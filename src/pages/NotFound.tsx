@@ -1,6 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
-import { ArrowRight, Shield, Radar } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import AgentIcon from "@/Shuffle-MCPs/AgentIcon";
+import shuffleInfraLogo from "@/assets/shuffle-infrastructure-logo.png";
 
 const NotFound = () => {
   const location = useLocation();
@@ -33,8 +35,8 @@ const NotFound = () => {
             to="/dashboard"
             className="group flex flex-col rounded-xl border border-border bg-card p-6 transition-colors hover:border-primary hover:bg-card/80"
           >
-            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Shield className="h-5 w-5" />
+            <div className="mb-4 flex h-10 w-10 items-center justify-center">
+              <AgentIcon size={40} />
             </div>
             <h2 className="mb-1 text-lg font-semibold text-foreground">
               Return to Shuffle Security
@@ -52,8 +54,8 @@ const NotFound = () => {
             href="https://shuffler.io"
             className="group flex flex-col rounded-xl border border-border bg-card p-6 transition-colors hover:border-primary hover:bg-card/80"
           >
-            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              <Radar className="h-5 w-5" />
+            <div className="mb-4 flex h-10 w-10 items-center justify-center">
+              <img src={shuffleInfraLogo} alt="Shuffle Core" width={40} height={40} style={{ borderRadius: 6 }} />
             </div>
             <h2 className="mb-1 text-lg font-semibold text-foreground">
               Return to Shuffle Core
