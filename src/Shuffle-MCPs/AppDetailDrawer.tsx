@@ -459,6 +459,9 @@ interface AppDetailDrawerProps {
   onAddToCanvas?: (appInfo: { name: string; icon: string; algoliaId: string | null }) => void;
   /** Whether the current user is authenticated. Defaults to true. */
   isAuthenticated?: boolean;
+  /** Host app's currently active org id. If different from the library's tracked org,
+   *  an `Org-Id` header is injected into the Singul curl preview. */
+  activeOrgId?: string | null;
 }
 
 export default function AppDetailDrawer({
@@ -470,6 +473,7 @@ export default function AppDetailDrawer({
   onRefresh,
   onAddToCanvas,
   isAuthenticated = true,
+  activeOrgId,
 }: AppDetailDrawerProps) {
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   const [appLoading, setAppLoading] = useState(false);
