@@ -41,9 +41,8 @@ Follow us on Twitter at [@shuffleio](https://twitter.com/shuffleio).
 
 </div>
 
-* Cloud: Register at [https://shuffler.io/register](https://shuffler.io/register) and get cooking
-* Hosted UI: [https://security.shuffler.io](https://security.shuffler.io)
-* Self-hosted: see below ⬇️
+* Cloud: Register at [https://security.shuffler.io/register](https://security.shuffler.io/register) and get cooking
+* Self-hosted: see Install below 
 
 ## Install (self-hosted)
 
@@ -54,8 +53,6 @@ docker compose up -d
 ```
 
 That is it. Open **http://localhost:3002**. Defaults in `.env` work out of the box — edit them only for production.
-
-Full guide: [shuffle/shuffle install docs](https://github.com/shuffle/shuffle/blob/master/.github/install-guide.md)
 
 ## Support
 * [Discord](https://discord.gg/B2CBzUm)
@@ -94,5 +91,3 @@ Configure the API target via a `.env` file in the project root:
 ```env
 VITE_SHUFFLE_API_URL=https://shuffler.io
 ```
-
-See the [Setup Guide](/docs/setup) for detailed configuration instructions.
