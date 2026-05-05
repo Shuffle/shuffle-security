@@ -7,10 +7,9 @@ import { useState } from 'react';
 import { Box, Typography, IconButton, Drawer, Avatar, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShuffleMCP } from '@/Shuffle-MCPs';
+import { ShuffleMCP, AppDetailDrawer } from '@/Shuffle-MCPs';
 import type { AppSelectedEvent } from '@/Shuffle-MCPs';
 import { API_CONFIG } from '@/config/api';
-import AppDetailDrawer from '@/components/shared/AppDetailDrawer';
 import { ShufflePipelinesBanner } from '@/components/usecases/UsecaseAlluvialDiagram';
 import { IntegrationStatus } from '@/components/layout/IntegrationStatus';
 
