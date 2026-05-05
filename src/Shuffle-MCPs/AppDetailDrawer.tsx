@@ -493,7 +493,7 @@ const SingulActionsPreview = ({
                   <Button
                     size="small"
                     onClick={handlePlay}
-                    disabled={playLoading || lang !== 'curl'}
+                    disabled={playLoading}
                     startIcon={!playLoading && <PlayArrowIcon sx={{ fontSize: 14 }} />}
                     sx={{
                       height: 26,
