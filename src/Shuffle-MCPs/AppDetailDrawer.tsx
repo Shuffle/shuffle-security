@@ -423,11 +423,22 @@ const SingulActionsPreview = ({
               <Autocomplete
                 size="small"
                 disableClearable
-                options={actions}
-                value={selected ?? actions[0]}
+                options={sortedActions}
+                value={selected ?? sortedActions[0]}
                 onChange={(_, v) => v && handleSelect(v as SingulAction)}
-                getOptionLabel={(o: SingulAction | null) => o?.name ?? ''}
-                isOptionEqualToValue={(a, b) => a?.name === b?.name}
+                groupBy={(o: SingulAction) => o.category}
+                getOptionLabel={(o: SingulAction | null) => o?.label ?? ''}
+                isOptionEqualToValue={(a, b) => a?.name === b?.name && a?.category === b?.category}
+                renderOption={(props, option) => (
+                  <li {...props} key={`${option.category}-${option.name}`}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                      <Typography sx={{ fontSize: '0.78rem', color: 'hsl(var(--foreground))' }}>{option.label}</Typography>
+                      <Typography sx={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))' }}>
+                        {option.name}
+                      </Typography>
+                    </Box>
+                  </li>
+                )}
                 sx={{
                   flex: 1,
                   '& .MuiOutlinedInput-root': {
@@ -438,6 +449,24 @@ const SingulActionsPreview = ({
                     '& fieldset': { borderColor: 'hsl(var(--border))' },
                     '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
                     '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
+                  },
+                }}
+                componentsProps={{
+                  paper: {
+                    sx: {
+                      backgroundColor: 'hsl(var(--card))',
+                      color: 'hsl(var(--foreground))',
+                      border: '1px solid hsl(var(--border))',
+                      '& .MuiAutocomplete-groupLabel': {
+                        backgroundColor: 'hsl(var(--muted) / 0.6)',
+                        color: 'hsl(var(--muted-foreground))',
+                        fontSize: '0.65rem',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: 0.6,
+                        lineHeight: '24px',
+                      },
+                    },
                   },
                 }}
                 renderInput={(params) => (
