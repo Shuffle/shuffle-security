@@ -100,7 +100,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
       };
       fetchAuthenticatedApps();
     }
-  }, [apiKey, apiBaseUrl]);
+  }, [apiKey, apiBaseUrl, orgId]);
 
   // Fetch the user's private apps from /api/v1/apps when apiKey is provided.
   // These get merged into search results so users can find their own apps too.
