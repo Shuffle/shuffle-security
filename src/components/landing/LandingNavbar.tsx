@@ -44,6 +44,7 @@ export const LandingNavbar = () => {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
   const isOnLoginPage = location.pathname === '/login';
+  const isOnAuthPage = isOnLoginPage || location.pathname === '/register';
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -177,14 +178,16 @@ export const LandingNavbar = () => {
                       >
                         {isOnLoginPage ? 'Sign Up' : 'Sign In'}
                       </Button>
-                      <Button
-                        component={Link}
-                        to="/register"
-                        variant="contained"
-                        onClick={() => trackCTA('get_started', 'navbar')}
-                      >
-                        Get Started
-                      </Button>
+                      {!isOnAuthPage && (
+                        <Button
+                          component={Link}
+                          to="/register"
+                          variant="contained"
+                          onClick={() => trackCTA('get_started', 'navbar')}
+                        >
+                          Get Started
+                        </Button>
+                      )}
                     </>
                   )}
                 </>
@@ -244,20 +247,22 @@ export const LandingNavbar = () => {
                     <ListItemText primary={isOnLoginPage ? 'Sign Up' : 'Sign In'} />
                   </ListItemButton>
                 </ListItem>
-                <ListItem sx={{ px: 2, pt: 2 }}>
-                  <Button
-                    component={Link}
-                    to="/register"
-                    variant="contained"
-                    fullWidth
-                    onClick={() => {
-                      trackCTA('get_started', 'mobile_drawer');
-                      handleDrawerToggle();
-                    }}
-                  >
-                    Get Started
-                  </Button>
-                </ListItem>
+                {!isOnAuthPage && (
+                  <ListItem sx={{ px: 2, pt: 2 }}>
+                    <Button
+                      component={Link}
+                      to="/register"
+                      variant="contained"
+                      fullWidth
+                      onClick={() => {
+                        trackCTA('get_started', 'mobile_drawer');
+                        handleDrawerToggle();
+                      }}
+                    >
+                      Get Started
+                    </Button>
+                  </ListItem>
+                )}
               </>
             )}
           </List>
