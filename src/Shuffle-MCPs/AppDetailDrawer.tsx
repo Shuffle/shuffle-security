@@ -34,7 +34,7 @@ import ApiCallViewer from '@/Shuffle-MCPs/ApiCallViewer';
 import type { AlgoliaSearchApp } from './shuffle-mcp.helpers';
 import { useAppAuth } from '@/Shuffle-MCPs/useAppAuth';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
-import { useAuth } from '@/context/AuthContext';
+// AuthContext detached — consumers can pass `isAuthenticated` as a prop. Defaults to true.
 
 interface AppInfo {
   name: string;
@@ -97,6 +97,8 @@ interface AppDetailDrawerProps {
   onRefresh?: () => void;
   /** When set, replaces the Activate button with "+ Add" and calls this on click */
   onAddToCanvas?: (appInfo: { name: string; icon: string; algoliaId: string | null }) => void;
+  /** Whether the current user is authenticated. Defaults to true. */
+  isAuthenticated?: boolean;
 }
 
 export default function AppDetailDrawer({
@@ -107,8 +109,8 @@ export default function AppDetailDrawer({
   width = 520,
   onRefresh,
   onAddToCanvas,
+  isAuthenticated = true,
 }: AppDetailDrawerProps) {
-  const { isAuthenticated } = useAuth();
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   const [appLoading, setAppLoading] = useState(false);
   const [isActivated, setIsActivated] = useState<boolean | null>(null);
