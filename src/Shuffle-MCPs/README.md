@@ -28,7 +28,7 @@ Turn 3,000+ SaaS tools into MCP servers your agents can use. One search, one cli
 
 &nbsp;
 
-> **See it live:** [security.shuffler.io/shuffle-mcp-demo](https://security.shuffler.io/shuffle-mcp-demo) — interactive demo of all three components, no login required. The same library also powers [security.shuffler.io/apps](https://security.shuffler.io/apps) in production.
+> **See it live:** [security.shuffler.io/shuffle-mcp-demo](https://security.shuffler.io/shuffle-mcp-demo) — a fully working demo of every component in this package (inline search, search drawer, app detail drawer, auth, Try MCP, and Try individual actions). No login required.
 
 > **No SDK required.** Once a tool is authenticated in Shuffle, it is live as an MCP server immediately — call it from any agent over plain HTTP. This npm package is the optional UI layer for embedding the search-and-connect flow inside your own product.
 
