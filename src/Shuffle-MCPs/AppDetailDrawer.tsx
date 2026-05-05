@@ -371,10 +371,10 @@ const SingulActionsPreview = ({
                 size="small"
                 disableClearable
                 options={actions}
-                value={selected ?? null}
-                onChange={(_, v) => handleSelect(v as SingulAction)}
-                getOptionLabel={(o: SingulAction) => o.name}
-                isOptionEqualToValue={(a, b) => a.name === b.name}
+                value={selected ?? actions[0]}
+                onChange={(_, v) => v && handleSelect(v as SingulAction)}
+                getOptionLabel={(o: SingulAction | null) => o?.name ?? ''}
+                isOptionEqualToValue={(a, b) => a?.name === b?.name}
                 sx={{
                   flex: 1,
                   '& .MuiOutlinedInput-root': {
