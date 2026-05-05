@@ -575,3 +575,219 @@
   transition: background 0.15s;
 }
 .singul-drawer-cta:hover { background: #e65a00; }
+
+/* ============================================================
+ * Drawer extensions: meta row, auth tabs, edit form, MCP chat
+ * ============================================================ */
+.singul-drawer-meta {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.singul-drawer-meta .singul-drawer-desc { flex: 1; margin: 0; }
+
+.singul-drawer-activate {
+  flex-shrink: 0;
+  background: #FF6600;
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+.singul-drawer-activate:hover:not(:disabled) { background: #e65a00; }
+.singul-drawer-activate:disabled { opacity: 0.6; cursor: default; }
+.singul-drawer-activate-on {
+  background: transparent;
+  color: #9ca3af;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.singul-drawer-activate-on:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* Auth tabs */
+.singul-auth-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.singul-auth-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  color: #d1d5db;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.singul-auth-tab:hover { border-color: rgba(255, 255, 255, 0.2); }
+.singul-auth-tab-active {
+  border-color: rgba(255, 102, 0, 0.6);
+  background: rgba(255, 102, 0, 0.08);
+  color: #fff;
+}
+.singul-auth-tab-label { white-space: nowrap; }
+.singul-auth-tab-chips { display: inline-flex; gap: 4px; }
+.singul-auth-tab-new { color: #FF8533; border-style: dashed; }
+
+/* Auth form */
+.singul-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.singul-auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.singul-auth-field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #e5e7eb;
+}
+.singul-auth-field-req { color: #f87171; }
+.singul-auth-field-desc {
+  font-size: 11px;
+  color: #9ca3af;
+  line-height: 1.4;
+}
+.singul-auth-input {
+  background: #0a0c10;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 13px;
+  padding: 8px 10px;
+  font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.singul-auth-input:focus {
+  outline: none;
+  border-color: rgba(255, 102, 0, 0.6);
+  box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.12);
+}
+
+.singul-auth-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.singul-btn {
+  border: 0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  font-family: inherit;
+}
+.singul-btn:disabled { opacity: 0.6; cursor: default; }
+.singul-btn-primary { background: #FF6600; color: #fff; }
+.singul-btn-primary:hover:not(:disabled) { background: #e65a00; }
+.singul-btn-secondary {
+  background: transparent;
+  color: #d1d5db;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.singul-btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+}
+
+.singul-auth-message {
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  margin-top: 4px;
+}
+.singul-auth-message-ok {
+  background: rgba(34, 197, 94, 0.1);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+.singul-auth-message-err {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+/* MCP "Try it out" */
+.singul-mcp-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #0a0c10;
+  border-radius: 10px;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.singul-mcp-input-wrap:focus-within {
+  border-color: rgba(255, 102, 0, 0.6);
+  box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.12);
+}
+.singul-mcp-prompt {
+  color: #FF8533;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+.singul-mcp-input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  color: #fff;
+  font-size: 13px;
+  padding: 4px 0;
+  font-family: inherit;
+  outline: none;
+}
+.singul-mcp-input::placeholder { color: #6b7280; }
+.singul-mcp-run {
+  background: #FF6600;
+  color: #fff;
+  border: 0;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+.singul-mcp-run:hover:not(:disabled) { background: #e65a00; }
+.singul-mcp-run:disabled { opacity: 0.4; cursor: default; }
+
+.singul-mcp-result {
+  background: #0a0c10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #d1d5db;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 280px;
+  overflow-y: auto;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  margin: 0;
+}
+.singul-mcp-result-err {
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+}
