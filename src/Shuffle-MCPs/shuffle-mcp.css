@@ -5,16 +5,64 @@
  */
 
 .singul-container {
-  /* CSS Custom Properties for easy customization */
+  /* ============================================================
+   * Default theme: Shuffle-style dark (matches the rest of the app).
+   * For a light theme, add the `singul-theme-light` class on the
+   * <ShuffleMCP className="singul-theme-light" /> root.
+   * ============================================================ */
   --singul-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --singul-input-padding: 12px 16px;
   --singul-input-padding-right: 48px;
+  --singul-input-border: 1px solid rgba(255, 255, 255, 0.08);
+  --singul-input-border-radius: 10px;
+  --singul-input-bg: #14161b;
+  --singul-input-color: #f3f4f6;
+  --singul-input-font-size: 14px;
+  --singul-input-line-height: 1.5;
+  --singul-input-shadow: 0 1px 0 rgba(255, 255, 255, 0.02) inset;
+  --singul-input-focus-border: rgba(255, 102, 0, 0.55);
+  --singul-input-focus-shadow: 0 0 0 3px rgba(255, 102, 0, 0.15);
+  --singul-placeholder-color: #6b7280;
+  --singul-icon-color: #9ca3af;
+  --singul-spinner-border: 2px solid rgba(255, 255, 255, 0.08);
+  --singul-spinner-border-top: 2px solid #FF6600;
+  --singul-dropdown-bg: #14161b;
+  --singul-dropdown-border: 1px solid rgba(255, 255, 255, 0.08);
+  --singul-dropdown-border-radius: 10px;
+  --singul-dropdown-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+  --singul-dropdown-max-height: 400px;
+  --singul-item-padding: 12px 16px;
+  --singul-item-border: 1px solid rgba(255, 255, 255, 0.06);
+  --singul-item-hover-bg: rgba(255, 255, 255, 0.04);
+  --singul-item-selected-bg: rgba(255, 102, 0, 0.12);
+  --singul-item-selected-border: rgba(255, 102, 0, 0.55);
+  --singul-app-icon-size: 40px;
+  --singul-app-icon-border: 1px solid rgba(255, 255, 255, 0.08);
+  --singul-app-icon-border-radius: 8px;
+  --singul-app-name-font-weight: 600;
+  --singul-app-name-color: #f3f4f6;
+  --singul-app-name-font-size: 14px;
+  --singul-app-description-color: #9ca3af;
+  --singul-app-description-font-size: 12px;
+  --singul-app-category-bg: rgba(255, 255, 255, 0.06);
+  --singul-app-category-color: #d1d5db;
+  --singul-empty-state-color: #9ca3af;
+  --singul-empty-state-font-size: 14px;
+  --singul-grid-gap: 12px;
+  --singul-grid-columns: 3;
+  --singul-accent-color: #FF6600;
+
+  display: block;
+  position: relative;
+  width: 100%;
+  font-family: var(--singul-font-family);
+}
+
+/* Opt-in light theme (use className="singul-theme-light") */
+.singul-container.singul-theme-light {
   --singul-input-border: 1px solid #d1d5db;
-  --singul-input-border-radius: 8px;
   --singul-input-bg: #ffffff;
   --singul-input-color: #1f2937;
-  --singul-input-font-size: 16px;
-  --singul-input-line-height: 1.5;
   --singul-input-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
   --singul-input-focus-border: #3b82f6;
   --singul-input-focus-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 0 0 3px rgba(59, 130, 246, 0.1);
@@ -24,34 +72,17 @@
   --singul-spinner-border-top: 2px solid #3b82f6;
   --singul-dropdown-bg: #ffffff;
   --singul-dropdown-border: 1px solid #e5e7eb;
-  --singul-dropdown-border-radius: 8px;
   --singul-dropdown-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --singul-dropdown-max-height: 400px;
-  --singul-item-padding: 12px 16px;
   --singul-item-border: 1px solid #f3f4f6;
   --singul-item-hover-bg: #dff0ff;
   --singul-item-selected-bg: rgba(59, 130, 246, 0.1);
   --singul-item-selected-border: #3b82f6;
-  --singul-app-icon-size: 40px;
   --singul-app-icon-border: 1px solid #e5e7eb;
-  --singul-app-icon-border-radius: 8px;
-  --singul-app-name-font-weight: 600;
   --singul-app-name-color: #1f2937;
-  --singul-app-name-font-size: 14px;
   --singul-app-description-color: #6b7280;
-  --singul-app-description-font-size: 12px;
   --singul-app-category-bg: rgba(0, 0, 0, 0.05);
   --singul-app-category-color: #6b7280;
-  --singul-empty-state-color: #9ca3af;
-  --singul-empty-state-font-size: 14px;
-  --singul-grid-gap: 12px;
-  --singul-grid-columns: 3;
   --singul-accent-color: #3b82f6;
-
-  display: block;
-  position: relative;
-  width: 100%;
-  font-family: var(--singul-font-family);
 }
 
 .singul-search-bar-container {
