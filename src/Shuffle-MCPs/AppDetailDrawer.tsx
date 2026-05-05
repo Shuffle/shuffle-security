@@ -263,8 +263,15 @@ const SingulActionsPreview = ({
   categories?: string[];
   activeOrgId?: string | null;
 }) => {
-  const actions = useMemo(() => getSingulActions(categories), [categories]);
-  const isDisabled = actions.length === 0;
+  const defaultCategory = useMemo(() => pickDefaultCategory(categories), [categories]);
+  const actions = ALL_ACTIONS;
+  // Sort so that the app's default category appears first, rest follow original order.
+  const sortedActions = useMemo(() => {
+    const inCat = actions.filter((a) => a.category === defaultCategory);
+    const rest = actions.filter((a) => a.category !== defaultCategory);
+    return [...inCat, ...rest];
+  }, [actions, defaultCategory]);
+  const isDisabled = false;
   const [selected, setSelected] = useState<SingulAction | null>(null);
   const [lang, setLang] = useState<SnippetLang>('curl');
   const [snippet, setSnippet] = useState<string>('');
@@ -283,10 +290,10 @@ const SingulActionsPreview = ({
   );
 
   useEffect(() => {
-    const initial = actions[0] || null;
+    const initial = sortedActions[0] || null;
     setSelected(initial);
     setSnippet(buildSnippet(initial, lang));
-  }, [appName, actions, curlOpts, lang, buildSnippet]);
+  }, [appName, sortedActions, curlOpts, lang, buildSnippet]);
 
   const handleSelect = (action: SingulAction | null) => {
     setSelected(action);
