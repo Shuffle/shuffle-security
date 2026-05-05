@@ -322,6 +322,8 @@ const SingulActionsPreview = ({
     }
   };
 
+  const lineCount = useMemo(() => Math.max(snippet.split('\n').length, 1), [snippet]);
+
   return (
     <Box sx={{ mb: 3, opacity: isDisabled ? 0.55 : 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
@@ -337,11 +339,25 @@ const SingulActionsPreview = ({
 
       <Box
         sx={{
+          position: 'relative',
           p: 2,
           borderRadius: 2,
-          border: '1px dashed hsl(var(--border))',
-          backgroundColor: 'hsl(var(--muted) / 0.3)',
+          border: '1px solid hsl(var(--border))',
+          background: 'linear-gradient(180deg, hsl(var(--muted) / 0.35) 0%, hsl(var(--background) / 0.6) 100%)',
           pointerEvents: isDisabled ? 'none' : 'auto',
+          overflow: 'hidden',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            inset: -1,
+            borderRadius: 2,
+            padding: '1px',
+            background: 'linear-gradient(135deg, hsl(var(--primary) / 0.35), transparent 40%, hsl(var(--primary) / 0.15))',
+            WebkitMask: 'linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)',
+            WebkitMaskComposite: 'xor',
+            maskComposite: 'exclude',
+            pointerEvents: 'none',
+          },
         }}
       >
         {isDisabled ? (
@@ -349,154 +365,221 @@ const SingulActionsPreview = ({
             No category detected for this app
           </Typography>
         ) : (
-          <Box sx={{ display: 'flex', gap: 1, mb: 1.5, alignItems: 'center' }}>
-            <Autocomplete
-              size="small"
-              disableClearable
-              options={actions}
-              value={selected || undefined}
-              onChange={(_, v) => handleSelect(v as SingulAction)}
-              getOptionLabel={(o: SingulAction) => o.name}
-              isOptionEqualToValue={(a, b) => a.name === b.name}
-              sx={{
-                flex: 1,
-                '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'hsl(var(--card))',
-                  fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: '0.75rem',
-                  color: 'hsl(var(--foreground))',
-                  '& fieldset': { borderColor: 'hsl(var(--border))' },
-                  '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
-                  '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
-                },
-              }}
-              renderInput={(params) => (
-                <TextField {...params} placeholder="Select action" />
-              )}
-            />
-            <ToggleButtonGroup
-              size="small"
-              exclusive
-              value={lang}
-              onChange={(_, v) => v && setLang(v)}
-              sx={{
-                '& .MuiToggleButton-root': {
-                  height: 36,
-                  px: 1.5,
-                  fontSize: '0.7rem',
-                  textTransform: 'none',
-                  fontFamily: "'JetBrains Mono', monospace",
-                  color: 'hsl(var(--muted-foreground))',
-                  border: '1px solid hsl(var(--border))',
-                  '&.Mui-selected': {
-                    backgroundColor: 'hsl(var(--primary) / 0.15)',
-                    color: 'hsl(var(--primary))',
-                    borderColor: 'hsl(var(--primary))',
-                    '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.2)' },
+          <>
+            <Box sx={{ display: 'flex', gap: 1, mb: 1.5, alignItems: 'center' }}>
+              <Autocomplete
+                size="small"
+                disableClearable
+                options={actions}
+                value={selected || undefined}
+                onChange={(_, v) => handleSelect(v as SingulAction)}
+                getOptionLabel={(o: SingulAction) => o.name}
+                isOptionEqualToValue={(a, b) => a.name === b.name}
+                sx={{
+                  flex: 1,
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'hsl(var(--card))',
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: '0.75rem',
+                    color: 'hsl(var(--foreground))',
+                    '& fieldset': { borderColor: 'hsl(var(--border))' },
+                    '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
+                    '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
                   },
-                },
+                }}
+                renderInput={(params) => (
+                  <TextField {...params} placeholder="Select action" />
+                )}
+              />
+              <ToggleButtonGroup
+                size="small"
+                exclusive
+                value={lang}
+                onChange={(_, v) => v && setLang(v)}
+                sx={{
+                  '& .MuiToggleButton-root': {
+                    height: 36,
+                    px: 1.5,
+                    fontSize: '0.7rem',
+                    textTransform: 'none',
+                    fontFamily: "'JetBrains Mono', monospace",
+                    color: 'hsl(var(--muted-foreground))',
+                    border: '1px solid hsl(var(--border))',
+                    '&.Mui-selected': {
+                      backgroundColor: 'hsl(var(--primary) / 0.15)',
+                      color: 'hsl(var(--primary))',
+                      borderColor: 'hsl(var(--primary))',
+                      '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.2)' },
+                    },
+                  },
+                }}
+              >
+                <ToggleButton value="curl">curl</ToggleButton>
+                <ToggleButton value="python">python</ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
+
+            {/* Code card */}
+            <Box
+              sx={{
+                position: 'relative',
+                borderRadius: 1.5,
+                border: '1px solid hsl(var(--border))',
+                backgroundColor: 'hsl(var(--background))',
+                overflow: 'hidden',
+                boxShadow: '0 8px 24px -12px hsl(var(--primary) / 0.25)',
               }}
             >
-              <ToggleButton value="curl">curl</ToggleButton>
-              <ToggleButton value="python">python</ToggleButton>
-            </ToggleButtonGroup>
-          </Box>
+              {/* Header bar */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  px: 1.25,
+                  py: 0.75,
+                  borderBottom: '1px solid hsl(var(--border))',
+                  backgroundColor: 'hsl(var(--muted) / 0.4)',
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                  <Box sx={{ display: 'flex', gap: 0.4 }}>
+                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'hsl(0 70% 60% / 0.6)' }} />
+                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'hsl(40 80% 60% / 0.6)' }} />
+                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'hsl(140 60% 55% / 0.6)' }} />
+                  </Box>
+                  <Typography
+                    sx={{
+                      ml: 1,
+                      fontFamily: "'JetBrains Mono', monospace",
+                      fontSize: '0.65rem',
+                      color: 'hsl(var(--muted-foreground))',
+                      letterSpacing: 0.4,
+                    }}
+                  >
+                    {lang === 'python' ? 'singul.py' : 'request.sh'}
+                    {selected ? ` · ${selected.name}` : ''}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', gap: 0.75 }}>
+                  <Button
+                    size="small"
+                    onClick={handleCopy}
+                    sx={{
+                      height: 26,
+                      minWidth: 0,
+                      px: 1.25,
+                      fontSize: '0.65rem',
+                      textTransform: 'none',
+                      color: 'hsl(var(--muted-foreground))',
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      '&:hover': { backgroundColor: 'hsl(var(--muted))', color: 'hsl(var(--foreground))' },
+                    }}
+                  >
+                    Copy
+                  </Button>
+                  <Button
+                    size="small"
+                    onClick={handlePlay}
+                    disabled={playLoading || lang !== 'curl'}
+                    startIcon={!playLoading && <PlayArrowIcon sx={{ fontSize: 14 }} />}
+                    sx={{
+                      height: 26,
+                      minWidth: 0,
+                      px: 1.5,
+                      fontSize: '0.65rem',
+                      fontWeight: 600,
+                      textTransform: 'none',
+                      color: 'hsl(var(--primary-foreground))',
+                      backgroundColor: 'hsl(var(--primary))',
+                      border: '1px solid hsl(var(--primary))',
+                      boxShadow: '0 0 12px -2px hsl(var(--primary) / 0.6)',
+                      '& .MuiButton-startIcon': { mr: 0.5 },
+                      '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)', boxShadow: '0 0 16px -2px hsl(var(--primary) / 0.7)' },
+                      '&.Mui-disabled': { color: 'hsl(var(--primary-foreground) / 0.7)', backgroundColor: 'hsl(var(--primary) / 0.45)', boxShadow: 'none', borderColor: 'hsl(var(--primary) / 0.45)' },
+                    }}
+                  >
+                    {playLoading ? 'Running…' : 'Play'}
+                  </Button>
+                </Box>
+              </Box>
+
+              {/* Editor area with line numbers */}
+              <Box sx={{ display: 'flex', minHeight: 270 }}>
+                <Box
+                  aria-hidden
+                  sx={{
+                    userSelect: 'none',
+                    py: 1.5,
+                    pl: 1.25,
+                    pr: 1,
+                    textAlign: 'right',
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: '0.72rem',
+                    lineHeight: 1.5,
+                    color: 'hsl(var(--muted-foreground) / 0.6)',
+                    borderRight: '1px solid hsl(var(--border))',
+                    backgroundColor: 'hsl(var(--muted) / 0.25)',
+                    minWidth: 36,
+                  }}
+                >
+                  {Array.from({ length: lineCount }, (_, i) => (
+                    <div key={i}>{i + 1}</div>
+                  ))}
+                </Box>
+                <Box
+                  component="textarea"
+                  value={snippet}
+                  onChange={(e: any) => setSnippet(e.target.value)}
+                  spellCheck={false}
+                  sx={{
+                    flex: 1,
+                    minHeight: 270,
+                    resize: 'vertical',
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: '0.72rem',
+                    lineHeight: 1.5,
+                    color: 'hsl(var(--foreground))',
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    p: 1.5,
+                    outline: 'none',
+                    caretColor: 'hsl(var(--primary))',
+                  }}
+                />
+              </Box>
+            </Box>
+          </>
         )}
 
-        {!isDisabled && (
-          <Box sx={{ position: 'relative' }}>
+        {playResult !== null && (
+          <Box sx={{ mt: 1.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.5 }}>
+              <Box sx={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'hsl(140 60% 55%)' }} />
+              <Typography sx={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', letterSpacing: 0.4 }}>
+                response
+              </Typography>
+            </Box>
             <Box
-              component="textarea"
-              value={snippet}
-              onChange={(e: any) => setSnippet(e.target.value)}
-              spellCheck={false}
+              component="pre"
               sx={{
-                width: '100%',
-                minHeight: 270,
-                resize: 'vertical',
+                p: 1.5,
+                maxHeight: 240,
+                overflow: 'auto',
                 fontFamily: "'JetBrains Mono', monospace",
-                fontSize: '0.72rem',
+                fontSize: '0.7rem',
                 lineHeight: 1.5,
                 color: 'hsl(var(--foreground))',
                 backgroundColor: 'hsl(var(--background))',
                 border: '1px solid hsl(var(--border))',
                 borderRadius: 1.5,
-                p: 1.5,
-                outline: 'none',
-                '&:focus': { borderColor: 'hsl(var(--primary))' },
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                m: 0,
               }}
-            />
-            <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.75 }}>
-              <Button
-                size="small"
-                onClick={handleCopy}
-                sx={{
-                  height: 26,
-                  minWidth: 0,
-                  px: 1.25,
-                  fontSize: '0.65rem',
-                  textTransform: 'none',
-                  color: 'hsl(var(--muted-foreground))',
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  '&:hover': { backgroundColor: 'hsl(var(--muted))', color: 'hsl(var(--foreground))' },
-                }}
-              >
-                Copy
-              </Button>
-              <Button
-                size="small"
-                onClick={handlePlay}
-                disabled={playLoading || lang !== 'curl'}
-                startIcon={!playLoading && <PlayArrowIcon sx={{ fontSize: 14 }} />}
-                sx={{
-                  height: 26,
-                  minWidth: 0,
-                  px: 1.25,
-                  fontSize: '0.65rem',
-                  fontWeight: 600,
-                  textTransform: 'none',
-                  color: 'hsl(var(--primary-foreground))',
-                  backgroundColor: 'hsl(var(--primary))',
-                  border: '1px solid hsl(var(--primary))',
-                  '& .MuiButton-startIcon': { mr: 0.5 },
-                  '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)' },
-                  '&.Mui-disabled': { color: 'hsl(var(--primary-foreground) / 0.7)', backgroundColor: 'hsl(var(--primary) / 0.6)' },
-                }}
-              >
-                {playLoading ? 'Running…' : 'Play'}
-              </Button>
-            </Box>
-          </Box>
-        )}
-
-        {playResult !== null && (
-          <Box
-            component="pre"
-            sx={{
-              mt: 1.5,
-              p: 1.5,
-              maxHeight: 240,
-              overflow: 'auto',
-              fontFamily: "'JetBrains Mono', monospace",
-              fontSize: '0.7rem',
-              lineHeight: 1.5,
-              color: 'hsl(var(--foreground))',
-              backgroundColor: 'hsl(var(--background))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: 1.5,
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-word',
-              m: 0,
-            }}
-          >
-            {playResult}
-          </Box>
-        )}
-      </Box>
-    </Box>
-  );
-};
+            >
+              {playResult}
 
 interface AppDetailDrawerProps {
   open: boolean;
