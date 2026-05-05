@@ -351,28 +351,31 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
 
       {/* Host-level vulnerability summary */}
       {vulnerabilities !== undefined && (
-        <div className={`rounded-md border p-3 ${totalOpenVulns > 0 ? 'border-red-500/30 bg-red-500/5' : 'border-border bg-muted/20'}`}>
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div className="flex items-start gap-2">
-              <AlertTriangle size={14} className={`mt-0.5 ${totalOpenVulns > 0 ? 'text-red-500' : 'text-muted-foreground'}`} />
-              <div className="flex flex-col gap-0.5">
+        totalOpenVulns > 0 ? (
+          <div className="rounded-md border p-3 border-red-500/30 bg-red-500/5">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-start gap-2">
+                <AlertTriangle size={14} className="mt-0.5 text-red-500" />
                 <span className="text-xs font-semibold text-foreground">
-                  {totalOpenVulns > 0
-                    ? `${totalOpenVulns} open vulnerabilit${totalOpenVulns === 1 ? 'y' : 'ies'} attached to this host`
-                    : 'No vulnerabilities attached to this host'}
+                  {totalOpenVulns} open vulnerabilit{totalOpenVulns === 1 ? 'y' : 'ies'} attached to this host
                 </span>
-                {totalOpenVulns === 0 && (
-                  <span className="text-[0.65rem] text-muted-foreground leading-snug">
-                    Only vulnerabilities recorded against this hostname in the vulnerability datastore are shown here.
-                    OSV lookups from <span className="font-mono">/software/&#123;name&#125;</span> and <span className="font-mono">/packages/&#123;name&#125;</span> are
-                    live registry queries and aren't attached to a host until a scanner workflow imports them.
-                  </span>
-                )}
               </div>
+              <SeverityBadgeRow counts={sevCounts} />
             </div>
-            {totalOpenVulns > 0 && <SeverityBadgeRow counts={sevCounts} />}
           </div>
-        </div>
+        ) : (
+          <VulnerabilityAutomationBanner
+            alwaysShow
+            description={
+              <>
+                No vulnerabilities are currently attached to this host. Until the{' '}
+                <span className="font-medium text-foreground">Vulnerability Comparison</span> automation is
+                running, scanner results are not being correlated to hosts — so a clean state here may just
+                mean no scan has been imported yet.
+              </>
+            }
+          />
+        )
       )}
 
       <div className="space-y-2">
