@@ -93,18 +93,21 @@ This is the **default** behavior — clicking an app opens the built-in side dra
 <ShuffleMCP apiKey={user.apiKey} inline />
 ```
 
-Want to take over with your own drawer instead? Pass `onAppSelected` (this disables the built-in drawer) and optionally `preventDefault` (to skip the legacy `window.open(authUrl)` fallback):
+Want to take over selection yourself (e.g. open your own drawer, route to a detail page, kick off a custom auth flow)? Pass `onAppSelected` — that disables the built-in drawer. Add `preventDefault` to also skip the legacy `window.open(authUrl)` fallback:
 
 ```tsx
 <ShuffleMCP
   apiKey={user.apiKey}
   inline
   preventDefault
-  onAppSelected={(d) => openMyOwnDrawer(d.app)}
+  onAppSelected={({ app, authUrl }) => {
+    // do whatever you want — navigate, open a modal, start auth, etc.
+    navigate(`/integrations/${app.objectID}`);
+  }}
 />
 ```
 
-Full two-drawer reference implementation: [`src/components/shared/AppSearchDrawer.tsx`](../components/shared/AppSearchDrawer.tsx).
+Reference implementation: [`src/components/shared/AppSearchDrawer.tsx`](../components/shared/AppSearchDrawer.tsx).
 
 ### Predefined search
 
