@@ -28,7 +28,7 @@ import {
 import { motion } from 'framer-motion';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import EditIcon from '@mui/icons-material/Edit';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import { DeleteOutline as DeleteOutlineIcon } from '@mui/icons-material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import LockIcon from '@mui/icons-material/Lock';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
@@ -773,12 +773,14 @@ export const AppAuthCard = ({
                   '& .MuiSvgIcon-root': { color: 'text.secondary' },
                 }}
                 MenuProps={{
-                  PaperProps: {
-                     sx: {
+                  slotProps: {
+                    paper: {
+                      sx: {
                       backgroundColor: 'background.paper',
                       border: '1px solid',
                       borderColor: 'divider',
                       maxHeight: 300,
+                      },
                     },
                   },
                 }}
@@ -1139,11 +1141,13 @@ export const AppAuthCard = ({
                       '& .MuiSvgIcon-root': { color: 'hsl(var(--muted-foreground))' },
                     }}
                     MenuProps={{
-                      PaperProps: {
+                      slotProps: {
+                        paper: {
                         sx: {
                           backgroundColor: 'background.paper',
                           border: '1px solid',
                           borderColor: 'divider',
+                        },
                         },
                       },
                     }}
