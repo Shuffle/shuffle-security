@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
+import { VulnerabilityAutomationBanner } from '@/components/vulnerabilities/VulnerabilityAutomationBanner';
 import {
   HardDrive, Lock, Package, Zap, ChevronRight, ChevronDown,
   Hash, Cpu, Send, ShieldCheck, ShieldX, FileCode, ScanLine, AlertTriangle,
