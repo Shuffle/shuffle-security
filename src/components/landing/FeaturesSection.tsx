@@ -559,6 +559,112 @@ const DetectionLoopVisual = () => {
   );
 };
 
+const HostMonitorVisual = () => {
+  const checks = [
+    { label: 'Disk Encryption', status: 'pass', color: '#22c55e' },
+    { label: 'Screenlock Policy', status: 'pass', color: '#22c55e' },
+    { label: 'OS Patch Level', status: 'warn', color: '#f59e0b' },
+    { label: 'EDR Running', status: 'pass', color: '#22c55e' },
+    { label: 'Firewall Enabled', status: 'fail', color: '#ef4444' },
+  ];
+  return (
+    <Box
+      sx={{
+        p: 4,
+        borderRadius: 4,
+        background: 'linear-gradient(145deg, rgba(16, 185, 129, 0.06) 0%, rgba(16, 185, 129, 0.01) 100%)',
+        border: '1px solid rgba(16, 185, 129, 0.15)',
+      }}
+    >
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Box>
+          <Typography sx={{ fontWeight: 700, fontSize: '0.95rem' }}>laptop-fin-04</Typography>
+          <Typography sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>macOS 14.5 • SOC2 baseline</Typography>
+        </Box>
+        <Box sx={{ py: 0.5, px: 1.5, borderRadius: 2, background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+          <Typography sx={{ color: '#10b981', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.05em' }}>ONLINE</Typography>
+        </Box>
+      </Box>
+      <Stack spacing={1.25}>
+        {checks.map((c, i) => (
+          <motion.div
+            key={c.label}
+            initial={{ opacity: 0, x: -10 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.08 }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1.5, borderRadius: 2, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <Typography sx={{ fontSize: '0.85rem' }}>{c.label}</Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: c.color }} />
+                <Typography sx={{ color: c.color, fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase' }}>{c.status}</Typography>
+              </Box>
+            </Box>
+          </motion.div>
+        ))}
+      </Stack>
+      <Box sx={{ mt: 2.5, p: 1.75, borderRadius: 2, background: 'rgba(14, 165, 233, 0.08)', border: '1px solid rgba(14, 165, 233, 0.2)', fontFamily: 'ui-monospace, SFMono-Regular, monospace' }}>
+        <Typography sx={{ color: '#0ea5e9', fontSize: '0.75rem' }}>$ shuffle exec --host laptop-fin-04 -- enable-firewall</Typography>
+      </Box>
+    </Box>
+  );
+};
+
+const VulnAutomationVisual = () => {
+  const vulns = [
+    { cve: 'CVE-2024-3094', sev: 'Critical', color: '#ef4444', action: 'Auto-patched on 12 hosts' },
+    { cve: 'CVE-2024-21413', sev: 'High', color: '#f97316', action: 'Ticket created in Jira' },
+    { cve: 'CVE-2023-44487', sev: 'Medium', color: '#f59e0b', action: 'Suppressed (not exploitable)' },
+  ];
+  return (
+    <Box
+      sx={{
+        p: 4,
+        borderRadius: 4,
+        background: 'linear-gradient(145deg, rgba(244, 63, 94, 0.06) 0%, rgba(244, 63, 94, 0.01) 100%)',
+        border: '1px solid rgba(244, 63, 94, 0.15)',
+      }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+        <Typography sx={{ fontWeight: 700, fontSize: '0.95rem' }}>Vulnerability Pipeline</Typography>
+        <Typography sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>437 findings · last 24h</Typography>
+      </Box>
+      <Stack spacing={1.5}>
+        {vulns.map((v, i) => (
+          <motion.div
+            key={v.cve}
+            initial={{ opacity: 0, y: 8 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.1 }}
+          >
+            <Box sx={{ p: 2, borderRadius: 2, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, fontFamily: 'ui-monospace, SFMono-Regular, monospace' }}>{v.cve}</Typography>
+                <Box sx={{ py: 0.25, px: 1, borderRadius: 1, background: `${v.color}20`, border: `1px solid ${v.color}40` }}>
+                  <Typography sx={{ color: v.color, fontSize: '0.7rem', fontWeight: 700 }}>{v.sev}</Typography>
+                </Box>
+              </Box>
+              <Typography sx={{ color: 'text.secondary', fontSize: '0.78rem' }}>→ {v.action}</Typography>
+            </Box>
+          </motion.div>
+        ))}
+      </Stack>
+      <Box sx={{ mt: 2.5, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+        {['Enrich', 'Prioritize', 'Patch', 'Verify'].map((step, i) => (
+          <Box key={step} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ py: 0.5, px: 1.5, borderRadius: 1.5, background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.25)' }}>
+              <Typography sx={{ color: '#f43f5e', fontSize: '0.7rem', fontWeight: 600 }}>{step}</Typography>
+            </Box>
+            {i < 3 && <Typography sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>→</Typography>}
+          </Box>
+        ))}
+      </Box>
+    </Box>
+  );
+};
+
 const features: Omit<FeatureSectionProps, 'reverse'>[] = [
   {
     icon: null,
