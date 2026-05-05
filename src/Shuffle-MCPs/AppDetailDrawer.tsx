@@ -854,7 +854,7 @@ export default function AppDetailDrawer({
                 </Box>
 
                 {/* Try Singul actions — disabled-look catalog */}
-                <SingulActionsPreview categories={appInfo?.categories} />
+                <SingulActionsPreview appName={appName || ''} categories={appInfo?.categories} />
               </motion.div>
             )}
 
