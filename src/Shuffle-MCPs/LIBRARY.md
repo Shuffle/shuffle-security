@@ -172,7 +172,7 @@ When `apiKey` is set, status dots are populated: validated, configured, selected
 ### Styling & rendering
 | Prop | Type | Description |
 |---|---|---|
-| `customStyles` | `CustomStyles` | Per-slot style overrides — see [`singul.helpers.ts`](./singul.helpers.ts) |
+| `customStyles` | `CustomStyles` | Per-slot style overrides — see [`shuffle-mcp.helpers.ts`](./shuffle-mcp.helpers.ts) |
 | `className` | `string` | Extra class on the root |
 | `renderItem` | `(app, isSelected, onSelect, authState) => ReactNode` | Replace item renderer |
 | `renderEmptyState` | `() => ReactNode` | Replace empty state |

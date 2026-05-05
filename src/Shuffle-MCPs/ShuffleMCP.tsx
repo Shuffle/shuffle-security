@@ -6,8 +6,8 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo, useImperativeHandle } from 'react';
 import { algoliasearch, SearchClient } from 'algoliasearch';
-import type { AlgoliaSearchApp, AppSelectedEvent, ShuffleMCPProps, AppAuthentication } from './singul.helpers';
-import './singul.css';
+import type { AlgoliaSearchApp, AppSelectedEvent, ShuffleMCPProps, AppAuthentication } from './shuffle-mcp.helpers';
+import './shuffle-mcp.css';
 
 const DEFAULT_ALGOLIA_APP_ID = 'JNSS5CFDZZ';
 const DEFAULT_ALGOLIA_API_KEY = '33e4e3564f4f060e96e0531957bed552';

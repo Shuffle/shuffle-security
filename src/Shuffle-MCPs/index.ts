@@ -12,4 +12,4 @@ export type {
   AppAuthentication,
   CustomStyles,
   ShuffleMCPProps,
-} from './singul.helpers';
+} from './shuffle-mcp.helpers';

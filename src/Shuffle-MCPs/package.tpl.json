@@ -28,7 +28,7 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
-    "./singul.css": "./dist/singul.css"
+    "./shuffle-mcp.css": "./dist/shuffle-mcp.css"
   },
   "files": [
     "dist",
