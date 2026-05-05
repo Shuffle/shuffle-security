@@ -1,8 +1,7 @@
 /**
- * Dashboard Overview — modern KPI tiles with inline sparklines, a hero
- * incident-activity chart, severity breakdown, and monitor coverage radial.
- * Inspired by Vicarius / Linear / Vercel style: dense, gradient accents,
- * bold numbers, minimal chrome.
+ * Dashboard Overview — cyberpunk-inspired analytics: neon gradients,
+ * glow effects, vivid bar/area gradients. Reference: Vicarius / cyberpunk
+ * dashboards with magenta→violet→cyan palette over dark surfaces.
  */
 import { useMemo } from 'react';
 import { Box, Typography, Skeleton } from '@mui/material';
@@ -51,18 +50,22 @@ interface OverviewProps {
   monitorsLoading?: boolean;
 }
 
-const SEV = {
-  critical: 'hsl(var(--severity-critical))',
-  high: 'hsl(var(--severity-high))',
-  medium: 'hsl(var(--severity-medium))',
-  low: 'hsl(var(--severity-low))',
-  info: 'hsl(var(--severity-info))',
+// ── Cyberpunk neon palette ──────────────────────────────────────────────────
+const NEON = {
+  magenta: '#FF2E9F',
+  pink: '#EC517C',
+  violet: '#9C5AF2',
+  cyan: '#22E6FF',
+  amber: '#FFB020',
+  red: '#FF3B5C',
+  green: '#3DF5A0',
+  orange: '#FF6600', // brand
 };
 
 const STATUS_COLORS = {
-  New: 'hsl(var(--severity-info))',
-  'In Progress': 'hsl(var(--primary))',
-  Resolved: 'hsl(var(--severity-low))',
+  New: NEON.cyan,
+  'In Progress': NEON.orange,
+  Resolved: NEON.green,
 };
 
 // ── Tooltip ─────────────────────────────────────────────────────────────────
@@ -70,26 +73,26 @@ const TooltipContent = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
     <Box sx={{
-      bgcolor: 'hsl(var(--popover))',
+      bgcolor: 'hsl(var(--popover) / 0.85)',
       border: '1px solid hsl(var(--border))',
       borderRadius: 1.5,
       px: 1.25,
       py: 0.85,
-      boxShadow: '0 8px 24px hsl(0 0% 0% / 0.4)',
-      backdropFilter: 'blur(8px)',
+      boxShadow: `0 0 0 1px ${NEON.violet}33, 0 8px 24px hsl(0 0% 0% / 0.5)`,
+      backdropFilter: 'blur(12px)',
     }}>
       {label != null && (
-        <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', fontWeight: 600, display: 'block', mb: 0.5, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', fontWeight: 600, display: 'block', mb: 0.5, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
           {label}
         </Typography>
       )}
       {payload.map((entry: any) => (
         <Box key={entry.name ?? entry.dataKey} sx={{ display: 'flex', alignItems: 'center', gap: 0.75, py: 0.15 }}>
-          <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: entry.color || entry.payload?.fill, flexShrink: 0 }} />
+          <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: entry.color || entry.payload?.fill, flexShrink: 0, boxShadow: `0 0 6px ${entry.color || entry.payload?.fill}` }} />
           <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem' }}>
             {entry.name}
           </Typography>
-          <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.72rem', fontWeight: 700, ml: 'auto' }}>
+          <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.72rem', fontWeight: 700, ml: 'auto', fontFamily: 'ui-monospace, monospace' }}>
             {entry.value}
           </Typography>
         </Box>
@@ -98,10 +101,11 @@ const TooltipContent = ({ active, payload, label }: any) => {
   );
 };
 
-// ── KPI Tile with sparkline ─────────────────────────────────────────────────
+// ── KPI Tile ────────────────────────────────────────────────────────────────
 interface KpiTileProps {
   icon: LucideIcon;
-  accent: string;
+  glow: string;
+  gradient: string;
   value: number | string;
   label: string;
   delta?: { value: string; positive: boolean } | null;
@@ -111,13 +115,14 @@ interface KpiTileProps {
   delay?: number;
 }
 
-const KpiTile = ({ icon: Icon, accent, value, label, delta, spark, isLoading, onClick, delay = 0 }: KpiTileProps) => {
+const KpiTile = ({ icon: Icon, glow, gradient, value, label, delta, spark, isLoading, onClick, delay = 0 }: KpiTileProps) => {
   const sparkData = (spark ?? []).map((v, i) => ({ i, v }));
+  const sparkId = `spark-${label.replace(/\s/g, '')}`;
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay }}
+      transition={{ duration: 0.35, delay }}
     >
       <Box
         onClick={onClick}
@@ -125,25 +130,37 @@ const KpiTile = ({ icon: Icon, accent, value, label, delta, spark, isLoading, on
           position: 'relative',
           p: 2.25,
           borderRadius: 2.5,
-          background: `linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--card) / 0.6) 100%)`,
+          background: `
+            linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--card) / 0.4) 100%)
+          `,
           border: '1px solid hsl(var(--border))',
           cursor: onClick ? 'pointer' : 'default',
-          transition: 'all 0.25s ease',
+          transition: 'all 0.3s cubic-bezier(.2,.8,.2,1)',
           overflow: 'hidden',
           height: '100%',
-          minHeight: 132,
+          minHeight: 144,
           '&::before': {
             content: '""',
             position: 'absolute',
             inset: 0,
-            background: `radial-gradient(circle at 100% 0%, ${accent} 0%, transparent 55%)`,
-            opacity: 0.08,
+            background: gradient,
+            opacity: 0.18,
             pointerEvents: 'none',
+            transition: 'opacity 0.3s',
+          },
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            top: -1, left: -1, right: -1,
+            height: 1,
+            background: `linear-gradient(90deg, transparent, ${glow}, transparent)`,
+            opacity: 0.6,
           },
           '&:hover': onClick ? {
-            borderColor: accent,
-            transform: 'translateY(-1px)',
-            '&::before': { opacity: 0.16 },
+            borderColor: `${glow}66`,
+            transform: 'translateY(-2px)',
+            boxShadow: `0 0 0 1px ${glow}33, 0 12px 32px ${glow}22`,
+            '&::before': { opacity: 0.32 },
             '& .kpi-arrow': { opacity: 1, transform: 'translate(0,0)' },
           } : {},
         }}
@@ -151,23 +168,24 @@ const KpiTile = ({ icon: Icon, accent, value, label, delta, spark, isLoading, on
         <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 1.5, position: 'relative' }}>
           <Box
             sx={{
-              width: 32, height: 32, borderRadius: 1.5,
+              width: 34, height: 34, borderRadius: 1.5,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              backgroundColor: `${accent.replace('))', ') / 0.12)')}`,
-              border: `1px solid ${accent.replace('))', ') / 0.25)')}`,
+              background: `linear-gradient(135deg, ${glow}33, ${glow}11)`,
+              border: `1px solid ${glow}55`,
+              boxShadow: `0 0 12px ${glow}44, inset 0 0 8px ${glow}22`,
             }}
           >
-            <Icon size={16} style={{ color: accent }} />
+            <Icon size={16} style={{ color: glow, filter: `drop-shadow(0 0 4px ${glow})` }} />
           </Box>
           {onClick && (
             <ArrowUpRight
               size={14}
               className="kpi-arrow"
               style={{
-                color: 'hsl(var(--muted-foreground))',
+                color: glow,
                 opacity: 0,
                 transform: 'translate(-4px, 4px)',
-                transition: 'all 0.2s ease',
+                transition: 'all 0.25s ease',
               }}
             />
           )}
@@ -175,51 +193,67 @@ const KpiTile = ({ icon: Icon, accent, value, label, delta, spark, isLoading, on
 
         <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, position: 'relative' }}>
           {isLoading ? (
-            <Skeleton variant="text" width={60} height={36} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
+            <Skeleton variant="text" width={70} height={40} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
           ) : (
             <Typography sx={{
               fontWeight: 700,
-              fontSize: '1.85rem',
+              fontSize: '2rem',
               lineHeight: 1,
               color: 'hsl(var(--foreground))',
-              fontFeatureSettings: '"tnum"',
-              letterSpacing: '-0.02em',
+              fontFamily: 'ui-monospace, "SF Mono", monospace',
+              letterSpacing: '-0.03em',
+              textShadow: `0 0 24px ${glow}55`,
             }}>
               {value}
             </Typography>
           )}
           {delta && (
-            <Typography sx={{
-              fontSize: '0.7rem',
-              fontWeight: 600,
-              color: delta.positive ? 'hsl(var(--severity-low))' : 'hsl(var(--severity-high))',
-              mb: 0.4,
+            <Box sx={{
+              display: 'inline-flex', alignItems: 'center', gap: 0.25,
+              px: 0.75, py: 0.25,
+              borderRadius: 999,
+              fontSize: '0.65rem',
+              fontWeight: 700,
+              fontFamily: 'ui-monospace, monospace',
+              color: delta.positive ? NEON.green : NEON.red,
+              background: delta.positive ? `${NEON.green}1A` : `${NEON.red}1A`,
+              border: `1px solid ${delta.positive ? NEON.green : NEON.red}44`,
+              mb: 0.5,
             }}>
-              {delta.positive ? '↑' : '↓'} {delta.value}
-            </Typography>
+              {delta.positive ? '↓' : '↑'} {delta.value}
+            </Box>
           )}
         </Box>
         <Typography sx={{
-          fontSize: '0.72rem',
+          fontSize: '0.7rem',
           color: 'hsl(var(--muted-foreground))',
           mt: 0.5,
           fontWeight: 500,
+          textTransform: 'uppercase',
+          letterSpacing: '0.06em',
           position: 'relative',
         }}>
           {label}
         </Typography>
 
         {sparkData.length > 1 && !isLoading && (
-          <Box sx={{ height: 28, mt: 1, mx: -0.5 }}>
+          <Box sx={{ height: 32, mt: 1, mx: -0.5, position: 'relative' }}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={sparkData}>
+                <defs>
+                  <linearGradient id={sparkId} x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor={glow} stopOpacity={0.3} />
+                    <stop offset="100%" stopColor={glow} stopOpacity={1} />
+                  </linearGradient>
+                </defs>
                 <Line
                   type="monotone"
                   dataKey="v"
-                  stroke={accent}
-                  strokeWidth={1.5}
+                  stroke={`url(#${sparkId})`}
+                  strokeWidth={1.75}
                   dot={false}
                   isAnimationActive={false}
+                  style={{ filter: `drop-shadow(0 0 4px ${glow})` }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -231,20 +265,21 @@ const KpiTile = ({ icon: Icon, accent, value, label, delta, spark, isLoading, on
 };
 
 // ── Panel wrapper ───────────────────────────────────────────────────────────
-const Panel = ({ title, action, children, delay = 0, sx }: {
+const Panel = ({ title, action, children, delay = 0, accent }: {
   title: string;
   action?: React.ReactNode;
   children: React.ReactNode;
   delay?: number;
-  sx?: any;
+  accent?: string;
 }) => (
   <motion.div
     initial={{ opacity: 0, y: 8 }}
     animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.3, delay }}
+    transition={{ duration: 0.35, delay }}
     style={{ height: '100%' }}
   >
     <Box sx={{
+      position: 'relative',
       p: 2.5,
       borderRadius: 2.5,
       backgroundColor: 'hsl(var(--card))',
@@ -252,20 +287,31 @@ const Panel = ({ title, action, children, delay = 0, sx }: {
       height: '100%',
       display: 'flex',
       flexDirection: 'column',
-      ...sx,
+      overflow: 'hidden',
+      ...(accent && {
+        '&::before': {
+          content: '""',
+          position: 'absolute',
+          top: 0, left: 0, right: 0,
+          height: 1,
+          background: `linear-gradient(90deg, transparent 5%, ${accent}, transparent 95%)`,
+          opacity: 0.7,
+        },
+      }),
     }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, position: 'relative' }}>
         <Typography sx={{
-          fontSize: '0.78rem',
+          fontSize: '0.75rem',
           fontWeight: 600,
           color: 'hsl(var(--foreground))',
-          letterSpacing: '-0.01em',
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
         }}>
           {title}
         </Typography>
         {action}
       </Box>
-      <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', position: 'relative' }}>
         {children}
       </Box>
     </Box>
@@ -306,7 +352,6 @@ export const DashboardOverview = ({
     return { openCount: open.length, criticalCount: critical, last24h, delta };
   }, [incidents]);
 
-  // 14-day sparkline of new incidents
   const incidentSpark = useMemo(() => {
     const days = 14;
     const arr = new Array(days).fill(0);
@@ -320,7 +365,6 @@ export const DashboardOverview = ({
     return arr;
   }, [incidents]);
 
-  // 30-day stacked area
   const trendData = useMemo(() => {
     const buckets: { date: string; ms: number; New: number; 'In Progress': number; Resolved: number }[] = [];
     const today = new Date();
@@ -343,26 +387,24 @@ export const DashboardOverview = ({
 
   const trendHasData = trendData.some(d => d.New || d['In Progress'] || d.Resolved);
 
-  // Vulnerability data
   const vulnTotal =
     vulnSeverityCounts.critical + vulnSeverityCounts.high + vulnSeverityCounts.medium +
     vulnSeverityCounts.low + vulnSeverityCounts.info;
   const vulnData = [
-    { name: 'Critical', value: vulnSeverityCounts.critical, color: SEV.critical },
-    { name: 'High', value: vulnSeverityCounts.high, color: SEV.high },
-    { name: 'Medium', value: vulnSeverityCounts.medium, color: SEV.medium },
-    { name: 'Low', value: vulnSeverityCounts.low, color: SEV.low },
-    { name: 'Info', value: vulnSeverityCounts.info, color: SEV.info },
+    { name: 'Critical', value: vulnSeverityCounts.critical, color: NEON.red, gradId: 'vuln-crit' },
+    { name: 'High', value: vulnSeverityCounts.high, color: NEON.magenta, gradId: 'vuln-high' },
+    { name: 'Medium', value: vulnSeverityCounts.medium, color: NEON.violet, gradId: 'vuln-med' },
+    { name: 'Low', value: vulnSeverityCounts.low, color: NEON.cyan, gradId: 'vuln-low' },
+    { name: 'Info', value: vulnSeverityCounts.info, color: NEON.green, gradId: 'vuln-info' },
   ];
   const vulnCriticalPct = vulnTotal > 0
     ? Math.round(((vulnSeverityCounts.critical + vulnSeverityCounts.high) / vulnTotal) * 100)
     : 0;
 
-  // Monitor radial: hosts vs sensors as % of combined target
   const monitorTotal = (monitorHostCount ?? 0) + (runningSensorCount ?? 0);
   const radialData = [
-    { name: 'Sensors', value: runningSensorCount ?? 0, fill: 'hsl(var(--severity-low))' },
-    { name: 'Hosts', value: monitorHostCount ?? 0, fill: 'hsl(var(--primary))' },
+    { name: 'Sensors', value: runningSensorCount ?? 0, fill: NEON.cyan },
+    { name: 'Hosts', value: monitorHostCount ?? 0, fill: NEON.violet },
   ];
 
   return (
@@ -378,9 +420,10 @@ export const DashboardOverview = ({
       >
         <KpiTile
           icon={Flame}
-          accent={SEV.high}
+          glow={NEON.magenta}
+          gradient={`radial-gradient(circle at 100% 0%, ${NEON.magenta} 0%, transparent 60%)`}
           value={incidentStats.openCount}
-          label="Open incidents"
+          label="Open Incidents"
           delta={incidentStats.delta}
           spark={incidentSpark}
           isLoading={incidentsLoading}
@@ -389,27 +432,30 @@ export const DashboardOverview = ({
         />
         <KpiTile
           icon={AlertTriangle}
-          accent={SEV.critical}
+          glow={NEON.red}
+          gradient={`radial-gradient(circle at 100% 0%, ${NEON.red} 0%, transparent 60%)`}
           value={incidentStats.criticalCount}
-          label="Critical & high priority"
+          label="Critical / High"
           isLoading={incidentsLoading}
           onClick={() => navigate('/incidents?severity=critical')}
           delay={0.05}
         />
         <KpiTile
           icon={Monitor}
-          accent="hsl(var(--primary))"
+          glow={NEON.cyan}
+          gradient={`radial-gradient(circle at 100% 0%, ${NEON.cyan} 0%, transparent 60%)`}
           value={monitorHostCount ?? 0}
-          label={runningSensorCount ? `Hosts • ${runningSensorCount} sensors` : 'Host monitors'}
+          label={runningSensorCount ? `Hosts • ${runningSensorCount} sensors` : 'Host Monitors'}
           isLoading={monitorsLoading}
           onClick={() => navigate('/monitors')}
           delay={0.1}
         />
         <KpiTile
           icon={ShieldAlert}
-          accent={SEV.medium}
+          glow={NEON.violet}
+          gradient={`radial-gradient(circle at 100% 0%, ${NEON.violet} 0%, transparent 60%)`}
           value={vulnTotal}
-          label={vulnCriticalPct ? `Vulnerabilities • ${vulnCriticalPct}% critical/high` : 'Vulnerabilities'}
+          label={vulnCriticalPct ? `Vulnerabilities • ${vulnCriticalPct}% crit/high` : 'Vulnerabilities'}
           isLoading={vulnLoading}
           onClick={() => navigate('/vulnerabilities')}
           delay={0.15}
@@ -426,37 +472,38 @@ export const DashboardOverview = ({
         }}
       >
         <Panel
-          title="Incident activity"
+          title="Incident Activity"
+          accent={NEON.magenta}
           delay={0.2}
           action={
             <Box sx={{ display: 'flex', gap: 1.5 }}>
               {Object.entries(STATUS_COLORS).map(([label, color]) => (
                 <Box key={label} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: color }} />
+                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: color, boxShadow: `0 0 6px ${color}` }} />
                   <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--muted-foreground))', fontWeight: 500 }}>{label}</Typography>
                 </Box>
               ))}
             </Box>
           }
         >
-          <Box sx={{ height: 240 }}>
+          <Box sx={{ height: 260 }}>
             {incidentsLoading ? (
-              <Skeleton variant="rounded" height={240} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
+              <Skeleton variant="rounded" height={260} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
             ) : trendHasData ? (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={trendData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                   <defs>
                     {Object.entries(STATUS_COLORS).map(([k, c]) => (
                       <linearGradient key={k} id={`ov-grad-${k.replace(/\s/g, '')}`} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={c} stopOpacity={0.45} />
-                        <stop offset="100%" stopColor={c} stopOpacity={0.02} />
+                        <stop offset="0%" stopColor={c} stopOpacity={0.55} />
+                        <stop offset="100%" stopColor={c} stopOpacity={0} />
                       </linearGradient>
                     ))}
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.4} vertical={false} />
+                  <CartesianGrid strokeDasharray="2 4" stroke="hsl(var(--border))" strokeOpacity={0.35} vertical={false} />
                   <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={32} />
                   <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} allowDecimals={false} width={32} />
-                  <RechartsTooltip content={<TooltipContent />} />
+                  <RechartsTooltip content={<TooltipContent />} cursor={{ stroke: NEON.violet, strokeOpacity: 0.3, strokeWidth: 1 }} />
                   {Object.entries(STATUS_COLORS).map(([k, c]) => (
                     <Area
                       key={k}
@@ -464,8 +511,9 @@ export const DashboardOverview = ({
                       dataKey={k}
                       stackId="1"
                       stroke={c}
-                      strokeWidth={1.75}
+                      strokeWidth={2}
                       fill={`url(#ov-grad-${k.replace(/\s/g, '')})`}
+                      style={{ filter: `drop-shadow(0 0 6px ${c}66)` }}
                     />
                   ))}
                 </AreaChart>
@@ -476,7 +524,7 @@ export const DashboardOverview = ({
           </Box>
         </Panel>
 
-        <Panel title="Monitor coverage" delay={0.25}>
+        <Panel title="Monitor Coverage" accent={NEON.cyan} delay={0.25}>
           <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', minHeight: 240 }}>
             {monitorsLoading ? (
               <Skeleton variant="circular" width={160} height={160} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
@@ -484,15 +532,33 @@ export const DashboardOverview = ({
               <>
                 <ResponsiveContainer width="100%" height={220}>
                   <RadialBarChart
-                    innerRadius="60%"
+                    innerRadius="62%"
                     outerRadius="100%"
                     data={radialData}
                     startAngle={90}
                     endAngle={-270}
-                    barSize={12}
+                    barSize={14}
                   >
+                    <defs>
+                      <linearGradient id="radial-host" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stopColor={NEON.violet} />
+                        <stop offset="100%" stopColor={NEON.magenta} />
+                      </linearGradient>
+                      <linearGradient id="radial-sensor" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stopColor={NEON.cyan} />
+                        <stop offset="100%" stopColor={NEON.green} />
+                      </linearGradient>
+                    </defs>
                     <PolarAngleAxis type="number" domain={[0, Math.max(monitorTotal, 1)]} tick={false} />
-                    <RadialBar dataKey="value" cornerRadius={6} background={{ fill: 'hsl(var(--muted) / 0.2)' }} />
+                    <RadialBar
+                      dataKey="value"
+                      cornerRadius={8}
+                      background={{ fill: 'hsl(var(--muted) / 0.15)' }}
+                    >
+                      {radialData.map((d, i) => (
+                        <Cell key={d.name} fill={i === 0 ? 'url(#radial-sensor)' : 'url(#radial-host)'} style={{ filter: `drop-shadow(0 0 8px ${d.fill}88)` }} />
+                      ))}
+                    </RadialBar>
                     <RechartsTooltip content={<TooltipContent />} />
                   </RadialBarChart>
                 </ResponsiveContainer>
@@ -503,10 +569,18 @@ export const DashboardOverview = ({
                   textAlign: 'center',
                   pointerEvents: 'none',
                 }}>
-                  <Typography sx={{ fontSize: '1.85rem', fontWeight: 700, color: 'hsl(var(--foreground))', lineHeight: 1, letterSpacing: '-0.02em' }}>
+                  <Typography sx={{
+                    fontSize: '2rem',
+                    fontWeight: 700,
+                    color: 'hsl(var(--foreground))',
+                    lineHeight: 1,
+                    letterSpacing: '-0.03em',
+                    fontFamily: 'ui-monospace, monospace',
+                    textShadow: `0 0 24px ${NEON.cyan}66`,
+                  }}>
                     {monitorTotal}
                   </Typography>
-                  <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', mt: 0.5, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>
+                  <Typography sx={{ fontSize: '0.62rem', color: 'hsl(var(--muted-foreground))', mt: 0.5, textTransform: 'uppercase', letterSpacing: '0.12em', fontWeight: 600 }}>
                     Total
                   </Typography>
                 </Box>
@@ -519,17 +593,17 @@ export const DashboardOverview = ({
             <Box sx={{ display: 'flex', justifyContent: 'space-around', pt: 1.5, borderTop: '1px solid hsl(var(--border))' }}>
               <Box sx={{ textAlign: 'center' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, justifyContent: 'center' }}>
-                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'hsl(var(--primary))' }} />
-                  <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: 'hsl(var(--foreground))' }}>{monitorHostCount ?? 0}</Typography>
+                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: NEON.violet, boxShadow: `0 0 6px ${NEON.violet}` }} />
+                  <Typography sx={{ fontSize: '0.95rem', fontWeight: 700, color: 'hsl(var(--foreground))', fontFamily: 'ui-monospace, monospace' }}>{monitorHostCount ?? 0}</Typography>
                 </Box>
-                <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', mt: 0.25 }}>Hosts</Typography>
+                <Typography sx={{ fontSize: '0.62rem', color: 'hsl(var(--muted-foreground))', mt: 0.25, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Hosts</Typography>
               </Box>
               <Box sx={{ textAlign: 'center' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, justifyContent: 'center' }}>
-                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'hsl(var(--severity-low))' }} />
-                  <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: 'hsl(var(--foreground))' }}>{runningSensorCount ?? 0}</Typography>
+                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: NEON.cyan, boxShadow: `0 0 6px ${NEON.cyan}` }} />
+                  <Typography sx={{ fontSize: '0.95rem', fontWeight: 700, color: 'hsl(var(--foreground))', fontFamily: 'ui-monospace, monospace' }}>{runningSensorCount ?? 0}</Typography>
                 </Box>
-                <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', mt: 0.25 }}>Sensors</Typography>
+                <Typography sx={{ fontSize: '0.62rem', color: 'hsl(var(--muted-foreground))', mt: 0.25, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Sensors</Typography>
               </Box>
             </Box>
           )}
@@ -538,30 +612,39 @@ export const DashboardOverview = ({
 
       {/* Vulnerability severity */}
       <Panel
-        title="Vulnerabilities by severity"
+        title="Vulnerabilities by Severity"
+        accent={NEON.violet}
         delay={0.3}
         action={
           <Typography
             onClick={() => navigate('/vulnerabilities')}
-            sx={{ fontSize: '0.7rem', color: 'hsl(var(--primary))', cursor: 'pointer', fontWeight: 500, '&:hover': { textDecoration: 'underline' } }}
+            sx={{ fontSize: '0.7rem', color: NEON.cyan, cursor: 'pointer', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', '&:hover': { textShadow: `0 0 8px ${NEON.cyan}` } }}
           >
             View all →
           </Typography>
         }
       >
-        <Box sx={{ height: 180 }}>
+        <Box sx={{ height: 200 }}>
           {vulnLoading ? (
-            <Skeleton variant="rounded" height={180} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
+            <Skeleton variant="rounded" height={200} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
           ) : vulnTotal > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={vulnData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.4} vertical={false} />
+                <defs>
+                  {vulnData.map((d) => (
+                    <linearGradient key={d.gradId} id={d.gradId} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={d.color} stopOpacity={1} />
+                      <stop offset="100%" stopColor={d.color} stopOpacity={0.25} />
+                    </linearGradient>
+                  ))}
+                </defs>
+                <CartesianGrid strokeDasharray="2 4" stroke="hsl(var(--border))" strokeOpacity={0.35} vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} />
                 <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} allowDecimals={false} width={32} />
-                <RechartsTooltip content={<TooltipContent />} cursor={{ fill: 'hsl(var(--muted) / 0.2)' }} />
-                <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={56}>
+                <RechartsTooltip content={<TooltipContent />} cursor={{ fill: 'hsl(var(--muted) / 0.15)' }} />
+                <Bar dataKey="value" radius={[6, 6, 0, 0]} maxBarSize={64}>
                   {vulnData.map((d) => (
-                    <Cell key={d.name} fill={d.color} />
+                    <Cell key={d.name} fill={`url(#${d.gradId})`} style={{ filter: `drop-shadow(0 0 8px ${d.color}77)` }} />
                   ))}
                 </Bar>
               </BarChart>
