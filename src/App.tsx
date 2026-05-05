@@ -180,10 +180,10 @@ const ThemedApp = () => {
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/preferences" element={<OrgPreferencesPage />} />
               <Route path="/monitors" element={<VulnAssetsPage />} />
-              <Route path="/monitors/:id" element={<SupportOnly><MonitorDetailPage /></SupportOnly>} />
-              <Route path="/monitors/:hostUuid/terminal" element={<SupportOnly><HostTerminalPage /></SupportOnly>} />
-              <Route path="/software/*" element={<SupportOnly><EntityReferencePage type="software" /></SupportOnly>} />
-              <Route path="/packages/*" element={<SupportOnly><EntityReferencePage type="package" /></SupportOnly>} />
+              <Route path="/monitors/:id" element={<MonitorDetailPage />} />
+              <Route path="/monitors/:hostUuid/terminal" element={<HostTerminalPage />} />
+              <Route path="/software/*" element={<EntityReferencePage type="software" />} />
+              <Route path="/packages/*" element={<EntityReferencePage type="package" />} />
               <Route path="/assets" element={<AssetsPage />} />
             </Route>
 

@@ -413,11 +413,6 @@ const VulnAssetsPage = () => {
   const { isAuthenticated, isLoading: authLoading, userInfo } = useAuth();
   if (authLoading) return null;
   if (!isAuthenticated) return <PublicMonitorsView />;
-  // Auth gate that previously lived in App.tsx as <SupportOnly>. Non-support
-  // users still land on the dashboard; only support users see the live app.
-  if (userInfo?.support !== true) {
-    return <Navigate to="/dashboard" replace />;
-  }
   return <AuthenticatedVulnAssetsPage />;
 };
 
