@@ -126,7 +126,7 @@ const ThemedApp = () => {
             <Route path="/docs" element={<DocsPage />} />
             <Route path="/docs/:slug" element={<DocsPage />} />
             {/* Public library demo — works whether logged in or not */}
-            <Route path="/shuffle-mcp-test" element={<ShuffleMcpTestPage />} />
+            <Route path="/shuffle-mcp-demo" element={<ShuffleMcpTestPage />} />
             {/* Onboarding with sidebar (collapsed by default) */}
             <Route
               element={

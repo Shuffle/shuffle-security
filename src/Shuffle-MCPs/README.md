@@ -28,7 +28,7 @@ Turn 3,000+ SaaS tools into MCP servers your agents can use. One search, one cli
 
 &nbsp;
 
-> **See it live:** [security.shuffler.io/shuffle-mcp-test](https://security.shuffler.io/shuffle-mcp-test) — interactive demo of all three components, no login required. The same library also powers [security.shuffler.io/apps](https://security.shuffler.io/apps) in production.
+> **See it live:** [security.shuffler.io/shuffle-mcp-demo](https://security.shuffler.io/shuffle-mcp-demo) — interactive demo of all three components, no login required. The same library also powers [security.shuffler.io/apps](https://security.shuffler.io/apps) in production.
 
 > **No SDK required.** Once a tool is authenticated in Shuffle, it is live as an MCP server immediately — call it from any agent over plain HTTP. This npm package is the optional UI layer for embedding the search-and-connect flow inside your own product.
 
@@ -89,9 +89,9 @@ The library exports three React components — use one, two, or all three. They 
 
 | Component | What it does | Live demo |
 |---|---|---|
-| [`<ShuffleMCP />`](#1-shufflemcp--inline-search) | Inline search box that merges Algolia's 3,000+ public app catalog with the current user's private apps | [/shuffle-mcp-test §1](https://security.shuffler.io/shuffle-mcp-test) |
-| [`<AppSearchDrawer />`](#2-appsearchdrawer--full-search-drawer) | Right-side drawer wrapping `<ShuffleMCP />` plus a "Your apps" status row. This is the exact "Add Ingestion Source" drawer used in production | [/shuffle-mcp-test §2](https://security.shuffler.io/shuffle-mcp-test) |
-| [`<AppDetailDrawer />`](#3-appdetaildrawer--single-app-config) | Right-side drawer for a single app: list/edit/test authentications and try the MCP `tools/call` endpoint inline | [/shuffle-mcp-test §3](https://security.shuffler.io/shuffle-mcp-test) |
+| [`<ShuffleMCP />`](#1-shufflemcp--inline-search) | Inline search box that merges Algolia's 3,000+ public app catalog with the current user's private apps | [/shuffle-mcp-demo §1](https://security.shuffler.io/shuffle-mcp-demo) |
+| [`<AppSearchDrawer />`](#2-appsearchdrawer--full-search-drawer) | Right-side drawer wrapping `<ShuffleMCP />` plus a "Your apps" status row. This is the exact "Add Ingestion Source" drawer used in production | [/shuffle-mcp-demo §2](https://security.shuffler.io/shuffle-mcp-demo) |
+| [`<AppDetailDrawer />`](#3-appdetaildrawer--single-app-config) | Right-side drawer for a single app: list/edit/test authentications and try the MCP `tools/call` endpoint inline | [/shuffle-mcp-demo §3](https://security.shuffler.io/shuffle-mcp-demo) |
 
 ### 1. `<ShuffleMCP />` — inline search
 
