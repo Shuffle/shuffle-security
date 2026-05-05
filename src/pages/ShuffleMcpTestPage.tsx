@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import {
   Box,
   Typography,
@@ -294,6 +294,90 @@ const ShuffleMcpTestPage = () => {
   const [authApp, setAuthApp] = useState('Gmail');
   const [mcpApp, setMcpApp] = useState('Slack');
   const [actionsApp, setActionsApp] = useState('VirusTotal');
+
+  useEffect(() => {
+    const TITLE = 'Shuffle MCP — React component library demo';
+    const DESCRIPTION =
+      'Live demo of @shuffleio/shuffle-mcps: six drop-in React components for app search, authentication, and MCP integration powered by Shuffle.';
+    const URL = 'https://security.shuffler.io/shuffle-mcp-demo';
+    const IMAGE = 'https://security.shuffler.io/og-image.png';
+
+    const prevTitle = document.title;
+    document.title = TITLE;
+
+    const setMeta = (selector: string, attr: string, value: string, create: () => HTMLElement) => {
+      let el = document.head.querySelector(selector) as HTMLElement | null;
+      const created = !el;
+      if (!el) {
+        el = create();
+        document.head.appendChild(el);
+      }
+      const prev = el.getAttribute(attr);
+      el.setAttribute(attr, value);
+      return () => {
+        if (created) el?.remove();
+        else if (prev !== null) el?.setAttribute(attr, prev);
+      };
+    };
+
+    const cleanups = [
+      setMeta('meta[name="description"]', 'content', DESCRIPTION, () => {
+        const m = document.createElement('meta');
+        m.setAttribute('name', 'description');
+        return m;
+      }),
+      setMeta('link[rel="canonical"]', 'href', URL, () => {
+        const l = document.createElement('link');
+        l.setAttribute('rel', 'canonical');
+        return l;
+      }),
+      setMeta('meta[property="og:title"]', 'content', TITLE, () => {
+        const m = document.createElement('meta');
+        m.setAttribute('property', 'og:title');
+        return m;
+      }),
+      setMeta('meta[property="og:description"]', 'content', DESCRIPTION, () => {
+        const m = document.createElement('meta');
+        m.setAttribute('property', 'og:description');
+        return m;
+      }),
+      setMeta('meta[property="og:type"]', 'content', 'website', () => {
+        const m = document.createElement('meta');
+        m.setAttribute('property', 'og:type');
+        return m;
+      }),
+      setMeta('meta[property="og:url"]', 'content', URL, () => {
+        const m = document.createElement('meta');
+        m.setAttribute('property', 'og:url');
+        return m;
+      }),
+      setMeta('meta[property="og:image"]', 'content', IMAGE, () => {
+        const m = document.createElement('meta');
+        m.setAttribute('property', 'og:image');
+        return m;
+      }),
+      setMeta('meta[name="twitter:card"]', 'content', 'summary_large_image', () => {
+        const m = document.createElement('meta');
+        m.setAttribute('name', 'twitter:card');
+        return m;
+      }),
+      setMeta('meta[name="twitter:title"]', 'content', TITLE, () => {
+        const m = document.createElement('meta');
+        m.setAttribute('name', 'twitter:title');
+        return m;
+      }),
+      setMeta('meta[name="twitter:description"]', 'content', DESCRIPTION, () => {
+        const m = document.createElement('meta');
+        m.setAttribute('name', 'twitter:description');
+        return m;
+      }),
+    ];
+
+    return () => {
+      document.title = prevTitle;
+      cleanups.forEach(fn => fn());
+    };
+  }, []);
 
   return (
     <>
