@@ -145,6 +145,19 @@ export const LandingNavbar = () => {
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               {!isMobile && (
+                <Button
+                  component="a"
+                  href="https://github.com/shuffle/shuffle-security"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  variant="text"
+                  startIcon={<GitHubIcon />}
+                  sx={{ color: 'text.secondary', textTransform: 'none' }}
+                >
+                  Open Source
+                </Button>
+              )}
+              {!isMobile && (
                 <>
                   {isAuthenticated ? (
                     <Button
