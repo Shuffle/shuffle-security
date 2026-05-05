@@ -34,7 +34,7 @@ import { toast } from 'sonner';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
 import DownloadIcon from '@mui/icons-material/Download';
 import PopupTextEditor from '@/components/shared/PopupTextEditor';
-import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
+import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
 import { useAuthenticatedApps } from '@/hooks/useAuthenticatedApps';
 import AddIcon from '@mui/icons-material/Add';
 import { Tooltip } from '@mui/material';

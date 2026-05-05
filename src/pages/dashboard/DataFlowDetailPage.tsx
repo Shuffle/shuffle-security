@@ -13,7 +13,7 @@ import { Clock } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useUsecases } from '@/hooks/useUsecases';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
-import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
+import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
 import {
   TOOL_CATEGORIES,

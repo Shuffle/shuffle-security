@@ -148,7 +148,7 @@ import HighlightedFileEditor from '@/components/incidents/HighlightedFileEditor'
 import EmailThreadPanel, { isEmailContent } from '@/components/incidents/EmailThreadPanel';
 import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
 import { useAssignEscalateStatus } from '@/hooks/useAssignEscalateStatus';
-import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
+import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
 
 // TaskTemplate interface is now imported from useCaseTemplates
 

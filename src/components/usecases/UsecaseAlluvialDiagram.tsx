@@ -17,7 +17,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Plus, Webhook } from 'lucide-react';
-import AppSearchDrawer from '@/components/shared/AppSearchDrawer';
+import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
 import { useAuth } from '@/context/AuthContext';
 import { useAppDetail } from '@/context/AppDetailContext';
 import { getApiUrl, getAuthHeader } from '@/config/api';
