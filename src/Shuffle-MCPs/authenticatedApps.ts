@@ -50,9 +50,10 @@ const cache = new Map<string, CacheEntry>();
 const cacheKey = (crossOrgId?: string | null): string => crossOrgId || '';
 
 const doFetch = async (crossOrgId?: string | null): Promise<AuthenticatedAppRaw[]> => {
+  // getAuthHeader() now scopes to the active org by default; pass crossOrgId
+  // explicitly to override when reading from a different tenant.
   const headers: Record<string, string> = {
-    ...getAuthHeader(),
-    ...(crossOrgId ? { 'Org-Id': crossOrgId } : {}),
+    ...getAuthHeader(crossOrgId ?? undefined),
   };
   const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {
     credentials: 'include',

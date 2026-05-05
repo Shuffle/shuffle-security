@@ -201,13 +201,27 @@ export const API_ENDPOINTS = {
   apps: '/apps',
 };
 
-// Get authorization header - uses API key if available, otherwise session token
-export const getAuthHeader = (): Record<string, string> => {
+// Get authorization header - uses API key if available, otherwise session token.
+// Always scopes the request to the currently-active org via Org-Id when known,
+// so a user in a sub-org reads/writes against that sub-org rather than their
+// default home org. Pass `overrideOrgId` to force a different org (e.g. when
+// reading data from another tenant in a multi-tenant view).
+export const getAuthHeader = (overrideOrgId?: string | null): Record<string, string> => {
+  const headers: Record<string, string> = {};
+
   // Only send Authorization header for API key auth.
   // Session-based (cookie) auth is handled by credentials: 'include' — never both.
   const apiKey = API_CONFIG.apiKey;
   if (apiKey) {
-    return { 'Authorization': `Bearer ${apiKey}` };
+    headers['Authorization'] = `Bearer ${apiKey}`;
   }
-  return {};
+
+  // Scope to the active org. Explicit override beats the tracked org.
+  const orgId = overrideOrgId ?? _trackedOrgId;
+  if (orgId) {
+    headers['Org-Id'] = orgId;
+  }
+
+  return headers;
 };
+
