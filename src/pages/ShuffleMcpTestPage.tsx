@@ -22,13 +22,13 @@ import { API_CONFIG } from '@/Shuffle-MCPs/api';
  * showing the exact source that produced the rendered demo.
  */
 
-const SNIPPET_INLINE_SEARCH = `import { ShuffleMCP } from '@/Shuffle-MCPs';
+const SNIPPET_INLINE_SEARCH = `import { ShuffleMCP } from '@shuffleio/shuffle-mcps';
 
 <ShuffleMCP inline layout="grid" gridColumns={3} />`;
 
 const SNIPPET_SEARCH_DRAWER = `import { useState } from 'react';
 import { Button } from '@mui/material';
-import { AppSearchDrawer } from '@/Shuffle-MCPs';
+import { AppSearchDrawer } from '@shuffleio/shuffle-mcps';
 
 const [open, setOpen] = useState(false);
 
@@ -47,7 +47,7 @@ const [open, setOpen] = useState(false);
 
 const SNIPPET_DETAIL_DRAWER = `import { useState } from 'react';
 import { Button, Stack } from '@mui/material';
-import { AppDetailDrawer } from '@/Shuffle-MCPs';
+import { AppDetailDrawer } from '@shuffleio/shuffle-mcps';
 
 const [appName, setAppName] = useState<string | null>(null);
 
@@ -188,8 +188,17 @@ const ShuffleMcpTestPage = () => {
           Shuffle MCP — library demo
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Three self-contained components from <code>@/Shuffle-MCPs</code>. Expand
-          "Show source" under each section to see the exact code that produced it.
+          Three self-contained components from{' '}
+          <Box
+            component="a"
+            href="https://www.npmjs.com/package/@shuffleio/shuffle-mcps"
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{ color: 'hsl(var(--primary))', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+          >
+            <code>@shuffleio/shuffle-mcps</code>
+          </Box>
+          . Expand "Show source" under each section to see the exact code that produced it.
         </Typography>
       </Box>
 
