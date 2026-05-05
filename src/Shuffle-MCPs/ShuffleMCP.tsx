@@ -105,7 +105,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
   // Fetch the user's private apps from /api/v1/apps when apiKey is provided.
   // These get merged into search results so users can find their own apps too.
   useEffect(() => {
-    if (!apiKey || disablePrivateApps) {
+    if (disablePrivateApps) {
       setPrivateApps([]);
       return;
     }
@@ -113,7 +113,9 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
       try {
         const response = await fetch(`${apiBaseUrl}${privateAppsPath}`, {
           headers: {
-            'Authorization': `Bearer ${apiKey}`,
+            // apiKey is optional — if omitted we rely on the browser session
+            // cookie (credentials: 'include'), which is how prod usually auths.
+            ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
             ...(orgId ? { 'Org-Id': orgId } : {}),
           },
           credentials: 'include',
