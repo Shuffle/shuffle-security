@@ -182,6 +182,58 @@ print(response)`;
 
 type SnippetLang = 'curl' | 'python';
 
+/** HTML-escape user content before injecting into a highlighted <pre>. */
+const escapeHtml = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/** Lightweight syntax highlighter for the curl/python snippets. Token colors
+ *  use raw HSL values so the inline <span style> works without a CSS pass.
+ *  Strings are tokenized first, then the surrounding text is colored. */
+function highlightSnippet(code: string, lang: SnippetLang): string {
+  const COL = {
+    string: 'hsl(140 60% 65%)',
+    keyword: 'hsl(280 70% 75%)',
+    func: 'hsl(45 90% 65%)',
+    number: 'hsl(20 90% 65%)',
+    flag: 'hsl(200 80% 70%)',
+    builtin: 'hsl(0 70% 70%)',
+    comment: 'hsl(var(--muted-foreground))',
+  };
+  // Tokenize strings first so internal punctuation is not re-matched.
+  const parts: string[] = [];
+  const stringRe = /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g;
+  let last = 0;
+  for (const m of code.matchAll(stringRe)) {
+    const idx = m.index!;
+    if (idx > last) parts.push(highlightNonString(code.slice(last, idx), lang, COL));
+    parts.push(`<span style="color:${COL.string}">${escapeHtml(m[0])}</span>`);
+    last = idx + m[0].length;
+  }
+  if (last < code.length) parts.push(highlightNonString(code.slice(last), lang, COL));
+  return parts.join('');
+}
+
+function highlightNonString(
+  src: string,
+  lang: SnippetLang,
+  COL: Record<string, string>,
+): string {
+  let s = escapeHtml(src);
+  if (lang === 'python') {
+    s = s.replace(/(^|[^\w])(#[^\n]*)/g, (_, p, c) => `${p}<span style="color:${COL.comment}">${c}</span>`);
+    s = s.replace(/\b(import|from|as|def|return|if|else|elif|for|while|in|None|True|False|print|class|with|try|except)\b/g,
+      `<span style="color:${COL.keyword}">$1</span>`);
+    s = s.replace(/\b([a-zA-Z_][\w]*)(?=\s*\()/g, `<span style="color:${COL.func}">$1</span>`);
+  } else {
+    // curl
+    s = s.replace(/\b(curl)\b/g, `<span style="color:${COL.builtin}">$1</span>`);
+    s = s.replace(/(^|\s)(-[A-Za-z]|--[\w-]+)/g, (_, p, f) => `${p}<span style="color:${COL.flag}">${f}</span>`);
+  }
+  s = s.replace(/\b(\d+(?:\.\d+)?)\b/g, `<span style="color:${COL.number}">$1</span>`);
+  return s;
+}
+
+
 const SingulActionsPreview = ({
   appName,
   categories,
@@ -538,26 +590,53 @@ const SingulActionsPreview = ({
                     <div key={i}>{i + 1}</div>
                   ))}
                 </Box>
-                <Box
-                  component="textarea"
-                  value={snippet}
-                  onChange={(e: any) => setSnippet(e.target.value)}
-                  spellCheck={false}
-                  sx={{
-                    flex: 1,
-                    minHeight: 270,
-                    resize: 'vertical',
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: '0.72rem',
-                    lineHeight: 1.5,
-                    color: 'hsl(var(--foreground))',
-                    backgroundColor: 'transparent',
-                    border: 'none',
-                    p: 1.5,
-                    outline: 'none',
-                    caretColor: 'hsl(var(--primary))',
-                  }}
-                />
+                <Box sx={{ flex: 1, position: 'relative', minHeight: 270 }}>
+                  <Box
+                    aria-hidden
+                    sx={{
+                      position: 'absolute',
+                      inset: 0,
+                      m: 0,
+                      p: 1.5,
+                      fontFamily: "'JetBrains Mono', monospace",
+                      fontSize: '0.72rem',
+                      lineHeight: 1.5,
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
+                      pointerEvents: 'none',
+                      overflow: 'hidden',
+                    }}
+                    dangerouslySetInnerHTML={{ __html: highlightSnippet(snippet, lang) + '\n' }}
+                  />
+                  <Box
+                    component="textarea"
+                    value={snippet}
+                    onChange={(e: any) => setSnippet(e.target.value)}
+                    spellCheck={false}
+                    sx={{
+                      position: 'relative',
+                      width: '100%',
+                      height: '100%',
+                      minHeight: 270,
+                      resize: 'vertical',
+                      fontFamily: "'JetBrains Mono', monospace",
+                      fontSize: '0.72rem',
+                      lineHeight: 1.5,
+                      color: 'transparent',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundColor: 'transparent',
+                      border: 'none',
+                      p: 1.5,
+                      m: 0,
+                      outline: 'none',
+                      caretColor: 'hsl(var(--primary))',
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
+                      overflow: 'auto',
+                      '&::selection': { color: 'inherit', backgroundColor: 'hsl(var(--primary) / 0.3)' },
+                    }}
+                  />
+                </Box>
               </Box>
             </Box>
           </>
