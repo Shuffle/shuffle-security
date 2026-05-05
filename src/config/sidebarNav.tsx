@@ -123,7 +123,7 @@ export const SIDEBAR_NAV: SidebarItemSpec[] = [
       {
         tabKey: 'host_monitors_response',
         label: 'Response',
-        path: '/incidents/response-actions',
+        path: '/monitors/response',
         icon: <Zap size={16} />,
         supportOnly: true,
       },
