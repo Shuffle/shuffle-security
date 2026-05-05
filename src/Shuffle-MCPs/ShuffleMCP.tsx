@@ -298,7 +298,8 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
 
   // Handle app selection
   const selectApp = useCallback((app: AlgoliaSearchApp) => {
-    const authUrl = `${apiBaseUrl}${appAuthPath}?app_id=${app.objectID}&auth=${authToken}&source=shuffle${orgId ? `&org_id=${encodeURIComponent(orgId)}` : ''}`;
+    const handoffToken = apiKey || authToken || '';
+    const authUrl = `${apiBaseUrl}${appAuthPath}?app_id=${app.objectID}&auth=${handoffToken}&source=shuffle${orgId ? `&org_id=${encodeURIComponent(orgId)}` : ''}`;
 
     if (multiSelect) {
       const isAlreadySelected = internalSelectedApps.some((a) => a.objectID === app.objectID);
@@ -323,7 +324,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
 
       setIsOpen(false);
     }
-  }, [authToken, apiBaseUrl, appAuthPath, orgId, multiSelect, internalSelectedApps, onAppSelected, onSelectionChange, preventDefault]);
+  }, [authToken, apiKey, apiBaseUrl, appAuthPath, orgId, multiSelect, internalSelectedApps, onAppSelected, onSelectionChange, preventDefault]);
 
   // Handle keyboard navigation
   const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
@@ -620,7 +621,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
         const matchingAuths = authenticatedApps.filter(
           a => norm(a.app?.name || '') === norm(drawerApp.name)
         );
-        const drawerAuthUrl = `${apiBaseUrl}${appAuthPath}?app_id=${drawerApp.objectID}&auth=${authToken}&source=shuffle${orgId ? `&org_id=${encodeURIComponent(orgId)}` : ''}`;
+        const drawerAuthUrl = `${apiBaseUrl}${appAuthPath}?app_id=${drawerApp.objectID}&auth=${apiKey || authToken || ''}&source=shuffle${orgId ? `&org_id=${encodeURIComponent(orgId)}` : ''}`;
         return (
           <>
             <div className="singul-drawer-backdrop" onClick={() => setDrawerApp(null)} />

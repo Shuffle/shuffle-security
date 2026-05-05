@@ -277,7 +277,6 @@ export default function AppSearchDrawer({
               transition={{ duration: 0.2 }}
             >
               <ShuffleMCP
-                authToken={API_CONFIG.apiKey || ''}
                 apiKey={API_CONFIG.apiKey || undefined}
                 apiBaseUrl={API_CONFIG.baseUrl}
                 placeholder={initialQuery ? `Search ${initialQuery} integrations...` : 'Search integrations...'}

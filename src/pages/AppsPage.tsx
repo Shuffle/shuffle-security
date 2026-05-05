@@ -325,7 +325,6 @@ export default function AppsPage() {
             >
               <ShuffleMCP
                 ref={singulRef}
-                authToken=""
                 placeholder="Search integrations... (e.g., Splunk, CrowdStrike)"
                 layout="grid"
                 gridColumns={3}

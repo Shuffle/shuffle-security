@@ -74,7 +74,7 @@ import { ShuffleMCP } from 'shuffle-mcps';
 export default function App() {
   return (
     <ShuffleMCP
-      authToken="any-token"
+      apiKey="YOUR_SHUFFLE_API_KEY"
       inline
       layout="grid"
       gridColumns={3}
@@ -92,7 +92,7 @@ The most common pattern. Set `preventDefault` and handle `onAppSelected` to chai
 
 ```tsx
 <ShuffleMCP
-  authToken={token}
+  apiKey={token}
   inline
   preventDefault
   onAppSelected={(d) => openDetailDrawer(d.app)}
@@ -105,7 +105,7 @@ Full two-drawer reference implementation: [`src/components/shared/AppSearchDrawe
 
 ```tsx
 <ShuffleMCP
-  authToken="..."
+  apiKey="..."
   inline
   initialFilterQuery="siem"
   placeholder="Search SIEM tools..."
@@ -118,7 +118,7 @@ Full two-drawer reference implementation: [`src/components/shared/AppSearchDrawe
 const [picked, setPicked] = useState<AlgoliaSearchApp[]>([]);
 
 <ShuffleMCP
-  authToken="..."
+  apiKey="..."
   inline
   multiSelect
   showCheckbox
@@ -131,7 +131,7 @@ const [picked, setPicked] = useState<AlgoliaSearchApp[]>([]);
 
 ```tsx
 <ShuffleMCP
-  authToken={user.token}
+  apiKey={user.apiKey}
   apiKey={user.apiKey}
   apiBaseUrl="https://your-backend.example.com"
   algoliaAppId="YOUR_APP_ID"
@@ -145,7 +145,8 @@ When `apiKey` is set, the component also fetches the user's **private apps** fro
 
 | Prop | Type | Description |
 |---|---|---|
-| `authToken` | `string` | Required. Forwarded into the auth URL. |
+| `apiKey` | `string` | Shuffle API key. Used as `Authorization: Bearer` on every request and forwarded into the auth handoff URL as `&auth=`. This is the canonical credential. |
+| `~~authToken~~` | `string` | **Deprecated.** Use `apiKey`. Kept for back-compat — only used as the auth-URL token if `apiKey` is not set. |
 | `orgId` | `string` | Optional Shuffle organization ID. When set, every API call (`/api/v1/apps/authentication`, `/api/v1/apps`) is sent with an `Org-Id: <orgId>` header, and the auth URL gets `&org_id=<orgId>` appended. Default: not sent. |
 | `inline` | `boolean` | Inline results vs floating dropdown. |
 | `layout` | `'list' \| 'grid'` | Result layout. Default `'list'`. |
@@ -165,7 +166,7 @@ When you do **not** pass `onAppSelected`, clicking an app opens a built-in right
 
 ```tsx
 <ShuffleMCP
-  authToken={token}
+  apiKey={token}
   apiKey={user.apiKey}
   orgId={currentOrg.id}   // every request now scoped to this org
 />
@@ -178,7 +179,7 @@ Full prop reference, framework setup (Next.js, Vue), styling slots, custom rende
 
 ```tsx
 const ref = useRef<ShuffleMCPHandle>(null);
-<ShuffleMCP ref={ref} authToken="..." inline />
+<ShuffleMCP ref={ref} apiKey="..." inline />
 
 ref.current?.search('slack');
 ref.current?.clear();

@@ -308,7 +308,6 @@ export const PrimaryToolStep = ({
             >
               <ShuffleMCP
                 ref={singulRef}
-                authToken="demo-token"
                 apiKey={API_CONFIG.apiKey || undefined}
                 apiBaseUrl={API_CONFIG.baseUrl}
                 placeholder="Search all integrations..."

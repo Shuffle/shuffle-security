@@ -218,7 +218,6 @@ export const AddAppModal = ({ open, onClose, initialQuery, categoryLabel }: AddA
                 transition={{ duration: 0.2 }}
               >
                 <ShuffleMCP
-                  authToken={API_CONFIG.apiKey || ''}
                   apiKey={API_CONFIG.apiKey || undefined}
                   apiBaseUrl={API_CONFIG.baseUrl}
                   placeholder={`Search ${categoryLabel.toLowerCase()} integrations...`}

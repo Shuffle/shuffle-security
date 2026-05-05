@@ -94,8 +94,21 @@ export interface AppAuthentication {
 }
 
 export interface ShuffleMCPProps {
-  // Required
-  authToken: string;
+  /**
+   * Shuffle API key. Used as the `Authorization: Bearer` header on every
+   * request the component makes (`/api/v1/apps/authentication`,
+   * `/api/v1/apps`) AND forwarded into the OAuth handoff URL as `&auth=`.
+   * This is the canonical credential — pass it once.
+   */
+  apiKey?: string;
+
+  /**
+   * @deprecated Use `apiKey` instead. Kept for backwards compatibility — if
+   * `apiKey` is set, it is used for the redirect handoff too. If you only
+   * provide `authToken` it is still forwarded into the auth URL but no API
+   * calls will be made.
+   */
+  authToken?: string;
 
   /**
    * Optional Shuffle organization ID. When provided, every API call this
@@ -133,8 +146,6 @@ export interface ShuffleMCPProps {
   hitsPerPage?: number;
   
   // Authentication
-  /** API key for fetching authenticated apps from the auth endpoint */
-  apiKey?: string;
   /** Base URL for backend API calls (default: https://shuffler.io) */
   apiBaseUrl?: string;
   /** Path appended to apiBaseUrl to fetch authenticated apps (default: /api/v1/apps/authentication) */

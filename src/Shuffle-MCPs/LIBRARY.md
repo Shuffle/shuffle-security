@@ -21,7 +21,7 @@ Full API reference for [`shuffle-mcps`](./README.md). For a quick start, see the
 ```tsx
 import { ShuffleMCP } from 'shuffle-mcps';
 
-<ShuffleMCP authToken="..." onAppSelected={(d) => console.log(d)} />
+<ShuffleMCP apiKey="..." onAppSelected={(d) => console.log(d)} />
 ```
 
 ### Next.js
@@ -63,7 +63,7 @@ export default { components: { ShuffleMCP } /* ... */ };
 ```tsx
 <Drawer open={open} onClose={onClose} PaperProps={{ sx: { width: 560 } }}>
   <ShuffleMCP
-    authToken="..."
+    apiKey="..."
     inline
     layout="grid"
     gridColumns={2}
@@ -82,7 +82,7 @@ A full two-drawer reference (search → detail/auth) lives in [`src/components/s
 ```tsx
 const ref = useRef<ShuffleMCPHandle>(null);
 <button onClick={() => ref.current?.search('slack')}>Find Slack</button>
-<ShuffleMCP ref={ref} authToken="..." inline />
+<ShuffleMCP ref={ref} apiKey="..." inline />
 ```
 
 ### Multi-select
@@ -91,7 +91,7 @@ const ref = useRef<ShuffleMCPHandle>(null);
 const [picked, setPicked] = useState<AlgoliaSearchApp[]>([]);
 
 <ShuffleMCP
-  authToken="..."
+  apiKey="..."
   inline
   multiSelect
   showCheckbox
@@ -104,7 +104,7 @@ const [picked, setPicked] = useState<AlgoliaSearchApp[]>([]);
 
 ```tsx
 <ShuffleMCP
-  authToken={user.token}
+  apiKey={user.apiKey}
   apiKey={user.apiKey}
   apiBaseUrl="https://your-backend.example.com"
   algoliaAppId="YOUR_APP_ID"
@@ -120,7 +120,7 @@ When `apiKey` is set, status dots are populated: validated, configured, selected
 ### Required
 | Prop | Type | Description |
 |---|---|---|
-| `authToken` | `string` | Token forwarded into the auth URL. |
+| `apiKey` | `string` | Your Shuffle API key. Used as `Authorization: Bearer` on all API calls and forwarded into the auth handoff URL as `&auth=`. |
 
 ### Search
 | Prop | Type | Default | Description |
@@ -152,9 +152,9 @@ When `apiKey` is set, status dots are populated: validated, configured, selected
 ### Backend / auth
 | Prop | Type | Default | Description |
 |---|---|---|---|
-| `authToken` | `string` | — | Required. Forwarded into the auth URL as `&auth=`. |
+| `apiKey` | `string` | — | Shuffle API key — canonical credential. Used as `Authorization: Bearer` on `/api/v1/apps/authentication` and `/api/v1/apps`, and forwarded into the auth handoff URL as `&auth=`. Enables status dots and merges private apps into search. |
+| `~~authToken~~` | `string` | — | **Deprecated.** Use `apiKey`. Only used for the auth handoff URL when `apiKey` is not set. Kept for backwards compatibility. |
 | `orgId` | `string` | — | Optional Shuffle organization ID. When set, every request the component issues (`/api/v1/apps/authentication`, `/api/v1/apps`) includes an `Org-Id: <orgId>` header, and the auth handoff URL gets `&org_id=<orgId>` appended. Omit to use the user's default org. |
-| `apiKey` | `string` | — | Bearer token. Enables status dots **and** loads the user's private apps from `/api/v1/apps`. |
 | `apiBaseUrl` | `string` | `"https://shuffler.io"` | API base URL |
 | `authPath` | `string` | `"/api/v1/apps/authentication"` | Authenticated-apps path |
 | `appAuthPath` | `string` | `"/appauth"` | OAuth handoff path |
