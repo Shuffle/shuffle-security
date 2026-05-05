@@ -1275,13 +1275,15 @@ export const AppAuthCard = ({
                 <Dialog
                   open={!!deleteConfirmAuthId}
                   onClose={() => setDeleteConfirmAuthId(null)}
-                  PaperProps={{
-                    sx: {
-                      backgroundColor: 'background.paper',
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      borderRadius: 3,
-                      minWidth: 360,
+                  slotProps={{
+                    paper: {
+                      sx: {
+                        backgroundColor: 'background.paper',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 3,
+                        minWidth: 360,
+                      },
                     },
                   }}
                 >
@@ -2058,13 +2060,15 @@ export const AppAuthCard = ({
         onClose={() => setDocsOpen(false)}
         maxWidth="md"
         fullWidth
-        PaperProps={{
-          sx: {
-            backgroundColor: 'background.paper',
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: 3,
-            maxHeight: '80vh',
+        slotProps={{
+          paper: {
+            sx: {
+              backgroundColor: 'background.paper',
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 3,
+              maxHeight: '80vh',
+            },
           },
         }}
       >
