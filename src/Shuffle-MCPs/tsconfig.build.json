@@ -20,6 +20,6 @@
       "@/assets/*": ["assets/*"]
     }
   },
-  "include": ["index.ts", "ShuffleMCP.tsx", "AppDetailDrawer.tsx", "shuffle-mcp.helpers.ts"],
+  "include": ["index.ts", "ShuffleMCP.tsx", "AppDetailDrawer.tsx", "shuffle-mcp.helpers.ts", "assets.d.ts", "**/*.tsx", "**/*.ts"],
   "exclude": ["dist", "node_modules"]
 }
