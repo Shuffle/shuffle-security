@@ -186,9 +186,10 @@ type SnippetLang = 'curl' | 'python';
 const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-/** Lightweight syntax highlighter for the curl/python snippets. Token colors
- *  use raw HSL values so the inline <span style> works without a CSS pass.
- *  Strings are tokenized first, then the surrounding text is colored. */
+/** Single-pass tokenizer-based highlighter. We MUST NOT run successive regex
+ *  passes over already-highlighted HTML, because the inline `style="color:hsl(...)"`
+ *  attributes contain words/numbers that later passes would happily re-match
+ *  (e.g. `hsl` matches `\w+(?=\()`, digits inside `280` match `\d+`). */
 function highlightSnippet(code: string, lang: SnippetLang): string {
   const COL = {
     string: 'hsl(140 60% 65%)',
@@ -199,43 +200,80 @@ function highlightSnippet(code: string, lang: SnippetLang): string {
     builtin: 'hsl(0 70% 70%)',
     comment: 'hsl(var(--muted-foreground))',
   };
-  // Tokenize strings first so internal punctuation is not re-matched.
-  const parts: string[] = [];
-  const stringRe = /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')/g;
-  let last = 0;
-  for (const m of code.matchAll(stringRe)) {
-    const idx = m.index!;
-    if (idx > last) parts.push(highlightNonString(code.slice(last, idx), lang, COL));
-    parts.push(`<span style="color:${COL.string}">${escapeHtml(m[0])}</span>`);
-    last = idx + m[0].length;
+  const PY_KEYWORDS = new Set([
+    'import', 'from', 'as', 'def', 'return', 'if', 'else', 'elif', 'for',
+    'while', 'in', 'None', 'True', 'False', 'print', 'class', 'with', 'try', 'except',
+  ]);
+  const wrap = (color: string, text: string) =>
+    `<span style="color:${color}">${escapeHtml(text)}</span>`;
+
+  const out: string[] = [];
+  let i = 0;
+  const n = code.length;
+  while (i < n) {
+    const ch = code[i];
+    // Strings
+    if (ch === '"' || ch === "'") {
+      const quote = ch;
+      let j = i + 1;
+      while (j < n && code[j] !== quote) {
+        if (code[j] === '\\' && j + 1 < n) j += 2;
+        else j++;
+      }
+      j = Math.min(j + 1, n);
+      out.push(wrap(COL.string, code.slice(i, j)));
+      i = j;
+      continue;
+    }
+    // Python comments
+    if (lang === 'python' && ch === '#') {
+      let j = i;
+      while (j < n && code[j] !== '\n') j++;
+      out.push(wrap(COL.comment, code.slice(i, j)));
+      i = j;
+      continue;
+    }
+    // Curl flags ( -X / --header ), only at start of token
+    if (lang === 'curl' && ch === '-' && (i === 0 || /\s/.test(code[i - 1]))) {
+      let j = i + 1;
+      if (code[j] === '-') j++;
+      while (j < n && /[\w-]/.test(code[j])) j++;
+      out.push(wrap(COL.flag, code.slice(i, j)));
+      i = j;
+      continue;
+    }
+    // Numbers
+    if (/\d/.test(ch)) {
+      let j = i;
+      while (j < n && /[\d.]/.test(code[j])) j++;
+      out.push(wrap(COL.number, code.slice(i, j)));
+      i = j;
+      continue;
+    }
+    // Identifiers / keywords / function calls
+    if (/[A-Za-z_]/.test(ch)) {
+      let j = i;
+      while (j < n && /[\w]/.test(code[j])) j++;
+      const word = code.slice(i, j);
+      if (lang === 'python' && PY_KEYWORDS.has(word)) {
+        out.push(wrap(COL.keyword, word));
+      } else if (lang === 'curl' && word === 'curl') {
+        out.push(wrap(COL.builtin, word));
+      } else if (code[j] === '(') {
+        out.push(wrap(COL.func, word));
+      } else {
+        out.push(escapeHtml(word));
+      }
+      i = j;
+      continue;
+    }
+    // Plain char (operators, whitespace, punctuation)
+    out.push(escapeHtml(ch));
+    i++;
   }
-  if (last < code.length) parts.push(highlightNonString(code.slice(last), lang, COL));
-  return parts.join('');
+  return out.join('');
 }
 
-function highlightNonString(
-  src: string,
-  lang: SnippetLang,
-  COL: Record<string, string>,
-): string {
-  // Highlight numbers FIRST on plain (escaped) text, so subsequent inserted
-  // span styles (which contain hsl(...) numbers) are not re-matched.
-  let s = escapeHtml(src).replace(
-    /\b(\d+(?:\.\d+)?)\b/g,
-    `<span style="color:${COL.number}">$1</span>`,
-  );
-  if (lang === 'python') {
-    s = s.replace(/(^|[^\w])(#[^\n]*)/g, (_, p, c) => `${p}<span style="color:${COL.comment}">${c}</span>`);
-    s = s.replace(/\b(import|from|as|def|return|if|else|elif|for|while|in|None|True|False|print|class|with|try|except)\b/g,
-      `<span style="color:${COL.keyword}">$1</span>`);
-    s = s.replace(/\b([a-zA-Z_][\w]*)(?=\s*\()/g, `<span style="color:${COL.func}">$1</span>`);
-  } else {
-    // curl
-    s = s.replace(/\b(curl)\b/g, `<span style="color:${COL.builtin}">$1</span>`);
-    s = s.replace(/(^|\s)(-[A-Za-z]|--[\w-]+)/g, (_, p, f) => `${p}<span style="color:${COL.flag}">${f}</span>`);
-  }
-  return s;
-}
 
 
 const SingulActionsPreview = ({
