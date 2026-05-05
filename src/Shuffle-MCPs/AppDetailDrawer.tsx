@@ -278,11 +278,19 @@ const SingulActionsPreview = ({
 
   const [playLoading, setPlayLoading] = useState(false);
   const [playResult, setPlayResult] = useState<string | null>(null);
+  const responseRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToResponse = () => {
+    requestAnimationFrame(() => {
+      responseRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  };
 
   const handlePlay = async () => {
     if (!snippet || playLoading) return;
     setPlayLoading(true);
-    setPlayResult(null);
+    setPlayResult('');
+    scrollToResponse();
     try {
       const body = lang === 'python'
         ? {
