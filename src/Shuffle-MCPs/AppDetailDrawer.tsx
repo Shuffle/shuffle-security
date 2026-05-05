@@ -370,7 +370,8 @@ const SingulActionsPreview = ({ appName, categories }: { appName: string; catego
               <Button
                 size="small"
                 onClick={handlePlay}
-                startIcon={<PlayArrowIcon sx={{ fontSize: 14 }} />}
+                disabled={playLoading}
+                startIcon={!playLoading && <PlayArrowIcon sx={{ fontSize: 14 }} />}
                 sx={{
                   height: 26,
                   minWidth: 0,
@@ -383,11 +384,36 @@ const SingulActionsPreview = ({ appName, categories }: { appName: string; catego
                   border: '1px solid hsl(var(--primary))',
                   '& .MuiButton-startIcon': { mr: 0.5 },
                   '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)' },
+                  '&.Mui-disabled': { color: 'hsl(var(--primary-foreground) / 0.7)', backgroundColor: 'hsl(var(--primary) / 0.6)' },
                 }}
               >
-                Play
+                {playLoading ? 'Running…' : 'Play'}
               </Button>
             </Box>
+          </Box>
+        )}
+
+        {playResult !== null && (
+          <Box
+            component="pre"
+            sx={{
+              mt: 1.5,
+              p: 1.5,
+              maxHeight: 240,
+              overflow: 'auto',
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: '0.7rem',
+              lineHeight: 1.5,
+              color: 'hsl(var(--foreground))',
+              backgroundColor: 'hsl(var(--background))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: 1.5,
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              m: 0,
+            }}
+          >
+            {playResult}
           </Box>
         )}
       </Box>
