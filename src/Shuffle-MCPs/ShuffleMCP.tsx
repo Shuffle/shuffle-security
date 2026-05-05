@@ -65,6 +65,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [internalSelectedApps, setInternalSelectedApps] = useState<AlgoliaSearchApp[]>(selectedApps);
   const [authenticatedApps, setAuthenticatedApps] = useState<AppAuthentication[]>(externalAuthenticatedApps || []);
+  const [drawerApp, setDrawerApp] = useState<AlgoliaSearchApp | null>(null);
   const hasInitialized = useRef(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
