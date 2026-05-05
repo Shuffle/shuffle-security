@@ -112,7 +112,10 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
     const fetchPrivateApps = async () => {
       try {
         const response = await fetch(`${apiBaseUrl}${privateAppsPath}`, {
-          headers: { 'Authorization': `Bearer ${apiKey}` },
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            ...(orgId ? { 'Org-Id': orgId } : {}),
+          },
           credentials: 'include',
         });
         if (!response.ok) return;
