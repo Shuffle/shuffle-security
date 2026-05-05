@@ -45,7 +45,18 @@
   },
   "peerDependencies": {
     "react": ">=18",
-    "react-dom": ">=18"
+    "react-dom": ">=18",
+    "@mui/material": ">=5",
+    "@mui/icons-material": ">=5",
+    "@emotion/react": ">=11",
+    "@emotion/styled": ">=11",
+    "framer-motion": ">=10",
+    "sonner": ">=1",
+    "lucide-react": ">=0.300.0",
+    "react-router-dom": ">=6"
+  },
+  "peerDependenciesMeta": {
+    "react-router-dom": { "optional": true }
   },
   "dependencies": {
     "algoliasearch": "^5.0.0"
