@@ -5,7 +5,7 @@
  * Accepts either an app name (fetches data) or pre-loaded app info.
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { toast } from 'sonner';
 import { Download, Forward } from 'lucide-react';
 import { getDatastoreByCategory, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
@@ -626,6 +626,9 @@ export default function AppDetailDrawer({
   const [activateLoading, setActivateLoading] = useState(false);
   const [resolvedAlgoliaId, setResolvedAlgoliaId] = useState<string | null>(null);
   const [authExpanded, setAuthExpanded] = useState(true);
+  // Auto-collapse Authentication section when a valid auth exists; expand otherwise.
+  // Only fires when validity flips, so user manual toggles are preserved.
+  const lastValidAuthRef = useRef<boolean | null>(null);
   const [incidentStats, setIncidentStats] = useState<{ ingested: number; forwarded: number } | null>(null);
 
   const {
@@ -828,6 +831,18 @@ export default function AppDetailDrawer({
   const hasAnyAuth = matchingEntries.length > 0;
   const authCount = matchingEntries.length;
   const displayName = (appInfo?.name || appName || '').replace(/_/g, ' ');
+
+  // Auto-collapse when valid auth appears, auto-expand when it disappears.
+  useEffect(() => {
+    if (lastValidAuthRef.current === hasValidAuth) return;
+    lastValidAuthRef.current = hasValidAuth;
+    setAuthExpanded(!hasValidAuth);
+  }, [hasValidAuth]);
+
+  // Reset tracker when switching apps so the new app starts from current state.
+  useEffect(() => {
+    lastValidAuthRef.current = null;
+  }, [appName]);
 
   const handleActivateToggle = async () => {
     if (!appName || activateLoading) return;
