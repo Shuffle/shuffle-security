@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { ArrowRight } from "lucide-react";
-import { AgentIcon } from "@/Shuffle-MCPs/AgentIcon";
+import AgentIcon from "@/Shuffle-MCPs/AgentIcon";
 import shuffleInfraLogo from "@/assets/shuffle-infrastructure-logo.png";
 
 const NotFound = () => {
