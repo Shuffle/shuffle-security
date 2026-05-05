@@ -178,14 +178,16 @@ export const LandingNavbar = () => {
                       >
                         {isOnLoginPage ? 'Sign Up' : 'Sign In'}
                       </Button>
-                      <Button
-                        component={Link}
-                        to="/register"
-                        variant="contained"
-                        onClick={() => trackCTA('get_started', 'navbar')}
-                      >
-                        Get Started
-                      </Button>
+                      {!isOnAuthPage && (
+                        <Button
+                          component={Link}
+                          to="/register"
+                          variant="contained"
+                          onClick={() => trackCTA('get_started', 'navbar')}
+                        >
+                          Get Started
+                        </Button>
+                      )}
                     </>
                   )}
                 </>
