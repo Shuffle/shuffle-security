@@ -19,9 +19,20 @@ export const SHUFFLE_AUTOMATION_URL = 'https://shuffler.io/new-dashboard';
 // Known cloud domains that should always use shuffler.io as the default backend
 const CLOUD_DOMAINS = ['security.shuffler.io', 'shutdown.no'];
 
+// Safely read Vite-style env vars without depending on `vite/client` types
+// (the published library should not require Vite to be installed).
+const getEnvVar = (key: string): string | undefined => {
+  try {
+    const meta = import.meta as unknown as { env?: Record<string, string | undefined> };
+    return meta?.env?.[key];
+  } catch {
+    return undefined;
+  }
+};
+
 // Determine if we're in Lovable preview (dev) or published (prod)
 export const isDevEnvironment = (): boolean => {
-  if (import.meta.env.VITE_SHUFFLE_API_URL) return false;
+  if (getEnvVar('VITE_SHUFFLE_API_URL')) return false;
   const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
   return hostname.includes('lovableproject.com') || hostname.includes('id-preview--');
 };
@@ -47,8 +58,9 @@ export const isCloud = (): boolean => isCloudDomain();
 export const isOnprem = (): boolean => !isDevEnvironment() && !isCloudDomain();
 
 const getDefaultBaseUrl = (): string => {
-  if (import.meta.env.VITE_SHUFFLE_API_URL) {
-    return import.meta.env.VITE_SHUFFLE_API_URL;
+  const envUrl = getEnvVar('VITE_SHUFFLE_API_URL');
+  if (envUrl) {
+    return envUrl;
   }
   if (isDevEnvironment()) return DEV_BACKEND;
   // Cloud domains always default to shuffler.io; region_url from getinfo may override later
