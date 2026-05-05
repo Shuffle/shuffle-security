@@ -3191,6 +3191,11 @@ function UsecaseCard({
  * an internal `/api/v1/getinfo` probe).
  */
 export default function UsecasesPage(props: UsecasesPageProps = {}) {
+  usePageMeta({
+    title: 'Usecases',
+    description: 'Browse and configure security automation usecases and data flows.',
+    url: '/usecases',
+  });
   useInjectScopedStyles();
   const { globalUrl, userdata, isLoaded, isLoggedIn, theme = 'system' } = props;
 
