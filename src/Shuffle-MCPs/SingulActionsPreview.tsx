@@ -218,7 +218,12 @@ function highlightNonString(
   lang: SnippetLang,
   COL: Record<string, string>,
 ): string {
-  let s = escapeHtml(src);
+  // Highlight numbers FIRST on plain (escaped) text, so subsequent inserted
+  // span styles (which contain hsl(...) numbers) are not re-matched.
+  let s = escapeHtml(src).replace(
+    /\b(\d+(?:\.\d+)?)\b/g,
+    `<span style="color:${COL.number}">$1</span>`,
+  );
   if (lang === 'python') {
     s = s.replace(/(^|[^\w])(#[^\n]*)/g, (_, p, c) => `${p}<span style="color:${COL.comment}">${c}</span>`);
     s = s.replace(/\b(import|from|as|def|return|if|else|elif|for|while|in|None|True|False|print|class|with|try|except)\b/g,
@@ -229,7 +234,6 @@ function highlightNonString(
     s = s.replace(/\b(curl)\b/g, `<span style="color:${COL.builtin}">$1</span>`);
     s = s.replace(/(^|\s)(-[A-Za-z]|--[\w-]+)/g, (_, p, f) => `${p}<span style="color:${COL.flag}">${f}</span>`);
   }
-  s = s.replace(/\b(\d+(?:\.\d+)?)\b/g, `<span style="color:${COL.number}">$1</span>`);
   return s;
 }
 
