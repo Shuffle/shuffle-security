@@ -13,6 +13,7 @@ import './shuffle-mcp.css';
 const DEFAULT_ALGOLIA_APP_ID = 'JNSS5CFDZZ';
 const DEFAULT_ALGOLIA_API_KEY = '33e4e3564f4f060e96e0531957bed552';
 const DEFAULT_ALGOLIA_INDEX = 'appsearch';
+const EMPTY_SELECTED_APPS: AlgoliaSearchApp[] = [];
 
 export interface ShuffleMCPHandle {
   search: (query: string) => void;
@@ -29,7 +30,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
   showCategories = false,
   showCheckbox = false,
   multiSelect = false,
-  selectedApps = [],
+  selectedApps = EMPTY_SELECTED_APPS,
   preventDefault = false,
   inline = false,
   initialQuery = '',
