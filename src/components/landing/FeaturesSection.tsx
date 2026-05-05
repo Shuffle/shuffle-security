@@ -123,6 +123,38 @@ const FeatureSection = ({ title, highlight, description, bullets, color, reverse
                 </motion.div>
               ))}
             </Stack>
+            {link && (
+              <Box sx={{ mt: 5 }}>
+                <Box
+                  component={link.startsWith('http') ? 'a' : Link}
+                  {...(link.startsWith('http')
+                    ? { href: link, target: '_blank', rel: 'noopener noreferrer' }
+                    : { to: link })}
+                  sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    py: 1.25,
+                    px: 2.5,
+                    borderRadius: 2,
+                    background: `${color}12`,
+                    border: `1px solid ${color}30`,
+                    color,
+                    fontWeight: 600,
+                    fontSize: '0.95rem',
+                    textDecoration: 'none',
+                    transition: 'all 0.2s ease',
+                    '&:hover': {
+                      background: `${color}1f`,
+                      borderColor: `${color}55`,
+                      transform: 'translateX(4px)',
+                    },
+                  }}
+                >
+                  {linkLabel || 'Learn more'} →
+                </Box>
+              </Box>
+            )}
           </motion.div>
         </Grid>
         <Grid size={{ xs: 12, md: 6 }}>
