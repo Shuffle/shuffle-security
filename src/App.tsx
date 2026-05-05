@@ -125,6 +125,8 @@ const ThemedApp = () => {
             <Route path="/register" element={<AuthPage mode="register" />} />
             <Route path="/docs" element={<DocsPage />} />
             <Route path="/docs/:slug" element={<DocsPage />} />
+            {/* Public library demo — works whether logged in or not */}
+            <Route path="/shuffle-mcp-test" element={<ShuffleMcpTestPage />} />
             {/* Onboarding with sidebar (collapsed by default) */}
             <Route
               element={
@@ -148,7 +150,6 @@ const ThemedApp = () => {
               }
             >
               <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/shuffle-mcp-test" element={<ShuffleMcpTestPage />} />
               <Route path="/incidents" element={<IncidentsPage />} />
               {/* Simple incident view was removed — redirect any old links to the full view. */}
               <Route path="/incidents-simple" element={<Navigate to="/incidents" replace />} />
