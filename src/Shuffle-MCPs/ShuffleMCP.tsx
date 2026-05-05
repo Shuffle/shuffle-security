@@ -20,6 +20,7 @@ export interface ShuffleMCPHandle {
 
 export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
   authToken,
+  orgId,
   placeholder = 'Search apps...',
   layout = 'list',
   gridColumns = 3,
