@@ -280,22 +280,33 @@ const SingulActionsPreview = ({
   const [playResult, setPlayResult] = useState<string | null>(null);
 
   const handlePlay = async () => {
-    if (!snippet || playLoading || lang !== 'curl') return;
+    if (!snippet || playLoading) return;
     setPlayLoading(true);
     setPlayResult(null);
     try {
-      const res = await fetch(getApiUrl('/api/v1/apps/http/run'), {
+      const body = lang === 'python'
+        ? {
+            name: 'execute_python',
+            app_id: '',
+            environment: 'Cloud',
+            parameters: [{ name: 'code', value: snippet, schema: { type: 'string' } }],
+            app_name: 'Shuffle Tools',
+            app_version: '1.2.0',
+          }
+        : {
+            name: 'curl',
+            app_id: 'ebfe7d5c80000676588f86731db0a555',
+            environment: 'Cloud',
+            parameters: [{ name: 'statement', value: snippet, schema: { type: 'string' } }],
+            app_name: 'http',
+            app_version: '1.4.0',
+          };
+      const path = lang === 'python' ? '/api/v1/apps/shuffle_tools/run' : '/api/v1/apps/http/run';
+      const res = await fetch(getApiUrl(path), {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-        body: JSON.stringify({
-          name: 'curl',
-          app_id: 'ebfe7d5c80000676588f86731db0a555',
-          environment: 'Cloud',
-          parameters: [{ name: 'statement', value: snippet, schema: { type: 'string' } }],
-          app_name: 'http',
-          app_version: '1.4.0',
-        }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       let output = data?.result;
@@ -311,7 +322,7 @@ const SingulActionsPreview = ({
       if (parsed?.success === false) {
         toast.error(parsed.reason || 'Run failed');
       } else {
-        toast.success(`Ran ${selected?.name || 'curl'}`);
+        toast.success(`Ran ${selected?.name || lang}`);
       }
     } catch (err: any) {
       const msg = err?.message || 'Run failed';
