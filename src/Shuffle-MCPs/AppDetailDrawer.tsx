@@ -219,9 +219,9 @@ function buildSingulPython(
   const app = appName || '<appname>';
   const fields = action?.fields.length ? action.fields : [];
   const fieldsStr = JSON.stringify(fields);
-  return `import singul
+  return `import shufflepy
 
-response = singul.run("${app}", action="${act}", fields=${fieldsStr})
+response = shufflepy.run("${app}", action="${act}", fields=${fieldsStr})
 
 print(response)`;
 }
