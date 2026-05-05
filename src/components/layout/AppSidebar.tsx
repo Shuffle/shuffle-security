@@ -40,7 +40,7 @@ import { useTheme } from '@/context/ThemeContext';
 import LogoutIcon from '@mui/icons-material/Logout';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { SHUFFLE_AUTOMATION_URL } from '@/Shuffle-MCPs/api';
-import { IntegrationStatus } from './IntegrationStatus';
+import { IntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
 import { SidebarSearchDialog } from './SidebarSearchDialog';
 import AgentPermissionsDrawer from '@/components/agent/AgentPermissionsDrawer';
 import { useEntityPreference, useSidebarTabs } from '@/hooks/useEntityLabel';

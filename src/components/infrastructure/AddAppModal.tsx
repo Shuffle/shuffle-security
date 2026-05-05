@@ -24,7 +24,7 @@ import { ShuffleMCP } from '@/Shuffle-MCPs';
 import type { AppSelectedEvent } from '@/Shuffle-MCPs';
 import { AppAuthCard } from '@/Shuffle-MCPs/AppAuthConfig';
 import { API_CONFIG } from '@/Shuffle-MCPs/api';
-import { useAppAuthFlow } from '@/Shuffle-MCPs/useAppAuthFlow';
+import { useAppAuthFlow } from '@/hooks/useAppAuthFlow';
 
 // Singul styles — matches /onboarding/sources
 const singulStyles = {
