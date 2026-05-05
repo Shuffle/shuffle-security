@@ -15,6 +15,8 @@ export type { AppAuthSectionProps } from './AppAuthSection';
 export { default as TryMcpSection } from './TryMcpSection';
 export type { TryMcpSectionProps } from './TryMcpSection';
 export { default as SingulActionsPreview } from './SingulActionsPreview';
+export { useAppLookup } from './useAppLookup';
+export type { AppLookupResult } from './useAppLookup';
 export { IntegrationStatus, refreshAllIntegrationStatus } from './IntegrationStatus';
 export { useAppAuth } from './useAppAuth';
 export { AppDetailProvider, useAppDetail } from './AppDetailContext';
