@@ -184,7 +184,7 @@ const ThemedApp = () => {
               <Route path="/monitors/:hostUuid/terminal" element={<HostTerminalPage />} />
               <Route path="/software/*" element={<EntityReferencePage type="software" />} />
               <Route path="/packages/*" element={<EntityReferencePage type="package" />} />
-              <Route path="/assets" element={<AssetsPage />} />
+              <Route path="/assets" element={<SupportOnly><AssetsPage /></SupportOnly>} />
             </Route>
 
             {/* App detail & usecase detail: uses sidebar when authenticated, standalone when guest */}
