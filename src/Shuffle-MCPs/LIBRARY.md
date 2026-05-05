@@ -105,13 +105,14 @@ const [picked, setPicked] = useState<AlgoliaSearchApp[]>([]);
 ```tsx
 <ShuffleMCP
   apiKey={user.apiKey}
-  apiKey={user.apiKey}
   apiBaseUrl="https://your-backend.example.com"
   algoliaAppId="YOUR_APP_ID"
   algoliaApiKey="YOUR_SEARCH_KEY"
   algoliaIndexName="your-index"
 />
 ```
+
+> **About `apiKey`:** this is the **current user's personal Shuffle API key**, not an org-level or service token. Your backend should look up the signed-in user's API key (wherever you store it — DB, session, etc.) and pass it through to this component. The component sends it as `Authorization: Bearer` on every API request and forwards it into the auth handoff URL as `&auth=`, so all reads and authentications happen as that user.
 
 When `apiKey` is set, status dots are populated: validated, configured, selected, inactive.
 
@@ -120,7 +121,7 @@ When `apiKey` is set, status dots are populated: validated, configured, selected
 ### Required
 | Prop | Type | Description |
 |---|---|---|
-| `apiKey` | `string` | Your Shuffle API key. Used as `Authorization: Bearer` on all API calls and forwarded into the auth handoff URL as `&auth=`. |
+| `apiKey` | `string` | The **current user's** Shuffle API key. Your backend should fetch it from wherever you store the user's credentials and pass it in. Used as `Authorization: Bearer` on all API calls and forwarded into the auth handoff URL as `&auth=`. |
 
 ### Search
 | Prop | Type | Default | Description |
@@ -152,7 +153,7 @@ When `apiKey` is set, status dots are populated: validated, configured, selected
 ### Backend / auth
 | Prop | Type | Default | Description |
 |---|---|---|---|
-| `apiKey` | `string` | — | Shuffle API key — canonical credential. Used as `Authorization: Bearer` on `/api/v1/apps/authentication` and `/api/v1/apps`, and forwarded into the auth handoff URL as `&auth=`. Enables status dots and merges private apps into search. |
+| `apiKey` | `string` | — | The **current user's** Shuffle API key — canonical credential. Your backend resolves the signed-in user's key and passes it in. Used as `Authorization: Bearer` on `/api/v1/apps/authentication` and `/api/v1/apps`, and forwarded into the auth handoff URL as `&auth=`. Enables status dots and merges private apps into search. |
 | `~~authToken~~` | `string` | — | **Deprecated.** Use `apiKey`. Only used for the auth handoff URL when `apiKey` is not set. Kept for backwards compatibility. |
 | `orgId` | `string` | — | Optional Shuffle organization ID. When set, every request the component issues (`/api/v1/apps/authentication`, `/api/v1/apps`) includes an `Org-Id: <orgId>` header, and the auth handoff URL gets `&org_id=<orgId>` appended. Omit to use the user's default org. |
 | `apiBaseUrl` | `string` | `"https://shuffler.io"` | API base URL |
