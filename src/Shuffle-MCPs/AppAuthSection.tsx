@@ -29,8 +29,8 @@ export interface AppAuthSectionProps {
   /** Auth entries already filtered to this app. */
   matchingEntries: any[];
   onAuthChange: any;
-  onTestConnection: (appId: string, authId?: string) => void;
-  onSaveAuth: (appId: string, creds: any) => void;
+  onTestConnection: (appId: string, authId?: string) => any;
+  onSaveAuth: (appId: string, credentials: Record<string, string>) => Promise<boolean>;
   onRefreshAuth: () => void;
 }
 
