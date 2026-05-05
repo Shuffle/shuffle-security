@@ -534,7 +534,37 @@ const DashboardPage = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [filter, setFilter] = useState<'all' | 'approval' | 'question'>('all');
   const [hasRunningSensor, setHasRunningSensor] = useState<boolean | null>(null);
+  const [runningSensorCount, setRunningSensorCount] = useState<number>(0);
   const [hasHostMonitor, setHasHostMonitor] = useState<boolean | null>(null);
+  const [hostMonitorCount, setHostMonitorCount] = useState<number>(0);
+  const [overviewCollapsed, setOverviewCollapsed] = useState(false);
+  const [setupCollapsed, setSetupCollapsed] = useState(false);
+
+  // Incidents + vulnerabilities for the overview charts
+  const { items: incidentItems, isLoading: incidentsLoading } = useDatastore({
+    category: DATASTORE_CATEGORIES.INCIDENTS,
+  });
+  const { severityCounts: vulnSeverityCounts, isLoading: vulnLoading } = useVulnerabilities({ tab: 'assets' });
+
+  const overviewIncidents = useMemo(() => {
+    const out: { status: string; severity: string; createdTs: number }[] = [];
+    for (const item of incidentItems) {
+      try {
+        if (!item.value || (typeof item.value === 'string' && item.value.length > 5_000_000)) continue;
+        const data = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
+        const customAttrs = data?.metadata?.extensions?.custom_attributes;
+        const severityId = data?.severity_id;
+        const sevMap: Record<number, string> = { 1: 'info', 2: 'low', 3: 'medium', 4: 'high', 5: 'critical', 6: 'critical' };
+        const severity = (data?.severity || sevMap[severityId] || 'medium').toString().toLowerCase();
+        const status = (data?.status || customAttrs?.status || 'new').toString().toLowerCase();
+        const createdTs = (item as any).created
+          ? Number((item as any).created) * (Number((item as any).created) < 1e12 ? 1000 : 1)
+          : 0;
+        out.push({ status, severity, createdTs });
+      } catch { /* skip */ }
+    }
+    return out;
+  }, [incidentItems]);
 
   // Check for running detection sensors AND deployed host monitors
   useEffect(() => {
