@@ -54,6 +54,11 @@ import { findIngestTicketsWorkflow } from '@/lib/ingestionDetection';
 import { getApiUrl, getAuthHeader } from '@/config/api';
 import { toast } from 'sonner';
 import { DemoModeCard } from '@/components/demo/DemoModeCard';
+import { useDatastore } from '@/hooks/useDatastore';
+import { DATASTORE_CATEGORIES } from '@/services/datastore';
+import { useVulnerabilities } from '@/hooks/useVulnerabilities';
+import { DashboardOverview } from '@/components/dashboard/DashboardOverview';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 // ── Setup Step ─────────────────────────────────────────────────────────────────
 
@@ -529,7 +534,37 @@ const DashboardPage = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [filter, setFilter] = useState<'all' | 'approval' | 'question'>('all');
   const [hasRunningSensor, setHasRunningSensor] = useState<boolean | null>(null);
+  const [runningSensorCount, setRunningSensorCount] = useState<number>(0);
   const [hasHostMonitor, setHasHostMonitor] = useState<boolean | null>(null);
+  const [hostMonitorCount, setHostMonitorCount] = useState<number>(0);
+  const [overviewCollapsed, setOverviewCollapsed] = useState(false);
+  const [setupCollapsed, setSetupCollapsed] = useState(false);
+
+  // Incidents + vulnerabilities for the overview charts
+  const { items: incidentItems, isLoading: incidentsLoading } = useDatastore({
+    category: DATASTORE_CATEGORIES.INCIDENTS,
+  });
+  const { severityCounts: vulnSeverityCounts, isLoading: vulnLoading } = useVulnerabilities({ tab: 'assets' });
+
+  const overviewIncidents = useMemo(() => {
+    const out: { status: string; severity: string; createdTs: number }[] = [];
+    for (const item of incidentItems) {
+      try {
+        if (!item.value || (typeof item.value === 'string' && item.value.length > 5_000_000)) continue;
+        const data = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
+        const customAttrs = data?.metadata?.extensions?.custom_attributes;
+        const severityId = data?.severity_id;
+        const sevMap: Record<number, string> = { 1: 'info', 2: 'low', 3: 'medium', 4: 'high', 5: 'critical', 6: 'critical' };
+        const severity = (data?.severity || sevMap[severityId] || 'medium').toString().toLowerCase();
+        const status = (data?.status || customAttrs?.status || 'new').toString().toLowerCase();
+        const createdTs = (item as any).created
+          ? Number((item as any).created) * (Number((item as any).created) < 1e12 ? 1000 : 1)
+          : 0;
+        out.push({ status, severity, createdTs });
+      } catch { /* skip */ }
+    }
+    return out;
+  }, [incidentItems]);
 
   // Check for running detection sensors AND deployed host monitors
   useEffect(() => {
@@ -542,14 +577,19 @@ const DashboardPage = () => {
         if (res.ok) {
           const envs = await res.json();
           const now = Math.floor(Date.now() / 1000);
-          const running = Array.isArray(envs) && envs.some(
+          const runningEnvs = Array.isArray(envs) ? envs.filter(
             (e: any) => e.Type === 'onprem' && e.checkin > 0 && (now - e.checkin) < 300 && e.data_lake?.enabled === true
-          );
-          setHasRunningSensor(running);
-          const hasHost = Array.isArray(envs) && envs.some(
-            (e: any) => !e.archived && Array.isArray(e.sensor_hosts) && e.sensor_hosts.length > 0
-          );
-          setHasHostMonitor(hasHost);
+          ) : [];
+          setHasRunningSensor(runningEnvs.length > 0);
+          setRunningSensorCount(runningEnvs.length);
+          let hostCount = 0;
+          if (Array.isArray(envs)) {
+            for (const e of envs) {
+              if (!e.archived && Array.isArray(e.sensor_hosts)) hostCount += e.sensor_hosts.length;
+            }
+          }
+          setHasHostMonitor(hostCount > 0);
+          setHostMonitorCount(hostCount);
         } else {
           setHasRunningSensor(false);
           setHasHostMonitor(false);
@@ -808,9 +848,34 @@ const DashboardPage = () => {
       {/* ── Demo Mode CTA ────────────────────────────────────────────────────── */}
       <DemoModeCard />
 
+      {/* When setup is mostly done, surface the Overview above the Setup Guide
+          so the dashboard feels useful at a glance. Otherwise show it below. */}
+      {!setupLoading && progressPercent >= 80 && (
+        <DashboardOverview
+          incidents={overviewIncidents}
+          incidentsLoading={incidentsLoading}
+          vulnSeverityCounts={vulnSeverityCounts}
+          vulnLoading={vulnLoading}
+          monitorHostCount={hostMonitorCount}
+          runningSensorCount={runningSensorCount}
+          monitorsLoading={hasHostMonitor === null}
+        />
+      )}
+
       {/* ── Setup Checklist ──────────────────────────────────────────────────── */}
       <Box sx={{ mb: 5 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            mb: setupCollapsed ? 0 : 2,
+            cursor: progressPercent >= 80 ? 'pointer' : 'default',
+          }}
+          onClick={() => {
+            if (progressPercent >= 80) setSetupCollapsed(c => !c);
+          }}
+        >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
             <Sparkles size={18} style={{ color: 'hsl(var(--primary))' }} />
             <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: 'hsl(var(--foreground))' }}>
@@ -828,7 +893,13 @@ const DashboardPage = () => {
               }}
             />
           </Box>
+          {progressPercent >= 80 && (
+            <IconButton size="small" onClick={(e) => { e.stopPropagation(); setSetupCollapsed(c => !c); }} sx={{ color: 'hsl(var(--muted-foreground))' }}>
+              {setupCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+            </IconButton>
+          )}
         </Box>
+        {!setupCollapsed && (<>
 
         {/* Progress bar */}
         <Box sx={{ mb: 2.5 }}>
@@ -906,7 +977,21 @@ const DashboardPage = () => {
             )}
           </Box>
         )}
+        </>)}
       </Box>
+
+      {/* Show Overview below the Setup Guide when it is not already above. */}
+      {(setupLoading || progressPercent < 80) && (
+        <DashboardOverview
+          incidents={overviewIncidents}
+          incidentsLoading={incidentsLoading}
+          vulnSeverityCounts={vulnSeverityCounts}
+          vulnLoading={vulnLoading}
+          monitorHostCount={hostMonitorCount}
+          runningSensorCount={runningSensorCount}
+          monitorsLoading={hasHostMonitor === null}
+        />
+      )}
 
       {/* ── Agent Notifications ──────────────────────────────────────────────── */}
       <Box>
