@@ -626,6 +626,9 @@ export default function AppDetailDrawer({
   const [activateLoading, setActivateLoading] = useState(false);
   const [resolvedAlgoliaId, setResolvedAlgoliaId] = useState<string | null>(null);
   const [authExpanded, setAuthExpanded] = useState(true);
+  // Auto-collapse Authentication section when a valid auth exists; expand otherwise.
+  // Only fires when validity flips, so user manual toggles are preserved.
+  const lastValidAuthRef = useRef<boolean | null>(null);
   const [incidentStats, setIncidentStats] = useState<{ ingested: number; forwarded: number } | null>(null);
 
   const {
