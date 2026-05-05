@@ -473,7 +473,7 @@ const SingulActionsPreview = ({
                     '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
                   },
                 }}
-                componentsProps={{
+                slotProps={{
                   paper: {
                     sx: {
                       backgroundColor: 'hsl(var(--card))',
