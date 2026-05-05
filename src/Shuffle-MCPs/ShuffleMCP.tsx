@@ -255,16 +255,19 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
 
       const hits = (searchResult.hits as AlgoliaSearchApp[]).map(h => ({ ...h, source: 'public' as const }));
       setResults(hits);
-      setIsOpen(hits.length > 0);
+      // Open dropdown if we got Algolia hits OR we have private apps to show
+      setIsOpen(hits.length > 0 || privateApps.length > 0);
       setSelectedIndex(-1);
     } catch (error) {
+      // Algolia rate-limit (429) or network error: don't blank out the dropdown
+      // if we still have private apps to show from /api/v1/apps.
       console.error('Search failed:', error);
       setResults([]);
-      setIsOpen(false);
+      setIsOpen(privateApps.length > 0);
     } finally {
       setIsLoading(false);
     }
-  }, [hitsPerPage]);
+  }, [hitsPerPage, algoliaIndexName, privateApps.length]);
 
   // Expose imperative methods via ref
   useImperativeHandle(ref, () => ({
