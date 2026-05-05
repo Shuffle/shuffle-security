@@ -98,100 +98,126 @@ const CollapsibleDescription = ({ description }: { description: string }) => {
  */
 interface SingulAction {
   name: string;
+  label: string;
+  category: string;
   fields: { name: string; value: string }[];
 }
 
-const SINGUL_ACTIONS: Record<string, SingulAction[]> = {
-  'threat': [
-    { name: 'get_ioc', fields: [{ name: 'value', value: '1.2.3.4' }] },
-    { name: 'search_indicator', fields: [{ name: 'query', value: 'malicious.com' }] },
-    { name: 'enrich_hash', fields: [{ name: 'hash', value: 'd41d8cd98f00b204e9800998ecf8427e' }] },
-  ],
-  'intel': [
-    { name: 'get_ioc', fields: [{ name: 'value', value: '1.2.3.4' }] },
-    { name: 'search_indicator', fields: [{ name: 'query', value: 'malicious.com' }] },
-  ],
-  'siem': [
-    { name: 'search', fields: [{ name: 'query', value: 'event.type:login' }, { name: 'time_range', value: '24h' }] },
-    { name: 'list_alerts', fields: [{ name: 'severity', value: 'high' }] },
-    { name: 'close_alert', fields: [{ name: 'alert_id', value: '' }] },
-  ],
-  'email': [
-    { name: 'list_emails', fields: [{ name: 'folder', value: 'INBOX' }, { name: 'limit', value: '10' }] },
-    { name: 'send_email', fields: [{ name: 'to', value: 'user@example.com' }, { name: 'subject', value: 'Hello' }, { name: 'body', value: 'Test message' }] },
-    { name: 'get_attachments', fields: [{ name: 'message_id', value: '' }] },
-  ],
-  'communication': [
-    { name: 'send_message', fields: [{ name: 'channel', value: '#general' }, { name: 'message', value: 'Hello from Singul' }] },
-    { name: 'list_channels', fields: [] },
-    { name: 'create_channel', fields: [{ name: 'name', value: 'incident-response' }] },
-    { name: 'get_user', fields: [{ name: 'user_id', value: '' }] },
-  ],
-  'edr': [
-    { name: 'list_detections', fields: [{ name: 'severity', value: 'high' }] },
-    { name: 'isolate_host', fields: [{ name: 'host_id', value: '' }] },
-    { name: 'list_processes', fields: [{ name: 'host_id', value: '' }] },
-    { name: 'run_script', fields: [{ name: 'host_id', value: '' }, { name: 'script', value: 'whoami' }] },
-  ],
-  'endpoint': [
-    { name: 'list_detections', fields: [{ name: 'severity', value: 'high' }] },
-    { name: 'isolate_host', fields: [{ name: 'host_id', value: '' }] },
-  ],
-  'cloud': [
-    { name: 'list_instances', fields: [{ name: 'region', value: 'us-east-1' }] },
-    { name: 'list_buckets', fields: [] },
-    { name: 'get_logs', fields: [{ name: 'resource', value: '' }] },
-  ],
-  'ticket': [
-    { name: 'create_ticket', fields: [{ name: 'title', value: 'New incident' }, { name: 'description', value: '' }, { name: 'priority', value: 'medium' }] },
-    { name: 'list_tickets', fields: [{ name: 'status', value: 'open' }] },
-    { name: 'update_ticket', fields: [{ name: 'ticket_id', value: '' }, { name: 'status', value: 'in_progress' }] },
-    { name: 'close_ticket', fields: [{ name: 'ticket_id', value: '' }] },
-  ],
-  'itsm': [
-    { name: 'create_ticket', fields: [{ name: 'title', value: 'New incident' }, { name: 'priority', value: 'medium' }] },
-    { name: 'list_tickets', fields: [{ name: 'status', value: 'open' }] },
-  ],
-  'case': [
-    { name: 'create_case', fields: [{ name: 'title', value: 'New case' }, { name: 'severity', value: 'medium' }] },
-    { name: 'list_cases', fields: [{ name: 'status', value: 'open' }] },
-    { name: 'close_case', fields: [{ name: 'case_id', value: '' }] },
-  ],
-  'vulnerab': [
-    { name: 'list_vulnerabilities', fields: [{ name: 'severity', value: 'critical' }] },
-    { name: 'scan_asset', fields: [{ name: 'asset_id', value: '' }] },
-    { name: 'get_cve', fields: [{ name: 'cve_id', value: 'CVE-2024-0001' }] },
-  ],
-  'network': [
-    { name: 'list_rules', fields: [] },
-    { name: 'block_ip', fields: [{ name: 'ip', value: '1.2.3.4' }] },
-    { name: 'create_rule', fields: [{ name: 'name', value: 'block-bad-ip' }, { name: 'action', value: 'deny' }] },
-  ],
-  'identity': [
-    { name: 'list_users', fields: [] },
-    { name: 'disable_user', fields: [{ name: 'user_id', value: '' }] },
-    { name: 'reset_password', fields: [{ name: 'user_id', value: '' }] },
-  ],
+/** Default starter fields per canonical action (lowercased snake_case key). */
+const ACTION_DEFAULT_FIELDS: Record<string, { name: string; value: string }[]> = {
+  list_messages: [{ name: 'channel', value: '#general' }, { name: 'limit', value: '10' }],
+  send_message: [{ name: 'channel', value: '#general' }, { name: 'message', value: 'Hello from Shuffle' }],
+  get_message: [{ name: 'message_id', value: '' }],
+  search_messages: [{ name: 'query', value: 'incident' }],
+  list_attachments: [{ name: 'message_id', value: '' }],
+  get_attachment: [{ name: 'attachment_id', value: '' }],
+  get_contact: [{ name: 'email', value: 'user@example.com' }],
+
+  search: [{ name: 'query', value: 'event.type:login' }, { name: 'time_range', value: '24h' }],
+  list_alerts: [{ name: 'severity', value: 'high' }],
+  close_alert: [{ name: 'alert_id', value: '' }],
+  get_alert: [{ name: 'alert_id', value: '' }],
+  create_detection: [{ name: 'name', value: 'My detection' }, { name: 'query', value: 'event.type:login AND result:failure' }],
+  add_to_lookup_list: [{ name: 'list_name', value: 'blocked_ips' }, { name: 'value', value: '1.2.3.4' }],
+  isolate_endpoint: [{ name: 'host_id', value: '' }],
+
+  block_hash: [{ name: 'hash', value: 'd41d8cd98f00b204e9800998ecf8427e' }],
+  search_hosts: [{ name: 'query', value: 'hostname:laptop-*' }],
+  isolate_host: [{ name: 'host_id', value: '' }],
+  unisolate_host: [{ name: 'host_id', value: '' }],
+  trigger_host_scan: [{ name: 'host_id', value: '' }],
+
+  list_tickets: [{ name: 'status', value: 'open' }],
+  get_ticket: [{ name: 'ticket_id', value: '' }],
+  create_ticket: [{ name: 'title', value: 'New incident' }, { name: 'description', value: '' }, { name: 'priority', value: 'medium' }],
+  close_ticket: [{ name: 'ticket_id', value: '' }],
+  add_comment: [{ name: 'ticket_id', value: '' }, { name: 'comment', value: 'Investigation update' }],
+  update_ticket: [{ name: 'ticket_id', value: '' }, { name: 'status', value: 'in_progress' }],
+  search_tickets: [{ name: 'query', value: 'status:open' }],
+
+  list_assets: [{ name: 'limit', value: '50' }],
+  get_asset: [{ name: 'asset_id', value: '' }],
+  search_assets: [{ name: 'query', value: 'os:windows' }],
+  search_users: [{ name: 'query', value: 'department:finance' }],
+  search_endpoints: [{ name: 'query', value: 'os:windows' }],
+  search_vulnerabilities: [{ name: 'severity', value: 'critical' }],
+
+  get_ioc: [{ name: 'value', value: '1.2.3.4' }],
+  search_ioc: [{ name: 'query', value: 'malicious.com' }],
+  create_ioc: [{ name: 'type', value: 'ipv4' }, { name: 'value', value: '1.2.3.4' }],
+  update_ioc: [{ name: 'ioc_id', value: '' }, { name: 'value', value: '1.2.3.4' }],
+  delete_ioc: [{ name: 'ioc_id', value: '' }],
+
+  reset_password: [{ name: 'user_id', value: '' }],
+  enable_user: [{ name: 'user_id', value: '' }],
+  disable_user: [{ name: 'user_id', value: '' }],
+  get_identity: [{ name: 'user_id', value: '' }],
+  search_identity: [{ name: 'query', value: 'department:finance' }],
+  get_kms_key: [{ name: 'key_id', value: '' }],
+
+  get_rules: [],
+  allow_ip: [{ name: 'ip', value: '1.2.3.4' }],
+  block_ip: [{ name: 'ip', value: '1.2.3.4' }],
+
+  answer_question: [{ name: 'question', value: 'What is this alert about?' }],
+  run_action: [{ name: 'app', value: 'jira' }, { name: 'action', value: 'create_ticket' }],
+  run_llm: [{ name: 'prompt', value: 'Summarize this incident' }, { name: 'model', value: 'gpt-4o-mini' }],
+
+  update_info: [{ name: 'key', value: '' }, { name: 'value', value: '' }],
+  get_info: [{ name: 'key', value: '' }],
+  get_status: [],
+  get_version: [],
+  get_health: [],
+  get_config: [{ name: 'key', value: '' }],
+  get_configs: [],
+  get_configs_by_type: [{ name: 'type', value: '' }],
+  get_configs_by_name: [{ name: 'name', value: '' }],
+  run_script: [{ name: 'script', value: 'whoami' }],
 };
 
-function getSingulActions(categories?: string[]): SingulAction[] {
-  if (!categories || categories.length === 0) return [];
-  const matched: SingulAction[] = [];
-  const seen = new Set<string>();
+/** Default categories + their action labels (canonical order). */
+const ACTION_CATEGORIES: { name: string; action_labels: string[] }[] = [
+  { name: 'Communication', action_labels: ['List Messages', 'Send Message', 'Get Message', 'Search messages', 'List Attachments', 'Get Attachment', 'Get Contact'] },
+  { name: 'SIEM', action_labels: ['Search', 'List Alerts', 'Close Alert', 'Get Alert', 'Create detection', 'Add to lookup list', 'Isolate endpoint'] },
+  { name: 'Eradication', action_labels: ['List Alerts', 'Close Alert', 'Get Alert', 'Create detection', 'Block hash', 'Search Hosts', 'Isolate host', 'Unisolate host', 'Trigger host scan'] },
+  { name: 'Cases', action_labels: ['List tickets', 'Get ticket', 'Create ticket', 'Close ticket', 'Add comment', 'Update ticket', 'Search tickets'] },
+  { name: 'Assets', action_labels: ['List Assets', 'Get Asset', 'Search Assets', 'Search Users', 'Search endpoints', 'Search vulnerabilities'] },
+  { name: 'Intel', action_labels: ['Get IOC', 'Search IOC', 'Create IOC', 'Update IOC', 'Delete IOC'] },
+  { name: 'IAM', action_labels: ['Reset Password', 'Enable user', 'Disable user', 'Get Identity', 'Get Asset', 'Search Identity', 'Get KMS Key'] },
+  { name: 'Network', action_labels: ['Get Rules', 'Allow IP', 'Block IP'] },
+  { name: 'AI', action_labels: ['Answer Question', 'Run Action', 'Run LLM'] },
+  { name: 'Internal', action_labels: ['Answer Question', 'Run Action', 'Run LLM'] },
+  { name: 'Other', action_labels: ['Update Info', 'Get Info', 'Get Status', 'Get Version', 'Get Health', 'Get Config', 'Get Configs', 'Get Configs by type', 'Get Configs by name', 'Run script'] },
+];
+
+const labelToName = (label: string) =>
+  label.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+
+/** Flat list of ALL actions across every category, preserving order. */
+const ALL_ACTIONS: SingulAction[] = ACTION_CATEGORIES.flatMap((cat) =>
+  cat.action_labels.map((label) => {
+    const name = labelToName(label);
+    return {
+      name,
+      label,
+      category: cat.name,
+      fields: ACTION_DEFAULT_FIELDS[name] ?? [],
+    };
+  }),
+);
+
+/** Pick the best matching default category for an app, given its raw categories. */
+function pickDefaultCategory(categories?: string[]): string {
+  if (!categories || categories.length === 0) return 'Other';
+  const known = ACTION_CATEGORIES.map((c) => c.name.toLowerCase());
   for (const cat of categories) {
-    const normalized = cat.toLowerCase();
-    for (const [key, actions] of Object.entries(SINGUL_ACTIONS)) {
-      if (normalized.includes(key) || key.includes(normalized)) {
-        for (const a of actions) {
-          if (!seen.has(a.name)) {
-            seen.add(a.name);
-            matched.push(a);
-          }
-        }
-      }
-    }
+    const n = cat.toLowerCase();
+    const direct = known.find((k) => k === n);
+    if (direct) return ACTION_CATEGORIES.find((c) => c.name.toLowerCase() === direct)!.name;
+    const partial = known.find((k) => n.includes(k) || k.includes(n));
+    if (partial) return ACTION_CATEGORIES.find((c) => c.name.toLowerCase() === partial)!.name;
   }
-  return matched.slice(0, 8);
+  return 'Other';
 }
 
 function buildSingulCurl(
@@ -237,8 +263,15 @@ const SingulActionsPreview = ({
   categories?: string[];
   activeOrgId?: string | null;
 }) => {
-  const actions = useMemo(() => getSingulActions(categories), [categories]);
-  const isDisabled = actions.length === 0;
+  const defaultCategory = useMemo(() => pickDefaultCategory(categories), [categories]);
+  const actions = ALL_ACTIONS;
+  // Sort so that the app's default category appears first, rest follow original order.
+  const sortedActions = useMemo(() => {
+    const inCat = actions.filter((a) => a.category === defaultCategory);
+    const rest = actions.filter((a) => a.category !== defaultCategory);
+    return [...inCat, ...rest];
+  }, [actions, defaultCategory]);
+  const isDisabled = false;
   const [selected, setSelected] = useState<SingulAction | null>(null);
   const [lang, setLang] = useState<SnippetLang>('curl');
   const [snippet, setSnippet] = useState<string>('');
@@ -257,10 +290,10 @@ const SingulActionsPreview = ({
   );
 
   useEffect(() => {
-    const initial = actions[0] || null;
+    const initial = sortedActions[0] || null;
     setSelected(initial);
     setSnippet(buildSnippet(initial, lang));
-  }, [appName, actions, curlOpts, lang, buildSnippet]);
+  }, [appName, sortedActions, curlOpts, lang, buildSnippet]);
 
   const handleSelect = (action: SingulAction | null) => {
     setSelected(action);
@@ -390,11 +423,22 @@ const SingulActionsPreview = ({
               <Autocomplete
                 size="small"
                 disableClearable
-                options={actions}
-                value={selected ?? actions[0]}
+                options={sortedActions}
+                value={selected ?? sortedActions[0]}
                 onChange={(_, v) => v && handleSelect(v as SingulAction)}
-                getOptionLabel={(o: SingulAction | null) => o?.name ?? ''}
-                isOptionEqualToValue={(a, b) => a?.name === b?.name}
+                groupBy={(o: SingulAction) => o.category}
+                getOptionLabel={(o: SingulAction | null) => o?.label ?? ''}
+                isOptionEqualToValue={(a, b) => a?.name === b?.name && a?.category === b?.category}
+                renderOption={(props, option) => (
+                  <li {...props} key={`${option.category}-${option.name}`}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                      <Typography sx={{ fontSize: '0.78rem', color: 'hsl(var(--foreground))' }}>{option.label}</Typography>
+                      <Typography sx={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))' }}>
+                        {option.name}
+                      </Typography>
+                    </Box>
+                  </li>
+                )}
                 sx={{
                   flex: 1,
                   '& .MuiOutlinedInput-root': {
@@ -405,6 +449,24 @@ const SingulActionsPreview = ({
                     '& fieldset': { borderColor: 'hsl(var(--border))' },
                     '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
                     '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
+                  },
+                }}
+                componentsProps={{
+                  paper: {
+                    sx: {
+                      backgroundColor: 'hsl(var(--card))',
+                      color: 'hsl(var(--foreground))',
+                      border: '1px solid hsl(var(--border))',
+                      '& .MuiAutocomplete-groupLabel': {
+                        backgroundColor: 'hsl(var(--muted) / 0.6)',
+                        color: 'hsl(var(--muted-foreground))',
+                        fontSize: '0.65rem',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: 0.6,
+                        lineHeight: '24px',
+                      },
+                    },
                   },
                 }}
                 renderInput={(params) => (
