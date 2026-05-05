@@ -20,8 +20,8 @@ import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import RssFeedIcon from '@mui/icons-material/RssFeed';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { Network, Braces, Waypoints, Link2, Workflow, Activity, BookOpen, LayoutDashboard, Shield, HardDrive, Radar, Users } from 'lucide-react';
-import AgentIcon from '@/components/agent/AgentIcon';
-import { getApiUrl, getAuthHeader } from '@/config/api';
+import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
+import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { useWorkflows } from '@/hooks/useWorkflows';
 import type { AlgoliaSearchApp } from '@/Shuffle-MCPs/shuffle-mcp.helpers';
 

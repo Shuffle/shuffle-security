@@ -19,8 +19,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { Plus, Webhook } from 'lucide-react';
 import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
 import { useAuth } from '@/context/AuthContext';
-import { useAppDetail } from '@/context/AppDetailContext';
-import { getApiUrl, getAuthHeader } from '@/config/api';
+import { useAppDetail } from '@/Shuffle-MCPs/AppDetailContext';
+import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { deduplicateAuthApps, backfillAppImages, type AuthAppEntry } from '@/lib/utils';
 import {
   SIEM_PATTERNS,
@@ -31,7 +31,7 @@ import {
   findForwardTicketsWorkflow,
   extractWorkflowAppNames,
   normalizeAppName,
-} from '@/lib/ingestionDetection';
+} from '@/Shuffle-MCPs/ingestionDetection';
 import { TOOL_CATEGORIES } from '@/config/usecases';
 import shuffleInfraLogo from '@/assets/shuffle-infrastructure-logo.png';
 import shuffleIcon from '@/assets/shuffle-icon.png';

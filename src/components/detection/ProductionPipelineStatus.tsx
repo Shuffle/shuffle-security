@@ -8,7 +8,7 @@ import ReportProblemIcon from '@mui/icons-material/ReportProblem';
 import ForwardToInboxIcon from '@mui/icons-material/ForwardToInbox';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import { getApiUrl, getAuthHeader } from '@/config/api';
+import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { useWorkflows } from '@/hooks/useWorkflows';
 
 interface StageInfo {

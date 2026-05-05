@@ -29,14 +29,14 @@
  * regardless so a flaky API does not block the user.
  */
 
-import { getApiUrl, getAuthHeader } from '@/config/api';
+import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { getAutomationLabels } from '@/config/usecases';
 import {
   findIngestTicketsWorkflow,
   extractWorkflowAppNames,
-} from '@/lib/ingestionDetection';
+} from '@/Shuffle-MCPs/ingestionDetection';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
-import { getDatastoreByCategory, setDatastoreItems, DATASTORE_CATEGORIES } from '@/services/datastore';
+import { getDatastoreByCategory, setDatastoreItems, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 // Canonical seeders + workflow generator — SAME functions used by the
 // Threat Feeds page, IOC Types page, and the onboarding AutomationConfig.
 // Keeping a single source of truth means changes there propagate to demo

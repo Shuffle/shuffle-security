@@ -40,7 +40,7 @@ import {
   Schedule as ScheduleIcon,
 } from '@mui/icons-material';
 import { useUsers, User } from '@/hooks/useUsers';
-import { setDatastoreItem, getDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
+import { setDatastoreItem, getDatastoreItem, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 
 // Escalation levels for assignment priority
 export type EscalationLevel = 'tier1' | 'tier2' | 'tier3' | 'manager';

@@ -17,7 +17,7 @@ import {
 import { Search, Plus, RefreshCw, MonitorSmartphone, Server, Monitor, Smartphone, Laptop, Tablet, Wifi, HardDrive } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useMultiDatastore } from '@/hooks/useMultiDatastore';
-import { setDatastoreItem, DatastoreItem } from '@/services/datastore';
+import { setDatastoreItem, DatastoreItem } from '@/Shuffle-MCPs/datastore';
 import { ASSET_CATEGORIES, ASSET_CATEGORY_BY_ID, LEGACY_ASSETS_KEY, AssetCategory } from '@/config/assetCategories';
 import { CreateAssetDialog } from '@/components/assets/CreateAssetDialog';
 import { OCSFDeviceInventory, DEVICE_TYPES, RISK_LEVELS } from '@/config/ocsfAssetSchema';

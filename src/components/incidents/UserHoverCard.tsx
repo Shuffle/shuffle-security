@@ -17,7 +17,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import { useNavigate } from 'react-router-dom';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
-import AgentIcon from '@/components/agent/AgentIcon';
+import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import singulAgentIcon from '@/assets/singul-agent-icon.png';
 import { isAIAssignee } from '@/lib/utils';
 import { useUsers, type User } from '@/hooks/useUsers';

@@ -9,9 +9,9 @@ import CloseIcon from '@mui/icons-material/Close';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShuffleMCP, AppDetailDrawer } from '@/Shuffle-MCPs';
 import type { AppSelectedEvent } from '@/Shuffle-MCPs';
-import { API_CONFIG } from '@/config/api';
-import { ShufflePipelinesBanner } from '@/components/usecases/UsecaseAlluvialDiagram';
-import { IntegrationStatus } from '@/components/layout/IntegrationStatus';
+import { API_CONFIG } from '@/Shuffle-MCPs/api';
+import { ShufflePipelinesBanner } from '@/Shuffle-MCPs/ShufflePipelinesBanner';
+import { IntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
 
 // Singul styles — compact dark theme
 const singulStyles = {

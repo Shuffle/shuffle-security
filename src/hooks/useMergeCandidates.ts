@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { getDatastoreByCategory, DATASTORE_CATEGORIES } from '@/services/datastore';
+import { getDatastoreByCategory, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import {
   scoreMergeCandidates,
   ScoredMergeCandidate,

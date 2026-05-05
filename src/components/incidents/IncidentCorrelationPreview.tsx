@@ -4,7 +4,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import LaunchIcon from '@mui/icons-material/Launch';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { Link } from 'react-router-dom';
-import { getDatastoreItem } from '@/services/datastore';
+import { getDatastoreItem } from '@/Shuffle-MCPs/datastore';
 
 interface IncidentCorrelationPreviewProps {
   /** Incident ID for the chip the user clicked. */

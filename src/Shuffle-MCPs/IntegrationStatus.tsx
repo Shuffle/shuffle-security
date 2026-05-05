@@ -9,11 +9,11 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { Link } from 'react-router-dom';
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
-import { fetchAuthenticatedApps } from '@/services/authenticatedApps';
-import { deduplicateAuthApps, backfillAppImages, type AuthAppEntry } from '@/lib/utils';
-import { useAppDetail } from '@/context/AppDetailContext';
-import { SIEM_PATTERNS, CASES_PATTERNS, EDR_PATTERNS, EMAIL_APP_PATTERNS } from '@/lib/ingestionDetection';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
+import { fetchAuthenticatedApps } from '@/Shuffle-MCPs/authenticatedApps';
+import { deduplicateAuthApps, backfillAppImages, type AuthAppEntry } from '@/Shuffle-MCPs/auth-utils';
+import { useAppDetail } from '@/Shuffle-MCPs/AppDetailContext';
+import { SIEM_PATTERNS, CASES_PATTERNS, EDR_PATTERNS, EMAIL_APP_PATTERNS } from '@/Shuffle-MCPs/ingestionDetection';
 
 interface Integration {
   id: string;

@@ -18,7 +18,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { useAuth } from '@/context/AuthContext';
-import { API_CONFIG } from '@/config/api';
+import { API_CONFIG } from '@/Shuffle-MCPs/api';
 import { Server } from 'lucide-react';
 import gcpLogo from '@/assets/gcp-logo.png';
 import awsLogo from '@/assets/aws-logo.png';

@@ -22,8 +22,8 @@ import {
 } from '@/components/ui/dialog';
 import { ShuffleMCP } from '@/Shuffle-MCPs';
 import type { AppSelectedEvent } from '@/Shuffle-MCPs';
-import { AppAuthCard } from '@/components/onboarding/AppAuthConfig';
-import { API_CONFIG } from '@/config/api';
+import { AppAuthCard } from '@/Shuffle-MCPs/AppAuthConfig';
+import { API_CONFIG } from '@/Shuffle-MCPs/api';
 import { useAppAuthFlow } from '@/hooks/useAppAuthFlow';
 
 // Singul styles — matches /onboarding/sources

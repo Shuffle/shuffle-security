@@ -25,13 +25,13 @@ import RestoreIcon from '@mui/icons-material/Restore';
 import CloseIcon from '@mui/icons-material/Close';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import WebhookIcon from '@mui/icons-material/Webhook';
-import AgentIcon from '@/components/agent/AgentIcon';
+import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import EnhancedEncryptionIcon from '@mui/icons-material/EnhancedEncryption';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import SecurityIcon from '@mui/icons-material/Security';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { toast } from 'sonner';
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import DownloadIcon from '@mui/icons-material/Download';
 import PopupTextEditor from '@/components/shared/PopupTextEditor';
 import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
@@ -39,8 +39,8 @@ import { useAuthenticatedApps } from '@/hooks/useAuthenticatedApps';
 import AddIcon from '@mui/icons-material/Add';
 import { Tooltip } from '@mui/material';
 
-import { CategoryAutomation } from '@/services/datastore';
-import { extractValidatedIngestionApps, ValidatedIngestionApp, findIngestTicketsWorkflow, extractWorkflowAppNames } from '@/lib/ingestionDetection';
+import { CategoryAutomation } from '@/Shuffle-MCPs/datastore';
+import { extractValidatedIngestionApps, ValidatedIngestionApp, findIngestTicketsWorkflow, extractWorkflowAppNames } from '@/Shuffle-MCPs/ingestionDetection';
 import { IngestionSourceButton } from '@/components/incidents/IngestionSourceButton';
 
 // API format for automations

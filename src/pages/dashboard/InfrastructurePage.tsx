@@ -4,9 +4,9 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { deduplicateAuthApps, backfillAppImages, type AuthAppEntry } from '@/lib/utils';
-import { setDatastoreItem, getDatastoreItem, DATASTORE_CATEGORIES } from '@/services/datastore';
+import { setDatastoreItem, getDatastoreItem, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import ReactFlow, {
   Background,
   Controls,
@@ -42,7 +42,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
-import { IntegrationStatus } from '@/components/layout/IntegrationStatus';
+import { IntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
 import { AddAppModal } from '@/components/infrastructure/AddAppModal';
 import {
   TOOL_CATEGORIES,

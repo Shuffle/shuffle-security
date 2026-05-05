@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { useDemo, TOUR_STEPS } from '@/context/DemoContext';
 import { useWorkflows } from '@/hooks/useWorkflows';
 import { useAgentNotifications } from '@/hooks/useNotifications';
-import { isWorkflowScheduleStopped } from '@/lib/ingestionDetection';
+import { isWorkflowScheduleStopped } from '@/Shuffle-MCPs/ingestionDetection';
 import { seedDemoWazuhImplantIncident } from '@/services/demoMode';
 import { useEntityPreference } from '@/hooks/useEntityLabel';
 

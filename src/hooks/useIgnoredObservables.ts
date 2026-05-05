@@ -25,7 +25,7 @@ import {
   getDatastoreByCategory,
   setDatastoreItem,
   deleteDatastoreItem,
-} from '@/services/datastore';
+} from '@/Shuffle-MCPs/datastore';
 import {
   canonicalCompositeKey,
   encodeCompositeKey,

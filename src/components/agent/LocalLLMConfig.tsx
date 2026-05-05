@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Typography, FormControl, InputLabel, Select, MenuItem, TextField } from '@mui/material';
-import { AppAuthCard } from '@/components/onboarding/AppAuthConfig';
+import { AppAuthCard } from '@/Shuffle-MCPs/AppAuthConfig';
 import type { AlgoliaSearchApp } from '@/Shuffle-MCPs';
-import { useAppAuth } from '@/hooks/useAppAuth';
-import { getApiUrl, getAuthHeader } from '@/config/api';
-import { refreshAllIntegrationStatus } from '@/components/layout/IntegrationStatus';
+import { useAppAuth } from '@/Shuffle-MCPs/useAppAuth';
+import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
+import { refreshAllIntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
 import singulAgentIcon from '@/assets/singul-agent-icon.png';
 
 const OPENAI_APP_NAME = 'OpenAI';

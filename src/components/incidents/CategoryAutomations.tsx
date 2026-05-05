@@ -9,7 +9,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import WebhookIcon from '@mui/icons-material/Webhook';
-import AgentIcon from '@/components/agent/AgentIcon';
+import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import EnhancedEncryptionIcon from '@mui/icons-material/EnhancedEncryption';
 import EditIcon from '@mui/icons-material/Edit';

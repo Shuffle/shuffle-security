@@ -16,7 +16,7 @@ import {
   DATASTORE_CATEGORIES,
   getDatastoreItem,
   setDatastoreItem,
-} from '@/services/datastore';
+} from '@/Shuffle-MCPs/datastore';
 import type { Observable, IncidentTask } from '@/config/ocsfIncidentSchema';
 
 export interface ReportSection {

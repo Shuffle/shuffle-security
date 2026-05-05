@@ -3,7 +3,7 @@
  * Fetches and manages notifications from the Shuffle API.
  */
 
-import { getApiUrl, shuffleFetch } from '@/config/api';
+import { getApiUrl, shuffleFetch } from '@/Shuffle-MCPs/api';
 
 export interface AgentNotification {
   id: string;

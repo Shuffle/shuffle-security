@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
-import type { AppAuthState, AuthStatus, ApiAuthEntry } from '@/components/onboarding/AppAuthConfig';
-import { refreshAllIntegrationStatus } from '@/components/layout/IntegrationStatus';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
+import type { AppAuthState, AuthStatus, ApiAuthEntry } from '@/Shuffle-MCPs/AppAuthConfig';
+import { refreshAllIntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
 
 // Helper to process auth data and invalidate entries older than 30 days
 const processAuthData = (authData: ApiAuthEntry[]): ApiAuthEntry[] => {

@@ -29,7 +29,7 @@ import {
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { getApiUrl, getAuthHeader } from '@/config/api';
+import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { useAuth } from '@/context/AuthContext';
 import { useSubOrgs, SubOrg } from '@/hooks/useSubOrgs';
 import { getRegionFlag } from '@/lib/regionFlag';

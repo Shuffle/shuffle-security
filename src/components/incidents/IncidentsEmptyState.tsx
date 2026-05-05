@@ -6,7 +6,7 @@ import InboxIcon from '@mui/icons-material/Inbox';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import AddIcon from '@mui/icons-material/Add';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import { ValidatedIngestionApp } from '@/lib/ingestionDetection';
+import { ValidatedIngestionApp } from '@/Shuffle-MCPs/ingestionDetection';
 import { IngestionSourceButton } from './IngestionSourceButton';
 import { WebhookIngestionButton, WebhookIngestionInfo } from './WebhookIngestionButton';
 import { useEntityText } from '@/hooks/useEntityLabel';

@@ -34,13 +34,13 @@ import {
 } from 'lucide-react';
 
 import AgentActionDrawer from '@/components/agent/AgentActionDrawer';
-import AgentIcon from '@/components/agent/AgentIcon';
+import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import LocalLLMConfig from '@/components/agent/LocalLLMConfig';
 import PermissionsPanel from '@/components/agent/PermissionsPanel';
 import AddIcon from '@mui/icons-material/Add';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { runAgent } from '@/services/agentRun';
 import { deduplicateAuthApps, backfillAppImages } from '@/lib/utils';
 import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';

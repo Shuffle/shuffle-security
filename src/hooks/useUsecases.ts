@@ -7,7 +7,7 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/context/AuthContext';
-import { getApiUrl, shuffleFetch } from '@/config/api';
+import { getApiUrl, shuffleFetch } from '@/Shuffle-MCPs/api';
 import {
   DEFAULT_USECASES,
   type Usecase,

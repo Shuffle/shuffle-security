@@ -26,10 +26,10 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import CloseIcon from '@mui/icons-material/Close';
 import { toast } from 'sonner';
 
-import { DATASTORE_CATEGORIES, getDatastoreItem, setDatastoreItem } from '@/services/datastore';
+import { DATASTORE_CATEGORIES, getDatastoreItem, setDatastoreItem } from '@/Shuffle-MCPs/datastore';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
-import { getApiUrl, getAuthHeader } from '@/config/api';
+import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { resyncState } from '@/lib/resyncState';
 import { useEntityText } from '@/hooks/useEntityLabel';
 import {

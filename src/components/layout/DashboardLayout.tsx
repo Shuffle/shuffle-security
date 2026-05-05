@@ -3,7 +3,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { Box, Alert, Button } from '@mui/material';
 import { AppSidebar } from './AppSidebar';
 import { MobileBottomNav } from './MobileBottomNav';
-import { AppDetailProvider, useAppDetail } from '@/context/AppDetailContext';
+import { AppDetailProvider, useAppDetail } from '@/Shuffle-MCPs/AppDetailContext';
 import AppDetailDrawer from '@/components/shared/AppDetailDrawer';
 import AgentHandoffWatcher from '@/components/agent/AgentHandoffWatcher';
 import { useAuth } from '@/context/AuthContext';

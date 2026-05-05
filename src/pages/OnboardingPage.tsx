@@ -6,7 +6,7 @@ import { TicketingSystemSearch } from '@/components/onboarding/TicketingSystemSe
 import { WelcomeStep } from '@/components/onboarding/WelcomeStep';
 import { UnifiedSourceSetup } from '@/components/onboarding/UnifiedSourceSetup';
 import type { AlgoliaSearchApp } from '@/Shuffle-MCPs';
-import { AppAuthConfig, AppAuthState, AuthStatus } from '@/components/onboarding/AppAuthConfig';
+import { AppAuthConfig, AppAuthState, AuthStatus } from '@/Shuffle-MCPs/AppAuthConfig';
 import { AutomationConfig, EnrichmentState } from '@/components/onboarding/AutomationConfig';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -16,14 +16,14 @@ import WavingHandIcon from '@mui/icons-material/WavingHand';
 import LinkIcon from '@mui/icons-material/Link';
 import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/config/api';
-import { setDatastoreItem, getDatastoreItem } from '@/services/datastore';
+import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
+import { setDatastoreItem, getDatastoreItem } from '@/Shuffle-MCPs/datastore';
 import {
   isEmailApp, isIngestionApp, isThreatIntelApp,
-} from '@/lib/ingestionDetection';
-import { findIngestTicketsWorkflow, findForwardTicketsWorkflow, extractWorkflowAppNames } from '@/lib/ingestionDetection';
+} from '@/Shuffle-MCPs/ingestionDetection';
+import { findIngestTicketsWorkflow, findForwardTicketsWorkflow, extractWorkflowAppNames } from '@/Shuffle-MCPs/ingestionDetection';
 import { trackOnboardingStep, trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
-import { refreshAllIntegrationStatus } from '@/components/layout/IntegrationStatus';
+import { refreshAllIntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
 
 // Datastore category for onboarding config (using shuffle-security_ prefix for consistency)
 const ONBOARDING_CONFIG_CATEGORY = 'shuffle-security_onboarding';

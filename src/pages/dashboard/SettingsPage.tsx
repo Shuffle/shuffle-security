@@ -10,7 +10,7 @@ import {
   Avatar,
   Divider,
 } from '@mui/material';
-import { getApiUrl, getAuthHeader, API_CONFIG } from '@/config/api';
+import { getApiUrl, getAuthHeader, API_CONFIG } from '@/Shuffle-MCPs/api';
 import { useAuth } from '@/context/AuthContext';
 import { trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 

@@ -38,7 +38,7 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import TuneIcon from '@mui/icons-material/Tune';
 import RssFeedIcon from '@mui/icons-material/RssFeed';
 import FingerprintIcon from '@mui/icons-material/Fingerprint';
-import AgentIcon from '@/components/agent/AgentIcon';
+import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 
 /** Stable identifiers used as keys in the persisted visibility map.
  *  NEVER renumber/rename — these end up in the org datastore. New items
