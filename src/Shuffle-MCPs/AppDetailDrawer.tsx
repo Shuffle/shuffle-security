@@ -34,7 +34,7 @@ import AppMcpChat from '@/Shuffle-MCPs/AppMcpChat';
 import ApiCallViewer from '@/Shuffle-MCPs/ApiCallViewer';
 import type { AlgoliaSearchApp } from './shuffle-mcp.helpers';
 import { useAppAuth } from '@/Shuffle-MCPs/useAppAuth';
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
+import { API_CONFIG, getApiUrl, getAuthHeader, getTrackedOrgId } from '@/Shuffle-MCPs/api';
 // AuthContext detached — consumers can pass `isAuthenticated` as a prop. Defaults to true.
 
 interface AppInfo {
@@ -190,33 +190,56 @@ function getSingulActions(categories?: string[]): SingulAction[] {
   return matched.slice(0, 8);
 }
 
-function buildSingulCurl(appName: string, action: SingulAction | null): string {
+function buildSingulCurl(
+  appName: string,
+  action: SingulAction | null,
+  opts?: { apiKey?: string | null; orgId?: string | null },
+): string {
   const act = action?.name || '{action}';
   const body = {
     app: appName || '<appname>',
     fields: action?.fields.length ? action.fields : [{ name: 'field1', value: 'value1' }],
   };
+  const token = opts?.apiKey || 'YOUR_TOKEN';
+  const orgLine = opts?.orgId ? `\n  -H "Org-Id: ${opts.orgId}" \\` : '';
   return `curl -X POST https://singul.io/api/${act} \\
-  -H "Authorization: Bearer YOUR_TOKEN" \\
+  -H "Authorization: Bearer ${token}" \\${orgLine}
   -d '${JSON.stringify(body, null, 2)}'`;
 }
 
-const SingulActionsPreview = ({ appName, categories }: { appName: string; categories?: string[] }) => {
+const SingulActionsPreview = ({
+  appName,
+  categories,
+  activeOrgId,
+}: {
+  appName: string;
+  categories?: string[];
+  activeOrgId?: string | null;
+}) => {
   const actions = useMemo(() => getSingulActions(categories), [categories]);
   const isDisabled = actions.length === 0;
   const [selected, setSelected] = useState<SingulAction | null>(null);
   const [curl, setCurl] = useState<string>('');
 
+  const curlOpts = useMemo(() => {
+    const apiKey = API_CONFIG.apiKey;
+    const trackedOrg = getTrackedOrgId();
+    // Only inject Org-Id when it differs from the host app's currently active org
+    const orgId = trackedOrg && activeOrgId && trackedOrg !== activeOrgId ? trackedOrg : null;
+    return { apiKey, orgId };
+  }, [activeOrgId]);
+
   useEffect(() => {
     const initial = actions[0] || null;
     setSelected(initial);
-    setCurl(buildSingulCurl(appName, initial));
-  }, [appName, actions]);
+    setCurl(buildSingulCurl(appName, initial, curlOpts));
+  }, [appName, actions, curlOpts]);
 
   const handleSelect = (action: SingulAction) => {
     setSelected(action);
-    setCurl(buildSingulCurl(appName, action));
+    setCurl(buildSingulCurl(appName, action, curlOpts));
   };
+
 
   const handleCopy = async () => {
     try {
@@ -436,6 +459,9 @@ interface AppDetailDrawerProps {
   onAddToCanvas?: (appInfo: { name: string; icon: string; algoliaId: string | null }) => void;
   /** Whether the current user is authenticated. Defaults to true. */
   isAuthenticated?: boolean;
+  /** Host app's currently active org id. If different from the library's tracked org,
+   *  an `Org-Id` header is injected into the Singul curl preview. */
+  activeOrgId?: string | null;
 }
 
 export default function AppDetailDrawer({
@@ -447,6 +473,7 @@ export default function AppDetailDrawer({
   onRefresh,
   onAddToCanvas,
   isAuthenticated = true,
+  activeOrgId,
 }: AppDetailDrawerProps) {
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   const [appLoading, setAppLoading] = useState(false);
@@ -945,7 +972,7 @@ export default function AppDetailDrawer({
                 </Box>
 
                 {/* Try Singul actions — disabled-look catalog */}
-                <SingulActionsPreview appName={appName || ''} categories={appInfo?.categories} />
+                <SingulActionsPreview appName={appName || ''} categories={appInfo?.categories} activeOrgId={activeOrgId} />
               </motion.div>
             )}
 
