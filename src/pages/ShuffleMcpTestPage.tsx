@@ -298,7 +298,7 @@ const ShuffleMcpTestPage = () => {
   return (
     <>
       <LandingNavbar />
-      <Container maxWidth="lg" sx={{ py: 6 }}>
+      <Container maxWidth="lg" sx={{ pt: { xs: 12, md: 16 }, pb: 6 }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" sx={{ fontWeight: 600, mb: 1 }}>
           Shuffle MCP — library demo
