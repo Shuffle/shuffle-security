@@ -14,6 +14,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
 import { ShuffleMCP, AppSearchDrawer, AppDetailDrawer } from '@/Shuffle-MCPs';
+import { API_CONFIG } from '@/Shuffle-MCPs/api';
 
 /**
  * Demo page for the Shuffle-MCPs library.
