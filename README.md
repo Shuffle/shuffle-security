@@ -14,11 +14,11 @@ Follow us on Twitter at [@shuffleio](https://twitter.com/shuffleio).
 
 <p align="center">
   <img width="49%" alt="Incidents view" src="https://github.com/user-attachments/assets/6f8fef8e-83f2-4912-b14a-981ffca7980f" />
-  <img width="49%" alt="Incident detail" src="https://github.com/user-attachments/assets/2c0056c2-646b-431b-a78d-7a2673fd1a3b" />
+  <img width="49%" alt="Automation pipeline" src="https://github.com/user-attachments/assets/e79ae7af-0db8-4d89-be62-706c223b198a" />
 </p>
 
 <p align="center">
-  <img width="49%" alt="Automation pipeline" src="https://github.com/user-attachments/assets/e79ae7af-0db8-4d89-be62-706c223b198a" />
+  <img width="49%" alt="Incident detail" src="https://github.com/user-attachments/assets/2c0056c2-646b-431b-a78d-7a2673fd1a3b" />
   <img width="49%" alt="AI Agent" src="https://github.com/user-attachments/assets/511cedd8-0a40-4e52-93cc-5638048a45dd" />
 </p>
 
