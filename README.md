@@ -12,15 +12,28 @@ Follow us on Twitter at [@shuffleio](https://twitter.com/shuffleio).
 
 </div>
 
-<p align="center">
-  <img width="49%" alt="Incidents view" src="https://github.com/user-attachments/assets/6f8fef8e-83f2-4912-b14a-981ffca7980f" />
-  <img width="49%" alt="Automation pipeline" src="https://github.com/user-attachments/assets/e79ae7af-0db8-4d89-be62-706c223b198a" />
-</p>
-
-<p align="center">
-  <img width="49%" alt="Incident detail" src="https://github.com/user-attachments/assets/2c0056c2-646b-431b-a78d-7a2673fd1a3b" />
-  <img width="49%" alt="AI Agent" src="https://github.com/user-attachments/assets/511cedd8-0a40-4e52-93cc-5638048a45dd" />
-</p>
+<table align="center">
+  <tr>
+    <td width="50%" align="center">
+      <img alt="Incidents view" src="https://github.com/user-attachments/assets/6f8fef8e-83f2-4912-b14a-981ffca7980f" /><br/>
+      <sub><b>Handle incidents from any source</b><br/>One unified view for alerts, cases and tickets across every tool.</sub>
+    </td>
+    <td width="50%" align="center">
+      <img alt="Automation pipeline" src="https://github.com/user-attachments/assets/e79ae7af-0db8-4d89-be62-706c223b198a" /><br/>
+      <sub><b>Be in control of the automation</b><br/>Visual ingest and forward pipelines you can shape end-to-end.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img alt="Incident detail" src="https://github.com/user-attachments/assets/2c0056c2-646b-431b-a78d-7a2673fd1a3b" /><br/>
+      <sub><b>Investigate with full context</b><br/>Observables, correlations, IOCs and stakeholders in one place.</sub>
+    </td>
+    <td width="50%" align="center">
+      <img alt="AI Agent" src="https://github.com/user-attachments/assets/511cedd8-0a40-4e52-93cc-5638048a45dd" /><br/>
+      <sub><b>Let the AI agent do the heavy lifting</b><br/>Triage, enrich and respond — with approvals where it matters.</sub>
+    </td>
+  </tr>
+</table>
 
 <div align="center">
 
