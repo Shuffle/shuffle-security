@@ -392,6 +392,7 @@ const ShuffleMcpTestPage = () => {
         appName={detailApp}
       />
     </Container>
+    </>
   );
 };
 
