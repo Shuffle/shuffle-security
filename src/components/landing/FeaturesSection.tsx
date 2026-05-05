@@ -12,6 +12,8 @@ interface FeatureSectionProps {
   color: string;
   reverse?: boolean;
   visual: React.ReactNode;
+  link?: string;
+  linkLabel?: string;
 }
 
 const FeatureSection = ({ title, highlight, description, bullets, color, reverse, visual }: FeatureSectionProps) => (
