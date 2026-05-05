@@ -144,7 +144,7 @@ export default function AppDetailDrawer({
     const searchName = appName.replace(/_/g, ' ');
 
     (async () => {
-      // Algolia lookup
+      // Algolia lookup (best-effort — may fail with 429 or be unavailable)
       let algoliaId: string | null = null;
       try {
         const { algoliasearch } = await import('algoliasearch');
@@ -169,7 +169,40 @@ export default function AppDetailDrawer({
         }
       } catch {}
 
-      // Config API — fetch immediately, don't block on activation check
+      // Fallback: if Algolia didn't resolve an id, look it up via /api/v1/apps
+      // This also doubles as our activation check below.
+      let appsList: any[] | null = null;
+      if (API_CONFIG.apiKey) {
+        try {
+          const res = await fetch(getApiUrl('/api/v1/apps'), {
+            credentials: 'include',
+            headers: { ...getAuthHeader() },
+          });
+          if (res.ok) {
+            const apps = await res.json();
+            if (Array.isArray(apps)) appsList = apps;
+          }
+        } catch {}
+      }
+
+      if (!algoliaId && appsList) {
+        const localMatch = appsList.find((a: any) =>
+          (a.name || '').toLowerCase().replace(/[\s_\-]+/g, '_') === normalizedName
+        );
+        if (localMatch?.id) {
+          algoliaId = localMatch.id;
+          setResolvedAlgoliaId(localMatch.id);
+          setAppInfo(prev => prev ?? {
+            name: localMatch.name || searchName,
+            description: localMatch.description || '',
+            large_image: localMatch.large_image || '',
+            categories: localMatch.categories || [],
+            authentication: localMatch.authentication,
+          });
+        }
+      }
+
+      // Config API — only available when we have an id
       if (API_CONFIG.apiKey && algoliaId) {
         try {
           const response = await fetch(
@@ -183,33 +216,26 @@ export default function AppDetailDrawer({
             }
           }
         } catch {}
-
-        // Fire activation check in background — don't await it
-        (async () => {
-          try {
-            const res = await fetch(getApiUrl('/api/v1/apps'), {
-              credentials: 'include',
-              headers: { ...getAuthHeader() },
-            });
-            if (res.ok) {
-              const apps = await res.json();
-              if (Array.isArray(apps)) {
-                const match = apps.find((a: any) =>
-                  (a.name || '').toLowerCase().replace(/[\s_\-]+/g, '_') === normalizedName && a.activated
-                );
-                setIsActivated(!!match);
-                setActivatedAppId(match?.id || null);
-              } else {
-                setIsActivated(false);
-              }
-            } else {
-              setIsActivated(false);
-            }
-          } catch {
-            setIsActivated(false);
-          }
-        })();
       }
+
+      // Activation status from the same /api/v1/apps response
+      if (appsList) {
+        const activeMatch = appsList.find((a: any) =>
+          (a.name || '').toLowerCase().replace(/[\s_\-]+/g, '_') === normalizedName && a.activated
+        );
+        setIsActivated(!!activeMatch);
+        setActivatedAppId(activeMatch?.id || null);
+      } else {
+        setIsActivated(false);
+      }
+
+      // Last-resort: if we still have no appInfo, seed from the name so the drawer renders
+      setAppInfo(prev => prev ?? {
+        name: searchName,
+        description: '',
+        large_image: '',
+        categories: [],
+      });
 
       setAppLoading(false);
     })();
