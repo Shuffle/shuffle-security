@@ -1,4 +1,8 @@
-# [![Shuffle Logo](https://github.com/Shuffle/Shuffle/blob/main/frontend/public/images/Shuffle_logo_new.png)](https://shuffler.io) Shuffle Security
+<div align="center">
+
+<img src="src/assets/singul-agent-icon.png" alt="Shuffle Security Agent" width="96" height="96" />
+
+# Shuffle Security
 
 [Shuffle Security](https://security.shuffler.io) is the open source incident response and security operations frontend for [Shuffle](https://shuffler.io) — built for and by security professionals. It brings alerts, cases, observables, assets and AI-driven response into a single workspace, designed to work well for SOC teams, MSSPs and service providers.
 
@@ -6,16 +10,24 @@
 
 Follow us on Twitter at [@shuffleio](https://twitter.com/shuffleio).
 
-<img width="1670" height="649" alt="image" src="https://github.com/user-attachments/assets/6f8fef8e-83f2-4912-b14a-981ffca7980f" />
+</div>
 
-<img width="874" height="951" alt="image" src="https://github.com/user-attachments/assets/2c0056c2-646b-431b-a78d-7a2673fd1a3b" />
+<p align="center">
+  <img width="49%" alt="Incidents view" src="https://github.com/user-attachments/assets/6f8fef8e-83f2-4912-b14a-981ffca7980f" />
+  <img width="49%" alt="Incident detail" src="https://github.com/user-attachments/assets/2c0056c2-646b-431b-a78d-7a2673fd1a3b" />
+</p>
 
-<img width="1506" height="586" alt="image" src="https://github.com/user-attachments/assets/e79ae7af-0db8-4d89-be62-706c223b198a" />
+<p align="center">
+  <img width="49%" alt="Automation pipeline" src="https://github.com/user-attachments/assets/e79ae7af-0db8-4d89-be62-706c223b198a" />
+  <img width="49%" alt="AI Agent" src="https://github.com/user-attachments/assets/511cedd8-0a40-4e52-93cc-5638048a45dd" />
+</p>
 
-<img width="1485" height="1131" alt="image" src="https://github.com/user-attachments/assets/511cedd8-0a40-4e52-93cc-5638048a45dd" />
-
+<div align="center">
 
 ## Try it
+
+</div>
+
 * Cloud: Register at [https://shuffler.io/register](https://shuffler.io/register) and get cooking
 * Self-hosted: Check out the [installation guide](https://github.com/shuffle/shuffle/blob/master/.github/install-guide.md)
 * Hosted UI: [https://security.shuffler.io](https://security.shuffler.io)
@@ -86,9 +98,11 @@ Contributing guidelines are outlined [here](https://github.com/shuffle/Shuffle/b
 
 ## Contributors
 **Shuffle**
+
 [![](https://contrib.rocks/image?repo=shuffle/shuffle)](https://github.com/shuffle/shuffle/graphs/contributors)
 
 [**App magicians**](https://github.com/shuffle/shuffle-apps)
+
 [![](https://contrib.rocks/image?repo=shuffle/shuffle-apps)](https://github.com/shuffle/shuffle-apps/graphs/contributors)
 
 ## License
