@@ -72,7 +72,7 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
   const [expanded, setExpanded] = useState(false);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const appDetail = useAppDetail();
+  const appDetail = useAppDetailOptional();
 
   // Apply filter if provided (case-insensitive name match)
   const integrations = filterApps
