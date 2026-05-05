@@ -304,7 +304,7 @@ const ShuffleMcpTestPage = () => {
           Shuffle MCP — library demo
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Three self-contained components from{' '}
+          Six self-contained components from{' '}
           <Box
             component="a"
             href="https://www.npmjs.com/package/@shuffleio/shuffle-mcps"
