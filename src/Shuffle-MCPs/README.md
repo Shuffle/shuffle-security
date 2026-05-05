@@ -265,6 +265,50 @@ When you do **not** pass `onAppSelected`, clicking an app opens a built-in right
 ```
 
 
+## Theming (light + dark)
+
+There is no `theme` prop — every component reads from your app's CSS variables and inherits whatever palette is active. Define these tokens once in your global stylesheet (e.g. `:root` for light, `.dark` for dark) and the components flip automatically:
+
+```css
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --border: 220 13% 91%;
+  --muted: 220 14% 96%;
+  --muted-foreground: 220 9% 46%;
+  --primary: 24 100% 50%;          /* Shuffle orange */
+  --primary-foreground: 0 0% 100%;
+}
+
+.dark {
+  --background: 222 47% 6%;
+  --foreground: 0 0% 98%;
+  --card: 222 47% 9%;
+  --border: 217 19% 18%;
+  --muted: 217 19% 14%;
+  --muted-foreground: 220 9% 65%;
+  --primary: 24 100% 55%;
+  --primary-foreground: 0 0% 100%;
+}
+```
+
+Values are raw HSL channels (no `hsl(...)` wrapper) because internally we use `hsl(var(--card))`, `hsl(var(--border) / 0.5)`, etc. Toggle dark mode by adding/removing the `.dark` class on `<html>` or `<body>` — same pattern as Tailwind / shadcn.
+
+For finer-grained overrides on `<ShuffleMCP />`, pass `customStyles` — every slot (container, input, dropdown, gridItem, appName, appDescription, appCategory, appTags, emptyState, errorState, …) accepts a `React.CSSProperties` object. See [LIBRARY.md](./LIBRARY.md#styling) for the full slot list.
+
+```tsx
+<ShuffleMCP
+  apiKey="..."
+  inline
+  customStyles={{
+    container: { borderRadius: 16 },
+    input: { fontFamily: 'Inter, sans-serif' },
+    gridItem: { background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' },
+  }}
+/>
+```
+
 Full prop reference, framework setup (Next.js, Vue), styling slots, custom rendering, and publishing: [**LIBRARY.md**](./LIBRARY.md).
 
 ## Imperative handle
