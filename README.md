@@ -45,8 +45,6 @@ Follow us on Twitter at [@shuffleio](https://twitter.com/shuffleio).
 * Self-hosted: Check out the [installation guide](https://github.com/shuffle/shuffle/blob/master/.github/install-guide.md)
 * Hosted UI: [https://security.shuffler.io](https://security.shuffler.io)
 
-Please consider [sponsoring](https://github.com/sponsors/frikky) the project if you want to see more rapid development.
-
 ## Support
 * [Discord](https://discord.gg/B2CBzUm)
 * [Twitter](https://twitter.com/shuffleio)
