@@ -294,25 +294,29 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
   // Handle app selection
   const selectApp = useCallback((app: AlgoliaSearchApp) => {
     const authUrl = `${apiBaseUrl}${appAuthPath}?app_id=${app.objectID}&auth=${authToken}&source=shuffle`;
-    
+
     if (multiSelect) {
       const isAlreadySelected = internalSelectedApps.some((a) => a.objectID === app.objectID);
       const newSelection = isAlreadySelected
         ? internalSelectedApps.filter((a) => a.objectID !== app.objectID)
         : [...internalSelectedApps, app];
-      
+
       setInternalSelectedApps(newSelection);
       onSelectionChange?.(newSelection);
     } else {
-      onAppSelected?.({ app, authUrl });
-      
-      if (!preventDefault) {
-        window.open(authUrl, '_blank');
+      // If consumer wired up onAppSelected, defer entirely to them.
+      if (onAppSelected) {
+        onAppSelected({ app, authUrl });
+        if (!preventDefault) {
+          window.open(authUrl, '_blank');
+        }
+      } else if (!preventDefault) {
+        // New default: open built-in side drawer with the app + its existing
+        // authentications, instead of popping a new tab to shuffler.io.
+        setDrawerApp(app);
       }
-      
+
       setIsOpen(false);
-      setQuery('');
-      setResults([]);
     }
   }, [authToken, apiBaseUrl, appAuthPath, multiSelect, internalSelectedApps, onAppSelected, onSelectionChange, preventDefault]);
 
