@@ -6239,7 +6239,7 @@ const IncidentDetailPage = () => {
                         (async () => {
                           setAskAgentSending(true);
                           try {
-                            await handleAddComment(`@AIAgent ${askAgentText.trim()}`);
+                            await handleAddComment(`@AIAgent ${askAgentText.trim()}${buildAskAgentContext()}`);
                             setAskAgentText('');
                             setAskAgentAnchor(null);
                             toast.success('Sent to the AI agent');
@@ -6300,7 +6300,7 @@ const IncidentDetailPage = () => {
                         onClick={async () => {
                           setAskAgentSending(true);
                           try {
-                            await handleAddComment(`@AIAgent ${askAgentText.trim()}`);
+                            await handleAddComment(`@AIAgent ${askAgentText.trim()}${buildAskAgentContext()}`);
                             setAskAgentText('');
                             setAskAgentAnchor(null);
                             toast.success('Sent to the AI agent');
