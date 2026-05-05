@@ -28,5 +28,14 @@ export const AppDetailProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useAppDetail = () => {
-  return useContext(AppDetailContext);
+  const context = useContext(AppDetailContext);
+  if (!context) {
+    throw new Error('useAppDetail must be used within an AppDetailProvider');
+  }
+  return context;
+};
+
+/** Safe variant: returns null if no provider is mounted. Useful for components used both inside and outside the dashboard. */
+export const useAppDetailOptional = () => {
+  return useContext(AppDetailContext) ?? null;
 };
