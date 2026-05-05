@@ -597,7 +597,7 @@ export default function AppDetailDrawer({
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.15 }}>
                 <Box sx={{ mb: 3 }}>
                   <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '0.95rem', mb: 1.5 }}>
-                    Try it out
+                    Try MCP
                   </Typography>
                   <AppMcpChat
                     appName={appName || ''}
@@ -606,8 +606,12 @@ export default function AppDetailDrawer({
                     categories={appInfo?.categories}
                   />
                 </Box>
+
+                {/* Try Singul actions — disabled-look catalog */}
+                <SingulActionsPreview categories={appInfo?.categories} />
               </motion.div>
             )}
+
 
           </>
         )}
