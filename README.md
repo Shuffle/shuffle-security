@@ -42,8 +42,21 @@ Follow us on Twitter at [@shuffleio](https://twitter.com/shuffleio).
 </div>
 
 * Cloud: Register at [https://shuffler.io/register](https://shuffler.io/register) and get cooking
-* Self-hosted: Check out the [installation guide](https://github.com/shuffle/shuffle/blob/master/.github/install-guide.md)
 * Hosted UI: [https://security.shuffler.io](https://security.shuffler.io)
+* Self-hosted: see below ⬇️
+
+## Install (self-hosted)
+
+```bash
+git clone https://github.com/shuffle/shuffle-security
+cd shuffle-security
+cp .env.example .env   # set DB_LOCATION, SHUFFLE_FILE_LOCATION, SHUFFLE_APP_HOTLOAD_LOCATION, SHUFFLE_OPENSEARCH_PASSWORD
+docker compose up -d
+```
+
+Open **http://localhost:3002** (Shuffle Security UI). Backend on `:5001`, Shuffle Core UI on `:3001`.
+
+Full guide: [shuffle/shuffle install docs](https://github.com/shuffle/shuffle/blob/master/.github/install-guide.md)
 
 ## Support
 * [Discord](https://discord.gg/B2CBzUm)
