@@ -49,6 +49,7 @@ import EntityReferencePage from '@/pages/dashboard/EntityReferencePage';
 import VulnerabilityDetailPage from '@/pages/dashboard/VulnerabilityDetailPage';
 
 import AppsPage from '@/pages/AppsPage';
+import ShuffleMcpTestPage from '@/pages/ShuffleMcpTestPage';
 import NotFound from './pages/NotFound';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { DemoProvider } from '@/context/DemoContext';
