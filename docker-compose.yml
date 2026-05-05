@@ -1,39 +1,27 @@
 services:
-  security-frontend:
+  frontend:
     image: ghcr.io/shuffle/shuffle-security:latest
     container_name: shuffle-frontend
     hostname: shuffle-frontend
     ports:
-      - "3002:80"
-      - "3444:443"
+      - "${FRONTEND_PORT:-3002}:80"
+      - "${FRONTEND_PORT_HTTPS:-3444}:443"
     networks:
       - shuffle
     environment:
-      - BACKEND_HOSTNAME=${BACKEND_HOSTNAME}
-    restart: unless-stopped
-    depends_on:
-      - backend
-  frontend:
-    image: ghcr.io/shuffle/shuffle-frontend:latest
-    container_name: shuffle-frontend
-    hostname: shuffle-frontend
-    ports:
-      - "${FRONTEND_PORT}:80"
-      - "${FRONTEND_PORT_HTTPS}:443"
-    networks:
-      - shuffle
-    environment:
-      - BACKEND_HOSTNAME=${BACKEND_HOSTNAME}
+      # Hostname (or container name) of the Shuffle backend service.
+      # Resolved at container start by envsubst into nginx.conf for /api/v1 + /api/v2 proxying.
+      - BACKEND_HOSTNAME=${BACKEND_HOSTNAME:-shuffle-backend}
     restart: unless-stopped
     depends_on:
       - backend
   backend:
     image: ghcr.io/shuffle/shuffle-backend:latest
     container_name: shuffle-backend
-    hostname: ${BACKEND_HOSTNAME}
+    hostname: ${BACKEND_HOSTNAME:-shuffle-backend}
     # Here for debugging:
     ports:
-      - "${BACKEND_PORT}:5001"
+      - "${BACKEND_PORT:-5001}:5001"
     networks:
       - shuffle
     volumes:
