@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, useRef, type ReactNode } from 'react';
 import {
   Box,
   Typography,
@@ -9,10 +9,13 @@ import {
   Collapse,
   IconButton,
   Tooltip,
+  Popover,
+  Avatar,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import {
   ShuffleMCP,
   AppSearchDrawer,
@@ -25,7 +28,7 @@ import {
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { API_CONFIG } from '@/Shuffle-MCPs/api';
-import { Box as MuiBox, TextField, Skeleton } from '@mui/material';
+import { Box as MuiBox, Skeleton } from '@mui/material';
 
 /**
  * Demo page for the Shuffle-MCPs library.
