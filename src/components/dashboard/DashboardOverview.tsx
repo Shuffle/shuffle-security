@@ -115,52 +115,31 @@ interface KpiTileProps {
   delay?: number;
 }
 
-const KpiTile = ({ icon: Icon, glow, gradient, value, label, delta, spark, isLoading, onClick, delay = 0 }: KpiTileProps) => {
+const KpiTile = ({ icon: Icon, glow, value, label, delta, spark, isLoading, onClick, delay = 0 }: KpiTileProps) => {
   const sparkData = (spark ?? []).map((v, i) => ({ i, v }));
   const sparkId = `spark-${label.replace(/\s/g, '')}`;
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay }}
+      transition={{ duration: 0.25, delay }}
     >
       <Box
         onClick={onClick}
         sx={{
           position: 'relative',
           p: 2.25,
-          borderRadius: 2.5,
-          background: `
-            linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--card) / 0.4) 100%)
-          `,
+          borderRadius: 2,
+          backgroundColor: 'hsl(var(--card))',
           border: '1px solid hsl(var(--border))',
           cursor: onClick ? 'pointer' : 'default',
-          transition: 'all 0.3s cubic-bezier(.2,.8,.2,1)',
+          transition: 'border-color 0.2s, transform 0.2s',
           overflow: 'hidden',
           height: '100%',
-          minHeight: 144,
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            inset: 0,
-            background: gradient,
-            opacity: 0.18,
-            pointerEvents: 'none',
-            transition: 'opacity 0.3s',
-          },
-          '&::after': {
-            content: '""',
-            position: 'absolute',
-            top: -1, left: -1, right: -1,
-            height: 1,
-            background: `linear-gradient(90deg, transparent, ${glow}, transparent)`,
-            opacity: 0.6,
-          },
+          minHeight: 140,
           '&:hover': onClick ? {
-            borderColor: `${glow}66`,
-            transform: 'translateY(-2px)',
-            boxShadow: `0 0 0 1px ${glow}33, 0 12px 32px ${glow}22`,
-            '&::before': { opacity: 0.32 },
+            borderColor: 'hsl(var(--border) / 1)',
+            transform: 'translateY(-1px)',
             '& .kpi-arrow': { opacity: 1, transform: 'translate(0,0)' },
           } : {},
         }}
