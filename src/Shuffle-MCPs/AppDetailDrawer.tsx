@@ -294,7 +294,7 @@ const SingulActionsPreview = ({ appName, categories }: { appName: string; catego
               spellCheck={false}
               sx={{
                 width: '100%',
-                minHeight: 180,
+                minHeight: 270,
                 resize: 'vertical',
                 fontFamily: "'JetBrains Mono', monospace",
                 fontSize: '0.72rem',
@@ -308,26 +308,45 @@ const SingulActionsPreview = ({ appName, categories }: { appName: string; catego
                 '&:focus': { borderColor: 'hsl(var(--primary))' },
               }}
             />
-            <Button
-              size="small"
-              onClick={handleCopy}
-              sx={{
-                position: 'absolute',
-                top: 8,
-                right: 8,
-                height: 26,
-                minWidth: 0,
-                px: 1.25,
-                fontSize: '0.65rem',
-                textTransform: 'none',
-                color: 'hsl(var(--muted-foreground))',
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-                '&:hover': { backgroundColor: 'hsl(var(--muted))', color: 'hsl(var(--foreground))' },
-              }}
-            >
-              Copy
-            </Button>
+            <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.75 }}>
+              <Button
+                size="small"
+                onClick={handleCopy}
+                sx={{
+                  height: 26,
+                  minWidth: 0,
+                  px: 1.25,
+                  fontSize: '0.65rem',
+                  textTransform: 'none',
+                  color: 'hsl(var(--muted-foreground))',
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  '&:hover': { backgroundColor: 'hsl(var(--muted))', color: 'hsl(var(--foreground))' },
+                }}
+              >
+                Copy
+              </Button>
+              <Button
+                size="small"
+                onClick={handlePlay}
+                startIcon={<PlayArrowIcon sx={{ fontSize: 14 }} />}
+                sx={{
+                  height: 26,
+                  minWidth: 0,
+                  px: 1.25,
+                  fontSize: '0.65rem',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  color: 'hsl(var(--primary-foreground))',
+                  backgroundColor: 'hsl(var(--primary))',
+                  border: '1px solid hsl(var(--primary))',
+                  '& .MuiButton-startIcon': { mr: 0.5 },
+                  '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)' },
+                }}
+              >
+                Play
+              </Button>
+            </Box>
           </Box>
         )}
       </Box>
