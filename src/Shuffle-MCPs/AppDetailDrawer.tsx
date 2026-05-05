@@ -227,11 +227,16 @@ const SingulActionsPreview = ({ appName, categories }: { appName: string; catego
     }
   };
 
+  const handlePlay = () => {
+    if (!selected) return;
+    toast.info(`Run ${selected.name} — coming soon`);
+  };
+
   return (
     <Box sx={{ mb: 3, opacity: isDisabled ? 0.55 : 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
         <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '0.95rem' }}>
-          Try Singul actions
+          Try individual actions
         </Typography>
         <Chip
           label="Preview"
