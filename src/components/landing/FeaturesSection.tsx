@@ -16,7 +16,7 @@ interface FeatureSectionProps {
   linkLabel?: string;
 }
 
-const FeatureSection = ({ title, highlight, description, bullets, color, reverse, visual }: FeatureSectionProps) => (
+const FeatureSection = ({ title, highlight, description, bullets, color, reverse, visual, link, linkLabel }: FeatureSectionProps) => (
   <Box 
     sx={{ 
       py: { xs: 10, md: 16 },
