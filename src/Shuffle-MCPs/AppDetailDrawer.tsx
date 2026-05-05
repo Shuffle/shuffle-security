@@ -19,6 +19,10 @@ import {
   Button,
   Divider,
   Drawer,
+  Autocomplete,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -207,6 +211,23 @@ function buildSingulCurl(
   -d '${JSON.stringify(body, null, 2)}'`;
 }
 
+function buildSingulPython(
+  appName: string,
+  action: SingulAction | null,
+): string {
+  const act = action?.name || 'send_message';
+  const app = appName || '<appname>';
+  const fields = action?.fields.length ? action.fields : [];
+  const fieldsStr = JSON.stringify(fields);
+  return `import singul
+
+response = singul.run("${app}", action="${act}", fields=${fieldsStr})
+
+print(response)`;
+}
+
+type SnippetLang = 'curl' | 'python';
+
 const SingulActionsPreview = ({
   appName,
   categories,
@@ -219,32 +240,37 @@ const SingulActionsPreview = ({
   const actions = useMemo(() => getSingulActions(categories), [categories]);
   const isDisabled = actions.length === 0;
   const [selected, setSelected] = useState<SingulAction | null>(null);
-  const [curl, setCurl] = useState<string>('');
+  const [lang, setLang] = useState<SnippetLang>('curl');
+  const [snippet, setSnippet] = useState<string>('');
 
   const curlOpts = useMemo(() => {
     const apiKey = API_CONFIG.apiKey;
     const trackedOrg = getTrackedOrgId();
-    // Only inject Org-Id when it differs from the host app's currently active org
     const orgId = trackedOrg && activeOrgId && trackedOrg !== activeOrgId ? trackedOrg : null;
     return { apiKey, orgId };
   }, [activeOrgId]);
 
+  const buildSnippet = useCallback(
+    (action: SingulAction | null, l: SnippetLang) =>
+      l === 'python' ? buildSingulPython(appName, action) : buildSingulCurl(appName, action, curlOpts),
+    [appName, curlOpts],
+  );
+
   useEffect(() => {
     const initial = actions[0] || null;
     setSelected(initial);
-    setCurl(buildSingulCurl(appName, initial, curlOpts));
-  }, [appName, actions, curlOpts]);
+    setSnippet(buildSnippet(initial, lang));
+  }, [appName, actions, curlOpts, lang, buildSnippet]);
 
-  const handleSelect = (action: SingulAction) => {
+  const handleSelect = (action: SingulAction | null) => {
     setSelected(action);
-    setCurl(buildSingulCurl(appName, action, curlOpts));
+    setSnippet(buildSnippet(action, lang));
   };
-
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(curl);
-      toast.success('Copied curl command');
+      await navigator.clipboard.writeText(snippet);
+      toast.success('Copied snippet');
     } catch {
       toast.error('Copy failed');
     }
@@ -254,7 +280,7 @@ const SingulActionsPreview = ({
   const [playResult, setPlayResult] = useState<string | null>(null);
 
   const handlePlay = async () => {
-    if (!curl || playLoading) return;
+    if (!snippet || playLoading || lang !== 'curl') return;
     setPlayLoading(true);
     setPlayResult(null);
     try {
@@ -266,7 +292,7 @@ const SingulActionsPreview = ({
           name: 'curl',
           app_id: 'ebfe7d5c80000676588f86731db0a555',
           environment: 'Cloud',
-          parameters: [{ name: 'statement', value: curl, schema: { type: 'string' } }],
+          parameters: [{ name: 'statement', value: snippet, schema: { type: 'string' } }],
           app_name: 'http',
           app_version: '1.4.0',
         }),
@@ -318,43 +344,71 @@ const SingulActionsPreview = ({
           pointerEvents: isDisabled ? 'none' : 'auto',
         }}
       >
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: isDisabled ? 0 : 1.5 }}>
-          {isDisabled ? (
-            <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', fontStyle: 'italic', mx: 'auto', py: 1 }}>
-              No category detected for this app
-            </Typography>
-          ) : (
-            actions.map(action => {
-              const isActive = selected?.name === action.name;
-              return (
-                <Chip
-                  key={action.name}
-                  label={action.name}
-                  size="small"
-                  onClick={() => handleSelect(action)}
-                  sx={{
-                    height: 24,
-                    fontSize: '0.7rem',
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    backgroundColor: isActive ? 'hsl(var(--primary) / 0.15)' : 'hsl(var(--card))',
-                    color: isActive ? 'hsl(var(--primary))' : 'hsl(var(--foreground))',
-                    border: `1px solid ${isActive ? 'hsl(var(--primary))' : 'hsl(var(--border))'}`,
-                    '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.1)' },
-                  }}
-                />
-              );
-            })
-          )}
-        </Box>
+        {isDisabled ? (
+          <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', fontStyle: 'italic', textAlign: 'center', py: 1 }}>
+            No category detected for this app
+          </Typography>
+        ) : (
+          <Box sx={{ display: 'flex', gap: 1, mb: 1.5, alignItems: 'center' }}>
+            <Autocomplete
+              size="small"
+              disableClearable
+              options={actions}
+              value={selected || undefined}
+              onChange={(_, v) => handleSelect(v as SingulAction)}
+              getOptionLabel={(o: SingulAction) => o.name}
+              isOptionEqualToValue={(a, b) => a.name === b.name}
+              sx={{
+                flex: 1,
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'hsl(var(--card))',
+                  fontFamily: "'JetBrains Mono', monospace",
+                  fontSize: '0.75rem',
+                  color: 'hsl(var(--foreground))',
+                  '& fieldset': { borderColor: 'hsl(var(--border))' },
+                  '&:hover fieldset': { borderColor: 'hsl(var(--primary))' },
+                  '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
+                },
+              }}
+              renderInput={(params) => (
+                <TextField {...params} placeholder="Select action" />
+              )}
+            />
+            <ToggleButtonGroup
+              size="small"
+              exclusive
+              value={lang}
+              onChange={(_, v) => v && setLang(v)}
+              sx={{
+                '& .MuiToggleButton-root': {
+                  height: 36,
+                  px: 1.5,
+                  fontSize: '0.7rem',
+                  textTransform: 'none',
+                  fontFamily: "'JetBrains Mono', monospace",
+                  color: 'hsl(var(--muted-foreground))',
+                  border: '1px solid hsl(var(--border))',
+                  '&.Mui-selected': {
+                    backgroundColor: 'hsl(var(--primary) / 0.15)',
+                    color: 'hsl(var(--primary))',
+                    borderColor: 'hsl(var(--primary))',
+                    '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.2)' },
+                  },
+                },
+              }}
+            >
+              <ToggleButton value="curl">curl</ToggleButton>
+              <ToggleButton value="python">python</ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+        )}
 
         {!isDisabled && (
           <Box sx={{ position: 'relative' }}>
             <Box
               component="textarea"
-              value={curl}
-              onChange={(e: any) => setCurl(e.target.value)}
+              value={snippet}
+              onChange={(e: any) => setSnippet(e.target.value)}
               spellCheck={false}
               sx={{
                 width: '100%',
@@ -393,7 +447,7 @@ const SingulActionsPreview = ({
               <Button
                 size="small"
                 onClick={handlePlay}
-                disabled={playLoading}
+                disabled={playLoading || lang !== 'curl'}
                 startIcon={!playLoading && <PlayArrowIcon sx={{ fontSize: 14 }} />}
                 sx={{
                   height: 26,
