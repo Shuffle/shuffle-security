@@ -991,7 +991,7 @@ const DashboardPage = () => {
       </Box>
 
       {/* Show Overview below the Setup Guide when it is not already above. */}
-      {(setupLoading || progressPercent < 80) && (
+      {(setupLoading || progressPercent < 80) && isSupport && (
         <DashboardOverview
           incidents={overviewIncidents}
           incidentsLoading={incidentsLoading}
