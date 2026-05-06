@@ -2518,6 +2518,10 @@ const IncidentDetailPage = () => {
             assignee: editedAssignee.trim() || '', // Sync metadata assignee with top-level
             customFields: editedCustomFields,
             stakeholders: editedStakeholders,
+            // Mirror observables here — the loader prefers this path first,
+            // so a stale legacy value would otherwise win over the
+            // top-level edit.
+            observables: editedObservables,
           },
         },
       },
