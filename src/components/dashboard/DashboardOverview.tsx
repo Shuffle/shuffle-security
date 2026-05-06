@@ -25,8 +25,8 @@ import {
 } from 'recharts';
 import {
   AlertTriangle,
-  Monitor,
-  ShieldAlert,
+  MonitorCheck,
+  Bug,
   Flame,
   ArrowUpRight,
   type LucideIcon,
@@ -128,7 +128,7 @@ const KpiTile = ({ icon: Icon, glow, value, label, delta, spark, isLoading, onCl
         onClick={onClick}
         sx={{
           position: 'relative',
-          p: 2.25,
+          p: 2,
           borderRadius: 2,
           backgroundColor: 'hsl(var(--card))',
           border: '1px solid hsl(var(--border))',
@@ -136,7 +136,8 @@ const KpiTile = ({ icon: Icon, glow, value, label, delta, spark, isLoading, onCl
           transition: 'border-color 0.2s, transform 0.2s',
           overflow: 'hidden',
           height: '100%',
-          minHeight: 140,
+          display: 'flex',
+          flexDirection: 'column',
           '&:hover': onClick ? {
             borderColor: 'hsl(var(--border) / 1)',
             transform: 'translateY(-1px)',
@@ -144,7 +145,7 @@ const KpiTile = ({ icon: Icon, glow, value, label, delta, spark, isLoading, onCl
           } : {},
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 1.5, position: 'relative' }}>
+        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 1.25, position: 'relative' }}>
           <Box
             sx={{
               width: 32, height: 32, borderRadius: 1.25,
@@ -169,13 +170,13 @@ const KpiTile = ({ icon: Icon, glow, value, label, delta, spark, isLoading, onCl
           )}
         </Box>
 
-        <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, position: 'relative' }}>
+        <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, position: 'relative' }}>
           {isLoading ? (
-            <Skeleton variant="text" width={70} height={36} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
+            <Skeleton variant="text" width={70} height={32} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
           ) : (
             <Typography sx={{
               fontWeight: 600,
-              fontSize: '1.75rem',
+              fontSize: '1.6rem',
               lineHeight: 1,
               color: 'hsl(var(--foreground))',
               letterSpacing: '-0.02em',
@@ -192,7 +193,6 @@ const KpiTile = ({ icon: Icon, glow, value, label, delta, spark, isLoading, onCl
               fontWeight: 600,
               color: delta.positive ? NEON.green : NEON.red,
               backgroundColor: delta.positive ? `${NEON.green}1A` : `${NEON.red}1A`,
-              mb: 0.4,
             }}>
               {delta.positive ? '↓' : '↑'} {delta.value}
             </Box>
@@ -201,7 +201,7 @@ const KpiTile = ({ icon: Icon, glow, value, label, delta, spark, isLoading, onCl
         <Typography sx={{
           fontSize: '0.72rem',
           color: 'hsl(var(--muted-foreground))',
-          mt: 0.75,
+          mt: 0.5,
           fontWeight: 500,
           position: 'relative',
         }}>
@@ -209,7 +209,7 @@ const KpiTile = ({ icon: Icon, glow, value, label, delta, spark, isLoading, onCl
         </Typography>
 
         {sparkData.length > 1 && !isLoading && (
-          <Box sx={{ height: 32, mt: 1, mx: -0.5, position: 'relative' }}>
+          <Box sx={{ height: 28, mt: 'auto', pt: 1, mx: -0.5, position: 'relative' }}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={sparkData}>
                 <defs>
@@ -381,7 +381,7 @@ export const DashboardOverview = ({
         }}
       >
         <KpiTile
-          icon={Flame}
+          icon={AlertTriangle}
           glow={NEON.magenta}
           gradient={''}
           value={incidentStats.openCount}
@@ -393,7 +393,7 @@ export const DashboardOverview = ({
           delay={0}
         />
         <KpiTile
-          icon={AlertTriangle}
+          icon={Flame}
           glow={NEON.red}
           gradient={''}
           value={incidentStats.criticalCount}
@@ -403,7 +403,7 @@ export const DashboardOverview = ({
           delay={0.05}
         />
         <KpiTile
-          icon={Monitor}
+          icon={MonitorCheck}
           glow={NEON.cyan}
           gradient={''}
           value={monitorHostCount ?? 0}
@@ -413,7 +413,7 @@ export const DashboardOverview = ({
           delay={0.1}
         />
         <KpiTile
-          icon={ShieldAlert}
+          icon={Bug}
           glow={NEON.violet}
           gradient={''}
           value={vulnTotal}
