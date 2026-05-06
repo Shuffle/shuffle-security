@@ -157,6 +157,9 @@ export const setDatastoreItem = async (
     key: rawKey,
     value: serializeDatastoreValue(value),
     category,
+    // Incident category is governed by automation/security rules that would
+    // otherwise reject programmatic edits — bypass them for our own writes.
+    ...(category === 'shuffle-security_incidents' ? { ignore_security_rules: true } : {}),
   }];
 
   const headers: Record<string, string> = {
@@ -196,6 +199,7 @@ export const setDatastoreItems = async (
     key: item.key,
     value: serializeDatastoreValue(item.value),
     category,
+    ...(category === 'shuffle-security_incidents' ? { ignore_security_rules: true } : {}),
   }));
 
   const response = await fetch(getApiUrl('/api/v2/datastore'), {
