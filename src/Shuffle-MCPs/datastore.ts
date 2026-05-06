@@ -199,6 +199,7 @@ export const setDatastoreItems = async (
     key: item.key,
     value: serializeDatastoreValue(item.value),
     category,
+    ...(category === 'shuffle-security_incidents' ? { ignore_security_rules: true } : {}),
   }));
 
   const response = await fetch(getApiUrl('/api/v2/datastore'), {
