@@ -107,9 +107,9 @@ export const DemoModeCard = () => {
           px: { xs: 2, sm: 2.5 },
           py: { xs: 2.625, sm: 3.125 },
           display: 'flex',
-          alignItems: { xs: 'flex-start', sm: 'center' },
-          flexDirection: { xs: 'column', sm: 'row' },
-          gap: 2,
+          alignItems: { xs: 'flex-start', md: 'center' },
+          flexDirection: { xs: 'column', md: 'row' },
+          gap: { xs: 1.5, md: 2 },
         }}
       >
         {/* Icon */}
