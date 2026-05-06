@@ -5437,6 +5437,39 @@ const IncidentDetailPage = () => {
                 </Box>
               )}
             </>
+          ) : !agentReadiness.active && !agentReadiness.isLoading ? (
+            <>
+              <span>AI Agent automation is off —</span>
+              <Box
+                component="button"
+                type="button"
+                disabled={agentReadiness.isEnabling}
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  try {
+                    await agentReadiness.enable();
+                    toast.success('AI Agent automation enabled');
+                  } catch {
+                    toast.error('Failed to enable AI Agent automation');
+                  }
+                }}
+                sx={{
+                  fontWeight: 600,
+                  color: 'rgba(236, 81, 124, 0.95)',
+                  background: 'transparent',
+                  border: 'none',
+                  p: 0,
+                  cursor: agentReadiness.isEnabling ? 'default' : 'pointer',
+                  borderBottom: '1px dashed rgba(236, 81, 124, 0.5)',
+                  '&:hover': {
+                    color: 'rgba(236, 81, 124, 1)',
+                    borderBottomColor: 'rgba(236, 81, 124, 0.9)',
+                  },
+                }}
+              >
+                {agentReadiness.isEnabling ? 'Enabling…' : 'Enable now'}
+              </Box>
+            </>
           ) : toolsSummary ? (
             <>
               <span>Processing using the tools</span>
