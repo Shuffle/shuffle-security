@@ -149,22 +149,23 @@ export const setDatastoreItem = async (
   }
 
   const rawKey = normalizeDatastoreKey(key);
-  const payload = {
+  // Use the v2 datastore endpoint as a single-item array. This is the same
+  // endpoint the bulk writer uses; set_cache has been retired for incident
+  // updates because it stringifies the payload differently and caused
+  // double-encoded JSON to land in the datastore.
+  const payload = [{
     key: rawKey,
     value: serializeDatastoreValue(value),
     category,
-    ignore_security_rules: true,
-  };
+  }];
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Org-Id': orgId,
     ...getAuthHeader(),
   };
-  if (overrideOrgId) {
-    headers['Org-Id'] = overrideOrgId;
-  }
 
-  const response = await fetch(getApiUrl(`/api/v1/orgs/${orgId}/set_cache`), {
+  const response = await fetch(getApiUrl('/api/v2/datastore'), {
     method: 'POST',
     credentials: 'include',
     headers,
