@@ -856,7 +856,7 @@ const DashboardPage = () => {
         status: hasHostMonitor === true ? 'complete' : 'not-started',
         ctaLabel: 'Set Up',
         ctaPath: '/monitors?add_host=true',
-        priority: 1,
+        priority: 4,
       },
       {
         id: 'activate-apps',
