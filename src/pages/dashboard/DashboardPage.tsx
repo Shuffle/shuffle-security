@@ -551,30 +551,96 @@ const DashboardPage = () => {
   const [setupCollapsed, setSetupCollapsed] = useState(false);
 
   // Incidents + vulnerabilities for the overview charts
-  const { items: incidentItems, isLoading: incidentsLoading } = useDatastore({
+  const currentOrgId = userInfo?.active_org?.id;
+  const { items: incidentItems, isLoading: incidentsLoading, fetchItems: fetchIncidents, hasFetched: incidentsFetched } = useDatastore({
     category: DATASTORE_CATEGORIES.INCIDENTS,
   });
   const { severityCounts: vulnSeverityCounts, isLoading: vulnLoading } = useVulnerabilities({ tab: 'assets' });
 
+  // Trigger initial fetch (the hook does not auto-fetch)
+  useEffect(() => {
+    if (!incidentsFetched) fetchIncidents();
+  }, [incidentsFetched, fetchIncidents]);
+
+  // Multi-tenant: pull child-org incidents for parents so the overview
+  // reflects everything across the organization, not just the current org.
+  const { subOrgs, isParentOrg } = useSubOrgs(currentOrgId);
+  const [subOrgIncidentItems, setSubOrgIncidentItems] = useState<{ key: string; value: string; created?: number; edited?: number }[]>([]);
+
+  useEffect(() => {
+    if (!isParentOrg) { setSubOrgIncidentItems([]); return; }
+    const orgsToFetch = subOrgs.filter(o => o.id !== currentOrgId);
+    if (orgsToFetch.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const results = await Promise.all(orgsToFetch.map(async (org) => {
+        try {
+          const url = getApiUrl(`/api/v1/orgs/${org.id}/list_cache?category=${encodeURIComponent(DATASTORE_CATEGORIES.INCIDENTS)}&top=50`);
+          const response = await fetch(url, {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json', ...getAuthHeader(), 'Org-Id': org.id },
+          });
+          if (!response.ok) return [];
+          const data = await response.json();
+          return Array.isArray(data) ? data : (data.keys || data.data || []);
+        } catch {
+          return [];
+        }
+      }));
+      if (!cancelled) setSubOrgIncidentItems(results.flat());
+    })();
+    return () => { cancelled = true; };
+  }, [isParentOrg, subOrgs, currentOrgId]);
+
   const overviewIncidents = useMemo(() => {
     const out: { status: string; severity: string; createdTs: number }[] = [];
-    for (const item of incidentItems) {
+    const sevMap: Record<number, string> = { 1: 'informational', 2: 'low', 3: 'medium', 4: 'high', 5: 'critical', 6: 'critical' };
+    const statusMap: Record<number, string> = { 1: 'new', 2: 'in_progress', 3: 'resolved', 4: 'on_hold' };
+    const STATUS_SYNONYMS: Record<string, string> = {
+      open: 'new', created: 'new', pending: 'new', reported: 'new',
+      inprogress: 'in_progress', active: 'in_progress', investigating: 'in_progress',
+      working: 'in_progress', assigned: 'in_progress', acknowledged: 'in_progress',
+      closed: 'resolved', done: 'resolved', complete: 'resolved', completed: 'resolved',
+      fixed: 'resolved', remediated: 'resolved', mitigated: 'resolved',
+    };
+    const normalizeTs = (t: unknown): number => {
+      if (!t) return 0;
+      const n = typeof t === 'string' ? Number(t) : (typeof t === 'number' ? t : 0);
+      if (!n || isNaN(n) || n <= 0) {
+        if (typeof t === 'string') {
+          const d = new Date(t).getTime();
+          return isNaN(d) ? 0 : d;
+        }
+        return 0;
+      }
+      if (n < 1e12) return n * 1000;
+      if (n < 1e15) return n;
+      if (n < 1e18) return n / 1000;
+      return n / 1e6;
+    };
+    const all = [...incidentItems, ...subOrgIncidentItems];
+    const seen = new Set<string>();
+    for (const item of all) {
       try {
         if (!item.value || (typeof item.value === 'string' && item.value.length > 5_000_000)) continue;
         const data = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
         const customAttrs = data?.metadata?.extensions?.custom_attributes;
         const severityId = data?.severity_id;
-        const sevMap: Record<number, string> = { 1: 'info', 2: 'low', 3: 'medium', 4: 'high', 5: 'critical', 6: 'critical' };
         const severity = (data?.severity || sevMap[severityId] || 'medium').toString().toLowerCase();
-        const status = (data?.status || customAttrs?.status || 'new').toString().toLowerCase();
-        const createdTs = (item as any).created
-          ? Number((item as any).created) * (Number((item as any).created) < 1e12 ? 1000 : 1)
-          : 0;
+        const rawStatus = (data?.status || customAttrs?.status || statusMap[data?.status_id] || 'new').toString().toLowerCase().trim().replace(/[\s-]+/g, '_');
+        const status = STATUS_SYNONYMS[rawStatus] || STATUS_SYNONYMS[rawStatus.replace(/_/g, '')] || rawStatus;
+        const createdTs = normalizeTs(data?.created_time) || normalizeTs((item as { created?: number }).created);
+        // Dedupe across orgs by raw key tail (incidents shared between parent/child)
+        const dedupeKey = (item.key || '').includes('::') ? item.key.split('::').pop()! : item.key;
+        if (dedupeKey && seen.has(dedupeKey)) continue;
+        if (dedupeKey) seen.add(dedupeKey);
         out.push({ status, severity, createdTs });
       } catch { /* skip */ }
     }
     return out;
-  }, [incidentItems]);
+  }, [incidentItems, subOrgIncidentItems]);
+
 
   // Check for running detection sensors AND deployed host monitors
   useEffect(() => {
