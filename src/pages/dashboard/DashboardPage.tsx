@@ -1056,10 +1056,13 @@ const DashboardPage = () => {
       {/* ── Demo Mode CTA ────────────────────────────────────────────────────── */}
       <DemoModeCard />
 
-      {/* Overview is gated to support users only and only after the Setup
-          Guide is fully complete. Not yet ready for general availability. */}
-      {!setupLoading && allComplete && isSupport && (
-        <Box sx={{ mb: 2 }}>
+      {/* Overview is gated to support users only. When the Setup Guide is
+          incomplete it renders BELOW the guide; once complete it moves to the
+          top of the page. Not yet ready for general availability. */}
+      {/* ── Agent Notifications + Setup Guide + Overview (order swaps when setup complete) ── */}
+      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+      {!setupLoading && isSupport && (
+        <Box sx={{ mb: 2, order: allComplete ? 0 : 3 }}>
           <Chip
             size="small"
             label="Support only — preview"
@@ -1084,9 +1087,6 @@ const DashboardPage = () => {
           />
         </Box>
       )}
-
-      {/* ── Agent Notifications + Setup Guide (order swaps when setup complete) ── */}
-      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ order: allComplete ? 1 : 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
           <AlertTriangle size={18} style={{ color: 'hsl(var(--severity-high))' }} />
