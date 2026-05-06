@@ -292,7 +292,7 @@ export const DeploymentInstructions = ({
                     right: 8,
                     backgroundColor: 'hsl(var(--background))',
                     border: '1px solid hsl(var(--border))',
-                    '&:hover': { backgroundColor: 'hsl(var(--accent))' },
+                    '&:hover': { backgroundColor: 'hsl(var(--muted))' },
                   }}
                 >
                   {copied ? (
@@ -378,7 +378,7 @@ export const DeploymentInstructions = ({
                       right: 8,
                       backgroundColor: 'hsl(var(--background))',
                       border: '1px solid hsl(var(--border))',
-                      '&:hover': { backgroundColor: 'hsl(var(--accent))' },
+                      '&:hover': { backgroundColor: 'hsl(var(--muted))' },
                     }}
                   >
                     {copied ? (

@@ -8407,7 +8407,7 @@ const IncidentDetailPage = () => {
                       color: 'hsl(var(--muted-foreground))',
                       border: '1px solid hsl(var(--border))',
                       borderRadius: 1,
-                      '&:hover': { color: 'hsl(var(--primary))', bgcolor: 'hsl(var(--accent))' },
+                      '&:hover': { color: 'hsl(var(--primary))', bgcolor: 'hsl(var(--muted))' },
                     }}
                   >
                     <RefreshIcon sx={{ fontSize: 16 }} />
@@ -8442,7 +8442,7 @@ const IncidentDetailPage = () => {
                         ml: 'auto',
                         p: 0.5,
                         color: 'hsl(var(--muted-foreground))',
-                        '&:hover': { color: 'hsl(var(--primary))', bgcolor: 'hsl(var(--accent))' },
+                        '&:hover': { color: 'hsl(var(--primary))', bgcolor: 'hsl(var(--muted))' },
                       }}
                     >
                       {correlationsLoading
