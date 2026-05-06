@@ -159,7 +159,7 @@ export const DemoModeCard = () => {
         </Box>
 
         {/* Actions */}
-        <Box sx={{ display: 'flex', gap: 1, flexShrink: 0, flexWrap: 'wrap', width: { xs: '100%', sm: 'auto' } }}>
+        <Box sx={{ display: 'flex', gap: 1, flexShrink: 0, flexWrap: 'wrap', width: { xs: '100%', md: 'auto' } }}>
           {active ? (
             <>
               <Button
