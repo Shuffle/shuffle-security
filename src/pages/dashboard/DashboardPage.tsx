@@ -858,18 +858,33 @@ const DashboardPage = () => {
       {/* ── Demo Mode CTA ────────────────────────────────────────────────────── */}
       <DemoModeCard />
 
-      {/* When setup is mostly done, surface the Overview above the Setup Guide
-          so the dashboard feels useful at a glance. Otherwise show it below. */}
-      {!setupLoading && progressPercent >= 80 && isSupport && (
-        <DashboardOverview
-          incidents={overviewIncidents}
-          incidentsLoading={incidentsLoading}
-          vulnSeverityCounts={vulnSeverityCounts}
-          vulnLoading={vulnLoading}
-          monitorHostCount={hostMonitorCount}
-          runningSensorCount={runningSensorCount}
-          monitorsLoading={hasHostMonitor === null}
-        />
+      {/* Overview is gated to support users only and only after the Setup
+          Guide is fully complete. Not yet ready for general availability. */}
+      {!setupLoading && allComplete && isSupport && (
+        <Box sx={{ mb: 2 }}>
+          <Chip
+            size="small"
+            label="Support only — preview"
+            sx={{
+              height: 22,
+              fontSize: '0.7rem',
+              fontWeight: 600,
+              backgroundColor: 'hsl(var(--primary) / 0.12)',
+              color: 'hsl(var(--primary))',
+              border: '1px solid hsl(var(--primary) / 0.3)',
+              mb: 1,
+            }}
+          />
+          <DashboardOverview
+            incidents={overviewIncidents}
+            incidentsLoading={incidentsLoading}
+            vulnSeverityCounts={vulnSeverityCounts}
+            vulnLoading={vulnLoading}
+            monitorHostCount={hostMonitorCount}
+            runningSensorCount={runningSensorCount}
+            monitorsLoading={hasHostMonitor === null}
+          />
+        </Box>
       )}
 
       {/* ── Setup Checklist ──────────────────────────────────────────────────── */}
@@ -990,18 +1005,6 @@ const DashboardPage = () => {
         </>)}
       </Box>
 
-      {/* Show Overview below the Setup Guide when it is not already above. */}
-      {(setupLoading || progressPercent < 80) && isSupport && (
-        <DashboardOverview
-          incidents={overviewIncidents}
-          incidentsLoading={incidentsLoading}
-          vulnSeverityCounts={vulnSeverityCounts}
-          vulnLoading={vulnLoading}
-          monitorHostCount={hostMonitorCount}
-          runningSensorCount={runningSensorCount}
-          monitorsLoading={hasHostMonitor === null}
-        />
-      )}
 
       {/* ── Agent Notifications ──────────────────────────────────────────────── */}
       <Box>
