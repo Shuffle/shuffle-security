@@ -398,7 +398,7 @@ export const DashboardOverview = ({
           value={incidentStats.criticalCount}
           label="Critical / High"
           isLoading={incidentsLoading}
-          onClick={() => navigate('/incidents?severity=critical')}
+          onClick={() => navigate('/incidents?severity=critical,high')}
           delay={0.05}
         />
         <KpiTile
