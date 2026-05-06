@@ -416,7 +416,7 @@ export const DashboardOverview = ({
           glow={NEON.violet}
           gradient={''}
           value={vulnTotal}
-          label={vulnCriticalPct ? `Vulnerabilities • ${vulnCriticalPct}% crit/high` : 'Vulnerabilities'}
+          label="Vulnerabilities"
           isLoading={vulnLoading}
           onClick={() => navigate('/vulnerabilities')}
           delay={0.15}
