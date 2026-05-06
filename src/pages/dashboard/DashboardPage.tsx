@@ -1086,11 +1086,6 @@ const DashboardPage = () => {
       )}
 
       {/* ── Agent Notifications ──────────────────────────────────────────────── */}
-      {!allComplete && (
-        <Box sx={{ mb: 5 }}>
-          {/* Setup Guide rendered above when not complete — see block below for full content */}
-        </Box>
-      )}
       <Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
           <AlertTriangle size={18} style={{ color: 'hsl(var(--severity-high))' }} />
