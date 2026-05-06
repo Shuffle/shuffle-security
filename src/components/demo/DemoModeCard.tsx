@@ -253,7 +253,7 @@ export const DemoModeCard = () => {
                       py: 1,
                       boxShadow: 'none',
                       whiteSpace: 'nowrap',
-                      width: { xs: '100%', sm: 'auto' },
+                      width: { xs: '100%', md: 'auto' },
                       '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)', boxShadow: 'none' },
                       '&.Mui-disabled': {
                         backgroundColor: 'hsl(var(--muted))',
