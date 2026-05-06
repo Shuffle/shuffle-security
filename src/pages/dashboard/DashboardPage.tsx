@@ -1062,7 +1062,7 @@ const DashboardPage = () => {
       {/* ── Agent Notifications + Setup Guide + Overview (order swaps when setup complete) ── */}
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
       {!setupLoading && isSupport && (
-        <Box sx={{ mb: 2, order: allComplete ? 0 : 3 }}>
+        <Box sx={{ mb: 2, order: allComplete ? 0 : 2 }}>
           <Chip
             size="small"
             label="Support only — preview"
