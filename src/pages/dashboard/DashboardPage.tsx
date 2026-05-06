@@ -881,7 +881,7 @@ const DashboardPage = () => {
         status: hasAuthenticatedApps ? 'complete' : hasActivatedApps ? 'action-needed' : 'not-started',
         ctaLabel: 'Set Up Auth',
         ctaPath: '/onboarding/authenticate',
-        priority: 3,
+        priority: 2,
         detail: hasActivatedApps && !hasAuthenticatedApps
           ? `${activatedApps.length} activated — add credentials to connect.`
           : undefined,
