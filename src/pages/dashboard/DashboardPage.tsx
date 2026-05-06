@@ -1062,7 +1062,7 @@ const DashboardPage = () => {
       {/* ── Agent Notifications + Setup Guide + Overview (order swaps when setup complete) ── */}
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
       {!setupLoading && isSupport && (
-        <Box sx={{ mb: 2, order: allComplete ? 0 : 3 }}>
+        <Box sx={{ mb: 2, order: allComplete ? 0 : 2 }}>
           <Chip
             size="small"
             label="Support only — preview"
@@ -1087,7 +1087,7 @@ const DashboardPage = () => {
           />
         </Box>
       )}
-      <Box sx={{ order: allComplete ? 1 : 2 }}>
+      <Box sx={{ order: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
           <AlertTriangle size={18} style={{ color: 'hsl(var(--severity-high))' }} />
           <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: 'hsl(var(--foreground))' }}>
