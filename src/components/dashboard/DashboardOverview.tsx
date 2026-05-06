@@ -485,7 +485,7 @@ export const DashboardOverview = ({
           </Box>
         </Panel>
 
-        <Panel title="Monitor Coverage" accent={NEON.cyan} delay={0.25}>
+        <Panel title="Detection Coverage" accent={NEON.cyan} delay={0.25}>
           <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', minHeight: 240 }}>
             {monitorsLoading ? (
               <Skeleton variant="circular" width={160} height={160} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
