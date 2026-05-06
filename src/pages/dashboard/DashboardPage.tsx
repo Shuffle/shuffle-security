@@ -913,21 +913,72 @@ const DashboardPage = () => {
             <Loader2 size={18} style={{ color: 'hsl(var(--muted-foreground))', animation: 'spin 1s linear infinite' }} />
           )}
         </Box>
-        <Tooltip title="Refresh">
-          <IconButton
-            onClick={handleRefresh}
-            size="small"
-            sx={{ color: 'hsl(var(--muted-foreground))' }}
-          >
-            <RefreshIcon
-              fontSize="small"
-              sx={{
-                transition: 'transform 0.6s ease',
-                ...(isRefreshing && { animation: 'spin 0.6s linear' }),
-              }}
-            />
-          </IconButton>
-        </Tooltip>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {isParentOrg && subOrgs.length > 0 && (() => {
+            const currentOrgImage = userInfo?.active_org?.image;
+            const currentOrgName = userInfo?.active_org?.name || 'Current Tenant';
+            const options: { id: string; name: string; image?: string }[] = [
+              { id: currentOrgId || '', name: currentOrgName, image: currentOrgImage },
+              ...subOrgs.filter(o => o.id !== currentOrgId).map(o => ({ id: o.id, name: o.name, image: o.image })),
+            ];
+            const value = options.find(o => o.id === currentOrgId) || options[0];
+            return (
+              <Autocomplete
+                size="small"
+                disableClearable
+                options={options}
+                value={value}
+                getOptionLabel={(option) => option.name}
+                isOptionEqualToValue={(option, v) => option.id === v.id}
+                onChange={(_, newValue) => {
+                  if (newValue && newValue.id && newValue.id !== currentOrgId) {
+                    setActiveOrg(newValue.id);
+                  }
+                }}
+                renderOption={(props, option) => (
+                  <li {...props} key={option.id}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      {option.image ? (
+                        <img src={option.image} alt="" style={{ width: 20, height: 20, borderRadius: 4, objectFit: 'contain', flexShrink: 0 }} />
+                      ) : (
+                        <Box sx={{ width: 20, height: 20, borderRadius: '4px', bgcolor: 'hsl(var(--muted) / 0.5)', flexShrink: 0 }} />
+                      )}
+                      <Typography sx={{ fontSize: '0.82rem' }}>{option.name}</Typography>
+                    </Box>
+                  </li>
+                )}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    placeholder="Tenant"
+                    sx={{ minWidth: 180, width: 180 }}
+                  />
+                )}
+                sx={{
+                  minWidth: 180,
+                  width: 180,
+                  '& .MuiOutlinedInput-root': { minHeight: 36, py: '2px' },
+                }}
+                slotProps={{ popper: { sx: { zIndex: 1500 } } }}
+              />
+            );
+          })()}
+          <Tooltip title="Refresh">
+            <IconButton
+              onClick={handleRefresh}
+              size="small"
+              sx={{ color: 'hsl(var(--muted-foreground))' }}
+            >
+              <RefreshIcon
+                fontSize="small"
+                sx={{
+                  transition: 'transform 0.6s ease',
+                  ...(isRefreshing && { animation: 'spin 0.6s linear' }),
+                }}
+              />
+            </IconButton>
+          </Tooltip>
+        </Box>
       </Box>
       <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem', mb: 4 }}>
         Get started by completing the setup steps below, then monitor agent activity.
