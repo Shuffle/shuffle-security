@@ -550,6 +550,7 @@ const DashboardPage = () => {
   const [hostMonitorCount, setHostMonitorCount] = useState<number>(0);
   const [overviewCollapsed, setOverviewCollapsed] = useState(false);
   const [setupCollapsed, setSetupCollapsed] = useState(false);
+  const setupAutoCollapsedRef = useRef(false);
 
   // Incidents + vulnerabilities for the overview charts
   const currentOrgId = userInfo?.active_org?.id;
