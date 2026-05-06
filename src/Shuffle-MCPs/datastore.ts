@@ -111,6 +111,30 @@ const truncateResponsePreview = (value: string | null | undefined, maxLength = 2
 };
 
 /**
+ * Serialize a datastore value to a string for the API.
+ * Validates JSON-shaped strings (parse+restringify) so we always send valid JSON.
+ */
+const serializeDatastoreValue = (value: unknown): string => {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+      try {
+        return JSON.stringify(JSON.parse(trimmed));
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  }
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+};
+
+
+/**
  * Set a single item in the datastore
  */
 export const setDatastoreItem = async (
