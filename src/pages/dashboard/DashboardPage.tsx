@@ -717,7 +717,7 @@ const DashboardPage = () => {
       try {
         const res = await fetch(getApiUrl('/api/v1/getenvironments'), {
           credentials: 'include',
-          headers: { ...getAuthHeader() },
+          headers: { ...getAuthHeader(), ...(isViewingChild && viewOrgId ? { 'Org-Id': viewOrgId } : {}) },
         });
         if (res.ok) {
           const envs = await res.json();
