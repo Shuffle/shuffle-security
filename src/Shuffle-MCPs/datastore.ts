@@ -177,7 +177,7 @@ export const setDatastoreItem = async (
   }
 
   return { success: true };
-}
+};
 
 /**
  * Set multiple items in the datastore (bulk create) using v2 API
