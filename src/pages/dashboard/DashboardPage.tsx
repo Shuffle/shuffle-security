@@ -58,6 +58,7 @@ import { useDatastore } from '@/hooks/useDatastore';
 import { DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import { useVulnerabilities } from '@/hooks/useVulnerabilities';
 import { DashboardOverview } from '@/components/dashboard/DashboardOverview';
+import { useAuth } from '@/context/AuthContext';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 
