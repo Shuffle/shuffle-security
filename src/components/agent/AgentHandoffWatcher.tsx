@@ -106,71 +106,98 @@ const AgentHandoffWatcher = () => {
 
     // Avoid double-toasting on the dashboard — it already shows these inline.
     const onDashboard = location.pathname === '/dashboard' || location.pathname === '/';
+    if (onDashboard) {
+      // Still mark them seen so we don't burst-toast when navigating away.
+      notifications.forEach((n) => toastedIds.current.add(n.id));
+      return;
+    }
 
-    notifications.forEach((n) => {
-      if (toastedIds.current.has(n.id)) return;
-      toastedIds.current.add(n.id);
-      if (onDashboard) return;
+    // Collect every notification we have not toasted yet.
+    const fresh = notifications.filter((n) => !toastedIds.current.has(n.id));
+    if (fresh.length === 0) return;
+    fresh.forEach((n) => toastedIds.current.add(n.id));
 
-      const isApproval = isApprovalNotification(n);
-      const toastId = `agent-handoff-${n.id}`;
+    // BURST PROTECTION: when the agent dumps several handoffs at once
+    // (common for noisy runs), collapse them into a single summary toast
+    // instead of stacking N modals. Only show inline Approve/Deny when
+    // there is exactly one fresh approval and nothing else.
+    const approvals = fresh.filter((n) => isApprovalNotification(n));
+    const questions = fresh.filter((n) => !isApprovalNotification(n));
 
-      if (isApproval) {
-        // System #1 — agent wants to perform an action and needs go/no-go.
-        // Inline Approve + Deny so the user does not have to context-switch
-        // for a single binary decision.
-        toast('AI Agent needs approval (beta — support only)', {
-          id: toastId,
-          description: n.title || n.description || 'An agent action is paused waiting on you.',
-          duration: Infinity,
-          action: {
-            label: 'Approve',
-            onClick: async () => {
-              try {
-                await continueAgentExecution({ notification: n, approve: true });
-                await approveAgentAction(n.id).catch(() => { /* non-fatal */ });
-                toast.success('Action approved — the agent will continue.');
-                refresh();
-              } catch (err) {
-                console.error('[AgentHandoffWatcher] approve failed:', err);
-                toast.error('Failed to approve action.');
-              }
-            },
+    if (fresh.length > 1) {
+      const parts: string[] = [];
+      if (approvals.length) parts.push(`${approvals.length} approval${approvals.length === 1 ? '' : 's'}`);
+      if (questions.length) parts.push(`${questions.length} question${questions.length === 1 ? '' : 's'}`);
+      toast('AI Agent needs your attention (beta — support only)', {
+        id: 'agent-handoff-batch',
+        description: `${parts.join(' and ')} pending. Review them on the Agent page.`,
+        duration: Infinity,
+        action: {
+          label: 'Review all',
+          onClick: () => { window.location.href = '/agent'; },
+        },
+        cancel: {
+          label: 'Dismiss',
+          onClick: () => { /* sonner closes the toast on cancel click */ },
+        },
+      });
+      return;
+    }
+
+    // Single new handoff — keep the rich inline experience.
+    const n = fresh[0];
+    const isApproval = isApprovalNotification(n);
+    const toastId = `agent-handoff-${n.id}`;
+
+    if (isApproval) {
+      toast('AI Agent needs approval (beta — support only)', {
+        id: toastId,
+        description: n.title || n.description || 'An agent action is paused waiting on you.',
+        duration: Infinity,
+        action: {
+          label: 'Approve',
+          onClick: async () => {
+            try {
+              await continueAgentExecution({ notification: n, approve: true });
+              await approveAgentAction(n.id).catch(() => { /* non-fatal */ });
+              toast.success('Action approved — the agent will continue.');
+              refresh();
+            } catch (err) {
+              console.error('[AgentHandoffWatcher] approve failed:', err);
+              toast.error('Failed to approve action.');
+            }
           },
-          cancel: {
-            label: 'Deny',
-            onClick: async () => {
-              try {
-                await continueAgentExecution({ notification: n, approve: false });
-                await approveAgentAction(n.id).catch(() => { /* non-fatal */ });
-                toast.success('Action denied — the agent will continue accordingly.');
-                refresh();
-              } catch (err) {
-                console.error('[AgentHandoffWatcher] deny failed:', err);
-                toast.error('Failed to deny action.');
-              }
-            },
+        },
+        cancel: {
+          label: 'Deny',
+          onClick: async () => {
+            try {
+              await continueAgentExecution({ notification: n, approve: false });
+              await approveAgentAction(n.id).catch(() => { /* non-fatal */ });
+              toast.success('Action denied — the agent will continue accordingly.');
+              refresh();
+            } catch (err) {
+              console.error('[AgentHandoffWatcher] deny failed:', err);
+              toast.error('Failed to deny action.');
+            }
           },
-        });
-      } else {
-        // System #2 — agent has open questions that require typed answers.
-        // Open the standard AgentQuestionDialog right here so the user can
-        // answer without losing their current page context.
-        toast('AI Agent has a question (beta — support only)', {
-          id: toastId,
-          description: n.title || n.description || 'An agent run is paused waiting on your input.',
-          duration: Infinity,
-          action: {
-            label: 'Answer now',
-            onClick: () => setQuestionNotification(n),
-          },
-          cancel: {
-            label: 'Dismiss',
-            onClick: () => { /* sonner closes the toast on cancel click */ },
-          },
-        });
-      }
-    });
+        },
+      });
+    } else {
+      toast('AI Agent has a question (beta — support only)', {
+        id: toastId,
+        description: n.title || n.description || 'An agent run is paused waiting on your input.',
+        duration: Infinity,
+        action: {
+          label: 'Answer now',
+          onClick: () => setQuestionNotification(n),
+        },
+        cancel: {
+          label: 'Dismiss',
+          onClick: () => { /* sonner closes the toast on cancel click */ },
+        },
+      });
+    }
   }, [notifications, isAuthenticated, isSupport, location.pathname, refresh]);
 
   return (
