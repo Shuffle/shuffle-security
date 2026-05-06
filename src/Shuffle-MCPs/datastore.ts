@@ -127,7 +127,7 @@ export const setDatastoreItem = async (
   const rawKey = normalizeDatastoreKey(key);
   const payload = {
     key: rawKey,
-    value: typeof value === 'string' ? value : JSON.stringify(value),
+    value,
     category,
     ignore_security_rules: true,
   };
@@ -169,7 +169,7 @@ export const setDatastoreItems = async (
   // Use v2 API for bulk operations - send as array
   const payload = items.map(item => ({
     key: item.key,
-    value: typeof item.value === 'string' ? item.value : JSON.stringify(item.value),
+    value: item.value,
     category,
   }));
 
