@@ -2495,6 +2495,10 @@ const IncidentDetailPage = () => {
       types: editedLabels, // OCSF types[] field for labels
       observables: editedObservables,
       stakeholders: editedStakeholders,
+      // Mirror references at the top level so the loader's primary path
+      // (ocsf.references) reflects edits — finding_info_list[0].references
+      // is only the secondary store.
+      references: editedReferences,
       // Store tasks and activity at top level (primary location)
       tasks: tasks, // Always include, even if empty array
       activity: activity, // Always include, even if empty array
@@ -2514,6 +2518,10 @@ const IncidentDetailPage = () => {
             assignee: editedAssignee.trim() || '', // Sync metadata assignee with top-level
             customFields: editedCustomFields,
             stakeholders: editedStakeholders,
+            // Mirror observables here — the loader prefers this path first,
+            // so a stale legacy value would otherwise win over the
+            // top-level edit.
+            observables: editedObservables,
           },
         },
       },
