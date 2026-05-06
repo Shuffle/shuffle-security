@@ -471,11 +471,11 @@ export const DashboardOverview = ({
                       key={k}
                       type="monotone"
                       dataKey={k}
-                      stackId="1"
                       stroke={c}
                       strokeWidth={2}
                       fill={`url(#ov-grad-${k.replace(/\s/g, '')})`}
-                     
+                      fillOpacity={0.6}
+                      isAnimationActive={false}
                     />
                   ))}
                 </AreaChart>
