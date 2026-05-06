@@ -688,7 +688,7 @@ const DashboardPage = () => {
       if (n < 1e18) return n / 1000;
       return n / 1e6;
     };
-    const all = [...incidentItems, ...subOrgIncidentItems];
+    const all = [...effectiveIncidentItems, ...effectiveSubOrgIncidentItems];
     const seen = new Set<string>();
     for (const item of all) {
       try {
