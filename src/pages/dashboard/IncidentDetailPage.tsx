@@ -5449,6 +5449,17 @@ const IncidentDetailPage = () => {
                   try {
                     await agentReadiness.enable();
                     toast.success('AI Agent automation enabled');
+                    // The original @AIAgent comment was posted while the
+                    // automation was off, so the backend never picked it up.
+                    // Nudge the activity item (append a rerun_timestamp) so
+                    // the now-active "Run workflow" automation fires for it.
+                    if (commentId) {
+                      try {
+                        await handleRerunAgent(commentId);
+                      } catch (rerr) {
+                        console.warn('[AskAgent] Auto-rerun after enable failed:', rerr);
+                      }
+                    }
                   } catch {
                     toast.error('Failed to enable AI Agent automation');
                   }
