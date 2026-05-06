@@ -745,7 +745,7 @@ const DashboardPage = () => {
       }
     };
     checkSensors();
-  }, []);
+  }, [isViewingChild, viewOrgId]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
