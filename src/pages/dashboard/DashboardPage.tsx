@@ -986,7 +986,7 @@ const DashboardPage = () => {
               { id: currentOrgId || '', name: currentOrgName, image: currentOrgImage },
               ...subOrgs.filter(o => o.id !== currentOrgId).map(o => ({ id: o.id, name: o.name, image: o.image })),
             ];
-            const value = options.find(o => o.id === currentOrgId) || options[0];
+            const value = options.find(o => o.id === effectiveOrgId) || options[0];
             return (
               <Autocomplete
                 size="small"
@@ -996,9 +996,10 @@ const DashboardPage = () => {
                 getOptionLabel={(option) => option.name}
                 isOptionEqualToValue={(option, v) => option.id === v.id}
                 onChange={(_, newValue) => {
-                  if (newValue && newValue.id && newValue.id !== currentOrgId) {
-                    setActiveOrg(newValue.id);
-                  }
+                  if (!newValue) return;
+                  // Local view-as: do NOT change the active org. Just re-fetch
+                  // the dashboard's data using this org's Org-Id header.
+                  setViewOrgId(newValue.id === currentOrgId ? null : newValue.id);
                 }}
                 renderOption={(props, option) => (
                   <li {...props} key={option.id}>
