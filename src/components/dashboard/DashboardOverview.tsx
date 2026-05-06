@@ -547,7 +547,7 @@ export const DashboardOverview = ({
                 </Box>
               </>
             ) : (
-              <EmptyState text="No monitors deployed yet" />
+              <EmptyState text="No host monitors or pipeline sensors deployed yet" />
             )}
           </Box>
           {monitorTotal > 0 && (
