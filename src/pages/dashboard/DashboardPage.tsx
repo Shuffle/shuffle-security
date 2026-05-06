@@ -860,7 +860,7 @@ const DashboardPage = () => {
 
       {/* When setup is mostly done, surface the Overview above the Setup Guide
           so the dashboard feels useful at a glance. Otherwise show it below. */}
-      {!setupLoading && progressPercent >= 80 && (
+      {!setupLoading && progressPercent >= 80 && isSupport && (
         <DashboardOverview
           incidents={overviewIncidents}
           incidentsLoading={incidentsLoading}
