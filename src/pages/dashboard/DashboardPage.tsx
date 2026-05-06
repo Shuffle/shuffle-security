@@ -866,7 +866,7 @@ const DashboardPage = () => {
         status: hasActivatedApps ? 'complete' : 'not-started',
         ctaLabel: 'Browse Apps',
         ctaPath: '/apps',
-        priority: 2,
+        priority: 1,
         detail: hasActivatedApps ? undefined : 'Activate at least one app to unlock other steps.',
       },
       {
