@@ -550,6 +550,7 @@ const DashboardPage = () => {
   const [hostMonitorCount, setHostMonitorCount] = useState<number>(0);
   const [overviewCollapsed, setOverviewCollapsed] = useState(false);
   const [setupCollapsed, setSetupCollapsed] = useState(false);
+  const setupAutoCollapsedRef = useRef(false);
 
   // Incidents + vulnerabilities for the overview charts
   const currentOrgId = userInfo?.active_org?.id;
@@ -873,6 +874,14 @@ const DashboardPage = () => {
   const allComplete = completedCount === totalSteps;
   const setupLoading = authLoading || workflowsLoading;
 
+  // Auto-collapse Setup Guide once when fully complete
+  useEffect(() => {
+    if (!setupLoading && allComplete && totalSteps > 0 && !setupAutoCollapsedRef.current) {
+      setSetupCollapsed(true);
+      setupAutoCollapsedRef.current = true;
+    }
+  }, [setupLoading, allComplete, totalSteps]);
+
   // Notification counts & filter
   const approvalCount = notifications.filter(n => isApprovalNotification(n)).length;
   const questionCount = notifications.filter(n => !isApprovalNotification(n)).length;
@@ -953,125 +962,6 @@ const DashboardPage = () => {
           />
         </Box>
       )}
-
-      {/* ── Setup Checklist ──────────────────────────────────────────────────── */}
-      <Box sx={{ mb: 5 }}>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            mb: setupCollapsed ? 0 : 2,
-            cursor: progressPercent >= 80 ? 'pointer' : 'default',
-          }}
-          onClick={() => {
-            if (progressPercent >= 80) setSetupCollapsed(c => !c);
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Sparkles size={18} style={{ color: 'hsl(var(--primary))' }} />
-            <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: 'hsl(var(--foreground))' }}>
-              Setup Guide
-            </Typography>
-            <Chip
-              label={`${completedCount}/${totalSteps}`}
-              size="small"
-              sx={{
-                height: 22,
-                fontSize: '0.72rem',
-                fontWeight: 600,
-                backgroundColor: allComplete ? 'hsl(var(--severity-low) / 0.15)' : 'hsl(var(--primary) / 0.15)',
-                color: allComplete ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
-              }}
-            />
-          </Box>
-          {progressPercent >= 80 && (
-            <IconButton size="small" onClick={(e) => { e.stopPropagation(); setSetupCollapsed(c => !c); }} sx={{ color: 'hsl(var(--muted-foreground))' }}>
-              {setupCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-            </IconButton>
-          )}
-        </Box>
-        {!setupCollapsed && (<>
-
-        {/* Progress bar */}
-        <Box sx={{ mb: 2.5 }}>
-          <LinearProgress
-            variant={setupLoading ? 'indeterminate' : 'determinate'}
-            value={progressPercent}
-            sx={{
-              height: 6,
-              borderRadius: 3,
-              backgroundColor: 'hsl(var(--muted))',
-              '& .MuiLinearProgress-bar': {
-                borderRadius: 3,
-                backgroundColor: allComplete ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
-                transition: 'transform 0.6s ease',
-              },
-            }}
-          />
-        </Box>
-
-        {/* Steps */}
-        {setupLoading ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {[0, 1, 2].map(i => (
-              <Skeleton key={i} variant="rounded" height={68} sx={{ borderRadius: 2, bgcolor: 'hsl(var(--muted) / 0.3)' }} />
-            ))}
-          </Box>
-        ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {(showCompleted ? visibleSteps : incompleteVisibleSteps).map((step, i) => (
-              <SetupStepCard key={step.id} step={step} index={i} onIgnore={handleIgnoreStep} onRestore={handleRestoreStep} />
-            ))}
-            {(completedVisibleSteps.length > 0 || ignoredStepsList.length > 0) && (
-              <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
-                {completedVisibleSteps.length > 0 && (
-                  <Chip
-                    size="small"
-                    label={showCompleted ? `Hide finished (${completedVisibleSteps.length})` : `Show finished (${completedVisibleSteps.length})`}
-                    onClick={() => setShowCompleted(v => !v)}
-                    variant="outlined"
-                    sx={{
-                      fontSize: '0.72rem',
-                      height: 24,
-                      borderColor: 'hsl(var(--border))',
-                      color: 'hsl(var(--muted-foreground))',
-                      '&:hover': { bgcolor: 'hsl(var(--muted))' },
-                    }}
-                  />
-                )}
-                {ignoredStepsList.length > 0 && (
-                  <Chip
-                    size="small"
-                    label={showIgnored ? `Hide ignored (${ignoredStepsList.length})` : `Show ignored (${ignoredStepsList.length})`}
-                    onClick={() => setShowIgnored(v => !v)}
-                    variant="outlined"
-                    sx={{
-                      fontSize: '0.72rem',
-                      height: 24,
-                      borderColor: 'hsl(var(--border))',
-                      color: 'hsl(var(--muted-foreground))',
-                      '&:hover': { bgcolor: 'hsl(var(--muted))' },
-                    }}
-                  />
-                )}
-              </Box>
-            )}
-            {showIgnored && ignoredStepsList.length > 0 && (
-              <>
-                <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', mt: 1, opacity: 0.7 }}>
-                  Ignored ({ignoredStepsList.length})
-                </Typography>
-                {ignoredStepsList.map((step, i) => (
-                  <SetupStepCard key={step.id} step={step} index={visibleSteps.length + i} ignored onRestore={handleRestoreStep} />
-                ))}
-              </>
-            )}
-          </Box>
-        )}
-        </>)}
-      </Box>
-
 
       {/* ── Agent Notifications ──────────────────────────────────────────────── */}
       <Box>
@@ -1203,6 +1093,124 @@ const DashboardPage = () => {
           )}
           </>
         )}
+      </Box>
+
+      {/* ── Setup Checklist ──────────────────────────────────────────────────── */}
+      <Box sx={{ mt: 5 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            mb: setupCollapsed ? 0 : 2,
+            cursor: progressPercent >= 80 ? 'pointer' : 'default',
+          }}
+          onClick={() => {
+            if (progressPercent >= 80) setSetupCollapsed(c => !c);
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Sparkles size={18} style={{ color: 'hsl(var(--primary))' }} />
+            <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: 'hsl(var(--foreground))' }}>
+              Setup Guide
+            </Typography>
+            <Chip
+              label={`${completedCount}/${totalSteps}`}
+              size="small"
+              sx={{
+                height: 22,
+                fontSize: '0.72rem',
+                fontWeight: 600,
+                backgroundColor: allComplete ? 'hsl(var(--severity-low) / 0.15)' : 'hsl(var(--primary) / 0.15)',
+                color: allComplete ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
+              }}
+            />
+          </Box>
+          {progressPercent >= 80 && (
+            <IconButton size="small" onClick={(e) => { e.stopPropagation(); setSetupCollapsed(c => !c); }} sx={{ color: 'hsl(var(--muted-foreground))' }}>
+              {setupCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+            </IconButton>
+          )}
+        </Box>
+        {!setupCollapsed && (<>
+
+        {/* Progress bar */}
+        <Box sx={{ mb: 2.5 }}>
+          <LinearProgress
+            variant={setupLoading ? 'indeterminate' : 'determinate'}
+            value={progressPercent}
+            sx={{
+              height: 6,
+              borderRadius: 3,
+              backgroundColor: 'hsl(var(--muted))',
+              '& .MuiLinearProgress-bar': {
+                borderRadius: 3,
+                backgroundColor: allComplete ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
+                transition: 'transform 0.6s ease',
+              },
+            }}
+          />
+        </Box>
+
+        {/* Steps */}
+        {setupLoading ? (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            {[0, 1, 2].map(i => (
+              <Skeleton key={i} variant="rounded" height={68} sx={{ borderRadius: 2, bgcolor: 'hsl(var(--muted) / 0.3)' }} />
+            ))}
+          </Box>
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            {(showCompleted ? visibleSteps : incompleteVisibleSteps).map((step, i) => (
+              <SetupStepCard key={step.id} step={step} index={i} onIgnore={handleIgnoreStep} onRestore={handleRestoreStep} />
+            ))}
+            {(completedVisibleSteps.length > 0 || ignoredStepsList.length > 0) && (
+              <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
+                {completedVisibleSteps.length > 0 && (
+                  <Chip
+                    size="small"
+                    label={showCompleted ? `Hide finished (${completedVisibleSteps.length})` : `Show finished (${completedVisibleSteps.length})`}
+                    onClick={() => setShowCompleted(v => !v)}
+                    variant="outlined"
+                    sx={{
+                      fontSize: '0.72rem',
+                      height: 24,
+                      borderColor: 'hsl(var(--border))',
+                      color: 'hsl(var(--muted-foreground))',
+                      '&:hover': { bgcolor: 'hsl(var(--muted))' },
+                    }}
+                  />
+                )}
+                {ignoredStepsList.length > 0 && (
+                  <Chip
+                    size="small"
+                    label={showIgnored ? `Hide ignored (${ignoredStepsList.length})` : `Show ignored (${ignoredStepsList.length})`}
+                    onClick={() => setShowIgnored(v => !v)}
+                    variant="outlined"
+                    sx={{
+                      fontSize: '0.72rem',
+                      height: 24,
+                      borderColor: 'hsl(var(--border))',
+                      color: 'hsl(var(--muted-foreground))',
+                      '&:hover': { bgcolor: 'hsl(var(--muted))' },
+                    }}
+                  />
+                )}
+              </Box>
+            )}
+            {showIgnored && ignoredStepsList.length > 0 && (
+              <>
+                <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', mt: 1, opacity: 0.7 }}>
+                  Ignored ({ignoredStepsList.length})
+                </Typography>
+                {ignoredStepsList.map((step, i) => (
+                  <SetupStepCard key={step.id} step={step} index={visibleSteps.length + i} ignored onRestore={handleRestoreStep} />
+                ))}
+              </>
+            )}
+          </Box>
+        )}
+        </>)}
       </Box>
     </Box>
 
