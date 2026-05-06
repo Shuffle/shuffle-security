@@ -394,7 +394,7 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
                     color: 'hsl(var(--muted-foreground))',
                     cursor: 'pointer',
                     '&:hover': {
-                      backgroundColor: 'hsl(var(--accent))',
+                      backgroundColor: 'hsl(var(--muted))',
                     },
                   }}
                 >
@@ -415,7 +415,7 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
                     color: 'hsl(var(--muted-foreground))',
                     cursor: 'pointer',
                     '&:hover': {
-                      backgroundColor: 'hsl(var(--accent))',
+                      backgroundColor: 'hsl(var(--muted))',
                     },
                   }}
                 >
