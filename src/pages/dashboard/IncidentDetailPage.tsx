@@ -5400,7 +5400,7 @@ const IncidentDetailPage = () => {
             <AgentIcon size={11} style={{ opacity: timedOut ? 0.7 : 1 }} />
           </Box>
         </Tooltip>
-        {!timedOut && (
+        {!timedOut && agentReadiness.active && (
           <CircularProgress
             size={10}
             thickness={6}
