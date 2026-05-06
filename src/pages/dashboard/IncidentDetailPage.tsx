@@ -2495,6 +2495,10 @@ const IncidentDetailPage = () => {
       types: editedLabels, // OCSF types[] field for labels
       observables: editedObservables,
       stakeholders: editedStakeholders,
+      // Mirror references at the top level so the loader's primary path
+      // (ocsf.references) reflects edits — finding_info_list[0].references
+      // is only the secondary store.
+      references: editedReferences,
       // Store tasks and activity at top level (primary location)
       tasks: tasks, // Always include, even if empty array
       activity: activity, // Always include, even if empty array
