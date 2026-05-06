@@ -3628,6 +3628,51 @@ const IncidentDetailPage = () => {
       </Menu>
 
       {!timelineCollapsed && (<>
+      {/* Bad-data warning — surfaced inside the Timeline so users notice the
+          drift right where they would inspect / roll back changes. Triggered
+          by the same OCSF-recovery fallback that powers the top-of-page banner. */}
+      {ocsfFallbackInfo && (
+        <Box sx={{
+          mx: 2,
+          mt: 2,
+          p: 1.25,
+          borderRadius: 2,
+          bgcolor: 'hsl(38 92% 50% / 0.10)',
+          border: '1px solid hsl(38 92% 50% / 0.40)',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: 1,
+        }}>
+          <HistoryIcon sx={{ fontSize: 18, color: 'hsl(38 92% 50%)', mt: 0.1 }} />
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="body2" sx={{ color: 'hsl(38 92% 50%)', fontWeight: 600, fontSize: '0.78rem' }}>
+              Incident data looks broken — consider rolling back
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem', display: 'block', mt: 0.25 }}>
+              The latest payload is not valid OCSF. This often happens after a manual edit to the underlying datastore item. The last known-good revision
+              {ocsfFallbackInfo.revisionTimestamp ? ` is from ${new Date(ocsfFallbackInfo.revisionTimestamp).toLocaleString()}` : ''} — find it under the Changes filter below and restore it.
+            </Typography>
+            {!isFilterActive('revisions') && (
+              <Button
+                size="small"
+                onClick={() => setActiveTimelineFilters(new Set(['revisions']))}
+                sx={{
+                  mt: 0.75,
+                  textTransform: 'none',
+                  fontSize: '0.7rem',
+                  color: 'hsl(38 92% 50%)',
+                  px: 1,
+                  py: 0.25,
+                  minHeight: 0,
+                  '&:hover': { bgcolor: 'hsl(38 92% 50% / 0.15)' },
+                }}
+              >
+                Show changes
+              </Button>
+            )}
+          </Box>
+        </Box>
+      )}
       {/* Comment Input */}
       <Box sx={{ p: 2, borderBottom: '1px solid hsl(var(--border-subtle))' }}>
         <Box sx={{ display: 'flex', gap: 1 }}>
