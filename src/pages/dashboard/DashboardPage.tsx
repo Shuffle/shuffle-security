@@ -708,7 +708,7 @@ const DashboardPage = () => {
       } catch { /* skip */ }
     }
     return out;
-  }, [incidentItems, subOrgIncidentItems]);
+  }, [effectiveIncidentItems, effectiveSubOrgIncidentItems]);
 
 
   // Check for running detection sensors AND deployed host monitors
