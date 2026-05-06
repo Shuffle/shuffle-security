@@ -387,7 +387,6 @@ export const DashboardOverview = ({
           value={incidentStats.openCount}
           label="Open Incidents"
           delta={incidentStats.delta}
-          spark={incidentSpark}
           isLoading={incidentsLoading}
           onClick={() => navigate('/incidents')}
           delay={0}
