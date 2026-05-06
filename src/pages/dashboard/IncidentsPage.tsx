@@ -2523,22 +2523,27 @@ const IncidentsPage = () => {
                 />
               )}
 
-              {filters.severity && (
-                <Chip
-                  label={`${negatedFilters.has('severity') ? 'NOT ' : ''}${filters.severity}`}
-                  size="small"
-                  onClick={() => setNegatedFilters(prev => { const next = new Set(prev); next.has('severity') ? next.delete('severity') : next.add('severity'); return next; })}
-                  onDelete={() => { setFilters(prev => ({ ...prev, severity: null })); setNegatedFilters(prev => { const next = new Set(prev); next.delete('severity'); return next; }); }}
-                  sx={{ 
-                    cursor: 'pointer',
-                    textTransform: 'capitalize',
-                    backgroundColor: negatedFilters.has('severity') ? 'rgba(239, 68, 68, 0.15)' : `${severityColors[filters.severity] || '#94a3b8'}20`,
-                    color: negatedFilters.has('severity') ? '#f87171' : (severityColors[filters.severity] || '#94a3b8'),
-                    fontWeight: 500,
-                    '& .MuiChip-deleteIcon': { color: negatedFilters.has('severity') ? '#f87171' : (severityColors[filters.severity] || '#94a3b8') },
-                  }}
-                />
-              )}
+              {filters.severity && (() => {
+                const sevArr = Array.isArray(filters.severity) ? filters.severity : [filters.severity];
+                const sevLabel = sevArr.join(' / ');
+                const sevColor = sevArr.length === 1 ? (severityColors[sevArr[0]] || '#94a3b8') : '#94a3b8';
+                return (
+                  <Chip
+                    label={`${negatedFilters.has('severity') ? 'NOT ' : ''}${sevLabel}`}
+                    size="small"
+                    onClick={() => setNegatedFilters(prev => { const next = new Set(prev); next.has('severity') ? next.delete('severity') : next.add('severity'); return next; })}
+                    onDelete={() => { setFilters(prev => ({ ...prev, severity: null })); setNegatedFilters(prev => { const next = new Set(prev); next.delete('severity'); return next; }); }}
+                    sx={{
+                      cursor: 'pointer',
+                      textTransform: 'capitalize',
+                      backgroundColor: negatedFilters.has('severity') ? 'rgba(239, 68, 68, 0.15)' : `${sevColor}20`,
+                      color: negatedFilters.has('severity') ? '#f87171' : sevColor,
+                      fontWeight: 500,
+                      '& .MuiChip-deleteIcon': { color: negatedFilters.has('severity') ? '#f87171' : sevColor },
+                    }}
+                  />
+                );
+              })()}
 
               {filters.status && (
                 Array.isArray(filters.status) ? (
