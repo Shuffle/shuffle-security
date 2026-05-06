@@ -982,9 +982,12 @@ const DashboardPage = () => {
           {isParentOrg && subOrgs.length > 0 && (() => {
             const currentOrgImage = userInfo?.active_org?.image;
             const currentOrgName = userInfo?.active_org?.name || 'Current Tenant';
-            const options: { id: string; name: string; image?: string }[] = [
-              { id: currentOrgId || '', name: currentOrgName, image: currentOrgImage },
-              ...subOrgs.filter(o => o.id !== currentOrgId).map(o => ({ id: o.id, name: o.name, image: o.image })),
+            const sortedChildren = [...subOrgs]
+              .filter(o => o.id !== currentOrgId)
+              .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+            const options: { id: string; name: string; image?: string; isParent?: boolean }[] = [
+              { id: currentOrgId || '', name: currentOrgName, image: currentOrgImage, isParent: true },
+              ...sortedChildren.map(o => ({ id: o.id, name: o.name, image: o.image, isParent: false })),
             ];
             const value = options.find(o => o.id === effectiveOrgId) || options[0];
             return (
@@ -1002,14 +1005,14 @@ const DashboardPage = () => {
                   setViewOrgId(newValue.id === currentOrgId ? null : newValue.id);
                 }}
                 renderOption={(props, option) => (
-                  <li {...props} key={option.id}>
+                  <li {...props} key={option.id} style={{ paddingLeft: option.isParent ? 16 : 36 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       {option.image ? (
                         <img src={option.image} alt="" style={{ width: 20, height: 20, borderRadius: 4, objectFit: 'contain', flexShrink: 0 }} />
                       ) : (
                         <Box sx={{ width: 20, height: 20, borderRadius: '4px', bgcolor: 'hsl(var(--muted) / 0.5)', flexShrink: 0 }} />
                       )}
-                      <Typography sx={{ fontSize: '0.82rem' }}>{option.name}</Typography>
+                      <Typography sx={{ fontSize: '0.82rem', fontWeight: option.isParent ? 600 : 400 }}>{option.name}</Typography>
                     </Box>
                   </li>
                 )}
