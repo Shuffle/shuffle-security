@@ -1503,7 +1503,7 @@ const AuthenticatedVulnAssetsPage = () => {
                 <>
                   {/* Easy: one-liner */}
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-medium">Run this on the monitoring targets{hostPlatform === 'windows' ? ' (cmd/powershell)' : ''}</Label>
+                    <Label className="text-xs font-medium">Run this on the monitoring targets{hostPlatform === 'windows' ? ' with PowerShell as Administrator' : ''}</Label>
                     <div className="relative">
                       <pre className="text-xs bg-muted rounded-lg p-4 pr-12 border border-border overflow-x-auto font-mono text-foreground whitespace-pre-wrap break-all leading-relaxed max-h-40">
                         {getDeployCommand()}
