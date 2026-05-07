@@ -185,6 +185,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const setActiveOrg = useCallback(async (orgId: string) => {
     try {
+      // Trace every org-change call so we can attribute unexpected ones
+      // (e.g. fired from /incidents without the user clicking the switcher).
+      console.warn('[Auth] setActiveOrg → /api/v1/orgs/' + orgId + '/change', {
+        orgId,
+        currentPath: typeof window !== 'undefined' ? window.location.pathname + window.location.search : 'n/a',
+      });
+      console.trace('[Auth] setActiveOrg call site');
+
       // Reset region URL and theme immediately — the new org may have different settings
       resetRegionUrl();
       localStorage.removeItem('shuffle-theme');
