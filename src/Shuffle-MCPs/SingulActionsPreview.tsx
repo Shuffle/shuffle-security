@@ -500,32 +500,6 @@ const SingulActionsPreview = ({
                   <TextField {...params} placeholder="Select action" />
                 )}
               />
-              <ToggleButtonGroup
-                size="small"
-                exclusive
-                value={lang}
-                onChange={(_, v) => v && setLang(v)}
-                sx={{
-                  '& .MuiToggleButton-root': {
-                    height: 36,
-                    px: 1.5,
-                    fontSize: '0.7rem',
-                    textTransform: 'none',
-                    fontFamily: "'JetBrains Mono', monospace",
-                    color: 'hsl(var(--muted-foreground))',
-                    border: '1px solid hsl(var(--border))',
-                    '&.Mui-selected': {
-                      backgroundColor: 'hsl(var(--primary) / 0.15)',
-                      color: 'hsl(var(--primary))',
-                      borderColor: 'hsl(var(--primary))',
-                      '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.2)' },
-                    },
-                  },
-                }}
-              >
-                <ToggleButton value="curl">curl</ToggleButton>
-                <ToggleButton value="python">python</ToggleButton>
-              </ToggleButtonGroup>
             </Box>
 
             {/* Code card */}
