@@ -180,7 +180,7 @@ const SourceChartContent = ({
               fill={`url(#gradient-source-${i})`}
               dot={false}
               activeDot={{ r: 4, strokeWidth: 2, stroke: color, fill: 'hsl(var(--card))' }}
-              stackId="sources"
+              isAnimationActive={false}
             />
           );
         })}
