@@ -49,7 +49,7 @@ const ThreatFeedsPage = () => {
   usePageMeta({
     title: 'Threat feeds',
     description: 'Manage threat intelligence feeds and IOC sources, including MISP integrations.',
-    url: '/detection/threat-feeds',
+    url: '/incidents/threat-feeds',
   });
   const { threatFeeds: feeds, isLoading, saveFeed, deleteFeed, toggleFeed, initializeDefaults, refetch } = useThreatFeeds();
   const { iocTypes } = useIOCTypes();
