@@ -6,6 +6,7 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo, useImperativeHandle } from 'react';
 import { algoliasearch, SearchClient } from 'algoliasearch';
+import { Tooltip } from '@mui/material';
 import type { AlgoliaSearchApp, AppSelectedEvent, ShuffleMCPProps, AppAuthentication } from './shuffle-mcp.helpers';
 import AppDetailDrawer from './AppDetailDrawer';
 import './shuffle-mcp.css';
@@ -461,12 +462,14 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
             <span className="singul-app-name" style={customStyles.appName}>
               {app.name.replace(/_/g, ' ')}
               {app.source === 'private' && (
-                <span
-                  className="singul-private-badge"
+                <Tooltip
                   title="Private apps are apps you have activated in your organization, or your own custom apps — not just from the public Algolia catalog."
+                  arrow
+                  enterDelay={100}
+                  enterNextDelay={100}
                 >
-                  Private
-                </span>
+                  <span className="singul-private-badge">Private</span>
+                </Tooltip>
               )}
             </span>
             {showDescription && app.description && (
@@ -546,18 +549,18 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
               { key: 'public', label: 'Public', count: results.length, title: 'Public apps from the Shuffle catalog (powered by Algolia).' },
               { key: 'private', label: 'Private', count: filteredPrivateApps.length, title: 'Private apps are apps you have activated in your organization, or your own custom apps — not just from the public Algolia catalog.' },
             ] as const).map(opt => (
-              <button
-                key={opt.key}
-                type="button"
-                role="tab"
-                aria-selected={sourceFilter === opt.key}
-                title={opt.title}
-                className={`singul-source-pill ${sourceFilter === opt.key ? 'singul-source-pill-active' : ''}`}
-                onClick={() => setSourceFilter(opt.key)}
-              >
-                {opt.label}
-                <span className="singul-source-count">{opt.count}</span>
-              </button>
+              <Tooltip key={opt.key} title={opt.title} arrow enterDelay={100} enterNextDelay={100}>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={sourceFilter === opt.key}
+                  className={`singul-source-pill ${sourceFilter === opt.key ? 'singul-source-pill-active' : ''}`}
+                  onClick={() => setSourceFilter(opt.key)}
+                >
+                  {opt.label}
+                  <span className="singul-source-count">{opt.count}</span>
+                </button>
+              </Tooltip>
             ))}
           </div>
         )}
