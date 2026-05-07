@@ -69,6 +69,8 @@ export interface SidebarChildSpec {
   /** Lucide / MUI icon node — pass an already-instantiated element. */
   icon: React.ReactNode;
   supportOnly?: boolean;
+  /** Default visibility when no preference is persisted. Defaults to true. */
+  defaultVisible?: boolean;
 }
 
 export interface SidebarItemSpec {
@@ -81,6 +83,8 @@ export interface SidebarItemSpec {
   /** When true, the item ignores the visibility map (always shown). */
   alwaysVisible?: boolean;
   supportOnly?: boolean;
+  /** Default visibility when no preference is persisted. Defaults to true. */
+  defaultVisible?: boolean;
   children?: SidebarChildSpec[];
 }
 
@@ -111,6 +115,18 @@ export const SIDEBAR_NAV: SidebarItemSpec[] = [
         label: 'Custom Fields',
         path: '/incidents/custom-fields',
         icon: <TuneIcon fontSize="small" />,
+      },
+      {
+        tabKey: 'detection_threat_feeds',
+        label: 'Threat Feeds',
+        path: '/detection/threat-feeds',
+        icon: <RssFeedIcon fontSize="small" />,
+      },
+      {
+        tabKey: 'detection_ioc_types',
+        label: 'IOC Types',
+        path: '/detection/ioc-types',
+        icon: <FingerprintIcon fontSize="small" />,
       },
     ],
   },
@@ -149,12 +165,11 @@ export const SIDEBAR_NAV: SidebarItemSpec[] = [
     label: 'Detection',
     icon: <RadarIcon />,
     path: '/detection',
+    defaultVisible: false,
     children: [
-      { tabKey: 'detection_rules',        label: 'Rules',        path: '/detection/sigma',          icon: <Braces size={16} /> },
-      { tabKey: 'detection_pipelines',    label: 'Pipelines',    path: '/detection/pipelines',      icon: <Network size={16} /> },
-      { tabKey: 'detection_mitre',        label: 'ATT&CK',       path: '/detection/mitre',          icon: <Waypoints size={16} />, supportOnly: true },
-      { tabKey: 'detection_threat_feeds', label: 'Threat Feeds', path: '/detection/threat-feeds',   icon: <RssFeedIcon fontSize="small" /> },
-      { tabKey: 'detection_ioc_types',    label: 'IOC Types',    path: '/detection/ioc-types',      icon: <FingerprintIcon fontSize="small" /> },
+      { tabKey: 'detection_rules',     label: 'Rules',     path: '/detection/sigma',     icon: <Braces size={16} />,    defaultVisible: false },
+      { tabKey: 'detection_pipelines', label: 'Pipelines', path: '/detection/pipelines', icon: <Network size={16} />,   defaultVisible: false },
+      { tabKey: 'detection_mitre',     label: 'ATT&CK',    path: '/detection/mitre',     icon: <Waypoints size={16} />, supportOnly: true, defaultVisible: false },
     ],
   },
   {
@@ -177,3 +192,16 @@ export const ALL_SIDEBAR_KEYS: SidebarItemKey[] = SIDEBAR_NAV.flatMap((item) => 
   item.tabKey,
   ...(item.children?.map((c) => c.tabKey) ?? []),
 ]);
+
+/** Per-key default visibility. Items without `defaultVisible: false` default to true. */
+export const SIDEBAR_DEFAULT_VISIBILITY: Record<SidebarItemKey, boolean> = SIDEBAR_NAV.reduce(
+  (acc, item) => {
+    acc[item.tabKey] = item.defaultVisible !== false;
+    for (const c of item.children ?? []) {
+      acc[c.tabKey] = c.defaultVisible !== false;
+    }
+    return acc;
+  },
+  {} as Record<SidebarItemKey, boolean>,
+);
+
