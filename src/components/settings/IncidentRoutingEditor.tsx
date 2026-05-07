@@ -764,39 +764,139 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
             </Button>
           </Box>
 
-          {/* Action */}
+          {/* Actions */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pt: 1, borderTop: '1px solid hsl(var(--border))' }}>
             <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: '0.05em' }}>
-              Then suggest moving incident to
+              Then suggest
             </Typography>
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              <TextField
-                size="small"
-                select
-                value={rule.action.targetOrgId}
-                onChange={(e) => updateRule(rule.id, { action: { ...rule.action, targetOrgId: e.target.value } })}
-                sx={{ minWidth: 240 }}
-                label="Target tenant"
-              >
-                {orgOptions.length === 0 && (
-                  <MenuItem value="" disabled>
-                    No tenants available
-                  </MenuItem>
-                )}
-                {orgOptions.map((o) => (
-                  <MenuItem key={o.id} value={o.id} sx={{ fontSize: '0.8rem' }}>
-                    {o.name}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                size="small"
-                value={rule.action.reason || ''}
-                onChange={(e) => updateRule(rule.id, { action: { ...rule.action, reason: e.target.value } })}
-                placeholder="Reason shown to user (optional)"
-                sx={{ flex: 1, minWidth: 220 }}
-              />
-            </Stack>
+            {rule.actions.map((action, aIdx) => {
+              const valuePresets =
+                action.type === 'set_severity' ? SEVERITY_OPTIONS
+                : action.type === 'set_status' ? STATUS_OPTIONS
+                : action.type === 'set_priority' ? PRIORITY_OPTIONS
+                : null;
+              return (
+                <Box key={aIdx} sx={{ display: 'flex', flexDirection: 'column', gap: 1, p: 1, borderRadius: 1, bgcolor: 'hsl(var(--muted) / 0.3)' }}>
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
+                    <TextField
+                      size="small"
+                      select
+                      value={action.type}
+                      onChange={(e) => changeActionType(rule.id, aIdx, e.target.value as RoutingActionType)}
+                      sx={{ minWidth: 200 }}
+                      label="Action"
+                    >
+                      {(Object.keys(ACTION_TYPE_LABELS) as RoutingActionType[]).map((t) => (
+                        <MenuItem key={t} value={t} sx={{ fontSize: '0.8rem' }}>
+                          {ACTION_TYPE_LABELS[t]}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+
+                    {action.type === 'suggest_move' && (
+                      <TextField
+                        size="small"
+                        select
+                        value={action.targetOrgId || ''}
+                        onChange={(e) => updateAction(rule.id, aIdx, { targetOrgId: e.target.value })}
+                        sx={{ minWidth: 240 }}
+                        label="Target tenant"
+                      >
+                        {orgOptions.length === 0 && (
+                          <MenuItem value="" disabled>No tenants available</MenuItem>
+                        )}
+                        {orgOptions.map((o) => (
+                          <MenuItem key={o.id} value={o.id} sx={{ fontSize: '0.8rem' }}>{o.name}</MenuItem>
+                        ))}
+                      </TextField>
+                    )}
+
+                    {action.type === 'set_field' && (
+                      <TextField
+                        size="small"
+                        select
+                        value={action.field || ''}
+                        onChange={(e) => updateAction(rule.id, aIdx, { field: e.target.value })}
+                        SelectProps={{ renderValue: (v) => (v as string) || 'Pick field…' }}
+                        sx={{ minWidth: 220 }}
+                        label="Field"
+                      >
+                        {FIELD_SUGGESTIONS.map((f) => (
+                          <MenuItem key={f} value={f} sx={{ fontSize: '0.8rem' }}>{f}</MenuItem>
+                        ))}
+                        {action.field && !FIELD_SUGGESTIONS.includes(action.field) && (
+                          <MenuItem value={action.field}>{action.field}</MenuItem>
+                        )}
+                      </TextField>
+                    )}
+
+                    {action.type !== 'suggest_move' && (
+                      valuePresets ? (
+                        <TextField
+                          size="small"
+                          select
+                          value={action.value || ''}
+                          onChange={(e) => updateAction(rule.id, aIdx, { value: e.target.value })}
+                          sx={{ minWidth: 180 }}
+                          label="Value"
+                        >
+                          {valuePresets.map((v) => (
+                            <MenuItem key={v} value={v} sx={{ fontSize: '0.8rem' }}>{v}</MenuItem>
+                          ))}
+                        </TextField>
+                      ) : (
+                        <TextField
+                          size="small"
+                          value={action.value || ''}
+                          onChange={(e) => updateAction(rule.id, aIdx, { value: e.target.value })}
+                          placeholder={
+                            action.type === 'add_label' ? 'label name'
+                            : action.type === 'assign_to' ? 'user email or AI Agent'
+                            : action.type === 'add_comment' ? 'comment text'
+                            : 'value'
+                          }
+                          sx={{ flex: 1, minWidth: 200 }}
+                          multiline={action.type === 'add_comment'}
+                          maxRows={action.type === 'add_comment' ? 4 : 1}
+                          label="Value"
+                        />
+                      )
+                    )}
+
+                    <IconButton
+                      size="small"
+                      onClick={() => removeAction(rule.id, aIdx)}
+                      disabled={rule.actions.length <= 1}
+                      sx={{ width: 36, height: 36, color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--destructive))' } }}
+                    >
+                      <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                    </IconButton>
+                  </Stack>
+                  <TextField
+                    size="small"
+                    value={action.reason || ''}
+                    onChange={(e) => updateAction(rule.id, aIdx, { reason: e.target.value })}
+                    placeholder="Reason shown to user (optional)"
+                    sx={{ width: '100%' }}
+                  />
+                </Box>
+              );
+            })}
+            <Button
+              size="small"
+              onClick={() => addAction(rule.id)}
+              startIcon={<AddIcon sx={{ fontSize: 14 }} />}
+              sx={{
+                alignSelf: 'flex-start',
+                height: 28,
+                textTransform: 'none',
+                fontSize: '0.7rem',
+                color: 'hsl(var(--muted-foreground))',
+                '&:hover': { color: 'hsl(var(--primary))', bgcolor: 'transparent' },
+              }}
+            >
+              Add action
+            </Button>
           </Box>
 
           {/* Footer: stats + save */}
