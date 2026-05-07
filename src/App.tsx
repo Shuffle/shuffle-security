@@ -101,16 +101,14 @@ const ThemedApp = () => {
     <MuiThemeProvider theme={muiTheme}>
       <CssBaseline />
       <ExternalLinkConfirmDialog />
-      <Toaster 
-        position="bottom-right" 
+      <ToastContainer
+        position="bottom-right"
         theme={resolvedTheme}
-        toastOptions={{
-          style: {
-            background: 'hsl(var(--card))',
-            border: '1px solid hsl(var(--border))',
-            color: 'hsl(var(--foreground))',
-          },
-        }}
+        autoClose={4000}
+        newestOnTop
+        closeOnClick
+        pauseOnHover
+        draggable
       />
       <AuthProvider>
         <BrowserRouter>
