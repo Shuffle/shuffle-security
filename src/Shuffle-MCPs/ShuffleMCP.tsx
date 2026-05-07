@@ -467,6 +467,8 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
                   arrow
                   enterDelay={100}
                   enterNextDelay={100}
+                  placement="top"
+                  slotProps={{ popper: { style: { zIndex: 10000 } } }}
                 >
                   <span className="singul-private-badge">Private</span>
                 </Tooltip>
