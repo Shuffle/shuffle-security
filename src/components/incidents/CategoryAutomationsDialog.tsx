@@ -932,7 +932,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                   )}
 
                   {/* Security Rules Configuration */}
-                  {automation.enabled && automation.type === 'security_rules' && expandedTypes['security_rules'] && (
+                  {automation.type === 'security_rules' && expandedTypes['security_rules'] && (
                     <Box sx={{ px: 2, pb: 2, pt: 0.5 }}>
                       <TextField
                         size="small"
