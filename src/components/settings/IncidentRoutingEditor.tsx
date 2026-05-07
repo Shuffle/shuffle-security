@@ -417,20 +417,91 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
         </Paper>
       )}
 
-      {sortedRules.map((rule) => (
+      {sortedRules.map((rule) => {
+        const isOpen = expanded[rule.id] ?? false;
+        const targetName = orgOptions.find((o) => o.id === rule.action.targetOrgId)?.name || 'no target';
+        const condSummary = rule.conditions.length === 1
+          ? `${rule.conditions[0].field} ${OP_LABELS[rule.conditions[0].op]}${rule.conditions[0].op !== 'exists' ? ` "${rule.conditions[0].value || ''}"` : ''}`
+          : `${rule.conditions.length} conditions (${rule.matchMode === 'all' ? 'all' : 'any'})`;
+        return (
         <Paper
           key={rule.id}
           sx={{
-            p: 2,
+            p: isOpen ? 2 : 1.25,
             bgcolor: 'hsl(var(--card))',
             border: '1px solid hsl(var(--border))',
             borderRadius: 2,
             display: 'flex',
             flexDirection: 'column',
-            gap: 1.5,
+            gap: isOpen ? 1.5 : 0,
             opacity: rule.enabled ? 1 : 0.6,
           }}
         >
+          {/* Collapsed summary row */}
+          {!isOpen && (
+            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+              <Box
+                onClick={() => toggleExpanded(rule.id)}
+                sx={{ flex: 1, minWidth: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 0.25 }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography variant="body2" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {rule.name || 'Untitled rule'}
+                  </Typography>
+                  <Chip
+                    label={`p${rule.priority}`}
+                    size="small"
+                    sx={{ height: 18, fontSize: '0.6rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}
+                  />
+                  {!rule.enabled && (
+                    <Chip label="disabled" size="small" sx={{ height: 18, fontSize: '0.6rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }} />
+                  )}
+                  {localOnlyIds.has(rule.id) && (
+                    <Chip label="unsaved" size="small" sx={{ height: 18, fontSize: '0.6rem', bgcolor: 'hsl(var(--primary) / 0.15)', color: 'hsl(var(--primary))' }} />
+                  )}
+                </Box>
+                <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  When {condSummary} → move to {targetName}
+                </Typography>
+              </Box>
+              <Tooltip title={rule.enabled ? 'Disable rule' : 'Enable rule'}>
+                <Switch
+                  checked={rule.enabled}
+                  onChange={(e) => {
+                    updateRule(rule.id, { enabled: e.target.checked });
+                    if (!localOnlyIds.has(rule.id)) {
+                      // Persist toggle immediately for saved rules.
+                      const updated = { ...drafts[rule.id], enabled: e.target.checked, updatedTs: Date.now() };
+                      addItem(rule.id, JSON.stringify(updated));
+                    }
+                  }}
+                  size="small"
+                />
+              </Tooltip>
+              <Tooltip title="Edit">
+                <IconButton size="small" onClick={() => toggleExpanded(rule.id)} sx={{ width: 36, height: 36 }}>
+                  <ExpandMoreIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Delete">
+                <IconButton
+                  size="small"
+                  onClick={() => handleDelete(rule)}
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    color: 'hsl(var(--muted-foreground))',
+                    '&:hover': { color: 'hsl(var(--destructive))' },
+                  }}
+                >
+                  <DeleteOutlineIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+              </Tooltip>
+            </Box>
+          )}
+
+          {isOpen && (
+          <>
           {/* Header row: name + enable + priority + actions */}
           <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flexWrap: 'wrap' }}>
             <TextField
@@ -460,6 +531,11 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
             <Tooltip title="Duplicate">
               <IconButton size="small" onClick={() => handleDuplicate(rule)} sx={{ width: 36, height: 36 }}>
                 <ContentCopyIcon sx={{ fontSize: 16 }} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Collapse">
+              <IconButton size="small" onClick={() => toggleExpanded(rule.id)} sx={{ width: 36, height: 36 }}>
+                <ExpandLessIcon sx={{ fontSize: 18 }} />
               </IconButton>
             </Tooltip>
             <Tooltip title="Delete">
@@ -516,7 +592,6 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
                       {f}
                     </MenuItem>
                   ))}
-                  {/* Allow free-form by also showing the current value if not in list */}
                   {!FIELD_SUGGESTIONS.includes(cond.field) && cond.field && (
                     <MenuItem value={cond.field}>{cond.field}</MenuItem>
                   )}
@@ -627,8 +702,11 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
               {saving[rule.id] ? <CircularProgress size={16} /> : 'Save rule'}
             </Button>
           </Box>
+          </>
+          )}
         </Paper>
-      ))}
+        );
+      })}
     </Box>
   );
 };
