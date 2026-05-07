@@ -1,7 +1,7 @@
 import { useLocation } from 'react-router-dom';
 import { useMemo, useEffect, useCallback, useSyncExternalStore } from 'react';
 import { getDatastoreItem, setDatastoreItem, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
-import { SIDEBAR_NAV, ALL_SIDEBAR_KEYS, SidebarItemKey } from '@/config/sidebarNav';
+import { SIDEBAR_NAV, ALL_SIDEBAR_KEYS, SIDEBAR_DEFAULT_VISIBILITY, SidebarItemKey } from '@/config/sidebarNav';
 import { applyEntityTerminology } from '@/lib/entityTerminology';
 
 export const ENTITY_OPTIONS = [
