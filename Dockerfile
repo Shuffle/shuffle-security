@@ -1,27 +1,29 @@
 # Stage 1: Build
-FROM node:20-alpine AS build
+FROM oven/bun:1-alpine AS build
 
 WORKDIR /app
 
-# Optional: set a specific API URL at build time.
-# If omitted, the frontend defaults to the current domain (same-origin),
-# which works with the nginx reverse proxy for /api/v1 and /api/v2.
 ARG VITE_SHUFFLE_API_URL
 ENV VITE_SHUFFLE_API_URL=$VITE_SHUFFLE_API_URL
 
-# Install dependencies (npm + package-lock.json is the standard build system)
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 
-# Copy source and build
 COPY . .
-RUN npm run build
+RUN bun run build
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine
 
 # Remove default nginx config
 RUN rm /etc/nginx/nginx.conf /etc/nginx/conf.d/default.conf 2>/dev/null || true
+
+# Generate self-signed SSL certificates so the 443 listener works out of the box
+RUN apk add --no-cache openssl \
+ && openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+      -keyout /etc/nginx/privkey.pem \
+      -out /etc/nginx/fullchain.cert.pem \
+      -subj "/CN=localhost"
 
 # Copy project nginx config
 COPY nginx.conf /etc/nginx/nginx.conf
