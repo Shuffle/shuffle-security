@@ -18,10 +18,13 @@ import {
   Button,
   Autocomplete,
   TextField,
-  ToggleButton,
-  ToggleButtonGroup,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CheckIcon from '@mui/icons-material/Check';
+import { Code2, Terminal } from 'lucide-react';
 import { API_CONFIG, getApiUrl, getAuthHeader, getTrackedOrgId } from '@/Shuffle-MCPs/api';
 
 interface SingulAction {
