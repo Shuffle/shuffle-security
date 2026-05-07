@@ -3,12 +3,13 @@ import { ThemeProvider as MuiThemeProvider, CssBaseline, Box } from '@mui/materi
 import { Navigate } from 'react-router-dom';
 import { AppDetailProvider } from '@/Shuffle-MCPs/AppDetailContext';
 import { setToastImpl } from '@/Shuffle-MCPs/toast';
-import { toast as hostToast } from '@/hooks/use-toast';
-setToastImpl((arg) => hostToast(arg));
+import { toast as hostToast } from '@/lib/toast';
+setToastImpl((arg) => hostToast(arg as string));
 import { trackReferralParams, initAnalytics } from '@/lib/analytics';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Outlet } from 'react-router-dom';
-import { Toaster } from 'sonner';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { createMuiTheme } from '@/theme/muiTheme';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
