@@ -2202,6 +2202,7 @@ const IncidentsPage = () => {
           )}
           </>}
 
+          {false && <>
           {/* Forward Destinations — same visibility rules as the arrow above. */}
           {!ingestionLoading && !isDemoTourActive && !demoActive && ingestionApps.length > 0 && (
             <Box className={`automation-section-forward${forwardHovered ? ' is-hovered' : ''}`}
@@ -2337,6 +2338,7 @@ const IncidentsPage = () => {
               )}
             </Box>
           )}
+          </>}
           </Box>
           )}
 
