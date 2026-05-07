@@ -119,13 +119,13 @@ export const SIDEBAR_NAV: SidebarItemSpec[] = [
       {
         tabKey: 'detection_threat_feeds',
         label: 'Threat Feeds',
-        path: '/detection/threat-feeds',
+        path: '/incidents/threat-feeds',
         icon: <RssFeedIcon fontSize="small" />,
       },
       {
         tabKey: 'detection_ioc_types',
         label: 'IOC Types',
-        path: '/detection/ioc-types',
+        path: '/incidents/ioc-types',
         icon: <FingerprintIcon fontSize="small" />,
       },
     ],
