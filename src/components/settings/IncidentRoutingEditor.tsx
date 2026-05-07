@@ -580,7 +580,7 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
                   )}
                 </Box>
                 <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  When {condSummary} → move to {targetName}
+                  When {condSummary} → {actionSummary}
                 </Typography>
               </Box>
               <Tooltip title={rule.enabled ? 'Disable rule' : 'Enable rule'}>
