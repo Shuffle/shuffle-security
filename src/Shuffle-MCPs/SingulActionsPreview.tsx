@@ -328,7 +328,8 @@ const SingulActionsPreview = ({
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(snippet);
-      toast.success('Copied snippet');
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error('Copy failed');
     }
