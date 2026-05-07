@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Box, Button, Chip, CircularProgress, Tooltip, Typography } from '@mui/material';
+import { Box, Button, CircularProgress, IconButton, Tooltip, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
+import BoltIcon from '@mui/icons-material/Bolt';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import { useWebhookStatus } from '@/hooks/useWebhookStatus';
 import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
@@ -13,53 +14,66 @@ import { seedDefaultThreatFeeds } from '@/hooks/useThreatFeeds';
 import { toast } from '@/lib/toast';
 
 /**
- * Top-of-page status banner for /incidents that highlights whether the
- * critical automations are wired up:
- *  - Automatic Ingestion (webhook trigger)
- *  - Automatic Enrichment (threat feeds + IOC extraction + Enrich automation)
- *  - Assign & Escalate (background scheduler workflow)
- *  - Default config (IOC types + Threat feeds seeded in datastore)
+ * Compact automation readiness panel.
  *
- * If any of these are missing, an "Enable all" button mirrors what the
- * onboarding/demo bootstrap does so the operator can fix everything in
- * one click. Admin-only.
+ * Shown underneath the trend charts in the right-hand column on /incidents.
+ * Always renders for admins so they have at-a-glance visibility into which
+ * critical automations are wired up. Each row shows status + an inline
+ * "Enable" action; "Enable all" wires up everything in one click.
  */
-const STATUS_DISMISS_KEY = 'shuffle:automation-readiness-banner:dismissed-active';
-
-interface StatusChipProps {
+interface RowProps {
   label: string;
   active: boolean;
   loading?: boolean;
+  enabling?: boolean;
   tooltip?: string;
+  onEnable?: () => void;
 }
 
-const StatusChip = ({ label, active, loading, tooltip }: StatusChipProps) => {
-  const chip = (
-    <Chip
-      size="small"
-      icon={
-        loading ? (
-          <CircularProgress size={12} sx={{ color: 'inherit !important', ml: '6px' }} />
-        ) : active ? (
-          <CheckCircleIcon sx={{ fontSize: 14, color: 'hsl(var(--severity-low)) !important' }} />
-        ) : (
-          <RadioButtonUncheckedIcon sx={{ fontSize: 14, color: 'hsl(var(--muted-foreground)) !important' }} />
-        )
-      }
-      label={label}
-      sx={{
-        height: 24,
-        fontSize: '0.72rem',
-        fontWeight: 500,
-        bgcolor: active ? 'hsl(var(--severity-low) / 0.12)' : 'hsl(var(--muted))',
-        color: active ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))',
-        border: '1px solid',
-        borderColor: active ? 'hsl(var(--severity-low) / 0.3)' : 'hsl(var(--border))',
-        '& .MuiChip-label': { px: 0.75 },
-      }}
-    />
+const Row = ({ label, active, loading, enabling, tooltip, onEnable }: RowProps) => {
+  const icon = loading ? (
+    <CircularProgress size={12} sx={{ color: 'hsl(var(--muted-foreground))' }} />
+  ) : active ? (
+    <CheckCircleIcon sx={{ fontSize: 14, color: 'hsl(var(--severity-low))' }} />
+  ) : (
+    <RadioButtonUncheckedIcon sx={{ fontSize: 14, color: 'hsl(var(--muted-foreground))' }} />
   );
-  return tooltip ? <Tooltip title={tooltip} arrow>{chip}</Tooltip> : chip;
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 0.5 }}>
+      {icon}
+      <Tooltip title={tooltip || ''} arrow placement="left" disableHoverListener={!tooltip}>
+        <Typography
+          variant="body2"
+          sx={{
+            flex: 1,
+            fontSize: '0.78rem',
+            color: active ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
+          }}
+        >
+          {label}
+        </Typography>
+      </Tooltip>
+      {!active && !loading && onEnable && (
+        <Tooltip title={`Enable ${label}`} arrow>
+          <span>
+            <IconButton
+              size="small"
+              disabled={enabling}
+              onClick={onEnable}
+              sx={{
+                width: 22,
+                height: 22,
+                color: 'hsl(var(--primary))',
+                '&:hover': { bgcolor: 'hsl(var(--primary) / 0.1)' },
+              }}
+            >
+              {enabling ? <CircularProgress size={12} /> : <BoltIcon sx={{ fontSize: 14 }} />}
+            </IconButton>
+          </span>
+        </Tooltip>
+      )}
+    </Box>
+  );
 };
 
 export const AutomationReadinessBanner = () => {
@@ -69,6 +83,7 @@ export const AutomationReadinessBanner = () => {
   const assign = useAssignEscalateStatus();
 
   const [defaultsReady, setDefaultsReady] = useState<boolean | null>(null);
+  const [enabling, setEnabling] = useState<string | null>(null);
   const [enablingAll, setEnablingAll] = useState(false);
 
   const checkDefaults = useCallback(async () => {
@@ -92,6 +107,20 @@ export const AutomationReadinessBanner = () => {
   [webhook.enabled, enrichment.active, assign.active, defaultsReady]);
 
   const isLoading = webhook.isLoading || enrichment.isLoading || assign.isLoading || defaultsReady === null;
+
+  const wrap = useCallback(async (key: string, fn: () => Promise<unknown>) => {
+    setEnabling(key);
+    try {
+      await fn();
+      if (key === 'defaults') await checkDefaults();
+      toast.success(`Enabled: ${key}`);
+    } catch (err) {
+      console.error('[automation-readiness] enable failed', key, err);
+      toast.error(`Failed to enable ${key}`);
+    } finally {
+      setEnabling(null);
+    }
+  }, [checkDefaults]);
 
   const handleEnableAll = useCallback(async () => {
     setEnablingAll(true);
@@ -117,76 +146,87 @@ export const AutomationReadinessBanner = () => {
 
   if (!isAdmin) return null;
 
-  // Auto-hide once everything is active (sticky dismissed flag avoids flicker).
-  if (allActive) {
-    try { sessionStorage.setItem(STATUS_DISMISS_KEY, '1'); } catch { /* ignore */ }
-    return null;
-  }
+  const enabledCount =
+    (webhook.enabled ? 1 : 0) +
+    (enrichment.active ? 1 : 0) +
+    (assign.active ? 1 : 0) +
+    (defaultsReady === true ? 1 : 0);
 
   return (
-    <Alert
-      severity="warning"
-      icon={false}
+    <Box
       sx={{
-        mb: 2,
-        py: 1,
+        mt: 2,
+        p: 1.5,
+        borderRadius: 2,
         bgcolor: 'hsl(var(--card))',
         border: '1px solid hsl(var(--border))',
-        color: 'hsl(var(--foreground))',
-        '& .MuiAlert-message': { width: '100%', p: 0 },
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-        <Typography variant="body2" sx={{ fontWeight: 600, mr: 0.5 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+        <Typography variant="caption" sx={{ fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.68rem' }}>
           Automation Readiness
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
-          <StatusChip
-            label="Ingestion Webhook"
-            active={webhook.enabled}
-            loading={webhook.isLoading}
-            tooltip="Pushes alerts directly into incidents via webhook URL"
-          />
-          <StatusChip
-            label="Automatic Enrichment"
-            active={enrichment.active}
-            loading={enrichment.isLoading}
-            tooltip="Threat feeds + IOC extraction + Enrich automation"
-          />
-          <StatusChip
-            label="Assign & Escalate"
-            active={assign.active}
-            loading={assign.isLoading}
-            tooltip="Routes incidents to the on-call analyst and escalates"
-          />
-          <StatusChip
-            label="Default config"
-            active={defaultsReady === true}
-            loading={defaultsReady === null}
-            tooltip="Default IOC types and threat feeds seeded in datastore"
-          />
-        </Box>
-        <Box sx={{ flex: 1 }} />
+        <Typography variant="caption" sx={{ fontSize: '0.68rem', color: allActive ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))' }}>
+          {enabledCount}/4 active
+        </Typography>
+      </Box>
+      <Row
+        label="Ingestion Webhook"
+        active={webhook.enabled}
+        loading={webhook.isLoading}
+        enabling={enabling === 'webhook'}
+        tooltip="Pushes alerts directly into incidents via webhook URL"
+        onEnable={() => wrap('webhook', () => webhook.enable())}
+      />
+      <Row
+        label="Automatic Enrichment"
+        active={enrichment.active}
+        loading={enrichment.isLoading}
+        enabling={enabling === 'enrichment'}
+        tooltip="Threat feeds + IOC extraction + Enrich automation"
+        onEnable={() => wrap('enrichment', () => enrichment.enable())}
+      />
+      <Row
+        label="Assign & Escalate"
+        active={assign.active}
+        loading={assign.isLoading}
+        enabling={enabling === 'assign'}
+        tooltip="Routes incidents to the on-call analyst and escalates"
+        onEnable={() => wrap('assign', () => assign.enable())}
+      />
+      <Row
+        label="Default config"
+        active={defaultsReady === true}
+        loading={defaultsReady === null}
+        enabling={enabling === 'defaults'}
+        tooltip="Default IOC types and threat feeds seeded in datastore"
+        onEnable={() => wrap('defaults', async () => {
+          await Promise.allSettled([seedDefaultIOCTypes(), seedDefaultThreatFeeds()]);
+        })}
+      />
+      {!allActive && (
         <Button
+          fullWidth
           size="small"
-          variant="contained"
-          startIcon={enablingAll ? <CircularProgress size={14} color="inherit" /> : <RocketLaunchIcon sx={{ fontSize: 16 }} />}
+          variant="outlined"
+          startIcon={enablingAll ? <CircularProgress size={12} color="inherit" /> : <RocketLaunchIcon sx={{ fontSize: 14 }} />}
           disabled={enablingAll || isLoading}
           onClick={handleEnableAll}
           sx={{
-            height: 30,
+            mt: 1,
+            height: 28,
             textTransform: 'none',
-            fontSize: '0.78rem',
+            fontSize: '0.72rem',
             fontWeight: 600,
-            bgcolor: 'hsl(var(--primary))',
-            color: 'hsl(var(--primary-foreground))',
-            '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' },
+            borderColor: 'hsl(var(--primary) / 0.5)',
+            color: 'hsl(var(--primary))',
+            '&:hover': { borderColor: 'hsl(var(--primary))', bgcolor: 'hsl(var(--primary) / 0.08)' },
           }}
         >
           {enablingAll ? 'Enabling…' : 'Enable all'}
         </Button>
-      </Box>
-    </Alert>
+      )}
+    </Box>
   );
 };
 
