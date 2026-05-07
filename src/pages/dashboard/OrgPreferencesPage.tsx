@@ -19,6 +19,7 @@ import {
 import { SIDEBAR_NAV } from '@/config/sidebarNav';
 import { TaskStatusesEditor } from '@/components/settings/TaskStatusesEditor';
 import { SlaEditor } from '@/components/settings/SlaEditor';
+import { IncidentRoutingEditor } from '@/components/settings/IncidentRoutingEditor';
 import { useAuth } from '@/context/AuthContext';
 import { usePageMeta } from '@/hooks/usePageMeta';
 
