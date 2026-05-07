@@ -3315,21 +3315,40 @@ const IncidentsPage = () => {
               )
             )}
 
-          <IconButton
-            size="small"
-            disabled={currentPage >= Math.ceil(sortedIncidents.length / ITEMS_PER_PAGE)}
-            onClick={() => setCurrentPage(p => p + 1)}
-            sx={{
-              width: 36, height: 36,
-              border: '1px solid hsl(var(--border))',
-              borderRadius: 1,
-              color: 'hsl(var(--muted-foreground))',
-              '&:hover': { borderColor: 'hsl(var(--primary))', color: 'hsl(var(--primary))' },
-              '&.Mui-disabled': { opacity: 0.3 },
-            }}
-          >
-            <ChevronRightIcon fontSize="small" />
-          </IconButton>
+          {(() => {
+            const totalPages = Math.ceil(sortedIncidents.length / ITEMS_PER_PAGE);
+            const atEnd = currentPage >= totalPages;
+            // When the user reaches the last loaded page, the next click should
+            // sideload the next cursor batch from the server and advance into it.
+            const canLoadMoreFromServer = atEnd && hasMore;
+            const disabled = atEnd && !canLoadMoreFromServer;
+            return (
+              <IconButton
+                size="small"
+                disabled={disabled || isLoading}
+                onClick={async () => {
+                  if (canLoadMoreFromServer) {
+                    await fetchNextPage();
+                    setCurrentPage(p => p + 1);
+                  } else {
+                    setCurrentPage(p => p + 1);
+                  }
+                }}
+                title={canLoadMoreFromServer ? 'Load older incidents' : 'Next page'}
+                sx={{
+                  width: 36, height: 36,
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: 1,
+                  color: canLoadMoreFromServer ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                  borderColor: canLoadMoreFromServer ? 'hsl(var(--primary))' : 'hsl(var(--border))',
+                  '&:hover': { borderColor: 'hsl(var(--primary))', color: 'hsl(var(--primary))' },
+                  '&.Mui-disabled': { opacity: 0.3 },
+                }}
+              >
+                {isLoading && atEnd ? <CircularProgress size={14} /> : <ChevronRightIcon fontSize="small" />}
+              </IconButton>
+            );
+          })()}
         </Box>
       )}
 
