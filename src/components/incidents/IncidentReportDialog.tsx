@@ -25,7 +25,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import PrintIcon from '@mui/icons-material/Print';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import {
   generateIncidentReport,
   loadIncidentReport,

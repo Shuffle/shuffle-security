@@ -23,7 +23,7 @@ import {
   formatFileSize 
 } from '@/services/files';
 import { getAuthHeader } from '@/Shuffle-MCPs/api';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 interface FileAttachment {
   id: string;

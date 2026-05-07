@@ -2,7 +2,7 @@ import { Box, Typography, Button, CircularProgress, Chip } from '@mui/material';
 import WebhookIcon from '@mui/icons-material/Webhook';
 import { useWebhookStatus } from '@/hooks/useWebhookStatus';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 /**
  * Small chip shown inline next to page titles when webhook is active.

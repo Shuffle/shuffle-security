@@ -31,7 +31,7 @@ import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import { useCaseTemplates, CaseTemplate, TemplateTask } from '@/hooks/useCaseTemplates';
 import { TaskEditor } from '@/components/incidents/TaskEditor';
 import { IncidentTask, taskCategories } from '@/components/incidents/CreateIncidentDialog';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { usePageMeta } from '@/hooks/usePageMeta';
 
 const severityColors: Record<string, string> = {

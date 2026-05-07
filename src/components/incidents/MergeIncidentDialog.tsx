@@ -27,7 +27,7 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { getDatastoreByCategory, setDatastoreItem, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import { mapOCSFSeverity, mapOCSFStatus, Observable } from '@/config/ocsfIncidentSchema';
 import { severityColors, statusConfig } from '@/config/incidentConfig';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { useEntityText } from '@/hooks/useEntityLabel';
 
 interface IncidentSummary {

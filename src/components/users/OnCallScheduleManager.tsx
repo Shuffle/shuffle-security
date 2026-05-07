@@ -45,7 +45,7 @@ import {
   Person as PersonIcon,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import { setDatastoreItem, getDatastoreItem, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import { WeeklyScheduleTimeline, AI_AGENT_SCHEDULE } from '@/components/users/WeeklyScheduleTimeline';

@@ -62,7 +62,7 @@ import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover as RadixPopover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { resyncState } from '@/lib/resyncState';
 import { trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 import { ensureDefaultsInitialized } from '@/lib/initDefaults';

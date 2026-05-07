@@ -54,7 +54,7 @@ import { useAppAuth } from '@/Shuffle-MCPs/useAppAuth';
 import { useWorkflows } from '@/hooks/useWorkflows';
 import { findIngestTicketsWorkflow } from '@/Shuffle-MCPs/ingestionDetection';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { DemoModeCard } from '@/components/demo/DemoModeCard';
 import { useDatastore } from '@/hooks/useDatastore';
 import { DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';

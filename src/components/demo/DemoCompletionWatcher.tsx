@@ -12,7 +12,7 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { useDemo, TOUR_STEPS } from '@/context/DemoContext';
 import { useWorkflows } from '@/hooks/useWorkflows';
 import { useAgentNotifications } from '@/hooks/useNotifications';

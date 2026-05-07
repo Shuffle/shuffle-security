@@ -13,7 +13,7 @@ import {
   Alert,
   TextField,
 } from '@mui/material';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { setDatastoreItem, getDatastoreItem, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import { motion, AnimatePresence } from 'framer-motion';
