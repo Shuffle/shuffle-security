@@ -42,7 +42,7 @@ import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useDatastore } from '@/hooks/useDatastore';
 import { DEFAULT_IOC_TYPES, IOCType, IOC_CATEGORIES, IOCCategory, DEFAULT_ENABLED_IOCS, normalizeDefaultIOCType } from '@/hooks/useIOCTypes';
 import { DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import ThreatIntelAutomationBanner from '@/components/incidents/ThreatIntelAutomationBanner';
 import { usePageMeta } from '@/hooks/usePageMeta';
 

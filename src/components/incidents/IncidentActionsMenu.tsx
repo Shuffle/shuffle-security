@@ -24,7 +24,7 @@ import CallMergeIcon from '@mui/icons-material/CallMerge';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import SettingsIcon from '@mui/icons-material/Settings';
 import CloseIcon from '@mui/icons-material/Close';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 import { DATASTORE_CATEGORIES, getDatastoreItem, setDatastoreItem } from '@/Shuffle-MCPs/datastore';
 import { useDatastore } from '@/hooks/useDatastore';

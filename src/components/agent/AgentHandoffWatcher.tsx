@@ -26,7 +26,7 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { useAgentNotifications } from '@/hooks/useNotifications';
 import {
   isApprovalNotification,

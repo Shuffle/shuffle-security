@@ -7,7 +7,7 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import BlockIcon from '@mui/icons-material/Block';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDemo } from '@/context/DemoContext';
 

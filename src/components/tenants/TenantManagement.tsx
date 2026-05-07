@@ -28,7 +28,7 @@ import {
   SwapHoriz as SwapIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { useAuth } from '@/context/AuthContext';
 import { useSubOrgs, SubOrg } from '@/hooks/useSubOrgs';

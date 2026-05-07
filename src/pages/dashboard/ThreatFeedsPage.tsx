@@ -36,7 +36,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { useThreatFeeds, ThreatFeed, DEFAULT_THREAT_FEEDS } from '@/hooks/useThreatFeeds';
 import { useIOCTypes } from '@/hooks/useIOCTypes';
 import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import ThreatIntelAutomationBanner from '@/components/incidents/ThreatIntelAutomationBanner';
 import { usePageMeta } from '@/hooks/usePageMeta';
 

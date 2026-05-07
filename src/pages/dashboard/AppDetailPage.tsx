@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/lib/toast';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import {

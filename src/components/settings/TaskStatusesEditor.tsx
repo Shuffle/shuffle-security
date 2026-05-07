@@ -27,7 +27,7 @@ import {
   useTaskStatuses,
   setTaskStatuses,
 } from '@/hooks/useEntityLabel';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 const PRESET_COLORS = [
   '#3b82f6', // blue

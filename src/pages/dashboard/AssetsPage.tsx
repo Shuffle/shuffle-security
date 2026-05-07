@@ -24,7 +24,7 @@ import { OCSFDeviceInventory, DEVICE_TYPES, RISK_LEVELS } from '@/config/ocsfAss
 import { HostDetailPanel } from '@/components/monitors/HostDetailPanel';
 import { MonitorHostTable } from '@/components/monitors/MonitorHostTable';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 const DEFAULT_TAB = 'mobile';

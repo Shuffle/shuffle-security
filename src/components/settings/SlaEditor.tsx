@@ -20,7 +20,7 @@ import {
   Tooltip,
 } from '@mui/material';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import {
   SLA_SEVERITY_ORDER,
   SLA_SEVERITY_META,

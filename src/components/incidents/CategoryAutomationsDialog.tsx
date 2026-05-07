@@ -30,7 +30,7 @@ import EnhancedEncryptionIcon from '@mui/icons-material/EnhancedEncryption';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import SecurityIcon from '@mui/icons-material/Security';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import DownloadIcon from '@mui/icons-material/Download';
 import PopupTextEditor from '@/components/shared/PopupTextEditor';

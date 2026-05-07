@@ -18,7 +18,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import SyncIcon from '@mui/icons-material/Sync';
 import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { useMitreAttack } from '@/hooks/useMitreAttack';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePageMeta } from '@/hooks/usePageMeta';

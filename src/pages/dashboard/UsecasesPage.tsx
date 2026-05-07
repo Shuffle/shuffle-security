@@ -1053,7 +1053,7 @@ function useApi() {
 
 // ============================================================================
 // Real sonner toast — visible UI feedback for success/error.
-import { toast as sonnerToast } from 'sonner';
+import { toast as sonnerToast } from '@/lib/toast';
 import { usePageMeta } from '@/hooks/usePageMeta';
 const toast = {
   success: (msg: string, opts?: { duration?: number; description?: string }) => {

@@ -13,7 +13,7 @@ import { useVulnerabilities, Vulnerability, VulnSeverity, VulnCategory } from '@
 import { useAppAuth } from '@/Shuffle-MCPs/useAppAuth';
 import { isVulnScannerApp } from '@/Shuffle-MCPs/ingestionDetection';
 import { askAI } from '@/services/ai';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/context/AuthContext';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
