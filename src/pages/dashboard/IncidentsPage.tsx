@@ -1988,7 +1988,6 @@ const IncidentsPage = () => {
       transition={{ duration: 0.4 }}
     >
       <HighlightSpotlight />
-      <AutomationReadinessBanner />
       <ScheduleHealthBanner
         compact
         dismissKey="shuffle:schedule-health-banner:dismissed"
@@ -3126,6 +3125,7 @@ const IncidentsPage = () => {
           {Array.isArray(filters.org) && filters.org.length > 1 && (
             <OrgTrendChart incidents={activeIncidents} dateFrom={dateFrom} dateTo={dateTo} />
           )}
+          <AutomationReadinessBanner />
           {/* Irrelevant incidents bar */}
           {irrelevantCount > 0 && (
             <Box
