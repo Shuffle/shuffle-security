@@ -133,6 +133,7 @@ export const OrgTrendChart = ({ incidents, dateFrom, dateTo }: OrgTrendChartProp
             fill={`url(#org-gradient-${i})`}
             dot={false}
             activeDot={{ r: 4, strokeWidth: 2, stroke: ORG_PALETTE[i % ORG_PALETTE.length], fill: 'hsl(var(--card))' }}
+            isAnimationActive={false}
           />
         ))}
       </AreaChart>
