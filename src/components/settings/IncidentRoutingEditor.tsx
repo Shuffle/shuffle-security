@@ -406,7 +406,7 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
       priority: rule.priority + 1,
       matchMode: rule.matchMode,
       conditions: rule.conditions.map((c) => ({ ...c })),
-      action: { ...rule.action },
+      actions: rule.actions.map((a) => ({ ...a })),
     });
     setDrafts((prev) => ({ ...prev, [copy.id]: copy }));
     setLocalOnlyIds((prev) => new Set(prev).add(copy.id));
