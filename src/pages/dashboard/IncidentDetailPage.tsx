@@ -1571,7 +1571,15 @@ const IncidentDetailPage = () => {
     const fetchTime = performance.now() - loadStart;
     console.log(`[Perf] Incident fetch: ${fetchTime.toFixed(1)}ms, size: ${((result.item?.value?.length || 0) / 1024).toFixed(1)}KB`);
     
-    if (result.success && result.item) {
+    // Some API responses come back as success=true with an empty stub item
+    // (no key, empty value) when the requested key does not actually exist
+    // in the datastore. Treat that as "no item found" instead of letting it
+    // fall through to the parser and trip a misleading "parse-failed" error.
+    const itemValueLen = result.item?.value?.length || 0;
+    const itemKeyEmpty = !result.item?.key;
+    const isEmptyStub = !!(result.success && result.item) && itemKeyEmpty && itemValueLen <= 2;
+
+    if (result.success && result.item && !isEmptyStub) {
       setPublicAuthorization(result.item.public_authorization || '');
       const itemData = {
         key: result.item.key || id,
@@ -1736,11 +1744,14 @@ const IncidentDetailPage = () => {
         timestamp: new Date().toISOString(),
       });
     } else {
+      const stage = isEmptyStub ? 'no-item' : (result.success ? 'no-item' : 'no-success');
       setLoadDebug({
-        stage: result.success ? 'no-item' : 'no-success',
-        message: result.success
-          ? 'API responded success=true but no item was returned'
-          : 'API responded success=false (no item present in datastore for this key)',
+        stage,
+        message: isEmptyStub
+          ? 'API responded success=true but the item is an empty stub — no incident exists for this key in the active org'
+          : result.success
+            ? 'API responded success=true but no item was returned'
+            : 'API responded success=false (no item present in datastore for this key)',
         rawId,
         id,
         crossOrgId,
