@@ -192,3 +192,16 @@ export const ALL_SIDEBAR_KEYS: SidebarItemKey[] = SIDEBAR_NAV.flatMap((item) => 
   item.tabKey,
   ...(item.children?.map((c) => c.tabKey) ?? []),
 ]);
+
+/** Per-key default visibility. Items without `defaultVisible: false` default to true. */
+export const SIDEBAR_DEFAULT_VISIBILITY: Record<SidebarItemKey, boolean> = SIDEBAR_NAV.reduce(
+  (acc, item) => {
+    acc[item.tabKey] = item.defaultVisible !== false;
+    for (const c of item.children ?? []) {
+      acc[c.tabKey] = c.defaultVisible !== false;
+    }
+    return acc;
+  },
+  {} as Record<SidebarItemKey, boolean>,
+);
+
