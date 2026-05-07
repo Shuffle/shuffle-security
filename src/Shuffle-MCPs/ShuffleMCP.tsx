@@ -542,15 +542,16 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
         {showSourceFilter && privateApps.length > 0 && (
           <div className="singul-source-filter" role="tablist" aria-label="Filter by app source">
             {([
-              { key: 'all', label: 'All', count: results.length + filteredPrivateApps.length },
-              { key: 'public', label: 'Public', count: results.length },
-              { key: 'private', label: 'Private', count: filteredPrivateApps.length },
+              { key: 'all', label: 'All', count: results.length + filteredPrivateApps.length, title: 'All available apps — both the public catalog and your private apps.' },
+              { key: 'public', label: 'Public', count: results.length, title: 'Public apps from the Shuffle catalog (powered by Algolia).' },
+              { key: 'private', label: 'Private', count: filteredPrivateApps.length, title: 'Private apps are apps you have activated in your organization, or your own custom apps — not just from the public Algolia catalog.' },
             ] as const).map(opt => (
               <button
                 key={opt.key}
                 type="button"
                 role="tab"
                 aria-selected={sourceFilter === opt.key}
+                title={opt.title}
                 className={`singul-source-pill ${sourceFilter === opt.key ? 'singul-source-pill-active' : ''}`}
                 onClick={() => setSourceFilter(opt.key)}
               >
