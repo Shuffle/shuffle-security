@@ -65,7 +65,6 @@ const NEON = {
 const STATUS_COLORS = {
   New: NEON.cyan,
   'In Progress': NEON.orange,
-  Resolved: NEON.green,
 };
 
 // ── Tooltip ─────────────────────────────────────────────────────────────────

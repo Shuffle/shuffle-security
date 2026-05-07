@@ -13,7 +13,12 @@ import { toast as rtToast, type ToastOptions, type ToastContent } from 'react-to
 type LegacyOptions = {
   description?: React.ReactNode;
   duration?: number;
-} & Omit<ToastOptions, 'autoClose'>;
+  title?: React.ReactNode;
+  action?: unknown;
+  cancel?: unknown;
+  id?: string | number;
+  [key: string]: unknown;
+};
 
 const buildContent = (message: ToastContent, description?: React.ReactNode): ToastContent => {
   if (description === undefined || description === null || description === '') return message;
@@ -31,9 +36,10 @@ const buildContent = (message: ToastContent, description?: React.ReactNode): Toa
 
 const mapOptions = (opts?: LegacyOptions): ToastOptions | undefined => {
   if (!opts) return undefined;
-  const { description: _d, duration, ...rest } = opts;
-  const out: ToastOptions = { ...rest };
+  const { description: _d, duration, title: _t, action: _a, cancel: _c, id, ...rest } = opts;
+  const out: ToastOptions = { ...(rest as ToastOptions) };
   if (typeof duration === 'number') out.autoClose = duration;
+  if (id !== undefined) out.toastId = id;
   return out;
 };
 
