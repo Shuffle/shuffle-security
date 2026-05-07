@@ -2459,26 +2459,36 @@ const IncidentsPage = () => {
           <Box sx={{ display: 'flex', gap: { xs: 1, sm: 1.5 }, alignItems: 'center', flexWrap: 'nowrap', overflow: 'hidden' }}>
             {/* Select all checkbox - always visible */}
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <Tooltip title={selectedIds.size > 0 ? 'Deselect all' : 'Select all'}>
-                <Checkbox
-                  checked={selectedIds.size === sortedIncidents.length && sortedIncidents.length > 0}
-                  indeterminate={selectedIds.size > 0 && selectedIds.size < sortedIncidents.length}
-                  onChange={() => {
-                    if (selectedIds.size > 0) {
-                      setSelectedIds(new Set());
-                    } else {
-                      setSelectedIds(new Set(sortedIncidents.map(i => i.id)));
-                    }
-                  }}
-                  size="small"
-                  sx={{
-                    color: 'hsl(var(--muted-foreground))',
-                    '&.Mui-checked, &.MuiCheckbox-indeterminate': {
-                      color: 'hsl(var(--primary))',
-                    },
-                  }}
-                />
-              </Tooltip>
+              {(() => {
+                const visibleIds = sortedIncidents
+                  .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                  .map(i => i.id);
+                const visibleSelectedCount = visibleIds.filter(id => selectedIds.has(id)).length;
+                const allVisibleSelected = visibleIds.length > 0 && visibleSelectedCount === visibleIds.length;
+                const someVisibleSelected = visibleSelectedCount > 0 && !allVisibleSelected;
+                return (
+                  <Tooltip title={selectedIds.size > 0 ? 'Deselect all' : 'Select all on this page'}>
+                    <Checkbox
+                      checked={allVisibleSelected}
+                      indeterminate={someVisibleSelected || (selectedIds.size > 0 && !allVisibleSelected)}
+                      onChange={() => {
+                        if (selectedIds.size > 0) {
+                          setSelectedIds(new Set());
+                        } else {
+                          setSelectedIds(new Set(visibleIds));
+                        }
+                      }}
+                      size="small"
+                      sx={{
+                        color: 'hsl(var(--muted-foreground))',
+                        '&.Mui-checked, &.MuiCheckbox-indeterminate': {
+                          color: 'hsl(var(--primary))',
+                        },
+                      }}
+                    />
+                  </Tooltip>
+                );
+              })()}
               {selectedIds.size > 0 && (
                 <Typography
                   variant="caption"
