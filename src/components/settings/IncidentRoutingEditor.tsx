@@ -167,21 +167,32 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
   // Local draft state — only saved on explicit "Save" per rule.
   const [drafts, setDrafts] = useState<Record<string, RoutingRule>>({});
   const [saving, setSaving] = useState<Record<string, boolean>>({});
+  // IDs that exist only in the browser (not yet saved to the datastore).
+  const [localOnlyIds, setLocalOnlyIds] = useState<Set<string>>(new Set());
+  // Per-rule expand/collapse. Saved rules default collapsed; new rules open.
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     fetchItems();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Hydrate drafts whenever the underlying datastore items change.
+  // Hydrate drafts from the datastore, but PRESERVE any in-flight local drafts
+  // (newly added rules that have not been saved yet).
   useEffect(() => {
-    const next: Record<string, RoutingRule> = {};
-    for (const it of items) {
-      const rule = parseRule(it.key, typeof it.value === 'string' ? it.value : JSON.stringify(it.value));
-      if (rule) next[rule.id] = rule;
-    }
-    setDrafts(next);
-  }, [items]);
+    setDrafts((prev) => {
+      const next: Record<string, RoutingRule> = {};
+      // Keep local-only drafts as-is.
+      for (const id of localOnlyIds) {
+        if (prev[id]) next[id] = prev[id];
+      }
+      for (const it of items) {
+        const rule = parseRule(it.key, typeof it.value === 'string' ? it.value : JSON.stringify(it.value));
+        if (rule) next[rule.id] = rule;
+      }
+      return next;
+    });
+  }, [items, localOnlyIds]);
 
   const sortedRules = useMemo(
     () =>
@@ -250,7 +261,17 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
       const ok = await addItem(rule.id, JSON.stringify(payload));
       if (ok) {
         toast.success('Routing rule saved');
-        await fetchItems();
+        // Update local draft in place — no full reload of the area.
+        setDrafts((prev) => ({ ...prev, [rule.id]: payload }));
+        // Promote local-only rule to "persisted".
+        setLocalOnlyIds((prev) => {
+          if (!prev.has(rule.id)) return prev;
+          const next = new Set(prev);
+          next.delete(rule.id);
+          return next;
+        });
+        // Collapse saved rule for a clean overview.
+        setExpanded((prev) => ({ ...prev, [rule.id]: false }));
       } else {
         toast.error('Failed to save routing rule');
       }
@@ -260,13 +281,40 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
   };
 
   const handleDelete = async (rule: RoutingRule) => {
-    if (!window.confirm(`Delete routing rule "${rule.name}"?`)) return;
+    // Local-only (never saved) — just drop it.
+    if (localOnlyIds.has(rule.id)) {
+      setDrafts((prev) => {
+        const next = { ...prev };
+        delete next[rule.id];
+        return next;
+      });
+      setLocalOnlyIds((prev) => {
+        const next = new Set(prev);
+        next.delete(rule.id);
+        return next;
+      });
+      setExpanded((prev) => {
+        const next = { ...prev };
+        delete next[rule.id];
+        return next;
+      });
+      return;
+    }
+    // Optimistic remove for persisted rules.
+    const snapshot = drafts[rule.id];
+    setDrafts((prev) => {
+      const next = { ...prev };
+      delete next[rule.id];
+      return next;
+    });
     const ok = await removeItem(rule.id);
     if (ok) {
-      toast.success('Rule deleted');
-      await fetchItems();
+      toast.success(`Deleted "${rule.name}"`);
     } else {
       toast.error('Failed to delete rule');
+      if (snapshot) {
+        setDrafts((prev) => ({ ...prev, [rule.id]: snapshot }));
+      }
     }
   };
 
@@ -279,6 +327,8 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
       action: { ...rule.action },
     });
     setDrafts((prev) => ({ ...prev, [copy.id]: copy }));
+    setLocalOnlyIds((prev) => new Set(prev).add(copy.id));
+    setExpanded((prev) => ({ ...prev, [copy.id]: true }));
   };
 
   const handleAdd = () => {
@@ -290,6 +340,12 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
       },
     });
     setDrafts((prev) => ({ ...prev, [fresh.id]: fresh }));
+    setLocalOnlyIds((prev) => new Set(prev).add(fresh.id));
+    setExpanded((prev) => ({ ...prev, [fresh.id]: true }));
+  };
+
+  const toggleExpanded = (id: string) => {
+    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   const orgOptions = useMemo(() => {
