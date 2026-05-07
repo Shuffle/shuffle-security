@@ -143,18 +143,21 @@ export default function AppSearchDrawer({
   pinnedApps,
 }: AppSearchDrawerProps) {
   const [detailAppName, setDetailAppName] = useState<string | null>(null);
+  const [detailAppId, setDetailAppId] = useState<string | null>(null);
 
   const handleClose = () => {
     setDetailAppName(null);
+    setDetailAppId(null);
     onClose();
   };
 
   const handleAppSelected = (detail: AppSelectedEvent) => {
+    const algoliaId = (detail.app as any).objectID || null;
     const appInfo = {
       name: detail.app.name,
       icon: detail.app.image_url || '',
       categories: detail.app.categories || [],
-      id: (detail.app as any).objectID || null,
+      id: algoliaId,
     };
     if (onQuickSelect) {
       onQuickSelect(appInfo);
@@ -165,6 +168,7 @@ export default function AppSearchDrawer({
       return;
     }
     setDetailAppName(detail.app.name);
+    setDetailAppId(algoliaId);
   };
 
   return (
@@ -322,9 +326,11 @@ export default function AppSearchDrawer({
         onClose={() => {
           const name = detailAppName;
           setDetailAppName(null);
+          setDetailAppId(null);
           if (name) onDetailClose?.(name);
         }}
         appName={detailAppName}
+        appId={detailAppId}
         anchor={anchor}
         width={width}
         onRefresh={onClose}

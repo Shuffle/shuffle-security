@@ -105,6 +105,9 @@ interface AppDetailDrawerProps {
   onClose: () => void;
   /** App name to load */
   appName: string | null;
+  /** Pre-resolved Algolia objectID — bypasses Algolia lookup when provided (e.g. when the
+   *  caller already had the hit, like AppSearchDrawer / "Add Ingestion Source"). */
+  appId?: string | null;
   /** Anchor side */
   anchor?: 'left' | 'right';
   /** Width in px */
@@ -124,6 +127,7 @@ export default function AppDetailDrawer({
   open,
   onClose,
   appName,
+  appId,
   anchor = 'right',
   width = 520,
   onRefresh,
@@ -159,7 +163,8 @@ export default function AppDetailDrawer({
     setAppLoading(true);
     setAppInfo(null);
     setIsActivated(null);
-    setResolvedAlgoliaId(null);
+    // Seed from caller-provided id (e.g. AppSearchDrawer already has the Algolia hit)
+    setResolvedAlgoliaId(appId || null);
     // Always refresh auth when opening a different app
     refreshAuth();
 
@@ -167,30 +172,33 @@ export default function AppDetailDrawer({
     const searchName = appName.replace(/_/g, ' ');
 
     (async () => {
-      // Algolia lookup (best-effort — may fail with 429 or be unavailable)
-      let algoliaId: string | null = null;
-      try {
-        const { algoliasearch } = await import('algoliasearch');
-        const client = algoliasearch('JNSS5CFDZZ', '33e4e3564f4f060e96e0531957bed552');
-        const res = await client.search({
-          requests: [{ indexName: 'appsearch', query: searchName, hitsPerPage: 10 }],
-        });
-        const hits = (res as any)?.results?.[0]?.hits || [];
-        const match = hits.find((h: any) =>
-          h.name?.toLowerCase().replace(/[\s_\-]+/g, '_') === normalizedName
-        ) || (hits.length > 0 ? hits[0] : null);
-
-        if (match) {
-          algoliaId = match.objectID;
-          setResolvedAlgoliaId(algoliaId);
-          setAppInfo({
-            name: match.name || searchName,
-            description: match.description || '',
-            large_image: match.image_url || '',
-            categories: match.categories || [],
+      // Algolia lookup (best-effort — may fail with 429 or be unavailable).
+      // Skip entirely when the caller already passed an appId.
+      let algoliaId: string | null = appId || null;
+      if (!algoliaId) {
+        try {
+          const { algoliasearch } = await import('algoliasearch');
+          const client = algoliasearch('JNSS5CFDZZ', '33e4e3564f4f060e96e0531957bed552');
+          const res = await client.search({
+            requests: [{ indexName: 'appsearch', query: searchName, hitsPerPage: 10 }],
           });
-        }
-      } catch {}
+          const hits = (res as any)?.results?.[0]?.hits || [];
+          const match = hits.find((h: any) =>
+            h.name?.toLowerCase().replace(/[\s_\-]+/g, '_') === normalizedName
+          ) || (hits.length > 0 ? hits[0] : null);
+
+          if (match) {
+            algoliaId = match.objectID;
+            setResolvedAlgoliaId(algoliaId);
+            setAppInfo({
+              name: match.name || searchName,
+              description: match.description || '',
+              large_image: match.image_url || '',
+              categories: match.categories || [],
+            });
+          }
+        } catch {}
+      }
 
       // Fallback: if Algolia didn't resolve an id, look it up via /api/v1/apps
       // This also doubles as our activation check below.
@@ -262,7 +270,7 @@ export default function AppDetailDrawer({
 
       setAppLoading(false);
     })();
-  }, [open, appName]);
+  }, [open, appName, appId]);
 
   // Fetch incident stats for this app
   useEffect(() => {
