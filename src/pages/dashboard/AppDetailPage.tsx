@@ -24,14 +24,15 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import { AppAuthCard } from '@/Shuffle-MCPs/AppAuthConfig';
 import type { AlgoliaSearchApp } from '@/Shuffle-MCPs';
 import { useAppAuth } from '@/Shuffle-MCPs/useAppAuth';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
+import AppTitleHeader from '@/Shuffle-MCPs/AppTitleHeader';
+import AppAuthSection from '@/Shuffle-MCPs/AppAuthSection';
+import TryMcpSection from '@/Shuffle-MCPs/TryMcpSection';
 import { useAuth } from '@/context/AuthContext';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
 
-import AppMcpChat from '@/Shuffle-MCPs/AppMcpChat';
 import ApiCallViewer from '@/Shuffle-MCPs/ApiCallViewer';
 interface AppInfo {
   name: string;
@@ -443,261 +444,93 @@ const AppDetailPage = () => {
         </Button>
 
         {/* App header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 3,
-              mb: 4,
-              p: 3,
-              borderRadius: 3,
-              background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)',
-              border: '1px solid hsl(var(--border))',
-            }}
-          >
-            <Avatar
-              src={resolvedImage}
-              alt={displayName}
-              sx={{
-                width: 72,
-                height: 72,
-                borderRadius: '16px',
-                backgroundColor: 'hsl(var(--muted))',
-                border: '2px solid',
-                borderColor: hasValidAuth
-                  ? 'hsl(var(--severity-low))'
-                  : hasAnyAuth
-                    ? 'hsl(142 76% 36% / 0.3)'
-                    : 'hsl(var(--border))',
-                p: 0.5,
-                '& img': {
-                  objectFit: 'contain',
-                  borderRadius: '12px',
-                },
-              }}
-            >
-              <Typography sx={{ fontSize: '1.5rem', fontWeight: 700 }}>
-                {displayName.charAt(0).toUpperCase()}
-              </Typography>
-            </Avatar>
+        <AppTitleHeader
+          name={displayName}
+          image={resolvedImage}
+          hasValidAuth={hasValidAuth}
+          hasAnyAuth={hasAnyAuth}
+          isAuthenticated={isAuthenticated}
+          categories={appInfo?.categories}
+          isActivated={isActivated}
+          activateLoading={activateLoading}
+          onActivateToggle={handleActivateToggle}
+        />
 
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
-                <Typography
-                  variant="h5"
-                  sx={{
-                    color: 'hsl(var(--foreground))',
-                    fontWeight: 700,
-                    textTransform: 'capitalize',
-                  }}
-                >
-                  {displayName}
-                </Typography>
-                {isAuthenticated && hasValidAuth && (
-                  <Chip
-                    icon={<CheckCircleIcon sx={{ fontSize: 14 }} />}
-                    label="Verified"
-                    size="small"
-                    sx={{
-                      height: 24,
-                      backgroundColor: 'hsla(142, 76%, 36%, 0.15)',
-                      color: 'hsl(var(--severity-low))',
-                      fontWeight: 600,
-                      fontSize: '0.75rem',
-                      '& .MuiChip-icon': { color: 'hsl(var(--severity-low))' },
-                    }}
-                  />
-                )}
-                {isAuthenticated && !hasValidAuth && hasAnyAuth && (
-                  <Chip
-                    icon={<ErrorOutlineIcon sx={{ fontSize: 14 }} />}
-                    label="Pending"
-                    size="small"
-                    sx={{
-                      height: 24,
-                      backgroundColor: 'hsla(38, 92%, 50%, 0.15)',
-                      color: 'hsl(var(--severity-medium))',
-                      fontWeight: 600,
-                      fontSize: '0.75rem',
-                      '& .MuiChip-icon': { color: 'hsl(var(--severity-medium))' },
-                    }}
-                  />
-                )}
-              </Box>
-
-              {appInfo?.description && (
-                <CollapsibleDescription description={appInfo.description} />
-              )}
-
-              {appInfo?.categories && appInfo.categories.length > 0 && (
-                <Box sx={{ display: 'flex', gap: 0.5, mt: 1, flexWrap: 'wrap' }}>
-                  {appInfo.categories.slice(0, 4).map((cat) => (
-                    <Chip
-                      key={cat}
-                      label={cat}
-                      size="small"
-                      sx={{
-                        height: 20,
-                        fontSize: '0.65rem',
-                        fontWeight: 500,
-                        backgroundColor: 'hsl(var(--muted))',
-                        color: 'hsl(var(--muted-foreground))',
-                        textTransform: 'capitalize',
-                      }}
-                    />
-                  ))}
-                </Box>
-              )}
-            </Box>
-
-            {/* Action buttons — only for authenticated users */}
-            {isAuthenticated && (
-              <Box sx={{ display: 'flex', gap: 1, flexShrink: 0, alignItems: 'center' }}>
-                {isActivated !== null && (
-                  <Button
-                    onClick={handleActivateToggle}
-                    disabled={activateLoading}
-                    variant={isActivated ? 'outlined' : 'contained'}
-                    size="small"
-                    sx={{
-                      textTransform: 'none',
-                      fontWeight: 600,
-                      fontSize: '0.75rem',
-                      borderRadius: 2,
-                      px: 2,
-                      py: 0.75,
-                      minHeight: 0,
-                      ...(isActivated
-                        ? {
-                            color: 'hsl(var(--muted-foreground))',
-                            borderColor: 'hsl(var(--border))',
-                            '&:hover': {
-                              borderColor: 'hsl(var(--destructive))',
-                              color: 'hsl(var(--destructive))',
-                              bgcolor: 'hsla(var(--destructive) / 0.08)',
-                            },
-                          }
-                        : {
-                            bgcolor: '#FF6600',
-                            '&:hover': { bgcolor: '#e55c00' },
-                          }),
-                    }}
-                  >
-                    {activateLoading ? '…' : isActivated ? 'Deactivate' : 'Activate'}
-                  </Button>
-                )}
-              </Box>
-            )}
+        {/* Description (kept on the page; the drawer shows this inline in the header) */}
+        {appInfo?.description && (
+          <Box sx={{ mb: 3 }}>
+            <CollapsibleDescription description={appInfo.description} />
           </Box>
-        </motion.div>
+        )}
 
         {/* Authentication section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-        >
+        {isAuthenticated ? (
+          <AppAuthSection
+            displayName={displayName}
+            algoliaApp={algoliaApp}
+            resolvedAlgoliaId={appInfo?.algoliaId || null}
+            authState={authState}
+            expanded={authExpanded}
+            onToggle={() => setAuthExpanded(prev => !prev)}
+            authCount={authCount}
+            isAuthenticated={isAuthenticated}
+            matchingEntries={matchingEntries}
+            onAuthChange={handleAuthChange}
+            onTestConnection={(appId, authId) => handleTestConnection(appname || appId, authId)}
+            onSaveAuth={(appId, creds) => handleSaveAuth(appname || appId, creds)}
+            onRefreshAuth={refreshAuth}
+          />
+        ) : (
           <Box sx={{ mb: 4 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-              <Box>
-                <Typography
-                  variant="h6"
-                  sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '1.1rem' }}
-                >
-                  Authentication
-                </Typography>
-                <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', mt: 0.25 }}>
-                  {isAuthenticated
-                    ? authCount > 0
-                      ? `${authCount} configuration${authCount > 1 ? 's' : ''} found`
-                      : 'No authentication configured yet'
-                    : `Connect your ${displayName} account to get started`}
-                </Typography>
-              </Box>
+            <GuestLockedSection
+              title="Authentication Required"
+              description={`Sign up to connect your ${displayName} credentials and start automating workflows.`}
+              appname={appname || ''}
+            />
+          </Box>
+        )}
+
+        {/* Try MCP — shared with the App Configuration drawer */}
+        {isAuthenticated ? (
+          <>
+            <TryMcpSection
+              appName={appname || ''}
+              appIcon={resolvedImage}
+              appId={matchingEntries[0]?.app?.id || matchingEntries[0]?.id || appname || ''}
+              categories={appInfo?.categories}
+            />
+            <Box sx={{ mb: 4 }}>
+              <ApiCallViewer
+                config={{
+                  method: 'POST',
+                  url: `${getApiUrl(`/api/v1/apps/${encodeURIComponent(appname || '')}/mcp`)}`,
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API_CONFIG.apiKey || '<your-api-key>'}`,
+                  },
+                  body: {
+                    jsonrpc: '2.0',
+                    id: '<request-id>',
+                    method: 'tools/call',
+                    params: {
+                      tool_name: appname || '',
+                      tool_id: matchingEntries[0]?.app?.id || appname || '',
+                      input: { text: '<your-prompt>' },
+                    },
+                  },
+                }}
+              />
             </Box>
-
-            {isAuthenticated && algoliaApp ? (
-              <AppAuthCard
-                app={algoliaApp}
-                authState={authState}
-                isExpanded={authExpanded}
-                onToggle={() => setAuthExpanded(prev => !prev)}
-                onAuthChange={handleAuthChange}
-                onTestConnection={(appId, authId) => handleTestConnection(appname || appId, authId)}
-                onSaveAuth={(appId, creds) => handleSaveAuth(appname || appId, creds)}
-                apiAuthEntries={matchingEntries}
-                onRefreshAuth={refreshAuth}
-              />
-            ) : !isAuthenticated ? (
-              <GuestLockedSection
-                title="Authentication Required"
-                description={`Sign up to connect your ${displayName} credentials and start automating workflows.`}
-                appname={appname || ''}
-              />
-            ) : null}
-          </Box>
-        </motion.div>
-
-        {/* Agent Chat / Try it out */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.15 }}
-        >
+          </>
+        ) : (
           <Box sx={{ mb: 4 }}>
-            <Typography
-              variant="h6"
-              sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '1.1rem', mb: 2 }}
-            >
-              Try it out
-            </Typography>
-
-            {isAuthenticated ? (
-              <>
-                <AppMcpChat
-                  appName={appname || ''}
-                  appIcon={resolvedImage}
-                  appId={matchingEntries[0]?.app?.id || matchingEntries[0]?.id || appname || ''}
-                  categories={appInfo?.categories}
-                />
-                <Box sx={{ mt: 2 }}>
-                  <ApiCallViewer
-                    config={{
-                      method: 'POST',
-                      url: `${getApiUrl(`/api/v1/apps/${encodeURIComponent(appname || '')}/mcp`)}`,
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${API_CONFIG.apiKey || '<your-api-key>'}`,
-                      },
-                      body: {
-                        jsonrpc: '2.0',
-                        id: '<request-id>',
-                        method: 'tools/call',
-                        params: {
-                          tool_name: appname || '',
-                          tool_id: matchingEntries[0]?.app?.id || appname || '',
-                          input: { text: '<your-prompt>' },
-                        },
-                      },
-                    }}
-                  />
-                </Box>
-              </>
-            ) : (
-              <GuestLockedSection
-                title="AI-Powered Actions"
-                description={`Run automated actions with ${displayName} using natural language. Sign up to try it.`}
-                appname={appname || ''}
-              />
-            )}
+            <GuestLockedSection
+              title="AI-Powered Actions"
+              description={`Run automated actions with ${displayName} using natural language. Sign up to try it.`}
+              appname={appname || ''}
+            />
           </Box>
-        </motion.div>
-
+        )}
         {/* Quick info */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
