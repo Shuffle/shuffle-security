@@ -422,11 +422,11 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
                 return (
                   <div className={`rounded-md border border-border overflow-hidden ${variant === 'page' ? 'max-h-[400px]' : 'max-h-[240px]'} overflow-y-auto`}>
                     <table className="w-full text-xs">
-                      <thead className="bg-muted/40 sticky top-0">
-                        <tr>
-                          <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Name</th>
-                          <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Version</th>
-                          <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground">Source</th>
+                      <thead className="sticky top-0 z-10">
+                        <tr className="bg-background">
+                          <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground bg-background border-b border-border">Name</th>
+                          <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground bg-background border-b border-border">Version</th>
+                          <th className="text-left px-3 py-1.5 font-semibold text-muted-foreground bg-background border-b border-border">Source</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
