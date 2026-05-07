@@ -845,8 +845,8 @@ const IncidentsPage = () => {
         }
 
         const ingestionResults = extractValidatedIngestionApps(authApps, workflowAppNames);
-        // Backfill missing images from Algolia
-        const { backfillAppImages, deduplicateAuthApps } = await import('@/lib/utils');
+        // Backfill missing images: 1) module cache + Algolia, 2) /api/v1/apps as last resort
+        const { backfillAppImages, deduplicateAuthApps, seedImageCache } = await import('@/lib/utils');
         const deduped = deduplicateAuthApps(authApps.filter((a: any) => a.active || a.validation?.valid));
         await backfillAppImages(deduped);
         const imgMap = new Map<string, string>();
@@ -854,6 +854,34 @@ const IncidentsPage = () => {
         ingestionResults.forEach(app => {
           if (!app.image) app.image = imgMap.get(normalizeAppName(app.name)) || '';
         });
+
+        // Fallback: any app still without an image — look it up in /api/v1/apps by normalized name.
+        // Both Algolia and the auth list can miss images for legitimate apps; /api/v1/apps usually has it.
+        const stillMissing = ingestionResults.filter(a => !a.image);
+        if (stillMissing.length > 0) {
+          try {
+            const appsRes = await fetch(getApiUrl('/api/v1/apps'), {
+              credentials: 'include',
+              headers: { ...getAuthHeader() },
+            });
+            if (appsRes.ok) {
+              const apps = await appsRes.json();
+              const list: any[] = Array.isArray(apps) ? apps : [];
+              const byName = new Map<string, string>();
+              list.forEach(a => {
+                const img = a.large_image || a.image_url;
+                if (img && a.name) byName.set(normalizeAppName(a.name), img);
+              });
+              stillMissing.forEach(app => {
+                const img = byName.get(normalizeAppName(app.name));
+                if (img) {
+                  app.image = img;
+                  seedImageCache(app.name, img);
+                }
+              });
+            }
+          } catch {}
+        }
         setIngestionApps(ingestionResults);
 
         // Extract forward apps using same auth data but Forward Tickets workflow
