@@ -127,6 +127,7 @@ export default function AppDetailDrawer({
   open,
   onClose,
   appName,
+  appId,
   anchor = 'right',
   width = 520,
   onRefresh,
