@@ -151,3 +151,28 @@ export const buildAgentContextBlock = (ctx: AgentContextInput): string => {
     '```',
   ].join('\n');
 };
+
+/**
+ * Marker line that prefixes the auto-attached agent context block. Anything
+ * from this line onward is for the AI agent and should be hidden in the UI.
+ */
+export const AGENT_CONTEXT_MARKER = '**Context (auto-attached for the AI agent)**';
+
+/**
+ * Remove the auto-attached agent context block from a comment body so the
+ * user-facing rendering only shows what they actually typed. The block is
+ * still persisted in the underlying message for the agent to consume.
+ */
+export const stripAgentContextBlock = (text: string): string => {
+  if (!text) return text;
+  const idx = text.indexOf(AGENT_CONTEXT_MARKER);
+  if (idx === -1) return text;
+  // Walk back over the leading "---\n" separator and any trailing whitespace
+  // so the trimmed message looks clean.
+  let cut = idx;
+  // Strip an optional preceding line that is just a horizontal rule.
+  const before = text.slice(0, cut);
+  const trimmed = before.replace(/\n?-{3,}\s*\n?$/, '');
+  cut = trimmed.length;
+  return text.slice(0, cut).replace(/\s+$/, '');
+};
