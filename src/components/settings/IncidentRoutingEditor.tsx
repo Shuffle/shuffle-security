@@ -61,6 +61,28 @@ export interface RoutingCondition {
   value?: string;
 }
 
+export type RoutingActionType =
+  | 'suggest_move'
+  | 'set_severity'
+  | 'set_status'
+  | 'set_priority'
+  | 'add_label'
+  | 'assign_to'
+  | 'add_comment'
+  | 'set_field';
+
+export interface RoutingAction {
+  type: RoutingActionType;
+  /** Target tenant id — only for suggest_move. */
+  targetOrgId?: string;
+  /** Target field path — only for set_field. */
+  field?: string;
+  /** Value applied / suggested. Severity/status use the canonical string. */
+  value?: string;
+  /** Optional human-readable reason shown in the suggestion banner. */
+  reason?: string;
+}
+
 export interface RoutingRule {
   id: string;
   name: string;
@@ -68,11 +90,8 @@ export interface RoutingRule {
   priority: number;
   matchMode: 'all' | 'any';
   conditions: RoutingCondition[];
-  action: {
-    type: 'suggest_move';
-    targetOrgId: string;
-    reason?: string;
-  };
+  /** Multiple suggestions can fire per rule. */
+  actions: RoutingAction[];
   createdBy?: string;
   createdTs?: number;
   updatedTs?: number;
@@ -105,8 +124,36 @@ const OP_LABELS: Record<RoutingConditionOp, string> = {
   exists: 'exists',
 };
 
+export const ACTION_TYPE_LABELS: Record<RoutingActionType, string> = {
+  suggest_move: 'Move to tenant',
+  set_severity: 'Set severity',
+  set_status: 'Set status',
+  set_priority: 'Set priority',
+  add_label: 'Add label',
+  assign_to: 'Assign to',
+  add_comment: 'Add comment',
+  set_field: 'Set custom field',
+};
+
+const SEVERITY_OPTIONS = ['Informational', 'Low', 'Medium', 'High', 'Critical'];
+const STATUS_OPTIONS = ['New', 'In Progress', 'On Hold', 'Resolved', 'Closed'];
+const PRIORITY_OPTIONS = ['Low', 'Medium', 'High', 'Urgent'];
+
 const newId = () =>
   `rt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+
+const defaultActionFor = (type: RoutingActionType): RoutingAction => {
+  switch (type) {
+    case 'suggest_move': return { type, targetOrgId: '', reason: '' };
+    case 'set_severity': return { type, value: 'High' };
+    case 'set_status': return { type, value: 'In Progress' };
+    case 'set_priority': return { type, value: 'High' };
+    case 'add_label': return { type, value: '' };
+    case 'assign_to': return { type, value: '' };
+    case 'add_comment': return { type, value: '' };
+    case 'set_field': return { type, field: '', value: '' };
+  }
+};
 
 const emptyRule = (defaults: Partial<RoutingRule> = {}): RoutingRule => ({
   id: newId(),
@@ -115,7 +162,7 @@ const emptyRule = (defaults: Partial<RoutingRule> = {}): RoutingRule => ({
   priority: 100,
   matchMode: 'all',
   conditions: [{ field: 'rawOCSF.unmapped_original.to', op: 'contains', value: '' }],
-  action: { type: 'suggest_move', targetOrgId: '', reason: '' },
+  actions: [defaultActionFor('suggest_move')],
   createdTs: Date.now(),
   updatedTs: Date.now(),
   matchCount: 0,
@@ -126,6 +173,20 @@ const parseRule = (key: string, value: string): RoutingRule | null => {
   try {
     const parsed = JSON.parse(value);
     if (!parsed || typeof parsed !== 'object') return null;
+    // Backward compat: legacy single `action` -> `actions: [action]`.
+    let actions: RoutingAction[] = [];
+    if (Array.isArray(parsed.actions)) {
+      actions = parsed.actions.filter((a: any) => a && typeof a.type === 'string');
+    } else if (parsed.action && typeof parsed.action === 'object') {
+      actions = [{
+        type: (parsed.action.type as RoutingActionType) || 'suggest_move',
+        targetOrgId: parsed.action.targetOrgId,
+        field: parsed.action.field,
+        value: parsed.action.value,
+        reason: parsed.action.reason,
+      }];
+    }
+    if (actions.length === 0) actions = [defaultActionFor('suggest_move')];
     return {
       id: parsed.id || key,
       name: typeof parsed.name === 'string' ? parsed.name : 'Untitled rule',
@@ -133,11 +194,7 @@ const parseRule = (key: string, value: string): RoutingRule | null => {
       priority: Number.isFinite(parsed.priority) ? parsed.priority : 100,
       matchMode: parsed.matchMode === 'any' ? 'any' : 'all',
       conditions: Array.isArray(parsed.conditions) ? parsed.conditions : [],
-      action: {
-        type: 'suggest_move',
-        targetOrgId: parsed.action?.targetOrgId || '',
-        reason: parsed.action?.reason || '',
-      },
+      actions,
       createdBy: parsed.createdBy,
       createdTs: parsed.createdTs,
       updatedTs: parsed.updatedTs,
@@ -146,6 +203,19 @@ const parseRule = (key: string, value: string): RoutingRule | null => {
     };
   } catch {
     return null;
+  }
+};
+
+const summarizeAction = (a: RoutingAction, orgName?: string): string => {
+  switch (a.type) {
+    case 'suggest_move': return `move to ${orgName || a.targetOrgId || 'no target'}`;
+    case 'set_severity': return `set severity to ${a.value || '?'}`;
+    case 'set_status': return `set status to ${a.value || '?'}`;
+    case 'set_priority': return `set priority to ${a.value || '?'}`;
+    case 'add_label': return `add label "${a.value || ''}"`;
+    case 'assign_to': return `assign to ${a.value || '?'}`;
+    case 'add_comment': return `add comment`;
+    case 'set_field': return `set ${a.field || '?'} = "${a.value || ''}"`;
   }
 };
 
@@ -248,9 +318,19 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
       toast.error('Give the rule a name first');
       return;
     }
-    if (!rule.action.targetOrgId) {
-      toast.error('Select a target tenant');
+    if (rule.actions.length === 0) {
+      toast.error('Add at least one action');
       return;
+    }
+    for (const a of rule.actions) {
+      if (a.type === 'suggest_move' && !a.targetOrgId) {
+        toast.error('Select a target tenant for the move action');
+        return;
+      }
+      if (a.type === 'set_field' && !a.field) {
+        toast.error('Pick a field for "Set custom field"');
+        return;
+      }
     }
     setSaving((p) => ({ ...p, [rule.id]: true }));
     try {
@@ -326,7 +406,7 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
       priority: rule.priority + 1,
       matchMode: rule.matchMode,
       conditions: rule.conditions.map((c) => ({ ...c })),
-      action: { ...rule.action },
+      actions: rule.actions.map((a) => ({ ...a })),
     });
     setDrafts((prev) => ({ ...prev, [copy.id]: copy }));
     setLocalOnlyIds((prev) => new Set(prev).add(copy.id));
@@ -335,15 +415,52 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
 
   const handleAdd = () => {
     const fresh = emptyRule({
-      action: {
-        type: 'suggest_move',
-        targetOrgId: subOrgs[0]?.id || '',
-        reason: '',
-      },
+      actions: [{ type: 'suggest_move', targetOrgId: subOrgs[0]?.id || '', reason: '' }],
     });
     setDrafts((prev) => ({ ...prev, [fresh.id]: fresh }));
     setLocalOnlyIds((prev) => new Set(prev).add(fresh.id));
     setExpanded((prev) => ({ ...prev, [fresh.id]: true }));
+  };
+
+  const updateAction = (ruleId: string, idx: number, patch: Partial<RoutingAction>) => {
+    setDrafts((prev) => {
+      const r = prev[ruleId];
+      if (!r) return prev;
+      const actions = r.actions.slice();
+      actions[idx] = { ...actions[idx], ...patch };
+      return { ...prev, [ruleId]: { ...r, actions, updatedTs: Date.now() } };
+    });
+  };
+
+  const changeActionType = (ruleId: string, idx: number, type: RoutingActionType) => {
+    setDrafts((prev) => {
+      const r = prev[ruleId];
+      if (!r) return prev;
+      const actions = r.actions.slice();
+      const prevReason = actions[idx]?.reason;
+      actions[idx] = { ...defaultActionFor(type), reason: prevReason };
+      if (type === 'suggest_move' && !actions[idx].targetOrgId) {
+        actions[idx].targetOrgId = subOrgs[0]?.id || '';
+      }
+      return { ...prev, [ruleId]: { ...r, actions, updatedTs: Date.now() } };
+    });
+  };
+
+  const addAction = (ruleId: string) => {
+    setDrafts((prev) => {
+      const r = prev[ruleId];
+      if (!r) return prev;
+      return { ...prev, [ruleId]: { ...r, actions: [...r.actions, defaultActionFor('set_severity')], updatedTs: Date.now() } };
+    });
+  };
+
+  const removeAction = (ruleId: string, idx: number) => {
+    setDrafts((prev) => {
+      const r = prev[ruleId];
+      if (!r) return prev;
+      const actions = r.actions.filter((_, i) => i !== idx);
+      return { ...prev, [ruleId]: { ...r, actions, updatedTs: Date.now() } };
+    });
   };
 
   const toggleExpanded = (id: string) => {
@@ -419,7 +536,9 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
 
       {sortedRules.map((rule) => {
         const isOpen = expanded[rule.id] ?? false;
-        const targetName = orgOptions.find((o) => o.id === rule.action.targetOrgId)?.name || 'no target';
+        const actionSummary = rule.actions
+          .map((a) => summarizeAction(a, a.type === 'suggest_move' ? orgOptions.find((o) => o.id === a.targetOrgId)?.name : undefined))
+          .join(' · ');
         const condSummary = rule.conditions.length === 1
           ? `${rule.conditions[0].field} ${OP_LABELS[rule.conditions[0].op]}${rule.conditions[0].op !== 'exists' ? ` "${rule.conditions[0].value || ''}"` : ''}`
           : `${rule.conditions.length} conditions (${rule.matchMode === 'all' ? 'all' : 'any'})`;
@@ -461,7 +580,7 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
                   )}
                 </Box>
                 <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  When {condSummary} → move to {targetName}
+                  When {condSummary} → {actionSummary}
                 </Typography>
               </Box>
               <Tooltip title={rule.enabled ? 'Disable rule' : 'Enable rule'}>
@@ -645,39 +764,139 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
             </Button>
           </Box>
 
-          {/* Action */}
+          {/* Actions */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pt: 1, borderTop: '1px solid hsl(var(--border))' }}>
             <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: '0.05em' }}>
-              Then suggest moving incident to
+              Then suggest
             </Typography>
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              <TextField
-                size="small"
-                select
-                value={rule.action.targetOrgId}
-                onChange={(e) => updateRule(rule.id, { action: { ...rule.action, targetOrgId: e.target.value } })}
-                sx={{ minWidth: 240 }}
-                label="Target tenant"
-              >
-                {orgOptions.length === 0 && (
-                  <MenuItem value="" disabled>
-                    No tenants available
-                  </MenuItem>
-                )}
-                {orgOptions.map((o) => (
-                  <MenuItem key={o.id} value={o.id} sx={{ fontSize: '0.8rem' }}>
-                    {o.name}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                size="small"
-                value={rule.action.reason || ''}
-                onChange={(e) => updateRule(rule.id, { action: { ...rule.action, reason: e.target.value } })}
-                placeholder="Reason shown to user (optional)"
-                sx={{ flex: 1, minWidth: 220 }}
-              />
-            </Stack>
+            {rule.actions.map((action, aIdx) => {
+              const valuePresets =
+                action.type === 'set_severity' ? SEVERITY_OPTIONS
+                : action.type === 'set_status' ? STATUS_OPTIONS
+                : action.type === 'set_priority' ? PRIORITY_OPTIONS
+                : null;
+              return (
+                <Box key={aIdx} sx={{ display: 'flex', flexDirection: 'column', gap: 1, p: 1, borderRadius: 1, bgcolor: 'hsl(var(--muted) / 0.3)' }}>
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
+                    <TextField
+                      size="small"
+                      select
+                      value={action.type}
+                      onChange={(e) => changeActionType(rule.id, aIdx, e.target.value as RoutingActionType)}
+                      sx={{ minWidth: 200 }}
+                      label="Action"
+                    >
+                      {(Object.keys(ACTION_TYPE_LABELS) as RoutingActionType[]).map((t) => (
+                        <MenuItem key={t} value={t} sx={{ fontSize: '0.8rem' }}>
+                          {ACTION_TYPE_LABELS[t]}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+
+                    {action.type === 'suggest_move' && (
+                      <TextField
+                        size="small"
+                        select
+                        value={action.targetOrgId || ''}
+                        onChange={(e) => updateAction(rule.id, aIdx, { targetOrgId: e.target.value })}
+                        sx={{ minWidth: 240 }}
+                        label="Target tenant"
+                      >
+                        {orgOptions.length === 0 && (
+                          <MenuItem value="" disabled>No tenants available</MenuItem>
+                        )}
+                        {orgOptions.map((o) => (
+                          <MenuItem key={o.id} value={o.id} sx={{ fontSize: '0.8rem' }}>{o.name}</MenuItem>
+                        ))}
+                      </TextField>
+                    )}
+
+                    {action.type === 'set_field' && (
+                      <TextField
+                        size="small"
+                        select
+                        value={action.field || ''}
+                        onChange={(e) => updateAction(rule.id, aIdx, { field: e.target.value })}
+                        SelectProps={{ renderValue: (v) => (v as string) || 'Pick field…' }}
+                        sx={{ minWidth: 220 }}
+                        label="Field"
+                      >
+                        {FIELD_SUGGESTIONS.map((f) => (
+                          <MenuItem key={f} value={f} sx={{ fontSize: '0.8rem' }}>{f}</MenuItem>
+                        ))}
+                        {action.field && !FIELD_SUGGESTIONS.includes(action.field) && (
+                          <MenuItem value={action.field}>{action.field}</MenuItem>
+                        )}
+                      </TextField>
+                    )}
+
+                    {action.type !== 'suggest_move' && (
+                      valuePresets ? (
+                        <TextField
+                          size="small"
+                          select
+                          value={action.value || ''}
+                          onChange={(e) => updateAction(rule.id, aIdx, { value: e.target.value })}
+                          sx={{ minWidth: 180 }}
+                          label="Value"
+                        >
+                          {valuePresets.map((v) => (
+                            <MenuItem key={v} value={v} sx={{ fontSize: '0.8rem' }}>{v}</MenuItem>
+                          ))}
+                        </TextField>
+                      ) : (
+                        <TextField
+                          size="small"
+                          value={action.value || ''}
+                          onChange={(e) => updateAction(rule.id, aIdx, { value: e.target.value })}
+                          placeholder={
+                            action.type === 'add_label' ? 'label name'
+                            : action.type === 'assign_to' ? 'user email or AI Agent'
+                            : action.type === 'add_comment' ? 'comment text'
+                            : 'value'
+                          }
+                          sx={{ flex: 1, minWidth: 200 }}
+                          multiline={action.type === 'add_comment'}
+                          maxRows={action.type === 'add_comment' ? 4 : 1}
+                          label="Value"
+                        />
+                      )
+                    )}
+
+                    <IconButton
+                      size="small"
+                      onClick={() => removeAction(rule.id, aIdx)}
+                      disabled={rule.actions.length <= 1}
+                      sx={{ width: 36, height: 36, color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--destructive))' } }}
+                    >
+                      <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                    </IconButton>
+                  </Stack>
+                  <TextField
+                    size="small"
+                    value={action.reason || ''}
+                    onChange={(e) => updateAction(rule.id, aIdx, { reason: e.target.value })}
+                    placeholder="Reason shown to user (optional)"
+                    sx={{ width: '100%' }}
+                  />
+                </Box>
+              );
+            })}
+            <Button
+              size="small"
+              onClick={() => addAction(rule.id)}
+              startIcon={<AddIcon sx={{ fontSize: 14 }} />}
+              sx={{
+                alignSelf: 'flex-start',
+                height: 28,
+                textTransform: 'none',
+                fontSize: '0.7rem',
+                color: 'hsl(var(--muted-foreground))',
+                '&:hover': { color: 'hsl(var(--primary))', bgcolor: 'transparent' },
+              }}
+            >
+              Add action
+            </Button>
           </Box>
 
           {/* Footer: stats + save */}
