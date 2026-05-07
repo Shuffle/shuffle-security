@@ -1,0 +1,102 @@
+name: Sync usecases to shaffuru
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/pages/dashboard/UsecasesPage.tsx'
+      - 'src/assets/**'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[sync]')"
+    steps:
+      - name: Checkout shuffle-security
+        uses: actions/checkout@v4
+
+      - name: Checkout shaffuru
+        uses: actions/checkout@v4
+        with:
+          repository: Shuffle/shaffuru
+          token: ${{ secrets.SHAFFURU_PAT }}
+          path: _shaffuru
+
+      - name: Copy main file
+        run: |
+          cp src/pages/dashboard/UsecasesPage.tsx _shaffuru/frontend/src/client/views/UsecasesSecurity.tsx
+
+      - name: Copy assets dynamically
+        run: |
+          FILE="_shaffuru/frontend/src/client/views/UsecasesSecurity.tsx"
+          DEST="_shaffuru/frontend/public/images/security"
+          mkdir -p "$DEST"
+
+          grep -oP "from '@/assets/\K[^']+" "$FILE" | while read -r asset; do
+            if [ -f "src/assets/$asset" ]; then
+              echo "Copying asset: $asset"
+              cp "src/assets/$asset" "$DEST/$asset"
+            fi
+          done
+
+      - name: Transform imports for shaffuru (CRA, no @ alias)
+        run: |
+          FILE="_shaffuru/frontend/src/client/views/UsecasesSecurity.tsx"
+
+          # Replace all @/assets/ imports with public path constants
+          # Turns: import varName from '@/assets/filename.ext';
+          # Into:  const varName = '/images/security/filename.ext';
+          sed -i -E "s|import ([a-zA-Z_][a-zA-Z0-9_]*) from '@/assets/([^']+)';|const \1 = '/images/security/\2';|g" "$FILE"
+
+          # Remove usePageMeta import and its call block
+          sed -i "/import { usePageMeta } from '@\/hooks\/usePageMeta';/d" "$FILE"
+          sed -i '/usePageMeta({/,/});/d' "$FILE"
+
+          # Replace sonner import with no-op
+          sed -i "s|import { toast as sonnerToast } from 'sonner';|const sonnerToast = { success: (..._a: any[]) => {}, error: (..._a: any[]) => {} };|" "$FILE"
+          # Remove all sonnerToast.xxx() calls
+          sed -i -E 's|sonnerToast\.[a-zA-Z]+\([^)]*\);?||g' "$FILE"
+
+      - name: Verify no unhandled @/ imports
+        run: |
+          FILE="_shaffuru/frontend/src/client/views/UsecasesSecurity.tsx"
+          REMAINING=$(grep -n "from '@/" "$FILE" || true)
+          if [ -n "$REMAINING" ]; then
+            echo "::error::Unhandled @/ imports found — these will break in shaffuru:"
+            echo "$REMAINING"
+            exit 1
+          fi
+          echo "✓ No unhandled @/ imports"
+
+      - name: Check for actual changes
+        id: diff
+        working-directory: _shaffuru
+        run: |
+          if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.diff.outputs.skip != 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          path: _shaffuru
+          token: ${{ secrets.SHAFFURU_PAT }}
+          branch: sync/usecases-from-security
+          title: "sync: usecases page from shuffle-security"
+          body: |
+            Auto-synced from [shuffle-security@${{ github.sha }}](https://github.com/Shuffle/shuffle-security/commit/${{ github.sha }})
+
+            **Source commit:** ${{ github.event.head_commit.message }}
+
+            **Files synced:**
+            - `UsecasesPage.tsx` → `UsecasesSecurity.tsx`
+            - All `@/assets/*` referenced in the file → `public/images/security/`
+
+            **Transforms applied:**
+            - `@/assets/X` imports → `/images/security/X` constants
+            - `usePageMeta` → removed
+            - `sonner` toast → no-op
+          labels: sync
+          commit-message: "[sync] usecases from shuffle-security@${{ github.sha }}"
+          delete-branch: true
