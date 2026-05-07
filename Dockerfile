@@ -15,12 +15,15 @@ RUN bun run build
 # Stage 2: Serve with Nginx
 FROM nginx:alpine
 
+# openssl is required to generate the self-signed certificate at container start
+RUN apk add --no-cache openssl
+
 # Remove default nginx config
 RUN rm /etc/nginx/nginx.conf /etc/nginx/conf.d/default.conf 2>/dev/null || true
 
-# Generate self-signed SSL certificates so the 443 listener works out of the box
-RUN apk add --no-cache openssl \
- && openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+# Bake a self-signed certificate into the image so the 443 listener works out of the box.
+# It is regenerated at container start as well (see CMD) in case /etc/nginx is overlaid by a volume mount.
+RUN openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
       -keyout /etc/nginx/privkey.pem \
       -out /etc/nginx/fullchain.cert.pem \
       -subj "/CN=localhost"
@@ -36,5 +39,18 @@ ENV BACKEND_HOSTNAME=backend
 
 EXPOSE 80 443
 
-# Use envsubst to resolve $BACKEND_HOSTNAME in nginx.conf at container start
-CMD ["/bin/sh", "-c", "envsubst '${BACKEND_HOSTNAME}' < /etc/nginx/nginx.conf > /tmp/nginx.conf && mv /tmp/nginx.conf /etc/nginx/nginx.conf && nginx -g 'daemon off;'"]
+# At container start:
+#   1. Ensure a self-signed cert exists (regenerate if missing — e.g. when /etc/nginx is volume-mounted).
+#   2. Resolve $BACKEND_HOSTNAME in nginx.conf via envsubst.
+#   3. Launch nginx in the foreground.
+CMD ["/bin/sh", "-c", "\
+  if [ ! -f /etc/nginx/fullchain.cert.pem ] || [ ! -f /etc/nginx/privkey.pem ]; then \
+    echo 'Generating self-signed TLS certificate for nginx...'; \
+    openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+      -keyout /etc/nginx/privkey.pem \
+      -out /etc/nginx/fullchain.cert.pem \
+      -subj '/CN=localhost'; \
+  fi && \
+  envsubst '$${BACKEND_HOSTNAME}' < /etc/nginx/nginx.conf > /tmp/nginx.conf && \
+  mv /tmp/nginx.conf /etc/nginx/nginx.conf && \
+  nginx -g 'daemon off;'"]
