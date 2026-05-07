@@ -461,7 +461,12 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
             <span className="singul-app-name" style={customStyles.appName}>
               {app.name.replace(/_/g, ' ')}
               {app.source === 'private' && (
-                <span className="singul-private-badge" title="From your private apps">Private</span>
+                <span
+                  className="singul-private-badge"
+                  title="Private apps are apps you have activated in your organization, or your own custom apps — not just from the public Algolia catalog."
+                >
+                  Private
+                </span>
               )}
             </span>
             {showDescription && app.description && (
