@@ -457,20 +457,6 @@ export const IncidentActionsMenu = ({
           </MenuItem>
         )}
 
-        {incident?.rawOCSF?.shuffle_execution_id && (
-          <MenuItem
-            onClick={() => {
-              setAnchor(null);
-              window.open(
-                `https://shuffler.io/workflows/${incident.rawOCSF.shuffle_execution_id}?execution_id=${incident.rawOCSF.shuffle_execution_id}`,
-                '_blank',
-              );
-            }}
-          >
-            <SettingsIcon sx={{ fontSize: 16, mr: 1 }} />
-            View Automation
-          </MenuItem>
-        )}
       </Menu>
 
       {/* ---- Share dialog ---- */}

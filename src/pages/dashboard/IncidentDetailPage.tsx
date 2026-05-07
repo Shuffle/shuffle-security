@@ -6879,17 +6879,6 @@ const IncidentDetailPage = () => {
                   </span>
                 </Tooltip>
               )}
-              {incident?.rawOCSF?.shuffle_execution_id && (
-                <MenuItem
-                  onClick={() => {
-                    setActionsMenuAnchor(null);
-                    window.open(`https://shuffler.io/workflows/${incident.rawOCSF.shuffle_execution_id}?execution_id=${incident.rawOCSF.shuffle_execution_id}`, '_blank');
-                  }}
-                >
-                  <SettingsIcon sx={{ fontSize: 16, mr: 1 }} />
-                  View Automation
-                </MenuItem>
-              )}
             </Menu>
 
             <IncidentReportDialog
@@ -7483,6 +7472,20 @@ const IncidentDetailPage = () => {
                   <Typography variant="body2">{metrics?.age}</Typography>
                 </Box>
               </Box>
+              {incident?.rawOCSF?.shuffle_execution_id && (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                  <Box>
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>Original ingestion execution</Typography>
+                    <Typography
+                      variant="body2"
+                      onClick={() => window.open(`https://shuffler.io/workflows/${incident.rawOCSF.shuffle_execution_id}?execution_id=${incident.rawOCSF.shuffle_execution_id}`, '_blank')}
+                      sx={{ color: '#06b6d4', cursor: 'pointer', fontFamily: 'monospace', fontSize: '0.75rem', wordBreak: 'break-all', '&:hover': { textDecoration: 'underline' } }}
+                    >
+                      {String(incident.rawOCSF.shuffle_execution_id)}
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
             </Box>
 
             {/* Labels */}
