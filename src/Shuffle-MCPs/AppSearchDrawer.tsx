@@ -326,9 +326,11 @@ export default function AppSearchDrawer({
         onClose={() => {
           const name = detailAppName;
           setDetailAppName(null);
+          setDetailAppId(null);
           if (name) onDetailClose?.(name);
         }}
         appName={detailAppName}
+        appId={detailAppId}
         anchor={anchor}
         width={width}
         onRefresh={onClose}
