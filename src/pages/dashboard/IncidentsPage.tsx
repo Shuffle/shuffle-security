@@ -71,6 +71,7 @@ import { ensureDefaultsInitialized } from '@/lib/initDefaults';
 const LEGACY_ALERTS_CATEGORY = 'shuffle-alerts';
 const LEGACY_SECURITY_ALERTS_CATEGORY = 'shuffle-security_alerts';
 const MIGRATION_KEY = 'shuffle_incidents_migrated_v1';
+const DEFAULT_STATUS_FILTER = ['new', 'in_progress'];
 
 const toRawIncidentKey = (key: string): string => {
   if (!key?.includes('::')) return key;
@@ -400,7 +401,7 @@ const IncidentsPage = () => {
     const tagParam = searchParams.get('tag');
     return {
       severity: sevParam,
-      status: statusParam,
+      status: statusParam ?? DEFAULT_STATUS_FILTER,
       tlp: tlpParam || null,
       assignee: assigneeParam || null,
       source: sourceParam || null,
@@ -536,7 +537,7 @@ const IncidentsPage = () => {
        return {
          ...prev,
          severity: null,
-         status: null,
+          status: DEFAULT_STATUS_FILTER,
          source: null,
          tag: null,
          assignee: null,
@@ -1547,7 +1548,7 @@ const IncidentsPage = () => {
     } else if (isChildOrg && currentOrgId) {
       defaultOrg = [currentOrgId];
     }
-    setFilters({ severity: null, status: null, tlp: null, assignee: null, source: null, tag: null, org: defaultOrg });
+    setFilters({ severity: null, status: DEFAULT_STATUS_FILTER, tlp: null, assignee: null, source: null, tag: null, org: defaultOrg });
     setNegatedFilters(new Set());
     setDateFrom(undefined);
     setDateTo(undefined);
@@ -1689,7 +1690,11 @@ const IncidentsPage = () => {
     if (filters.severity || filters.tlp || filters.source || filters.tag) return false;
     if (negatedFilters.size > 0 || dateFrom || dateTo) return false;
     if (filters.assignee !== null || searchQuery.trim()) return false;
-    if (filters.status !== null) return false;
+    const statusFilter = Array.isArray(filters.status) ? filters.status : filters.status ? [filters.status] : [];
+    if (statusFilter.length !== DEFAULT_STATUS_FILTER.length) return false;
+    for (const status of DEFAULT_STATUS_FILTER) {
+      if (!statusFilter.includes(status)) return false;
+    }
 
     // Org filter check
     if (isParentOrg) {
