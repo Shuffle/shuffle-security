@@ -206,6 +206,14 @@ const meaningfulString = (val: unknown): string | undefined => {
   return decodeHtmlEntities(trimmed);
 };
 
+// Normalize source labels so equivalent values render consistently in filters/charts.
+// e.g. legacy payloads use "Manual Entry" while the modern create flow uses "Manual".
+const normalizeSourceLabel = (val: string | undefined): string | undefined => {
+  if (!val) return val;
+  if (val.trim().toLowerCase() === 'manual entry') return 'Manual';
+  return val;
+};
+
 /**
  * Resolve the "created" timestamp for an incident.
  * Priority: value.created_time → item.created (datastore envelope).
