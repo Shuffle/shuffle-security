@@ -260,6 +260,26 @@ const isOcsfShapedData = (data: unknown): boolean => {
   return isNewFormat || isLegacyOCSF;
 };
 
+// Critical identity fields. If any are missing on a saved OCSF payload, we
+// treat the payload as partially corrupted and try to overlay missing pieces
+// from the most recent revision that still has them. A bad Raw OCSF save (or
+// upstream pipeline drop) often clears title/desc/id while leaving severity_id
+// intact, which would silently slip past `isOcsfShapedData`.
+const getMissingCriticalFields = (data: unknown): string[] => {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return ['title', 'description', 'id'];
+  const d = data as any;
+  const fi = d.finding_info_list?.[0] || d.finding_info || {};
+  const missing: string[] = [];
+  const title = d.title || fi.title;
+  if (!title || (typeof title === 'string' && !title.trim())) missing.push('title');
+  const desc = d.desc || d.message || d.description || fi.desc;
+  if (!desc || (typeof desc === 'string' && !desc.trim())) missing.push('description');
+  const id = d.finding_uid || d.id || fi.uid || fi.finding_uid;
+  if (!id || (typeof id === 'string' && !id.trim())) missing.push('id');
+  return missing;
+};
+
+
 // Best-effort JSON parse for revision values (handles base64-encoded strings).
 const parseRevisionValue = (raw: unknown): any | null => {
   if (raw == null) return null;
