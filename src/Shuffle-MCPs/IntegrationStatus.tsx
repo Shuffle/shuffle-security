@@ -449,8 +449,8 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
               ) : (
                 <IconButton
                   size="small"
-                  component="a"
-                  href="/onboarding"
+                  component={RouterLink}
+                  to="/onboarding"
                   sx={{ 
                     width: 26,
                     height: 26,
