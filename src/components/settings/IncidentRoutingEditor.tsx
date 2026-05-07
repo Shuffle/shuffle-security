@@ -34,6 +34,11 @@ import {
   Chip,
   Stack,
   CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
@@ -362,8 +367,11 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
     }
   };
 
-  const handleDelete = async (rule: RoutingRule) => {
-    // Local-only (never saved) — just drop it.
+  const [pendingDelete, setPendingDelete] = useState<RoutingRule | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = (rule: RoutingRule) => {
+    // Local-only (never saved) — just drop it without confirmation.
     if (localOnlyIds.has(rule.id)) {
       setDrafts((prev) => {
         const next = { ...prev };
@@ -382,7 +390,14 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
       });
       return;
     }
-    // Optimistic remove for persisted rules.
+    // Persisted — confirm first.
+    setPendingDelete(rule);
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    const rule = pendingDelete;
+    setDeleting(true);
     const snapshot = drafts[rule.id];
     setDrafts((prev) => {
       const next = { ...prev };
@@ -390,6 +405,8 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
       return next;
     });
     const ok = await removeItem(rule.id);
+    setDeleting(false);
+    setPendingDelete(null);
     if (ok) {
       toast.success(`Deleted "${rule.name}"`);
     } else {
@@ -399,6 +416,7 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
       }
     }
   };
+
 
   const handleDuplicate = (rule: RoutingRule) => {
     const copy = emptyRule({
@@ -926,6 +944,49 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
         </Paper>
         );
       })}
+
+      <Dialog
+        open={!!pendingDelete}
+        onClose={() => !deleting && setPendingDelete(null)}
+        PaperProps={{
+          sx: {
+            bgcolor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
+            color: 'hsl(var(--foreground))',
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: 'hsl(var(--foreground))' }}>Delete routing rule?</DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ color: 'hsl(var(--muted-foreground))' }}>
+            This will permanently delete the rule <strong style={{ color: 'hsl(var(--foreground))' }}>"{pendingDelete?.name}"</strong>.
+            Incidents will no longer be evaluated against it. This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setPendingDelete(null)}
+            disabled={deleting}
+            sx={{ height: 36, textTransform: 'none', color: 'hsl(var(--muted-foreground))' }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmDelete}
+            disabled={deleting}
+            variant="contained"
+            sx={{
+              height: 36,
+              textTransform: 'none',
+              bgcolor: 'hsl(var(--destructive))',
+              color: 'hsl(var(--destructive-foreground))',
+              '&:hover': { bgcolor: 'hsl(var(--destructive) / 0.9)' },
+            }}
+          >
+            {deleting ? <CircularProgress size={16} /> : 'Delete rule'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
