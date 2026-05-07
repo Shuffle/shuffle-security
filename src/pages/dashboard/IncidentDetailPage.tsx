@@ -5199,7 +5199,13 @@ const IncidentDetailPage = () => {
               <>
                 <CollapsibleContent maxHeight={240} storageKey={`incident-comment-expand::${rawId || ''}::${actItem.id || ''}`}>
                   <MentionText
-                    text={actItem.content && /<[a-z][\s\S]*>/i.test(actItem.content) ? htmlToPlainText(actItem.content).trim() : decodeHtmlEntities(actItem.content || '')}
+                    text={(() => {
+                      const raw = actItem.content || '';
+                      const decoded = /<[a-z][\s\S]*>/i.test(raw) ? htmlToPlainText(raw).trim() : decodeHtmlEntities(raw);
+                      // Hide the auto-attached agent context block from the user.
+                      // The block is still in the persisted message for the agent.
+                      return stripAgentContextBlock(decoded);
+                    })()}
                     sx={{ fontSize: '0.8rem', color: 'text.secondary', whiteSpace: 'pre-wrap' }}
                   />
                   {actItem.attachments && actItem.attachments.length > 0 && (
