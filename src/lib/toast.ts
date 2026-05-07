@@ -15,8 +15,10 @@ type LegacyOptions = {
   duration?: number;
   title?: React.ReactNode;
   action?: unknown;
+  cancel?: unknown;
   id?: string | number;
-} & Omit<ToastOptions, 'autoClose' | 'toastId'>;
+  [key: string]: unknown;
+};
 
 const buildContent = (message: ToastContent, description?: React.ReactNode): ToastContent => {
   if (description === undefined || description === null || description === '') return message;
