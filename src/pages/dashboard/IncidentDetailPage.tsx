@@ -273,6 +273,14 @@ const parseRevisionValue = (raw: unknown): any | null => {
 
 // Strict check: only return string if it has meaningful non-whitespace content
 // Also rejects raw JSON objects/arrays that shouldn't be displayed as text
+// Normalize equivalent source labels (e.g. "Manual Entry" -> "Manual") so the
+// UI does not show two chips for the same logical source.
+const normalizeSourceLabel = (val: string | undefined): string | undefined => {
+  if (!val) return val;
+  if (val.trim().toLowerCase() === 'manual entry') return 'Manual';
+  return val;
+};
+
 const meaningfulString = (val: unknown): string | undefined => {
   if (typeof val !== 'string') return undefined;
   const trimmed = val.trim();
