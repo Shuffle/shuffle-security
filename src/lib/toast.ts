@@ -13,7 +13,10 @@ import { toast as rtToast, type ToastOptions, type ToastContent } from 'react-to
 type LegacyOptions = {
   description?: React.ReactNode;
   duration?: number;
-} & Omit<ToastOptions, 'autoClose'>;
+  title?: React.ReactNode;
+  action?: unknown;
+  id?: string | number;
+} & Omit<ToastOptions, 'autoClose' | 'toastId'>;
 
 const buildContent = (message: ToastContent, description?: React.ReactNode): ToastContent => {
   if (description === undefined || description === null || description === '') return message;
