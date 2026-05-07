@@ -911,7 +911,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                   )}
 
                   {/* Webhook Configuration */}
-                  {automation.enabled && automation.type === 'webhook' && expandedTypes['webhook'] && (
+                  {automation.type === 'webhook' && expandedTypes['webhook'] && (
                     <Box sx={{ px: 2, pb: 2, pt: 0.5 }}>
                       <TextField
                         size="small"
