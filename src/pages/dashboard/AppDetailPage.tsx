@@ -506,12 +506,10 @@ const AppDetailPage = () => {
                   method: 'POST',
                   url: `${getApiUrl(`/api/v1/apps/${encodeURIComponent(appname || '')}/mcp`)}`,
                   headers: {
-                    'Content-Type': 'application/json',
                     'Authorization': `Bearer ${API_CONFIG.apiKey || '<your-api-key>'}`,
                   },
                   body: {
                     jsonrpc: '2.0',
-                    id: '<request-id>',
                     method: 'tools/call',
                     params: {
                       tool_name: appname || '',
