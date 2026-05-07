@@ -318,9 +318,19 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
       toast.error('Give the rule a name first');
       return;
     }
-    if (!rule.action.targetOrgId) {
-      toast.error('Select a target tenant');
+    if (rule.actions.length === 0) {
+      toast.error('Add at least one action');
       return;
+    }
+    for (const a of rule.actions) {
+      if (a.type === 'suggest_move' && !a.targetOrgId) {
+        toast.error('Select a target tenant for the move action');
+        return;
+      }
+      if (a.type === 'set_field' && !a.field) {
+        toast.error('Pick a field for "Set custom field"');
+        return;
+      }
     }
     setSaving((p) => ({ ...p, [rule.id]: true }));
     try {
