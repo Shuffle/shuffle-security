@@ -69,10 +69,10 @@ export const SIDEBAR_TAB_OPTIONS: ReadonlyArray<{
   ...(item.children?.map((c) => ({ key: c.tabKey, label: c.label, parent: item.tabKey })) ?? []),
 ]);
 
-// All tabs visible by default — derived from the shared nav config so newly
-// added items automatically default to ON without touching this file.
+// Per-key default visibility — derived from the shared nav config. Items
+// can opt out by setting `defaultVisible: false` in `sidebarNav.tsx`.
 const DEFAULT_SIDEBAR_TABS: Record<SidebarTabKey, boolean> = ALL_SIDEBAR_KEYS.reduce(
-  (acc, key) => { acc[key] = true; return acc; },
+  (acc, key) => { acc[key] = SIDEBAR_DEFAULT_VISIBILITY[key] ?? true; return acc; },
   {} as Record<SidebarTabKey, boolean>,
 );
 
