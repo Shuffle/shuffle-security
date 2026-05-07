@@ -18,10 +18,13 @@ import {
   Button,
   Autocomplete,
   TextField,
-  ToggleButton,
-  ToggleButtonGroup,
+  IconButton,
+  Tooltip,
 } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CheckIcon from '@mui/icons-material/Check';
+import { Code2, Terminal } from 'lucide-react';
 import { API_CONFIG, getApiUrl, getAuthHeader, getTrackedOrgId } from '@/Shuffle-MCPs/api';
 
 interface SingulAction {
@@ -325,7 +328,8 @@ const SingulActionsPreview = ({
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(snippet);
-      toast.success('Copied snippet');
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error('Copy failed');
     }
@@ -334,6 +338,7 @@ const SingulActionsPreview = ({
   const [playLoading, setPlayLoading] = useState(false);
   const [playResult, setPlayResult] = useState<string | null>(null);
   const responseRef = useRef<HTMLDivElement | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const scrollToResponse = () => {
     requestAnimationFrame(() => {
@@ -495,32 +500,6 @@ const SingulActionsPreview = ({
                   <TextField {...params} placeholder="Select action" />
                 )}
               />
-              <ToggleButtonGroup
-                size="small"
-                exclusive
-                value={lang}
-                onChange={(_, v) => v && setLang(v)}
-                sx={{
-                  '& .MuiToggleButton-root': {
-                    height: 36,
-                    px: 1.5,
-                    fontSize: '0.7rem',
-                    textTransform: 'none',
-                    fontFamily: "'JetBrains Mono', monospace",
-                    color: 'hsl(var(--muted-foreground))',
-                    border: '1px solid hsl(var(--border))',
-                    '&.Mui-selected': {
-                      backgroundColor: 'hsl(var(--primary) / 0.15)',
-                      color: 'hsl(var(--primary))',
-                      borderColor: 'hsl(var(--primary))',
-                      '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.2)' },
-                    },
-                  },
-                }}
-              >
-                <ToggleButton value="curl">curl</ToggleButton>
-                <ToggleButton value="python">python</ToggleButton>
-              </ToggleButtonGroup>
             </Box>
 
             {/* Code card */}
@@ -534,79 +513,101 @@ const SingulActionsPreview = ({
                 boxShadow: '0 8px 24px -12px hsl(var(--primary) / 0.25)',
               }}
             >
-              {/* Header bar */}
+              {/* Header bar — matches ApiCallViewer */}
               <Box
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
-                  px: 1.25,
-                  py: 0.75,
+                  gap: 1,
+                  px: 2,
+                  py: 1,
                   borderBottom: '1px solid hsl(var(--border))',
-                  backgroundColor: 'hsl(var(--muted) / 0.4)',
+                  backgroundColor: 'hsl(var(--card))',
                 }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                  <Box sx={{ display: 'flex', gap: 0.4 }}>
-                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'hsl(0 70% 60% / 0.6)' }} />
-                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'hsl(40 80% 60% / 0.6)' }} />
-                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'hsl(140 60% 55% / 0.6)' }} />
-                  </Box>
-                  <Typography
+                <Code2 size={14} style={{ color: 'hsl(var(--muted-foreground))' }} />
+                <Typography
+                  sx={{
+                    fontSize: '0.7rem',
+                    fontWeight: 600,
+                    color: 'hsl(var(--muted-foreground))',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  Action
+                </Typography>
+                {selected && (
+                  <Chip
+                    label={selected.name}
+                    size="small"
                     sx={{
-                      ml: 1,
+                      height: 18,
+                      fontSize: '0.6rem',
+                      fontWeight: 700,
                       fontFamily: "'JetBrains Mono', monospace",
-                      fontSize: '0.65rem',
-                      color: 'hsl(var(--muted-foreground))',
-                      letterSpacing: 0.4,
+                      bgcolor: 'hsla(var(--severity-medium) / 0.15)',
+                      color: 'hsl(var(--severity-medium))',
+                      '& .MuiChip-label': { px: 0.75 },
                     }}
-                  >
-                    {lang === 'python' ? 'singul.py' : 'request.sh'}
-                    {selected ? ` · ${selected.name}` : ''}
-                  </Typography>
+                  />
+                )}
+                <Box sx={{ flex: 1 }} />
+                {/* Language toggle (cURL / Python) */}
+                <Box sx={{ display: 'flex', gap: 0.5 }}>
+                  {(['curl', 'python'] as SnippetLang[]).map((m) => (
+                    <Chip
+                      key={m}
+                      label={m === 'curl' ? 'cURL' : 'Python'}
+                      icon={m === 'curl' ? <Terminal size={12} /> : <Code2 size={12} />}
+                      size="small"
+                      onClick={() => setLang(m)}
+                      sx={{
+                        height: 22,
+                        fontSize: '0.6rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        bgcolor: lang === m ? 'hsl(var(--primary) / 0.12)' : 'transparent',
+                        color: lang === m ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                        border: lang === m ? '1px solid hsl(var(--primary) / 0.3)' : '1px solid transparent',
+                        '& .MuiChip-icon': {
+                          color: lang === m ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                        },
+                        '&:hover': {
+                          bgcolor: lang === m ? 'hsl(var(--primary) / 0.15)' : 'hsl(var(--muted))',
+                        },
+                      }}
+                    />
+                  ))}
                 </Box>
-                <Box sx={{ display: 'flex', gap: 0.75 }}>
-                  <Button
-                    size="small"
-                    onClick={handleCopy}
-                    sx={{
-                      height: 26,
-                      minWidth: 0,
-                      px: 1.25,
-                      fontSize: '0.65rem',
-                      textTransform: 'none',
-                      color: 'hsl(var(--muted-foreground))',
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      '&:hover': { backgroundColor: 'hsl(var(--muted))', color: 'hsl(var(--foreground))' },
-                    }}
-                  >
-                    Copy
-                  </Button>
-                  <Button
-                    size="small"
-                    onClick={handlePlay}
-                    disabled={playLoading}
-                    startIcon={!playLoading && <PlayArrowIcon sx={{ fontSize: 14 }} />}
-                    sx={{
-                      height: 26,
-                      minWidth: 0,
-                      px: 1.5,
-                      fontSize: '0.65rem',
-                      fontWeight: 600,
-                      textTransform: 'none',
-                      color: 'hsl(var(--primary-foreground))',
-                      backgroundColor: 'hsl(var(--primary))',
-                      border: '1px solid hsl(var(--primary))',
-                      boxShadow: '0 0 12px -2px hsl(var(--primary) / 0.6)',
-                      '& .MuiButton-startIcon': { mr: 0.5 },
-                      '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)', boxShadow: '0 0 16px -2px hsl(var(--primary) / 0.7)' },
-                      '&.Mui-disabled': { color: 'hsl(var(--primary-foreground) / 0.7)', backgroundColor: 'hsl(var(--primary) / 0.45)', boxShadow: 'none', borderColor: 'hsl(var(--primary) / 0.45)' },
-                    }}
-                  >
-                    {playLoading ? 'Running…' : 'Play'}
-                  </Button>
-                </Box>
+                <Tooltip title={copied ? 'Copied!' : 'Copy'} arrow>
+                  <IconButton size="small" onClick={handleCopy} sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                    {copied ? <CheckIcon sx={{ fontSize: 14 }} /> : <ContentCopyIcon sx={{ fontSize: 14 }} />}
+                  </IconButton>
+                </Tooltip>
+                <Button
+                  size="small"
+                  onClick={handlePlay}
+                  disabled={playLoading}
+                  startIcon={!playLoading && <PlayArrowIcon sx={{ fontSize: 14 }} />}
+                  sx={{
+                    height: 26,
+                    minWidth: 0,
+                    px: 1.5,
+                    fontSize: '0.65rem',
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    color: 'hsl(var(--primary-foreground))',
+                    backgroundColor: 'hsl(var(--primary))',
+                    border: '1px solid hsl(var(--primary))',
+                    boxShadow: '0 0 12px -2px hsl(var(--primary) / 0.6)',
+                    '& .MuiButton-startIcon': { mr: 0.5 },
+                    '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)', boxShadow: '0 0 16px -2px hsl(var(--primary) / 0.7)' },
+                    '&.Mui-disabled': { color: 'hsl(var(--primary-foreground) / 0.7)', backgroundColor: 'hsl(var(--primary) / 0.45)', boxShadow: 'none', borderColor: 'hsl(var(--primary) / 0.45)' },
+                  }}
+                >
+                  {playLoading ? 'Running…' : 'Play'}
+                </Button>
               </Box>
 
               {/* Editor area with line numbers */}
