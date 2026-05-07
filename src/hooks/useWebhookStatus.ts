@@ -71,13 +71,25 @@ export const useWebhookStatus = (): WebhookStatus => {
     setIsEnabling(true);
     armOptimistic(true);
     try {
-      const res = await fetch(getApiUrl('/api/v2/workflows/generate'), {
-        method: 'POST',
-        credentials: 'include',
-        headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ label: 'Ingest Tickets_webhook' }),
-      });
-      if (!res.ok) throw new Error('Failed to enable webhook');
+      // Mirror the onboarding flow: ensure BOTH the polling "Ingest Tickets"
+      // workflow and the "Ingest Tickets_webhook" trigger workflow exist.
+      // Without the polling workflow, the webhook by itself is useless.
+      const results = await Promise.allSettled([
+        fetch(getApiUrl('/api/v2/workflows/generate'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ label: 'Ingest Tickets', category: 'cases' }),
+        }),
+        fetch(getApiUrl('/api/v2/workflows/generate'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ label: 'Ingest Tickets_webhook' }),
+        }),
+      ]);
+      const anyOk = results.some((r) => r.status === 'fulfilled' && r.value.ok);
+      if (!anyOk) throw new Error('Failed to enable ingestion');
       await new Promise((r) => setTimeout(r, 1500));
       await refetch();
     } finally {
@@ -89,13 +101,23 @@ export const useWebhookStatus = (): WebhookStatus => {
     setIsDisabling(true);
     armOptimistic(false);
     try {
-      const res = await fetch(getApiUrl('/api/v2/workflows/generate'), {
-        method: 'POST',
-        credentials: 'include',
-        headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ label: 'Ingest Tickets_webhook', action_name: 'remove' }),
-      });
-      if (!res.ok) throw new Error('Failed to disable webhook');
+      // Remove BOTH workflows so ingestion is fully off.
+      const results = await Promise.allSettled([
+        fetch(getApiUrl('/api/v2/workflows/generate'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ label: 'Ingest Tickets', category: 'cases', action_name: 'remove' }),
+        }),
+        fetch(getApiUrl('/api/v2/workflows/generate'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+          body: JSON.stringify({ label: 'Ingest Tickets_webhook', action_name: 'remove' }),
+        }),
+      ]);
+      const anyOk = results.some((r) => r.status === 'fulfilled' && r.value.ok);
+      if (!anyOk) throw new Error('Failed to disable ingestion');
       await new Promise((r) => setTimeout(r, 1500));
       await refetch();
     } finally {
