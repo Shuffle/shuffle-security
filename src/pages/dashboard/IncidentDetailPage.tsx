@@ -1744,11 +1744,14 @@ const IncidentDetailPage = () => {
         timestamp: new Date().toISOString(),
       });
     } else {
+      const stage = isEmptyStub ? 'no-item' : (result.success ? 'no-item' : 'no-success');
       setLoadDebug({
-        stage: result.success ? 'no-item' : 'no-success',
-        message: result.success
-          ? 'API responded success=true but no item was returned'
-          : 'API responded success=false (no item present in datastore for this key)',
+        stage,
+        message: isEmptyStub
+          ? 'API responded success=true but the item is an empty stub — no incident exists for this key in the active org'
+          : result.success
+            ? 'API responded success=true but no item was returned'
+            : 'API responded success=false (no item present in datastore for this key)',
         rawId,
         id,
         crossOrgId,
