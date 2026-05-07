@@ -307,6 +307,14 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
     return opts;
   }, [subOrgs, currentOrgId, userInfo]);
 
+  if (!isParentOrg && !forceShow) {
+    return (
+      <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+        Incident routing is only available when you have one or more child tenants.
+      </Typography>
+    );
+  }
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
