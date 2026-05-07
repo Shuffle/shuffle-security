@@ -2190,6 +2190,7 @@ const IncidentsPage = () => {
             </Box>
           )}
 
+          {false && <>
           {/* Arrow between Ingest and Forward — hidden until workflows loaded,
               while the demo tour drawer is open, while in demo mode, and
               when no ingestion source has been set up yet (Forward only
@@ -2199,7 +2200,9 @@ const IncidentsPage = () => {
             <ChevronRightIcon sx={{ fontSize: 18 }} />
           </Box>
           )}
+          </>}
 
+          {false && <>
           {/* Forward Destinations — same visibility rules as the arrow above. */}
           {!ingestionLoading && !isDemoTourActive && !demoActive && ingestionApps.length > 0 && (
             <Box className={`automation-section-forward${forwardHovered ? ' is-hovered' : ''}`}
@@ -2335,6 +2338,7 @@ const IncidentsPage = () => {
               )}
             </Box>
           )}
+          </>}
           </Box>
           )}
 
@@ -2502,6 +2506,7 @@ const IncidentsPage = () => {
               sx={{ width: { xs: 100, sm: 140 }, minWidth: 0, flexShrink: 1 }}
       />
 
+      {false && <>
       <AppSearchDrawer
         open={forwardAppSearchOpen}
         onClose={() => {
@@ -2511,6 +2516,7 @@ const IncidentsPage = () => {
         title="Add Forward Destination"
         subtitle="Search and authenticate a tool to forward incidents to"
       />
+      </>}
 
             {/* Bulk actions */}
             {selectedIds.size > 0 && (
