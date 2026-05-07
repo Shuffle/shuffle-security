@@ -2190,6 +2190,7 @@ const IncidentsPage = () => {
             </Box>
           )}
 
+          {false && (
           {/* Arrow between Ingest and Forward — hidden until workflows loaded,
               while the demo tour drawer is open, while in demo mode, and
               when no ingestion source has been set up yet (Forward only
@@ -2198,6 +2199,7 @@ const IncidentsPage = () => {
           <Box className="automation-arrow" sx={{ display: 'flex', alignItems: 'center', color: 'hsl(var(--muted-foreground))', mx: -0.25, maxWidth: 30, opacity: 1 }}>
             <ChevronRightIcon sx={{ fontSize: 18 }} />
           </Box>
+          )}
           )}
 
           {/* Forward Destinations — same visibility rules as the arrow above. */}
