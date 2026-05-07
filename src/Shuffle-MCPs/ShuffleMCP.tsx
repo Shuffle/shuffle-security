@@ -549,17 +549,27 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
               { key: 'public', label: 'Public', count: results.length, title: 'Public apps from the Shuffle catalog (powered by Algolia).' },
               { key: 'private', label: 'Private', count: filteredPrivateApps.length, title: 'Private apps are apps you have activated in your organization, or your own custom apps — not just from the public Algolia catalog.' },
             ] as const).map(opt => (
-              <Tooltip key={opt.key} title={opt.title} arrow enterDelay={100} enterNextDelay={100}>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={sourceFilter === opt.key}
-                  className={`singul-source-pill ${sourceFilter === opt.key ? 'singul-source-pill-active' : ''}`}
-                  onClick={() => setSourceFilter(opt.key)}
-                >
-                  {opt.label}
-                  <span className="singul-source-count">{opt.count}</span>
-                </button>
+              <Tooltip
+                key={opt.key}
+                title={opt.title}
+                arrow
+                enterDelay={100}
+                enterNextDelay={100}
+                placement="top"
+                slotProps={{ popper: { style: { zIndex: 10000 } } }}
+              >
+                <span style={{ display: 'inline-flex' }}>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={sourceFilter === opt.key}
+                    className={`singul-source-pill ${sourceFilter === opt.key ? 'singul-source-pill-active' : ''}`}
+                    onClick={() => setSourceFilter(opt.key)}
+                  >
+                    {opt.label}
+                    <span className="singul-source-count">{opt.count}</span>
+                  </button>
+                </span>
               </Tooltip>
             ))}
           </div>
