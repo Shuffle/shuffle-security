@@ -192,14 +192,6 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
     [drafts]
   );
 
-  if (!isParentOrg && !forceShow) {
-    return (
-      <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-        Incident routing is only available when you have one or more child tenants.
-      </Typography>
-    );
-  }
-
   const updateRule = (id: string, patch: Partial<RoutingRule>) => {
     setDrafts((prev) => ({ ...prev, [id]: { ...prev[id], ...patch, updatedTs: Date.now() } }));
   };
@@ -306,6 +298,14 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
     for (const so of subOrgs) opts.push({ id: so.id, name: so.name || so.id.slice(0, 8) });
     return opts;
   }, [subOrgs, currentOrgId, userInfo]);
+
+  if (!isParentOrg && !forceShow) {
+    return (
+      <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+        Incident routing is only available when you have one or more child tenants.
+      </Typography>
+    );
+  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
