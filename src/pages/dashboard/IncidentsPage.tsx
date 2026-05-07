@@ -283,7 +283,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       return {
         id: item.key, // Always use datastore key as the canonical ID
         title: meaningfulString(ocsf.title) || meaningfulString(ocsf.supporting_data) || meaningfulString(ocsf.desc),
-        source: meaningfulString(ocsf.product?.name) || meaningfulString(ocsf.types?.[0]),
+        source: normalizeSourceLabel(meaningfulString(ocsf.product?.name) || meaningfulString(ocsf.types?.[0])),
         severity: mapOCSFSeverity(ocsf.severity_id || 3),
         status: normalizeStatus(ocsf.status || mapOCSFStatus(ocsf.status_id || 1)),
         assignee: rawAssignee,
