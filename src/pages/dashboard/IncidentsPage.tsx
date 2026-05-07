@@ -1987,6 +1987,7 @@ const IncidentsPage = () => {
       transition={{ duration: 0.4 }}
     >
       <HighlightSpotlight />
+      <AutomationReadinessBanner />
       <ScheduleHealthBanner
         compact
         dismissKey="shuffle:schedule-health-banner:dismissed"
