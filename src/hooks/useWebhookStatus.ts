@@ -15,11 +15,16 @@ export interface WebhookStatus {
   enable: () => Promise<void>;
   /** Whether the enable action is in progress */
   isEnabling: boolean;
+  /** Disable the webhook (removes/stops it) */
+  disable: () => Promise<void>;
+  /** Whether the disable action is in progress */
+  isDisabling: boolean;
 }
 
 export const useWebhookStatus = (): WebhookStatus => {
   const { data: workflows, isLoading, refetch } = useWorkflows();
   const [isEnabling, setIsEnabling] = useState(false);
+  const [isDisabling, setIsDisabling] = useState(false);
 
   const webhookWorkflow = workflows?.find((w) => w.name === 'Ingestion Webhook');
 
@@ -56,6 +61,22 @@ export const useWebhookStatus = (): WebhookStatus => {
     }
   };
 
+  const disable = async () => {
+    setIsDisabling(true);
+    try {
+      const res = await fetch(getApiUrl('/api/v2/workflows/generate'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ label: 'Ingest Tickets_webhook', action_name: 'remove' }),
+      });
+      if (!res.ok) throw new Error('Failed to disable webhook');
+      await refetch();
+    } finally {
+      setIsDisabling(false);
+    }
+  };
+
   return {
     exists: !!webhookWorkflow,
     enabled,
@@ -63,5 +84,7 @@ export const useWebhookStatus = (): WebhookStatus => {
     isLoading,
     enable,
     isEnabling,
+    disable,
+    isDisabling,
   };
 };

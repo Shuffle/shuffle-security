@@ -12,6 +12,10 @@ export interface AssignEscalateStatus {
   enable: () => Promise<void>;
   /** Whether an enable action is in progress */
   isEnabling: boolean;
+  /** Disable the Assign & Escalate workflow */
+  disable: () => Promise<void>;
+  /** Whether a disable action is in progress */
+  isDisabling: boolean;
 }
 
 /**
@@ -23,6 +27,7 @@ export interface AssignEscalateStatus {
 export const useAssignEscalateStatus = (): AssignEscalateStatus => {
   const { data: workflows, isLoading, refetch } = useWorkflows();
   const [isEnabling, setIsEnabling] = useState(false);
+  const [isDisabling, setIsDisabling] = useState(false);
   const [optimistic, setOptimistic] = useState<boolean | null>(null);
 
   const labels = useMemo(() => getAutomationLabels('assign_escalate'), []);
@@ -51,6 +56,28 @@ export const useAssignEscalateStatus = (): AssignEscalateStatus => {
     }
   }, [labels, refetch]);
 
+  const disable = useCallback(async () => {
+    setOptimistic(false);
+    setIsDisabling(true);
+    try {
+      await Promise.allSettled(
+        labels.map((label) =>
+          fetch(getApiUrl('/api/v2/workflows/generate'), {
+            method: 'POST',
+            credentials: 'include',
+            headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ label, category: 'cases', action_name: 'remove' }),
+          }),
+        ),
+      );
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await refetch();
+    } finally {
+      setIsDisabling(false);
+      setOptimistic(null);
+    }
+  }, [labels, refetch]);
+
   const active = useMemo(() => {
     if (optimistic !== null) return optimistic;
     if (!workflows || labels.length === 0) return false;
@@ -62,5 +89,5 @@ export const useAssignEscalateStatus = (): AssignEscalateStatus => {
     );
   }, [workflows, labels, optimistic]);
 
-  return { active, isLoading, enable, isEnabling };
+  return { active, isLoading, enable, isEnabling, disable, isDisabling };
 };
