@@ -303,10 +303,8 @@ const AppDetailPage = () => {
       // Revert optimistic update
       setIsActivated(wasActivated);
       setActivatedAppId(prevAppId);
-      toast({
-        title: wasActivated ? 'Deactivation failed' : 'Activation failed',
+      toast.error(wasActivated ? 'Deactivation failed' : 'Activation failed', {
         description: 'Something went wrong. Please try again.',
-        variant: 'destructive',
       });
     } finally {
       setActivateLoading(false);
