@@ -747,7 +747,10 @@ export const forceCreateSingleDemoIncidentReturningKey = async (): Promise<strin
   // Wipe any prior focus incident so this stays a single, fresh item.
   // Uses the shared helper so duplicates can't slip in via a different
   // browser / cleared storage / pipeline-renamed key.
-  await wipeExistingDemoIncidents(isDemoFocusIncident);
+  // Skip the full-category server scan: callers hitting "Force generate"
+  // expect immediate feedback, and the local index already covers anything
+  // we seeded in this session.
+  await wipeExistingDemoIncidents(isDemoFocusIncident, { skipServerScan: true });
 
   // Same as the step seeder: ensure feeds are enabled and reuse / pick real IOCs.
   void forceEnableDefaultThreatFeeds();
