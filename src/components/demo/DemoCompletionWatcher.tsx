@@ -28,13 +28,21 @@ const WAZUH_FOLLOWUP_DELAY_MS = 6000;
 export const DemoCompletionWatcher = () => {
   const { drawerOpen, step, setStepCompleted, markStepCompleted, goToStep, setDock, dock, hoveredGoalSelector, completedSteps } = useDemo();
   const askAgentInjectedRef = useRef(false);
-  const { data: workflows } = useWorkflows();
+  const { data: workflows, isFetching: workflowsFetching } = useWorkflows();
   const { notifications } = useAgentNotifications();
   const queryClient = useQueryClient();
   const location = useLocation();
   const { basePath: entityBasePath } = useEntityPreference();
   const wazuhSeededRef = useRef(false);
   const autoAdvancedRef = useRef(false);
+  /** Counts consecutive "webhook missing/stopped" observations. We only
+   *  revert the `ingest-webhook` gate to incomplete after seeing it missing
+   *  TWICE in a row, to avoid a race where the workflows query is mid-refetch
+   *  right after the user clicked Enable: the cache still has the old list
+   *  (no webhook), the watcher flips the gate back to false, and the user
+   *  sees the spotlight re-lock for a few seconds even though the button is
+   *  visibly green. */
+  const webhookMissingTicksRef = useRef(0);
 
   // ─── welcome: bidirectional sync — the user must navigate to the Incidents
   // page from the sidebar themselves. Completes the moment the route matches
@@ -49,14 +57,27 @@ export const DemoCompletionWatcher = () => {
   }, [drawerOpen, location.pathname, entityBasePath, setStepCompleted]);
 
   // ─── ingest-webhook: bidirectional sync with the live workflow state ──────
-  // Mark complete when the Ingestion Webhook workflow exists AND its trigger
-  // is started. Mark incomplete when it's missing or stopped again.
+  // Mark complete the moment the Ingestion Webhook workflow exists AND its
+  // trigger is started. Mark incomplete only after we have confirmed it's
+  // missing/stopped on a SETTLED query (not a mid-flight refetch) AND we have
+  // seen it missing twice in a row — see `webhookMissingTicksRef` above.
   useEffect(() => {
     if (!drawerOpen || !workflows) return;
     const webhookWf = workflows.find(w => w.name === 'Ingestion Webhook');
     const done = !!webhookWf && !isWorkflowScheduleStopped(webhookWf);
-    setStepCompleted('ingest-webhook', done);
-  }, [drawerOpen, workflows, setStepCompleted]);
+    if (done) {
+      webhookMissingTicksRef.current = 0;
+      setStepCompleted('ingest-webhook', true);
+      return;
+    }
+    // Skip flipping false while a refetch is in flight — the cache may be
+    // stale right after the user toggled Enable.
+    if (workflowsFetching) return;
+    webhookMissingTicksRef.current += 1;
+    if (webhookMissingTicksRef.current >= 2) {
+      setStepCompleted('ingest-webhook', false);
+    }
+  }, [drawerOpen, workflows, workflowsFetching, setStepCompleted]);
 
   // Poll workflows so a revert (stopping the webhook again) is picked up
   // quickly without requiring a tab refocus. Only runs while the tour is open.
