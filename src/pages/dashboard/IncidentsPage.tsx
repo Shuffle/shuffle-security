@@ -509,9 +509,7 @@ const IncidentsPage = () => {
    useEffect(() => {
      if (!demoActive) return;
      const hasOutlook = demoInjectedApps.some(a => /outlook|office365/i.test(a.name));
-     const hasDefender = demoInjectedApps.some(a => /defender/i.test(a.name));
      if (hasOutlook) markStepCompleted('add-outlook:outlook');
-     if (hasDefender) markStepCompleted('add-outlook:defender');
    }, [demoActive, demoInjectedApps, markStepCompleted]);
 
    // When demo mode is off, drop any stale injected apps so they don't keep
