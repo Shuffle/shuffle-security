@@ -496,8 +496,8 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
             const expanded = !collapsedProcs.has(p.pid) || !!q;
             const cmd = p.command_line || p.exe_path || `(pid ${p.pid})`;
             return (
-              <>
-                <tr key={p.pid} className="hover:bg-muted/20">
+              <Fragment key={p.pid}>
+                <tr className="hover:bg-muted/20">
                   <td className="px-3 py-1 font-mono text-muted-foreground align-top">{p.pid}</td>
                   <td className="px-3 py-1 font-mono text-muted-foreground align-top truncate max-w-[120px]" title={p.user || ''}>{p.user || '—'}</td>
                   <td className="px-3 py-1 text-muted-foreground align-top whitespace-nowrap">{p.creation_time ? fmtTime(p.creation_time) : '—'}</td>
