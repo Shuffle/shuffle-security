@@ -235,7 +235,7 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
   return (
     <div className={wrapperClass}>
       {/* Info grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <Hash size={12} />
