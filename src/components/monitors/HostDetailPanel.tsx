@@ -151,6 +151,58 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
   const responseActionsOn = !!responseActionsRaw && raLower !== 'false' && raLower !== '0' && raLower !== 'no' && raLower !== 'off';
   const logForwardingOn = !!host.log_forwarding;
 
+  // ── Uptime ──────────────────────────────────────────────────────────────
+  // Prefer explicit boot_time / uptime fields; fall back to PID 1's
+  // creation_time, then to the oldest process creation_time we can find.
+  const procListForStats = Array.isArray(host.process_list) ? (host.process_list as ProcessEntry[]) : [];
+  const normalizeMs = (t: number) => (t > 1e12 ? t : t * 1000);
+  const bootTimeRaw = (host as Record<string, unknown>).boot_time;
+  const uptimeRaw = (host as Record<string, unknown>).uptime;
+  let bootMs: number | null = null;
+  if (typeof bootTimeRaw === 'number' && bootTimeRaw > 0) bootMs = normalizeMs(bootTimeRaw);
+  else if (typeof bootTimeRaw === 'string' && bootTimeRaw) {
+    const parsed = Date.parse(bootTimeRaw);
+    if (!isNaN(parsed)) bootMs = parsed;
+  }
+  if (bootMs === null && typeof uptimeRaw === 'number' && uptimeRaw > 0) {
+    bootMs = Date.now() - normalizeMs(uptimeRaw);
+  }
+  if (bootMs === null && procListForStats.length) {
+    const pid1 = procListForStats.find(p => p.pid === 1);
+    const candidate = pid1?.creation_time ?? procListForStats
+      .map(p => p.creation_time || 0)
+      .filter(t => t > 0)
+      .reduce<number>((min, t) => (min === 0 || t < min ? t : min), 0);
+    if (candidate && candidate > 0) bootMs = normalizeMs(candidate);
+  }
+  const formatUptime = (ms: number) => {
+    const secs = Math.max(0, Math.floor((Date.now() - ms) / 1000));
+    const d = Math.floor(secs / 86400);
+    const h = Math.floor((secs % 86400) / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    if (d > 0) return `${d}d ${h}h`;
+    if (h > 0) return `${h}h ${m}m`;
+    return `${m}m`;
+  };
+
+  // ── Primary users (from process_list) ───────────────────────────────────
+  // Aggregate non-system users by process count; show top 3.
+  const SYSTEM_USERS = new Set([
+    'root', '_root', 'system', 'daemon', 'nobody', 'launchd', '_windowserver',
+    '_spotlight', '_coreaudiod', '_locationd', '_softwareupdate', '_assetcache',
+    '_networkd', '_timed', '_mdnsresponder', '_distnote', '_usbmuxd',
+    'systemd', 'syslog', 'messagebus', 'dbus', 'sshd', 'NT AUTHORITY\\SYSTEM',
+    'LOCAL SERVICE', 'NETWORK SERVICE',
+  ]);
+  const userCounts = new Map<string, number>();
+  for (const p of procListForStats) {
+    const u = (p.user || '').trim();
+    if (!u) continue;
+    if (SYSTEM_USERS.has(u) || SYSTEM_USERS.has(u.toLowerCase()) || u.startsWith('_')) continue;
+    userCounts.set(u, (userCounts.get(u) || 0) + 1);
+  }
+  const primaryUsers = [...userCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
+
   // ── Vulnerability matching ──────────────────────────────────────────────
   // `vulnerabilities` is already pre-filtered to this host by the caller.
   // We further classify each vuln so we can render badges next to the matching
