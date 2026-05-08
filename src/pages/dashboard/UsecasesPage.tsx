@@ -1704,6 +1704,7 @@ function UsecaseDetailContent({
   flowId,
   hideBackNav = false,
   hidePrevNext = false,
+  showConnectionPath = false,
   onNavigateUsecase,
   usecases,
   isEnabled = false,
@@ -1715,6 +1716,7 @@ function UsecaseDetailContent({
   flowId: string | undefined;
   hideBackNav?: boolean;
   hidePrevNext?: boolean;
+  showConnectionPath?: boolean;
   onNavigateUsecase?: (flowId: string) => void;
   usecases: Usecase[];
   /** Whether this automation currently has a running workflow */
