@@ -35,6 +35,7 @@ import {
 import { TOOL_CATEGORIES } from '@/config/usecases';
 import shuffleInfraLogo from '@/assets/shuffle-infrastructure-logo.png';
 import shuffleIcon from '@/assets/shuffle-icon.png';
+import singulAgentIcon from '@/assets/singul-agent-icon.png';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -1302,9 +1303,9 @@ export default function UsecaseAlluvialDiagram({
             >
               <Box
                 component="img"
-                src={shuffleInfraLogo}
-                alt="Shuffle"
-                sx={{ width: 48, height: 48, objectFit: 'contain' }}
+                src={singulAgentIcon}
+                alt="Shuffle Security Agent"
+                sx={{ width: 48, height: 48, objectFit: 'contain', borderRadius: '6px' }}
               />
             </Tooltip>
           </Box>
