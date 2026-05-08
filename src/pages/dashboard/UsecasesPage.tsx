@@ -30,6 +30,7 @@ import {
 import { Search, ArrowRight, ArrowLeft, Download, Zap, Activity, CheckCircle2, Circle, AlertTriangle, Network, Clock, Power, PowerOff, FileJson, X, ExternalLink, Flame, PlayCircle, BookOpen, LayoutGrid, Server, Shield, MessageSquare, Mail, Crosshair, HardDrive, KeyRound, Cloud, Sparkles } from 'lucide-react';
 import ReactGA from 'react-ga4';
 import shuffleSecurityIcon from '@/assets/shuffle-icon.png';
+import UsecaseAlluvialDiagram from '@/components/usecases/UsecaseAlluvialDiagram';
 // ── Flow phases ────────────────────────────────────────────────────────────────
 
 export type FlowPhase = 'ingest' | 'response' | 'correlation';
@@ -2088,6 +2089,13 @@ function UsecaseDetailContent({
         <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1.5 }}>
           Connection Path
         </Typography>
+        {['siem_case_management_1', 'edr_case_management_1', 'email_case_management_1'].includes(flow.id) ? (
+          <UsecaseAlluvialDiagram
+            sourceCategory={flow.source}
+            targetCategory={flow.target}
+            highlightCategory={flow.source}
+          />
+        ) : (
         <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
           {[
             { title: 'Source', meta: sourceCat, details: sourceDetails, categoryId: flow.source, appNames: categoryAppNames[flow.source] || [] },
@@ -2148,6 +2156,7 @@ function UsecaseDetailContent({
             );
           })}
         </Box>
+        )}
       </Box>
 
       {(() => {
@@ -2883,7 +2892,15 @@ function UsecasesPageInner() {
                 onClick={() => {
                   const id = drawerFlowId;
                   const name = usecases.find(u => u.id === id)?.label || id || '';
-                  window.open(`https://security.shuffler.io/usecases/${slugify(name)}/details`, '_blank', 'noopener,noreferrer');
+                  const slug = slugify(name);
+                  // When already on security.shuffler.io, navigate internally to
+                  // the in-app full details page. Otherwise (preview / dev /
+                  // embedded host), pop open the canonical public page.
+                  if (typeof window !== 'undefined' && window.location.hostname === 'security.shuffler.io') {
+                    navigate(`/usecases/${slug}/details`);
+                  } else {
+                    window.open(`https://security.shuffler.io/usecases/${slug}/details`, '_blank', 'noopener,noreferrer');
+                  }
                 }}
                 endIcon={<ExternalLink size={14} />}
                 sx={{
