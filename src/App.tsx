@@ -39,7 +39,25 @@ import OrgPreferencesPage from '@/pages/dashboard/OrgPreferencesPage';
 import AgentActivityPage from '@/pages/dashboard/AgentActivityPage';
 import InfrastructurePage from '@/pages/dashboard/InfrastructurePage';
 import DataFlowDetailPage from '@/pages/dashboard/DataFlowDetailPage';
-import UsecasesPage from '@/pages/dashboard/UsecasesPage';
+import UsecasesPageRaw from '@/pages/dashboard/UsecasesPage';
+import { useAuth as useAppAuth } from '@/context/AuthContext';
+
+// Bridge AuthContext -> UsecasesPage so the in-page "Get started free" CTA
+// correctly hides for already-authenticated dashboard users.
+const UsecasesPage = () => {
+  const { isAuthenticated, isLoading, userInfo } = useAppAuth();
+  return (
+    <UsecasesPageRaw
+      isLoaded={!isLoading}
+      isLoggedIn={isAuthenticated}
+      userdata={userInfo ? {
+        id: userInfo.id,
+        username: userInfo.username,
+        support: userInfo.support,
+      } as any : undefined}
+    />
+  );
+};
 import AppDetailPage from '@/pages/dashboard/AppDetailPage';
 import DocsPage from '@/pages/docs/DocsPage';
 import PipelinesPage from '@/pages/dashboard/PipelinesPage';
