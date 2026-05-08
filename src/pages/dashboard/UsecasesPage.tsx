@@ -2156,6 +2156,7 @@ function UsecaseDetailContent({
             );
           })}
         </Box>
+        )}
       </Box>
 
       {(() => {
