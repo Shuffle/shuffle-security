@@ -706,22 +706,12 @@ export const forceRecreateDemoIncidents = async (): Promise<number> => {
     await Promise.allSettled(indexedKeys.map(k => deleteDatastoreItem(k, DATASTORE_CATEGORIES.INCIDENTS)));
   }
 
-  // 2. Safety scan: also delete any orphan demo-tagged incidents
-  try {
-    const res = await getDatastoreByCategory(DATASTORE_CATEGORIES.INCIDENTS);
-    if (res.success && res.data) {
-      const orphans = res.data.filter(item => {
-        if (typeof item.key === 'string' && item.key.startsWith('demo-')) return true;
-        try {
-          const parsed = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
-          return parsed?.metadata?.extensions?.custom_attributes?.demo === true;
-        } catch { return false; }
-      });
-      if (orphans.length > 0) {
-        await Promise.allSettled(orphans.map(o => deleteDatastoreItem(o.key, DATASTORE_CATEGORIES.INCIDENTS)));
-      }
-    }
-  } catch { /* best-effort */ }
+  // 2. Safety scan SKIPPED for performance: fetching the entire incidents
+  // category to find orphan demo-tagged items is prohibitively slow on
+  // tenants with thousands of real incidents (the user's primary complaint
+  // when "Force generate" feels frozen). The local index is authoritative
+  // for anything seeded in this browser session; cleanup of cross-browser
+  // orphans is handled by the explicit "Clean up demo data" action.
 
   // 3. Clear the index entry + step marker so the seeder runs fresh
   const newIdx = readIndex();
