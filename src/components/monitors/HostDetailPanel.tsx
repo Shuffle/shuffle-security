@@ -320,22 +320,47 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
         </div>
         <div className="space-y-1">
           <div className="flex items-center gap-1.5 text-muted-foreground">
-            <Send size={12} />
-            <span className="text-[0.65rem] font-semibold uppercase tracking-wide">Log Forwarding</span>
+            <Zap size={12} />
+            <span className="text-[0.65rem] font-semibold uppercase tracking-wide">Uptime</span>
           </div>
-          {host.log_forwarding ? (
+          {bootMs !== null ? (
             <TooltipProvider delayDuration={200}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <p className="text-xs text-foreground cursor-help truncate">Enabled</p>
+                  <p className="text-xs text-foreground cursor-help">{formatUptime(bootMs)}</p>
                 </TooltipTrigger>
-                <TooltipContent side="bottom" align="start" className="z-[9999] max-w-sm">
-                  <pre className="text-[0.65rem] font-mono whitespace-pre-wrap">{host.log_forwarding}</pre>
+                <TooltipContent side="bottom" align="start" className="z-[9999]">
+                  <p className="text-[0.65rem] font-mono">Booted {new Date(bootMs).toLocaleString()}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          ) : <p className="text-xs text-muted-foreground">Not enabled</p>}
+          ) : <p className="text-xs text-muted-foreground">—</p>}
         </div>
+        <div className="space-y-1">
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Cpu size={12} />
+            <span className="text-[0.65rem] font-semibold uppercase tracking-wide">Primary User{primaryUsers.length === 1 ? '' : 's'}</span>
+          </div>
+          {primaryUsers.length > 0 ? (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <p className="text-xs text-foreground cursor-help truncate">
+                    {primaryUsers.map(([u]) => u).join(', ')}
+                  </p>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" align="start" className="z-[9999]">
+                  <div className="space-y-0.5">
+                    {primaryUsers.map(([u, c]) => (
+                      <p key={u} className="text-[0.65rem] font-mono">{u} <span className="text-muted-foreground">· {c} proc{c === 1 ? '' : 's'}</span></p>
+                    ))}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : <p className="text-xs text-muted-foreground">—</p>}
+        </div>
+
         <div className="space-y-1">
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <Zap size={12} />
