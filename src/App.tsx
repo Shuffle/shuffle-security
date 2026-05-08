@@ -215,7 +215,7 @@ const ThemedApp = () => {
             <Route element={<ConditionalDashboardLayout />}>
               <Route path="/usecases" element={<UsecasesPage />} />
               <Route path="/usecases/:flowId" element={<UsecasesPage />} />
-              <Route path="/usecases/:flowId/details" element={<DataFlowDetailPage />} />
+              <Route path="/usecases/:flowId/details" element={<UsecasesPage />} />
               <Route path="/apps/:appname" element={<AppDetailPage />} />
               <Route path="/vulnerabilities" element={<VulnerabilitiesPage />} />
               <Route path="/vulnerabilities/*" element={<VulnerabilityDetailPage />} />
