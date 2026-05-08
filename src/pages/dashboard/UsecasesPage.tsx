@@ -1704,6 +1704,7 @@ function UsecaseDetailContent({
   flowId,
   hideBackNav = false,
   hidePrevNext = false,
+  showConnectionPath = false,
   onNavigateUsecase,
   usecases,
   isEnabled = false,
@@ -1715,6 +1716,7 @@ function UsecaseDetailContent({
   flowId: string | undefined;
   hideBackNav?: boolean;
   hidePrevNext?: boolean;
+  showConnectionPath?: boolean;
   onNavigateUsecase?: (flowId: string) => void;
   usecases: Usecase[];
   /** Whether this automation currently has a running workflow */
@@ -2085,6 +2087,7 @@ function UsecaseDetailContent({
         </Box>
       </Box>
 
+      {showConnectionPath && (
       <Box sx={{ p: 3, borderRadius: 2, border: CARD_BORDER, bgcolor: CARD_BG, mb: 3 }}>
         <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1.5 }}>
           Connection Path
@@ -2158,6 +2161,7 @@ function UsecaseDetailContent({
         </Box>
         )}
       </Box>
+      )}
 
       {(() => {
         const linkedWorkflows = findWorkflowsForUsecase(flow, workflows);
@@ -2584,6 +2588,7 @@ function UsecasesPageInner() {
       <Box sx={{ px: { xs: 2, md: 4 }, py: 4, maxWidth: 1200, width: '100%', mx: 'auto' }}>
         <UsecaseDetailContent
           flowId={drawerFlowId ?? undefined}
+          showConnectionPath
           onNavigateUsecase={(id) => {
             const f = usecases.find(u => u.id === id);
             const name = f?.label || id || '';
