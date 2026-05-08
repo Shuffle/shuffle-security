@@ -6,8 +6,20 @@ import { Button } from '@/components/ui/button';
 import { VulnerabilityAutomationBanner } from '@/components/vulnerabilities/VulnerabilityAutomationBanner';
 import {
   HardDrive, Lock, Package, Zap, ChevronRight, ChevronDown,
-  Hash, Cpu, Send, ShieldCheck, ShieldX, FileCode, ScanLine, AlertTriangle,
+  Hash, Cpu, Send, ShieldCheck, ShieldX, FileCode, ScanLine, AlertTriangle, GitBranch,
 } from 'lucide-react';
+
+interface ProcessEntry {
+  pid: number;
+  ppid: number;
+  tty?: string;
+  command_line?: string;
+  user?: string;
+  creation_time?: number;
+  exe_path?: string;
+  sha256?: string;
+  [key: string]: unknown;
+}
 import type { Vulnerability, VulnSeverity } from '@/hooks/useVulnerabilities';
 
 /**
