@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate, Link, useSearchParams, useParams } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams, useParams, useLocation } from 'react-router-dom';
 
 import {
   Box,
