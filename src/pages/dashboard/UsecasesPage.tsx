@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate, Link, useSearchParams, useParams } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams, useParams, useLocation } from 'react-router-dom';
 
 import {
   Box,
@@ -2562,6 +2562,34 @@ function UsecasesPageInner() {
       flows: filtered.filter((f) => f.phase === p.id),
     })).filter((g) => g.flows.length > 0);
   }, [filtered, phaseFilter]);
+
+  // Full-page detail view: /usecases/:flowId/details renders just
+  // UsecaseDetailContent at full width, instead of the card grid + drawer.
+  const location = useLocation();
+  const isDetailsRoute = location.pathname.endsWith('/details');
+  if (isDetailsRoute) {
+    const detailFlow = drawerFlowId ? usecases.find(u => u.id === drawerFlowId) : null;
+    const detailEnabled = detailFlow ? isFlowVisuallyEnabled(detailFlow) : false;
+    const detailCanToggle = isAuthenticated && !!detailFlow?.automationLabel;
+    return (
+      <Box sx={{ px: { xs: 2, md: 4 }, py: 4, maxWidth: 1200, width: '100%', mx: 'auto' }}>
+        <UsecaseDetailContent
+          flowId={drawerFlowId ?? undefined}
+          onNavigateUsecase={(id) => {
+            const f = usecases.find(u => u.id === id);
+            const name = f?.label || id || '';
+            navigate(`/usecases/${slugify(name)}/details`);
+          }}
+          usecases={usecases}
+          isEnabled={detailEnabled}
+          canToggle={detailCanToggle}
+          isAuthenticated={isAuthenticated}
+          onToggled={handleUsecaseWorkflowGenerated}
+          workflows={workflows}
+        />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ px: { xs: 2, md: 4 }, py: 4, maxWidth: 1200, width: '100%', mx: 'auto' }}>
