@@ -398,6 +398,198 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
         )
       )}
 
+      {/* Process Tree */}
+      <div className="space-y-2">
+        {(() => {
+          const procs: ProcessEntry[] = Array.isArray(host.process_list) ? (host.process_list as ProcessEntry[]) : [];
+          const procCount = procs.length;
+          const header = collapsibleSections ? (
+            <button onClick={() => setProcessOpen(!processOpen)} className="flex items-center gap-2 w-full text-left hover:bg-muted/20 rounded px-1 py-0.5 -mx-1 transition-colors">
+              {processOpen ? <ChevronDown size={14} className="text-muted-foreground" /> : <ChevronRight size={14} className="text-muted-foreground" />}
+              <GitBranch size={14} className="text-muted-foreground" />
+              <span className="text-xs font-semibold text-foreground">Process Tree</span>
+              {procCount > 0 && <span className="text-[0.65rem] text-muted-foreground">({procCount} processes)</span>}
+            </button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <GitBranch size={14} className="text-muted-foreground" />
+              <span className="text-xs font-semibold text-foreground">Process Tree</span>
+              {procCount > 0 && <span className="text-[0.65rem] text-muted-foreground">({procCount} processes)</span>}
+            </div>
+          );
+
+          if (!processOpen) return header;
+          if (procCount === 0) {
+            return (
+              <>
+                {header}
+                <p className={`text-xs text-muted-foreground italic ${collapsibleSections ? 'pl-7' : ''}`}>No process information collected for this host.</p>
+              </>
+            );
+          }
+
+          // Build tree
+          const byPid = new Map<number, ProcessEntry>();
+          for (const p of procs) byPid.set(p.pid, p);
+          const childrenMap = new Map<number, ProcessEntry[]>();
+          const roots: ProcessEntry[] = [];
+          for (const p of procs) {
+            if (p.ppid && byPid.has(p.ppid) && p.ppid !== p.pid) {
+              const arr = childrenMap.get(p.ppid) || [];
+              arr.push(p);
+              childrenMap.set(p.ppid, arr);
+            } else {
+              roots.push(p);
+            }
+          }
+          const procName = (p: ProcessEntry): string => {
+            const src = p.exe_path || p.command_line || '';
+            const stripped = src.split(/\s+/)[0] || '';
+            const base = stripped.split('/').pop() || stripped;
+            return base.toLowerCase();
+          };
+          const sortFn = (a: ProcessEntry, b: ProcessEntry) => {
+            const dir = procSortDir === 'asc' ? 1 : -1;
+            switch (procSortKey) {
+              case 'created': return dir * ((a.creation_time || 0) - (b.creation_time || 0));
+              case 'user': return dir * (a.user || '').localeCompare(b.user || '');
+              case 'name': return dir * procName(a).localeCompare(procName(b));
+              case 'pid':
+              default: return dir * (a.pid - b.pid);
+            }
+          };
+          roots.sort(sortFn);
+          for (const arr of childrenMap.values()) arr.sort(sortFn);
+
+          const q = processFilter.toLowerCase().trim();
+          const matches = (p: ProcessEntry) => {
+            if (!q) return true;
+            return (
+              String(p.pid).includes(q) ||
+              String(p.ppid).includes(q) ||
+              (p.command_line || '').toLowerCase().includes(q) ||
+              (p.exe_path || '').toLowerCase().includes(q) ||
+              (p.user || '').toLowerCase().includes(q) ||
+              (p.tty || '').toLowerCase().includes(q) ||
+              (p.sha256 || '').toLowerCase().includes(q)
+            );
+          };
+          const visibleCache = new Map<number, boolean>();
+          const isVisible = (p: ProcessEntry): boolean => {
+            if (visibleCache.has(p.pid)) return visibleCache.get(p.pid)!;
+            const own = matches(p);
+            const kids = childrenMap.get(p.pid) || [];
+            const result = own || kids.some(isVisible);
+            visibleCache.set(p.pid, result);
+            return result;
+          };
+
+          const fmtTime = (t?: number) => {
+            if (!t) return '';
+            try { return new Date(t * 1000).toLocaleString(); } catch { return ''; }
+          };
+
+          const renderNode = (p: ProcessEntry, depth: number): JSX.Element | null => {
+            if (q && !isVisible(p)) return null;
+            const kids = (childrenMap.get(p.pid) || []).filter(k => !q || isVisible(k));
+            const hasKids = kids.length > 0;
+            const expanded = !collapsedProcs.has(p.pid) || !!q;
+            const cmd = p.command_line || p.exe_path || `(pid ${p.pid})`;
+            return (
+              <div key={p.pid}>
+                <div
+                  className="flex items-center gap-2 px-2 py-1 hover:bg-muted/20 border-b border-border/40 text-xs"
+                  style={{ paddingLeft: 8 + depth * 16 }}
+                >
+                  {hasKids ? (
+                    <button
+                      type="button"
+                      onClick={() => setCollapsedProcs(prev => {
+                        const next = new Set(prev);
+                        if (next.has(p.pid)) next.delete(p.pid); else next.add(p.pid);
+                        return next;
+                      })}
+                      className="shrink-0"
+                    >
+                      {expanded ? <ChevronDown size={11} className="text-muted-foreground" /> : <ChevronRight size={11} className="text-muted-foreground" />}
+                    </button>
+                  ) : (
+                    <span className="inline-block w-[11px] shrink-0" />
+                  )}
+                  <span className="text-[0.65rem] font-mono text-muted-foreground shrink-0 w-12">{p.pid}</span>
+                  {p.user && (
+                    <span className="text-[0.65rem] font-mono text-muted-foreground shrink-0 truncate max-w-[100px]" title={p.user}>{p.user}</span>
+                  )}
+                  <TooltipProvider delayDuration={200}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="font-mono text-foreground truncate flex-1 cursor-help">{cmd}</span>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" align="start" className="z-[9999] max-w-xl">
+                        <div className="space-y-0.5 text-[0.65rem] font-mono">
+                          <p><span className="text-muted-foreground">pid:</span> {p.pid} · <span className="text-muted-foreground">ppid:</span> {p.ppid}</p>
+                          {p.user && <p><span className="text-muted-foreground">user:</span> {p.user}</p>}
+                          {p.tty && <p><span className="text-muted-foreground">tty:</span> {p.tty}</p>}
+                          {p.exe_path && <p className="break-all"><span className="text-muted-foreground">exe:</span> {p.exe_path}</p>}
+                          {p.command_line && <p className="break-all whitespace-pre-wrap"><span className="text-muted-foreground">cmd:</span> {p.command_line}</p>}
+                          {p.creation_time ? <p><span className="text-muted-foreground">started:</span> {fmtTime(p.creation_time)}</p> : null}
+                          {p.sha256 && <p className="break-all"><span className="text-muted-foreground">sha256:</span> {p.sha256}</p>}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  {p.tty && <span className="text-[0.65rem] font-mono text-muted-foreground shrink-0 hidden lg:inline">{p.tty}</span>}
+                </div>
+                {hasKids && expanded && kids.map(k => renderNode(k, depth + 1))}
+              </div>
+            );
+          };
+
+          return (
+            <>
+              {header}
+              <div className="flex items-center gap-2 mb-1">
+                <Input
+                  placeholder="Filter by pid, command, user, path, sha256..."
+                  value={processFilter}
+                  onChange={(e) => setProcessFilter(e.target.value)}
+                  className="h-7 text-xs flex-1"
+                />
+                <span className="text-[0.65rem] text-muted-foreground shrink-0">Sort</span>
+                {(['pid', 'name', 'user', 'created'] as const).map(k => {
+                  const label = k === 'pid' ? 'PID' : k === 'created' ? 'Started' : k === 'user' ? 'User' : 'Name';
+                  const active = procSortKey === k;
+                  return (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => {
+                        if (active) setProcSortDir(d => d === 'asc' ? 'desc' : 'asc');
+                        else { setProcSortKey(k); setProcSortDir('asc'); }
+                      }}
+                      className={`h-7 px-2 rounded border text-[0.65rem] font-medium transition-colors ${
+                        active
+                          ? 'border-primary/40 bg-primary/10 text-foreground'
+                          : 'border-border bg-background text-muted-foreground hover:bg-muted/30'
+                      }`}
+                    >
+                      {label}{active ? (procSortDir === 'asc' ? ' ↑' : ' ↓') : ''}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className={`rounded-md border border-border overflow-hidden ${variant === 'page' ? 'max-h-[500px]' : 'max-h-[340px]'} overflow-y-auto`}>
+                {roots.filter(r => !q || isVisible(r)).length === 0 ? (
+                  <p className="px-3 py-3 text-center text-xs text-muted-foreground italic">No matches</p>
+                ) : (
+                  roots.map(r => renderNode(r, 0))
+                )}
+              </div>
+            </>
+          );
+        })()}
+      </div>
+
       <div className="space-y-2">
         {collapsibleSections ? (
           <button onClick={() => setSoftwareOpen(!softwareOpen)} className="flex items-center gap-2 w-full text-left hover:bg-muted/20 rounded px-1 py-0.5 -mx-1 transition-colors">
@@ -637,199 +829,6 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
             </>
           )
         )}
-      </div>
-
-      {/* Process Tree */}
-      <div className="space-y-2">
-        {(() => {
-          const procs: ProcessEntry[] = Array.isArray(host.process_list) ? (host.process_list as ProcessEntry[]) : [];
-          const procCount = procs.length;
-          const header = collapsibleSections ? (
-            <button onClick={() => setProcessOpen(!processOpen)} className="flex items-center gap-2 w-full text-left hover:bg-muted/20 rounded px-1 py-0.5 -mx-1 transition-colors">
-              {processOpen ? <ChevronDown size={14} className="text-muted-foreground" /> : <ChevronRight size={14} className="text-muted-foreground" />}
-              <GitBranch size={14} className="text-muted-foreground" />
-              <span className="text-xs font-semibold text-foreground">Process Tree</span>
-              {procCount > 0 && <span className="text-[0.65rem] text-muted-foreground">({procCount} processes)</span>}
-            </button>
-          ) : (
-            <div className="flex items-center gap-2">
-              <GitBranch size={14} className="text-muted-foreground" />
-              <span className="text-xs font-semibold text-foreground">Process Tree</span>
-              {procCount > 0 && <span className="text-[0.65rem] text-muted-foreground">({procCount} processes)</span>}
-            </div>
-          );
-
-          if (!processOpen) return header;
-          if (procCount === 0) {
-            return (
-              <>
-                {header}
-                <p className={`text-xs text-muted-foreground italic ${collapsibleSections ? 'pl-7' : ''}`}>No process information collected for this host.</p>
-              </>
-            );
-          }
-
-          // Build tree
-          const byPid = new Map<number, ProcessEntry>();
-          for (const p of procs) byPid.set(p.pid, p);
-          const childrenMap = new Map<number, ProcessEntry[]>();
-          const roots: ProcessEntry[] = [];
-          for (const p of procs) {
-            if (p.ppid && byPid.has(p.ppid) && p.ppid !== p.pid) {
-              const arr = childrenMap.get(p.ppid) || [];
-              arr.push(p);
-              childrenMap.set(p.ppid, arr);
-            } else {
-              roots.push(p);
-            }
-          }
-          const procName = (p: ProcessEntry): string => {
-            const src = p.exe_path || p.command_line || '';
-            const stripped = src.split(/\s+/)[0] || '';
-            const base = stripped.split('/').pop() || stripped;
-            return base.toLowerCase();
-          };
-          const sortFn = (a: ProcessEntry, b: ProcessEntry) => {
-            const dir = procSortDir === 'asc' ? 1 : -1;
-            switch (procSortKey) {
-              case 'created': return dir * ((a.creation_time || 0) - (b.creation_time || 0));
-              case 'user': return dir * (a.user || '').localeCompare(b.user || '');
-              case 'name': return dir * procName(a).localeCompare(procName(b));
-              case 'pid':
-              default: return dir * (a.pid - b.pid);
-            }
-          };
-          roots.sort(sortFn);
-          for (const arr of childrenMap.values()) arr.sort(sortFn);
-
-          const q = processFilter.toLowerCase().trim();
-          const matches = (p: ProcessEntry) => {
-            if (!q) return true;
-            return (
-              String(p.pid).includes(q) ||
-              String(p.ppid).includes(q) ||
-              (p.command_line || '').toLowerCase().includes(q) ||
-              (p.exe_path || '').toLowerCase().includes(q) ||
-              (p.user || '').toLowerCase().includes(q) ||
-              (p.tty || '').toLowerCase().includes(q) ||
-              (p.sha256 || '').toLowerCase().includes(q)
-            );
-          };
-          // visibility: a node is visible if it or any descendant matches
-          const visibleCache = new Map<number, boolean>();
-          const isVisible = (p: ProcessEntry): boolean => {
-            if (visibleCache.has(p.pid)) return visibleCache.get(p.pid)!;
-            const own = matches(p);
-            const kids = childrenMap.get(p.pid) || [];
-            const result = own || kids.some(isVisible);
-            visibleCache.set(p.pid, result);
-            return result;
-          };
-
-          const fmtTime = (t?: number) => {
-            if (!t) return '';
-            try { return new Date(t * 1000).toLocaleString(); } catch { return ''; }
-          };
-
-          const renderNode = (p: ProcessEntry, depth: number): JSX.Element | null => {
-            if (q && !isVisible(p)) return null;
-            const kids = (childrenMap.get(p.pid) || []).filter(k => !q || isVisible(k));
-            const hasKids = kids.length > 0;
-            const expanded = !collapsedProcs.has(p.pid) || !!q;
-            const cmd = p.command_line || p.exe_path || `(pid ${p.pid})`;
-            return (
-              <div key={p.pid}>
-                <div
-                  className="flex items-center gap-2 px-2 py-1 hover:bg-muted/20 border-b border-border/40 text-xs"
-                  style={{ paddingLeft: 8 + depth * 16 }}
-                >
-                  {hasKids ? (
-                    <button
-                      type="button"
-                      onClick={() => setCollapsedProcs(prev => {
-                        const next = new Set(prev);
-                        if (next.has(p.pid)) next.delete(p.pid); else next.add(p.pid);
-                        return next;
-                      })}
-                      className="shrink-0"
-                    >
-                      {expanded ? <ChevronDown size={11} className="text-muted-foreground" /> : <ChevronRight size={11} className="text-muted-foreground" />}
-                    </button>
-                  ) : (
-                    <span className="inline-block w-[11px] shrink-0" />
-                  )}
-                  <span className="text-[0.65rem] font-mono text-muted-foreground shrink-0 w-12">{p.pid}</span>
-                  {p.user && (
-                    <span className="text-[0.65rem] font-mono text-muted-foreground shrink-0 truncate max-w-[100px]" title={p.user}>{p.user}</span>
-                  )}
-                  <TooltipProvider delayDuration={200}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="font-mono text-foreground truncate flex-1 cursor-help">{cmd}</span>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom" align="start" className="z-[9999] max-w-xl">
-                        <div className="space-y-0.5 text-[0.65rem] font-mono">
-                          <p><span className="text-muted-foreground">pid:</span> {p.pid} · <span className="text-muted-foreground">ppid:</span> {p.ppid}</p>
-                          {p.user && <p><span className="text-muted-foreground">user:</span> {p.user}</p>}
-                          {p.tty && <p><span className="text-muted-foreground">tty:</span> {p.tty}</p>}
-                          {p.exe_path && <p className="break-all"><span className="text-muted-foreground">exe:</span> {p.exe_path}</p>}
-                          {p.command_line && <p className="break-all whitespace-pre-wrap"><span className="text-muted-foreground">cmd:</span> {p.command_line}</p>}
-                          {p.creation_time ? <p><span className="text-muted-foreground">started:</span> {fmtTime(p.creation_time)}</p> : null}
-                          {p.sha256 && <p className="break-all"><span className="text-muted-foreground">sha256:</span> {p.sha256}</p>}
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  {p.tty && <span className="text-[0.65rem] font-mono text-muted-foreground shrink-0 hidden lg:inline">{p.tty}</span>}
-                </div>
-                {hasKids && expanded && kids.map(k => renderNode(k, depth + 1))}
-              </div>
-            );
-          };
-
-          return (
-            <>
-              {header}
-              <div className="flex items-center gap-2 mb-1">
-                <Input
-                  placeholder="Filter by pid, command, user, path, sha256..."
-                  value={processFilter}
-                  onChange={(e) => setProcessFilter(e.target.value)}
-                  className="h-7 text-xs flex-1"
-                />
-                <span className="text-[0.65rem] text-muted-foreground shrink-0">Sort</span>
-                {(['pid', 'name', 'user', 'created'] as const).map(k => {
-                  const label = k === 'pid' ? 'PID' : k === 'created' ? 'Started' : k === 'user' ? 'User' : 'Name';
-                  const active = procSortKey === k;
-                  return (
-                    <button
-                      key={k}
-                      type="button"
-                      onClick={() => {
-                        if (active) setProcSortDir(d => d === 'asc' ? 'desc' : 'asc');
-                        else { setProcSortKey(k); setProcSortDir('asc'); }
-                      }}
-                      className={`h-7 px-2 rounded border text-[0.65rem] font-medium transition-colors ${
-                        active
-                          ? 'border-primary/40 bg-primary/10 text-foreground'
-                          : 'border-border bg-background text-muted-foreground hover:bg-muted/30'
-                      }`}
-                    >
-                      {label}{active ? (procSortDir === 'asc' ? ' ↑' : ' ↓') : ''}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className={`rounded-md border border-border overflow-hidden ${variant === 'page' ? 'max-h-[500px]' : 'max-h-[340px]'} overflow-y-auto`}>
-                {roots.filter(r => !q || isVisible(r)).length === 0 ? (
-                  <p className="px-3 py-3 text-center text-xs text-muted-foreground italic">No matches</p>
-                ) : (
-                  roots.map(r => renderNode(r, 0))
-                )}
-              </div>
-            </>
-          );
-        })()}
       </div>
     </div>
   );
