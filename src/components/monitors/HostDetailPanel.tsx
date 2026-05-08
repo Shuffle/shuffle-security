@@ -486,7 +486,7 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
 
           const fmtTime = (t?: number) => {
             if (!t) return '';
-            try { return new Date(t * 1000).toLocaleString(); } catch { return ''; }
+            try { return new Date(t > 1e12 ? t : t * 1000).toLocaleString(); } catch { return ''; }
           };
 
           const renderNode = (p: ProcessEntry, depth: number): JSX.Element | null => {
