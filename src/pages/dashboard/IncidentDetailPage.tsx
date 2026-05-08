@@ -151,6 +151,27 @@ import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
 import { useAssignEscalateStatus } from '@/hooks/useAssignEscalateStatus';
 import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
 
+// One-time per-browser default: the very first time an incident is opened
+// in this browser, expand BOTH the Email Thread and the Timeline so the
+// user immediately sees the most important context. After this runs once,
+// the user's own collapse/expand preference is honored as normal (the
+// sentinel below prevents us from overriding their choices on later
+// visits). Both panels keep their existing localStorage keys.
+try {
+  if (typeof window !== 'undefined') {
+    const FIRST_OPEN_DEFAULTS_KEY = 'shuffle-incident-first-open-defaults-applied';
+    if (!localStorage.getItem(FIRST_OPEN_DEFAULTS_KEY)) {
+      // Email Thread: '1' = open. Force open even if a previous default
+      // (collapsed) had been written, since the request is "ALWAYS expand
+      // on first open in this browser".
+      localStorage.setItem('shuffle-incident-email-thread-open', '1');
+      // Timeline: '1' = collapsed, so '0' = expanded.
+      localStorage.setItem('shuffle-incident-timeline-collapsed', '0');
+      localStorage.setItem(FIRST_OPEN_DEFAULTS_KEY, '1');
+    }
+  }
+} catch { /* ignore — non-fatal */ }
+
 // TaskTemplate interface is now imported from useCaseTemplates
 
 export interface Stakeholder {
