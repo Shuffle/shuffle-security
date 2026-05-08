@@ -766,6 +766,7 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
                 <HostDetailPanel
                   host={host as any}
                   variant="inline"
+                  collapsibleSections
                   hostUuid={host.uuid}
                   hostname={host.hostname}
                   groupName={host.groupName}
