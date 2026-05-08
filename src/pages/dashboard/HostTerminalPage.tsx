@@ -823,14 +823,16 @@ const HostTerminalPage = () => {
 
       {/* Predefined action chips */}
       <div className="px-6 py-3 flex flex-wrap gap-1.5 border-t border-border/50 shrink-0">
-        <button
-          key="disable_rce"
-          disabled={!canRunActions || isDemoHost}
-          className="px-3 py-1.5 text-xs rounded-md border border-destructive/40 text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={() => executeHostAction('disable_rce', 'Disable RCE', true)}
-        >
-          Disable RCE
-        </button>
+        {hostsLoaded && isFull && (
+          <button
+            key="disable_rce"
+            disabled={!canRunActions || isDemoHost}
+            className="px-3 py-1.5 text-xs rounded-md border border-destructive/40 text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => executeHostAction('disable_rce', 'Disable RCE', true)}
+          >
+            Disable RCE
+          </button>
+        )}
         {[
           { id: 'isolate_host', name: 'Isolate Host' },
           { id: 'disable_user', name: 'Disable User Accounts' },
