@@ -717,7 +717,7 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
             if (q && !isVisible(p)) return null;
             const kids = (childrenMap.get(p.pid) || []).filter(k => !q || isVisible(k));
             const hasKids = kids.length > 0;
-            const expanded = expandedProcs.has(p.pid) || !!q;
+            const expanded = !collapsedProcs.has(p.pid) || !!q;
             const cmd = p.command_line || p.exe_path || `(pid ${p.pid})`;
             return (
               <div key={p.pid}>
@@ -728,7 +728,7 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
                   {hasKids ? (
                     <button
                       type="button"
-                      onClick={() => setExpandedProcs(prev => {
+                      onClick={() => setCollapsedProcs(prev => {
                         const next = new Set(prev);
                         if (next.has(p.pid)) next.delete(p.pid); else next.add(p.pid);
                         return next;
