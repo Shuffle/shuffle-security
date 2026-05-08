@@ -2411,11 +2411,9 @@ const IncidentsPage = () => {
                   trackPredefinedEvent(GA_EVENTS.INCIDENT_AUTOMATION_CHANGE, 'open_dialog');
                   setAutomationsDialogOpen(true);
                 }
-                // Demo: mark the optional "peek at automation" sub-goal as
-                // done the moment the user engages with this button.
-                if (demoActive && demoDrawerOpen && demoStepId === 'ingest-webhook') {
-                  markStepCompleted('ingest-webhook:automation');
-                }
+                // Demo: the "Enable the AI Agent automation" sub-goal is
+                // tracked by watching the live automation state, not by a
+                // click — see the useEffect above.
               }}
               sx={{ 
                 width: 36,
