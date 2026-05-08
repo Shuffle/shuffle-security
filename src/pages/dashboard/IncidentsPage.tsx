@@ -3217,13 +3217,12 @@ const IncidentsPage = () => {
           // normal detail drawer so the user isn't trapped if they explore.
           const norm = app.name.toLowerCase().replace(/[^a-z0-9]/g, '');
           const isOutlook = norm.includes('outlook') || norm.includes('office365');
-          const isDefender = norm.includes('defender');
-          if (isOutlook || isDefender) {
+          if (isOutlook) {
             // Close the search drawer and run the fake auth experience.
             setAppSearchOpen(false);
             setFakeAuth({ name: app.name, image: app.icon || '' });
             // After ~1.6s, finish "auth": inject the app into Ingest. Mark
-            // the step done only when BOTH apps have been added.
+            // the step done when Outlook has been added.
             setTimeout(() => {
               setDemoInjectedApps(prev => {
                 if (prev.some(a => a.name.toLowerCase() === app.name.toLowerCase())) return prev;
@@ -3238,9 +3237,8 @@ const IncidentsPage = () => {
                     category: 'email',
                   },
                 ];
-                // Mark whichever sub-goal this app satisfies as complete.
+                // Mark the sub-goal as complete.
                 if (isOutlook) markStepCompleted('add-outlook:outlook');
-                if (isDefender) markStepCompleted('add-outlook:defender');
                 return next;
               });
               setFakeAuth(null);
