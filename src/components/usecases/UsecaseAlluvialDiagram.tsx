@@ -1303,9 +1303,9 @@ export default function UsecaseAlluvialDiagram({
             >
               <Box
                 component="img"
-                src={shuffleInfraLogo}
-                alt="Shuffle"
-                sx={{ width: 48, height: 48, objectFit: 'contain' }}
+                src={singulAgentIcon}
+                alt="Shuffle Security Agent"
+                sx={{ width: 48, height: 48, objectFit: 'contain', borderRadius: '6px' }}
               />
             </Tooltip>
           </Box>
