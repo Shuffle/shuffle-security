@@ -499,7 +499,7 @@ const IncidentsPage = () => {
    // automation row down to the bare minimum: webhook + the highlighted "+"
    // button. Existing ingest icons, the arrow, and the entire Forward section
    // are hidden so the user can't be distracted from the one click we want.
-   const { active: demoActive, drawerOpen: demoDrawerOpen, step: demoStep, markStepCompleted } = useDemo();
+   const { active: demoActive, drawerOpen: demoDrawerOpen, step: demoStep, markStepCompleted, setStepCompleted } = useDemo();
    const demoStepId = TOUR_STEPS[demoStep]?.id;
    const isAddOutlookStep = demoActive && demoDrawerOpen && demoStepId === 'add-outlook';
 
@@ -511,6 +511,18 @@ const IncidentsPage = () => {
      const hasOutlook = demoInjectedApps.some(a => /outlook|office365/i.test(a.name));
      if (hasOutlook) markStepCompleted('add-outlook:outlook');
    }, [demoActive, demoInjectedApps, markStepCompleted]);
+
+   // Demo step #3 ("ingest-webhook"): the "Enable the AI Agent automation"
+   // sub-goal is satisfied iff the "Run AI Agent" automation is currently
+   // enabled in this org. We mirror the live state both ways so toggling the
+   // automation off in the dialog re-locks the step.
+   useEffect(() => {
+     if (!demoActive) return;
+     const aiAgentEnabled = categoryAutomations.some(
+       a => a.enabled && (a.type === 'ai_agent' || a.name === 'Run AI Agent'),
+     );
+     setStepCompleted('ingest-webhook:automation', aiAgentEnabled);
+   }, [demoActive, categoryAutomations, setStepCompleted]);
 
    // When demo mode is off, drop any stale injected apps so they don't keep
    // appearing in the Ingest bar after cleanup (or in fresh sessions where
@@ -2399,11 +2411,9 @@ const IncidentsPage = () => {
                   trackPredefinedEvent(GA_EVENTS.INCIDENT_AUTOMATION_CHANGE, 'open_dialog');
                   setAutomationsDialogOpen(true);
                 }
-                // Demo: mark the optional "peek at automation" sub-goal as
-                // done the moment the user engages with this button.
-                if (demoActive && demoDrawerOpen && demoStepId === 'ingest-webhook') {
-                  markStepCompleted('ingest-webhook:automation');
-                }
+                // Demo: the "Enable the AI Agent automation" sub-goal is
+                // tracked by watching the live automation state, not by a
+                // click — see the useEffect above.
               }}
               sx={{ 
                 width: 36,
