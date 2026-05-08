@@ -107,14 +107,14 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: 'ingest-webhook',
     title: 'Turn on the ingestion webhook',
-    body: 'A webhook URL where tools can post incidents — and a peek at how automations decide what happens next.',
+    body: 'A webhook URL where tools can post incidents — and the AI Agent automation that triages every new one.',
     bullets: [
       'Click the highlighted Webhook button and enable it',
-      'Optional: open "Automation for Incidents" to see how agent actions and ingestion are wired together',
+      'Open "Automation for Incidents" and make sure the AI Agent automation is enabled',
     ],
     route: '/incidents',
     requirement: {
-      label: 'Enable the ingestion webhook',
+      label: 'Enable the ingestion webhook and the AI Agent automation',
       targetSelector: '[data-tour="webhook-ingestion-button"]',
     },
     subGoals: [
@@ -125,8 +125,7 @@ export const TOUR_STEPS: TourStep[] = [
       },
       {
         id: 'ingest-webhook:automation',
-        label: 'Peek at "Automation for Incidents"',
-        optional: true,
+        label: 'Enable the AI Agent automation',
         targetSelector: '[data-tour="incidents-automation-button"]',
       },
     ],
