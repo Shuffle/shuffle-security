@@ -10,7 +10,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ChevronRight, HardDrive, Lock, Package, FileCode, Zap, Send, Laptop,
+  ChevronRight, HardDrive, Lock, Package, FileCode, Zap, Activity, Laptop,
   Play, Loader2, Maximize2, Terminal, CheckCircle2, ShieldX,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
