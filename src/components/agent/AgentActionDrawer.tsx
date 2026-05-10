@@ -1018,9 +1018,40 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
                   </Box>
                 </Box>
               </Box>
-              <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', mt: 0.75 }}>
-                ⌘+Enter to send · paste or attach an image · JSON-RPC
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 0.75, gap: 1 }}>
+                <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))' }}>
+                  ⌘+Enter to send · JSON-RPC
+                </Typography>
+                <Box
+                  component="button"
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isRunning}
+                  sx={{
+                    all: 'unset',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    px: 1,
+                    py: 0.4,
+                    borderRadius: '6px',
+                    fontSize: '0.7rem',
+                    cursor: isRunning ? 'default' : 'pointer',
+                    color: attachedImage ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                    border: '1px solid',
+                    borderColor: attachedImage ? 'hsl(var(--primary))' : 'hsl(var(--border))',
+                    bgcolor: attachedImage ? 'hsla(var(--primary) / 0.1)' : 'transparent',
+                    transition: 'all 0.15s ease',
+                    '&:hover': isRunning ? {} : {
+                      color: 'hsl(var(--foreground))',
+                      bgcolor: 'hsl(var(--muted))',
+                    },
+                  }}
+                >
+                  <Paperclip size={12} />
+                  {attachedImage ? 'Replace image' : 'Attach image'}
+                </Box>
+              </Box>
             </Box>
 
             {runError && (
