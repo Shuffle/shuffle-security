@@ -525,6 +525,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const [agentRequestLoading, setAgentRequestLoading] = useState(false);
   const [execution, setExecution] = useState<ExecutionData | null>(null);
   const [agentData, setAgentData] = useState<{ decisions?: AgentDecision[]; original_input?: string; status?: string; started_at?: number; completed_at?: number; [k: string]: any }>({});
+  const [agentActionResult, setAgentActionResult] = useState<any>(null);
   const [showStarter, setShowStarter] = useState(true);
   const [openIndexes, setOpenIndexes] = useState<Set<number>>(new Set());
   const [questionAnswers, setQuestionAnswers] = useState<Record<string, { index: number; value: string }>>({});
