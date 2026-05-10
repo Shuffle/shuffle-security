@@ -27,6 +27,7 @@ import { HostDetailPanel } from './HostDetailPanel';
 import { HostActionChips, getActiveUser as sharedGetActiveUser } from './hostActionDefinitions';
 import { DEMO_HOST_HOSTNAME } from '@/services/demoLiveEnvironment';
 import { terminalStorageKey, readStoredSession, registerHostIdentity } from '@/utils/terminalStorageKey';
+import { ActionOutputView } from './ActionOutputView';
 
 // ── Helpers (identical to the originals on VulnAssetsPage) ─────────────────
 const OsIcon = ({ os, size = 14, className = '' }: { os?: string; size?: number; className?: string }) => {
@@ -659,7 +660,10 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
                                       {(entry.actionOutput || entry.error) && (
                                         <div className="px-3 py-1.5">
                                           {entry.actionOutput && (
-                                            <pre className="text-[0.6rem] font-mono text-foreground/80 whitespace-pre-wrap break-words max-h-28 overflow-y-auto">{entry.actionOutput}</pre>
+                                            <ActionOutputView
+                                              output={entry.actionOutput}
+                                              className="text-[0.6rem] font-mono text-foreground/80 whitespace-pre-wrap break-words max-h-28 overflow-y-auto"
+                                            />
                                           )}
                                           {entry.error && (
                                             <pre className="text-[0.6rem] font-mono text-destructive whitespace-pre-wrap break-words">{entry.error}</pre>

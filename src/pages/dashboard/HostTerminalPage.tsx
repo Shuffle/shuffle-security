@@ -20,6 +20,7 @@ import { DEFAULT_AGENT_PERMISSIONS } from '@/hooks/useAgentPermissions';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { fetchHostSupplements } from '@/lib/mergeMonitorHosts';
 import { HostActionChips, getActiveUser } from '@/components/monitors/hostActionDefinitions';
+import { ActionOutputView } from '@/components/monitors/ActionOutputView';
 import { terminalStorageKey, readStoredSession, registerHostIdentity } from '@/utils/terminalStorageKey';
 
 interface HostOption {
@@ -68,8 +69,17 @@ const HISTORY_KEY = (hostUuid: string) => terminalStorageKey(hostUuid);
 const MAX_STORED = 50;
 const MAX_OUTPUT_CHARS = 20000;
 
+const IMAGE_PREFIXES = ['iVBORw0KGgo', '/9j/', 'R0lGOD', 'UklGR'];
+const looksLikeBase64Image = (s: string | undefined): boolean => {
+  if (!s) return false;
+  const head = s.trim().slice(0, 16);
+  return IMAGE_PREFIXES.some(p => head.startsWith(p));
+};
+
 const truncate = (s: string | undefined, n: number): string | undefined => {
   if (!s) return s;
+  // Never truncate base64 image payloads — half a PNG cannot be decoded.
+  if (looksLikeBase64Image(s)) return s;
   return s.length > n ? s.slice(0, n) + `\n…[truncated ${s.length - n} chars]` : s;
 };
 
@@ -856,7 +866,10 @@ const HostTerminalPage = () => {
               {isExpanded && hasOutput && (
                 <div className="px-6 py-2.5">
                   {entry.actionOutput && (
-                    <pre className="text-sm font-mono text-foreground/80 whitespace-pre-wrap break-words">{entry.actionOutput}</pre>
+                    <ActionOutputView
+                      output={entry.actionOutput}
+                      className="text-sm font-mono text-foreground/80 whitespace-pre-wrap break-words"
+                    />
                   )}
                   {entry.error && (
                     <pre className="text-sm font-mono text-destructive whitespace-pre-wrap break-words">{entry.error}</pre>
