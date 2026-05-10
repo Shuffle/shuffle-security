@@ -144,6 +144,7 @@ const HostTerminalPage = () => {
   // doesn't match any env-stub host (covers cases where the env API and the
   // datastores use different UUIDs for the same machine).
   const [datastoreResolvedHostname, setDatastoreResolvedHostname] = useState<string>('');
+  const [activeUser, setActiveUser] = useState<string | null>(null);
 
   // Resolve host info from location.state first, then fall back to allHosts lookup.
   // Match by UUID first, then by hostname (with tolerant domain-suffix stripping)
