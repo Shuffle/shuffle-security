@@ -79,6 +79,13 @@ export interface AgentUIProps {
   maxWidth?: number;
   /** Read `?execution_id` & `?authorization` from window URL on mount. */
   readUrlParams?: boolean;
+  /**
+   * Optional explicit execution to attach to on mount. Overrides URL params
+   * and skips the starter — useful when embedding to monitor a known run.
+   */
+  executionId?: string;
+  /** Authorization token paired with `executionId`. */
+  authorization?: string;
   /** Called whenever a run finishes (success or failure). */
   onRun?: (info: { input: string; success: boolean; executionId?: string; error?: string }) => void;
 }
