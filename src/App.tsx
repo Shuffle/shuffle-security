@@ -195,6 +195,8 @@ const ThemedApp = () => {
               <Route path="/monitors/response" element={<SupportOnly><ResponseActionsPage /></SupportOnly>} />
               <Route path="/incidents/response-actions" element={<Navigate to="/monitors/response" replace />} />
               <Route path="/agent" element={<AgentActivityPage />} />
+              <Route path="/agents" element={<AgentsPage />} />
+              <Route path="/agents/:executionId" element={<AgentsPage />} />
               <Route path="/infrastructure" element={<InfrastructurePage />} />
               <Route path="/infrastructure/flows/:flowId" element={<DataFlowDetailPage />} />
               <Route path="/users" element={<UsersPage />} />
