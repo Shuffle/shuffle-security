@@ -526,8 +526,9 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
                 <CheckDot on={screenlockOn} state={screenlockState} tip={`automatic_screen_lock_enabled = ${fmtRaw(host.automatic_screen_lock_enabled)}`} />
                 <CheckDot
                   on={softwareCount > 0}
+                  color={softwareCount === 1 ? 'bg-[hsl(var(--severity-medium))]' : undefined}
                   tip={Array.isArray(host.installed_software)
-                    ? `installed_software: ${softwareCount} ${softwareCount === 1 ? 'item' : 'items'}`
+                    ? `installed_software: ${softwareCount} ${softwareCount === 1 ? 'item (likely incomplete inventory)' : 'items'}`
                     : `installed_software = ${fmtRaw(host.installed_software)}`}
                 />
                 <CheckDot
