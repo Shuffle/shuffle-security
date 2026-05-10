@@ -68,7 +68,8 @@ const parseResponseActionsState = (value: unknown): { enabled: boolean; mode: 'f
 };
 
 const countActiveProcesses = (host: { process_list?: unknown }): number => {
-  return Array.isArray(host.process_list) ? host.process_list.length : 0;
+  const v = (host as { process_list?: unknown }).process_list;
+  return Array.isArray(v) ? v.length : 0;
 };
 
 const triState = (v: unknown): 'on' | 'off' | 'empty' => {
