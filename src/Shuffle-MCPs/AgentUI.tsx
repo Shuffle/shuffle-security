@@ -939,8 +939,10 @@ const AgentUI: React.FC<AgentUIProps> = ({
       ...(apiKey ? { apiKey } : {}),
       ...(apiBaseUrl ? { apiBaseUrl } : {}),
       ...(orgId ? { orgId } : {}),
-      ...(chosenApps.length === 1 ? { toolName: chosenApps[0].name } : {}),
-      ...(chosenApps.length > 1 ? { toolNames: chosenApps.map((a) => a.name) } : {}),
+      // Send a single comma-separated `tool_name` in the format
+      // `app:<objectID>:<slug>,app:<objectID>:<slug>` so the backend resolves
+      // the exact app versions instead of guessing by slug.
+      ...(chosenApps.length > 0 ? { toolName: buildToolName(chosenApps) } : {}),
       ...(attachedImages.length > 0 ? { images: attachedImages.map((img) => {
         const m = /^data:([^;]+);base64,(.*)$/.exec(img.dataUrl);
         return m ? { mimeType: m[1], data: m[2], name: img.name } : { mimeType: 'image/png', data: img.dataUrl, name: img.name };
