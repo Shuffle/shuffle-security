@@ -161,7 +161,7 @@ export const HostActionPopover = ({
                   variant="ghost"
                   size="icon"
                   className="h-5 w-5 shrink-0"
-                  onClick={() => navigate(`/monitors/${host.uuid}/terminal`, { state: { hostname: host.hostname, groupName: host.groupName, mode: responseActionsMode || 'controlled' } })}
+                  onClick={() => navigate(`/monitors/${encodeURIComponent(hostUrlSegment(host))}/terminal`, { state: { hostname: host.hostname, groupName: host.groupName, mode: responseActionsMode || 'controlled' } })}
                 >
                   <Maximize2 size={10} />
                 </Button>
