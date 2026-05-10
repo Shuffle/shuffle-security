@@ -142,7 +142,8 @@ const getCommandHistory = (hostUuid: string): string[] => {
   }
   const cmds: string[] = [];
   for (let i = stored.length - 1; i >= 0; i--) {
-    if (stored[i]?.actionName) cmds.push(stored[i].actionName);
+    const cmd = stored[i]?.commandText || stored[i]?.actionName;
+    if (cmd) cmds.push(cmd);
   }
   return cmds;
 };
