@@ -39,7 +39,7 @@ const detectImage = (raw: string): { mime: string; b64: string } | null => {
     try {
       const parsed = JSON.parse(s);
       const candidates: unknown[] = Array.isArray(parsed) ? parsed : [parsed];
-      const keys = ['image', 'screenshot', 'data', 'png', 'jpeg', 'jpg', 'b64', 'base64'];
+      const keys = ['image_base64', 'imageBase64', 'image', 'screenshot', 'screenshot_base64', 'data', 'png', 'jpeg', 'jpg', 'b64', 'base64'];
       for (const item of candidates) {
         if (!item || typeof item !== 'object') continue;
         for (const key of keys) {
@@ -59,9 +59,16 @@ const detectImage = (raw: string): { mime: string; b64: string } | null => {
 
   // Last-resort regex: pull a base64-looking blob out of any wrapper text
   // (handles truncated JSON, partial logs, etc.)
-  const regexMatch = s.match(/"(?:image|screenshot|data|png|jpeg|jpg|b64|base64)"\s*:\s*"([A-Za-z0-9+/=\s]{200,})"?/i);
+  // Try data: URI inside any wrapper text first
+  const dataUriInWrapper = s.match(/data:(image\/[a-z+.-]+);base64,([A-Za-z0-9+/=\s]{200,})/i);
+  if (dataUriInWrapper) {
+    return { mime: dataUriInWrapper[1], b64: dataUriInWrapper[2].replace(/\s+/g, '').replace(/["'\\].*$/, '') };
+  }
+  const regexMatch = s.match(/"(?:image_base64|imageBase64|image|screenshot|screenshot_base64|data|png|jpeg|jpg|b64|base64)"\s*:\s*"([^"]{200,})"?/i);
   if (regexMatch) {
     const inner = regexMatch[1].replace(/\s+/g, '');
+    const dm = inner.match(/^data:(image\/[a-z+.-]+);base64,(.+)$/i);
+    if (dm) return { mime: dm[1], b64: dm[2] };
     const sig = matchSignature(inner);
     if (sig) return sig;
   }
