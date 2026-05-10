@@ -466,12 +466,12 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
               </span>
             </Tooltip>
           )}
-          {item.type === 'decision' && details?.run_details?.debug_url && (
+          {item.type === 'decision' && (details?.run_details as any)?.debug_url && (
             <Tooltip title="Open debug URL">
               <span>
                 <IconButton
                   size="small"
-                  onClick={() => window.open(details.run_details.debug_url, '_blank', 'noopener,noreferrer')}
+                  onClick={() => window.open((details!.run_details as any).debug_url, '_blank', 'noopener,noreferrer')}
                   sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
                 >
                   <OpenInNewIcon sx={{ fontSize: 16 }} />
