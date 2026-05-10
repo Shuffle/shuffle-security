@@ -32,8 +32,8 @@ export interface AgentRunRequest {
   toolIds?: string[];
   /**
    * Optional: one or more attached images. Sent under
-   * `params.input.image` as an array of MCP image content blocks
-   * (`{ type: "image", data, mimeType }`).
+   * `params.input.images` as an array of `{ url, detail }` objects,
+   * where `url` is a `data:<mime>;base64,<data>` URL.
    */
   images?: AgentImageInput[];
   /** @deprecated Use `images`. Single base64 data URL kept for back-compat. */
@@ -227,13 +227,12 @@ export const runAgent = async (request: AgentRunRequest): Promise<AgentRunRespon
     if (parsed) images.push(parsed);
   }
 
-  // Per MCP spec, image content blocks are `{ type: "image", data, mimeType }`.
-  // Sent under `params.input.image` as an array so the agent can accept multiple.
+  // Sent under `params.input.images` as an array of `{ url, detail }` objects
+  // so the agent can accept multiple images. `url` is a data URL.
   if (images.length > 0) {
-    input.image = images.map((img) => ({
-      type: 'image',
-      data: img.data,
-      mimeType: img.mimeType,
+    input.images = images.map((img) => ({
+      url: `data:${img.mimeType};base64,${img.data}`,
+      detail: 'auto',
     }));
   }
 
