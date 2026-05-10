@@ -45,7 +45,7 @@ export const ActionOutputView = ({ output, className }: ActionOutputViewProps) =
         <button
           type="button"
           onClick={() => setZoomed(true)}
-          className="block w-full rounded border border-border overflow-hidden bg-muted/30 hover:border-primary transition-colors"
+          className="block max-w-[50%] rounded border border-border overflow-hidden bg-muted/30 hover:border-primary transition-colors"
         >
           <img src={src} alt="Action screenshot" className="w-full h-auto block" />
         </button>
