@@ -295,8 +295,8 @@ const RemoteControlChip = ({ size, disabled, onSend }: RemoteControlChipProps) =
 
         {op === 'keyboard.press' && (
           <div>
-            <label className="text-[0.65rem] font-mono text-muted-foreground">key (virtual key code)</label>
-            <Input value={keyCode} onChange={e => setKeyCode(e.target.value)} className="h-7 text-xs font-mono" />
+            <label className="text-[0.65rem] font-mono text-muted-foreground">key (a-z, 0-9, enter, esc, f1, or VK code)</label>
+            <Input value={keyCode} onChange={e => setKeyCode(e.target.value)} placeholder="Enter" className="h-7 text-xs font-mono" />
           </div>
         )}
 
