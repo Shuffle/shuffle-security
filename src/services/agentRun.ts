@@ -8,6 +8,19 @@ import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 
 // ── Request types ──────────────────────────────────────────────────────────────
 
+/**
+ * MCP-spec image content block.
+ * @see https://modelcontextprotocol.io specification — Image Content
+ */
+export interface AgentImageInput {
+  /** Raw base64 (no data URL prefix) */
+  data: string;
+  /** e.g. "image/png", "image/jpeg" */
+  mimeType: string;
+  /** Optional original filename — for UI/debugging only */
+  name?: string;
+}
+
 export interface AgentRunRequest {
   /** The user's prompt / instruction */
   input: string;
@@ -17,9 +30,22 @@ export interface AgentRunRequest {
   /** Optional: target multiple apps */
   toolNames?: string[];
   toolIds?: string[];
-  /** Optional: attached image (base64 data URL, e.g. data:image/png;base64,...) */
+  /**
+   * Optional: one or more attached images. Sent under
+   * `params.input.image` as an array of MCP image content blocks
+   * (`{ type: "image", data, mimeType }`).
+   */
+  images?: AgentImageInput[];
+  /** @deprecated Use `images`. Single base64 data URL kept for back-compat. */
   image?: string;
 }
+
+/** Split a `data:<mime>;base64,<data>` URL into its mime + base64 parts. */
+const parseDataUrl = (dataUrl: string): AgentImageInput | null => {
+  const match = /^data:([^;]+);base64,(.*)$/.exec(dataUrl);
+  if (!match) return null;
+  return { mimeType: match[1], data: match[2] };
+};
 
 // ── Response types ─────────────────────────────────────────────────────────────
 
@@ -190,17 +216,32 @@ const isExecutionStub = (data: unknown): data is { execution_id: string } => {
  * If the response is an execution stub, polls for the real result.
  */
 export const runAgent = async (request: AgentRunRequest): Promise<AgentRunResponse> => {
-  const params: Record<string, unknown> = {
-    input: { text: request.input },
-  };
+  const input: Record<string, unknown> = { text: request.input };
+
+  // Collect images: prefer explicit `images` array, fall back to legacy `image` data URL.
+  const images: AgentImageInput[] = [];
+  if (request.images && request.images.length > 0) {
+    images.push(...request.images);
+  } else if (request.image && request.image.length > 0) {
+    const parsed = parseDataUrl(request.image);
+    if (parsed) images.push(parsed);
+  }
+
+  // Per MCP spec, image content blocks are `{ type: "image", data, mimeType }`.
+  // Sent under `params.input.image` as an array so the agent can accept multiple.
+  if (images.length > 0) {
+    input.image = images.map((img) => ({
+      type: 'image',
+      data: img.data,
+      mimeType: img.mimeType,
+    }));
+  }
+
+  const params: Record<string, unknown> = { input };
 
   // Single tool target
-  if (request.toolName) {
-    params.tool_name = request.toolName;
-  }
-  if (request.toolId) {
-    params.tool_id = request.toolId;
-  }
+  if (request.toolName) params.tool_name = request.toolName;
+  if (request.toolId) params.tool_id = request.toolId;
 
   // Multiple tool targets
   if (request.toolNames && request.toolNames.length > 0) {
@@ -208,12 +249,6 @@ export const runAgent = async (request: AgentRunRequest): Promise<AgentRunRespon
   }
   if (request.toolIds && request.toolIds.length > 0) {
     params.tool_ids = request.toolIds;
-  }
-
-  // Optional attached image — sent as a top-level "image" field on params
-  // (base64 data URL). The backend forwards this to the LLM as multimodal input.
-  if (request.image && request.image.length > 0) {
-    params.image = request.image;
   }
 
   const payload = {

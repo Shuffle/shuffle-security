@@ -642,7 +642,7 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
   const [runError, setRunError] = useState<string | null>(null);
   const [selectedApps, setSelectedApps] = useState<SelectedApp[]>(initialApp ? [initialApp] : []);
   const [appSearchOpen, setAppSearchOpen] = useState(false);
-  const [attachedImage, setAttachedImage] = useState<{ dataUrl: string; name: string } | null>(null);
+  const [attachedImages, setAttachedImages] = useState<{ dataUrl: string; name: string }[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -655,9 +655,14 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
     const reader = new FileReader();
     reader.onload = () => {
       const result = typeof reader.result === 'string' ? reader.result : '';
-      if (result) setAttachedImage({ dataUrl: result, name: file.name });
+      if (result) setAttachedImages(prev => [...prev, { dataUrl: result, name: file.name || 'Pasted image' }]);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleImagesSelected = (files: FileList | File[] | null) => {
+    if (!files) return;
+    Array.from(files).forEach(handleImageSelected);
   };
 
   // Live-poll the run while it is in-progress. Returns the same reference
@@ -680,7 +685,10 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
       ...(selectedApps.length > 1 ? {
         toolNames: selectedApps.map(a => a.name),
       } : {}),
-      ...(attachedImage ? { image: attachedImage.dataUrl } : {}),
+      ...(attachedImages.length > 0 ? { images: attachedImages.map(img => {
+        const m = /^data:([^;]+);base64,(.*)$/.exec(img.dataUrl);
+        return m ? { mimeType: m[1], data: m[2], name: img.name } : { mimeType: 'image/png', data: img.dataUrl, name: img.name };
+      }) } : {}),
     });
 
     if (result.success) {
@@ -706,7 +714,7 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
     setAgentInput('');
     setActionRun(null);
     setRunError(null);
-    setAttachedImage(null);
+    setAttachedImages([]);
   };
 
   return (
@@ -898,44 +906,47 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
                   boxShadow: '0 0 0 3px hsla(var(--primary) / 0.12)',
                 },
               }}>
-                {/* Image preview chip */}
-                {attachedImage && (
-                  <Box sx={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 1,
-                    alignSelf: 'flex-start',
-                    p: 0.5,
-                    pr: 1,
-                    borderRadius: 1.5,
-                    border: '1px solid hsl(var(--border))',
-                    bgcolor: 'hsl(var(--background))',
-                    maxWidth: '100%',
-                  }}>
-                    <Box
-                      component="img"
-                      src={attachedImage.dataUrl}
-                      alt={attachedImage.name}
-                      sx={{ width: 32, height: 32, borderRadius: 1, objectFit: 'cover', flexShrink: 0 }}
-                    />
-                    <Typography sx={{
-                      fontSize: '0.72rem',
-                      color: 'hsl(var(--foreground))',
-                      maxWidth: 200,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}>
-                      {attachedImage.name}
-                    </Typography>
-                    <IconButton
-                      size="small"
-                      onClick={() => setAttachedImage(null)}
-                      sx={{ p: 0.25, color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--destructive))' } }}
-                      aria-label="Remove attached image"
-                    >
-                      <XIcon size={12} />
-                    </IconButton>
+                {/* Image preview chips (one per attachment) */}
+                {attachedImages.length > 0 && (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, alignSelf: 'flex-start' }}>
+                    {attachedImages.map((img, idx) => (
+                      <Box key={`${img.name}-${idx}`} sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 1,
+                        p: 0.5,
+                        pr: 1,
+                        borderRadius: 1.5,
+                        border: '1px solid hsl(var(--border))',
+                        bgcolor: 'hsl(var(--background))',
+                        maxWidth: '100%',
+                      }}>
+                        <Box
+                          component="img"
+                          src={img.dataUrl}
+                          alt={img.name}
+                          sx={{ width: 32, height: 32, borderRadius: 1, objectFit: 'cover', flexShrink: 0 }}
+                        />
+                        <Typography sx={{
+                          fontSize: '0.72rem',
+                          color: 'hsl(var(--foreground))',
+                          maxWidth: 200,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}>
+                          {img.name}
+                        </Typography>
+                        <IconButton
+                          size="small"
+                          onClick={() => setAttachedImages(prev => prev.filter((_, i) => i !== idx))}
+                          sx={{ p: 0.25, color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--destructive))' } }}
+                          aria-label="Remove attached image"
+                        >
+                          <XIcon size={12} />
+                        </IconButton>
+                      </Box>
+                    ))}
                   </Box>
                 )}
 
@@ -957,15 +968,16 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
                     onPaste={(e) => {
                       const items = e.clipboardData?.items;
                       if (!items) return;
+                      const files: File[] = [];
                       for (const item of Array.from(items)) {
                         if (item.kind === 'file' && item.type.startsWith('image/')) {
                           const file = item.getAsFile();
-                          if (file) {
-                            e.preventDefault();
-                            handleImageSelected(file);
-                            return;
-                          }
+                          if (file) files.push(file);
                         }
+                      }
+                      if (files.length > 0) {
+                        e.preventDefault();
+                        handleImagesSelected(files);
                       }
                     }}
                     fullWidth
@@ -982,10 +994,10 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
                     ref={fileInputRef}
                     type="file"
                     accept="image/*"
+                    multiple
                     style={{ display: 'none' }}
                     onChange={(e) => {
-                      const f = e.target.files?.[0] || null;
-                      handleImageSelected(f);
+                      handleImagesSelected(e.target.files);
                       // Reset so selecting the same file again still fires onChange
                       if (e.target) e.target.value = '';
                     }}
@@ -1037,10 +1049,10 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
                     borderRadius: '6px',
                     fontSize: '0.7rem',
                     cursor: isRunning ? 'default' : 'pointer',
-                    color: attachedImage ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                    color: attachedImages.length > 0 ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
                     border: '1px solid',
-                    borderColor: attachedImage ? 'hsl(var(--primary))' : 'hsl(var(--border))',
-                    bgcolor: attachedImage ? 'hsla(var(--primary) / 0.1)' : 'transparent',
+                    borderColor: attachedImages.length > 0 ? 'hsl(var(--primary))' : 'hsl(var(--border))',
+                    bgcolor: attachedImages.length > 0 ? 'hsla(var(--primary) / 0.1)' : 'transparent',
                     transition: 'all 0.15s ease',
                     '&:hover': isRunning ? {} : {
                       color: 'hsl(var(--foreground))',
@@ -1049,7 +1061,7 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
                   }}
                 >
                   <Paperclip size={12} />
-                  {attachedImage ? 'Replace image' : 'Attach image'}
+                  {attachedImages.length > 0 ? `Add image (${attachedImages.length})` : 'Attach image'}
                 </Box>
               </Box>
             </Box>
