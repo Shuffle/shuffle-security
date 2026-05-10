@@ -468,6 +468,7 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
                   inputRef={inputRef}
                   autoFocus
                   multiline
+                  minRows={3}
                   maxRows={6}
                   value={agentInput}
                   onChange={(e) => setAgentInput(e.target.value)}
