@@ -1302,7 +1302,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
             setChosenApps((prev) =>
               prev.some((a) => a.name === app.name)
                 ? prev
-                : [...prev, { name: app.name, icon: app.icon }]
+                : [...prev, { name: app.name, icon: app.icon, id: app.id || undefined }]
             );
           }}
         />
