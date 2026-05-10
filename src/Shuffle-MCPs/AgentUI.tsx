@@ -67,8 +67,16 @@ export interface AgentUIApp {
 }
 
 export interface AgentUIProps {
-  /** Initial chip set under the prompt. Defaults to Http + Shuffle Tools. */
+  /** Controlled list of apps. When provided, overrides defaultApps and disables auto-load. */
+  apps?: AgentUIApp[];
+  /** Initial chip set under the prompt. Used only when `apps` is not provided. */
   defaultApps?: AgentUIApp[];
+  /**
+   * When true (default) and neither `apps` nor `defaultApps` is provided, fetch the
+   * caller's authenticated apps via `/api/v1/apps/authentication` (requires an API
+   * token to be set on `API_CONFIG`).
+   */
+  autoLoadApps?: boolean;
   /** Hero title above the prompt. */
   title?: string;
   /** Optional subtitle/description shown under the title. */
