@@ -788,7 +788,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
       }));
     })();
     return () => { cancelled = true; };
-  }, [chosenApps, availableApps]);
+  }, [chosenApps, availableApps, resolveUrl, resolveHeaders]);
 
   // Auto-load the caller's authenticated apps when nothing was passed in
   // and an API token is configured. Skipped when controlled or `defaultApps`
