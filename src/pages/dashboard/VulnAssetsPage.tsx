@@ -576,7 +576,7 @@ const AuthenticatedVulnAssetsPage = () => {
     // Persist immediately so running commands survive refresh
     try {
       const key = terminalStorageKey(hostUuid);
-      const stored = JSON.parse(localStorage.getItem(key) || '[]');
+      const stored = readStoredSession(hostUuid);
       const persistEntry = {
         entryId: entry.entryId,
         actionName: entry.actionName,
@@ -607,7 +607,7 @@ const AuthenticatedVulnAssetsPage = () => {
       if (latest.status === 'success' || latest.status === 'error') {
         try {
           const key = terminalStorageKey(hostUuid);
-          const stored = JSON.parse(localStorage.getItem(key) || '[]');
+          const stored = readStoredSession(hostUuid);
           const idx = stored.findIndex((e: any) => e.entryId === latest.entryId);
           if (idx >= 0) {
             stored[idx] = { ...stored[idx], status: latest.status, finishedAt: latest.finishedAt, executionId: latest.executionId, authorization: latest.authorization };

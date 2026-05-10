@@ -134,7 +134,7 @@ export const useHostActions = ({ onActionComplete }: UseHostActionsOptions = {})
     });
     try {
       const key = terminalStorageKey(hostUuid);
-      const stored = JSON.parse(localStorage.getItem(key) || '[]');
+      const stored = readStoredSession(hostUuid);
       const persistEntry = {
         entryId: entry.entryId,
         actionName: entry.actionName,
@@ -165,7 +165,7 @@ export const useHostActions = ({ onActionComplete }: UseHostActionsOptions = {})
       if (latest.status === 'success' || latest.status === 'error') {
         try {
           const key = terminalStorageKey(hostUuid);
-          const stored = JSON.parse(localStorage.getItem(key) || '[]');
+          const stored = readStoredSession(hostUuid);
           const sIdx = stored.findIndex((e: any) => e.entryId === latest.entryId);
           if (sIdx >= 0) {
             stored[sIdx] = { ...stored[sIdx], status: latest.status, finishedAt: latest.finishedAt, executionId: latest.executionId, authorization: latest.authorization };

@@ -247,7 +247,7 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
     });
     try {
       const key = terminalStorageKey(hostUuid);
-      const stored = JSON.parse(localStorage.getItem(key) || '[]');
+      const stored = readStoredSession(hostUuid);
       stored.push({
         entryId: entry.entryId, actionName: entry.actionName, status: entry.status,
         startedAt: entry.startedAt, finishedAt: entry.finishedAt,
@@ -272,7 +272,7 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
       if (latest.status === 'success' || latest.status === 'error') {
         try {
           const key = terminalStorageKey(hostUuid);
-          const stored = JSON.parse(localStorage.getItem(key) || '[]');
+          const stored = readStoredSession(hostUuid);
           // Persist actionOutput + error so the full-screen terminal page shows
           // the same output rows as the inline popover (both share this key).
           const persistFields = {
