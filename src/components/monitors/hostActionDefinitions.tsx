@@ -135,10 +135,11 @@ interface HostActionChipsProps {
 
 const isWindowsArch = (arch?: string) => {
   const s = String(arch || '').toLowerCase();
-  // Match "windows", "win32", "win", but NOT "darwin" (macOS).
   if (!s) return false;
-  if (s.includes('darwin')) return false;
-  return /\bwin(dows|32|64)?\b/.test(s) || s === 'win';
+  if (s.includes('darwin') || s.includes('mac') || s.includes('linux')) return false;
+  // Match os/arch fields ("windows", "win32", "win64", "amd64-windows") and
+  // typical Windows hostnames ("DESKTOP-XXXX", "WIN-XXXX", "LAPTOP-XXXX").
+  return /\bwin(dows|32|64)?\b/.test(s) || /\b(desktop|laptop|win)-/.test(s);
 };
 
 type RemoteOp = 'mouse.move' | 'mouse.click' | 'mouse.drag' | 'keyboard.press' | 'system.wait';
