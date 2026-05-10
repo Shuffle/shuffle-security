@@ -919,6 +919,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
               </Box>
             </Box>
 
+            {!hideAppPicker && (
             <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1 }}>
               <Box
                 component="button"
@@ -936,7 +937,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 }}
               >
                 <AddIcon sx={{ fontSize: 16 }} />
-                Select Apps / MCPs
+                {appPickerLabel}
               </Box>
               {chosenApps.map((app, i) => (
                 <Box
@@ -970,6 +971,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 </Box>
               ))}
             </Box>
+            )}
 
             {error && (
               <Box sx={{
