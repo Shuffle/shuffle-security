@@ -529,6 +529,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
 
     const result = await runAgent({
       input: text.trim(),
+      skipPolling: true,
       ...(chosenApps.length === 1 ? { toolName: chosenApps[0].name } : {}),
       ...(chosenApps.length > 1 ? { toolNames: chosenApps.map((a) => a.name) } : {}),
       ...(attachedImages.length > 0 ? { images: attachedImages.map((img) => {
