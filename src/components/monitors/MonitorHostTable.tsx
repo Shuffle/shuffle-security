@@ -514,11 +514,16 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
                     : `code_scanner = ${fmtRaw(host.code_scanner)}`}
                 />
                 <CheckDot
+                  on={activeProcessesCount > 0}
+                  tip={activeProcessesCount > 0
+                    ? `process_list: ${activeProcessesCount} active ${activeProcessesCount === 1 ? 'process' : 'processes'}`
+                    : 'No active processes reported'}
+                />
+                <CheckDot
                   on={responseActionsOn}
                   tip={`response_actions = ${fmtRaw(responseActionsRaw)}`}
                   color={responseActionsMode === 'full' ? 'bg-[hsl(var(--severity-high))]' : 'bg-[hsl(var(--severity-low))]'}
                 />
-                <CheckDot on={logForwardingOn} tip={`log_forwarding = ${fmtRaw(host.log_forwarding)}`} />
                 <span className="text-xs text-muted-foreground truncate">{host.groupName}</span>
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
