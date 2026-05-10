@@ -67,17 +67,8 @@ const parseResponseActionsState = (value: unknown): { enabled: boolean; mode: 'f
   return { enabled, mode: enabled ? (raw.includes('full') ? 'full' : 'controlled') : null };
 };
 
-const isActiveMonitoringEnabled = (host: { log_forwarding?: unknown }): boolean => {
-  const v = host.log_forwarding;
-  if (v === undefined || v === null) return false;
-  const raw = String(v).toLowerCase().trim();
-  if (!raw) return false;
-  // Explicit off / unconfigured states
-  if (raw === 'false' || raw === '0' || raw === 'no' || raw === 'off') return false;
-  if (raw.includes('not implemented') || raw.includes('not configured') || raw.includes('disabled')) return false;
-  // String like "not implemented: false" or "...: false" → treat as off
-  if (/[:=]\s*false\s*$/.test(raw)) return false;
-  return true;
+const countActiveProcesses = (host: { process_list?: unknown }): number => {
+  return Array.isArray(host.process_list) ? host.process_list.length : 0;
 };
 
 const triState = (v: unknown): 'on' | 'off' | 'empty' => {
