@@ -767,21 +767,21 @@ const AgentUI: React.FC<AgentUIProps> = ({
           <Box
             component="form"
             onSubmit={(e) => { e.preventDefault(); submitInput(actionInput); }}
-            sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, py: 4 }}
+            sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: compact ? 2 : 3, py: compact ? 2 : 4 }}
           >
-            {!hideHeroIcon && (
+            {!hideHeroIcon && !compact && (
               <Box sx={{
-                width: 84, height: 84, borderRadius: 3,
+                width: heroIconSize, height: heroIconSize, borderRadius: 3,
                 bgcolor: 'hsl(var(--card))',
                 border: '1px solid hsl(var(--border))',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
               }}>
-                <AgentIcon size={56} />
+                {heroIcon ?? <AgentIcon size={Math.round(heroIconSize * 0.67)} />}
               </Box>
             )}
             <Typography component="h1" sx={{
-              fontSize: { xs: '1.75rem', md: '2.25rem' },
+              fontSize: compact ? { xs: '1.25rem', md: '1.5rem' } : { xs: '1.75rem', md: '2.25rem' },
               fontWeight: 600,
               color: 'hsl(var(--foreground))',
               textAlign: 'center',
