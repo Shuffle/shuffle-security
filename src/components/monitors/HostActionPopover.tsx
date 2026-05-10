@@ -197,7 +197,10 @@ export const HostActionPopover = ({
                       {(entry.actionOutput || entry.error) && (
                         <div className="px-3 py-1.5">
                           {entry.actionOutput && (
-                            <pre className="text-[0.6rem] font-mono text-foreground/80 whitespace-pre-wrap break-words max-h-28 overflow-y-auto">{entry.actionOutput}</pre>
+                            <ActionOutputView
+                              output={entry.actionOutput}
+                              className="text-[0.6rem] font-mono text-foreground/80 whitespace-pre-wrap break-words max-h-28 overflow-y-auto"
+                            />
                           )}
                           {entry.error && (
                             <pre className="text-[0.6rem] font-mono text-destructive whitespace-pre-wrap break-words">{entry.error}</pre>
