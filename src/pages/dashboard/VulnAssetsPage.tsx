@@ -758,9 +758,7 @@ const AuthenticatedVulnAssetsPage = () => {
               actionSuccess: parsed.success,
               error: parsed.success ? undefined : (parsed.error || parsed.output || 'Action reported failure'),
             });
-            if (!parsed.success) {
-              toast.error('Action failed', { description: parsed.error || parsed.output || `"${actionName}" → ${hostname}` });
-            }
+            // Result + error are already surfaced in the action output panel — no toast needed.
             return;
           } catch {
             if (!pollingActiveRef.current.get(hostUuid)) return;
