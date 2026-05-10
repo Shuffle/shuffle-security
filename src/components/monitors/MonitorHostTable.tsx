@@ -445,7 +445,7 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
           const responseActionsState = parseResponseActionsState(responseActionsRaw);
           const responseActionsOn = responseActionsState.enabled;
           const responseActionsMode = responseActionsState.mode;
-          const logForwardingOn = isActiveMonitoringEnabled(host);
+          const activeProcessesCount = countActiveProcesses(host);
           // Stable per-row key: uuid when present, otherwise groupId+hostname+idx.
           // Avoids collapsing all uuid-less rows into a single expansion entry.
           const rowKey = (host.uuid && String(host.uuid).trim())
