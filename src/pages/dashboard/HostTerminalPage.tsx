@@ -273,14 +273,18 @@ const HostTerminalPage = () => {
           for (const [, val] of map.entries()) {
             const recUuid = String((val as any).uuid || '').trim();
             if (recUuid && recUuid === hostUuid) {
-              const hn = String((val as any).hostname || '').trim();
-              if (hn) return hn;
+              return val;
             }
           }
-          return '';
+          return null;
         };
-        const found = search(supplements.sensorsByHost) || search(supplements.assetsByHost);
-        if (!cancelled && found) setDatastoreResolvedHostname(found);
+        const foundRecord = search(supplements.sensorsByHost) || search(supplements.assetsByHost);
+        if (!cancelled && foundRecord) {
+          const hn = String((foundRecord as any).hostname || '').trim();
+          if (hn) setDatastoreResolvedHostname(hn);
+          const au = getActiveUser(foundRecord);
+          if (au) setActiveUser(au);
+        }
       } catch { /* ignore */ }
       finally {
         if (!cancelled) setDatastoreLookupDone(true);
