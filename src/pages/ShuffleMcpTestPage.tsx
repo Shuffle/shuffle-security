@@ -37,6 +37,21 @@ import { Box as MuiBox, Skeleton } from '@mui/material';
  * showing the exact source that produced the rendered demo.
  */
 
+const SNIPPET_AGENT_RUNNER = `import { AgentRunner } from '@shuffleio/shuffle-mcps';
+
+<AgentRunner
+  title="What do you want to do?"
+  initialApps={[
+    { name: 'Http' },
+    { name: 'Shuffle_tools' },
+  ]}
+  onRun={({ input, success }) => console.log('agent run', { input, success })}
+/>`;
+
+const SNIPPET_AGENT_DEBUGGER = `import { AgentDebugger } from '@shuffleio/shuffle-mcps';
+
+<AgentDebugger limit={25} pollIntervalMs={30000} />`;
+
 const SNIPPET_INLINE_SEARCH = `import { ShuffleMCP } from '@shuffleio/shuffle-mcps';
 
 <ShuffleMCP inline layout="grid" gridColumns={3} />`;
