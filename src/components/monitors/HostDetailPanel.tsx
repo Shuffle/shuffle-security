@@ -118,8 +118,9 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
   const resolvedHostname = hostname || (host.hostname as string | undefined);
   const canRunCbom = !!resolvedUuid && !!resolvedHostname;
   const runCbomScan = (path: string) => {
-    if (!resolvedUuid) return;
-    navigate(`/monitors/${resolvedUuid}/terminal`, {
+    if (!resolvedHostname) return;
+    const segment = hostUrlSegment({ hostname: resolvedHostname, arch: host.arch as string | undefined, uuid: resolvedUuid });
+    navigate(`/monitors/${encodeURIComponent(segment)}/terminal`, {
       state: {
         hostname: resolvedHostname,
         groupName: groupName || (host.groupName as string | undefined) || '',
