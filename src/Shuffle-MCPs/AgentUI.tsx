@@ -539,6 +539,46 @@ const AgentUI: React.FC<AgentUIProps> = ({
     if (apps) setChosenApps(apps);
   }, [apps]);
 
+  // Sideload missing app icons via Algolia (same source as the picker), so
+  // built-in/default chips like "http" and "shuffle_tools" show their logo
+  // even when the caller didn't pass one in.
+  useEffect(() => {
+    const missing = chosenApps.filter((a) => !a.icon && a.name);
+    if (missing.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { algoliasearch } = await import('algoliasearch');
+        const client = algoliasearch('JNSS5CFDZZ', '33e4e3564f4f060e96e0531957bed552');
+        const norm = (n: string) => n.toLowerCase().replace(/[\s_\-]+/g, '_');
+        const resolved = await Promise.all(missing.map(async (a) => {
+          const known = availableApps.find((x) => norm(x.name) === norm(a.name));
+          if (known?.icon) return { name: a.name, icon: known.icon };
+          try {
+            const res = await client.searchSingleIndex({
+              indexName: 'appsearch',
+              searchParams: { query: a.name.replace(/_/g, ' '), hitsPerPage: 3 },
+            });
+            const match = (res.hits as any[]).find((h) => norm(h.name || '') === norm(a.name))
+              || (res.hits as any[])[0];
+            return { name: a.name, icon: match?.image_url || '' };
+          } catch {
+            return { name: a.name, icon: '' };
+          }
+        }));
+        if (cancelled) return;
+        setChosenApps((prev) => prev.map((a) => {
+          if (a.icon) return a;
+          const r = resolved.find((x) => x.name === a.name);
+          return r?.icon ? { ...a, icon: r.icon } : a;
+        }));
+      } catch {
+        // ignore — chips will just show initials
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [chosenApps, availableApps]);
+
   // Auto-load the caller's authenticated apps when nothing was passed in
   // and an API token is configured. Skipped when controlled or `defaultApps`
   // were provided explicitly.
