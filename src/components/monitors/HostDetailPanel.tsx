@@ -21,6 +21,7 @@ interface ProcessEntry {
   [key: string]: unknown;
 }
 import type { Vulnerability, VulnSeverity } from '@/hooks/useVulnerabilities';
+import { hostUrlSegment } from '@/utils/hostUrlSegment';
 
 /**
  * Click handler that mimics <a> behavior:
