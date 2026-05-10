@@ -1206,7 +1206,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                     multiline
                     minRows={1}
                     maxRows={4}
-                    placeholder="Add more details to continue this task…"
+                    placeholder={continuationPlaceholder}
                     value={continuationText}
                     onChange={(e) => setContinuationText(e.target.value)}
                     disabled={agentRequestLoading}
