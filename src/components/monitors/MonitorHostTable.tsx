@@ -178,7 +178,7 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
       case 'software': cmp = (Array.isArray(a.installed_software) ? a.installed_software.length : 0) - (Array.isArray(b.installed_software) ? b.installed_software.length : 0); break;
       case 'codescan': cmp = (Array.isArray(a.code_scanner) ? a.code_scanner.length : 0) - (Array.isArray(b.code_scanner) ? b.code_scanner.length : 0); break;
       case 'response': cmp = Number(parseResponseActionsState(a.response_actions).enabled) - Number(parseResponseActionsState(b.response_actions).enabled); break;
-      case 'logfwd': cmp = Number(!!a.log_forwarding) - Number(!!b.log_forwarding); break;
+      case 'processes': cmp = countActiveProcesses(a) - countActiveProcesses(b); break;
       case 'group': cmp = (a.groupName || '').localeCompare(b.groupName || ''); break;
       case 'checkin': cmp = (a.checkin || 0) - (b.checkin || 0); break;
     }
