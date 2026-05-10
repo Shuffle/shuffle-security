@@ -507,11 +507,14 @@ const AgentUI: React.FC<AgentUIProps> = ({
     }
   }, [readUrlParams, getExecution]);
 
-  // Poll while running
+  // Poll while running. Continue indefinitely until we see a terminal status
+  // (FINISHED / FAILURE / ABORTED). We never give up on our own — long
+  // executions just keep streaming results back.
   useEffect(() => {
     if (!execution?.execution_id || !execution?.authorization) return;
     const status = (execution.status || '').toUpperCase();
-    if (status !== 'EXECUTING' && status !== 'WAITING') return;
+    const TERMINAL = ['FINISHED', 'FAILURE', 'ABORTED', 'CANCELLED', 'CANCELED'];
+    if (TERMINAL.includes(status)) return;
     const id = setInterval(() => {
       getExecution(execution.execution_id!, execution.authorization!);
     }, 3000);
