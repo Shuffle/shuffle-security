@@ -25,6 +25,8 @@ export interface HostActionPopoverHost {
   uuid: string;
   hostname: string;
   groupName: string;
+  /** Architecture (e.g. windows, linux, darwin) — used to disambiguate the URL segment */
+  arch?: string;
   /** Raw response_actions value, e.g. "full" or "controlled" */
   responseActions?: string;
   /** Full host record (for getActiveUser → Screenshot chip) */
