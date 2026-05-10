@@ -1120,7 +1120,10 @@ const AgentUI: React.FC<AgentUIProps> = ({
     }
   };
 
-  const TabBar: React.FC = () => (
+  // Rendered inline (not a nested component) so it isn't remounted on every
+  // parent re-render — the live duration ticker would otherwise reset hover
+  // state every second and swallow clicks.
+  const tabBar = (
     <Box sx={{
       display: 'flex', alignItems: 'center', gap: 1.5,
       p: 1,
@@ -1180,7 +1183,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   return (
     <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', pb: 4 }}>
       <Box sx={{ width: '100%', maxWidth, display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {hasExecution && <TabBar />}
+        {hasExecution && tabBar}
         {showStarter ? (
           <Box
             component="form"
