@@ -357,6 +357,7 @@ const HostTerminalPage = () => {
           if (hn) setDatastoreResolvedHostname(hn);
           const au = getActiveUser(foundRecord);
           if (au) setActiveUser(au);
+          setAgentPrivilege(inferAgentPrivilege(foundRecord));
         }
       } catch { /* ignore */ }
       finally {
