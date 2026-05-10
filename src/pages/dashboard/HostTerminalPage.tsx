@@ -63,7 +63,13 @@ type StoredEntry = {
 };
 
 const HISTORY_KEY = (hostUuid: string) => `terminal_session_${hostUuid}`;
-const MAX_STORED = 200;
+const MAX_STORED = 50;
+const MAX_OUTPUT_CHARS = 20000;
+
+const truncate = (s: string | undefined, n: number): string | undefined => {
+  if (!s) return s;
+  return s.length > n ? s.slice(0, n) + `\n…[truncated ${s.length - n} chars]` : s;
+};
 
 const getStoredSession = (hostUuid: string): StoredEntry[] => {
   try {
