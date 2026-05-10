@@ -569,7 +569,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
             icon: app?.large_image || app?.image_url || app?.image || entry?.bestImage || '',
           });
         }
-        if (!cancelled && loaded.length) setChosenApps(loaded);
+        if (!cancelled && loaded.length) setAvailableApps(loaded);
       } catch {
         // silent — caller can still pick apps manually
       }
