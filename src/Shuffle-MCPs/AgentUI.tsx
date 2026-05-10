@@ -417,6 +417,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const [questionAnswers, setQuestionAnswers] = useState<Record<string, { index: number; value: string }>>({});
   const [continuationText, setContinuationText] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'simple' | 'detailed'>('simple');
   const [attachedImages, setAttachedImages] = useState<{ dataUrl: string; name: string }[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
