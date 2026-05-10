@@ -1543,9 +1543,13 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   const rawStartedAt = agentData?.started_at || execution?.started_at || 0;
                   // Normalize: backend may return Unix milliseconds (UnixMillis) or seconds.
                   const startedAtSec = rawStartedAt > 1e12 ? Math.floor(rawStartedAt / 1000) : rawStartedAt;
+                  // Prefer the backend's started_at, but fall back to our local
+                  // capture so the counter always ticks from t=0 instead of
+                  // freezing at "1s" while we wait for the first poll response.
+                  const effectiveStart = startedAtSec || localRunStart || 0;
                   let durationSec: number | null = null;
-                  if (isRunning && startedAtSec) {
-                    durationSec = Math.max(0, nowTick - startedAtSec);
+                  if (isRunning && effectiveStart) {
+                    durationSec = Math.max(0, nowTick - effectiveStart);
                   } else if (totalDuration && totalDuration > 0) {
                     durationSec = Math.round(totalDuration);
                   }
