@@ -506,7 +506,7 @@ const ShuffleMcpTestPage = () => {
         </DemoSection>
 
         <DemoSection
-          title="2. Search drawer"
+          title="3. Search drawer"
           description={<><code>&lt;AppSearchDrawer /&gt;</code> — the exact same drawer used on /incidents → "Add Ingestion Source".</>}
           code={SNIPPET_SEARCH_DRAWER}
         >
@@ -516,7 +516,7 @@ const ShuffleMcpTestPage = () => {
         </DemoSection>
 
         <DemoSection
-          title="3. App detail / config drawer"
+          title="4. App detail / config drawer"
           description={<><code>&lt;AppDetailDrawer /&gt;</code> — auth + MCP "try it out" for a single app.</>}
           code={SNIPPET_DETAIL_DRAWER}
         >
@@ -530,7 +530,7 @@ const ShuffleMcpTestPage = () => {
         </DemoSection>
 
         <DemoSection
-          title="4. Authentication (standalone)"
+          title="5. Authentication (standalone)"
           description={<><code>&lt;AppAuthSection /&gt;</code> + <code>useAppLookup()</code> — drop the auth card anywhere by passing just an app name.</>}
           code={SNIPPET_AUTH_SECTION}
         >
@@ -539,7 +539,7 @@ const ShuffleMcpTestPage = () => {
         </DemoSection>
 
         <DemoSection
-          title="5. Try MCP (standalone)"
+          title="6. Try MCP (standalone)"
           description={<><code>&lt;TryMcpSection /&gt;</code> — chat against an app's MCP tools. Resolves icon + id from the app name.</>}
           code={SNIPPET_TRY_MCP}
         >
@@ -548,7 +548,7 @@ const ShuffleMcpTestPage = () => {
         </DemoSection>
 
         <DemoSection
-          title="6. Try individual actions (standalone)"
+          title="7. Try individual actions (standalone)"
           description={<><code>&lt;SingulActionsPreview /&gt;</code> — full curl/python catalog with Play. Sorts the app's category to the top.</>}
           code={SNIPPET_TRY_ACTIONS}
         >
