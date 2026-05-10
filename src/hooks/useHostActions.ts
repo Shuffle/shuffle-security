@@ -93,6 +93,7 @@ export const useHostActions = ({ onActionComplete }: UseHostActionsOptions = {})
           next.set(hostUuid, stored.map((e: any, i: number) => ({
             entryId: e.entryId || `${e.startedAt || i}-${Math.random().toString(36).slice(2, 8)}`,
             actionName: e.actionName || '',
+            commandText: e.commandText,
             status: e.status || 'error',
             startedAt: e.startedAt || 0,
             finishedAt: e.finishedAt,
