@@ -411,6 +411,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
   hideHeroIcon = false,
   maxWidth = 900,
   readUrlParams = true,
+  executionId,
+  authorization,
   onRun,
 }) => {
   const [actionInput, setActionInput] = useState('');
