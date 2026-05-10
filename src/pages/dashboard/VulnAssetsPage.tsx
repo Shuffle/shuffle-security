@@ -493,7 +493,7 @@ const AuthenticatedVulnAssetsPage = () => {
     setActionHistoryMap(prev => {
       if ((prev.get(hostUuid) || []).length > 0) return prev;
       try {
-        const stored = JSON.parse(localStorage.getItem(terminalStorageKey(hostUuid)) || '[]');
+        const stored = readStoredSession(hostUuid);
         if (Array.isArray(stored) && stored.length > 0) {
           const next = new Map(prev);
           next.set(hostUuid, stored.map((e: any, i: number) => ({
@@ -519,7 +519,7 @@ const AuthenticatedVulnAssetsPage = () => {
 
   const getCommandHistory = (hostUuid: string): string[] => {
     try {
-      const stored = JSON.parse(localStorage.getItem(terminalStorageKey(hostUuid)) || '[]');
+      const stored = readStoredSession(hostUuid);
       // Fall back to old cmd_history_ key
       if (!Array.isArray(stored) || stored.length === 0) {
         const old = JSON.parse(localStorage.getItem(`cmd_history_${hostUuid}`) || '[]');
