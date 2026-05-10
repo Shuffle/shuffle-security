@@ -39,6 +39,8 @@ type ActionDebugEntry = {
   entryId: number;
   hostUuid: string;
   actionName: string;
+  /** Exact command string sent to backend — used for ArrowUp re-run */
+  commandText?: string;
   hostname: string;
   status: 'sending' | 'polling' | 'success' | 'error';
   requestBody: object;
@@ -56,6 +58,7 @@ type ActionDebugEntry = {
 type StoredEntry = {
   entryId?: string;
   actionName: string;
+  commandText?: string;
   status: 'success' | 'error';
   startedAt: number;
   finishedAt?: number;
