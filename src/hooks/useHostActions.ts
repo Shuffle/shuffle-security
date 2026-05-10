@@ -121,7 +121,10 @@ export const useHostActions = ({ onActionComplete }: UseHostActionsOptions = {})
       }
       const cmds: string[] = [];
       for (let i = stored.length - 1; i >= 0; i--) {
-        if (stored[i]?.actionName) cmds.push(stored[i].actionName);
+        // Prefer the exact command text — falls back to actionName for legacy
+        // entries persisted before commandText was introduced.
+        const cmd = stored[i]?.commandText || stored[i]?.actionName;
+        if (cmd) cmds.push(cmd);
       }
       return cmds;
     } catch { return []; }
