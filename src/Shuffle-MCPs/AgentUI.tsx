@@ -913,7 +913,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
       border: '1px solid hsl(var(--border))',
       bgcolor: 'hsl(var(--card))',
       width: 'fit-content',
-      alignSelf: 'flex-start',
+      alignSelf: 'center',
     }}>
       <Box sx={{ display: 'inline-flex', gap: 0.25, p: 0.25, borderRadius: 999, bgcolor: 'hsl(var(--muted) / 0.6)' }}>
         {(['start', 'simple', 'detailed'] as TabKey[]).map((t) => {
