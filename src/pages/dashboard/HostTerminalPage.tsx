@@ -19,6 +19,7 @@ import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { DEFAULT_AGENT_PERMISSIONS } from '@/hooks/useAgentPermissions';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { fetchHostSupplements } from '@/lib/mergeMonitorHosts';
+import { HostActionChips, getActiveUser } from '@/components/monitors/hostActionDefinitions';
 
 interface HostOption {
   uuid: string;
