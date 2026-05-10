@@ -531,6 +531,10 @@ const AgentUI: React.FC<AgentUIProps> = ({
       input: text.trim(),
       ...(chosenApps.length === 1 ? { toolName: chosenApps[0].name } : {}),
       ...(chosenApps.length > 1 ? { toolNames: chosenApps.map((a) => a.name) } : {}),
+      ...(attachedImages.length > 0 ? { images: attachedImages.map((img) => {
+        const m = /^data:([^;]+);base64,(.*)$/.exec(img.dataUrl);
+        return m ? { mimeType: m[1], data: m[2], name: img.name } : { mimeType: 'image/png', data: img.dataUrl, name: img.name };
+      }) } : {}),
     });
 
     setAgentRequestLoading(false);
