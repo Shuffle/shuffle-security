@@ -465,6 +465,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
 }) => {
   const [actionInput, setActionInput] = useState(defaultInput);
   const [chosenApps, setChosenApps] = useState<AgentUIApp[]>(apps ?? defaultApps ?? []);
+  // Apps the caller has authenticated — used to resolve icons by name and as
+  // suggestions in the picker. NOT auto-selected as `chosenApps`.
+  const [availableApps, setAvailableApps] = useState<AgentUIApp[]>([]);
   const [appSearchOpen, setAppSearchOpen] = useState(false);
   const [agentRequestLoading, setAgentRequestLoading] = useState(false);
   const [execution, setExecution] = useState<ExecutionData | null>(null);
@@ -566,7 +569,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
             icon: app?.large_image || app?.image_url || app?.image || entry?.bestImage || '',
           });
         }
-        if (!cancelled && loaded.length) setChosenApps(loaded);
+        if (!cancelled && loaded.length) setAvailableApps(loaded);
       } catch {
         // silent — caller can still pick apps manually
       }
@@ -1384,10 +1387,11 @@ const AgentUI: React.FC<AgentUIProps> = ({
           title={appPickerTitle}
           subtitle={appPickerSubtitle}
           onQuickSelect={(app) => {
+            const known = availableApps.find((a) => a.name?.toLowerCase() === app.name?.toLowerCase());
             setChosenApps((prev) =>
               prev.some((a) => a.name === app.name)
                 ? prev
-                : [...prev, { name: app.name, icon: app.icon, id: app.id || undefined }]
+                : [...prev, { name: app.name, icon: app.icon || known?.icon, id: app.id || known?.id || undefined }]
             );
           }}
         />
