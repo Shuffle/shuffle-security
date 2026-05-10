@@ -464,7 +464,11 @@ const AgentUI: React.FC<AgentUIProps> = ({
   onRun,
 }) => {
   const [actionInput, setActionInput] = useState(defaultInput);
-  const [chosenApps, setChosenApps] = useState<AgentUIApp[]>(apps ?? defaultApps ?? []);
+  const BUILTIN_DEFAULT_APPS: AgentUIApp[] = [
+    { name: 'http' },
+    { name: 'shuffle_tools' },
+  ];
+  const [chosenApps, setChosenApps] = useState<AgentUIApp[]>(apps ?? defaultApps ?? BUILTIN_DEFAULT_APPS);
   // Apps the caller has authenticated — used to resolve icons by name and as
   // suggestions in the picker. NOT auto-selected as `chosenApps`.
   const [availableApps, setAvailableApps] = useState<AgentUIApp[]>([]);
