@@ -1,6 +1,9 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { installLocalStorageQuotaGuard } from "./utils/safeLocalStorage";
+
+installLocalStorageQuotaGuard();
 
 const cleanupServiceWorkers = async (): Promise<boolean> => {
   if (!("serviceWorker" in navigator)) return false;
