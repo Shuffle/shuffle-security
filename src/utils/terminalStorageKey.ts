@@ -58,16 +58,30 @@ export const terminalStorageKey = (alias: string): string => {
  */
 export const readStoredSession = (alias: string): any[] => {
   const out: any[] = [];
-  const seen = new Set<string>();
+  const byEntryId = new Map<string, any>();
+  const bySignature = new Map<string, any>(); // actionName::startedAt fallback
   const merge = (key: string) => {
     try {
       const raw = JSON.parse(localStorage.getItem(key) || '[]');
       if (!Array.isArray(raw)) return;
       for (const e of raw) {
-        const id = e?.entryId || `${e?.startedAt || ''}::${e?.actionName || ''}`;
-        if (seen.has(id)) continue;
-        seen.add(id);
-        out.push(e);
+        const eid = e?.entryId ? String(e.entryId) : '';
+        const sig = `${e?.actionName || ''}::${e?.startedAt || ''}`;
+        // Same entryId across stores → merge in place.
+        if (eid && byEntryId.has(eid)) {
+          Object.assign(byEntryId.get(eid), e);
+          continue;
+        }
+        // Same action+startedAt but different entryId shape (legacy cross-store
+        // duplication) → merge into the existing record instead of duplicating.
+        if (bySignature.has(sig) && e?.startedAt) {
+          Object.assign(bySignature.get(sig), e);
+          continue;
+        }
+        const row = { ...e };
+        out.push(row);
+        if (eid) byEntryId.set(eid, row);
+        if (e?.startedAt) bySignature.set(sig, row);
       }
     } catch { /* ignore */ }
   };
