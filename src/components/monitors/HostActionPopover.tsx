@@ -25,6 +25,8 @@ export interface HostActionPopoverHost {
   groupName: string;
   /** Raw response_actions value, e.g. "full" or "controlled" */
   responseActions?: string;
+  /** Full host record (for getActiveUser → Screenshot chip) */
+  raw?: unknown;
 }
 
 interface HostActionPopoverProps {
