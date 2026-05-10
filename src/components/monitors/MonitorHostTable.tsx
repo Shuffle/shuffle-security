@@ -67,7 +67,7 @@ const parseResponseActionsState = (value: unknown): { enabled: boolean; mode: 'f
   return { enabled, mode: enabled ? (raw.includes('full') ? 'full' : 'controlled') : null };
 };
 
-const countActiveProcesses = (host: { process_list?: unknown }): number => {
+const countActiveProcesses = (host: MonitorHost): number => {
   const v = (host as { process_list?: unknown }).process_list;
   return Array.isArray(v) ? v.length : 0;
 };
