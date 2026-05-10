@@ -1191,7 +1191,13 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   const status = (execution?.status || agentData?.status || 'EXECUTING').toUpperCase();
                   const decisionCount = (agentData?.decisions || []).length;
                   const isRunning = !['FINISHED', 'FAILURE', 'ABORTED', 'CANCELLED', 'CANCELED'].includes(status);
-                  const durationSec = totalDuration && totalDuration > 0 ? Math.round(totalDuration) : null;
+                  const startedAt = agentData?.started_at || execution?.started_at || 0;
+                  let durationSec: number | null = null;
+                  if (isRunning && startedAt) {
+                    durationSec = Math.max(0, nowTick - startedAt);
+                  } else if (totalDuration && totalDuration > 0) {
+                    durationSec = Math.round(totalDuration);
+                  }
                   return (
                     <>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
@@ -1217,11 +1223,63 @@ const AgentUI: React.FC<AgentUIProps> = ({
                           bgcolor: 'hsl(var(--background))',
                           fontSize: '0.9rem',
                           color: 'hsl(var(--foreground))',
-                          '& p': { margin: 0 },
+                          '& > *:first-of-type': { mt: 0 },
+                          '& > *:last-child': { mb: 0 },
+                          '& p': { my: 1, lineHeight: 1.55 },
+                          '& h1, & h2, & h3, & h4': { mt: 2, mb: 1, fontWeight: 600, lineHeight: 1.3 },
+                          '& h1': { fontSize: '1.15rem' },
+                          '& h2': { fontSize: '1.05rem' },
+                          '& h3, & h4': { fontSize: '0.95rem' },
+                          '& ul, & ol': { my: 1, pl: 3 },
+                          '& li': { my: 0.25 },
+                          '& a': { color: 'hsl(var(--primary))', textDecoration: 'underline' },
+                          '& code': {
+                            px: 0.5, py: 0.125, borderRadius: 0.5,
+                            bgcolor: 'hsl(var(--muted))',
+                            fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+                            fontSize: '0.82em',
+                          },
+                          '& pre': {
+                            p: 1.5, my: 1, borderRadius: 1,
+                            bgcolor: 'hsl(var(--muted))',
+                            overflowX: 'auto',
+                            fontSize: '0.82rem',
+                          },
+                          '& pre code': { p: 0, bgcolor: 'transparent' },
+                          '& blockquote': {
+                            borderLeft: '3px solid hsl(var(--border))',
+                            pl: 1.5, my: 1, color: 'hsl(var(--muted-foreground))',
+                          },
+                          '& table': { borderCollapse: 'collapse', my: 1, fontSize: '0.85rem' },
+                          '& th, & td': { border: '1px solid hsl(var(--border))', px: 1, py: 0.5 },
+                          '& hr': { border: 0, borderTop: '1px solid hsl(var(--border))', my: 1.5 },
                         }}>
                           <Markdown remarkPlugins={[remarkGfm]}>{finishAnswer}</Markdown>
                         </Box>
                       ) : isRunning ? (
+                        <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))' }}>
+                          Waiting for the agent to finish. Switch to Detailed for the live timeline.
+                        </Typography>
+                      ) : (
+                        <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))' }}>
+                          No final answer was returned. Open Detailed to inspect each step.
+                        </Typography>
+                      )}
+                      {!isRunning && (
+                        <Box>
+                          <Button
+                            size="small"
+                            variant="text"
+                            onClick={() => setViewMode('detailed')}
+                            sx={{ color: 'hsl(var(--primary))', textTransform: 'none', px: 0 }}
+                          >
+                            View detailed timeline →
+                          </Button>
+                        </Box>
+                      )}
+                    </>
+                  );
+                })()}
                         <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))' }}>
                           Waiting for the agent to finish. Switch to Detailed for the live timeline.
                         </Typography>
