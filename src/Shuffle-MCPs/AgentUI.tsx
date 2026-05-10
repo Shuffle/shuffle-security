@@ -701,6 +701,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
       } else {
         actionResult = json;
       }
+      setAgentActionResult(actionResult);
       const v = validateJson(actionResult?.result);
       if (v.valid) setAgentData({ ...v.result, started_at: json.started_at, completed_at: json.completed_at, status: json.status });
       setError(null);
