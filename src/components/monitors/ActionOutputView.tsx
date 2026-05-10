@@ -1,0 +1,65 @@
+/**
+ * Renders an action's stdout. Most actions return text and we show it in a
+ * <pre>. The `script:screenshot` action returns a base64-encoded PNG which
+ * we detect by signature and render as an inline image instead.
+ */
+import { useMemo, useState } from 'react';
+
+const IMAGE_SIGNATURES: Array<{ prefix: string; mime: string }> = [
+  { prefix: 'iVBORw0KGgo', mime: 'image/png' },   // PNG
+  { prefix: '/9j/',        mime: 'image/jpeg' },  // JPEG
+  { prefix: 'R0lGOD',      mime: 'image/gif' },   // GIF
+  { prefix: 'UklGR',       mime: 'image/webp' },  // WebP
+];
+
+const detectImage = (raw: string): { mime: string; b64: string } | null => {
+  if (!raw || typeof raw !== 'string') return null;
+  // Strip surrounding whitespace/quotes/json wrappers and any data: prefix.
+  let s = raw.trim().replace(/^["']|["']$/g, '');
+  const dataMatch = s.match(/^data:(image\/[a-z+.-]+);base64,([A-Za-z0-9+/=\s]+)$/i);
+  if (dataMatch) return { mime: dataMatch[1], b64: dataMatch[2].replace(/\s+/g, '') };
+  // Compact: must be a long, mostly-base64 blob.
+  const compact = s.replace(/\s+/g, '');
+  if (compact.length < 200) return null;
+  if (!/^[A-Za-z0-9+/=]+$/.test(compact)) return null;
+  for (const sig of IMAGE_SIGNATURES) {
+    if (compact.startsWith(sig.prefix)) return { mime: sig.mime, b64: compact };
+  }
+  return null;
+};
+
+interface ActionOutputViewProps {
+  output: string;
+  /** Tailwind classes for the <pre> fallback (so each call site keeps its own sizing). */
+  className?: string;
+}
+
+export const ActionOutputView = ({ output, className }: ActionOutputViewProps) => {
+  const detected = useMemo(() => detectImage(output), [output]);
+  const [zoomed, setZoomed] = useState(false);
+
+  if (detected) {
+    const src = `data:${detected.mime};base64,${detected.b64}`;
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => setZoomed(true)}
+          className="block w-full rounded border border-border overflow-hidden bg-muted/30 hover:border-primary transition-colors"
+        >
+          <img src={src} alt="Action screenshot" className="w-full h-auto block" />
+        </button>
+        {zoomed && (
+          <div
+            className="fixed inset-0 z-[10000] bg-black/80 flex items-center justify-center p-6 cursor-zoom-out"
+            onClick={() => setZoomed(false)}
+          >
+            <img src={src} alt="Action screenshot" className="max-w-full max-h-full rounded shadow-2xl" />
+          </div>
+        )}
+      </>
+    );
+  }
+
+  return <pre className={className}>{output}</pre>;
+};
