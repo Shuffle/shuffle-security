@@ -667,46 +667,16 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
                                   </div>
                                 )}
                               </div>
-                              {/* Predefined action chips */}
-                              {(() => {
-                                const activeUser = getActiveUser(host);
-                                const screenshotCmd = activeUser ? `script:screenshot ${activeUser}` : '';
-                                return (
-                                  <div className="px-3 py-2 flex flex-wrap gap-1 border-t border-border/50 shrink-0">
-                                    <button
-                                      key="disable_rce"
-                                      className="px-2 py-1 text-[0.65rem] rounded-md border border-destructive/40 text-destructive hover:bg-destructive/10 transition-colors"
-                                      onClick={() => executeHostAction('disable_rce', 'Disable RCE', host.hostname, host.groupName || '', host.uuid, true)}
-                                    >
-                                      Disable RCE
-                                    </button>
-                                    <button
-                                      key="screenshot"
-                                      disabled={!activeUser}
-                                      title={activeUser ? `Capture screenshot of ${activeUser}'s session` : 'No active user detected on this host'}
-                                      className={`px-2 py-1 text-[0.65rem] rounded-md border transition-colors ${activeUser ? 'border-border text-foreground hover:bg-muted/50' : 'border-border text-muted-foreground opacity-50 cursor-not-allowed'}`}
-                                      onClick={() => activeUser && executeHostAction(screenshotCmd, `Screenshot (${activeUser})`, host.hostname, host.groupName || '', host.uuid)}
-                                    >
-                                      Screenshot{activeUser ? ` (${activeUser})` : ''}
-                                    </button>
-                                    <button
-                                      key="isolate_host"
-                                      className="px-2 py-1 text-[0.65rem] rounded-md border border-border text-foreground hover:bg-muted/50 transition-colors"
-                                      onClick={() => executeHostAction('isolate_host', 'Isolate Host', host.hostname, host.groupName || '', host.uuid, true)}
-                                    >
-                                      Isolate Host
-                                    </button>
-                                    {[
-                                      { id: 'disable_user', name: 'Disable User Accounts' },
-                                      { id: 'restart_now', name: 'Restart Endpoint' },
-                                    ].map(s => (
-                                      <button key={s.id} disabled title="Not yet available on the endpoint" className="px-2 py-1 text-[0.65rem] rounded-md border border-border text-muted-foreground opacity-50 cursor-not-allowed">
-                                        {s.name}
-                                      </button>
-                                    ))}
-                                  </div>
-                                );
-                              })()}
+                              {/* Predefined action chips (shared definition) */}
+                              <div className="px-3 py-2 border-t border-border/50 shrink-0">
+                                <HostActionChips
+                                  activeUser={getActiveUser(host)}
+                                  size="compact"
+                                  onRun={({ actionId, displayName }) =>
+                                    executeHostAction(actionId, displayName, host.hostname, host.groupName || '', host.uuid, true)
+                                  }
+                                />
+                              </div>
                               {/* Command input */}
                               <div className="px-3 py-2 border-t border-border shrink-0">
                                 <div className="flex gap-1.5 items-center">
