@@ -20,6 +20,13 @@ export type ActionDebugEntry = {
   entryId: string;
   hostUuid: string;
   actionName: string;
+  /**
+   * The exact command string sent to the backend (e.g. `script:screenshot frikky`
+   * or `remote_control {"actions":[…]}`). Used to repopulate the input when
+   * the user presses ArrowUp in the terminal — `actionName` is only the
+   * display label and would otherwise lose the parameters.
+   */
+  commandText?: string;
   hostname: string;
   status: 'sending' | 'polling' | 'success' | 'error';
   requestBody: object;
@@ -86,6 +93,7 @@ export const useHostActions = ({ onActionComplete }: UseHostActionsOptions = {})
           next.set(hostUuid, stored.map((e: any, i: number) => ({
             entryId: e.entryId || `${e.startedAt || i}-${Math.random().toString(36).slice(2, 8)}`,
             actionName: e.actionName || '',
+            commandText: e.commandText,
             status: e.status || 'error',
             startedAt: e.startedAt || 0,
             finishedAt: e.finishedAt,
@@ -114,7 +122,10 @@ export const useHostActions = ({ onActionComplete }: UseHostActionsOptions = {})
       }
       const cmds: string[] = [];
       for (let i = stored.length - 1; i >= 0; i--) {
-        if (stored[i]?.actionName) cmds.push(stored[i].actionName);
+        // Prefer the exact command text — falls back to actionName for legacy
+        // entries persisted before commandText was introduced.
+        const cmd = stored[i]?.commandText || stored[i]?.actionName;
+        if (cmd) cmds.push(cmd);
       }
       return cmds;
     } catch { return []; }
@@ -138,6 +149,7 @@ export const useHostActions = ({ onActionComplete }: UseHostActionsOptions = {})
       const persistEntry = {
         entryId: entry.entryId,
         actionName: entry.actionName,
+        commandText: entry.commandText,
         status: entry.status,
         startedAt: entry.startedAt,
         finishedAt: entry.finishedAt,
@@ -216,6 +228,7 @@ export const useHostActions = ({ onActionComplete }: UseHostActionsOptions = {})
       entryId,
       hostUuid,
       actionName,
+      commandText: isPredefined ? `script:${actionId}` : actionId,
       hostname,
       status: 'sending',
       requestBody,

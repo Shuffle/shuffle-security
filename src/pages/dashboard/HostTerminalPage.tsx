@@ -39,6 +39,8 @@ type ActionDebugEntry = {
   entryId: number;
   hostUuid: string;
   actionName: string;
+  /** Exact command string sent to backend — used for ArrowUp re-run */
+  commandText?: string;
   hostname: string;
   status: 'sending' | 'polling' | 'success' | 'error';
   requestBody: object;
@@ -56,6 +58,7 @@ type ActionDebugEntry = {
 type StoredEntry = {
   entryId?: string;
   actionName: string;
+  commandText?: string;
   status: 'success' | 'error';
   startedAt: number;
   finishedAt?: number;
@@ -93,6 +96,7 @@ const saveSession = (hostUuid: string, entries: ActionDebugEntry[]) => {
   const toStore: StoredEntry[] = entries.map(e => ({
     entryId: String(e.entryId),
     actionName: e.actionName,
+    commandText: e.commandText,
     status: (e.status === 'success' || e.status === 'error') ? e.status : undefined,
     startedAt: e.startedAt,
     finishedAt: e.finishedAt,
@@ -138,7 +142,8 @@ const getCommandHistory = (hostUuid: string): string[] => {
   }
   const cmds: string[] = [];
   for (let i = stored.length - 1; i >= 0; i--) {
-    if (stored[i]?.actionName) cmds.push(stored[i].actionName);
+    const cmd = stored[i]?.commandText || stored[i]?.actionName;
+    if (cmd) cmds.push(cmd);
   }
   return cmds;
 };
@@ -384,6 +389,7 @@ const HostTerminalPage = () => {
         entryId: ++entryIdCounter,
         hostUuid,
         actionName: e.actionName,
+        commandText: e.commandText,
         hostname,
         status: (e.status === 'success' || e.status === 'error') ? e.status : 'error',
         requestBody: {},
@@ -462,6 +468,7 @@ const HostTerminalPage = () => {
       entryId: myId,
       hostUuid,
       actionName,
+      commandText: isPredefined ? `script:${actionId}` : actionId,
       hostname,
       status: 'sending',
       requestBody,
@@ -957,7 +964,7 @@ const HostTerminalPage = () => {
             disabled={!canRunActions || isDemoHost}
             onKeyDown={e => {
               // Full ordered history, every entry (no dedup), most recent first
-              const history = [...actionHistory].reverse().map(e => e.actionName).filter(Boolean);
+              const history = [...actionHistory].reverse().map(e => e.commandText || e.actionName).filter(Boolean);
               if (e.key === 'Enter' && customAction.trim()) {
                 setHistoryIndex(-1);
                 executeHostAction(customAction.trim(), customAction.trim());
