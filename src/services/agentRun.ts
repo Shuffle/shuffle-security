@@ -38,6 +38,12 @@ export interface AgentRunRequest {
   images?: AgentImageInput[];
   /** @deprecated Use `images`. Single base64 data URL kept for back-compat. */
   image?: string;
+  /**
+   * If true, return the initial response immediately without polling for the
+   * final execution result. The caller is then responsible for polling
+   * `/api/v1/streams/results` itself (e.g. AgentUI's live timeline).
+   */
+  skipPolling?: boolean;
 }
 
 /** Split a `data:<mime>;base64,<data>` URL into its mime + base64 parts. */
@@ -303,6 +309,15 @@ export const runAgent = async (request: AgentRunRequest): Promise<AgentRunRespon
     const data = JSON.parse(rawText);
 
     if (isExecutionStub(data)) {
+      if (request.skipPolling) {
+        // Hand control back to the caller (it will poll itself).
+        return {
+          success: true,
+          content: '',
+          rawData: data,
+          status: response.status,
+        };
+      }
       console.log(`[AgentRun] Got execution stub, polling for result: ${data.execution_id}`);
       return pollExecutionResult(data.execution_id);
     }

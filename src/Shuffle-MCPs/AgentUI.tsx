@@ -417,6 +417,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const [questionAnswers, setQuestionAnswers] = useState<Record<string, { index: number; value: string }>>({});
   const [continuationText, setContinuationText] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'simple' | 'detailed'>('simple');
   const [attachedImages, setAttachedImages] = useState<{ dataUrl: string; name: string }[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -507,11 +508,14 @@ const AgentUI: React.FC<AgentUIProps> = ({
     }
   }, [readUrlParams, getExecution]);
 
-  // Poll while running
+  // Poll while running. Continue indefinitely until we see a terminal status
+  // (FINISHED / FAILURE / ABORTED). We never give up on our own — long
+  // executions just keep streaming results back.
   useEffect(() => {
     if (!execution?.execution_id || !execution?.authorization) return;
     const status = (execution.status || '').toUpperCase();
-    if (status !== 'EXECUTING' && status !== 'WAITING') return;
+    const TERMINAL = ['FINISHED', 'FAILURE', 'ABORTED', 'CANCELLED', 'CANCELED'];
+    if (TERMINAL.includes(status)) return;
     const id = setInterval(() => {
       getExecution(execution.execution_id!, execution.authorization!);
     }, 3000);
@@ -525,10 +529,11 @@ const AgentUI: React.FC<AgentUIProps> = ({
     setAgentRequestLoading(true);
     setShowStarter(false);
     setExecution(null);
-    setAgentData({});
+    setAgentData({ original_input: text.trim() });
 
     const result = await runAgent({
       input: text.trim(),
+      skipPolling: true,
       ...(chosenApps.length === 1 ? { toolName: chosenApps[0].name } : {}),
       ...(chosenApps.length > 1 ? { toolNames: chosenApps.map((a) => a.name) } : {}),
       ...(attachedImages.length > 0 ? { images: attachedImages.map((img) => {
@@ -550,7 +555,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
     const eid = raw?.execution_id;
     const auth = raw?.authorization;
     if (eid && auth) {
-      // We have a real workflow execution to follow
+      // Seed an EXECUTING stub so the poll effect starts immediately,
+      // then kick off the first fetch. The poller continues until terminal.
+      setExecution({ execution_id: eid, authorization: auth, status: 'EXECUTING' });
       getExecution(eid, auth);
       onRun?.({ input: text, success: true, executionId: eid });
     } else {
@@ -929,6 +936,22 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   </span>
                 </Tooltip>
               </ButtonGroup>
+              <ButtonGroup size="small" sx={{ ml: 1 }}>
+                <Button
+                  variant={viewMode === 'simple' ? 'contained' : 'outlined'}
+                  onClick={() => setViewMode('simple')}
+                  sx={viewMode === 'simple' ? { bgcolor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))', '&:hover': { bgcolor: 'hsl(var(--primary))', filter: 'brightness(1.1)' } } : {}}
+                >
+                  Simple
+                </Button>
+                <Button
+                  variant={viewMode === 'detailed' ? 'contained' : 'outlined'}
+                  onClick={() => setViewMode('detailed')}
+                  sx={viewMode === 'detailed' ? { bgcolor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))', '&:hover': { bgcolor: 'hsl(var(--primary))', filter: 'brightness(1.1)' } } : {}}
+                >
+                  Detailed
+                </Button>
+              </ButtonGroup>
               <Box sx={{ flex: 1 }}>
                 <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--foreground))', fontWeight: 600 }}>
                   {agentData?.original_input || actionInput || 'Agent run'}
@@ -961,7 +984,80 @@ const AgentUI: React.FC<AgentUIProps> = ({
               }}>{error}</Box>
             )}
 
-            {/* Timeline */}
+            {/* Simple summary view */}
+            {viewMode === 'simple' && (
+              <Box sx={{
+                borderRadius: 2,
+                border: '1px solid hsl(var(--border))',
+                bgcolor: 'hsl(var(--card))',
+                p: 2.5,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1.5,
+              }}>
+                {(() => {
+                  const status = (execution?.status || agentData?.status || 'EXECUTING').toUpperCase();
+                  const decisionCount = (agentData?.decisions || []).length;
+                  const isRunning = !['FINISHED', 'FAILURE', 'ABORTED', 'CANCELLED', 'CANCELED'].includes(status);
+                  const durationSec = totalDuration && totalDuration > 0 ? Math.round(totalDuration) : null;
+                  return (
+                    <>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                        {isRunning ? (
+                          <CircularProgress size={16} sx={{ color: 'hsl(var(--primary))' }} />
+                        ) : status === 'FINISHED' ? (
+                          <CheckCircleIcon sx={{ fontSize: 18, color: 'hsl(142 70% 45%)' }} />
+                        ) : (
+                          <ErrorIcon sx={{ fontSize: 18, color: 'hsl(var(--destructive))' }} />
+                        )}
+                        <Typography sx={{ fontSize: '0.9rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                          {isRunning ? 'Agent is working…' : status === 'FINISHED' ? 'Run finished' : `Run ${status.toLowerCase()}`}
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
+                          {decisionCount} step{decisionCount === 1 ? '' : 's'}
+                          {durationSec != null ? ` · ${durationSec}s` : ''}
+                        </Typography>
+                      </Box>
+                      {finishAnswer ? (
+                        <Box sx={{
+                          p: 2, borderRadius: 1.5,
+                          border: '1px solid hsl(var(--border))',
+                          bgcolor: 'hsl(var(--background))',
+                          fontSize: '0.9rem',
+                          color: 'hsl(var(--foreground))',
+                          '& p': { margin: 0 },
+                        }}>
+                          <Markdown remarkPlugins={[remarkGfm]}>{finishAnswer}</Markdown>
+                        </Box>
+                      ) : isRunning ? (
+                        <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))' }}>
+                          Waiting for the agent to finish. Switch to Detailed for the live timeline.
+                        </Typography>
+                      ) : (
+                        <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))' }}>
+                          No final answer was returned. Open Detailed to inspect each step.
+                        </Typography>
+                      )}
+                      {!isRunning && (
+                        <Box>
+                          <Button
+                            size="small"
+                            variant="text"
+                            onClick={() => setViewMode('detailed')}
+                            sx={{ color: 'hsl(var(--primary))', textTransform: 'none', px: 0 }}
+                          >
+                            View detailed timeline →
+                          </Button>
+                        </Box>
+                      )}
+                    </>
+                  );
+                })()}
+              </Box>
+            )}
+
+            {/* Detailed timeline view */}
+            {viewMode === 'detailed' && (
             <Box sx={{
               borderRadius: 2,
               border: '1px solid hsl(var(--border))',
@@ -993,6 +1089,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 ))
               )}
             </Box>
+            )}
 
             {/* Continuation form (after a finish decision) */}
             {finishDecisionId && (
