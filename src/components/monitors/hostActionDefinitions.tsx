@@ -50,6 +50,7 @@ export const PREDEFINED_HOST_ACTIONS: PredefinedHostAction[] = [
   { id: 'disable_rce', name: 'Disable RCE', variant: 'destructive' },
   { id: 'screenshot', name: 'Screenshot', variant: 'normal' },
   { id: 'isolate_host', name: 'Isolate Host', variant: 'normal' },
+  { id: 'unisolate_host', name: 'Unisolate', variant: 'normal' },
   { id: 'disable_user', name: 'Disable User Accounts', variant: 'disabled', disabledReason: 'Not yet available on the endpoint' },
   { id: 'restart_now', name: 'Restart Endpoint', variant: 'disabled', disabledReason: 'Not yet available on the endpoint' },
 ];
