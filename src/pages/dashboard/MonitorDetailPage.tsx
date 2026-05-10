@@ -12,6 +12,7 @@ import { DisableRceConfirmDialog } from '@/components/monitors/DisableRceConfirm
 import { fetchHostSupplements, mergeHost } from '@/lib/mergeMonitorHosts';
 import { isDemoActive } from '@/services/demoMode';
 import { DEMO_HOST_HOSTNAME } from '@/services/demoLiveEnvironment';
+import { parseHostUrlSegment } from '@/utils/hostUrlSegment';
 
 // ── OS icon (kept local — also used inline in the header) ────────────────────
 const OsIcon = ({ os, size = 14, className = '' }: { os: string; size?: number; className?: string }) => {
