@@ -171,6 +171,35 @@ const RemoteControlChip = ({ size, disabled, onSend }: RemoteControlChipProps) =
   const [keyCode, setKeyCode] = useState('13');
   const [waitMs, setWaitMs] = useState('250');
 
+  // Translate human-typed keys into Windows virtual key codes.
+  // - Single 0-9 / A-Z character → 0x30..0x39 / 0x41..0x5A
+  // - Common named keys ("enter", "esc", "space", arrows, F1-F12) → VK code
+  // - "0x1B" / "27" / decimals pass through unchanged
+  const NAMED_VK: Record<string, number> = {
+    enter: 0x0D, return: 0x0D, esc: 0x1B, escape: 0x1B, tab: 0x09,
+    space: 0x20, spacebar: 0x20, backspace: 0x08, delete: 0x2E, del: 0x2E,
+    insert: 0x2D, home: 0x24, end: 0x23, pageup: 0x21, pagedown: 0x22,
+    left: 0x25, up: 0x26, right: 0x27, down: 0x28,
+    shift: 0x10, ctrl: 0x11, control: 0x11, alt: 0x12, win: 0x5B, meta: 0x5B,
+    capslock: 0x14,
+  };
+  const resolveKey = (raw: string): number => {
+    const t = String(raw || '').trim();
+    if (!t) return 0;
+    if (/^0x[0-9a-f]+$/i.test(t)) return parseInt(t, 16);
+    if (/^\d+$/.test(t)) return parseInt(t, 10);
+    if (t.length === 1) {
+      const c = t.toUpperCase().charCodeAt(0);
+      if (c >= 0x30 && c <= 0x39) return c; // 0-9
+      if (c >= 0x41 && c <= 0x5A) return c; // A-Z
+    }
+    const lower = t.toLowerCase();
+    if (NAMED_VK[lower] != null) return NAMED_VK[lower];
+    const fmatch = lower.match(/^f([1-9]|1[0-2])$/);
+    if (fmatch) return 0x70 + (parseInt(fmatch[1], 10) - 1);
+    return Number(t) || 0;
+  };
+
   const buildPayload = () => {
     let params: Record<string, unknown> = {};
     if (op === 'mouse.move') {
@@ -180,7 +209,7 @@ const RemoteControlChip = ({ size, disabled, onSend }: RemoteControlChipProps) =
     } else if (op === 'mouse.drag') {
       params = { from_x: Number(x), from_y: Number(y), to_x: Number(toX), to_y: Number(toY), button };
     } else if (op === 'keyboard.press') {
-      params = { key: Number(keyCode) };
+      params = { key: resolveKey(keyCode) };
     } else if (op === 'system.wait') {
       params = { ms: Number(waitMs) };
     }
@@ -266,8 +295,8 @@ const RemoteControlChip = ({ size, disabled, onSend }: RemoteControlChipProps) =
 
         {op === 'keyboard.press' && (
           <div>
-            <label className="text-[0.65rem] font-mono text-muted-foreground">key (virtual key code)</label>
-            <Input value={keyCode} onChange={e => setKeyCode(e.target.value)} className="h-7 text-xs font-mono" />
+            <label className="text-[0.65rem] font-mono text-muted-foreground">key (a-z, 0-9, enter, esc, f1, or VK code)</label>
+            <Input value={keyCode} onChange={e => setKeyCode(e.target.value)} placeholder="Enter" className="h-7 text-xs font-mono" />
           </div>
         )}
 
