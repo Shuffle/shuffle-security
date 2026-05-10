@@ -227,6 +227,7 @@ export const useHostActions = ({ onActionComplete }: UseHostActionsOptions = {})
       entryId,
       hostUuid,
       actionName,
+      commandText: isPredefined ? `script:${actionId}` : actionId,
       hostname,
       status: 'sending',
       requestBody,
