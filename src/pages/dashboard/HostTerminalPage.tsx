@@ -984,7 +984,7 @@ const HostTerminalPage = () => {
         <p className="text-[0.65rem] text-muted-foreground/60 mt-2.5 text-center">
           {isDemoHost
             ? 'Demo terminal — only the "Isolate Host" predefined action is enabled.'
-            : 'No session is created — each command is standalone. History is stored locally in your browser.'}
+            : 'No session is created — each command is standalone. Full history is saved as Workflow Executions, with sessions stored locally in your browser.'}
         </p>
       </div>
 
