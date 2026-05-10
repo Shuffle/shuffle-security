@@ -43,7 +43,10 @@ import HourglassDisabledIcon from '@mui/icons-material/HourglassDisabled';
 import PauseIcon from '@mui/icons-material/Pause';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import RefreshIcon from '@mui/icons-material/Refresh';
-// RestartAltIcon removed (replaced by chip tabs)
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+import ThumbDownIcon from '@mui/icons-material/ThumbDown';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SendIcon from '@mui/icons-material/Send';
 import WarningIcon from '@mui/icons-material/Warning';
 import CloseIcon from '@mui/icons-material/Close';
@@ -264,12 +267,15 @@ interface TimelineRowProps {
   questionAnswers: Record<string, { index: number; value: string }>;
   setQuestionAnswers: React.Dispatch<React.SetStateAction<Record<string, { index: number; value: string }>>>;
   onSubmitQuestions: (decisionId: string, answers: Record<string, any>, isContinuation?: boolean) => void;
+  onRerunAgent: () => void;
+  onRerunDecision: (decision: any) => void;
   agentRequestLoading: boolean;
 }
 
 const TimelineRow: React.FC<TimelineRowProps> = ({
   item, index, open, onToggle, appsById, totalDuration, originalStartTime,
-  maxWidth, questionAnswers, setQuestionAnswers, onSubmitQuestions, agentRequestLoading,
+  maxWidth, questionAnswers, setQuestionAnswers, onSubmitQuestions,
+  onRerunAgent, onRerunDecision, agentRequestLoading,
 }) => {
   const validate = validateJson(item.details);
   const itemStart = item.start_time || 0;
@@ -391,6 +397,88 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
         </Tooltip>
         <Box sx={{ width: 60, fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', textAlign: 'right' }}>
           {dur > 0 ? `${dur.toFixed(1)}s` : ''}
+        </Box>
+        {/* Per-row actions: Approve/Deny, Rerun */}
+        <Box
+          sx={{ display: 'flex', alignItems: 'center', gap: 0.25, ml: 1, minWidth: 96, justifyContent: 'flex-end' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {item.type === 'decision'
+            && details?.run_details?.status === 'WAITING'
+            && (item.category === 'ask' || details?.action === 'ask')
+            && questions.length === 0 && (
+            <>
+              <Tooltip title="Approve this step">
+                <span>
+                  <IconButton
+                    size="small"
+                    disabled={agentRequestLoading}
+                    onClick={() => {
+                      if (details?.run_details?.id) onSubmitQuestions(details.run_details.id, { approve: 'true' });
+                    }}
+                    sx={{ color: STATUS_COLORS.finished }}
+                  >
+                    <ThumbUpIcon sx={{ fontSize: 16 }} />
+                  </IconButton>
+                </span>
+              </Tooltip>
+              <Tooltip title="Deny this step">
+                <span>
+                  <IconButton
+                    size="small"
+                    disabled={agentRequestLoading}
+                    onClick={() => {
+                      if (details?.run_details?.id) onSubmitQuestions(details.run_details.id, { approve: 'false' });
+                    }}
+                    sx={{ color: STATUS_COLORS.error }}
+                  >
+                    <ThumbDownIcon sx={{ fontSize: 16 }} />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            </>
+          )}
+          {item.type === 'agent' && (
+            <Tooltip title="Rerun the agent with the same input">
+              <span>
+                <IconButton
+                  size="small"
+                  disabled={agentRequestLoading}
+                  onClick={onRerunAgent}
+                  sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
+                >
+                  <RestartAltIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+              </span>
+            </Tooltip>
+          )}
+          {item.type === 'decision' && (
+            <Tooltip title="Rerun from this decision (clears all decisions after it)">
+              <span>
+                <IconButton
+                  size="small"
+                  disabled={agentRequestLoading || !details?.run_details?.id}
+                  onClick={() => details && onRerunDecision(details)}
+                  sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
+                >
+                  <RestartAltIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+              </span>
+            </Tooltip>
+          )}
+          {item.type === 'decision' && (details?.run_details as any)?.debug_url && (
+            <Tooltip title="Open debug URL">
+              <span>
+                <IconButton
+                  size="small"
+                  onClick={() => window.open((details!.run_details as any).debug_url, '_blank', 'noopener,noreferrer')}
+                  sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
+                >
+                  <OpenInNewIcon sx={{ fontSize: 16 }} />
+                </IconButton>
+              </span>
+            </Tooltip>
+          )}
         </Box>
       </Box>
 
@@ -522,6 +610,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const [agentRequestLoading, setAgentRequestLoading] = useState(false);
   const [execution, setExecution] = useState<ExecutionData | null>(null);
   const [agentData, setAgentData] = useState<{ decisions?: AgentDecision[]; original_input?: string; status?: string; started_at?: number; completed_at?: number; [k: string]: any }>({});
+  const [agentActionResult, setAgentActionResult] = useState<any>(null);
   const [showStarter, setShowStarter] = useState(true);
   const [openIndexes, setOpenIndexes] = useState<Set<number>>(new Set());
   const [questionAnswers, setQuestionAnswers] = useState<Record<string, { index: number; value: string }>>({});
@@ -697,6 +786,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
       } else {
         actionResult = json;
       }
+      setAgentActionResult(actionResult);
       const v = validateJson(actionResult?.result);
       if (v.valid) setAgentData({ ...v.result, started_at: json.started_at, completed_at: json.completed_at, status: json.status });
       setError(null);
@@ -868,6 +958,65 @@ const AgentUI: React.FC<AgentUIProps> = ({
       setAgentRequestLoading(false);
     }
   }, [execution, getExecution]);
+
+  // ── Rerun the whole agent with the original input ──
+  const rerunAgent = useCallback(() => {
+    const input =
+      agentData?.original_input ||
+      actionInput ||
+      (() => {
+        const msgs = (agentData as any)?.input?.messages || [];
+        const m = msgs.find((m: any) => m?.role === 'user' && !String(m?.role).includes('USER CONTEXT'));
+        return m?.content || '';
+      })();
+    if (!input) {
+      toast({ title: 'Nothing to rerun', description: 'No original input found for this execution.', variant: 'destructive' });
+      return;
+    }
+    setActionInput(input);
+    submitInput(input);
+  }, [agentData, actionInput, submitInput]);
+
+  // ── Rerun a single decision (clears decisions after it on the backend) ──
+  const rerunDecision = useCallback(async (decision: any) => {
+    if (!execution?.execution_id) {
+      toast({ title: 'No execution loaded', description: 'Cannot rerun this decision.', variant: 'destructive' });
+      return;
+    }
+    if (!agentActionResult?.action) {
+      toast({ title: 'Missing action context', description: 'Could not locate the agent action node.', variant: 'destructive' });
+      return;
+    }
+    const decisionId = decision?.run_details?.id;
+    if (!decisionId) {
+      toast({ title: 'Missing decision id', description: 'This decision cannot be rerun.', variant: 'destructive' });
+      return;
+    }
+    const body: any = { ...agentActionResult.action };
+    body.source_execution = execution.execution_id;
+    body.source_workflow = execution.workflow?.id;
+    setAgentRequestLoading(true);
+    try {
+      const resp = await fetch(getApiUrl(`/api/v1/apps/agent/run?rerun=true&decision_id=${encodeURIComponent(decisionId)}`), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify(body),
+      });
+      const json = await resp.json().catch(() => ({}));
+      if (json?.success === false) {
+        toast({ title: 'Rerun failed', description: json.reason || 'Try again later.', variant: 'destructive' });
+      } else {
+        toast({ title: 'Rerunning decision', description: 'The agent will continue from this step.' });
+        setTimeout(() => getExecution(execution.execution_id!, execution.authorization!), 800);
+        setTimeout(() => getExecution(execution.execution_id!, execution.authorization!), 5000);
+      }
+    } catch (err) {
+      toast({ title: 'Network error', description: String(err), variant: 'destructive' });
+    } finally {
+      setAgentRequestLoading(false);
+    }
+  }, [execution, agentActionResult, getExecution]);
 
   // ── Build timeline ──
   const { timeline, originalStartTime, totalDuration, finishDecisionId, finishAnswer } = useMemo(() => {
@@ -1418,6 +1567,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
                     questionAnswers={questionAnswers}
                     setQuestionAnswers={setQuestionAnswers}
                     onSubmitQuestions={submitQuestions}
+                    onRerunAgent={rerunAgent}
+                    onRerunDecision={rerunDecision}
                     agentRequestLoading={agentRequestLoading}
                   />
                 ))
