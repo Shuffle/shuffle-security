@@ -6,7 +6,12 @@
  * If you want to add, rename, enable or disable a predefined action, do it
  * here — every UI location renders from this list so they stay in sync.
  */
+import { useState } from 'react';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { MousePointerClick } from 'lucide-react';
 
 export const SYSTEM_USERS = new Set([
   'root', '_root', 'system', 'daemon', 'nobody', 'launchd', '_windowserver',
