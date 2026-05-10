@@ -18,7 +18,7 @@ import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { DEFAULT_AGENT_PERMISSIONS } from '@/hooks/useAgentPermissions';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { fetchHostSupplements } from '@/lib/mergeMonitorHosts';
-import { HostActionChips, getActiveUser } from '@/components/monitors/hostActionDefinitions';
+import { HostActionChips, getActiveUser, inferAgentPrivilege, type AgentPrivilege } from '@/components/monitors/hostActionDefinitions';
 import { ActionOutputView } from '@/components/monitors/ActionOutputView';
 import { terminalStorageKey, readStoredSession, registerHostIdentity } from '@/utils/terminalStorageKey';
 import { hostUrlSegment, parseHostUrlSegment } from '@/utils/hostUrlSegment';
