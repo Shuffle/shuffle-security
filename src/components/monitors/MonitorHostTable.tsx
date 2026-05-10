@@ -688,7 +688,7 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
                                 <HostActionChips
                                   activeUser={getActiveUser(host)}
                                   agentPrivilege={inferAgentPrivilege(host)}
-                                  arch={host.arch}
+                                  arch={`${host.os || ''} ${host.arch || ''}`}
                                   size="compact"
                                   onRun={({ actionId, displayName }) =>
                                     executeHostAction(actionId, displayName, host.hostname, host.groupName || '', host.uuid, true)

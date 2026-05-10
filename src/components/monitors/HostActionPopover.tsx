@@ -243,7 +243,7 @@ export const HostActionPopover = ({
                 <HostActionChips
                   activeUser={getActiveUser(host.raw)}
                   agentPrivilege={inferAgentPrivilege(host.raw)}
-                  arch={host.arch}
+                  arch={`${(host as { os?: string }).os || ''} ${host.arch || ''}`}
                   size="compact"
                   onRun={({ actionId, displayName }) =>
                     executeHostAction(actionId, displayName, host.hostname, host.groupName, host.uuid, true)

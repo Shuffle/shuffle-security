@@ -898,7 +898,7 @@ const HostTerminalPage = () => {
         <HostActionChips
           activeUser={activeUser}
           agentPrivilege={agentPrivilege}
-          arch={resolvedHost?.arch}
+          arch={`${resolvedHost?.os || ''} ${resolvedHost?.arch || ''}`}
           size="comfortable"
           allDisabled={!canRunActions}
           allDisabledReason="Monitor resolution required before running predefined actions"

@@ -133,7 +133,13 @@ interface HostActionChipsProps {
   arch?: string;
 }
 
-const isWindowsArch = (arch?: string) => /win/i.test(String(arch || ''));
+const isWindowsArch = (arch?: string) => {
+  const s = String(arch || '').toLowerCase();
+  // Match "windows", "win32", "win", but NOT "darwin" (macOS).
+  if (!s) return false;
+  if (s.includes('darwin')) return false;
+  return /\bwin(dows|32|64)?\b/.test(s) || s === 'win';
+};
 
 type RemoteOp = 'mouse.move' | 'mouse.click' | 'mouse.drag' | 'keyboard.press' | 'system.wait';
 
