@@ -366,12 +366,19 @@ const HostTerminalPage = () => {
   }, [hostsLoaded, hostUuid, hostState?.hostname, resolvedHost, datastoreResolvedHostname]);
 
 
-  // Load stored session on mount / host change
+  // Load stored session on mount / host change. We re-run when the resolved
+  // hostname becomes known because the canonical storage key only resolves
+  // *after* registerHostIdentity() has been called for this alias — the
+  // mini-popover writes under `terminal_session_h:<hostname>|<arch>` and
+  // without re-reading we'd be stuck on the empty `terminal_session_<urlSeg>`.
   useEffect(() => {
     if (!hostUuid) return;
     const stored = getStoredSession(hostUuid);
-    if (stored.length > 0) {
-      setActionHistory(stored.map((e, i) => ({
+    if (stored.length === 0) return;
+    setActionHistory(prev => {
+      // Don't clobber in-flight entries the user just kicked off.
+      if (prev.some(e => e.status === 'sending' || e.status === 'polling')) return prev;
+      return stored.map((e) => ({
         entryId: ++entryIdCounter,
         hostUuid,
         actionName: e.actionName,
@@ -384,9 +391,9 @@ const HostTerminalPage = () => {
         authorization: e.authorization,
         actionOutput: e.actionOutput,
         error: e.error,
-      })));
-    }
-  }, [hostUuid]);
+      }));
+    });
+  }, [hostUuid, hostname, resolvedHost?.uuid, hostsLoaded]);
 
   // Save to localStorage when entries finish
   useEffect(() => {
