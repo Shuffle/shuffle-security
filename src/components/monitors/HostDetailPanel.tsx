@@ -648,7 +648,7 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
                     </TooltipProvider>
                   </td>
                 </tr>
-                {hasKids && expanded && kids.map(k => renderNode(k, depth + 1))}
+                {hasKids && expanded && !flat && kids.map(k => renderNode(k, depth + 1))}
               </Fragment>
             );
           };
