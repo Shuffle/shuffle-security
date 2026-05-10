@@ -53,12 +53,23 @@ const detectImage = (raw: string): { mime: string; b64: string } | null => {
         }
       }
     } catch {
-      // not JSON — fall through
+      // truncated/invalid JSON — fall through to regex extraction
     }
+  }
+
+  // Last-resort regex: pull a base64-looking blob out of any wrapper text
+  // (handles truncated JSON, partial logs, etc.)
+  const regexMatch = s.match(/"(?:image|screenshot|data|png|jpeg|jpg|b64|base64)"\s*:\s*"([A-Za-z0-9+/=\s]{200,})"?/i);
+  if (regexMatch) {
+    const inner = regexMatch[1].replace(/\s+/g, '');
+    const sig = matchSignature(inner);
+    if (sig) return sig;
   }
 
   return null;
 };
+
+const MAX_TEXT_CHARS = 4000;
 
 interface ActionOutputViewProps {
   output: string;
@@ -69,6 +80,7 @@ interface ActionOutputViewProps {
 export const ActionOutputView = ({ output, className }: ActionOutputViewProps) => {
   const detected = useMemo(() => detectImage(output), [output]);
   const [zoomed, setZoomed] = useState(false);
+  const [showFull, setShowFull] = useState(false);
 
   if (detected) {
     const src = `data:${detected.mime};base64,${detected.b64}`;
@@ -93,5 +105,26 @@ export const ActionOutputView = ({ output, className }: ActionOutputViewProps) =
     );
   }
 
-  return <pre className={className}>{output}</pre>;
+  const isHuge = !!output && output.length > MAX_TEXT_CHARS;
+  const display = !isHuge || showFull
+    ? output
+    : `${output.slice(0, MAX_TEXT_CHARS)}\n\n… [truncated ${output.length - MAX_TEXT_CHARS} chars to keep the page responsive]`;
+
+  return (
+    <>
+      <pre className={className}>{display}</pre>
+      {isHuge && (
+        <div className="mt-1 flex items-center gap-2 text-[0.6rem] text-muted-foreground">
+          <span>{(output.length / 1024).toFixed(1)} KB output</span>
+          <button
+            type="button"
+            onClick={() => setShowFull(v => !v)}
+            className="underline hover:text-foreground"
+          >
+            {showFull ? 'Collapse' : 'Show full'}
+          </button>
+        </div>
+      )}
+    </>
+  );
 };
