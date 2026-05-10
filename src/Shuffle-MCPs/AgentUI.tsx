@@ -823,10 +823,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
     }
   };
 
-  const restart = () => {
-    setShowStarter(true);
-    setError(null);
-  };
+  // restart() removed — Start tab now toggles via goToTab() while preserving the execution.
+
 
   // The three top-level "tabs": Start (the prompt form), Simple summary,
   // and Detailed timeline. They're all available once an execution exists,
