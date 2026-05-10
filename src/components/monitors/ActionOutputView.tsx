@@ -120,6 +120,18 @@ export const ActionOutputView = ({ output, className }: ActionOutputViewProps) =
   const [zoomed, setZoomed] = useState(false);
   const [showFull, setShowFull] = useState(false);
 
+  useEffect(() => {
+    if (!zoomed) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        setZoomed(false);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [zoomed]);
+
   if (detected) {
     const src = `data:${detected.mime};base64,${detected.b64}`;
     const hasMeta = !!(detected.cursor || detected.screenSize);
