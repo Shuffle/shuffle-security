@@ -505,17 +505,25 @@ const AgentUI: React.FC<AgentUIProps> = ({
     }
   }, []);
 
-  // Read URL params on mount
+  // Attach to an explicit execution (props) or one passed via URL params.
+  // Props take precedence over URL params.
   useEffect(() => {
-    if (!readUrlParams) return;
-    const params = new URLSearchParams(window.location.search);
-    const eid = params.get('execution_id');
-    const auth = params.get('authorization');
+    let eid: string | null = null;
+    let auth: string | null = null;
+    if (executionId && authorization) {
+      eid = executionId;
+      auth = authorization;
+    } else if (readUrlParams) {
+      const params = new URLSearchParams(window.location.search);
+      eid = params.get('execution_id');
+      auth = params.get('authorization');
+    }
     if (eid && auth) {
       setShowStarter(false);
+      setExecution({ execution_id: eid, authorization: auth, status: 'EXECUTING' });
       getExecution(eid, auth);
     }
-  }, [readUrlParams, getExecution]);
+  }, [readUrlParams, executionId, authorization, getExecution]);
 
   // Poll while running. Continue indefinitely until we see a terminal status
   // (FINISHED / FAILURE / ABORTED). We never give up on our own — long
