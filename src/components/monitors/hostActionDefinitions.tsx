@@ -31,6 +31,42 @@ export const getActiveUser = (host: unknown): string | null => {
   return [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0];
 };
 
+export type AgentPrivilege = 'system' | 'user' | 'unknown';
+
+/**
+ * Infer whether the host monitor agent is running as SYSTEM (Windows) /
+ * root (unix) by inspecting which processes it was able to enumerate user
+ * info for.
+ *
+ * Heuristic: a SYSTEM-context agent can read `user` for processes owned by
+ * NT AUTHORITY\SYSTEM, Local Service, Network Service (or root on unix). A
+ * user-context agent typically gets empty `user` strings on those rows
+ * (access denied) and can only attribute its own user's processes.
+ *
+ * Returns 'unknown' when there's no process_list to reason about.
+ */
+export const inferAgentPrivilege = (host: unknown): AgentPrivilege => {
+  const v = (host as { process_list?: unknown } | null | undefined)?.process_list;
+  if (!Array.isArray(v) || v.length === 0) return 'unknown';
+  let systemRows = 0;
+  for (const p of v as Array<{ user?: unknown }>) {
+    const u = String(p?.user || '').trim().toLowerCase();
+    if (!u) continue;
+    if (
+      u === 'system' ||
+      u === 'root' ||
+      u === 'nt authority\\system' ||
+      u === 'local service' ||
+      u === 'nt authority\\local service' ||
+      u === 'network service' ||
+      u === 'nt authority\\network service'
+    ) {
+      systemRows++;
+    }
+  }
+  return systemRows > 0 ? 'system' : 'user';
+};
+
 export type PredefinedActionVariant = 'destructive' | 'normal' | 'disabled';
 
 export interface PredefinedHostAction {
@@ -39,6 +75,8 @@ export interface PredefinedHostAction {
   variant: PredefinedActionVariant;
   /** When true the chip needs an active user resolved via getActiveUser */
   requiresActiveUser?: boolean;
+  /** When true the action only works if the agent is running as SYSTEM/root */
+  requiresSystem?: boolean;
   disabledReason?: string;
 }
 
@@ -47,10 +85,10 @@ export interface PredefinedHostAction {
  * `disabled` variant chips are always rendered greyed out.
  */
 export const PREDEFINED_HOST_ACTIONS: PredefinedHostAction[] = [
-  { id: 'disable_rce', name: 'Disable RCE', variant: 'destructive' },
+  { id: 'disable_rce', name: 'Disable RCE', variant: 'destructive', requiresSystem: true },
   { id: 'screenshot', name: 'Screenshot', variant: 'normal' },
-  { id: 'isolate_host', name: 'Isolate Host', variant: 'normal' },
-  { id: 'unisolate_host', name: 'Unisolate', variant: 'normal' },
+  { id: 'isolate_host', name: 'Isolate Host', variant: 'normal', requiresSystem: true },
+  { id: 'unisolate_host', name: 'Unisolate', variant: 'normal', requiresSystem: true },
   { id: 'disable_user', name: 'Disable User Accounts', variant: 'disabled', disabledReason: 'Not yet available on the endpoint' },
   { id: 'restart_now', name: 'Restart Endpoint', variant: 'disabled', disabledReason: 'Not yet available on the endpoint' },
 ];
