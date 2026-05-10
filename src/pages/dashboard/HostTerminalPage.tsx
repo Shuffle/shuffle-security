@@ -14,7 +14,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, ChevronRight, Loader2, Play, RefreshCw, Search, ShieldX, Terminal, X } from 'lucide-react';
-import { toast } from '@/lib/toast';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { DEFAULT_AGENT_PERMISSIONS } from '@/hooks/useAgentPermissions';
 import { usePageMeta } from '@/hooks/usePageMeta';
