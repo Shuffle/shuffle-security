@@ -357,16 +357,6 @@ const HostTerminalPage = () => {
     return () => { cancelled = true; };
   }, [hostsLoaded, hostUuid, hostState?.hostname, resolvedHost, datastoreResolvedHostname]);
 
-  const resolutionToastRef = useRef('');
-  useEffect(() => {
-    if (!datastoreLookupDone) return;
-    const nextKey = hostLookupFailed ? `host:${hostUuid}` : missingSensorGroup ? `group:${hostUuid}` : '';
-    if (!nextKey || resolutionToastRef.current === nextKey) return;
-    resolutionToastRef.current = nextKey;
-    toast.error(hostLookupFailed ? 'Monitor not found' : 'Sensor group missing', {
-      description: resolutionErrorMessage,
-    });
-  }, [datastoreLookupDone, hostLookupFailed, hostUuid, missingSensorGroup, resolutionErrorMessage]);
 
   // Load stored session on mount / host change
   useEffect(() => {
