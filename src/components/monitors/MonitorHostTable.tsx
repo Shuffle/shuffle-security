@@ -72,6 +72,29 @@ const countActiveProcesses = (host: MonitorHost): number => {
   return Array.isArray(v) ? v.length : 0;
 };
 
+const SYSTEM_USERS = new Set([
+  'root', '_root', 'system', 'daemon', 'nobody', 'launchd', '_windowserver',
+  '_spotlight', '_coreaudiod', '_locationd', '_softwareupdate', '_assetcache',
+  '_networkd', '_timed', '_mdnsresponder', '_distnote', '_usbmuxd',
+  'systemd', 'syslog', 'messagebus', 'dbus', 'sshd', 'nt authority\\system',
+  'local service', 'network service',
+]);
+
+/** Best-effort active-user detection: top non-system user across process_list. */
+const getActiveUser = (host: MonitorHost): string | null => {
+  const v = (host as { process_list?: unknown }).process_list;
+  if (!Array.isArray(v)) return null;
+  const counts = new Map<string, number>();
+  for (const p of v as Array<{ user?: unknown }>) {
+    const u = String(p?.user || '').trim();
+    if (!u) continue;
+    if (SYSTEM_USERS.has(u.toLowerCase()) || u.startsWith('_')) continue;
+    counts.set(u, (counts.get(u) || 0) + 1);
+  }
+  if (counts.size === 0) return null;
+  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0];
+};
+
 const triState = (v: unknown): 'on' | 'off' | 'empty' => {
   if (v === true || v === 'true' || v === 'TRUE') return 'on';
   if (v === false || v === 'false' || v === 'FALSE' || v === '0' || v === 0 || v === 'no' || v === 'off') return 'off';
