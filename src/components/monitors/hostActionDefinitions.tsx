@@ -184,7 +184,11 @@ const RemoteControlChip = ({ size, disabled, onSend }: RemoteControlChipProps) =
     capslock: 0x14,
   };
   const resolveKey = (raw: string): number => {
-    const t = String(raw || '').trim();
+    const s = String(raw || '');
+    if (!s) return 0;
+    // Preserve single-character whitespace (e.g. ' ' → VK_SPACE) before trimming
+    if (s.length === 1 && /\s/.test(s)) return 0x20;
+    const t = s.trim();
     if (!t) return 0;
     if (/^0x[0-9a-f]+$/i.test(t)) return parseInt(t, 16);
     if (/^\d+$/.test(t)) return parseInt(t, 10);
