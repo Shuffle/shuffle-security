@@ -17,6 +17,8 @@ export interface AgentRunRequest {
   /** Optional: target multiple apps */
   toolNames?: string[];
   toolIds?: string[];
+  /** Optional: attached image (base64 data URL, e.g. data:image/png;base64,...) */
+  image?: string;
 }
 
 // ── Response types ─────────────────────────────────────────────────────────────
@@ -206,6 +208,12 @@ export const runAgent = async (request: AgentRunRequest): Promise<AgentRunRespon
   }
   if (request.toolIds && request.toolIds.length > 0) {
     params.tool_ids = request.toolIds;
+  }
+
+  // Optional attached image — sent as a top-level "image" field on params
+  // (base64 data URL). The backend forwards this to the LLM as multimodal input.
+  if (request.image && request.image.length > 0) {
+    params.image = request.image;
   }
 
   const payload = {
