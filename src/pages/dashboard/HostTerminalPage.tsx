@@ -377,7 +377,7 @@ const HostTerminalPage = () => {
     if (stored.length === 0) return;
     setActionHistory(prev => {
       // Don't clobber in-flight entries the user just kicked off.
-      if (prev.some(e => e.status === 'pending')) return prev;
+      if (prev.some(e => e.status === 'sending' || e.status === 'polling')) return prev;
       return stored.map((e) => ({
         entryId: ++entryIdCounter,
         hostUuid,
