@@ -4,8 +4,10 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Play, Terminal, ShieldX, CheckCircle2, Maximize2 } from 'lucide-react';
+import { Loader2, Play, Terminal, Maximize2 } from 'lucide-react';
+import { CheckCircle2, ShieldX } from 'lucide-react';
 import type { ActionDebugEntry } from '@/hooks/useHostActions';
+import { HostActionChips, getActiveUser } from './hostActionDefinitions';
 
 /**
  * Shared "Run Action" popover used in BOTH the host list view (VulnAssetsPage)
