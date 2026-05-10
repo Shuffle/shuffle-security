@@ -293,9 +293,7 @@ export const useHostActions = ({ onActionComplete }: UseHostActionsOptions = {})
               actionSuccess: result.success,
               error: result.success ? undefined : (result.error || result.output || 'Action reported failure'),
             });
-            if (!result.success) {
-              toast.error('Action failed', { description: result.error || result.output || `"${actionName}" → ${hostname}` });
-            }
+            // Result + error are already surfaced in the action output panel — no toast needed.
             return;
           } catch {
             if (!pollingActiveRef.current.get(hostUuid)) return;
