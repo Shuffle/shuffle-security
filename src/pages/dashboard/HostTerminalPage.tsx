@@ -268,9 +268,13 @@ const HostTerminalPage = () => {
       try {
         const supplements = await fetchHostSupplements();
         const search = (map: Map<string, Record<string, unknown>>) => {
+          // Direct hostname key match (supplements are keyed by hostname).
+          const directHostname = (resolvedHost?.hostname || hostState?.hostname || '').toLowerCase().trim();
+          if (directHostname && map.has(directHostname)) return map.get(directHostname) || null;
           for (const [, val] of map.entries()) {
             const recUuid = String((val as any).uuid || '').trim();
-            if (recUuid && recUuid === hostUuid) {
+            const recHost = String((val as any).hostname || '').toLowerCase().trim();
+            if ((recUuid && recUuid === hostUuid) || (recHost && recHost === idLower) || (recHost && stripDomain(recHost) === idStripped)) {
               return val;
             }
           }
