@@ -23,6 +23,8 @@ import {
   AppAuthSection,
   TryMcpSection,
   SingulActionsPreview,
+  AgentRunner,
+  AgentDebugger,
   useAppLookup,
 } from '@/Shuffle-MCPs';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
@@ -34,6 +36,21 @@ import { Box as MuiBox, Skeleton } from '@mui/material';
  * Each section is paired with an MUI-docs-style expandable code block
  * showing the exact source that produced the rendered demo.
  */
+
+const SNIPPET_AGENT_RUNNER = `import { AgentRunner } from '@shuffleio/shuffle-mcps';
+
+<AgentRunner
+  title="What do you want to do?"
+  initialApps={[
+    { name: 'Http' },
+    { name: 'Shuffle_tools' },
+  ]}
+  onRun={({ input, success }) => console.log('agent run', { input, success })}
+/>`;
+
+const SNIPPET_AGENT_DEBUGGER = `import { AgentDebugger } from '@shuffleio/shuffle-mcps';
+
+<AgentDebugger limit={25} pollIntervalMs={30000} />`;
 
 const SNIPPET_INLINE_SEARCH = `import { ShuffleMCP } from '@shuffleio/shuffle-mcps';
 
