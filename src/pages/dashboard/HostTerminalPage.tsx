@@ -582,7 +582,7 @@ const HostTerminalPage = () => {
     if (autoRunFiredRef.current) return;
     const action = hostState?.autoRunAction;
     if (!action || !hostUuid) return;
-    if (!hostname || hostname === 'Unknown Host' || hostname === hostUuid) return;
+    if (!hostname || hostname === 'Unknown Host') return;
     if (!groupName) return;
     autoRunFiredRef.current = true;
     executeHostAction(action, action, false);
