@@ -717,7 +717,7 @@ const HostTerminalPage = () => {
                       setActionHistory([]);
                       setCustomAction('');
                       setHistoryIndex(-1);
-                      navigate(`/monitors/${h.uuid}/terminal`, {
+                      navigate(`/monitors/${encodeURIComponent(hostUrlSegment(h))}/terminal`, {
                         state: { hostname: h.hostname, groupName: h.groupName, mode: h.mode },
                         replace: true,
                       });
