@@ -656,12 +656,14 @@ const HostTerminalPage = () => {
   const finishedHistory = actionHistory.filter(e => e.status === 'success' || e.status === 'error');
   const runningEntries = actionHistory.filter(e => e.status === 'sending' || e.status === 'polling');
 
-  const filteredHosts = allHosts.filter(h =>
-    h.uuid !== hostUuid && (
-      h.hostname.toLowerCase().includes(hostSearchQuery.toLowerCase()) ||
-      h.groupName.toLowerCase().includes(hostSearchQuery.toLowerCase())
+  const filteredHosts = allHosts
+    .filter(h =>
+      h.uuid !== hostUuid && (
+        h.hostname.toLowerCase().includes(hostSearchQuery.toLowerCase()) ||
+        h.groupName.toLowerCase().includes(hostSearchQuery.toLowerCase())
+      )
     )
-  );
+    .sort((a, b) => (b.checkin || 0) - (a.checkin || 0));
 
   // No host in URL: auto-redirect to most recently checked-in monitor, or
   // show an empty state pointing to /monitors when none exist.
