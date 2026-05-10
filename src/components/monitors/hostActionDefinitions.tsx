@@ -111,6 +111,13 @@ interface HostActionChipsProps {
   size?: 'compact' | 'comfortable';
   /** Extra reason rendered as tooltip when allDisabled is true */
   allDisabledReason?: string;
+  /**
+   * Inferred privilege of the host monitor agent. When 'user', any action
+   * marked `requiresSystem` is rendered disabled with an explanatory tooltip
+   * (Windows: needs SYSTEM, unix: needs root). 'unknown' leaves them enabled
+   * since we can't tell.
+   */
+  agentPrivilege?: AgentPrivilege;
 }
 
 /**
@@ -126,6 +133,7 @@ export const HostActionChips = ({
   allDisabled = false,
   size = 'compact',
   allDisabledReason,
+  agentPrivilege = 'unknown',
 }: HostActionChipsProps) => {
   const sizing = size === 'compact'
     ? 'px-2 py-1 text-[0.65rem]'
@@ -137,7 +145,8 @@ export const HostActionChips = ({
         const needsUser = !!a.requiresActiveUser;
         const userMissing = needsUser && !activeUser;
         const isPermanentlyDisabled = a.variant === 'disabled';
-        const isDisabled = isPermanentlyDisabled || allDisabled || userMissing;
+        const needsSystem = !!a.requiresSystem && agentPrivilege === 'user';
+        const isDisabled = isPermanentlyDisabled || allDisabled || userMissing || needsSystem;
 
         let className = sizing + ' rounded-md border transition-colors ';
         if (isDisabled) {
