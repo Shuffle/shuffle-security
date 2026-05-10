@@ -1280,29 +1280,6 @@ const AgentUI: React.FC<AgentUIProps> = ({
                     </>
                   );
                 })()}
-                        <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))' }}>
-                          Waiting for the agent to finish. Switch to Detailed for the live timeline.
-                        </Typography>
-                      ) : (
-                        <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))' }}>
-                          No final answer was returned. Open Detailed to inspect each step.
-                        </Typography>
-                      )}
-                      {!isRunning && (
-                        <Box>
-                          <Button
-                            size="small"
-                            variant="text"
-                            onClick={() => setViewMode('detailed')}
-                            sx={{ color: 'hsl(var(--primary))', textTransform: 'none', px: 0 }}
-                          >
-                            View detailed timeline →
-                          </Button>
-                        </Box>
-                      )}
-                    </>
-                  );
-                })()}
               </Box>
             )}
 
