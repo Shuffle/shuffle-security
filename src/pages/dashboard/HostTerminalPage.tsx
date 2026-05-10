@@ -64,7 +64,7 @@ type StoredEntry = {
   error?: string;
 };
 
-const HISTORY_KEY = (hostUuid: string) => `terminal_session_${hostUuid}`;
+const HISTORY_KEY = (hostUuid: string) => terminalStorageKey(hostUuid);
 const MAX_STORED = 50;
 const MAX_OUTPUT_CHARS = 20000;
 
@@ -74,9 +74,9 @@ const truncate = (s: string | undefined, n: number): string | undefined => {
 };
 
 const getStoredSession = (hostUuid: string): StoredEntry[] => {
-  try {
-    return JSON.parse(localStorage.getItem(HISTORY_KEY(hostUuid)) || '[]');
-  } catch { return []; }
+  // Read merged from canonical (hostname+arch) key + legacy uuid key so the
+  // mini-popover and full terminal page share the same history.
+  return readStoredSession(hostUuid) as StoredEntry[];
 };
 
 const saveSession = (hostUuid: string, entries: ActionDebugEntry[]) => {
