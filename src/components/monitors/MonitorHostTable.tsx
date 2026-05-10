@@ -595,14 +595,7 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
                 <div className="flex items-center justify-end gap-2.5" onClick={e => e.stopPropagation()}>
                   {responseActionsOn ? (
                     <Popover
-                      open={openPopovers.has(host.uuid)}
                       onOpenChange={(open) => {
-                        setOpenPopovers(prev => {
-                          const next = new Set(prev);
-                          if (open) next.add(host.uuid);
-                          else next.delete(host.uuid);
-                          return next;
-                        });
                         if (open) hydrateHost(host.uuid);
                       }}
                     >
