@@ -242,6 +242,7 @@ export const HostActionPopover = ({
               <div className="px-3 py-2 border-t border-border/50 shrink-0">
                 <HostActionChips
                   activeUser={getActiveUser(host.raw)}
+                  agentPrivilege={inferAgentPrivilege(host.raw)}
                   size="compact"
                   onRun={({ actionId, displayName }) =>
                     executeHostAction(actionId, displayName, host.hostname, host.groupName, host.uuid, true)
