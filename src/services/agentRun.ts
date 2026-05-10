@@ -32,8 +32,8 @@ export interface AgentRunRequest {
   toolIds?: string[];
   /**
    * Optional: one or more attached images. Sent under
-   * `params.input.image` as an array of MCP image content blocks
-   * (`{ type: "image", data, mimeType }`).
+   * `params.input.images` as an array of `{ url, detail }` objects,
+   * where `url` is a `data:<mime>;base64,<data>` URL.
    */
   images?: AgentImageInput[];
   /** @deprecated Use `images`. Single base64 data URL kept for back-compat. */
