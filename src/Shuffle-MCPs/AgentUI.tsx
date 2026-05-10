@@ -1567,6 +1567,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
                     questionAnswers={questionAnswers}
                     setQuestionAnswers={setQuestionAnswers}
                     onSubmitQuestions={submitQuestions}
+                    onRerunAgent={rerunAgent}
+                    onRerunDecision={rerunDecision}
                     agentRequestLoading={agentRequestLoading}
                   />
                 ))
