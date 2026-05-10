@@ -778,6 +778,11 @@ const AgentUI: React.FC<AgentUIProps> = ({
 
   // ── Build timeline ──
   const { timeline, originalStartTime, totalDuration, finishDecisionId, finishAnswer } = useMemo(() => {
+    // Backend may return Unix milliseconds (UnixMillis) or seconds. Normalize to seconds.
+    const toSec = (t: any): number => {
+      const n = Number(t) || 0;
+      return n > 1e12 ? Math.floor(n / 1000) : n;
+    };
     const items: TimelineItem[] = [
       {
         label: 'AI Agent',
@@ -785,8 +790,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
         category: 'agent',
         details: agentData,
         status: execution?.status || agentData?.status,
-        start_time: agentData?.started_at || execution?.started_at,
-        end_time: agentData?.completed_at || execution?.completed_at,
+        start_time: toSec(agentData?.started_at || execution?.started_at),
+        end_time: toSec(agentData?.completed_at || execution?.completed_at),
       },
     ];
 
@@ -799,8 +804,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
         type: 'decision',
         category: dec.category,
         status: rd.status,
-        start_time: rd.started_at || 0,
-        end_time: rd.completed_at || Math.floor(Date.now() / 1000),
+        start_time: toSec(rd.started_at) || 0,
+        end_time: toSec(rd.completed_at) || Math.floor(Date.now() / 1000),
         details: dec,
       });
       if (dec.action === 'finish' || dec.category === 'finish' || dec.details?.action === 'finalise' || dec.action === 'finalise') {
@@ -819,6 +824,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
     const total = Math.max(1, end - startSafe);
     return { timeline: items, originalStartTime: startSafe, totalDuration: total, finishDecisionId: finishId, finishAnswer: finishAns };
   }, [agentData, execution?.status, execution?.started_at, execution?.completed_at]);
+
 
   const toggleOpen = (i: number) =>
     setOpenIndexes((prev) => {
