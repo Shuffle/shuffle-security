@@ -763,9 +763,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
       const stillMissing = missing.filter((a) => !resolved[a.name]);
       if (stillMissing.length > 0) {
         try {
-          const res = await fetch(getApiUrl('/api/v1/apps'), {
+          const res = await fetch(resolveUrl('/api/v1/apps'), {
             credentials: 'include',
-            headers: { ...getAuthHeader() },
+            headers: { ...resolveHeaders() },
           });
           if (res.ok) {
             const apps = await res.json();
