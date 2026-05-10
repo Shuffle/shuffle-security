@@ -476,8 +476,19 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'simple' | 'detailed'>('simple');
   const [attachedImages, setAttachedImages] = useState<{ dataUrl: string; name: string }[]>([]);
+  const [nowTick, setNowTick] = useState(() => Math.floor(Date.now() / 1000));
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Tick every second while a run is in progress so the Simple view duration
+  // counts up live instead of being frozen at "1s".
+  useEffect(() => {
+    const status = (execution?.status || agentData?.status || '').toUpperCase();
+    const TERMINAL = ['FINISHED', 'FAILURE', 'ABORTED', 'CANCELLED', 'CANCELED'];
+    if (!execution?.execution_id || TERMINAL.includes(status)) return;
+    const id = setInterval(() => setNowTick(Math.floor(Date.now() / 1000)), 1000);
+    return () => clearInterval(id);
+  }, [execution?.execution_id, execution?.status, agentData?.status]);
 
   const readImageAsDataUrl = (file: File): Promise<{ dataUrl: string; name: string } | null> =>
     new Promise((resolve) => {
