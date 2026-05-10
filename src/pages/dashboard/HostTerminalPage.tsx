@@ -416,11 +416,6 @@ const HostTerminalPage = () => {
     // Hard guard: backend rejects empty sensor_group / hosts with a confusing
     // "'sensor_group' can't be empty" error. Surface a clear message instead.
     if (!groupName || !hostname || hostname === 'Unknown Host' || hostname === hostUuid) {
-      toast.error(hostLookupFailed ? 'Monitor could not be resolved' : 'Sensor group missing', {
-        description: hostLookupFailed
-          ? `This terminal URL did not match a monitor returned by /getenvironments or the monitor datastores. ID: ${hostUuid}`
-          : 'The monitor resolved, but no environment Name was available to use as sensor_group.',
-      });
       return;
     }
     // Confirm gate for the irreversible disable_rce script
