@@ -144,7 +144,8 @@ export const useHostActions = ({ onActionComplete }: UseHostActionsOptions = {})
         executionId: entry.executionId,
         authorization: entry.authorization,
       };
-      stored.push(persistEntry);
+      const dupIdx = stored.findIndex((e: any) => e?.entryId && e.entryId === entry.entryId);
+      if (dupIdx >= 0) stored[dupIdx] = { ...stored[dupIdx], ...persistEntry }; else stored.push(persistEntry);
       if (stored.length > 200) stored.splice(0, stored.length - 200);
       localStorage.setItem(key, JSON.stringify(stored));
     } catch { /* ignore */ }
