@@ -1101,7 +1101,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 {chosenApps.map((app, i) => (
                   <Tooltip key={i} title={app.name.replace(/_/g, ' ')}>
                     <Avatar
-                      src={app.icon || (app.id ? `https://shuffler.io/api/v1/apps/${app.id}/icon` : undefined)}
+                      src={app.icon || undefined}
                       alt={app.name}
                       variant="rounded"
                       sx={{ bgcolor: 'hsl(var(--muted))' }}
