@@ -52,6 +52,26 @@ import WarningIcon from '@mui/icons-material/Warning';
 import CloseIcon from '@mui/icons-material/Close';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
+
+// Normalize agent answer text so react-markdown renders it correctly:
+// - Decode literal escape sequences ("\n", "\t", "\r") that come back
+//   double-encoded in some JSON payloads.
+// - Strip surrounding quotes if the value is itself a JSON-encoded string.
+// - Trim leading/trailing whitespace.
+const normalizeMarkdown = (raw: unknown): string => {
+  if (raw == null) return '';
+  let s = typeof raw === 'string' ? raw : (() => {
+    try { return JSON.stringify(raw, null, 2); } catch { return String(raw); }
+  })();
+  // If the whole thing is a JSON-encoded string, decode it once.
+  if (s.length > 1 && s.startsWith('"') && s.endsWith('"')) {
+    try { s = JSON.parse(s); } catch { /* keep as-is */ }
+  }
+  // Convert literal "\n" / "\t" / "\r" sequences into real characters.
+  s = s.replace(/\\r\\n/g, '\n').replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\"/g, '"');
+  return s.trim();
+};
 import JsonView from 'react18-json-view';
 import 'react18-json-view/src/style.css';
 import 'react18-json-view/src/dark.css';
