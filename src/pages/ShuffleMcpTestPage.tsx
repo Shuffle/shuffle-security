@@ -23,6 +23,8 @@ import {
   AppAuthSection,
   TryMcpSection,
   SingulActionsPreview,
+  AgentRunner,
+  AgentDebugger,
   useAppLookup,
 } from '@/Shuffle-MCPs';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
