@@ -26,6 +26,7 @@ import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { HostDetailPanel } from './HostDetailPanel';
 import { HostActionChips, getActiveUser as sharedGetActiveUser } from './hostActionDefinitions';
 import { DEMO_HOST_HOSTNAME } from '@/services/demoLiveEnvironment';
+import { terminalStorageKey, readStoredSession, registerHostIdentity } from '@/utils/terminalStorageKey';
 
 // ── Helpers (identical to the originals on VulnAssetsPage) ─────────────────
 const OsIcon = ({ os, size = 14, className = '' }: { os?: string; size?: number; className?: string }) => {
