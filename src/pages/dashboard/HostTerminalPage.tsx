@@ -63,7 +63,13 @@ type StoredEntry = {
 };
 
 const HISTORY_KEY = (hostUuid: string) => `terminal_session_${hostUuid}`;
-const MAX_STORED = 200;
+const MAX_STORED = 50;
+const MAX_OUTPUT_CHARS = 20000;
+
+const truncate = (s: string | undefined, n: number): string | undefined => {
+  if (!s) return s;
+  return s.length > n ? s.slice(0, n) + `\n…[truncated ${s.length - n} chars]` : s;
+};
 
 const getStoredSession = (hostUuid: string): StoredEntry[] => {
   try {
@@ -80,8 +86,8 @@ const saveSession = (hostUuid: string, entries: ActionDebugEntry[]) => {
     finishedAt: e.finishedAt,
     executionId: e.executionId,
     authorization: e.authorization,
-    actionOutput: e.actionOutput,
-    error: e.error,
+    actionOutput: truncate(e.actionOutput, MAX_OUTPUT_CHARS),
+    error: truncate(e.error, 2000),
   }));
   // Merge with existing — update in place if entryId matches, append if new
   const existing = getStoredSession(hostUuid);
@@ -89,8 +95,24 @@ const saveSession = (hostUuid: string, entries: ActionDebugEntry[]) => {
   for (const entry of toStore) {
     existingMap.set(entry.entryId!, { ...existingMap.get(entry.entryId!) , ...entry });
   }
-  const merged = Array.from(existingMap.values()).slice(-MAX_STORED);
-  localStorage.setItem(HISTORY_KEY(hostUuid), JSON.stringify(merged));
+  let merged = Array.from(existingMap.values()).slice(-MAX_STORED);
+  try {
+    localStorage.setItem(HISTORY_KEY(hostUuid), JSON.stringify(merged));
+  } catch (err) {
+    // Quota exceeded — progressively shrink and retry
+    for (const limit of [25, 10, 5, 1]) {
+      try {
+        merged = merged.slice(-limit).map(e => ({
+          ...e,
+          actionOutput: truncate(e.actionOutput, 2000),
+          error: truncate(e.error, 500),
+        }));
+        localStorage.setItem(HISTORY_KEY(hostUuid), JSON.stringify(merged));
+        return;
+      } catch { /* keep shrinking */ }
+    }
+    try { localStorage.removeItem(HISTORY_KEY(hostUuid)); } catch { /* ignore */ }
+  }
 };
 
 const getCommandHistory = (hostUuid: string): string[] => {
