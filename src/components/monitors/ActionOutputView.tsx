@@ -12,19 +12,51 @@ const IMAGE_SIGNATURES: Array<{ prefix: string; mime: string }> = [
   { prefix: 'UklGR',       mime: 'image/webp' },  // WebP
 ];
 
-const detectImage = (raw: string): { mime: string; b64: string } | null => {
-  if (!raw || typeof raw !== 'string') return null;
-  // Strip surrounding whitespace/quotes/json wrappers and any data: prefix.
-  let s = raw.trim().replace(/^["']|["']$/g, '');
-  const dataMatch = s.match(/^data:(image\/[a-z+.-]+);base64,([A-Za-z0-9+/=\s]+)$/i);
-  if (dataMatch) return { mime: dataMatch[1], b64: dataMatch[2].replace(/\s+/g, '') };
-  // Compact: must be a long, mostly-base64 blob.
-  const compact = s.replace(/\s+/g, '');
+const matchSignature = (compact: string): { mime: string; b64: string } | null => {
   if (compact.length < 200) return null;
   if (!/^[A-Za-z0-9+/=]+$/.test(compact)) return null;
   for (const sig of IMAGE_SIGNATURES) {
     if (compact.startsWith(sig.prefix)) return { mime: sig.mime, b64: compact };
   }
+  return null;
+};
+
+const detectImage = (raw: string): { mime: string; b64: string } | null => {
+  if (!raw || typeof raw !== 'string') return null;
+  const s = raw.trim().replace(/^["']|["']$/g, '');
+
+  // data: URI
+  const dataMatch = s.match(/^data:(image\/[a-z+.-]+);base64,([A-Za-z0-9+/=\s]+)$/i);
+  if (dataMatch) return { mime: dataMatch[1], b64: dataMatch[2].replace(/\s+/g, '') };
+
+  // Plain base64 blob
+  const compact = s.replace(/\s+/g, '');
+  const direct = matchSignature(compact);
+  if (direct) return direct;
+
+  // JSON wrapper, e.g. [{ "image": "<base64>", ... }] or { "image": "..." }
+  if (s.startsWith('{') || s.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(s);
+      const candidates: unknown[] = Array.isArray(parsed) ? parsed : [parsed];
+      const keys = ['image', 'screenshot', 'data', 'png', 'jpeg', 'jpg', 'b64', 'base64'];
+      for (const item of candidates) {
+        if (!item || typeof item !== 'object') continue;
+        for (const key of keys) {
+          const v = (item as Record<string, unknown>)[key];
+          if (typeof v !== 'string') continue;
+          const inner = v.trim().replace(/\s+/g, '');
+          const dm = inner.match(/^data:(image\/[a-z+.-]+);base64,(.+)$/i);
+          if (dm) return { mime: dm[1], b64: dm[2] };
+          const sig = matchSignature(inner);
+          if (sig) return sig;
+        }
+      }
+    } catch {
+      // not JSON — fall through
+    }
+  }
+
   return null;
 };
 
