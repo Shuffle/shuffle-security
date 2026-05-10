@@ -106,31 +106,43 @@ export const HostActionPopover = ({
 
   const isFull = responseActionsMode === 'full';
 
+  // When rendered as the "Run Action" button (detail page header), bypass the
+  // popover entirely and jump straight to the full terminal page.
+  if (trigger === 'button') {
+    return (
+      <Button
+        variant="outline"
+        size="sm"
+        className="gap-1.5 h-8"
+        onClick={() => navigate(
+          `/monitors/${encodeURIComponent(hostUrlSegment(host))}/terminal`,
+          { state: { hostname: host.hostname, groupName: host.groupName, mode: responseActionsMode || 'controlled' } },
+        )}
+      >
+        {actionExecuting.has(host.uuid) ? (
+          <Loader2 size={13} className="animate-spin text-primary" />
+        ) : (
+          <Terminal size={13} />
+        )}
+        Run Action
+      </Button>
+    );
+  }
+
   return (
     <Popover onOpenChange={(open) => { if (open) hydrateHost(host.uuid); }}>
       <PopoverTrigger asChild>
-        {trigger === 'icon' ? (
-          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary">
-            {actionExecuting.has(host.uuid) ? (
-              <Loader2 size={14} className="animate-spin text-primary" />
-            ) : (
-              <Play size={14} />
-            )}
-          </Button>
-        ) : (
-          <Button variant="outline" size="sm" className="gap-1.5 h-8">
-            {actionExecuting.has(host.uuid) ? (
-              <Loader2 size={13} className="animate-spin text-primary" />
-            ) : (
-              <Terminal size={13} />
-            )}
-            Run Action
-          </Button>
-        )}
+        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary">
+          {actionExecuting.has(host.uuid) ? (
+            <Loader2 size={14} className="animate-spin text-primary" />
+          ) : (
+            <Play size={14} />
+          )}
+        </Button>
       </PopoverTrigger>
       <PopoverContent
         align="end"
-        side={trigger === 'button' ? 'bottom' : 'left'}
+        side="left"
         collisionPadding={16}
         className="w-[34rem] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)] overflow-auto p-0"
         onClick={e => e.stopPropagation()}
