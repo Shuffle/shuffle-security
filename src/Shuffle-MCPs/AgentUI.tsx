@@ -1073,10 +1073,10 @@ const AgentUI: React.FC<AgentUIProps> = ({
     body.source_workflow = execution.workflow?.id;
     setAgentRequestLoading(true);
     try {
-      const resp = await fetch(getApiUrl(`/api/v1/apps/agent/run?rerun=true&decision_id=${encodeURIComponent(decisionId)}`), {
+      const resp = await fetch(resolveUrl(`/api/v1/apps/agent/run?rerun=true&decision_id=${encodeURIComponent(decisionId)}`), {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        headers: { 'Content-Type': 'application/json', ...resolveHeaders() },
         body: JSON.stringify(body),
       });
       const json = await resp.json().catch(() => ({}));
