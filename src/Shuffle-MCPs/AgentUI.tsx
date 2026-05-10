@@ -630,7 +630,25 @@ const AgentUI: React.FC<AgentUIProps> = ({
   executionId,
   authorization,
   onRun,
+  apiKey,
+  apiBaseUrl,
+  orgId,
 }) => {
+  // Per-instance API target. Props win over the shared API_CONFIG so the
+  // component can be embedded against a different Shuffle backend without
+  // mutating global state.
+  const resolveUrl = useCallback(
+    (path: string) => (apiBaseUrl ? `${apiBaseUrl.replace(/\/+$/, '')}${path}` : getApiUrl(path)),
+    [apiBaseUrl],
+  );
+  const resolveHeaders = useCallback((): Record<string, string> => {
+    const h: Record<string, string> = apiKey
+      ? { Authorization: `Bearer ${apiKey}` }
+      : { ...getAuthHeader() };
+    if (orgId) h['Org-Id'] = orgId;
+    return h;
+  }, [apiKey, orgId]);
+  const hasApiKey = !!apiKey || !!API_CONFIG.apiKey;
   const navigate = useNavigate();
   const [actionInput, setActionInput] = useState(defaultInput);
   const BUILTIN_DEFAULT_APPS: AgentUIApp[] = [
