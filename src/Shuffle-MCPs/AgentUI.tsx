@@ -924,7 +924,13 @@ const AgentUI: React.FC<AgentUIProps> = ({
     setError(null);
     setAgentRequestLoading(true);
     setShowStarter(false);
+    // Hard reset any prior run state so the new run starts from a clean slate.
     setExecution(null);
+    setAgentActionResult(null);
+    setOpenIndexes(new Set());
+    setQuestionAnswers({});
+    setContinuationText('');
+    setLocalRunStart(null);
     setAgentData({ original_input: text.trim() });
 
     const result = await runAgent({
