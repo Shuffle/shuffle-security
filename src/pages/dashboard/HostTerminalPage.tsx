@@ -200,6 +200,15 @@ const HostTerminalPage = () => {
       : '';
   const displayHostname = hasResolvedHostname ? hostname : 'Unresolved monitor';
 
+  // Map this URL alias (uuid OR hostname) to the canonical hostname+arch key
+  // so reads/writes match the mini-popover regardless of how the host was
+  // addressed in the route.
+  useEffect(() => {
+    if (hostUuid && hostname && hostname !== 'Unknown Host' && hostname !== hostUuid) {
+      registerHostIdentity(hostUuid, { hostname, arch: resolvedHost?.arch });
+    }
+  }, [hostUuid, hostname, resolvedHost?.arch]);
+
   // Demo terminal: when the URL points at a `demo-…` host (e.g.
   // /monitors/demo-host-fin-laptop-04/terminal) we lock the free-form
   // command input so the demo cannot be derailed by typing real shell
