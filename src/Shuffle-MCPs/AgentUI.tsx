@@ -883,6 +883,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   if (e.target) e.target.value = '';
                 }}
               />
+              {!hideAttach && (
               <IconButton
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -897,7 +898,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
               >
                 <AttachFileIcon sx={{ fontSize: 18 }} />
               </IconButton>
-              <Tooltip title="⌘+Enter to send" placement="top" arrow>
+              )}
+              <Tooltip title={submitTooltip} placement="top" arrow>
                 <span>
                   <IconButton
                     type="submit"
@@ -910,7 +912,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       '&.Mui-disabled': { bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' },
                     }}
                   >
-                    {agentRequestLoading ? <CircularProgress size={16} sx={{ color: 'inherit' }} /> : <PlayArrowRoundedIcon />}
+                    {agentRequestLoading ? <CircularProgress size={16} sx={{ color: 'inherit' }} /> : (submitIcon ?? <PlayArrowRoundedIcon />)}
                   </IconButton>
                 </span>
               </Tooltip>
