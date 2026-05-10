@@ -680,6 +680,7 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
       ...(selectedApps.length > 1 ? {
         toolNames: selectedApps.map(a => a.name),
       } : {}),
+      ...(attachedImage ? { image: attachedImage.dataUrl } : {}),
     });
 
     if (result.success) {
@@ -705,6 +706,7 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
     setAgentInput('');
     setActionRun(null);
     setRunError(null);
+    setAttachedImage(null);
   };
 
   return (
