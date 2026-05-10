@@ -18,7 +18,7 @@ import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { DEFAULT_AGENT_PERMISSIONS } from '@/hooks/useAgentPermissions';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { fetchHostSupplements } from '@/lib/mergeMonitorHosts';
-import { HostActionChips, getActiveUser } from '@/components/monitors/hostActionDefinitions';
+import { HostActionChips, getActiveUser, inferAgentPrivilege, type AgentPrivilege } from '@/components/monitors/hostActionDefinitions';
 import { ActionOutputView } from '@/components/monitors/ActionOutputView';
 import { terminalStorageKey, readStoredSession, registerHostIdentity } from '@/utils/terminalStorageKey';
 import { hostUrlSegment, parseHostUrlSegment } from '@/utils/hostUrlSegment';
@@ -179,6 +179,7 @@ const HostTerminalPage = () => {
   // datastores use different UUIDs for the same machine).
   const [datastoreResolvedHostname, setDatastoreResolvedHostname] = useState<string>('');
   const [activeUser, setActiveUser] = useState<string | null>(null);
+  const [agentPrivilege, setAgentPrivilege] = useState<AgentPrivilege>('unknown');
 
   // Resolve host info from location.state first, then fall back to allHosts lookup.
   // Match by UUID first, then by hostname (with tolerant domain-suffix stripping)
@@ -356,6 +357,7 @@ const HostTerminalPage = () => {
           if (hn) setDatastoreResolvedHostname(hn);
           const au = getActiveUser(foundRecord);
           if (au) setActiveUser(au);
+          setAgentPrivilege(inferAgentPrivilege(foundRecord));
         }
       } catch { /* ignore */ }
       finally {
@@ -895,6 +897,7 @@ const HostTerminalPage = () => {
       <div className="px-6 py-3 border-t border-border/50 shrink-0">
         <HostActionChips
           activeUser={activeUser}
+          agentPrivilege={agentPrivilege}
           size="comfortable"
           allDisabled={!canRunActions}
           allDisabledReason="Monitor resolution required before running predefined actions"

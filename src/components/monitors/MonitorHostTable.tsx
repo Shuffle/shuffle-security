@@ -24,7 +24,7 @@ import {
 import { toast } from '@/lib/toast';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { HostDetailPanel } from './HostDetailPanel';
-import { HostActionChips, getActiveUser as sharedGetActiveUser } from './hostActionDefinitions';
+import { HostActionChips, getActiveUser as sharedGetActiveUser, inferAgentPrivilege } from './hostActionDefinitions';
 import { DEMO_HOST_HOSTNAME } from '@/services/demoLiveEnvironment';
 import { terminalStorageKey, readStoredSession, registerHostIdentity } from '@/utils/terminalStorageKey';
 import { hostUrlSegment } from '@/utils/hostUrlSegment';
@@ -689,6 +689,7 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
                               <div className="px-3 py-2 border-t border-border/50 shrink-0">
                                 <HostActionChips
                                   activeUser={getActiveUser(host)}
+                                  agentPrivilege={inferAgentPrivilege(host)}
                                   size="compact"
                                   onRun={({ actionId, displayName }) =>
                                     executeHostAction(actionId, displayName, host.hostname, host.groupName || '', host.uuid, true)

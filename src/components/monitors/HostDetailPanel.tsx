@@ -8,6 +8,7 @@ import {
   HardDrive, Lock, Package, Zap, ChevronRight, ChevronDown,
   Hash, Cpu, Send, ShieldCheck, ShieldX, FileCode, ScanLine, AlertTriangle, GitBranch,
 } from 'lucide-react';
+import { inferAgentPrivilege } from './hostActionDefinitions';
 
 interface ProcessEntry {
   pid: number;
@@ -482,18 +483,41 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
         {(() => {
           const procs: ProcessEntry[] = Array.isArray(host.process_list) ? (host.process_list as ProcessEntry[]) : [];
           const procCount = procs.length;
+          const privilege = inferAgentPrivilege(host);
+          const privilegeBadge = privilege === 'unknown' ? null : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  className={`text-[0.6rem] font-mono uppercase tracking-wide px-1.5 py-0.5 rounded border ${
+                    privilege === 'system'
+                      ? 'border-emerald-500/40 text-emerald-500 bg-emerald-500/10'
+                      : 'border-amber-500/40 text-amber-500 bg-amber-500/10'
+                  }`}
+                >
+                  {privilege === 'system' ? 'SYSTEM' : 'User'}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="text-xs max-w-xs">
+                {privilege === 'system'
+                  ? 'Host monitor is running with SYSTEM / root privileges. All response actions are available.'
+                  : 'Host monitor is running as a regular user. Actions that require elevated privileges (Disable RCE, Isolate Host) are unavailable until the agent is reinstalled as SYSTEM / root.'}
+              </TooltipContent>
+            </Tooltip>
+          );
           const header = collapsibleSections ? (
             <button onClick={() => setProcessOpen(!processOpen)} className="flex items-center gap-2 w-full text-left hover:bg-muted/20 rounded px-1 py-0.5 -mx-1 transition-colors">
               {processOpen ? <ChevronDown size={14} className="text-muted-foreground" /> : <ChevronRight size={14} className="text-muted-foreground" />}
               <GitBranch size={14} className="text-muted-foreground" />
               <span className="text-xs font-semibold text-foreground">Process Tree</span>
               {procCount > 0 && <span className="text-[0.65rem] text-muted-foreground">({procCount} processes)</span>}
+              {privilegeBadge && <TooltipProvider delayDuration={200}>{privilegeBadge}</TooltipProvider>}
             </button>
           ) : (
             <div className="flex items-center gap-2">
               <GitBranch size={14} className="text-muted-foreground" />
               <span className="text-xs font-semibold text-foreground">Process Tree</span>
               {procCount > 0 && <span className="text-[0.65rem] text-muted-foreground">({procCount} processes)</span>}
+              {privilegeBadge && <TooltipProvider delayDuration={200}>{privilegeBadge}</TooltipProvider>}
             </div>
           );
 

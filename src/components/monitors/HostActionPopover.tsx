@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2, Play, Terminal, Maximize2 } from 'lucide-react';
 import { CheckCircle2, ShieldX } from 'lucide-react';
 import type { ActionDebugEntry } from '@/hooks/useHostActions';
-import { HostActionChips, getActiveUser } from './hostActionDefinitions';
+import { HostActionChips, getActiveUser, inferAgentPrivilege } from './hostActionDefinitions';
 import { ActionOutputView } from './ActionOutputView';
 import { hostUrlSegment } from '@/utils/hostUrlSegment';
 
@@ -242,6 +242,7 @@ export const HostActionPopover = ({
               <div className="px-3 py-2 border-t border-border/50 shrink-0">
                 <HostActionChips
                   activeUser={getActiveUser(host.raw)}
+                  agentPrivilege={inferAgentPrivilege(host.raw)}
                   size="compact"
                   onRun={({ actionId, displayName }) =>
                     executeHostAction(actionId, displayName, host.hostname, host.groupName, host.uuid, true)
