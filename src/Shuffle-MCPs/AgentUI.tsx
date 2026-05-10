@@ -874,6 +874,65 @@ const AgentUI: React.FC<AgentUIProps> = ({
     }
   }, [execution, getExecution]);
 
+  // ── Rerun the whole agent with the original input ──
+  const rerunAgent = useCallback(() => {
+    const input =
+      agentData?.original_input ||
+      actionInput ||
+      (() => {
+        const msgs = (agentData as any)?.input?.messages || [];
+        const m = msgs.find((m: any) => m?.role === 'user' && !String(m?.role).includes('USER CONTEXT'));
+        return m?.content || '';
+      })();
+    if (!input) {
+      toast({ title: 'Nothing to rerun', description: 'No original input found for this execution.', variant: 'destructive' });
+      return;
+    }
+    setActionInput(input);
+    submitInput(input);
+  }, [agentData, actionInput, submitInput]);
+
+  // ── Rerun a single decision (clears decisions after it on the backend) ──
+  const rerunDecision = useCallback(async (decision: any) => {
+    if (!execution?.execution_id) {
+      toast({ title: 'No execution loaded', description: 'Cannot rerun this decision.', variant: 'destructive' });
+      return;
+    }
+    if (!agentActionResult?.action) {
+      toast({ title: 'Missing action context', description: 'Could not locate the agent action node.', variant: 'destructive' });
+      return;
+    }
+    const decisionId = decision?.run_details?.id;
+    if (!decisionId) {
+      toast({ title: 'Missing decision id', description: 'This decision cannot be rerun.', variant: 'destructive' });
+      return;
+    }
+    const body: any = { ...agentActionResult.action };
+    body.source_execution = execution.execution_id;
+    body.source_workflow = execution.workflow?.id;
+    setAgentRequestLoading(true);
+    try {
+      const resp = await fetch(getApiUrl(`/api/v1/apps/agent/run?rerun=true&decision_id=${encodeURIComponent(decisionId)}`), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify(body),
+      });
+      const json = await resp.json().catch(() => ({}));
+      if (json?.success === false) {
+        toast({ title: 'Rerun failed', description: json.reason || 'Try again later.', variant: 'destructive' });
+      } else {
+        toast({ title: 'Rerunning decision', description: 'The agent will continue from this step.' });
+        setTimeout(() => getExecution(execution.execution_id!, execution.authorization!), 800);
+        setTimeout(() => getExecution(execution.execution_id!, execution.authorization!), 5000);
+      }
+    } catch (err) {
+      toast({ title: 'Network error', description: String(err), variant: 'destructive' });
+    } finally {
+      setAgentRequestLoading(false);
+    }
+  }, [execution, agentActionResult, getExecution]);
+
   // ── Build timeline ──
   const { timeline, originalStartTime, totalDuration, finishDecisionId, finishAnswer } = useMemo(() => {
     // Backend may return Unix milliseconds (UnixMillis) or seconds. Normalize to seconds.
