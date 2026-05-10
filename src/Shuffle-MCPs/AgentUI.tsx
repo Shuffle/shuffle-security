@@ -508,6 +508,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   authorization,
   onRun,
 }) => {
+  const navigate = useNavigate();
   const [actionInput, setActionInput] = useState(defaultInput);
   const BUILTIN_DEFAULT_APPS: AgentUIApp[] = [
     { name: 'http' },
