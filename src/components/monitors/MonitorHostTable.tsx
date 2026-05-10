@@ -248,11 +248,13 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
     try {
       const key = terminalStorageKey(hostUuid);
       const stored = readStoredSession(hostUuid);
-      stored.push({
+      const newRow = {
         entryId: entry.entryId, actionName: entry.actionName, status: entry.status,
         startedAt: entry.startedAt, finishedAt: entry.finishedAt,
         executionId: entry.executionId, authorization: entry.authorization,
-      });
+      };
+      const dupIdx = stored.findIndex((e: any) => e?.entryId && e.entryId === entry.entryId);
+      if (dupIdx >= 0) stored[dupIdx] = { ...stored[dupIdx], ...newRow }; else stored.push(newRow);
       if (stored.length > 200) stored.splice(0, stored.length - 200);
       localStorage.setItem(key, JSON.stringify(stored));
     } catch { /* ignore */ }
