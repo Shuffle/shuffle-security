@@ -209,7 +209,7 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
     setActionHistoryMap(prev => {
       if ((prev.get(hostUuid) || []).length > 0) return prev;
       try {
-        const stored = JSON.parse(localStorage.getItem(`terminal_session_${hostUuid}`) || '[]');
+        const stored = JSON.parse(localStorage.getItem(terminalStorageKey(hostUuid)) || '[]');
         if (Array.isArray(stored) && stored.length > 0) {
           const next = new Map(prev);
           next.set(hostUuid, stored.map((e: any, i: number) => ({
@@ -246,7 +246,7 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
       return next;
     });
     try {
-      const key = `terminal_session_${hostUuid}`;
+      const key = terminalStorageKey(hostUuid);
       const stored = JSON.parse(localStorage.getItem(key) || '[]');
       stored.push({
         entryId: entry.entryId, actionName: entry.actionName, status: entry.status,
@@ -271,7 +271,7 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
       next.set(hostUuid, updated);
       if (latest.status === 'success' || latest.status === 'error') {
         try {
-          const key = `terminal_session_${hostUuid}`;
+          const key = terminalStorageKey(hostUuid);
           const stored = JSON.parse(localStorage.getItem(key) || '[]');
           // Persist actionOutput + error so the full-screen terminal page shows
           // the same output rows as the inline popover (both share this key).

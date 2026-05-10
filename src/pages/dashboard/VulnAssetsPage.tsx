@@ -481,7 +481,7 @@ const AuthenticatedVulnAssetsPage = () => {
     setActionHistoryMap(prev => {
       if ((prev.get(hostUuid) || []).length > 0) return prev;
       try {
-        const stored = JSON.parse(localStorage.getItem(`terminal_session_${hostUuid}`) || '[]');
+        const stored = JSON.parse(localStorage.getItem(terminalStorageKey(hostUuid)) || '[]');
         if (Array.isArray(stored) && stored.length > 0) {
           const next = new Map(prev);
           next.set(hostUuid, stored.map((e: any, i: number) => ({
@@ -507,7 +507,7 @@ const AuthenticatedVulnAssetsPage = () => {
 
   const getCommandHistory = (hostUuid: string): string[] => {
     try {
-      const stored = JSON.parse(localStorage.getItem(`terminal_session_${hostUuid}`) || '[]');
+      const stored = JSON.parse(localStorage.getItem(terminalStorageKey(hostUuid)) || '[]');
       // Fall back to old cmd_history_ key
       if (!Array.isArray(stored) || stored.length === 0) {
         const old = JSON.parse(localStorage.getItem(`cmd_history_${hostUuid}`) || '[]');
@@ -563,7 +563,7 @@ const AuthenticatedVulnAssetsPage = () => {
     });
     // Persist immediately so running commands survive refresh
     try {
-      const key = `terminal_session_${hostUuid}`;
+      const key = terminalStorageKey(hostUuid);
       const stored = JSON.parse(localStorage.getItem(key) || '[]');
       const persistEntry = {
         entryId: entry.entryId,
@@ -594,7 +594,7 @@ const AuthenticatedVulnAssetsPage = () => {
       // Update the persisted entry in localStorage (was already added on push)
       if (latest.status === 'success' || latest.status === 'error') {
         try {
-          const key = `terminal_session_${hostUuid}`;
+          const key = terminalStorageKey(hostUuid);
           const stored = JSON.parse(localStorage.getItem(key) || '[]');
           const idx = stored.findIndex((e: any) => e.entryId === latest.entryId);
           if (idx >= 0) {
