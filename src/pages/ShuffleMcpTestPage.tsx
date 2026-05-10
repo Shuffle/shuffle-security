@@ -23,8 +23,7 @@ import {
   AppAuthSection,
   TryMcpSection,
   SingulActionsPreview,
-  AgentRunner,
-  AgentDebugger,
+  AgentUI,
   useAppLookup,
 } from '@/Shuffle-MCPs';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
@@ -37,20 +36,19 @@ import { Box as MuiBox, Skeleton } from '@mui/material';
  * showing the exact source that produced the rendered demo.
  */
 
-const SNIPPET_AGENT_RUNNER = `import { AgentRunner } from '@shuffleio/shuffle-mcps';
+const SNIPPET_AGENT_UI = `import { AgentUI } from '@shuffleio/shuffle-mcps';
 
-<AgentRunner
-  title="What do you want to do?"
-  initialApps={[
-    { name: 'Http' },
-    { name: 'Shuffle_tools' },
+// Modern hero "What do you want to do?" prompt + live debug timeline.
+// Reads ?execution_id&authorization from the URL to resume an existing run.
+<AgentUI
+  defaultApps={[
+    { name: 'Http', id: 'ebfe7d5c80000676588f86731db0a555' },
+    { name: 'Shuffle_tools', id: '3e2bdf9d5069fe3f4746c29d68785a6a' },
   ]}
-  onRun={({ input, success }) => console.log('agent run', { input, success })}
+  onRun={({ input, success, executionId }) =>
+    console.log('agent run', { input, success, executionId })
+  }
 />`;
-
-const SNIPPET_AGENT_DEBUGGER = `import { AgentDebugger } from '@shuffleio/shuffle-mcps';
-
-<AgentDebugger limit={25} pollIntervalMs={30000} />`;
 
 const SNIPPET_INLINE_SEARCH = `import { ShuffleMCP } from '@shuffleio/shuffle-mcps';
 
