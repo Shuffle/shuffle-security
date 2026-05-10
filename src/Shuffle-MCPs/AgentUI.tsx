@@ -71,12 +71,40 @@ export interface AgentUIProps {
   defaultApps?: AgentUIApp[];
   /** Hero title above the prompt. */
   title?: string;
+  /** Optional subtitle/description shown under the title. */
+  subtitle?: React.ReactNode;
   /** Placeholder shown in the empty prompt. */
   placeholder?: string;
+  /** Pre-fill the prompt with this text. */
+  defaultInput?: string;
+  /** Submit immediately on mount when `defaultInput` is provided. */
+  autoSubmit?: boolean;
   /** Hide the centered hero icon (compact mode). */
   hideHeroIcon?: boolean;
+  /** Replace the default AgentIcon with a custom node (e.g. brand logo). */
+  heroIcon?: React.ReactNode;
+  /** Pixel size of the hero icon container. Default 84. */
+  heroIconSize?: number;
   /** Maximum width of the centered card. */
   maxWidth?: number;
+  /** Compact mode: hides the hero icon, shrinks padding. */
+  compact?: boolean;
+  /** Hide the "Select Apps / MCPs" chip row entirely. */
+  hideAppPicker?: boolean;
+  /** Hide the paperclip image-attachment button. */
+  hideAttach?: boolean;
+  /** Label on the "Select Apps / MCPs" chip. */
+  appPickerLabel?: string;
+  /** Title on the AppSearchDrawer. */
+  appPickerTitle?: string;
+  /** Subtitle on the AppSearchDrawer. */
+  appPickerSubtitle?: string;
+  /** Tooltip on the submit button. Default: "⌘+Enter to send". */
+  submitTooltip?: string;
+  /** Custom icon for the submit button. */
+  submitIcon?: React.ReactNode;
+  /** Placeholder for the post-finish continuation field. */
+  continuationPlaceholder?: string;
   /** Read `?execution_id` & `?authorization` from window URL on mount. */
   readUrlParams?: boolean;
   /**
