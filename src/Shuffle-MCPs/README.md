@@ -195,6 +195,51 @@ Useful props:
 
 Reference implementation in production: [`src/Shuffle-MCPs/AppSearchDrawer.tsx`](./AppSearchDrawer.tsx) and [`AppDetailDrawer.tsx`](./AppDetailDrawer.tsx).
 
+### 4. `<AgentUI />` — start + debug agents
+
+A standalone "What do you want to do?" surface for the Shuffle agent. Two modes in one component:
+
+1. **Starter** — large hero prompt with attached MCP/app chips. Submits to `/api/v1/agent`.
+2. **Debugger** — compact header + live decision timeline driven by `/api/v1/streams/results`, with question/continuation forms, per-decision raw-JSON inspection, approvals, retries, and reruns.
+
+It switches modes automatically when an execution starts, or when `?execution_id=...&authorization=...` is present in the URL.
+
+```tsx
+import { AgentUI } from 'shuffle-mcps';
+
+<AgentUI
+  apiKey={user.apiKey}                    // optional — falls back to session
+  apiBaseUrl="https://shuffler.io"        // optional — falls back to default
+  orgId={user.orgId}                      // optional — sent as Org-Id header
+  defaultApps={[{ name: 'http' }, { name: 'shuffle_tools' }]}
+  onRun={({ input, success, executionId }) => {
+    console.log('agent run', { input, success, executionId });
+  }}
+/>
+```
+
+Like `<ShuffleMCP />`, all three of `apiKey`, `apiBaseUrl`, and `orgId` are **optional**. When omitted, the component uses the shared browser session (cookie + `localStorage.shuffle_api_key`) — the same behavior as the rest of this library.
+
+Useful props:
+
+| Prop | Type | Description |
+|---|---|---|
+| `apiKey` | `string` | Bearer token used for every `/api/v1/*` call this instance makes |
+| `apiBaseUrl` | `string` | Shuffle backend base URL (e.g. `https://shuffler.io`) |
+| `orgId` | `string` | Sent as the `Org-Id` header on every call |
+| `apps` | `AgentUIApp[]` | Controlled chip set. Disables auto-load |
+| `defaultApps` | `AgentUIApp[]` | Initial chip set when `apps` is not provided |
+| `autoLoadApps` | `boolean` | Auto-fetch the user's authenticated apps via `/api/v1/apps/authentication`. Default `true` |
+| `executionId` / `authorization` | `string` | Attach to a known execution on mount and skip the starter |
+| `readUrlParams` | `boolean` | Read `?execution_id` + `?authorization` from the URL. Default `true` |
+| `title` / `subtitle` / `placeholder` | `string` | Hero copy |
+| `defaultInput` / `autoSubmit` | `string` / `boolean` | Pre-fill and optionally submit on mount |
+| `compact` / `hideHeroIcon` / `hideAppPicker` / `hideAttach` | `boolean` | Layout switches for embedding |
+| `maxWidth` | `number` | Max width of the centered card. Default `900` |
+| `onRun` | `(info) => void` | Fires whenever a run finishes (success or failure) |
+
+Reference page in production: [`src/pages/dashboard/AgentsPage.tsx`](../pages/dashboard/AgentsPage.tsx) (mounted at [`/agents`](https://security.shuffler.io/agents)).
+
 ### Predefined search
 
 ```tsx
