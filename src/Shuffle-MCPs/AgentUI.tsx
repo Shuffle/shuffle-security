@@ -701,14 +701,17 @@ const AgentUI: React.FC<AgentUIProps> = ({
     const missing = chosenApps.filter((a) => !a.icon && a.name);
     if (missing.length === 0) return;
     let cancelled = false;
+    const norm = (n: string) => n.toLowerCase().replace(/[\s_\-]+/g, '_');
+
     (async () => {
+      // Pass 1 — try Algolia (public, works without an API key).
+      const resolved: Record<string, string> = {};
       try {
         const { algoliasearch } = await import('algoliasearch');
         const client = algoliasearch('JNSS5CFDZZ', '33e4e3564f4f060e96e0531957bed552');
-        const norm = (n: string) => n.toLowerCase().replace(/[\s_\-]+/g, '_');
-        const resolved = await Promise.all(missing.map(async (a) => {
+        await Promise.all(missing.map(async (a) => {
           const known = availableApps.find((x) => norm(x.name) === norm(a.name));
-          if (known?.icon) return { name: a.name, icon: known.icon };
+          if (known?.icon) { resolved[a.name] = known.icon; return; }
           try {
             const res = await client.searchSingleIndex({
               indexName: 'appsearch',
@@ -716,20 +719,40 @@ const AgentUI: React.FC<AgentUIProps> = ({
             });
             const match = (res.hits as any[]).find((h) => norm(h.name || '') === norm(a.name))
               || (res.hits as any[])[0];
-            return { name: a.name, icon: match?.image_url || '' };
-          } catch {
-            return { name: a.name, icon: '' };
+            if (match?.image_url) resolved[a.name] = match.image_url;
+          } catch { /* fall through to /api/v1/apps */ }
+        }));
+      } catch { /* fall through to /api/v1/apps */ }
+
+      // Pass 2 — for anything Algolia didn't resolve, fall back to /api/v1/apps
+      // so built-in chips (http, shuffle_tools) still get their logo even when
+      // Algolia is blocked or offline.
+      const stillMissing = missing.filter((a) => !resolved[a.name]);
+      if (stillMissing.length > 0) {
+        try {
+          const res = await fetch(getApiUrl('/api/v1/apps'), {
+            credentials: 'include',
+            headers: { ...getAuthHeader() },
+          });
+          if (res.ok) {
+            const apps = await res.json();
+            if (Array.isArray(apps)) {
+              for (const a of stillMissing) {
+                const m = apps.find((x: any) => norm(x.name || '') === norm(a.name));
+                const img = m?.large_image || m?.image_url || m?.image;
+                if (img) resolved[a.name] = img;
+              }
+            }
           }
-        }));
-        if (cancelled) return;
-        setChosenApps((prev) => prev.map((a) => {
-          if (a.icon) return a;
-          const r = resolved.find((x) => x.name === a.name);
-          return r?.icon ? { ...a, icon: r.icon } : a;
-        }));
-      } catch {
-        // ignore — chips will just show initials
+        } catch { /* chips will just show initials */ }
       }
+
+      if (cancelled) return;
+      setChosenApps((prev) => prev.map((a) => {
+        if (a.icon) return a;
+        const icon = resolved[a.name];
+        return icon ? { ...a, icon } : a;
+      }));
     })();
     return () => { cancelled = true; };
   }, [chosenApps, availableApps]);
