@@ -47,6 +47,7 @@ import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
 import { InputBase, Avatar } from '@mui/material';
 import type { AgentRun } from '@/services/agentActivity';
 import AgentRunResultViewer from '@/components/agent/AgentRunResultViewer';
+import { useAuth } from '@/context/AuthContext';
 
 const AGENT_TOOLS_KEY = 'agent_enabled_tools';
 
@@ -65,7 +66,8 @@ interface AgentPermissionsDrawerProps {
 
 const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsDrawerProps) => {
   const navigate = useNavigate();
-
+  const { userInfo } = useAuth();
+  const isSupport = userInfo?.support === true;
   const [activeTab, setActiveTab] = useState(0);
   const [viewRun, setViewRun] = useState<AgentRun | null>(null);
   const [viewDrawerOpen, setViewDrawerOpen] = useState(false);
@@ -328,7 +330,19 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
           }}
         >
           <Tab label="Run" icon={<Play size={14} />} iconPosition="start" sx={{ gap: 0.75 }} />
-          <Tab label="Permissions" icon={<ShieldCheck size={14} />} iconPosition="start" sx={{ gap: 0.75 }} />
+          <Tab
+            label={
+              <Tooltip title={isSupport ? '' : 'Coming soon'} arrow disableHoverListener={isSupport}>
+                <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center' }}>
+                  Permissions
+                </Box>
+              </Tooltip>
+            }
+            icon={<ShieldCheck size={14} />}
+            iconPosition="start"
+            disabled={!isSupport}
+            sx={{ gap: 0.75 }}
+          />
           <Tab
             label={
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -351,7 +365,24 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
       <Box sx={{ flex: 1, overflowY: 'auto', px: 3, py: 2.5 }}>
         {activeTab === 1 && (
           /* ── Permissions Tab ── */
-          <PermissionsPanel compact />
+          <Box>
+            <Alert
+              severity="info"
+              icon={<ShieldCheck size={16} />}
+              sx={{
+                mb: 2,
+                fontSize: '0.78rem',
+                borderRadius: 1.5,
+                bgcolor: 'hsla(var(--primary) / 0.08)',
+                color: 'hsl(var(--foreground))',
+                border: '1px solid hsla(var(--primary) / 0.25)',
+                '& .MuiAlert-icon': { color: 'hsl(var(--primary))' },
+              }}
+            >
+              Support-only preview. This tab is not yet available to customers.
+            </Alert>
+            <PermissionsPanel compact />
+          </Box>
         )}
 
         {activeTab === 0 && (
