@@ -44,7 +44,30 @@ export interface AgentRunRequest {
    * `/api/v1/streams/results` itself (e.g. AgentUI's live timeline).
    */
   skipPolling?: boolean;
+  /**
+   * Optional per-call overrides so callers (e.g. embedded `AgentUI`) can
+   * point at a different Shuffle backend without mutating the global
+   * `API_CONFIG`. When omitted, falls back to `getApiUrl` / `getAuthHeader`.
+   */
+  apiKey?: string;
+  apiBaseUrl?: string;
+  orgId?: string;
 }
+
+/** Build URL + headers honouring optional per-call overrides. */
+const resolveTarget = (
+  path: string,
+  opts: { apiKey?: string; apiBaseUrl?: string; orgId?: string } = {},
+): { url: string; headers: Record<string, string> } => {
+  const url = opts.apiBaseUrl
+    ? `${opts.apiBaseUrl.replace(/\/+$/, '')}${path}`
+    : getApiUrl(path);
+  const headers: Record<string, string> = opts.apiKey
+    ? { Authorization: `Bearer ${opts.apiKey}` }
+    : { ...getAuthHeader() };
+  if (opts.orgId) headers['Org-Id'] = opts.orgId;
+  return { url, headers };
+};
 
 /** Split a `data:<mime>;base64,<data>` URL into its mime + base64 parts. */
 const parseDataUrl = (dataUrl: string): AgentImageInput | null => {
@@ -122,9 +145,15 @@ export const parseAgentResponse = (data: unknown): string => {
  */
 const pollExecutionResult = async (
   executionId: string,
-  { maxAttempts = 15, intervalMs = 2000 }: { maxAttempts?: number; intervalMs?: number } = {}
+  {
+    maxAttempts = 15,
+    intervalMs = 2000,
+    apiKey,
+    apiBaseUrl,
+    orgId,
+  }: { maxAttempts?: number; intervalMs?: number; apiKey?: string; apiBaseUrl?: string; orgId?: string } = {}
 ): Promise<AgentRunResponse> => {
-  const url = getApiUrl(`/api/v1/streams/results`);
+  const { url, headers } = resolveTarget('/api/v1/streams/results', { apiKey, apiBaseUrl, orgId });
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
@@ -133,7 +162,7 @@ const pollExecutionResult = async (
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeader(),
+          ...headers,
         },
         body: JSON.stringify({
           execution_id: executionId,
@@ -263,13 +292,19 @@ export const runAgent = async (request: AgentRunRequest): Promise<AgentRunRespon
     params,
   };
 
+  const { url: agentUrl, headers: agentHeaders } = resolveTarget('/api/v1/agent', {
+    apiKey: request.apiKey,
+    apiBaseUrl: request.apiBaseUrl,
+    orgId: request.orgId,
+  });
+
   try {
-    const response = await fetch(getApiUrl('/api/v1/agent'), {
+    const response = await fetch(agentUrl, {
       method: 'POST',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
-        ...getAuthHeader(),
+        ...agentHeaders,
       },
       body: JSON.stringify(payload),
     });
@@ -319,7 +354,11 @@ export const runAgent = async (request: AgentRunRequest): Promise<AgentRunRespon
         };
       }
       console.log(`[AgentRun] Got execution stub, polling for result: ${data.execution_id}`);
-      return pollExecutionResult(data.execution_id);
+      return pollExecutionResult(data.execution_id, {
+        apiKey: request.apiKey,
+        apiBaseUrl: request.apiBaseUrl,
+        orgId: request.orgId,
+      });
     }
 
     const content = parseAgentResponse(data);

@@ -83,15 +83,16 @@ export default function App() {
 }
 ```
 
-## The three components
+## The components
 
-The library exports three React components — use one, two, or all three. They share state, so you can mix-and-match.
+The library exports four React components — use one or all of them. They share state, so you can mix-and-match.
 
 | Component | What it does | Live demo |
 |---|---|---|
 | [`<ShuffleMCP />`](#1-shufflemcp--inline-search) | Inline search box that merges Algolia's 3,000+ public app catalog with the current user's private apps | [/shuffle-mcp-demo §1](https://security.shuffler.io/shuffle-mcp-demo) |
 | [`<AppSearchDrawer />`](#2-appsearchdrawer--full-search-drawer) | Right-side drawer wrapping `<ShuffleMCP />` plus a "Your apps" status row. This is the exact "Add Ingestion Source" drawer used in production | [/shuffle-mcp-demo §2](https://security.shuffler.io/shuffle-mcp-demo) |
 | [`<AppDetailDrawer />`](#3-appdetaildrawer--single-app-config) | Right-side drawer for a single app: list/edit/test authentications and try the MCP `tools/call` endpoint inline | [/shuffle-mcp-demo §3](https://security.shuffler.io/shuffle-mcp-demo) |
+| [`<AgentUI />`](#4-agentui--start--debug-agents) | Standalone "What do you want to do?" hero prompt + live decision-by-decision debugger for `/api/v1/agent` runs. Drop-in replacement for the legacy Shuffle Core agent page | [/agents](https://security.shuffler.io/agents) |
 
 ### 1. `<ShuffleMCP />` — inline search
 
@@ -193,6 +194,51 @@ Useful props:
 | `isAuthenticated` | `boolean` | Whether the current user is signed in. Default `true` |
 
 Reference implementation in production: [`src/Shuffle-MCPs/AppSearchDrawer.tsx`](./AppSearchDrawer.tsx) and [`AppDetailDrawer.tsx`](./AppDetailDrawer.tsx).
+
+### 4. `<AgentUI />` — start + debug agents
+
+A standalone "What do you want to do?" surface for the Shuffle agent. Two modes in one component:
+
+1. **Starter** — large hero prompt with attached MCP/app chips. Submits to `/api/v1/agent`.
+2. **Debugger** — compact header + live decision timeline driven by `/api/v1/streams/results`, with question/continuation forms, per-decision raw-JSON inspection, approvals, retries, and reruns.
+
+It switches modes automatically when an execution starts, or when `?execution_id=...&authorization=...` is present in the URL.
+
+```tsx
+import { AgentUI } from 'shuffle-mcps';
+
+<AgentUI
+  apiKey={user.apiKey}                    // optional — falls back to session
+  apiBaseUrl="https://shuffler.io"        // optional — falls back to default
+  orgId={user.orgId}                      // optional — sent as Org-Id header
+  defaultApps={[{ name: 'http' }, { name: 'shuffle_tools' }]}
+  onRun={({ input, success, executionId }) => {
+    console.log('agent run', { input, success, executionId });
+  }}
+/>
+```
+
+Like `<ShuffleMCP />`, all three of `apiKey`, `apiBaseUrl`, and `orgId` are **optional**. When omitted, the component uses the shared browser session (cookie + `localStorage.shuffle_api_key`) — the same behavior as the rest of this library.
+
+Useful props:
+
+| Prop | Type | Description |
+|---|---|---|
+| `apiKey` | `string` | Bearer token used for every `/api/v1/*` call this instance makes |
+| `apiBaseUrl` | `string` | Shuffle backend base URL (e.g. `https://shuffler.io`) |
+| `orgId` | `string` | Sent as the `Org-Id` header on every call |
+| `apps` | `AgentUIApp[]` | Controlled chip set. Disables auto-load |
+| `defaultApps` | `AgentUIApp[]` | Initial chip set when `apps` is not provided |
+| `autoLoadApps` | `boolean` | Auto-fetch the user's authenticated apps via `/api/v1/apps/authentication`. Default `true` |
+| `executionId` / `authorization` | `string` | Attach to a known execution on mount and skip the starter |
+| `readUrlParams` | `boolean` | Read `?execution_id` + `?authorization` from the URL. Default `true` |
+| `title` / `subtitle` / `placeholder` | `string` | Hero copy |
+| `defaultInput` / `autoSubmit` | `string` / `boolean` | Pre-fill and optionally submit on mount |
+| `compact` / `hideHeroIcon` / `hideAppPicker` / `hideAttach` | `boolean` | Layout switches for embedding |
+| `maxWidth` | `number` | Max width of the centered card. Default `900` |
+| `onRun` | `(info) => void` | Fires whenever a run finishes (success or failure) |
+
+Reference page in production: [`src/pages/dashboard/AgentsPage.tsx`](../pages/dashboard/AgentsPage.tsx) (mounted at [`/agents`](https://security.shuffler.io/agents)).
 
 ### Predefined search
 

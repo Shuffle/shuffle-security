@@ -180,6 +180,21 @@ export interface AgentUIProps {
   authorization?: string;
   /** Called whenever a run finishes (success or failure). */
   onRun?: (info: { input: string; success: boolean; executionId?: string; error?: string }) => void;
+  /**
+   * Optional Shuffle API key. When provided, all `/api/v1/*` calls made by
+   * this component (agent run, polling, app autoload, icon fallback) use it
+   * via `Authorization: Bearer <apiKey>`. When omitted, falls back to the
+   * shared `API_CONFIG` (browser session / `localStorage.shuffle_api_key`).
+   */
+  apiKey?: string;
+  /**
+   * Optional Shuffle backend base URL (e.g. `https://shuffler.io`). When
+   * omitted, falls back to the shared `API_CONFIG.baseUrl`. Useful when
+   * embedding `AgentUI` inside another app that targets a different region.
+   */
+  apiBaseUrl?: string;
+  /** Optional Shuffle Org ID — sent as the `Org-Id` header on every call. */
+  orgId?: string;
 }
 
 interface ExecutionData {
@@ -615,7 +630,25 @@ const AgentUI: React.FC<AgentUIProps> = ({
   executionId,
   authorization,
   onRun,
+  apiKey,
+  apiBaseUrl,
+  orgId,
 }) => {
+  // Per-instance API target. Props win over the shared API_CONFIG so the
+  // component can be embedded against a different Shuffle backend without
+  // mutating global state.
+  const resolveUrl = useCallback(
+    (path: string) => (apiBaseUrl ? `${apiBaseUrl.replace(/\/+$/, '')}${path}` : getApiUrl(path)),
+    [apiBaseUrl],
+  );
+  const resolveHeaders = useCallback((): Record<string, string> => {
+    const h: Record<string, string> = apiKey
+      ? { Authorization: `Bearer ${apiKey}` }
+      : { ...getAuthHeader() };
+    if (orgId) h['Org-Id'] = orgId;
+    return h;
+  }, [apiKey, orgId]);
+  const hasApiKey = !!apiKey || !!API_CONFIG.apiKey;
   const navigate = useNavigate();
   const [actionInput, setActionInput] = useState(defaultInput);
   const BUILTIN_DEFAULT_APPS: AgentUIApp[] = [
@@ -730,9 +763,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
       const stillMissing = missing.filter((a) => !resolved[a.name]);
       if (stillMissing.length > 0) {
         try {
-          const res = await fetch(getApiUrl('/api/v1/apps'), {
+          const res = await fetch(resolveUrl('/api/v1/apps'), {
             credentials: 'include',
-            headers: { ...getAuthHeader() },
+            headers: { ...resolveHeaders() },
           });
           if (res.ok) {
             const apps = await res.json();
@@ -755,7 +788,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
       }));
     })();
     return () => { cancelled = true; };
-  }, [chosenApps, availableApps]);
+  }, [chosenApps, availableApps, resolveUrl, resolveHeaders]);
 
   // Auto-load the caller's authenticated apps when nothing was passed in
   // and an API token is configured. Skipped when controlled or `defaultApps`
@@ -763,13 +796,13 @@ const AgentUI: React.FC<AgentUIProps> = ({
   useEffect(() => {
     if (!autoLoadApps) return;
     if (apps || defaultApps) return;
-    if (!API_CONFIG.apiKey) return;
+    if (!hasApiKey) return;
     let cancelled = false;
     (async () => {
       try {
-        const resp = await fetch(getApiUrl('/api/v1/apps/authentication'), {
+        const resp = await fetch(resolveUrl('/api/v1/apps/authentication'), {
           credentials: 'include',
-          headers: { ...getAuthHeader() },
+          headers: { ...resolveHeaders() },
         });
         if (!resp.ok) return;
         const result = await resp.json();
@@ -797,17 +830,17 @@ const AgentUI: React.FC<AgentUIProps> = ({
       }
     })();
     return () => { cancelled = true; };
-  }, [autoLoadApps, apps, defaultApps]);
+  }, [autoLoadApps, apps, defaultApps, hasApiKey, resolveUrl, resolveHeaders]);
 
 
   // ── Fetch execution result (poll-friendly) ──
   const getExecution = useCallback(async (executionId: string, authorization: string) => {
     if (!executionId || !authorization) return;
     try {
-      const resp = await fetch(getApiUrl('/api/v1/streams/results'), {
+      const resp = await fetch(resolveUrl('/api/v1/streams/results'), {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        headers: { 'Content-Type': 'application/json', ...resolveHeaders() },
         body: JSON.stringify({ execution_id: executionId, authorization }),
       });
       if (!resp.ok) {
@@ -884,6 +917,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
     const result = await runAgent({
       input: text.trim(),
       skipPolling: true,
+      ...(apiKey ? { apiKey } : {}),
+      ...(apiBaseUrl ? { apiBaseUrl } : {}),
+      ...(orgId ? { orgId } : {}),
       ...(chosenApps.length === 1 ? { toolName: chosenApps[0].name } : {}),
       ...(chosenApps.length > 1 ? { toolNames: chosenApps.map((a) => a.name) } : {}),
       ...(attachedImages.length > 0 ? { images: attachedImages.map((img) => {
@@ -979,10 +1015,10 @@ const AgentUI: React.FC<AgentUIProps> = ({
       decision_id: decisionId,
     });
     try {
-      const resp = await fetch(getApiUrl(`/api/v1/workflows/${wfId}/run?${params.toString()}`), {
+      const resp = await fetch(resolveUrl(`/api/v1/workflows/${wfId}/run?${params.toString()}`), {
         method: 'GET',
         credentials: 'include',
-        headers: { ...getAuthHeader() },
+        headers: { ...resolveHeaders() },
       });
       const json = await resp.json();
       if (json.success === false) {
@@ -1040,10 +1076,10 @@ const AgentUI: React.FC<AgentUIProps> = ({
     body.source_workflow = execution.workflow?.id;
     setAgentRequestLoading(true);
     try {
-      const resp = await fetch(getApiUrl(`/api/v1/apps/agent/run?rerun=true&decision_id=${encodeURIComponent(decisionId)}`), {
+      const resp = await fetch(resolveUrl(`/api/v1/apps/agent/run?rerun=true&decision_id=${encodeURIComponent(decisionId)}`), {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        headers: { 'Content-Type': 'application/json', ...resolveHeaders() },
         body: JSON.stringify(body),
       });
       const json = await resp.json().catch(() => ({}));
