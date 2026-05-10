@@ -83,7 +83,7 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
   const [appSearchOpen, setAppSearchOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [attachedImage, setAttachedImage] = useState<{ dataUrl: string; name: string } | null>(null);
+  const [attachedImages, setAttachedImages] = useState<{ dataUrl: string; name: string }[]>([]);
 
   // Agent tools state
   const [agentTools, setAgentTools] = useState<AgentTool[]>([]);
@@ -227,11 +227,17 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === 'string') {
-        setAttachedImage({ dataUrl: reader.result, name: file.name || 'Pasted image' });
+        const result = reader.result;
+        setAttachedImages(prev => [...prev, { dataUrl: result, name: file.name || 'Pasted image' }]);
         setRunError(null);
       }
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleImagesSelected = (files: FileList | File[] | null) => {
+    if (!files) return;
+    Array.from(files).forEach(handleImageSelected);
   };
 
   const handleRunAgent = async () => {
@@ -248,7 +254,10 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
       ...(selectedApps.length > 1 ? {
         toolNames: selectedApps.map(a => a.name),
       } : {}),
-      ...(attachedImage ? { image: attachedImage.dataUrl } : {}),
+      ...(attachedImages.length > 0 ? { images: attachedImages.map(img => {
+        const m = /^data:([^;]+);base64,(.*)$/.exec(img.dataUrl);
+        return m ? { mimeType: m[1], data: m[2], name: img.name } : { mimeType: 'image/png', data: img.dataUrl, name: img.name };
+      }) } : {}),
     });
 
     if (result.success) {
