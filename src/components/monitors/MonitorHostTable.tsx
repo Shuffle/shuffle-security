@@ -142,6 +142,16 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
   const pollingActiveRef = useRef<Map<string, boolean>>(new Map());
 
+  // Register hostname+arch identity for every host so storage keys match
+  // those used by the full /monitors/:id/terminal page.
+  useEffect(() => {
+    for (const h of hosts) {
+      if (h.uuid && h.hostname) {
+        registerHostIdentity(h.uuid, { hostname: h.hostname, arch: h.arch });
+      }
+    }
+  }, [hosts]);
+
   // Broadcast a "demo object in view" signal whenever a demo-seeded host row
   // is currently expanded. The DemoTourDrawer listens to this and surfaces
   // the glowing "Re-open demo tour" pill so the user is not left wondering
