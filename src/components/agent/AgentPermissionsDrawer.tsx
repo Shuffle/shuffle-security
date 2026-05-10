@@ -47,6 +47,7 @@ import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
 import { InputBase, Avatar } from '@mui/material';
 import type { AgentRun } from '@/services/agentActivity';
 import AgentRunResultViewer from '@/components/agent/AgentRunResultViewer';
+import { useAuth } from '@/context/AuthContext';
 
 const AGENT_TOOLS_KEY = 'agent_enabled_tools';
 
@@ -65,7 +66,8 @@ interface AgentPermissionsDrawerProps {
 
 const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsDrawerProps) => {
   const navigate = useNavigate();
-
+  const { userInfo } = useAuth();
+  const isSupport = userInfo?.support === true;
   const [activeTab, setActiveTab] = useState(0);
   const [viewRun, setViewRun] = useState<AgentRun | null>(null);
   const [viewDrawerOpen, setViewDrawerOpen] = useState(false);
