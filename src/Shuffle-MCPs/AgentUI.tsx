@@ -43,7 +43,10 @@ import HourglassDisabledIcon from '@mui/icons-material/HourglassDisabled';
 import PauseIcon from '@mui/icons-material/Pause';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import RefreshIcon from '@mui/icons-material/Refresh';
-// RestartAltIcon removed (replaced by chip tabs)
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+import ThumbDownIcon from '@mui/icons-material/ThumbDown';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SendIcon from '@mui/icons-material/Send';
 import WarningIcon from '@mui/icons-material/Warning';
 import CloseIcon from '@mui/icons-material/Close';
