@@ -992,33 +992,6 @@ const AgentActionDrawer = ({ open, onClose, run, initialApp }: AgentActionDrawer
                   />
                   <Box
                     component="button"
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isRunning}
-                    title={attachedImage ? 'Replace image' : 'Attach image'}
-                    sx={{
-                      all: 'unset',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: 34,
-                      height: 34,
-                      borderRadius: '10px',
-                      flexShrink: 0,
-                      cursor: isRunning ? 'default' : 'pointer',
-                      color: attachedImage ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
-                      bgcolor: attachedImage ? 'hsla(var(--primary) / 0.1)' : 'transparent',
-                      transition: 'all 0.15s ease',
-                      '&:hover': isRunning ? {} : {
-                        color: 'hsl(var(--foreground))',
-                        bgcolor: 'hsl(var(--muted))',
-                      },
-                    }}
-                  >
-                    <Paperclip size={16} />
-                  </Box>
-                  <Box
-                    component="button"
                     onClick={handleRunAgent}
                     disabled={!agentInput.trim() || isRunning}
                     sx={{
