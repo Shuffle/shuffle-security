@@ -1197,9 +1197,7 @@ const IncidentsPage = () => {
 
   // Auto-resync untitled incidents (once per browser session, one at a time)
   useEffect(() => {
-    console.log('[AutoResync] Effect running. hasFetched:', hasFetched, 'incidents.length:', incidents.length, 'resyncingId:', resyncingId, 'queueSize:', autoResyncQueueRef.current.size, 'queue:', [...autoResyncQueueRef.current]);
     if (!hasFetched || incidents.length === 0) {
-      console.log('[AutoResync] Bailing: hasFetched=', hasFetched, 'incidents.length=', incidents.length);
       return;
     }
     
@@ -1212,7 +1210,6 @@ const IncidentsPage = () => {
     const needsSync = (t?: string, id?: string) => !t || t === 'Untitled Incident' || t === 'Requires sync' || t === 'undefined' || (id && t === id);
     const untitled = incidents.filter(inc => {
       const sync = needsSync(inc.title, inc.id);
-      console.log(`[AutoResync] Checking ${inc.id}: title="${inc.title}" needsSync=${sync} source="${inc.source}" alreadyResynced=${alreadyResynced.has(inc.id)} inQueue=${autoResyncQueueRef.current.has(inc.id)}`);
       if (!sync) return false;
       if (!inc.source) return false;
       if (alreadyResynced.has(inc.id)) return false;
@@ -1220,7 +1217,6 @@ const IncidentsPage = () => {
       return true;
     });
 
-    console.log('[AutoResync] Candidates:', untitled.length, 'resyncingId:', resyncingId);
     if (untitled.length === 0 || resyncingId) return;
 
     // Pick the first one
