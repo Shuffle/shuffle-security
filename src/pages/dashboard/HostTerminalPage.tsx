@@ -212,7 +212,15 @@ const HostTerminalPage = () => {
   const mode = hostState?.mode || resolvedHost?.mode || 'full';
   const isFull = mode === 'full';
   const needsLoading = !hostState?.hostname && !hostsLoaded;
-  const hasResolvedHostname = Boolean(hostname && hostname !== 'Unknown Host' && hostname !== parsedSegment.raw);
+  // A hostname counts as resolved when we matched a real host record OR when
+  // the URL segment itself is a hostname (the new canonical URL form). The
+  // only "unresolved" case is when allHosts loaded with no match AND the
+  // segment looks like a raw uuid we couldn't map.
+  const hasResolvedHostname = Boolean(
+    hostname &&
+    hostname !== 'Unknown Host' &&
+    (Boolean(resolvedHost) || Boolean(datastoreResolvedHostname) || Boolean(hostState?.hostname) || hostname === parsedSegment.hostname)
+  );
   const hostLookupFailed = hostsLoaded && datastoreLookupDone && !hasResolvedHostname;
   const missingSensorGroup = hostsLoaded && datastoreLookupDone && hasResolvedHostname && !groupName;
   const canRunActions = hasResolvedHostname && Boolean(groupName) && !hostLookupFailed && !missingSensorGroup;
