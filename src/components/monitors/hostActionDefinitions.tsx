@@ -163,11 +163,13 @@ export const HostActionChips = ({
 
         const tooltip = isPermanentlyDisabled
           ? a.disabledReason
-          : userMissing
-            ? 'No active user detected on this host'
-            : allDisabled
-              ? allDisabledReason
-              : undefined;
+          : needsSystem
+            ? 'Requires the host monitor to run as SYSTEM (Windows) or root. Currently running as a regular user.'
+            : userMissing
+              ? 'No active user detected on this host'
+              : allDisabled
+                ? allDisabledReason
+                : undefined;
 
         const handleClick = () => {
           if (isDisabled) return;
