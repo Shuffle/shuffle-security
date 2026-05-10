@@ -21,7 +21,28 @@ const matchSignature = (compact: string): { mime: string; b64: string } | null =
   return null;
 };
 
-const detectImage = (raw: string): { mime: string; b64: string } | null => {
+interface DetectedImage {
+  mime: string;
+  b64: string;
+  cursor?: { x: number; y: number };
+  screenSize?: { width: number; height: number };
+}
+
+const toCursor = (v: unknown): { x: number; y: number } | undefined => {
+  if (!v || typeof v !== 'object') return undefined;
+  const o = v as Record<string, unknown>;
+  if (typeof o.x === 'number' && typeof o.y === 'number') return { x: o.x, y: o.y };
+  return undefined;
+};
+
+const toSize = (v: unknown): { width: number; height: number } | undefined => {
+  if (!v || typeof v !== 'object') return undefined;
+  const o = v as Record<string, unknown>;
+  if (typeof o.width === 'number' && typeof o.height === 'number') return { width: o.width, height: o.height };
+  return undefined;
+};
+
+const detectImage = (raw: string): DetectedImage | null => {
   if (!raw || typeof raw !== 'string') return null;
   const s = raw.trim().replace(/^["']|["']$/g, '');
 
@@ -42,14 +63,17 @@ const detectImage = (raw: string): { mime: string; b64: string } | null => {
       const keys = ['image_base64', 'imageBase64', 'image', 'screenshot', 'screenshot_base64', 'data', 'png', 'jpeg', 'jpg', 'b64', 'base64'];
       for (const item of candidates) {
         if (!item || typeof item !== 'object') continue;
+        const rec = item as Record<string, unknown>;
+        const cursor = toCursor(rec.cursor);
+        const screenSize = toSize(rec.screen_size ?? rec.screenSize);
         for (const key of keys) {
-          const v = (item as Record<string, unknown>)[key];
+          const v = rec[key];
           if (typeof v !== 'string') continue;
           const inner = v.trim().replace(/\s+/g, '');
           const dm = inner.match(/^data:(image\/[a-z+.-]+);base64,(.+)$/i);
-          if (dm) return { mime: dm[1], b64: dm[2] };
+          if (dm) return { mime: dm[1], b64: dm[2], cursor, screenSize };
           const sig = matchSignature(inner);
-          if (sig) return sig;
+          if (sig) return { ...sig, cursor, screenSize };
         }
       }
     } catch {
@@ -57,20 +81,27 @@ const detectImage = (raw: string): { mime: string; b64: string } | null => {
     }
   }
 
-  // Last-resort regex: pull a base64-looking blob out of any wrapper text
-  // (handles truncated JSON, partial logs, etc.)
-  // Try data: URI inside any wrapper text first
+  // Last-resort regex extraction (handles truncated JSON)
+  // Pull cursor + screen_size if present in the raw text
+  let cursor: { x: number; y: number } | undefined;
+  let screenSize: { width: number; height: number } | undefined;
+  const cursorMatch = s.match(/"cursor"\s*:\s*\{\s*"x"\s*:\s*(-?\d+)\s*,\s*"y"\s*:\s*(-?\d+)/);
+  if (cursorMatch) cursor = { x: Number(cursorMatch[1]), y: Number(cursorMatch[2]) };
+  const sizeMatch = s.match(/"screen_?[Ss]ize"\s*:\s*\{\s*"width"\s*:\s*(\d+)\s*,\s*"height"\s*:\s*(\d+)/);
+  if (sizeMatch) screenSize = { width: Number(sizeMatch[1]), height: Number(sizeMatch[2]) };
+
   const dataUriInWrapper = s.match(/data:(image\/[a-z+.-]+);base64,([A-Za-z0-9+/=\s]{200,})/i);
   if (dataUriInWrapper) {
-    return { mime: dataUriInWrapper[1], b64: dataUriInWrapper[2].replace(/\s+/g, '').replace(/["'\\].*$/, '') };
+    const b64 = dataUriInWrapper[2].replace(/\s+/g, '').replace(/["'\\].*$/, '');
+    return { mime: dataUriInWrapper[1], b64, cursor, screenSize };
   }
   const regexMatch = s.match(/"(?:image_base64|imageBase64|image|screenshot|screenshot_base64|data|png|jpeg|jpg|b64|base64)"\s*:\s*"([^"]{200,})"?/i);
   if (regexMatch) {
     const inner = regexMatch[1].replace(/\s+/g, '');
     const dm = inner.match(/^data:(image\/[a-z+.-]+);base64,(.+)$/i);
-    if (dm) return { mime: dm[1], b64: dm[2] };
+    if (dm) return { mime: dm[1], b64: dm[2], cursor, screenSize };
     const sig = matchSignature(inner);
-    if (sig) return sig;
+    if (sig) return { ...sig, cursor, screenSize };
   }
 
   return null;
