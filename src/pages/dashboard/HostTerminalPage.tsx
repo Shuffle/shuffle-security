@@ -897,6 +897,7 @@ const HostTerminalPage = () => {
       <div className="px-6 py-3 border-t border-border/50 shrink-0">
         <HostActionChips
           activeUser={activeUser}
+          agentPrivilege={agentPrivilege}
           size="comfortable"
           allDisabled={!canRunActions}
           allDisabledReason="Monitor resolution required before running predefined actions"
