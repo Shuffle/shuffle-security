@@ -8,6 +8,7 @@ import { Loader2, Play, Terminal, Maximize2 } from 'lucide-react';
 import { CheckCircle2, ShieldX } from 'lucide-react';
 import type { ActionDebugEntry } from '@/hooks/useHostActions';
 import { HostActionChips, getActiveUser } from './hostActionDefinitions';
+import { ActionOutputView } from './ActionOutputView';
 
 /**
  * Shared "Run Action" popover used in BOTH the host list view (VulnAssetsPage)
