@@ -180,6 +180,21 @@ export interface AgentUIProps {
   authorization?: string;
   /** Called whenever a run finishes (success or failure). */
   onRun?: (info: { input: string; success: boolean; executionId?: string; error?: string }) => void;
+  /**
+   * Optional Shuffle API key. When provided, all `/api/v1/*` calls made by
+   * this component (agent run, polling, app autoload, icon fallback) use it
+   * via `Authorization: Bearer <apiKey>`. When omitted, falls back to the
+   * shared `API_CONFIG` (browser session / `localStorage.shuffle_api_key`).
+   */
+  apiKey?: string;
+  /**
+   * Optional Shuffle backend base URL (e.g. `https://shuffler.io`). When
+   * omitted, falls back to the shared `API_CONFIG.baseUrl`. Useful when
+   * embedding `AgentUI` inside another app that targets a different region.
+   */
+  apiBaseUrl?: string;
+  /** Optional Shuffle Org ID — sent as the `Org-Id` header on every call. */
+  orgId?: string;
 }
 
 interface ExecutionData {
