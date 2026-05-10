@@ -820,19 +820,23 @@ const AgentUI: React.FC<AgentUIProps> = ({
               >
                 <AttachFileIcon sx={{ fontSize: 18 }} />
               </IconButton>
-              <IconButton
-                type="submit"
-                disabled={actionInput.trim().length < 3 || agentRequestLoading}
-                sx={{
-                  width: 36, height: 36,
-                  bgcolor: actionInput.trim().length >= 3 ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
-                  color: actionInput.trim().length >= 3 ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))',
-                  '&:hover': actionInput.trim().length >= 3 ? { filter: 'brightness(1.1)', bgcolor: 'hsl(var(--primary))' } : {},
-                  '&.Mui-disabled': { bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' },
-                }}
-              >
-                {agentRequestLoading ? <CircularProgress size={16} sx={{ color: 'inherit' }} /> : <PlayArrowRoundedIcon />}
-              </IconButton>
+              <Tooltip title="⌘+Enter to send" placement="top" arrow>
+                <span>
+                  <IconButton
+                    type="submit"
+                    disabled={actionInput.trim().length < 3 || agentRequestLoading}
+                    sx={{
+                      width: 36, height: 36,
+                      bgcolor: actionInput.trim().length >= 3 ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
+                      color: actionInput.trim().length >= 3 ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))',
+                      '&:hover': actionInput.trim().length >= 3 ? { filter: 'brightness(1.1)', bgcolor: 'hsl(var(--primary))' } : {},
+                      '&.Mui-disabled': { bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' },
+                    }}
+                  >
+                    {agentRequestLoading ? <CircularProgress size={16} sx={{ color: 'inherit' }} /> : <PlayArrowRoundedIcon />}
+                  </IconButton>
+                </span>
+              </Tooltip>
               </Box>
             </Box>
 
@@ -887,10 +891,6 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 </Box>
               ))}
             </Box>
-
-            <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>
-              ⌘+Enter to send
-            </Typography>
 
             {error && (
               <Box sx={{
