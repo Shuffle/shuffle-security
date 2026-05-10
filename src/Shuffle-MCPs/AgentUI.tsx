@@ -19,6 +19,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Avatar,
   AvatarGroup,
@@ -507,6 +508,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   authorization,
   onRun,
 }) => {
+  const navigate = useNavigate();
   const [actionInput, setActionInput] = useState(defaultInput);
   const BUILTIN_DEFAULT_APPS: AgentUIApp[] = [
     { name: 'http' },
@@ -1256,7 +1258,13 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       src={app.icon || undefined}
                       alt={app.name}
                       variant="rounded"
-                      sx={{ bgcolor: 'hsl(var(--muted))' }}
+                      onClick={() => navigate(`/apps/${encodeURIComponent(app.name.toLowerCase().replace(/\s+/g, '_'))}`)}
+                      sx={{
+                        bgcolor: 'hsl(var(--muted))',
+                        cursor: 'pointer',
+                        transition: 'transform 0.15s ease, border-color 0.15s ease',
+                        '&:hover': { transform: 'scale(1.08)', borderColor: 'hsl(var(--primary)) !important' },
+                      }}
                     />
                   </Tooltip>
                 ))}
