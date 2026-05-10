@@ -130,7 +130,19 @@ export const ActionOutputView = ({ output, className }: ActionOutputViewProps) =
           onClick={() => setZoomed(true)}
           className="block max-w-[50%] rounded border border-border overflow-hidden bg-muted/30 hover:border-primary transition-colors"
         >
-          <img src={src} alt="Action screenshot" className="w-full h-auto block" />
+          <img
+            src={src}
+            alt="Action screenshot"
+            className="w-full h-auto block"
+            onLoad={(e) => {
+              // Once the image actually paints, the surrounding scroll
+              // container's content height grows. Pull this entry into view
+              // so the user does not have to manually scroll up to see it.
+              try {
+                (e.currentTarget as HTMLImageElement).scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+              } catch { /* ignore */ }
+            }}
+          />
         </button>
         {hasMeta && (
           <div className="mt-1 flex items-center gap-3 text-[0.6rem] font-mono text-muted-foreground">
