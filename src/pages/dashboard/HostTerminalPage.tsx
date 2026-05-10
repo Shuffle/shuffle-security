@@ -430,7 +430,7 @@ const HostTerminalPage = () => {
     if (!hostUuid) return;
     // Hard guard: backend rejects empty sensor_group / hosts with a confusing
     // "'sensor_group' can't be empty" error. Surface a clear message instead.
-    if (!groupName || !hostname || hostname === 'Unknown Host' || hostname === hostUuid) {
+    if (!groupName || !hostname || hostname === 'Unknown Host') {
       return;
     }
     // Confirm gate for the irreversible disable_rce script
@@ -582,7 +582,7 @@ const HostTerminalPage = () => {
     if (autoRunFiredRef.current) return;
     const action = hostState?.autoRunAction;
     if (!action || !hostUuid) return;
-    if (!hostname || hostname === 'Unknown Host' || hostname === hostUuid) return;
+    if (!hostname || hostname === 'Unknown Host') return;
     if (!groupName) return;
     autoRunFiredRef.current = true;
     executeHostAction(action, action, false);
