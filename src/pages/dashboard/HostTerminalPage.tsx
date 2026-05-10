@@ -856,7 +856,10 @@ const HostTerminalPage = () => {
               {isExpanded && hasOutput && (
                 <div className="px-6 py-2.5">
                   {entry.actionOutput && (
-                    <pre className="text-sm font-mono text-foreground/80 whitespace-pre-wrap break-words">{entry.actionOutput}</pre>
+                    <ActionOutputView
+                      output={entry.actionOutput}
+                      className="text-sm font-mono text-foreground/80 whitespace-pre-wrap break-words"
+                    />
                   )}
                   {entry.error && (
                     <pre className="text-sm font-mono text-destructive whitespace-pre-wrap break-words">{entry.error}</pre>
