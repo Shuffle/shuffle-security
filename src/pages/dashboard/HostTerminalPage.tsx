@@ -472,7 +472,7 @@ const HostTerminalPage = () => {
       const text = await resp.text().catch(() => '');
       if (!resp.ok) {
         updateMyEntry({ status: 'error', responseStatus: resp.status, responseBody: text, finishedAt: Date.now(), error: text || `HTTP ${resp.status}` });
-        toast.error('Action failed', { description: text || `HTTP ${resp.status}` });
+        
         return;
       }
 
@@ -507,7 +507,7 @@ const HostTerminalPage = () => {
             if (!pollResp.ok) {
               if (pollResp.status >= 400 && pollResp.status < 500) {
                 updateMyEntry({ status: 'error', responseBody: `Poll error ${pollResp.status}`, finishedAt: Date.now(), error: `HTTP ${pollResp.status}` });
-                toast.error('Action failed', { description: `Poll error ${pollResp.status}` });
+                
                 return;
               }
               continue;
@@ -536,9 +536,6 @@ const HostTerminalPage = () => {
             if (result.output || result.error) {
               setExpandedEntries(prev => new Set(prev).add(myId));
             }
-            if (!result.success) {
-              toast.error('Action failed', { description: result.error || result.output || `"${actionName}" → ${hostname}` });
-            }
             return;
           } catch {
             if (!pollingActiveRef.current.get(abortKey)) return;
@@ -547,7 +544,7 @@ const HostTerminalPage = () => {
         }
         if (pollingActiveRef.current.get(abortKey)) {
           updateMyEntry({ status: 'error', finishedAt: Date.now(), error: 'Timed out waiting for execution result (30 min).' });
-          toast.error('Action timed out', { description: 'No result after 30 minutes.' });
+          
         }
       } else {
         updateMyEntry({ status: 'success', responseStatus: resp.status, responseBody: text, finishedAt: Date.now() });
@@ -556,7 +553,7 @@ const HostTerminalPage = () => {
       if (!pollingActiveRef.current.get(abortKey)) return;
       const msg = err instanceof Error ? err.message : 'Request error';
       updateMyEntry({ status: 'error', finishedAt: Date.now(), error: msg });
-      toast.error('Action failed', { description: msg });
+      
     } finally {
       pollingActiveRef.current.delete(abortKey);
       abortControllersRef.current.delete(abortKey);
@@ -596,7 +593,7 @@ const HostTerminalPage = () => {
 
   const fetchEntryResult = useCallback(async (entry: ActionDebugEntry) => {
     if (!entry.executionId || !entry.authorization) {
-      toast.error('No execution ID available to reload');
+      
       return;
     }
     setLoadingEntries(prev => new Set(prev).add(entry.entryId));
@@ -608,12 +605,12 @@ const HostTerminalPage = () => {
         body: JSON.stringify({ execution_id: entry.executionId, authorization: entry.authorization }),
       });
       if (!resp.ok) {
-        toast.error('Failed to reload result', { description: `HTTP ${resp.status}` });
+        
         return;
       }
       const text = await resp.text();
       if (!text || text === '{}' || text === 'null') {
-        toast.info('Result not available yet');
+        
         return;
       }
       let pollData: unknown = null;
@@ -626,7 +623,7 @@ const HostTerminalPage = () => {
       ));
       setExpandedEntries(prev => new Set(prev).add(entry.entryId));
     } catch (err) {
-      toast.error('Failed to reload', { description: err instanceof Error ? err.message : 'Network error' });
+      
     } finally {
       setLoadingEntries(prev => { const next = new Set(prev); next.delete(entry.entryId); return next; });
     }
@@ -910,7 +907,7 @@ const HostTerminalPage = () => {
                   actionOutput: `Network isolation policy applied to ${hostname}.\nAll outbound connections blocked except to the security platform.\nUser session preserved. Awaiting analyst review.`,
                   actionSuccess: true,
                 } : e));
-                toast.success(`Isolate Host applied to ${hostname}`);
+                
               }, 1200);
               return true;
             }
