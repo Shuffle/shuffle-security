@@ -1191,10 +1191,12 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   const status = (execution?.status || agentData?.status || 'EXECUTING').toUpperCase();
                   const decisionCount = (agentData?.decisions || []).length;
                   const isRunning = !['FINISHED', 'FAILURE', 'ABORTED', 'CANCELLED', 'CANCELED'].includes(status);
-                  const startedAt = agentData?.started_at || execution?.started_at || 0;
+                  const rawStartedAt = agentData?.started_at || execution?.started_at || 0;
+                  // Normalize: backend may return Unix milliseconds (UnixMillis) or seconds.
+                  const startedAtSec = rawStartedAt > 1e12 ? Math.floor(rawStartedAt / 1000) : rawStartedAt;
                   let durationSec: number | null = null;
-                  if (isRunning && startedAt) {
-                    durationSec = Math.max(0, nowTick - startedAt);
+                  if (isRunning && startedAtSec) {
+                    durationSec = Math.max(0, nowTick - startedAtSec);
                   } else if (totalDuration && totalDuration > 0) {
                     durationSec = Math.round(totalDuration);
                   }
