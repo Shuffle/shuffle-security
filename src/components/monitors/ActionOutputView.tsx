@@ -122,6 +122,7 @@ export const ActionOutputView = ({ output, className }: ActionOutputViewProps) =
 
   if (detected) {
     const src = `data:${detected.mime};base64,${detected.b64}`;
+    const hasMeta = !!(detected.cursor || detected.screenSize);
     return (
       <>
         <button
@@ -131,12 +132,32 @@ export const ActionOutputView = ({ output, className }: ActionOutputViewProps) =
         >
           <img src={src} alt="Action screenshot" className="w-full h-auto block" />
         </button>
+        {hasMeta && (
+          <div className="mt-1 flex items-center gap-3 text-[0.6rem] font-mono text-muted-foreground">
+            {detected.screenSize && (
+              <span>screen {detected.screenSize.width}×{detected.screenSize.height}</span>
+            )}
+            {detected.cursor && (
+              <span>cursor ({detected.cursor.x}, {detected.cursor.y})</span>
+            )}
+          </div>
+        )}
         {zoomed && (
           <div
-            className="fixed inset-0 z-[10000] bg-black/80 flex items-center justify-center p-6 cursor-zoom-out"
+            className="fixed inset-0 z-[10000] bg-black/80 flex flex-col items-center justify-center p-6 cursor-zoom-out gap-2"
             onClick={() => setZoomed(false)}
           >
-            <img src={src} alt="Action screenshot" className="max-w-full max-h-full rounded shadow-2xl" />
+            <img src={src} alt="Action screenshot" className="max-w-full max-h-[calc(100%-2rem)] rounded shadow-2xl" />
+            {hasMeta && (
+              <div className="flex items-center gap-3 text-xs font-mono text-white/80">
+                {detected.screenSize && (
+                  <span>screen {detected.screenSize.width}×{detected.screenSize.height}</span>
+                )}
+                {detected.cursor && (
+                  <span>cursor ({detected.cursor.x}, {detected.cursor.y})</span>
+                )}
+              </div>
+            )}
           </div>
         )}
       </>
