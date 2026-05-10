@@ -154,6 +154,7 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
   const [pendingDisableRce, setPendingDisableRce] = useState<null | { actionId: string; actionName: string; hostname: string; groupName: string; hostUuid: string; isPredefined: boolean }>(null);
   const [customAction, setCustomAction] = useState('');
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [openPopovers, setOpenPopovers] = useState<Set<string>>(new Set());
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
   const pollingActiveRef = useRef<Map<string, boolean>>(new Map());
 
