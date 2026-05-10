@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { toast } from '@/lib/toast';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
+import { terminalStorageKey, readStoredSession } from '@/utils/terminalStorageKey';
 
 /**
  * Shared hook for executing response actions on a sensor host.
