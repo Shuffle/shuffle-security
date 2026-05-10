@@ -8,6 +8,7 @@ import {
   HardDrive, Lock, Package, Zap, ChevronRight, ChevronDown,
   Hash, Cpu, Send, ShieldCheck, ShieldX, FileCode, ScanLine, AlertTriangle, GitBranch,
 } from 'lucide-react';
+import { inferAgentPrivilege } from './hostActionDefinitions';
 
 interface ProcessEntry {
   pid: number;
