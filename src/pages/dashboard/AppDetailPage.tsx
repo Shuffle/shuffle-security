@@ -226,6 +226,38 @@ const AppDetailPage = () => {
         }
       }
 
+      // Step 3: Fallback — if Algolia didn't return an image (or no match at all),
+      // pull the app image from /api/v1/apps so we still render an icon.
+      const needsImageFallback = !algoliaMatch || !algoliaMatch.image_url;
+      if (needsImageFallback) {
+        try {
+          const res = await fetch(getApiUrl('/api/v1/apps'), {
+            credentials: 'include',
+            headers: { ...getAuthHeader() },
+          });
+          if (res.ok) {
+            const apps = await res.json();
+            if (Array.isArray(apps)) {
+              const match = apps.find((a: any) =>
+                (a.name || '').toLowerCase().replace(/[\s_\-]+/g, '_') === normalizedName
+              );
+              if (match) {
+                setAppInfo(prev => ({
+                  name: prev?.name || match.name || searchName,
+                  description: prev?.description || match.description || '',
+                  ...prev,
+                  large_image: prev?.large_image || match.large_image || '',
+                  categories: prev?.categories?.length ? prev.categories : (match.categories || []),
+                }));
+                algoliaMatch = algoliaMatch || match;
+              }
+            }
+          }
+        } catch {
+          // ignore — we'll fall through to the not-found handling below
+        }
+      }
+
       // If neither source found anything
       if (!algoliaMatch && !appInfo) {
         if (searchName.length > 1) {
