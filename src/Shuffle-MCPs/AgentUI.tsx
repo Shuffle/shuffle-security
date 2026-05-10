@@ -837,10 +837,10 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const getExecution = useCallback(async (executionId: string, authorization: string) => {
     if (!executionId || !authorization) return;
     try {
-      const resp = await fetch(getApiUrl('/api/v1/streams/results'), {
+      const resp = await fetch(resolveUrl('/api/v1/streams/results'), {
         method: 'POST',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        headers: { 'Content-Type': 'application/json', ...resolveHeaders() },
         body: JSON.stringify({ execution_id: executionId, authorization }),
       });
       if (!resp.ok) {
