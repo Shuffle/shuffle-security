@@ -51,7 +51,7 @@ import remarkGfm from 'remark-gfm';
 
 import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
-import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
+import { getApiUrl, getAuthHeader, API_CONFIG } from '@/Shuffle-MCPs/api';
 import { toast } from '@/Shuffle-MCPs/toast';
 import { runAgent } from '@/services/agentRun';
 
@@ -67,8 +67,16 @@ export interface AgentUIApp {
 }
 
 export interface AgentUIProps {
-  /** Initial chip set under the prompt. Defaults to Http + Shuffle Tools. */
+  /** Controlled list of apps. When provided, overrides defaultApps and disables auto-load. */
+  apps?: AgentUIApp[];
+  /** Initial chip set under the prompt. Used only when `apps` is not provided. */
   defaultApps?: AgentUIApp[];
+  /**
+   * When true (default) and neither `apps` nor `defaultApps` is provided, fetch the
+   * caller's authenticated apps via `/api/v1/apps/authentication` (requires an API
+   * token to be set on `API_CONFIG`).
+   */
+  autoLoadApps?: boolean;
   /** Hero title above the prompt. */
   title?: string;
   /** Optional subtitle/description shown under the title. */
@@ -427,13 +435,11 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-const DEFAULT_APPS: AgentUIApp[] = [
-  { name: 'Http', id: 'ebfe7d5c80000676588f86731db0a555' },
-  { name: 'Shuffle_tools', id: '3e2bdf9d5069fe3f4746c29d68785a6a' },
-];
 
 const AgentUI: React.FC<AgentUIProps> = ({
-  defaultApps = DEFAULT_APPS,
+  apps,
+  defaultApps,
+  autoLoadApps = true,
   title = 'What do you want to do?',
   subtitle,
   placeholder = 'Describe a task, e.g. "Get my emails for today and summarise them"',
@@ -458,7 +464,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   onRun,
 }) => {
   const [actionInput, setActionInput] = useState(defaultInput);
-  const [chosenApps, setChosenApps] = useState<AgentUIApp[]>(defaultApps);
+  const [chosenApps, setChosenApps] = useState<AgentUIApp[]>(apps ?? defaultApps ?? []);
   const [appSearchOpen, setAppSearchOpen] = useState(false);
   const [agentRequestLoading, setAgentRequestLoading] = useState(false);
   const [execution, setExecution] = useState<ExecutionData | null>(null);
@@ -509,6 +515,54 @@ const AgentUI: React.FC<AgentUIProps> = ({
     }
     return m;
   }, [chosenApps]);
+
+  // Sync controlled `apps` prop into local state.
+  useEffect(() => {
+    if (apps) setChosenApps(apps);
+  }, [apps]);
+
+  // Auto-load the caller's authenticated apps when nothing was passed in
+  // and an API token is configured. Skipped when controlled or `defaultApps`
+  // were provided explicitly.
+  useEffect(() => {
+    if (!autoLoadApps) return;
+    if (apps || defaultApps) return;
+    if (!API_CONFIG.apiKey) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const resp = await fetch(getApiUrl('/api/v1/apps/authentication'), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
+        });
+        if (!resp.ok) return;
+        const result = await resp.json();
+        const list = Array.isArray(result) ? result : (result?.data || []);
+        const seen = new Set<string>();
+        const loaded: AgentUIApp[] = [];
+        for (const entry of list) {
+          const app = entry?.app || entry;
+          const name: string | undefined = app?.name;
+          if (!name) continue;
+          const valid = entry?.active || entry?.validation?.valid || entry?.hasValidAuth;
+          if (valid === false) continue;
+          const key = name.toLowerCase();
+          if (seen.has(key)) continue;
+          seen.add(key);
+          loaded.push({
+            name,
+            id: app?.id || entry?.id,
+            icon: app?.large_image || app?.image_url || app?.image || entry?.bestImage || '',
+          });
+        }
+        if (!cancelled && loaded.length) setChosenApps(loaded);
+      } catch {
+        // silent — caller can still pick apps manually
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [autoLoadApps, apps, defaultApps]);
+
 
   // ── Fetch execution result (poll-friendly) ──
   const getExecution = useCallback(async (executionId: string, authorization: string) => {
@@ -962,7 +1016,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   }}
                 >
                   <Avatar
-                    src={app.icon || `https://shuffler.io/api/v1/apps/${app.id}/icon`}
+                    src={app.icon || undefined}
                     alt={app.name}
                     variant="rounded"
                     sx={{ width: 22, height: 22, bgcolor: 'transparent' }}
@@ -1047,7 +1101,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 {chosenApps.map((app, i) => (
                   <Tooltip key={i} title={app.name.replace(/_/g, ' ')}>
                     <Avatar
-                      src={app.icon || (app.id ? `https://shuffler.io/api/v1/apps/${app.id}/icon` : undefined)}
+                      src={app.icon || undefined}
                       alt={app.name}
                       variant="rounded"
                       sx={{ bgcolor: 'hsl(var(--muted))' }}
@@ -1248,7 +1302,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
             setChosenApps((prev) =>
               prev.some((a) => a.name === app.name)
                 ? prev
-                : [...prev, { name: app.name, icon: app.icon }]
+                : [...prev, { name: app.name, icon: app.icon, id: app.id || undefined }]
             );
           }}
         />
