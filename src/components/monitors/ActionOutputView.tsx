@@ -3,7 +3,7 @@
  * <pre>. The `script:screenshot` action returns a base64-encoded PNG which
  * we detect by signature and render as an inline image instead.
  */
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 const IMAGE_SIGNATURES: Array<{ prefix: string; mime: string }> = [
   { prefix: 'iVBORw0KGgo', mime: 'image/png' },   // PNG
