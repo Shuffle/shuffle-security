@@ -457,7 +457,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   authorization,
   onRun,
 }) => {
-  const [actionInput, setActionInput] = useState('');
+  const [actionInput, setActionInput] = useState(defaultInput);
   const [chosenApps, setChosenApps] = useState<AgentUIApp[]>(defaultApps);
   const [appSearchOpen, setAppSearchOpen] = useState(false);
   const [agentRequestLoading, setAgentRequestLoading] = useState(false);
