@@ -201,6 +201,34 @@ const RemoteControlChip = ({ size, disabled, onSend }: RemoteControlChipProps) =
   };
 
   const buildPayload = () => {
+    if (op === 'keyboard.press') {
+      // If the user typed a multi-char string that isn't a named key / VK code
+      // (e.g. "notepad"), expand it to one keyboard.press action per character
+      // so the agent types the whole string. Single chars / named keys / hex
+      // codes still produce a single action.
+      const raw = String(keyCode || '').trim();
+      const isNamed = /^[a-z]+$/i.test(raw) && raw.length > 1 &&
+        resolveKey(raw) !== 0 && resolveKey(raw) === resolveKey(raw.toLowerCase());
+      const namedHit = (() => {
+        // Only treat as a named key when resolveKey matches via the named map
+        // or F-key pattern — not when it happens to be a single A-Z letter.
+        if (raw.length <= 1) return true;
+        if (/^0x[0-9a-f]+$/i.test(raw) || /^\d+$/.test(raw)) return true;
+        const lower = raw.toLowerCase();
+        if (/^f([1-9]|1[0-2])$/.test(lower)) return true;
+        // Named map keys
+        const named = ['enter','return','esc','escape','tab','space','spacebar','backspace','delete','del','insert','home','end','pageup','pagedown','left','up','right','down','shift','ctrl','control','alt','win','meta','capslock'];
+        return named.includes(lower);
+      })();
+      if (!namedHit && raw.length > 1) {
+        const actions = Array.from(raw).map(ch => ({
+          op: 'keyboard.press',
+          params: { key: resolveKey(ch) },
+        })).filter(a => a.params.key);
+        return JSON.stringify({ actions });
+      }
+      return JSON.stringify({ actions: [{ op, params: { key: resolveKey(raw) } }] });
+    }
     let params: Record<string, unknown> = {};
     if (op === 'mouse.move') {
       params = { x: Number(x), y: Number(y) };
@@ -208,8 +236,6 @@ const RemoteControlChip = ({ size, disabled, onSend }: RemoteControlChipProps) =
       params = { x: Number(x), y: Number(y), button, delay_ms: Number(delayMs) };
     } else if (op === 'mouse.drag') {
       params = { from_x: Number(x), from_y: Number(y), to_x: Number(toX), to_y: Number(toY), button };
-    } else if (op === 'keyboard.press') {
-      params = { key: resolveKey(keyCode) };
     } else if (op === 'system.wait') {
       params = { ms: Number(waitMs) };
     }
@@ -295,7 +321,7 @@ const RemoteControlChip = ({ size, disabled, onSend }: RemoteControlChipProps) =
 
         {op === 'keyboard.press' && (
           <div>
-            <label className="text-[0.65rem] font-mono text-muted-foreground">key (a-z, 0-9, enter, esc, f1, or VK code)</label>
+            <label className="text-[0.65rem] font-mono text-muted-foreground">key or string ("notepad", "enter", "f1", a, 0x1B)</label>
             <Input value={keyCode} onChange={e => setKeyCode(e.target.value)} placeholder="Enter" className="h-7 text-xs font-mono" />
           </div>
         )}
