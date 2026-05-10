@@ -31,6 +31,7 @@ import {
   MonitorCheck,
   Bug,
   Zap,
+  Terminal,
 } from 'lucide-react';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import RadarIcon from '@mui/icons-material/Radar';
@@ -50,6 +51,7 @@ export type SidebarItemKey =
   | 'incidents_custom_fields'
   | 'host_monitors'
   | 'host_monitors_response'
+  | 'host_monitors_terminal'
   | 'vulnerabilities'
   | 'vulnerabilities_assets'
   | 'detection'
@@ -136,6 +138,12 @@ export const SIDEBAR_NAV: SidebarItemSpec[] = [
     icon: <MonitorCheck size={20} />,
     path: '/monitors',
     children: [
+      {
+        tabKey: 'host_monitors_terminal',
+        label: 'Remote Control',
+        path: '/monitors/terminal',
+        icon: <Terminal size={16} />,
+      },
       {
         tabKey: 'host_monitors_response',
         label: 'Response',

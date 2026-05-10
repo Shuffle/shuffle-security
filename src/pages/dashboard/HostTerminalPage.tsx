@@ -663,7 +663,33 @@ const HostTerminalPage = () => {
     )
   );
 
-  if (needsLoading) {
+  // No host in URL: auto-redirect to most recently checked-in monitor, or
+  // show an empty state pointing to /monitors when none exist.
+  const noHostInUrl = !hostUuid;
+  useEffect(() => {
+    if (!noHostInUrl || !hostsLoaded || allHosts.length === 0) return;
+    const sorted = [...allHosts].sort((a, b) => (b.checkin || 0) - (a.checkin || 0));
+    const target = sorted[0];
+    const seg = hostUrlSegment({ hostname: target.hostname, arch: target.arch, uuid: target.uuid });
+    if (seg) navigate(`/monitors/${encodeURIComponent(seg)}/terminal`, { replace: true });
+  }, [noHostInUrl, hostsLoaded, allHosts, navigate]);
+
+  if (noHostInUrl && hostsLoaded && allHosts.length === 0) {
+    return (
+      <div className="flex flex-col h-[calc(100vh-4rem)] items-center justify-center gap-4 text-muted-foreground px-6 text-center">
+        <Terminal size={32} className="text-muted-foreground/60" />
+        <div>
+          <p className="text-base font-medium text-foreground">No sensors found</p>
+          <p className="text-sm mt-1">Install a host monitor to start using Remote Control.</p>
+        </div>
+        <Button onClick={() => navigate('/monitors')} className="gap-1.5">
+          Add Host monitors <ArrowRight size={14} />
+        </Button>
+      </div>
+    );
+  }
+
+  if (needsLoading || (noHostInUrl && allHosts.length > 0)) {
     return (
       <div className="flex flex-col h-[calc(100vh-4rem)] items-center justify-center gap-3 text-muted-foreground">
         <Loader2 size={24} className="animate-spin" />
