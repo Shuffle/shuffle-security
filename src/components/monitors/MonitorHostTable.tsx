@@ -769,9 +769,9 @@ export const MonitorHostTable = ({ hosts, onRefresh }: MonitorHostTableProps) =>
                         <Button
                           variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary"
                           onClick={(e) => {
-                            const hostId = host.uuid || host.hostname;
-                            if (!hostId) return;
-                            const path = `/monitors/${encodeURIComponent(hostId)}`;
+                            const segment = hostUrlSegment(host);
+                            if (!segment) return;
+                            const path = `/monitors/${encodeURIComponent(segment)}`;
                             if (e.ctrlKey || e.metaKey) window.open(path, '_blank');
                             else navigate(path);
                           }}
