@@ -27,6 +27,7 @@ import { HostDetailPanel } from './HostDetailPanel';
 import { HostActionChips, getActiveUser as sharedGetActiveUser } from './hostActionDefinitions';
 import { DEMO_HOST_HOSTNAME } from '@/services/demoLiveEnvironment';
 import { terminalStorageKey, readStoredSession, registerHostIdentity } from '@/utils/terminalStorageKey';
+import { hostUrlSegment } from '@/utils/hostUrlSegment';
 import { ActionOutputView } from './ActionOutputView';
 
 // ── Helpers (identical to the originals on VulnAssetsPage) ─────────────────
