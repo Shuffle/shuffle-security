@@ -24,6 +24,7 @@ import {
 import { toast } from '@/lib/toast';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { HostDetailPanel } from './HostDetailPanel';
+import { HostActionChips, getActiveUser as sharedGetActiveUser } from './hostActionDefinitions';
 import { DEMO_HOST_HOSTNAME } from '@/services/demoLiveEnvironment';
 
 // ── Helpers (identical to the originals on VulnAssetsPage) ─────────────────
