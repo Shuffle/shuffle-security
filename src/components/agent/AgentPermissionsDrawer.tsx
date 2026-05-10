@@ -365,7 +365,24 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
       <Box sx={{ flex: 1, overflowY: 'auto', px: 3, py: 2.5 }}>
         {activeTab === 1 && (
           /* ── Permissions Tab ── */
-          <PermissionsPanel compact />
+          <Box>
+            <Alert
+              severity="info"
+              icon={<ShieldCheck size={16} />}
+              sx={{
+                mb: 2,
+                fontSize: '0.78rem',
+                borderRadius: 1.5,
+                bgcolor: 'hsla(var(--primary) / 0.08)',
+                color: 'hsl(var(--foreground))',
+                border: '1px solid hsla(var(--primary) / 0.25)',
+                '& .MuiAlert-icon': { color: 'hsl(var(--primary))' },
+              }}
+            >
+              Support-only preview. This tab is not yet available to customers.
+            </Alert>
+            <PermissionsPanel compact />
+          </Box>
         )}
 
         {activeTab === 0 && (
