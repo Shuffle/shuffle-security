@@ -672,8 +672,21 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const [viewMode, setViewMode] = useState<'simple' | 'detailed'>('simple');
   const [attachedImages, setAttachedImages] = useState<{ dataUrl: string; name: string }[]>([]);
   const [nowTick, setNowTick] = useState(() => Math.floor(Date.now() / 1000));
+  // Local fallback start timestamp captured the moment we first see an
+  // execution_id, so the "Agent is working… Xs" counter starts ticking
+  // immediately — even before the backend echoes `started_at` back to us.
+  const [localRunStart, setLocalRunStart] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Reset / capture the local run start whenever a new execution begins.
+  useEffect(() => {
+    if (execution?.execution_id) {
+      setLocalRunStart((prev) => prev ?? Math.floor(Date.now() / 1000));
+    } else {
+      setLocalRunStart(null);
+    }
+  }, [execution?.execution_id]);
 
   // Tick every second while a run is in progress so the Simple view duration
   // counts up live instead of being frozen at "1s".
