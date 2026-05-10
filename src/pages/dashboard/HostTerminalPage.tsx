@@ -69,8 +69,17 @@ const HISTORY_KEY = (hostUuid: string) => terminalStorageKey(hostUuid);
 const MAX_STORED = 50;
 const MAX_OUTPUT_CHARS = 20000;
 
+const IMAGE_PREFIXES = ['iVBORw0KGgo', '/9j/', 'R0lGOD', 'UklGR'];
+const looksLikeBase64Image = (s: string | undefined): boolean => {
+  if (!s) return false;
+  const head = s.trim().slice(0, 16);
+  return IMAGE_PREFIXES.some(p => head.startsWith(p));
+};
+
 const truncate = (s: string | undefined, n: number): string | undefined => {
   if (!s) return s;
+  // Never truncate base64 image payloads — half a PNG cannot be decoded.
+  if (looksLikeBase64Image(s)) return s;
   return s.length > n ? s.slice(0, n) + `\n…[truncated ${s.length - n} chars]` : s;
 };
 
