@@ -31,6 +31,8 @@ import {
   CheckCircle2,
   Settings2,
   Play,
+  Paperclip,
+  X,
 } from 'lucide-react';
 
 import AgentActionDrawer from '@/components/agent/AgentActionDrawer';
@@ -80,6 +82,8 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
   const [selectedApps, setSelectedApps] = useState<{ name: string; icon: string; categories: string[] }[]>([]);
   const [appSearchOpen, setAppSearchOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [attachedImage, setAttachedImage] = useState<{ dataUrl: string; name: string } | null>(null);
 
   // Agent tools state
   const [agentTools, setAgentTools] = useState<AgentTool[]>([]);
@@ -213,6 +217,23 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
 
 
 
+  const handleImageSelected = (file: File | null) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setRunError('Only image files can be attached.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setAttachedImage({ dataUrl: reader.result, name: file.name || 'Pasted image' });
+        setRunError(null);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleRunAgent = async () => {
     if (!agentInput.trim() || isRunning) return;
     setIsRunning(true);
@@ -227,6 +248,7 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
       ...(selectedApps.length > 1 ? {
         toolNames: selectedApps.map(a => a.name),
       } : {}),
+      ...(attachedImage ? { image: attachedImage.dataUrl } : {}),
     });
 
     if (result.success) {
@@ -251,6 +273,7 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
     setAgentInput('');
     setActionRun(null);
     setRunError(null);
+    setAttachedImage(null);
   };
 
   return (
@@ -392,7 +415,7 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
             <Box>
               <Box sx={{
                 display: 'flex',
-                alignItems: 'flex-end',
+                flexDirection: 'column',
                 gap: 1,
                 borderRadius: 2.5,
                 border: '1.5px solid hsl(var(--border))',
@@ -406,6 +429,29 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
                   boxShadow: '0 0 0 3px hsla(var(--primary) / 0.12)',
                 },
               }}>
+                {attachedImage && (
+                  <Box sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    alignSelf: 'flex-start',
+                    p: 0.5,
+                    pr: 1,
+                    borderRadius: 1.5,
+                    border: '1px solid hsl(var(--border))',
+                    bgcolor: 'hsl(var(--background))',
+                    maxWidth: '100%',
+                  }}>
+                    <Box component="img" src={attachedImage.dataUrl} alt={attachedImage.name} sx={{ width: 32, height: 32, borderRadius: 1, objectFit: 'cover', flexShrink: 0 }} />
+                    <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--foreground))', maxWidth: 190, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {attachedImage.name}
+                    </Typography>
+                    <IconButton size="small" onClick={() => setAttachedImage(null)} sx={{ p: 0.25, color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--destructive))' } }} aria-label="Remove attached image">
+                      <X size={12} />
+                    </IconButton>
+                  </Box>
+                )}
+                <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, width: '100%' }}>
                 <InputBase
                   inputRef={inputRef}
                   autoFocus
@@ -420,6 +466,20 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
                       handleRunAgent();
                     }
                   }}
+                  onPaste={(e) => {
+                    const items = e.clipboardData?.items;
+                    if (!items) return;
+                    for (const item of Array.from(items)) {
+                      if (item.kind === 'file' && item.type.startsWith('image/')) {
+                        const file = item.getAsFile();
+                        if (file) {
+                          e.preventDefault();
+                          handleImageSelected(file);
+                          return;
+                        }
+                      }
+                    }
+                  }}
                   fullWidth
                   sx={{
                     fontSize: '0.9rem',
@@ -430,6 +490,43 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
                     },
                   }}
                 />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    handleImageSelected(e.target.files?.[0] || null);
+                    if (e.target) e.target.value = '';
+                  }}
+                />
+                <Box
+                  component="button"
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isRunning}
+                  title={attachedImage ? 'Replace image' : 'Attach image'}
+                  sx={{
+                    all: 'unset',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 34,
+                    height: 34,
+                    borderRadius: '10px',
+                    flexShrink: 0,
+                    cursor: isRunning ? 'default' : 'pointer',
+                    color: attachedImage ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                    bgcolor: attachedImage ? 'hsla(var(--primary) / 0.1)' : 'transparent',
+                    transition: 'all 0.15s ease',
+                    '&:hover': isRunning ? {} : {
+                      color: 'hsl(var(--foreground))',
+                      bgcolor: 'hsl(var(--muted))',
+                    },
+                  }}
+                >
+                  <Paperclip size={16} />
+                </Box>
                 <Box
                   component="button"
                   onClick={handleRunAgent}
@@ -456,9 +553,10 @@ const AgentPermissionsDrawer = ({ open, onClose, initialTab }: AgentPermissionsD
                     <PlayArrowRoundedIcon sx={{ fontSize: 20 }} />
                   )}
                 </Box>
+                </Box>
               </Box>
               <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', mt: 0.75 }}>
-                ⌘+Enter to send
+                ⌘+Enter to send · paste or attach an image
               </Typography>
             </Box>
 
