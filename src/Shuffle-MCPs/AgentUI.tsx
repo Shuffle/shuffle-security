@@ -24,7 +24,7 @@ import {
   AvatarGroup,
   Box,
   Button,
-  ButtonGroup,
+  // ButtonGroup removed (replaced by chip tabs)
   Chip,
   CircularProgress,
   IconButton,
