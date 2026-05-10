@@ -440,24 +440,36 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
       {open && (
         <Box sx={{ px: 4, pb: 2 }}>
           <Box
-            component="pre"
             sx={{
-              m: 0,
               p: 2,
               borderRadius: 1.5,
               border: '1px solid hsl(var(--border))',
               bgcolor: 'hsl(var(--background))',
-              fontSize: '0.72rem',
-              lineHeight: 1.55,
-              color: 'hsl(var(--foreground))',
-              overflowX: 'auto',
+              overflow: 'auto',
               maxHeight: 400,
               fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+              '& .json-view': {
+                fontSize: '0.72rem !important',
+                fontFamily: 'inherit !important',
+                bgcolor: 'transparent !important',
+              },
             }}
           >
-            <code>
-              {validate.valid ? JSON.stringify(validate.result, null, 2) : String(item.details ?? '')}
-            </code>
+            {validate.valid && validate.result && typeof validate.result === 'object' ? (
+              <JsonView
+                src={deepParseJsonStrings(validate.result)}
+                dark
+                collapsed={2}
+                collapseStringMode="word"
+                collapseStringsAfterLength={120}
+                enableClipboard
+                displaySize
+              />
+            ) : (
+              <Box component="pre" sx={{ m: 0, fontSize: '0.72rem', color: 'hsl(var(--foreground))' }}>
+                <code>{String(item.details ?? '')}</code>
+              </Box>
+            )}
           </Box>
         </Box>
       )}
