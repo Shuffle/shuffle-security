@@ -20,6 +20,13 @@ export type ActionDebugEntry = {
   entryId: string;
   hostUuid: string;
   actionName: string;
+  /**
+   * The exact command string sent to the backend (e.g. `script:screenshot frikky`
+   * or `remote_control {"actions":[…]}`). Used to repopulate the input when
+   * the user presses ArrowUp in the terminal — `actionName` is only the
+   * display label and would otherwise lose the parameters.
+   */
+  commandText?: string;
   hostname: string;
   status: 'sending' | 'polling' | 'success' | 'error';
   requestBody: object;
