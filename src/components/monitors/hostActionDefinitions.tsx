@@ -6,7 +6,12 @@
  * If you want to add, rename, enable or disable a predefined action, do it
  * here — every UI location renders from this list so they stay in sync.
  */
+import { useState } from 'react';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { MousePointerClick } from 'lucide-react';
 
 export const SYSTEM_USERS = new Set([
   'root', '_root', 'system', 'daemon', 'nobody', 'launchd', '_windowserver',
@@ -118,7 +123,169 @@ interface HostActionChipsProps {
    * since we can't tell.
    */
   agentPrivilege?: AgentPrivilege;
+  /**
+   * Host architecture/OS string (e.g. "windows", "linux", "darwin"). When it
+   * indicates Windows, an extra "Remote Control" chip is rendered next to
+   * the Screenshot chip — this is a simple UI for issuing
+   * `script:remote_control { ... }` commands (mouse.move/click/drag,
+   * keyboard.press, system.wait) and is Windows-only for now.
+   */
+  arch?: string;
 }
+
+const isWindowsArch = (arch?: string) => /win/i.test(String(arch || ''));
+
+type RemoteOp = 'mouse.move' | 'mouse.click' | 'mouse.drag' | 'keyboard.press' | 'system.wait';
+
+interface RemoteControlChipProps {
+  size: 'compact' | 'comfortable';
+  disabled: boolean;
+  onSend: (json: string) => void;
+}
+
+const RemoteControlChip = ({ size, disabled, onSend }: RemoteControlChipProps) => {
+  const sizing = size === 'compact'
+    ? 'px-2 py-1 text-[0.65rem]'
+    : 'px-3 py-1.5 text-xs';
+  const className =
+    sizing +
+    ' rounded-md border transition-colors inline-flex items-center gap-1 ' +
+    (disabled
+      ? 'border-border text-muted-foreground opacity-50 cursor-not-allowed'
+      : 'border-border text-foreground hover:bg-muted/50');
+
+  const [op, setOp] = useState<RemoteOp>('mouse.click');
+  const [x, setX] = useState('600');
+  const [y, setY] = useState('400');
+  const [toX, setToX] = useState('800');
+  const [toY, setToY] = useState('500');
+  const [button, setButton] = useState<'left' | 'right' | 'middle'>('left');
+  const [delayMs, setDelayMs] = useState('100');
+  const [keyCode, setKeyCode] = useState('13');
+  const [waitMs, setWaitMs] = useState('250');
+
+  const buildPayload = () => {
+    let params: Record<string, unknown> = {};
+    if (op === 'mouse.move') {
+      params = { x: Number(x), y: Number(y) };
+    } else if (op === 'mouse.click') {
+      params = { x: Number(x), y: Number(y), button, delay_ms: Number(delayMs) };
+    } else if (op === 'mouse.drag') {
+      params = { from_x: Number(x), from_y: Number(y), to_x: Number(toX), to_y: Number(toY), button };
+    } else if (op === 'keyboard.press') {
+      params = { key: Number(keyCode) };
+    } else if (op === 'system.wait') {
+      params = { ms: Number(waitMs) };
+    }
+    return JSON.stringify({ actions: [{ op, params }] });
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button disabled={disabled} className={className}>
+          <MousePointerClick size={size === 'compact' ? 10 : 12} />
+          Remote Control
+        </button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        className="w-80 p-3 z-[9999] space-y-2"
+        onClick={e => e.stopPropagation()}
+      >
+        <div>
+          <label className="text-[0.65rem] font-mono text-muted-foreground">Operation</label>
+          <select
+            value={op}
+            onChange={e => setOp(e.target.value as RemoteOp)}
+            className="w-full mt-0.5 h-7 text-xs rounded-md border border-border bg-background px-2"
+          >
+            <option value="mouse.move">mouse.move</option>
+            <option value="mouse.click">mouse.click</option>
+            <option value="mouse.drag">mouse.drag</option>
+            <option value="keyboard.press">keyboard.press</option>
+            <option value="system.wait">system.wait</option>
+          </select>
+        </div>
+
+        {(op === 'mouse.move' || op === 'mouse.click' || op === 'mouse.drag') && (
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[0.65rem] font-mono text-muted-foreground">{op === 'mouse.drag' ? 'from_x' : 'x'}</label>
+              <Input value={x} onChange={e => setX(e.target.value)} className="h-7 text-xs font-mono" />
+            </div>
+            <div>
+              <label className="text-[0.65rem] font-mono text-muted-foreground">{op === 'mouse.drag' ? 'from_y' : 'y'}</label>
+              <Input value={y} onChange={e => setY(e.target.value)} className="h-7 text-xs font-mono" />
+            </div>
+          </div>
+        )}
+
+        {op === 'mouse.drag' && (
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[0.65rem] font-mono text-muted-foreground">to_x</label>
+              <Input value={toX} onChange={e => setToX(e.target.value)} className="h-7 text-xs font-mono" />
+            </div>
+            <div>
+              <label className="text-[0.65rem] font-mono text-muted-foreground">to_y</label>
+              <Input value={toY} onChange={e => setToY(e.target.value)} className="h-7 text-xs font-mono" />
+            </div>
+          </div>
+        )}
+
+        {(op === 'mouse.click' || op === 'mouse.drag') && (
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[0.65rem] font-mono text-muted-foreground">button</label>
+              <select
+                value={button}
+                onChange={e => setButton(e.target.value as 'left' | 'right' | 'middle')}
+                className="w-full mt-0.5 h-7 text-xs rounded-md border border-border bg-background px-2"
+              >
+                <option value="left">left</option>
+                <option value="right">right</option>
+                <option value="middle">middle</option>
+              </select>
+            </div>
+            {op === 'mouse.click' && (
+              <div>
+                <label className="text-[0.65rem] font-mono text-muted-foreground">delay_ms</label>
+                <Input value={delayMs} onChange={e => setDelayMs(e.target.value)} className="h-7 text-xs font-mono" />
+              </div>
+            )}
+          </div>
+        )}
+
+        {op === 'keyboard.press' && (
+          <div>
+            <label className="text-[0.65rem] font-mono text-muted-foreground">key (virtual key code)</label>
+            <Input value={keyCode} onChange={e => setKeyCode(e.target.value)} className="h-7 text-xs font-mono" />
+          </div>
+        )}
+
+        {op === 'system.wait' && (
+          <div>
+            <label className="text-[0.65rem] font-mono text-muted-foreground">ms</label>
+            <Input value={waitMs} onChange={e => setWaitMs(e.target.value)} className="h-7 text-xs font-mono" />
+          </div>
+        )}
+
+        <pre className="text-[0.6rem] font-mono text-muted-foreground bg-muted/30 rounded p-1.5 max-h-20 overflow-auto whitespace-pre-wrap break-all">
+          {buildPayload()}
+        </pre>
+
+        <Button
+          size="sm"
+          className="w-full h-7 text-xs"
+          onClick={() => onSend(buildPayload())}
+        >
+          Send
+        </Button>
+      </PopoverContent>
+    </Popover>
+  );
+};
 
 /**
  * Renders the canonical predefined-action chip row. Used by:
@@ -134,10 +301,13 @@ export const HostActionChips = ({
   size = 'compact',
   allDisabledReason,
   agentPrivilege = 'unknown',
+  arch,
 }: HostActionChipsProps) => {
   const sizing = size === 'compact'
     ? 'px-2 py-1 text-[0.65rem]'
     : 'px-3 py-1.5 text-xs';
+
+  const showRemoteControl = isWindowsArch(arch);
 
   return (
     <div className={`flex flex-wrap ${size === 'compact' ? 'gap-1' : 'gap-1.5'}`}>
@@ -174,10 +344,6 @@ export const HostActionChips = ({
         const handleClick = () => {
           if (isDisabled) return;
           if (customHandler && customHandler(a.id)) return;
-          // Build the canonical actionId. The caller always sends with
-          // isPredefined=true so the executor prepends "script:".
-          // Screenshot needs a trailing arg (username) to actually fire — fall back to "TEST"
-          // when no active user is detected so we never send a bare "script:screenshot".
           const actionId = a.id === 'screenshot'
             ? `${a.id} ${activeUser || 'TEST'}`
             : (needsUser && activeUser ? `${a.id} ${activeUser}` : a.id);
@@ -196,18 +362,35 @@ export const HostActionChips = ({
           </button>
         );
 
-        if (tooltip) {
+        const wrapped = tooltip ? (
+          <TooltipProvider key={a.id} delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild><span>{button}</span></TooltipTrigger>
+              <TooltipContent className="text-xs">{tooltip}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : button;
+
+        // Inject the Remote Control chip immediately after Screenshot on Windows
+        if (showRemoteControl && a.id === 'screenshot') {
           return (
-            <TooltipProvider key={a.id} delayDuration={200}>
-              <Tooltip>
-                <TooltipTrigger asChild><span>{button}</span></TooltipTrigger>
-                <TooltipContent className="text-xs">{tooltip}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <span key={a.id} className="contents">
+              {wrapped}
+              <RemoteControlChip
+                size={size}
+                disabled={allDisabled}
+                onSend={(json) => onRun({
+                  actionId: `remote_control ${json}`,
+                  displayName: 'Remote Control',
+                  isPredefined: true,
+                })}
+              />
+            </span>
           );
         }
-        return button;
+        return wrapped;
       })}
     </div>
   );
 };
+
