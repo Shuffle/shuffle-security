@@ -14,23 +14,23 @@ import {
   Chip,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
   CheckCircle,
   Settings,
   ArrowRight,
-  Clock,
-  AlertTriangle,
   HelpCircle,
   XCircle,
-  MoreHorizontal,
   Zap,
-  Shield,
   Send,
   Mail,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { stripAgentTitlePrefix, type AgentNotification } from '@/services/notifications';
+import {
+  stripAgentTitlePrefix,
+  parseAgentApprovalParams,
+  type AgentNotification,
+} from '@/services/notifications';
+import AgentUI from '@/Shuffle-MCPs/AgentUI';
 import type { AgentRun, AgentDecision } from '@/services/agentActivity';
 import {
   parseDatastoreReference,
@@ -280,7 +280,6 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
   const t = useEntityText();
   const [isConfiguring, setIsConfiguring] = useState(false);
   const [modifiedAction, setModifiedAction] = useState('');
-  const [timelineExpanded, setTimelineExpanded] = useState(false);
   const [questionAnswers, setQuestionAnswers] = useState<Record<number, string>>({});
 
   if (!item) return null;
@@ -292,7 +291,6 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
   const handleClose = () => {
     setIsConfiguring(false);
     setModifiedAction('');
-    setTimelineExpanded(false);
     setQuestionAnswers({});
     onClose();
   };
@@ -327,14 +325,6 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
       ? (SEVERITY_TOKEN_MAP[data.severityRaw.toLowerCase()] || '--severity-high')
       : null;
   const sevLabel = data.severity?.label || data.severityRaw || null;
-
-  // Timeline: show last N items, with expand for older ones
-  const totalTimeline = data.timeline.length;
-  const hasHiddenItems = totalTimeline > VISIBLE_TIMELINE_COUNT && !timelineExpanded;
-  const visibleTimeline = hasHiddenItems
-    ? data.timeline.slice(totalTimeline - VISIBLE_TIMELINE_COUNT)
-    : data.timeline;
-  const hiddenCount = totalTimeline - VISIBLE_TIMELINE_COUNT;
 
   return (
     <Drawer anchor="right" open={open} onClose={handleClose} PaperProps={{ sx: drawerPaperSx }}>
@@ -390,128 +380,58 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
       {/* Content */}
       <Box sx={{ px: 3, py: 3, display: 'flex', flexDirection: 'column', gap: 3, flex: 1, overflow: 'auto' }}>
 
-        {/* Agent Decision Timeline */}
-        {data.timeline.length > 0 && (
-          <Box>
-            <SectionLabel>Agent Decisions</SectionLabel>
-            <Box sx={{ position: 'relative', ml: 1.5 }}>
-
-              {/* Expand button for hidden items */}
-              {hasHiddenItems && (
-                <Box sx={{ display: 'flex', gap: 1.5, mb: 2, position: 'relative' }}>
-                  {/* Circle */}
-                  <Box sx={{
-                    width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    backgroundColor: 'hsl(var(--muted))',
-                    zIndex: 1, cursor: 'pointer',
-                  }}
-                    onClick={() => setTimelineExpanded(true)}
-                  >
-                    <MoreHorizontal size={14} style={{ color: 'hsl(var(--muted-foreground))' }} />
-                  </Box>
-                  {/* Connector line below circle */}
-                  <Box sx={{
-                    position: 'absolute', left: 13, top: 28, bottom: -16, width: 2,
-                    backgroundColor: 'hsl(var(--border))',
-                  }} />
-                  <Box
-                    onClick={() => setTimelineExpanded(true)}
-                    sx={{ cursor: 'pointer', pt: 0.5, '&:hover .expand-label': { color: 'hsl(var(--primary))' } }}
-                  >
-                    <Typography className="expand-label" sx={{
-                      fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))',
-                      fontWeight: 500, transition: 'color 0.15s',
-                    }}>
-                      See {hiddenCount} previous {hiddenCount === 1 ? 'decision' : 'decisions'}
-                    </Typography>
-                  </Box>
-                </Box>
-              )}
-
-              {/* Timeline entries */}
-              {visibleTimeline.map((entry, i) => {
-                const isLast = i === visibleTimeline.length - 1;
-                const isPending = entry.status === 'pending';
-                const isFailed = entry.status === 'failed';
-
-                const circleColor = isPending
-                  ? 'hsl(var(--severity-info))'
-                  : isFailed
-                    ? 'hsl(var(--severity-critical))'
-                    : 'hsl(var(--severity-low))';
-                const circleBg = isPending
-                  ? 'hsl(var(--severity-info) / 0.12)'
-                  : isFailed
-                    ? 'hsl(var(--severity-critical) / 0.12)'
-                    : 'hsl(var(--severity-low) / 0.12)';
-
-                return (
-                  <Box key={i} sx={{ display: 'flex', gap: 1.5, position: 'relative', pb: isLast ? 0 : 2 }}>
-                    {/* Circle + line column */}
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: 28 }}>
-                      {/* Circle */}
-                      <Box sx={{
-                        width: 28, height: 28, borderRadius: '50%',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        backgroundColor: circleBg,
-                        zIndex: 1, flexShrink: 0,
-                      }}>
-                        {isPending ? <Clock size={13} style={{ color: circleColor }} />
-                          : isFailed ? <XCircle size={13} style={{ color: circleColor }} />
-                          : <CheckCircle size={13} style={{ color: circleColor }} />}
-                      </Box>
-                      {/* Connector line below circle */}
-                      {!isLast && (
-                        <Box sx={{
-                          flex: 1, width: 2, minHeight: 8,
-                          backgroundColor: 'hsl(var(--border))',
-                        }} />
-                      )}
-                    </Box>
-
-                    {/* Content */}
-                    <Box sx={{
-                      flex: 1, minWidth: 0, pt: 0.25,
-                      ...(isPending && {
-                        px: 2, py: 1.5, borderRadius: 2,
-                        backgroundColor: 'hsl(var(--severity-info) / 0.06)',
-                        border: '1px solid hsl(var(--severity-info) / 0.2)',
-                      }),
-                    }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                        <Typography sx={{
-                          fontSize: '0.8rem', fontWeight: isPending ? 600 : 500,
-                          color: isPending ? 'hsl(var(--severity-info))' : 'hsl(var(--foreground))',
-                        }}>
-                          {entry.label}
-                        </Typography>
-                        {entry.tool && (
-                          <Chip label={entry.tool} size="small" sx={{
-                            height: 16, fontSize: '0.62rem',
-                            backgroundColor: 'hsl(var(--muted))',
-                            color: 'hsl(var(--muted-foreground))',
-                          }} />
-                        )}
-                      </Box>
-                      {entry.detail && (
-                        <Typography sx={{
-                          fontSize: '0.78rem', color: 'hsl(var(--muted-foreground))',
-                          mt: 0.25, lineHeight: 1.5,
-                          display: '-webkit-box', WebkitLineClamp: 3,
-                          WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                          wordBreak: 'break-word',
-                        }}>
-                          {entry.detail}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Box>
-                );
-              })}
-            </Box>
-          </Box>
-        )}
+        {/* Agent execution — canonical Simple/Detailed view from Shuffle-MCPs */}
+        {(() => {
+          const fromUrl = item.type === 'notification'
+            ? parseAgentApprovalParams(item.notification.reference_url)
+            : null;
+          const execId = item.type === 'notification'
+            ? (item.notification.execution_id || fromUrl?.executionId || '')
+            : item.run.execution_id;
+          const auth = item.type === 'notification'
+            ? (fromUrl?.authorization || '')
+            : (item.run.authorization || '');
+          if (!execId) return null;
+          if (item.type === 'run') {
+            return (
+              <AgentUI
+                key={execId}
+                initialExecution={{
+                  execution_id: item.run.execution_id,
+                  status: item.run.status,
+                  started_at: item.run.started_at ? Number(item.run.started_at) : undefined,
+                  completed_at: item.run.completed_at ? Number(item.run.completed_at) : undefined,
+                  results: item.run.results,
+                  workflow: item.run.workflow,
+                  authorization: item.run.authorization,
+                }}
+                readUrlParams={false}
+                autoLoadApps={false}
+                hideHeroIcon
+                hideAppPicker
+                hideAttach
+                compact
+                maxWidth={680}
+              />
+            );
+          }
+          // notification — fetch via execution_id + authorization (when present)
+          if (!auth) return null;
+          return (
+            <AgentUI
+              key={execId}
+              executionId={execId}
+              authorization={auth}
+              readUrlParams={false}
+              autoLoadApps={false}
+              hideHeroIcon
+              hideAppPicker
+              hideAttach
+              compact
+              maxWidth={680}
+            />
+          );
+        })()}
 
         {/* Questions — when agent needs user input instead of approval */}
         {data.isQuestion && data.questions.length > 0 && (
@@ -715,7 +635,7 @@ const statusChipSx = (token: string) => ({
 });
 
 const drawerPaperSx = {
-  width: { xs: '100%', sm: 440 },
+  width: { xs: '100%', sm: 720 },
   bgcolor: 'hsl(var(--background))',
   backgroundImage: 'none',
   borderLeft: '1px solid hsl(var(--border))',
