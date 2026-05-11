@@ -416,7 +416,8 @@ const AppMcpChat = ({ appName, appIcon, appId, categories }: AppMcpChatProps) =>
                 <Box
                   component="button"
                   onClick={runAction}
-                  disabled={!input.trim()}
+                  disabled={input.trim().length < MIN_INPUT_LENGTH}
+                  title={input.trim().length < MIN_INPUT_LENGTH ? `Enter at least ${MIN_INPUT_LENGTH} characters` : undefined}
                   sx={{
                     all: 'unset',
                     display: 'flex',
@@ -426,11 +427,11 @@ const AppMcpChat = ({ appName, appIcon, appId, categories }: AppMcpChatProps) =>
                     height: 30,
                     borderRadius: '8px',
                     flexShrink: 0,
-                    cursor: input.trim() ? 'pointer' : 'default',
-                    backgroundColor: input.trim() ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
-                    color: input.trim() ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))',
+                    cursor: input.trim().length >= MIN_INPUT_LENGTH ? 'pointer' : 'not-allowed',
+                    backgroundColor: input.trim().length >= MIN_INPUT_LENGTH ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
+                    color: input.trim().length >= MIN_INPUT_LENGTH ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))',
                     transition: 'all 0.15s ease',
-                    '&:hover': input.trim() ? {
+                    '&:hover': input.trim().length >= MIN_INPUT_LENGTH ? {
                       filter: 'brightness(1.1)',
                     } : {},
                   }}
