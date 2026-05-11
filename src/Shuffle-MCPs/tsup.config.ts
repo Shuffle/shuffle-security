@@ -42,6 +42,8 @@ export default defineConfig({
     'remark-gfm',
     /^remark-/,
     /^rehype-/,
+    'react18-json-view',
+    /^react18-json-view\//,
   ],
   // Also pass noExternal=false equivalent via esbuild to ensure
   // these are truly skipped even when tsup regex handling varies:
