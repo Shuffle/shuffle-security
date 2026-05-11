@@ -711,25 +711,30 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                     >
                       {config.name}
                     </Typography>
-                    {/* Per-row Reset — restores defaults for just this row,
-                        same logic as the global "Reset to default" but scoped. */}
-                    <Tooltip title={`Reset ${config.name} to default`}>
-                      <IconButton
-                        size="small"
-                        aria-label={`Reset ${config.name} to default`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          resetRow(automation.type!);
-                        }}
-                        sx={{
-                          color: 'hsl(var(--muted-foreground))',
-                          p: 0.5,
-                          '&:hover': { color: 'hsl(var(--primary))' },
-                        }}
-                      >
-                        <RestoreIcon sx={{ fontSize: 18 }} />
-                      </IconButton>
-                    </Tooltip>
+                    {/* Per-row Reset — only shown for rows that actually
+                        have a default to restore (enrich, security_rules,
+                        ai_agent). workflow/webhook have no defaults. */}
+                    {(automation.type === 'enrich' ||
+                      automation.type === 'security_rules' ||
+                      automation.type === 'ai_agent') && (
+                      <Tooltip title={`Reset ${config.name} to default`}>
+                        <IconButton
+                          size="small"
+                          aria-label={`Reset ${config.name} to default`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            resetRow(automation.type!);
+                          }}
+                          sx={{
+                            color: 'hsl(var(--muted-foreground))',
+                            p: 0.5,
+                            '&:hover': { color: 'hsl(var(--primary))' },
+                          }}
+                        >
+                          <RestoreIcon sx={{ fontSize: 18 }} />
+                        </IconButton>
+                      </Tooltip>
+                    )}
                     {/* Chevron — only for automations that have a config
                         section. Clicking expands/collapses the config without
                         toggling the enabled state. Enabling no longer auto-
