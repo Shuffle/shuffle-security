@@ -295,13 +295,16 @@ export default function AppSearchDrawer({
                 overflowY: 'auto',
               },
               '& .singul-results-grid': {
-                gridAutoRows: '1fr',
+                gridAutoRows: '75px',
                 gap: '12px',
               },
               '& .singul-results-grid .singul-dropdown-item': {
                 minHeight: 75,
+                maxHeight: 75,
+                height: 75,
                 padding: '14px 16px',
                 alignItems: 'center',
+                overflow: 'hidden',
               },
               '& .singul-results-grid .singul-app-info': {
                 alignItems: 'center',
