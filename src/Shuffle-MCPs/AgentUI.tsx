@@ -917,6 +917,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
     }
     if (eid && auth) {
       setShowStarter(false);
+      activeExecutionIdRef.current = eid;
       setExecution({ execution_id: eid, authorization: auth, status: 'EXECUTING' });
       getExecution(eid, auth);
     }
