@@ -222,7 +222,7 @@ export default function AppSearchDrawer({
         </Box>
 
         {/* Search body */}
-        <Box sx={{ flex: 1, overflowY: 'auto', p: 3, minHeight: '92vh' }}>
+        <Box sx={{ flex: 1, overflowY: 'auto', p: 3, minHeight: 0 }}>
           {showPipelinesBanner && <ShufflePipelinesBanner />}
 
           {/* Your Apps — reuse IntegrationStatus */}
