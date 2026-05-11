@@ -3,20 +3,15 @@
  * Shows real-time agent execution feed, stats, and activity overview
  */
 
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useState } from 'react';
 import {
   Box,
   Typography,
-  TextField,
-  InputAdornment,
   IconButton,
   Tooltip,
   Chip,
-  CircularProgress,
   Button,
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { motion } from 'framer-motion';
 import { Settings, Play } from 'lucide-react';
@@ -37,13 +32,6 @@ import { useAuth } from '@/context/AuthContext';
 import { useAgentPermissions } from '@/hooks/useAgentPermissions';
 import { usePageMeta } from '@/hooks/usePageMeta';
 
-const STATUS_FILTERS = [
-  { label: 'All', value: '' },
-  { label: 'Completed', value: 'FINISHED' },
-  { label: 'Running', value: 'EXECUTING' },
-  { label: 'Failed', value: 'ABORTED' },
-];
-
 const AgentActivityPage = () => {
 
   usePageMeta({
@@ -51,21 +39,7 @@ const AgentActivityPage = () => {
     description: 'Monitor AI agent runs, decisions, and automated incident response activity.',
     url: '/agent',
   });
-  const [searchParams] = useSearchParams();
-  const {
-    runs,
-    isLoading,
-    error,
-    hasMore,
-    stats,
-    statusFilter,
-    searchQuery,
-    setStatusFilter,
-    setSearchQuery,
-    loadMore,
-    refresh,
-    skippedCount,
-  } = useAgentActivity();
+  const { stats, refresh } = useAgentActivity();
 
   const { enabledPermissions, totalPermissions } = useAgentPermissions();
   const { userInfo } = useAuth();
