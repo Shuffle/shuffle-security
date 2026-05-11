@@ -171,11 +171,14 @@ const generateOnboardingWorkflows = async (): Promise<void> => {
   // Fire all generations in parallel — each is independent.
   const tasks: Promise<void>[] = [];
   for (const label of ingestLabels) {
+    // Skip the webhook variant entirely. We want the user to discover and
+    // enable the Ingestion Webhook themselves during the tour so they see
+    // where the webhook URL comes from.
+    if (label.endsWith('_webhook')) continue;
     if (label === INGEST_TICKETS_LABEL) {
       // Demo: generate with NO apps so we never touch the user's integrations.
       tasks.push(generateWorkflow({ label, enabledAppNames: [], category: 'cases', allowEmpty: true }));
     } else {
-      // Webhook variant + anything else keeps original behavior.
       tasks.push(generateWorkflow({ label, enabledAppNames: [], category: 'cases', allowEmpty: true }));
     }
   }
