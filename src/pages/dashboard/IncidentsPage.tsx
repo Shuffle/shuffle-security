@@ -3218,6 +3218,7 @@ const IncidentsPage = () => {
             objectID: 'demo-microsoft-365-defender',
           },
         ] : undefined}
+        highlightAppName={shouldHighlightOutlook ? 'Outlook_Office365' : undefined}
         onSelectOverride={isAddOutlookStep ? (app) => {
           // Pretend-authenticate flow: only Outlook Office365 or Microsoft
           // 365 Defender advance the tour. Anything else falls through to the
