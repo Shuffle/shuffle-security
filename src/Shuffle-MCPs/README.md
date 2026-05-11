@@ -250,8 +250,102 @@ Useful props:
 | `compact` / `hideHeroIcon` / `hideAppPicker` / `hideAttach` | `boolean` | Layout switches for embedding |
 | `maxWidth` | `number` | Max width of the centered card. Default `900` |
 | `onRun` | `(info) => void` | Fires whenever a run finishes (success or failure) |
+| `className` / `sx` / `contentSx` | `string` / `SxProps` | Style overrides for the root container and inner content column |
 
 Reference page in production: [`src/pages/dashboard/AgentsPage.tsx`](../pages/dashboard/AgentsPage.tsx) (mounted at [`/agents`](https://security.shuffler.io/agents)).
+
+### 5. `<AgentRunDrawer />` — Run Agent side panel
+
+Right-side drawer that embeds `<AgentUI />` in compact mode, with optional **Permissions** and **Local LLM** tabs you fill via slots. Zero host-app context required — pass `apiKey` / `apiBaseUrl` / `orgId` through `agentUIProps` to authenticate.
+
+```tsx
+import { useState } from 'react';
+import { AgentRunDrawer } from 'shuffle-mcps';
+
+const [open, setOpen] = useState(false);
+
+<AgentRunDrawer
+  open={open}
+  onClose={() => setOpen(false)}
+  agentUIProps={{ apiKey: user.apiKey, orgId: user.orgId }}
+  permissionsSlot={<MyPermissionsPanel />}   // optional — tab is hidden when omitted
+  localLLMSlot={<MyLocalLLMConfig />}        // optional — tab is hidden when omitted
+/>
+```
+
+Useful props:
+
+| Prop | Type | Description |
+|---|---|---|
+| `open` / `onClose` | `boolean` / `() => void` | Controlled open state |
+| `initialTab` | `'run' \| 'permissions' \| 'localLLM'` | Tab focused on open. Default `'run'` |
+| `permissionsSlot` / `localLLMSlot` | `ReactNode` | Render content for the optional tabs. Tab is hidden when omitted |
+| `agentUIProps` | `Partial<AgentUIProps>` | Forwarded to the embedded `<AgentUI />` |
+| `width` | `number` | Drawer width in px. Default `520` |
+| `title` / `subtitle` | `string` | Header copy |
+| `className` / `paperSx` / `headerSx` / `tabsSx` / `bodySx` | `string` / `SxProps` | Style overrides for the Drawer Paper, header bar, tab strip, and body container |
+
+### 6. `<AgentActivityList />` — past executions
+
+Searchable, status-filterable list of past `/api/v1/agent` runs. The component owns its own fetch + pagination loop. `onRunClick` lets the caller decide what happens on row click — typically opening `<AgentExecutionDrawer />`.
+
+```tsx
+import { useState } from 'react';
+import { AgentActivityList, AgentExecutionDrawer, type AgentRun } from 'shuffle-mcps';
+
+const [selectedRun, setSelectedRun] = useState<AgentRun | null>(null);
+
+<>
+  <AgentActivityList
+    apiKey={user.apiKey}
+    orgId={user.orgId}
+    onRunClick={setSelectedRun}
+  />
+
+  <AgentExecutionDrawer
+    open={!!selectedRun}
+    onClose={() => setSelectedRun(null)}
+    run={selectedRun}
+    apiKey={user.apiKey}
+    orgId={user.orgId}
+  />
+</>
+```
+
+Useful props:
+
+| Prop | Type | Description |
+|---|---|---|
+| `apiKey` / `apiBaseUrl` / `orgId` | `string` | Auth — same fallback semantics as `<AgentUI />` |
+| `onRunClick` | `(run: AgentRun) => void` | Row click handler |
+| `showSearchBar` / `showStatusChips` | `boolean` | Toggle the toolbar pieces. Default `true` |
+| `limit` | `number` | Page size. Default `50` |
+| `emptyTitle` / `emptySubtitle` | `string` | Empty-state copy |
+| `className` / `sx` / `toolbarSx` / `rowSx` | `string` / `SxProps` | Style overrides for the root container, toolbar, and each run row |
+
+### 7. `<AgentExecutionDrawer />` — inspect one run
+
+Right-side drawer that pre-loads a single `AgentRun` into `<AgentUI />` so you can inspect the Simple/Detailed view of any past execution without an `authorization` token.
+
+```tsx
+<AgentExecutionDrawer
+  open={!!selectedRun}
+  onClose={() => setSelectedRun(null)}
+  run={selectedRun}
+  apiKey={user.apiKey}
+  orgId={user.orgId}
+/>
+```
+
+Useful props:
+
+| Prop | Type | Description |
+|---|---|---|
+| `open` / `onClose` | `boolean` / `() => void` | Controlled open state |
+| `run` | `AgentRun \| null` | The run to display. When `null` and `open=true`, the drawer renders empty |
+| `width` | `number` | Drawer width in px. Default `720` |
+| `apiKey` / `apiBaseUrl` / `orgId` | `string` | Forwarded to the embedded `<AgentUI />` |
+| `className` / `paperSx` / `headerSx` / `bodySx` | `string` / `SxProps` | Style overrides for the Drawer Paper, header bar, and body container |
 
 ### Predefined search
 
