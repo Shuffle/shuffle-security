@@ -1743,6 +1743,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const activeTab: TabKey = showStarter ? 'start' : viewMode;
   const hasExecution = !!execution?.execution_id;
   const showRunSwitcher = hasExecution || agentRequestLoading;
+  useEffect(() => {
+    onViewChange?.(activeTab);
+  }, [activeTab, onViewChange]);
   const goToTab = (t: TabKey) => {
     if (t === 'start') {
       setShowStarter(true);
