@@ -188,10 +188,10 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
           bgcolor: 'hsla(var(--muted) / 0.3)',
         }}>
           <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
-            Configure an OpenAI-compatible endpoint for agent operations. Pick a common provider below, or choose "Custom / self-hosted" to enter your own URL. Credentials are saved securely via the app authentication system.{' '}
+            Configure an AI provider endpoint for agent operations. Pick a common provider below, or choose "Custom / self-hosted" to enter your own URL. Credentials are saved securely via the app authentication system.{' '}
             <Box
               component="a"
-              href="https://shuffler.io/docs/AI"
+              href="https://shuffler.io/docs/AI#using-self-hosted-ai-models"
               target="_blank"
               rel="noopener noreferrer"
               sx={{ color: 'hsl(var(--primary))', textDecoration: 'underline' }}
@@ -289,6 +289,9 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
         apiAuthEntries={openaiEntries}
         onRefreshAuth={refreshAuth}
         disableUrlPrefill
+        hideHeader
+        hideStatusChips
+        hideDocsLink
       />
     </Box>
   );

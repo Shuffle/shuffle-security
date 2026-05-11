@@ -165,6 +165,12 @@ export interface AppAuthCardProps {
   onRefreshAuth?: () => Promise<void> | void;
   /** When true, do NOT auto-fill URL fields with the param.example value. */
   disableUrlPrefill?: boolean;
+  /** Hide the entire card header row (app icon, name, description, chips, docs, expand). Body stays expanded. */
+  hideHeader?: boolean;
+  /** Hide the "Configured / Not configured" and "Tested / Not tested" chips. */
+  hideStatusChips?: boolean;
+  /** Hide the documentation (book icon) link. */
+  hideDocsLink?: boolean;
 }
 
 const containerVariants = {
@@ -194,6 +200,9 @@ export const AppAuthCard = ({
   onSelectAuth,
   onRefreshAuth,
   disableUrlPrefill,
+  hideHeader,
+  hideStatusChips,
+  hideDocsLink,
 }: AppAuthCardProps) => {
   // Helper to get best default auth: prioritize validated, otherwise last entry
   const getBestDefaultAuth = (entries: ApiAuthEntry[]): string => {
@@ -965,6 +974,7 @@ export const AppAuthCard = ({
           maxWidth: '100%',
         }}
       >
+        {!hideHeader && (
         <CardContent
           onClick={onToggle}
           sx={{
@@ -1050,7 +1060,7 @@ export const AppAuthCard = ({
             justifyContent: { xs: 'flex-start', sm: 'flex-end' },
           }}>
             {/* Auth status chip - show "Auth not required" for no-auth apps */}
-            {isNoAuthRequired(auth) ? (
+            {!hideStatusChips && (isNoAuthRequired(auth) ? (
               <Chip
                 label="Auth not required"
                 size="small"
@@ -1096,7 +1106,8 @@ export const AppAuthCard = ({
                   />
                 </Tooltip>
               </>
-            )}
+            ))}
+            {!hideDocsLink && (
             <Tooltip title="View documentation">
               <IconButton
                 size="small"
@@ -1115,6 +1126,7 @@ export const AppAuthCard = ({
                 <MenuBookIcon fontSize="small" />
               </IconButton>
             </Tooltip>
+            )}
             <IconButton
               size="small"
               sx={{
@@ -1127,6 +1139,7 @@ export const AppAuthCard = ({
             </IconButton>
           </Box>
         </CardContent>
+        )}
 
         <Collapse in={isExpanded}>
           <Box
