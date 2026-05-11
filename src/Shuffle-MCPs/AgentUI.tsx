@@ -305,12 +305,13 @@ interface TimelineRowProps {
   onRerunAgent: () => void;
   onRerunDecision: (decision: any) => void;
   agentRequestLoading: boolean;
+  getFormUrl?: (decisionId: string) => string | null;
 }
 
 const TimelineRow: React.FC<TimelineRowProps> = ({
   item, index, open, onToggle, appsById, totalDuration, originalStartTime,
   maxWidth, questionAnswers, setQuestionAnswers, onSubmitQuestions,
-  onRerunAgent, onRerunDecision, agentRequestLoading,
+  onRerunAgent, onRerunDecision, agentRequestLoading, getFormUrl,
 }) => {
   const validate = validateJson(item.details);
   const itemStart = item.start_time || 0;
@@ -570,19 +571,34 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
               />
             </Box>
           ))}
-          <Button
-            variant="contained"
-            size="small"
-            sx={{ mt: 2 }}
-            disabled={!questionsAnswered || agentRequestLoading}
-            onClick={() => {
-              if (details?.run_details?.id) {
-                onSubmitQuestions(details.run_details.id, questionAnswers);
-              }
-            }}
-          >
-            {agentRequestLoading ? <CircularProgress size={16} /> : 'Submit'}
-          </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
+            <Button
+              variant="contained"
+              size="small"
+              disabled={!questionsAnswered || agentRequestLoading}
+              onClick={() => {
+                if (details?.run_details?.id) {
+                  onSubmitQuestions(details.run_details.id, questionAnswers);
+                }
+              }}
+            >
+              {agentRequestLoading ? <CircularProgress size={16} /> : 'Submit'}
+            </Button>
+            {details?.run_details?.id && getFormUrl && getFormUrl(details.run_details.id) && (
+              <Tooltip title="Answer in the Form UI" placement="right">
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    const url = getFormUrl(details.run_details!.id!);
+                    if (url) window.open(url, '_blank', 'noopener,noreferrer');
+                  }}
+                  sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
+                >
+                  <OpenInNewIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
         </Box>
       )}
 
@@ -1171,6 +1187,25 @@ const AgentUI: React.FC<AgentUIProps> = ({
     setActionInput(input);
     submitInput(input);
   }, [agentData, actionInput, submitInput]);
+
+  // Build a popout URL to answer the agent's question in the standalone Form UI.
+  // Mirrors the legacy AgentUI behavior so users can hand off to /forms/...
+  const getFormUrl = useCallback((decisionId: string): string | null => {
+    const wfId = (execution as any)?.workflow?.id;
+    const auth = execution?.authorization;
+    const execId = execution?.execution_id;
+    const sourceNode = agentActionResult?.action?.id;
+    if (!wfId || !auth || !execId || !sourceNode || !decisionId) return null;
+    const backend = apiBaseUrl || (typeof window !== 'undefined' ? window.location.origin : '');
+    const params = new URLSearchParams({
+      authorization: auth,
+      reference_execution: execId,
+      source_node: sourceNode,
+      decision_id: decisionId,
+      ...(backend ? { backend_url: backend } : {}),
+    });
+    return `/forms/${wfId}?${params.toString()}`;
+  }, [execution, agentActionResult, apiBaseUrl]);
 
   // ── Rerun a single decision (clears decisions after it on the backend) ──
   const rerunDecision = useCallback(async (decision: any) => {
@@ -1797,7 +1832,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                               />
                             </Box>
                           ))}
-                          <Box>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                             <Button
                               variant="contained"
                               size="small"
@@ -1810,6 +1845,20 @@ const AgentUI: React.FC<AgentUIProps> = ({
                             >
                               {agentRequestLoading ? <CircularProgress size={16} /> : 'Submit'}
                             </Button>
+                            {pendingAsk.run_details?.id && getFormUrl(pendingAsk.run_details.id) && (
+                              <Tooltip title="Answer in the Form UI" placement="right">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => {
+                                    const url = getFormUrl(pendingAsk.run_details!.id!);
+                                    if (url) window.open(url, '_blank', 'noopener,noreferrer');
+                                  }}
+                                  sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
+                                >
+                                  <OpenInNewIcon sx={{ fontSize: 18 }} />
+                                </IconButton>
+                              </Tooltip>
+                            )}
                           </Box>
                         </Box>
                       ) : isRunning ? (
@@ -1871,6 +1920,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                     onRerunAgent={rerunAgent}
                     onRerunDecision={rerunDecision}
                     agentRequestLoading={agentRequestLoading}
+                    getFormUrl={getFormUrl}
                   />
                 ))
               )}
