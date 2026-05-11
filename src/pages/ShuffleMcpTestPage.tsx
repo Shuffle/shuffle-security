@@ -261,15 +261,122 @@ function CodeBlock({ code }: { code: string }) {
   );
 }
 
+type ApiEndpoint = { method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'ALGOLIA'; path: string; description?: string };
+
+const METHOD_COLORS: Record<ApiEndpoint['method'], string> = {
+  GET: 'hsl(142 60% 55%)',
+  POST: 'hsl(40 90% 65%)',
+  PUT: 'hsl(210 80% 65%)',
+  DELETE: 'hsl(0 75% 65%)',
+  ALGOLIA: 'hsl(280 70% 70%)',
+};
+
+function ApiPanel({ apis }: { apis: ApiEndpoint[] }) {
+  return (
+    <Box
+      sx={{
+        mt: 2,
+        borderRadius: 1.5,
+        border: '1px solid hsl(var(--border))',
+        backgroundColor: 'hsl(var(--muted) / 0.4)',
+        p: 2,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        minWidth: 0,
+      }}
+    >
+      <Typography
+        variant="caption"
+        sx={{
+          fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+          fontSize: '0.7rem',
+          textTransform: 'uppercase',
+          letterSpacing: '0.08em',
+          color: 'hsl(var(--muted-foreground))',
+          mb: 1.25,
+        }}
+      >
+        Backend APIs called
+      </Typography>
+      <Stack spacing={1}>
+        {apis.map((api, i) => (
+          <Box key={i} sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+              <Box
+                component="span"
+                sx={{
+                  fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+                  fontSize: '0.68rem',
+                  fontWeight: 700,
+                  color: METHOD_COLORS[api.method],
+                  border: `1px solid ${METHOD_COLORS[api.method]}`,
+                  borderRadius: 0.5,
+                  px: 0.6,
+                  py: 0.05,
+                  flexShrink: 0,
+                  letterSpacing: '0.04em',
+                }}
+              >
+                {api.method}
+              </Box>
+              <Box
+                component="code"
+                sx={{
+                  fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+                  fontSize: '0.75rem',
+                  color: 'hsl(var(--foreground))',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+                title={api.path}
+              >
+                {api.path}
+              </Box>
+            </Box>
+            {api.description && (
+              <Typography
+                variant="caption"
+                sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem', pl: 0.25 }}
+              >
+                {api.description}
+              </Typography>
+            )}
+          </Box>
+        ))}
+      </Stack>
+      <Box sx={{ flex: 1 }} />
+      <Typography
+        variant="caption"
+        sx={{ mt: 1.5, color: 'hsl(var(--muted-foreground))', fontSize: '0.68rem' }}
+      >
+        Full reference:{' '}
+        <Box
+          component="a"
+          href="https://shuffler.io/docs/API"
+          target="_blank"
+          rel="noopener noreferrer"
+          sx={{ color: 'hsl(var(--primary))', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+        >
+          shuffler.io/docs/API
+        </Box>
+      </Typography>
+    </Box>
+  );
+}
+
 function DemoSection({
   title,
   description,
   code,
+  apis,
   children,
 }: {
   title: string;
   description: ReactNode;
   code: string;
+  apis?: ApiEndpoint[];
   children: ReactNode;
 }) {
   const [showCode, setShowCode] = useState(false);
@@ -309,7 +416,37 @@ function DemoSection({
       </Box>
 
       <Collapse in={showCode} unmountOnExit>
-        <CodeBlock code={code} />
+        {apis && apis.length > 0 ? (
+          <Box
+            sx={{
+              display: 'grid',
+              gap: 2,
+              gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1.6fr) minmax(0, 1fr)' },
+              alignItems: 'stretch',
+            }}
+          >
+            <Box sx={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  mt: 2,
+                  mb: -1,
+                  fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+                  fontSize: '0.7rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  color: 'hsl(var(--muted-foreground))',
+                }}
+              >
+                Frontend (React)
+              </Typography>
+              <CodeBlock code={code} />
+            </Box>
+            <ApiPanel apis={apis} />
+          </Box>
+        ) : (
+          <CodeBlock code={code} />
+        )}
       </Collapse>
     </Paper>
   );
