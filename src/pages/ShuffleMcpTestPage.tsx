@@ -828,6 +828,13 @@ const [open, setOpen] = useState(false);
           title="5. Authentication (standalone)"
           description={<><code>&lt;AppAuthSection /&gt;</code> + <code>useAppLookup()</code> — drop the auth card anywhere by passing just an app name.</>}
           code={SNIPPET_AUTH_SECTION}
+          apis={[
+            { method: 'GET', path: '/api/v1/apps/:id/config', description: 'Auth field schema (apikey, oauth2, basic, …)' },
+            { method: 'GET', path: '/api/v1/apps/authentication', description: 'Existing entries for this app' },
+            { method: 'POST', path: '/api/v1/apps/authentication', description: 'Create or update an auth entry' },
+            { method: 'PUT', path: '/api/v1/apps/authentication/:id', description: 'Rename / edit existing auth' },
+            { method: 'GET', path: '/api/v1/docs/:name?location=openapi', description: 'OpenAPI spec for the app' },
+          ]}
         >
           <AppNamePicker value={authApp} onChange={setAuthApp} />
           <AuthSectionDemo appName={authApp} />
