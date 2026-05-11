@@ -182,6 +182,10 @@ export default function AppSearchDrawer({
           '& .MuiDrawer-paper': {
             width,
             maxWidth: '100vw',
+            height: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
             background: 'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)',
             borderLeft: anchor === 'right' ? '1px solid hsl(var(--border))' : 'none',
             borderRight: anchor === 'left' ? '1px solid hsl(var(--border))' : 'none',
@@ -218,7 +222,7 @@ export default function AppSearchDrawer({
         </Box>
 
         {/* Search body */}
-        <Box sx={{ flex: 1, overflowY: 'auto', p: 3, minHeight: '92vh' }}>
+        <Box sx={{ flex: 1, overflowY: 'auto', p: 3, minHeight: 0 }}>
           {showPipelinesBanner && <ShufflePipelinesBanner />}
 
           {/* Your Apps — reuse IntegrationStatus */}
