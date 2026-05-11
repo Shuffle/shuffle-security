@@ -313,6 +313,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
   maxWidth, questionAnswers, setQuestionAnswers, onSubmitQuestions,
   onRerunAgent, onRerunDecision, agentRequestLoading, getFormUrl,
 }) => {
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const validate = validateJson(item.details);
   const itemStart = item.start_time || 0;
   const itemEnd = item.end_time || itemStart;
@@ -546,44 +547,65 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
       {/* Question form (for ASK decisions) */}
       {questions.length > 0 && (item.status === 'RUNNING' || item.status === 'WAITING') && (
         <Box sx={{ px: 4, pb: 2 }}>
-          {questions.map((q, qi) => (
-            <Box key={qi} sx={{ mt: 2 }}>
-              <Box sx={{ fontSize: '0.85rem', color: 'hsl(var(--foreground))', mb: 1 }}>
-                <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>{normalizeMarkdown(q.question)}</Markdown>
-              </Box>
-              <TextField
-                fullWidth
-                multiline
-                minRows={2}
-                placeholder="Your answer here…"
-                value={questionAnswers[q.question]?.value || ''}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setQuestionAnswers((prev) => ({
-                    ...prev,
-                    [q.question]: { index: qi, value },
-                  }));
-                }}
-                size="small"
-                sx={{
-                  '& .MuiOutlinedInput-root': { bgcolor: 'hsl(var(--card))' },
-                }}
-              />
-            </Box>
-          ))}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
-            <Button
-              variant="contained"
-              size="small"
-              disabled={!questionsAnswered || agentRequestLoading}
-              onClick={() => {
-                if (details?.run_details?.id) {
-                  onSubmitQuestions(details.run_details.id, questionAnswers);
-                }
-              }}
-            >
-              {agentRequestLoading ? <CircularProgress size={16} /> : 'Submit'}
-            </Button>
+          {(() => {
+            const trySubmit = () => {
+              if (agentRequestLoading) return;
+              if (!questionsAnswered) {
+                setSubmitAttempted(true);
+                return;
+              }
+              if (details?.run_details?.id) {
+                onSubmitQuestions(details.run_details.id, questionAnswers);
+              }
+            };
+            return (
+              <>
+                {questions.map((q, qi) => {
+                  const value = questionAnswers[q.question]?.value || '';
+                  const isMissing = submitAttempted && !value;
+                  return (
+                    <Box key={qi} sx={{ mt: 2 }}>
+                      <Box sx={{ fontSize: '0.85rem', color: 'hsl(var(--foreground))', mb: 1 }}>
+                        <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>{normalizeMarkdown(q.question)}</Markdown>
+                      </Box>
+                      <TextField
+                        fullWidth
+                        multiline
+                        minRows={2}
+                        placeholder="Your answer here…"
+                        value={value}
+                        error={isMissing}
+                        helperText={isMissing ? 'Please answer this question' : undefined}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setQuestionAnswers((prev) => ({
+                            ...prev,
+                            [q.question]: { index: qi, value: v },
+                          }));
+                        }}
+                        onKeyDown={(e) => {
+                          if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                            e.preventDefault();
+                            trySubmit();
+                          }
+                        }}
+                        size="small"
+                        sx={{
+                          '& .MuiOutlinedInput-root': { bgcolor: 'hsl(var(--card))' },
+                        }}
+                      />
+                    </Box>
+                  );
+                })}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    disabled={agentRequestLoading}
+                    onClick={trySubmit}
+                  >
+                    {agentRequestLoading ? <CircularProgress size={16} /> : 'Submit'}
+                  </Button>
             {details?.run_details?.id && getFormUrl && getFormUrl(details.run_details.id) && (
               <Tooltip title="Answer in the Form UI" placement="right">
                 <IconButton
@@ -597,8 +619,11 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
                   <OpenInNewIcon sx={{ fontSize: 18 }} />
                 </IconButton>
               </Tooltip>
-            )}
-          </Box>
+                  )}
+                </Box>
+              </>
+            );
+          })()}
         </Box>
       )}
 
@@ -709,6 +734,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const [showStarter, setShowStarter] = useState(true);
   const [openIndexes, setOpenIndexes] = useState<Set<number>>(new Set());
   const [questionAnswers, setQuestionAnswers] = useState<Record<string, { index: number; value: string }>>({});
+  const [simpleSubmitAttempted, setSimpleSubmitAttempted] = useState(false);
   const [continuationText, setContinuationText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'simple' | 'detailed'>('simple');
@@ -1808,59 +1834,81 @@ const AgentUI: React.FC<AgentUIProps> = ({
                           <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>{normalizeMarkdown(finishAnswer)}</Markdown>
                         </Box>
                       ) : pendingAsk && pendingQuestions.length > 0 ? (
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                          {pendingQuestions.map((q, qi) => (
-                            <Box key={qi}>
-                              <Box sx={{ fontSize: '0.9rem', color: 'hsl(var(--foreground))', mb: 1, '& p': { my: 0.5 } }}>
-                                <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>{normalizeMarkdown(q.question)}</Markdown>
-                              </Box>
-                              <TextField
-                                fullWidth
-                                multiline
-                                minRows={2}
-                                placeholder="Your answer here…"
-                                value={questionAnswers[q.question]?.value || ''}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  setQuestionAnswers((prev) => ({
-                                    ...prev,
-                                    [q.question]: { index: qi, value },
-                                  }));
-                                }}
-                                size="small"
-                                sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'hsl(var(--background))' } }}
-                              />
-                            </Box>
-                          ))}
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Button
-                              variant="contained"
-                              size="small"
-                              disabled={!pendingAnswered || agentRequestLoading}
-                              onClick={() => {
-                                if (pendingAsk.run_details?.id) {
-                                  submitQuestions(pendingAsk.run_details.id, questionAnswers);
-                                }
-                              }}
-                            >
-                              {agentRequestLoading ? <CircularProgress size={16} /> : 'Submit'}
-                            </Button>
-                            {pendingAsk.run_details?.id && getFormUrl(pendingAsk.run_details.id) && (
-                              <Tooltip title="Answer in the Form UI" placement="right">
-                                <IconButton
+                        (() => {
+                          const trySimpleSubmit = () => {
+                            if (agentRequestLoading) return;
+                            if (!pendingAnswered) {
+                              setSimpleSubmitAttempted(true);
+                              return;
+                            }
+                            if (pendingAsk.run_details?.id) {
+                              submitQuestions(pendingAsk.run_details.id, questionAnswers);
+                            }
+                          };
+                          return (
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                              {pendingQuestions.map((q, qi) => {
+                                const value = questionAnswers[q.question]?.value || '';
+                                const isMissing = simpleSubmitAttempted && !value;
+                                return (
+                                  <Box key={qi}>
+                                    <Box sx={{ fontSize: '0.9rem', color: 'hsl(var(--foreground))', mb: 1, '& p': { my: 0.5 } }}>
+                                      <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>{normalizeMarkdown(q.question)}</Markdown>
+                                    </Box>
+                                    <TextField
+                                      fullWidth
+                                      multiline
+                                      minRows={2}
+                                      placeholder="Your answer here…"
+                                      value={value}
+                                      error={isMissing}
+                                      helperText={isMissing ? 'Please answer this question' : undefined}
+                                      onChange={(e) => {
+                                        const v = e.target.value;
+                                        setQuestionAnswers((prev) => ({
+                                          ...prev,
+                                          [q.question]: { index: qi, value: v },
+                                        }));
+                                      }}
+                                      onKeyDown={(e) => {
+                                        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                                          e.preventDefault();
+                                          trySimpleSubmit();
+                                        }
+                                      }}
+                                      size="small"
+                                      sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'hsl(var(--background))' } }}
+                                    />
+                                  </Box>
+                                );
+                              })}
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Button
+                                  variant="contained"
                                   size="small"
-                                  onClick={() => {
-                                    const url = getFormUrl(pendingAsk.run_details!.id!);
-                                    if (url) window.open(url, '_blank', 'noopener,noreferrer');
-                                  }}
-                                  sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
+                                  disabled={agentRequestLoading}
+                                  onClick={trySimpleSubmit}
                                 >
-                                  <OpenInNewIcon sx={{ fontSize: 18 }} />
-                                </IconButton>
-                              </Tooltip>
-                            )}
-                          </Box>
-                        </Box>
+                                  {agentRequestLoading ? <CircularProgress size={16} /> : 'Submit'}
+                                </Button>
+                                {pendingAsk.run_details?.id && getFormUrl(pendingAsk.run_details.id) && (
+                                  <Tooltip title="Answer in the Form UI" placement="right">
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => {
+                                        const url = getFormUrl(pendingAsk.run_details!.id!);
+                                        if (url) window.open(url, '_blank', 'noopener,noreferrer');
+                                      }}
+                                      sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
+                                    >
+                                      <OpenInNewIcon sx={{ fontSize: 18 }} />
+                                    </IconButton>
+                                  </Tooltip>
+                                )}
+                              </Box>
+                            </Box>
+                          );
+                        })()
                       ) : isRunning ? (
                         <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))' }}>
                           Waiting for the agent to produce the first step.
