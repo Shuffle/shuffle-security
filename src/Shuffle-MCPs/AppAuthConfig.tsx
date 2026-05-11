@@ -1060,7 +1060,7 @@ export const AppAuthCard = ({
             justifyContent: { xs: 'flex-start', sm: 'flex-end' },
           }}>
             {/* Auth status chip - show "Auth not required" for no-auth apps */}
-            {isNoAuthRequired(auth) ? (
+            {!hideStatusChips && (isNoAuthRequired(auth) ? (
               <Chip
                 label="Auth not required"
                 size="small"
