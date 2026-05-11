@@ -95,7 +95,7 @@ export default function App() {
 
 ## The components
 
-The library exports four React components — use one or all of them. They share state, so you can mix-and-match.
+The library exports six React components — use one or all of them. They share state, so you can mix-and-match.
 
 | Component | What it does | Live demo |
 |---|---|---|
@@ -103,7 +103,9 @@ The library exports four React components — use one or all of them. They share
 | [`<AppSearchDrawer />`](#2-appsearchdrawer--full-search-drawer) | Right-side drawer wrapping `<ShuffleMCP />` plus a "Your apps" status row. This is the exact "Add Ingestion Source" drawer used in production | [/shuffle-mcp-demo §2](https://security.shuffler.io/shuffle-mcp-demo) |
 | [`<AppDetailDrawer />`](#3-appdetaildrawer--single-app-config) | Right-side drawer for a single app: list/edit/test authentications and try the MCP `tools/call` endpoint inline | [/shuffle-mcp-demo §3](https://security.shuffler.io/shuffle-mcp-demo) |
 | [`<AgentUI />`](#4-agentui--start--debug-agents) | Standalone "What do you want to do?" hero prompt + live decision-by-decision debugger for `/api/v1/agent` runs. Drop-in replacement for the legacy Shuffle Core agent page | [/agents](https://security.shuffler.io/agents) |
-| `<AgentRunDrawer />` | Right-side drawer that hosts `<AgentUI />` in compact mode plus optional caller-provided **Permissions** and **Local LLM** tabs (slot-driven, no host context required). Replaces ad-hoc "Run Agent" sidebars. | [/shuffle-mcp-demo §1b](https://security.shuffler.io/shuffle-mcp-demo) |
+| [`<AgentRunDrawer />`](#5-agentrundrawer--run-agent-side-panel) | Right-side drawer that hosts `<AgentUI />` in compact mode plus optional caller-provided **Permissions** and **Local LLM** tabs (slot-driven, no host context required) | [/shuffle-mcp-demo §1b](https://security.shuffler.io/shuffle-mcp-demo) |
+| [`<AgentActivityList />`](#6-agentactivitylist--past-executions) | Searchable, status-filterable list of past `/api/v1/agent` runs. Pair with `<AgentExecutionDrawer />` to inspect any row in the canonical Simple/Detailed view | [/shuffle-mcp-demo §8](https://security.shuffler.io/shuffle-mcp-demo) |
+| [`<AgentExecutionDrawer />`](#7-agentexecutiondrawer--inspect-one-run) | Right-side drawer that pre-loads a single `AgentRun` into `<AgentUI />` (no `authorization` token required) for read-only inspection | [/agents](https://security.shuffler.io/agents) |
 
 ### 1. `<ShuffleMCP />` — inline search
 
