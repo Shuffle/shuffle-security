@@ -11,6 +11,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { Link as RouterLink } from 'react-router-dom';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { fetchAuthenticatedApps } from '@/Shuffle-MCPs/authenticatedApps';
+import { fetchAppsViaApiConfig as fetchApps } from '@/Shuffle-MCPs/appsCache';
 import { deduplicateAuthApps, backfillAppImages, type AuthAppEntry } from '@/Shuffle-MCPs/auth-utils';
 import { useAppDetailOptional } from '@/Shuffle-MCPs/AppDetailContext';
 import { SIEM_PATTERNS, CASES_PATTERNS, EDR_PATTERNS, EMAIL_APP_PATTERNS } from '@/Shuffle-MCPs/ingestionDetection';
@@ -117,17 +118,8 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
 
       if (dedupedIntegrations.length < 10) {
         try {
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 5000);
-          const appsResponse = await fetch(getApiUrl('/api/v1/apps'), {
-            credentials: 'include',
-            headers: { ...getAuthHeader() },
-            signal: controller.signal,
-          });
-          clearTimeout(timeout);
-          if (appsResponse.ok) {
-            const appsData = await appsResponse.json();
-            if (Array.isArray(appsData)) {
+          const appsData = await fetchApps();
+          if (Array.isArray(appsData)) {
               const activatedApps = appsData.filter((app: any) => app.activated);
               const slotsRemaining = 10 - dedupedIntegrations.length;
               let added = 0;
@@ -147,7 +139,6 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
                   added++;
                 }
               }
-            }
           }
         } catch (_) {
           // Non-critical, ignore

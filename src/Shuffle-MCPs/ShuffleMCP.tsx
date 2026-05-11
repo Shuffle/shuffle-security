@@ -10,6 +10,7 @@ import { Tooltip } from '@mui/material';
 import type { AlgoliaSearchApp, AppSelectedEvent, ShuffleMCPProps, AppAuthentication } from './shuffle-mcp.helpers';
 import AppDetailDrawer from './AppDetailDrawer';
 import './shuffle-mcp.css';
+import { fetchApps } from './appsCache';
 
 const DEFAULT_ALGOLIA_APP_ID = 'JNSS5CFDZZ';
 const DEFAULT_ALGOLIA_API_KEY = '33e4e3564f4f060e96e0531957bed552';
@@ -112,18 +113,12 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
     }
     const fetchPrivateApps = async () => {
       try {
-        const response = await fetch(`${apiBaseUrl}${privateAppsPath}`, {
-          headers: {
-            // apiKey is optional — if omitted we rely on the browser session
-            // cookie (credentials: 'include'), which is how prod usually auths.
-            ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
-            ...(orgId ? { 'Org-Id': orgId } : {}),
-          },
-          credentials: 'include',
+        const apps = await fetchApps({
+          baseUrl: apiBaseUrl,
+          path: privateAppsPath,
+          apiKey: apiKey || null,
+          orgId: orgId || null,
         });
-        if (!response.ok) return;
-        const data = await response.json();
-        const apps = Array.isArray(data) ? data : (data?.data || []);
         // Normalize to AlgoliaSearchApp shape, tagged as 'private' source.
         const normalized: AlgoliaSearchApp[] = apps.map((a: any) => ({
           name: a.name || '',

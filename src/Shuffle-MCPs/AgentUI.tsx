@@ -108,6 +108,7 @@ const deepParseJsonStrings = (obj: any, depth = 0): any => {
 import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
 import { getApiUrl, getAuthHeader, API_CONFIG } from '@/Shuffle-MCPs/api';
+import { fetchApps } from '@/Shuffle-MCPs/appsCache';
 import { toast } from '@/Shuffle-MCPs/toast';
 import { runAgent } from '@/Shuffle-MCPs/agentRun';
 
@@ -902,18 +903,17 @@ const AgentUI: React.FC<AgentUIProps> = ({
       const stillMissing = missing.filter((a) => !resolved[a.name]);
       if (stillMissing.length > 0) {
         try {
-          const res = await fetch(resolveUrl('/api/v1/apps'), {
-            credentials: 'include',
-            headers: { ...resolveHeaders() },
+          const baseUrl = apiBaseUrl ? apiBaseUrl.replace(/\/+$/, '') : API_CONFIG.baseUrl;
+          const apps = await fetchApps({
+            baseUrl,
+            apiKey: apiKey || API_CONFIG.apiKey,
+            orgId: orgId || null,
           });
-          if (res.ok) {
-            const apps = await res.json();
-            if (Array.isArray(apps)) {
-              for (const a of stillMissing) {
-                const m = apps.find((x: any) => norm(x.name || '') === norm(a.name));
-                const img = m?.large_image || m?.image_url || m?.image;
-                if (img) resolved[a.name] = img;
-              }
+          if (Array.isArray(apps)) {
+            for (const a of stillMissing) {
+              const m = apps.find((x: any) => norm(x.name || '') === norm(a.name));
+              const img = m?.large_image || m?.image_url || m?.image;
+              if (img) resolved[a.name] = img;
             }
           }
         } catch { /* chips will just show initials */ }

@@ -14,6 +14,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
+import { fetchAppsViaApiConfig } from '@/Shuffle-MCPs/appsCache';
 import { useAppAuth } from '@/Shuffle-MCPs/useAppAuth';
 import type { AlgoliaSearchApp } from './shuffle-mcp.helpers';
 
@@ -99,14 +100,8 @@ export function useAppLookup(appName: string | null): AppLookupResult {
       let appsList: any[] | null = null;
       if (API_CONFIG.apiKey) {
         try {
-          const res = await fetch(getApiUrl('/api/v1/apps'), {
-            credentials: 'include',
-            headers: { ...getAuthHeader() },
-          });
-          if (res.ok) {
-            const apps = await res.json();
-            if (Array.isArray(apps)) appsList = apps;
-          }
+          const apps = await fetchAppsViaApiConfig();
+          if (Array.isArray(apps)) appsList = apps;
         } catch {}
       }
 
