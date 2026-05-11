@@ -307,7 +307,8 @@ const SingulActionsPreview = ({
     const apiKey = API_CONFIG.apiKey;
     const trackedOrg = getTrackedOrgId();
     const orgId = trackedOrg && activeOrgId && trackedOrg !== activeOrgId ? trackedOrg : null;
-    return { apiKey, orgId };
+    const baseUrl = API_CONFIG.baseUrl;
+    return { apiKey, orgId, baseUrl };
   }, [activeOrgId]);
 
   const buildSnippet = useCallback(
