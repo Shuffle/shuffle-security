@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Box, Typography, FormControl, InputLabel, Select, MenuItem, TextField } from '@mui/material';
+import { Box, Typography, FormControl, Select, MenuItem, TextField } from '@mui/material';
 import { AppAuthCard } from '@/Shuffle-MCPs/AppAuthConfig';
 import type { AlgoliaSearchApp } from '@/Shuffle-MCPs';
 import { useAppAuth } from '@/Shuffle-MCPs/useAppAuth';
