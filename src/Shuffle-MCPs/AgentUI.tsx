@@ -870,11 +870,15 @@ const AgentUI: React.FC<AgentUIProps> = ({
         headers: { 'Content-Type': 'application/json', ...resolveHeaders() },
         body: JSON.stringify({ execution_id: executionId, authorization }),
       });
+      // Discard stale responses: if the user has since started a different
+      // run (or cleared this one), do not write old data back into state.
+      if (activeExecutionIdRef.current && activeExecutionIdRef.current !== executionId) return;
       if (!resp.ok) {
         setError(`Could not fetch execution (${resp.status}).`);
         return;
       }
       const json = await resp.json();
+      if (activeExecutionIdRef.current && activeExecutionIdRef.current !== executionId) return;
       if (json?.success === false) {
         setError(json.reason || 'Failed to load agent data.');
         return;
