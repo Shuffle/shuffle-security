@@ -251,6 +251,36 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
   const toggleExpanded = (type: string) =>
     setExpandedTypes(prev => ({ ...prev, [type]: !prev[type] }));
 
+  /** Default values for a single automation row. Mirrors the per-row pieces
+   *  of the global "Reset to default" action below, so a user can reset
+   *  one row independently. */
+  const DEFAULT_AI_PROMPTS: string[] = [
+    `Provide a short triage plan for the incident in english and update it in the internal shuffle datastore with the same key and category 'shuffle-security_incidents'.   Make sure it is JSON formatted like {"tasks": []} so that we can inject it in existing data. Some incidents are duds and should be closed quickly. Others are important ones. Others are missing important details. Use the following format for each task, and ONLY update the relevant fields: [{"assignee": "AI Agent", "title": "Title of the task", "category": "triage/containment/recovery/communication/documentation", "completed": false, "createdBy": "ai-agent@shuffler.io"}]. ONLY output as JSON and nothing more.   If the incident has RELEVANT tasks, add to them if necessary. When done, ALWAYS make sure the "status" is inProgress.`,
+    `Go through each task one by one if there are any. When starting them, self-assign yourself to make it clear you are working on it. Go in the order of incident response relevance, which is typically in order. If a task is irrelevant, set "disabled": true as a value for it.  Before starting, get "agent_permissions" from "shuffle-security_configuration". This has a list of permissions you NEED to follow. This extends the reach of tools and capabilities you are allowed to use. ONLY use the permissions that are enabled.`,
+  ];
+  const DEFAULT_AI_APPS: string[][] = [['b82668d868f6dc7ac1dc14caa92c674b'], ['b82668d868f6dc7ac1dc14caa92c674b']];
+  const DEFAULT_SECURITY_RULES = 'merge if always; deny if has_deleted_field';
+
+  const resetRow = (type: string) => {
+    setAutomations(prev => prev.map(a => {
+      if (a.type !== type) return a;
+      // enrich / security_rules / ai_agent default to enabled; others default to disabled
+      const enabledByDefault = type === 'enrich' || type === 'security_rules' || type === 'ai_agent';
+      return { ...a, enabled: enabledByDefault, trigger: 'on_edit' as const };
+    }));
+    if (type === 'workflow') {
+      setSelectedWorkflows([]);
+    } else if (type === 'webhook') {
+      setWebhookUrl('');
+    } else if (type === 'security_rules') {
+      setSecurityRulesText(DEFAULT_SECURITY_RULES);
+    } else if (type === 'ai_agent') {
+      setAiAgentPrompts([...DEFAULT_AI_PROMPTS]);
+      setAiAgentApps(DEFAULT_AI_APPS.map(a => [...a]));
+    }
+    setHasChanges(true);
+  };
+
   const fetchIngestionApps = async () => {
     try {
       const [authResponse, wfResponse] = await Promise.all([
@@ -681,6 +711,25 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                     >
                       {config.name}
                     </Typography>
+                    {/* Per-row Reset — restores defaults for just this row,
+                        same logic as the global "Reset to default" but scoped. */}
+                    <Tooltip title={`Reset ${config.name} to default`}>
+                      <IconButton
+                        size="small"
+                        aria-label={`Reset ${config.name} to default`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          resetRow(automation.type!);
+                        }}
+                        sx={{
+                          color: 'hsl(var(--muted-foreground))',
+                          p: 0.5,
+                          '&:hover': { color: 'hsl(var(--primary))' },
+                        }}
+                      >
+                        <RestoreIcon sx={{ fontSize: 18 }} />
+                      </IconButton>
+                    </Tooltip>
                     {/* Chevron — only for automations that have a config
                         section. Clicking expands/collapses the config without
                         toggling the enabled state. Enabling no longer auto-
