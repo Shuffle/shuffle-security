@@ -770,6 +770,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   authorization,
   initialExecution,
   onRun,
+  onViewChange,
   apiKey,
   apiBaseUrl,
   orgId,
