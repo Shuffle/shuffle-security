@@ -844,6 +844,10 @@ const [open, setOpen] = useState(false);
           title="6. Try MCP (standalone)"
           description={<><code>&lt;TryMcpSection /&gt;</code> — chat against an app's MCP tools. Resolves icon + id from the app name.</>}
           code={SNIPPET_TRY_MCP}
+          apis={[
+            { method: 'POST', path: '/api/v1/apps/:name/mcp', description: 'Send a chat message to the app\'s MCP tools' },
+            { method: 'GET', path: '/api/v1/apps/:id/config', description: 'Resolve icon, categories, auth' },
+          ]}
         >
           <AppNamePicker value={mcpApp} onChange={setMcpApp} />
           <TryMcpDemo appName={mcpApp} />
