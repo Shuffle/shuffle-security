@@ -1,75 +1,68 @@
 ## Goal
 
-Move the "Run Agent" sidebar (currently `src/components/agent/AgentPermissionsDrawer.tsx`, opened from `/agent` via the **Run Agent** button) into the Shuffle-MCPs library so it can be dropped into any host app — including standalone npm consumers — and replace its bespoke prompt/runner with the library's existing `AgentUI` component.
+Move the agent executions list (currently on `/agent`) and its click-to-open execution view into the `Shuffle-MCPs/` library so they work standalone. Replace the existing custom timeline drawer (`AgentActionDrawer`) with the canonical `AgentUI` Simple/Detailed view (the same one used on `/agents`).
 
-## What's there today
+## What gets added to `src/Shuffle-MCPs/`
 
-- `AgentPermissionsDrawer` is a 725-line MUI `Drawer` with three tabs: **Run**, **Permissions**, **Local LLM**.
-- The **Run** tab is a custom `InputBase` + image-paste + selected-apps row + `runAgent()` call + `AgentRunResultViewer`. This duplicates what `AgentUI` (already exported by Shuffle-MCPs) does better.
-- It pulls in project-only deps: `useNavigate`, `useAuth`, `services/agentRun`, `lib/utils.deduplicateAuthApps`, `PermissionsPanel`, `LocalLLMConfig`, `AppSearchDrawer` (already in lib).
+### 1. `agentActivity.ts` (new, library-internal)
+Self-contained service for `/api/v1/workflows/search` (workflow_id `AGENT`).
+- Reuses lib `API_CONFIG` / `getApiUrl` / `getAuthHeader` so it works standalone with the same `apiKey`/`apiBaseUrl`/`orgId` pattern as the rest of the library.
+- Exports `AgentRun`, `AgentRunResult`, `AgentDecision`, `searchAgentActivity()`.
 
-## Plan
+### 2. `AgentActivityList.tsx` (new)
+Standalone list component. Props:
+- `apiKey?`, `apiBaseUrl?`, `orgId?` — same auth pattern as `AgentUI`.
+- `onRunClick(run)` — required; consumer decides what happens on click.
+- `statusFilter?`, `searchQuery?`, `onStatusFilterChange?`, `onSearchQueryChange?` — optional controlled mode; uncontrolled by default.
+- `showSearchBar?`, `showStatusChips?` — default true; lets callers hide chrome.
+- Renders search box, status chips ("All / Completed / Running / Failed"), feed of run rows, "Load more", empty/loading/error states.
+- Internal lightweight `AgentRunRow` (replaces `AgentRunHeader`) — title, status chip, time-ago, duration. No project couplings (no `parseDatastoreReference`, no incident link, no skip-info; those are project-specific concerns and not needed for the standalone list).
+- HSL tokens only.
 
-### 1. New library component: `src/Shuffle-MCPs/AgentRunDrawer.tsx`
+### 3. `AgentExecutionDrawer.tsx` (new)
+Right-side `Drawer` that embeds `<AgentUI>` configured to display an existing run with the Simple/Detailed view (no Start prompt).
+- Props: `open`, `onClose`, `run: AgentRun | null`, plus `apiKey?`, `apiBaseUrl?`, `orgId?`, `width?`.
+- Renders header (status icon, title, close button) + `<AgentUI>` underneath.
+- Uses a new `initialExecution` prop on `AgentUI` (see §4) so Simple/Detailed renders immediately from the already-loaded `AgentRun` data — no extra fetch needed and no `authorization` token required.
+- HSL tokens only.
 
-A standalone right-side `Drawer` with tabs. Public props:
-
+### 4. Small extension to `AgentUI.tsx`
+Add a new optional prop:
 ```ts
-interface AgentRunDrawerProps {
-  open: boolean;
-  onClose: () => void;
-  initialTab?: 'run' | 'permissions' | 'localLLM';
-  /** Optional slot for the Permissions tab. Tab is hidden when omitted. */
-  permissionsSlot?: React.ReactNode;
-  /** Optional slot for the Local LLM tab. Tab is hidden when omitted. */
-  localLLMSlot?: React.ReactNode;
-  /** Forwarded to AgentUI (apiKey, apiBaseUrl, orgId, defaultApps, etc.). */
-  agentUIProps?: Partial<React.ComponentProps<typeof AgentUI>>;
-}
+initialExecution?: ExecutionData;
 ```
+When provided:
+- Skip the starter (`setShowStarter(false)`).
+- `setExecution(initialExecution)` and seed `agentActionResult` / `agentData` from `initialExecution.results` (same path as `getExecution` after a successful fetch).
+- Skip the `getExecution` call (which requires `authorization`).
+- Polling-on-EXECUTING still works if the run is live and `authorization` is present; for completed runs, no polling needed.
 
-- **Run tab** renders `<AgentUI inline maxWidth={undefined} {...agentUIProps} />` — no more custom InputBase, no more `runAgent()` call, no more `AgentRunResultViewer` duplication. AgentUI already handles input, attached images, app chips, execution streaming, and the timeline.
-- **Permissions / Local LLM tabs** are rendered via slots so the library has zero project coupling. If the host doesn't pass them, those tabs are not shown (drawer collapses to single-tab "Run" mode).
-- All styling stays HSL-token based (`hsl(var(--card))`, `hsl(var(--border))`) — already the convention in the lib.
-- Drop `useNavigate`, `useAuth`, `services/agentRun`, `deduplicateAuthApps`, `AGENT_TOOLS_KEY` localStorage logic (AgentUI manages its own app selection).
+This is the smallest surface-area change that lets the canonical Simple/Detailed UI render from a pre-loaded run.
 
-### 2. Re-export from the lib
+### 5. `index.ts` re-exports
+Export `AgentActivityList`, `AgentExecutionDrawer`, `searchAgentActivity`, and the `AgentRun` / `AgentDecision` / `AgentRunResult` types.
 
-Add to `src/Shuffle-MCPs/index.ts`:
-```ts
-export { default as AgentRunDrawer } from './AgentRunDrawer';
-```
-And document it in `LIBRARY.md` / `README.md` next to `AgentUI`.
+## Wire-up in the host app
 
-### 3. Wire the host app to the new component
+### `src/pages/dashboard/AgentActivityPage.tsx`
+- Replace the `<AgentActivityFeed>` + `<AgentActionDrawer>` block with `<AgentActivityList onRunClick={setSelectedRun} />` + `<AgentExecutionDrawer open={!!selectedRun} onClose={...} run={selectedRun} />`.
+- Stats panel, page header, Run/Permissions buttons, search/filter bar — kept as-is. (We keep the page-level search/chips above the list, and pass them in as controlled props so the existing `useAgentActivity` stats panel still works.)
 
-In `src/pages/dashboard/AgentActivityPage.tsx`:
-- Replace `import AgentPermissionsDrawer from '@/components/agent/AgentPermissionsDrawer'` with `import { AgentRunDrawer } from '@/Shuffle-MCPs'`.
-- Pass `permissionsSlot={<PermissionsPanel compact />}` (gated on `isSupport`) and `localLLMSlot={<LocalLLMConfig />}` so the existing project-only tabs keep working.
-- Map `initialTab` numeric (0/1/2) → `'run' | 'permissions' | 'localLLM'`.
+### Files left in place (project-only, not migrated)
+- `src/components/agent/AgentActionDrawer.tsx` — superseded; deleted.
+- `src/components/agent/AgentActivityFeed.tsx` — superseded; deleted.
+- `src/components/agent/AgentRunHeader.tsx`, `AgentRunResultViewer.tsx` — kept; still used by `IncidentDetailPage`, `useAgentActivity` (search filter helper), and `AgentQuickViewDrawer`.
+- `src/services/agentActivity.ts` — kept as a thin re-export from the lib so `useAgentActivity` keeps working.
+- `src/hooks/useAgentActivity.ts` — kept; project-side stats + search/skip filtering remain useful for the page.
 
-### 4. Delete the old component
+## Out of scope
 
-Remove `src/components/agent/AgentPermissionsDrawer.tsx` once the page no longer references it. Search for any other importers (`rg AgentPermissionsDrawer`) and migrate them too.
+- The "Run / Permissions / Local LLM" `AgentRunDrawer` already lives in the lib — unchanged.
+- No changes to incident-pivot links, skipped-run UI, or stats panel — those stay project-only.
+- `AgentQuickViewDrawer` (used in the dashboard) — unchanged.
 
-### 5. Standalone-safety checklist
+## Acceptance
 
-- No imports from `@/context/*`, `@/hooks/*`, `@/services/*`, `@/lib/*`, `react-router-dom`.
-- Only depends on: `react`, `@mui/material`, `lucide-react`, sibling lib files (`AgentUI`, `AgentIcon`, `api`).
-- Survives without project CSS — uses inline `sx` + HSL tokens with sane fallbacks (drawer already does this).
-- Verified by importing it in `/shuffle-mcp-demo` (add a small "Open Agent drawer" button section).
-
-## Files touched
-
-| File | Change |
-|---|---|
-| `src/Shuffle-MCPs/AgentRunDrawer.tsx` | **new** — standalone drawer, embeds `AgentUI` |
-| `src/Shuffle-MCPs/index.ts` | export `AgentRunDrawer` |
-| `src/Shuffle-MCPs/README.md` + `LIBRARY.md` | document new component |
-| `src/pages/dashboard/AgentActivityPage.tsx` | swap import, pass slots |
-| `src/pages/ShuffleMcpTestPage.tsx` | demo section for `AgentRunDrawer` |
-| `src/components/agent/AgentPermissionsDrawer.tsx` | **delete** |
-
-## Open question
-
-The current Run tab supports image paste/attach. `AgentUI` also accepts inputs but I want to confirm it already exposes image attachment in its inline UI before deletion — if not, I'll add an `attachments` prop pass-through rather than re-introducing a custom form.
+- `/agent` lists runs and opens a drawer on click that shows the same Simple/Detailed tabs as `/agents`.
+- `AgentActivityList` and `AgentExecutionDrawer` can be imported from `@/Shuffle-MCPs` and rendered with only `apiKey` + `apiBaseUrl` (no project hooks/contexts/services needed).
+- Typecheck clean.
