@@ -363,10 +363,17 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
     (q) => questionAnswers[q.question]?.value
   );
 
+  // If the run as a whole has finished, treat any still-RUNNING/WAITING rows
+  // (typically an unanswered ASK that the agent moved past) as ignored so we
+  // don't keep highlighting them with the orange "running" bar.
+  const effectiveStatus =
+    runFinished && (item.status === 'RUNNING' || item.status === 'WAITING')
+      ? 'IGNORED'
+      : item.status;
   const barColor = isProcessing ? 'hsl(var(--muted-foreground) / 0.45)' :
-    item.status === 'IGNORED' ? STATUS_COLORS.warning :
-    item.status === 'FINISHED' ? STATUS_COLORS.finished :
-    item.status === 'FAILURE' || item.status === 'ABORTED' ? STATUS_COLORS.error :
+    effectiveStatus === 'IGNORED' ? STATUS_COLORS.warning :
+    effectiveStatus === 'FINISHED' ? STATUS_COLORS.finished :
+    effectiveStatus === 'FAILURE' || effectiveStatus === 'ABORTED' ? STATUS_COLORS.error :
     STATUS_COLORS.running;
 
   return (
