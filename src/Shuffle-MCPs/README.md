@@ -27,11 +27,11 @@ Turn 3,000+ SaaS tools into MCP servers your agents can use. One search, one cli
   <tr>
     <td align="center" width="50%">
       <img src="https://security.shuffler.io/mcp/search-preview.png" alt="Search 3,000+ integrations" width="380" style="border-radius: 12px;" />
-      <br/><sub><b>2. Search any of 3,000+ tools</b></sub>
+      <br/><sub><b>3. Search any of 3,000+ tools</b></sub>
     </td>
     <td align="center" width="50%">
       <img src="https://security.shuffler.io/mcp/app-detail-preview.png" alt="Authenticate and use as MCP" width="380" style="border-radius: 12px;" />
-      <br/><sub><b>3. Authenticate — your agent uses it instantly</b></sub>
+      <br/><sub><b>4. Authenticate — your agent uses it instantly</b></sub>
     </td>
   </tr>
 </table>
