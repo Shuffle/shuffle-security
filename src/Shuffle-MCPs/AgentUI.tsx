@@ -217,6 +217,12 @@ export interface AgentUIProps {
   apiBaseUrl?: string;
   /** Optional Shuffle Org ID — sent as the `Org-Id` header on every call. */
   orgId?: string;
+  /** Optional className forwarded to the root container. */
+  className?: string;
+  /** Style overrides merged into the root container sx. */
+  sx?: SxProps<Theme>;
+  /** Style overrides for the inner content card (the column under the run-switcher). */
+  contentSx?: SxProps<Theme>;
 }
 
 interface ExecutionData {
