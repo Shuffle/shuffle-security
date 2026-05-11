@@ -35,6 +35,14 @@ export interface AgentExecutionDrawerProps {
   apiBaseUrl?: string;
   /** Optional Shuffle Org ID, forwarded to the embedded AgentUI. */
   orgId?: string;
+  /** Optional className forwarded to the Drawer Paper. */
+  className?: string;
+  /** Style overrides merged into the Drawer Paper sx. */
+  paperSx?: SxProps<Theme>;
+  /** Style overrides for the header bar. */
+  headerSx?: SxProps<Theme>;
+  /** Style overrides for the body container that wraps the embedded AgentUI. */
+  bodySx?: SxProps<Theme>;
 }
 
 const AgentExecutionDrawer = ({
