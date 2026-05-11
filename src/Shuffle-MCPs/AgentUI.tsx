@@ -508,6 +508,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
             const isApiAction =
               action !== 'ask' && cat !== 'ask' &&
               action !== 'finish' && action !== 'finalise' && cat !== 'finish' && cat !== 'finalise' &&
+              cat !== 'processing' &&
               action !== 'add_tool';
             if (!isApiAction) return null;
             return (
