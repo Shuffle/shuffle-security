@@ -30,6 +30,8 @@ import {
   useAppLookup,
 } from '@/Shuffle-MCPs';
 import type { AgentRun } from '@/Shuffle-MCPs';
+import PermissionsPanel from '@/components/agent/PermissionsPanel';
+import LocalLLMConfig from '@/components/agent/LocalLLMConfig';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
@@ -381,7 +383,12 @@ const AgentRunDrawerDemo = () => {
       <Button variant="contained" onClick={() => setOpen(true)}>
         Open Agent drawer
       </Button>
-      <AgentRunDrawer open={open} onClose={() => setOpen(false)} />
+      <AgentRunDrawer
+        open={open}
+        onClose={() => setOpen(false)}
+        permissionsSlot={<PermissionsPanel compact />}
+        localLLMSlot={<LocalLLMConfig />}
+      />
     </Box>
   );
 };
