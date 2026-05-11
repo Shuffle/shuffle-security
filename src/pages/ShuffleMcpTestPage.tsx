@@ -16,6 +16,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import GitHubIcon from '@mui/icons-material/GitHub';
 import {
   ShuffleMCP,
   AppSearchDrawer,
@@ -739,6 +740,64 @@ const ShuffleMcpTestPage = () => {
           </Box>
           . Expand "Show source" under each section to see the exact code that produced it.
         </Typography>
+        <Stack direction="row" spacing={1.5} sx={{ mt: 2 }}>
+          <Box
+            component="a"
+            href="https://github.com/shuffle/shuffle"
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 0.75,
+              px: 1.5,
+              py: 0.5,
+              borderRadius: 1,
+              border: '1px solid hsl(var(--border))',
+              backgroundColor: 'hsl(var(--muted) / 0.5)',
+              color: 'hsl(var(--foreground))',
+              textDecoration: 'none',
+              fontSize: '0.8rem',
+              fontWeight: 500,
+              transition: 'all 0.15s',
+              '&:hover': {
+                borderColor: 'hsl(var(--primary) / 0.5)',
+                backgroundColor: 'hsl(var(--primary) / 0.08)',
+              },
+            }}
+          >
+            <GitHubIcon sx={{ fontSize: 16 }} />
+            Shuffle Core
+          </Box>
+          <Box
+            component="a"
+            href="https://github.com/shuffle/shuffle-security"
+            target="_blank"
+            rel="noopener noreferrer"
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 0.75,
+              px: 1.5,
+              py: 0.5,
+              borderRadius: 1,
+              border: '1px solid hsl(var(--border))',
+              backgroundColor: 'hsl(var(--muted) / 0.5)',
+              color: 'hsl(var(--foreground))',
+              textDecoration: 'none',
+              fontSize: '0.8rem',
+              fontWeight: 500,
+              transition: 'all 0.15s',
+              '&:hover': {
+                borderColor: 'hsl(var(--primary) / 0.5)',
+                backgroundColor: 'hsl(var(--primary) / 0.08)',
+              },
+            }}
+          >
+            <GitHubIcon sx={{ fontSize: 16 }} />
+            Shuffle Security
+          </Box>
+        </Stack>
       </Box>
 
       <Stack spacing={4}>
