@@ -361,9 +361,12 @@ const AgentActivityList = ({
     : runs;
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box
+      className={className}
+      sx={[{ display: 'flex', flexDirection: 'column', gap: 2 }, ...(Array.isArray(sx) ? sx : sx ? [sx] : [])]}
+    >
       {(showSearchBar || showStatusChips) && (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+        <Box sx={[{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }, ...(Array.isArray(toolbarSx) ? toolbarSx : toolbarSx ? [toolbarSx] : [])]}>
           {showSearchBar && (
             <TextField
               placeholder="Search results..."
