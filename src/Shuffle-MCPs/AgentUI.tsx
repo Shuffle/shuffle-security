@@ -930,9 +930,13 @@ const AgentUI: React.FC<AgentUIProps> = ({
     const wanted: { raw: string; slug: string }[] = [];
     const seen = new Set<string>();
     for (const dec of decisions) {
+      const action = dec?.action || dec?.details?.action;
+      const category = dec?.category || dec?.details?.category;
+      if (action === 'finish' || action === 'finalise' || action === 'ask') continue;
+      if (category === 'finish' || category === 'finalise' || category === 'ask') continue;
       const tool = dec?.details?.tool ?? dec?.tool;
       if (!tool || typeof tool !== 'string') continue;
-      if (tool === 'singul') continue;
+      if (tool === 'singul' || tool === 'core') continue;
       let raw = tool;
       let slug = norm(tool);
       if (slug.startsWith('app:')) slug = slug.split(':')[2] || slug;
