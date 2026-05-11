@@ -1693,6 +1693,22 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   } else if (totalDuration && totalDuration > 0) {
                     durationSec = Math.round(totalDuration);
                   }
+                  // Detect a pending ASK decision (agent waiting on a user answer)
+                  const pendingAsk = (agentData?.decisions || []).slice().reverse().find((d) => {
+                    const isAsk = d.category === 'ask' || d.action === 'ask';
+                    const st = (d.run_details?.status || '').toUpperCase();
+                    return isAsk && (st === 'RUNNING' || st === 'WAITING');
+                  });
+                  const pendingQuestions: { question: string; index: number }[] = [];
+                  if (pendingAsk) {
+                    for (const f of pendingAsk.fields || []) {
+                      if (f.key === 'question' && f.value) {
+                        pendingQuestions.push({ question: f.value, index: pendingQuestions.length + 1 });
+                      }
+                    }
+                  }
+                  const pendingAnswered = pendingQuestions.every((q) => questionAnswers[q.question]?.value);
+
                   return (
                     <>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
@@ -1755,6 +1771,45 @@ const AgentUI: React.FC<AgentUIProps> = ({
                         }}>
                           <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>{normalizeMarkdown(finishAnswer)}</Markdown>
                         </Box>
+                      ) : pendingAsk && pendingQuestions.length > 0 ? (
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                          {pendingQuestions.map((q, qi) => (
+                            <Box key={qi}>
+                              <Box sx={{ fontSize: '0.9rem', color: 'hsl(var(--foreground))', mb: 1, '& p': { my: 0.5 } }}>
+                                <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>{normalizeMarkdown(q.question)}</Markdown>
+                              </Box>
+                              <TextField
+                                fullWidth
+                                multiline
+                                minRows={2}
+                                placeholder="Your answer here…"
+                                defaultValue={questionAnswers[q.question]?.value || ''}
+                                onBlur={(e) => {
+                                  setQuestionAnswers((prev) => ({
+                                    ...prev,
+                                    [q.question]: { index: qi, value: e.target.value },
+                                  }));
+                                }}
+                                size="small"
+                                sx={{ '& .MuiOutlinedInput-root': { bgcolor: 'hsl(var(--background))' } }}
+                              />
+                            </Box>
+                          ))}
+                          <Box>
+                            <Button
+                              variant="contained"
+                              size="small"
+                              disabled={!pendingAnswered || agentRequestLoading}
+                              onClick={() => {
+                                if (pendingAsk.run_details?.id) {
+                                  submitQuestions(pendingAsk.run_details.id, questionAnswers);
+                                }
+                              }}
+                            >
+                              {agentRequestLoading ? <CircularProgress size={16} /> : 'Submit'}
+                            </Button>
+                          </Box>
+                        </Box>
                       ) : isRunning ? (
                         <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))' }}>
                           Waiting for the agent to produce the first step.
@@ -1764,6 +1819,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                           No final answer was returned. Open Detailed to inspect each step.
                         </Typography>
                       )}
+
                       {!isRunning && (
                         <Box>
                           <Button
