@@ -294,6 +294,10 @@ export default function AppSearchDrawer({
                 maxHeight: 'none',
                 overflowY: 'auto',
               },
+              '& .singul-results-grid .singul-dropdown-item': {
+                minHeight: 56,
+                alignItems: 'center',
+              },
             }}
           >
             <AnimatePresence mode="wait">
