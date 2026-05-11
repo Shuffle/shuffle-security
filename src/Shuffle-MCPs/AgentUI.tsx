@@ -158,6 +158,8 @@ export interface AgentUIProps {
   hideAppPicker?: boolean;
   /** Hide the paperclip image-attachment button. */
   hideAttach?: boolean;
+  /** Disable the "Start" tab in the run switcher (e.g. when viewing a fixed execution). */
+  disableStartTab?: boolean;
   /** Label on the "Select Apps / MCPs" chip. */
   appPickerLabel?: string;
   /** Title on the AppSearchDrawer. */
