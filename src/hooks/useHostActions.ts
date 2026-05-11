@@ -200,19 +200,91 @@ export const useHostActions = ({ onActionComplete }: UseHostActionsOptions = {})
         try {
           const key = terminalStorageKey(hostUuid);
           const stored = readStoredSession(hostUuid);
+          const persistShape = {
+            entryId: latest.entryId,
+            actionName: latest.actionName,
+            commandText: latest.commandText,
+            status: latest.status,
+            startedAt: latest.startedAt,
+            finishedAt: latest.finishedAt,
+            executionId: latest.executionId,
+            authorization: latest.authorization,
+            actionOutput: truncate(latest.actionOutput, MAX_OUTPUT_CHARS),
+            error: truncate(latest.error, MAX_ERROR_CHARS),
+          };
           const sIdx = stored.findIndex((e: any) => e.entryId === latest.entryId);
           if (sIdx >= 0) {
-            stored[sIdx] = { ...stored[sIdx], status: latest.status, finishedAt: latest.finishedAt, executionId: latest.executionId, authorization: latest.authorization };
+            stored[sIdx] = { ...stored[sIdx], ...persistShape };
           } else {
-            stored.push({ entryId: latest.entryId, actionName: latest.actionName, status: latest.status, startedAt: latest.startedAt, finishedAt: latest.finishedAt, executionId: latest.executionId, authorization: latest.authorization });
+            stored.push(persistShape);
             if (stored.length > 200) stored.splice(0, stored.length - 200);
           }
-          localStorage.setItem(key, JSON.stringify(stored));
+          try {
+            localStorage.setItem(key, JSON.stringify(stored));
+          } catch {
+            // Quota — progressively shrink and retry.
+            for (const limit of [50, 25, 10, 5, 1]) {
+              try {
+                const shrunk = stored.slice(-limit).map((e: any) => ({
+                  ...e,
+                  actionOutput: truncate(e.actionOutput, 2000),
+                  error: truncate(e.error, 500),
+                }));
+                localStorage.setItem(key, JSON.stringify(shrunk));
+                break;
+              } catch { /* keep shrinking */ }
+            }
+          }
         } catch { /* ignore */ }
       }
       return next;
     });
   }, []);
+
+  // Loading state for sideload (re-fetch full result for a stored entry).
+  const [loadingEntries, setLoadingEntries] = useState<Set<string>>(new Set());
+
+  const removeHistoryEntry = useCallback((hostUuid: string, entryId: string) => {
+    setActionHistoryMap(prev => {
+      const history = prev.get(hostUuid);
+      if (!history) return prev;
+      const next = new Map(prev);
+      next.set(hostUuid, history.filter(e => e.entryId !== entryId));
+      return next;
+    });
+    try {
+      const key = terminalStorageKey(hostUuid);
+      const stored = readStoredSession(hostUuid).filter((e: any) => e?.entryId !== entryId);
+      localStorage.setItem(key, JSON.stringify(stored));
+    } catch { /* ignore */ }
+  }, []);
+
+  const fetchEntryResult = useCallback(async (hostUuid: string, entry: ActionDebugEntry) => {
+    if (!entry.executionId || !entry.authorization) return;
+    setLoadingEntries(prev => { const n = new Set(prev); n.add(entry.entryId); return n; });
+    try {
+      const resp = await fetch(getApiUrl('/api/v1/streams/results'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body: JSON.stringify({ execution_id: entry.executionId, authorization: entry.authorization }),
+      });
+      if (!resp.ok) return;
+      const text = await resp.text();
+      if (!text || text === '{}' || text === 'null') return;
+      let pollData: unknown = null;
+      try { pollData = JSON.parse(text); } catch { /* not JSON */ }
+      const result = parseActionResult(pollData);
+      updateHostDebug(hostUuid, entry.entryId, {
+        actionOutput: result.output || undefined,
+        error: result.error || undefined,
+        actionSuccess: result.success,
+      });
+    } catch { /* ignore */ } finally {
+      setLoadingEntries(prev => { const n = new Set(prev); n.delete(entry.entryId); return n; });
+    }
+  }, [updateHostDebug]);
+
 
   const executeHostAction = useCallback(async (
     actionId: string,
