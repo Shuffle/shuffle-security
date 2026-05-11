@@ -14,23 +14,23 @@ import {
   Chip,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
   CheckCircle,
   Settings,
   ArrowRight,
-  Clock,
-  AlertTriangle,
   HelpCircle,
   XCircle,
-  MoreHorizontal,
   Zap,
-  Shield,
   Send,
   Mail,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { stripAgentTitlePrefix, type AgentNotification } from '@/services/notifications';
+import {
+  stripAgentTitlePrefix,
+  parseAgentApprovalParams,
+  type AgentNotification,
+} from '@/services/notifications';
+import AgentUI from '@/Shuffle-MCPs/AgentUI';
 import type { AgentRun, AgentDecision } from '@/services/agentActivity';
 import {
   parseDatastoreReference,
