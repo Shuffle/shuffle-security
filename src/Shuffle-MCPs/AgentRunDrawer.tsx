@@ -31,7 +31,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { Play, Server, ShieldCheck } from 'lucide-react';
 
 import AgentIcon from './AgentIcon';
-import { AgentUI, type AgentUIProps } from './AgentUI';
+import AgentUI, { type AgentUIProps } from './AgentUI';
 
 export type AgentRunDrawerTab = 'run' | 'permissions' | 'localLLM';
 
