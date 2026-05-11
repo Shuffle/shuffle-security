@@ -687,6 +687,10 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const [localRunStart, setLocalRunStart] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Tracks the execution_id we currently want to display. Used to discard
+  // stale poll responses from a previous run after the user has started a
+  // new one (otherwise an in-flight fetch can repaint the old execution).
+  const activeExecutionIdRef = useRef<string | null>(null);
 
   // Reset / capture the local run start whenever a new execution begins.
   useEffect(() => {
@@ -866,11 +870,15 @@ const AgentUI: React.FC<AgentUIProps> = ({
         headers: { 'Content-Type': 'application/json', ...resolveHeaders() },
         body: JSON.stringify({ execution_id: executionId, authorization }),
       });
+      // Discard stale responses: if the user has since started a different
+      // run (or cleared this one), do not write old data back into state.
+      if (activeExecutionIdRef.current && activeExecutionIdRef.current !== executionId) return;
       if (!resp.ok) {
         setError(`Could not fetch execution (${resp.status}).`);
         return;
       }
       const json = await resp.json();
+      if (activeExecutionIdRef.current && activeExecutionIdRef.current !== executionId) return;
       if (json?.success === false) {
         setError(json.reason || 'Failed to load agent data.');
         return;
@@ -909,6 +917,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
     }
     if (eid && auth) {
       setShowStarter(false);
+      activeExecutionIdRef.current = eid;
       setExecution({ execution_id: eid, authorization: auth, status: 'EXECUTING' });
       getExecution(eid, auth);
     }
@@ -936,6 +945,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
     setShowStarter(false);
     // Hard reset any prior run state so the new run starts from a clean slate.
     const browserStart = Math.floor(Date.now() / 1000);
+    activeExecutionIdRef.current = null;
     setExecution(null);
     setAgentActionResult(null);
     setOpenIndexes(new Set());
@@ -944,6 +954,16 @@ const AgentUI: React.FC<AgentUIProps> = ({
     setNowTick(browserStart);
     setLocalRunStart(browserStart);
     setAgentData({ original_input: text.trim() });
+    // Strip any prior execution_id from the URL immediately so a refresh or
+    // restored URL state cannot resurrect the previous run.
+    if (readUrlParams && typeof window !== 'undefined') {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('execution_id');
+        url.searchParams.delete('authorization');
+        window.history.replaceState({}, '', url.toString());
+      } catch { /* noop */ }
+    }
 
     const result = await runAgent({
       input: text.trim(),
@@ -977,6 +997,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
     if (eid && auth) {
       // Seed an EXECUTING stub so the poll effect starts immediately,
       // then kick off the first fetch. The poller continues until terminal.
+      activeExecutionIdRef.current = eid;
       setExecution({ execution_id: eid, authorization: auth, status: 'EXECUTING' });
       // Reflect the new execution in the URL so the run is shareable/refreshable.
       if (readUrlParams && typeof window !== 'undefined') {
