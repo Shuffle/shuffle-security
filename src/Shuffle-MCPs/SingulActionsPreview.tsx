@@ -380,7 +380,7 @@ const SingulActionsPreview = ({
             app_name: 'http',
             app_version: '1.4.0',
           };
-      const path = lang === 'python' ? '/api/v1/apps/3e2bdf9d5069fe3f4746c29d68785a6a/run' : '/api/v1/apps/http/run';
+      const path = lang === 'python' ? '/api/v1/apps/3e2bdf9d5069fe3f4746c29d68785a6a/run?delete=true' : '/api/v1/apps/http/run?delete=true';
       const res = await fetch(getApiUrl(path), {
         method: 'POST',
         credentials: 'include',
