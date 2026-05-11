@@ -84,3 +84,19 @@ export const invalidateAppsCache = (opts?: FetchAppsOptions) => {
   }
   cache.delete(cacheKey(opts));
 };
+
+/**
+ * Convenience wrapper for callers that already use API_CONFIG / getAuthHeader.
+ * Coalesces against the same cache as `fetchApps`.
+ */
+import { API_CONFIG, getAuthHeader } from './api';
+
+export const fetchAppsViaApiConfig = (): Promise<any[]> => {
+  const headers = getAuthHeader();
+  const orgId = headers['Org-Id'] || null;
+  return fetchApps({
+    baseUrl: API_CONFIG.baseUrl,
+    apiKey: API_CONFIG.apiKey,
+    orgId,
+  });
+};
