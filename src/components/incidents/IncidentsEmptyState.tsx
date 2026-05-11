@@ -188,6 +188,11 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
           </Box>
         )}
 
+        {/* Demo mode CTA — same component as the dashboard, compact variant */}
+        <Box sx={{ width: '100%', maxWidth: 520, mb: 3 }}>
+          <DemoModeCard compact />
+        </Box>
+
         {/* CTA buttons */}
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
