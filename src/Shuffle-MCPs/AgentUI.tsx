@@ -323,13 +323,20 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
   let displayType = item.type as string;
   let displayLabel = item.label?.replace(/_/g, ' ') || '';
   const details = item.details as AgentDecision | undefined;
-  if (details?.reason) displayLabel = details.reason;
-  if (details?.action === 'finish' || item.category === 'finish' || details?.action === 'finalise') {
-    displayType = 'finalise';
-  } else if (item.category === 'ask' || details?.action === 'ask') {
-    displayType = 'question';
-  } else if (details?.action === 'add_tool') {
-    displayType = 'add tool';
+  const isProcessing = item.category === 'processing';
+  if (isProcessing) {
+    displayType = 'processing';
+  } else if (details?.reason) {
+    displayLabel = details.reason;
+  }
+  if (!isProcessing) {
+    if (details?.action === 'finish' || item.category === 'finish' || details?.action === 'finalise') {
+      displayType = 'finalise';
+    } else if (item.category === 'ask' || details?.action === 'ask') {
+      displayType = 'question';
+    } else if (details?.action === 'add_tool') {
+      displayType = 'add tool';
+    }
   }
 
   // Resolve app icon for the tool used
