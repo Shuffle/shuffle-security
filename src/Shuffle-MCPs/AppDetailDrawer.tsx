@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { toast } from '@/lib/toast';
+import { toast } from '@/Shuffle-MCPs/toast';
 import { Download, Forward } from 'lucide-react';
 import { getDatastoreByCategory, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import {

@@ -10,7 +10,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { toast } from '@/lib/toast';
+import { toast } from '@/Shuffle-MCPs/toast';
 import {
   Box,
   Typography,
