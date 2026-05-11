@@ -962,15 +962,15 @@ const AgentUI: React.FC<AgentUIProps> = ({
     // Snapshot prior run state so a failed network request does not leave
     // the user staring at an empty page with no way to retry. We only
     // commit the destructive reset once the new run has been accepted.
-    const prevExecution = execution;
-    const prevAgentData = agentData;
-    const prevAgentActionResult = agentActionResult;
-    const prevOpenIndexes = openIndexes;
-    const prevQuestionAnswers = questionAnswers;
-    const prevContinuationText = continuationText;
-    const prevLocalRunStart = localRunStart;
+    const prevExecution = stateRef.current.execution;
+    const prevAgentData = stateRef.current.agentData;
+    const prevAgentActionResult = stateRef.current.agentActionResult;
+    const prevOpenIndexes = stateRef.current.openIndexes;
+    const prevQuestionAnswers = stateRef.current.questionAnswers;
+    const prevContinuationText = stateRef.current.continuationText;
+    const prevLocalRunStart = stateRef.current.localRunStart;
     const prevActiveExecutionId = activeExecutionIdRef.current;
-    const prevShowStarter = showStarter;
+    const prevShowStarter = stateRef.current.showStarter;
 
     const result = await runAgent({
       input: text.trim(),
