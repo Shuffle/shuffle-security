@@ -27,6 +27,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import type { SxProps, Theme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import { Play, Server, ShieldCheck } from 'lucide-react';
 
@@ -60,6 +61,16 @@ export interface AgentRunDrawerProps {
   title?: string;
   /** Header subtitle. Default: "Run actions and manage permissions". */
   subtitle?: string;
+  /** Optional className forwarded to the Drawer Paper. */
+  className?: string;
+  /** Style overrides merged into the Drawer Paper sx. Use to override colors, padding, etc. */
+  paperSx?: SxProps<Theme>;
+  /** Style overrides for the header bar (icon + title + close). */
+  headerSx?: SxProps<Theme>;
+  /** Style overrides for the tab strip. */
+  tabsSx?: SxProps<Theme>;
+  /** Style overrides for the body container that wraps the active tab content. */
+  bodySx?: SxProps<Theme>;
 }
 
 const TAB_ORDER: AgentRunDrawerTab[] = ['run', 'permissions', 'localLLM'];
@@ -77,6 +88,11 @@ const AgentRunDrawer = ({
   width = 520,
   title = 'Agent',
   subtitle = 'Run actions and manage permissions',
+  className,
+  paperSx,
+  headerSx,
+  tabsSx,
+  bodySx,
 }: AgentRunDrawerProps) => {
   const [activeTab, setActiveTab] = useState<AgentRunDrawerTab>(initialTab);
 
@@ -107,27 +123,34 @@ const AgentRunDrawer = ({
       open={open}
       onClose={onClose}
       PaperProps={{
-        sx: {
-          width: { xs: '100%', sm: width },
-          background: 'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)',
-          borderLeft: '1px solid hsl(var(--border))',
-          boxShadow: '-8px 0 32px hsla(0, 0%, 0%, 0.4)',
-          display: 'flex',
-          flexDirection: 'column',
-        },
+        className,
+        sx: [
+          {
+            width: { xs: '100%', sm: width },
+            background: 'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)',
+            borderLeft: '1px solid hsl(var(--border))',
+            boxShadow: '-8px 0 32px hsla(0, 0%, 0%, 0.4)',
+            display: 'flex',
+            flexDirection: 'column',
+          },
+          ...(Array.isArray(paperSx) ? paperSx : paperSx ? [paperSx] : []),
+        ],
       }}
     >
       {/* Header */}
       <Box
-        sx={{
-          px: 3,
-          py: 2.5,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 2,
-          borderBottom: '1px solid hsl(var(--border))',
-          flexShrink: 0,
-        }}
+        sx={[
+          {
+            px: 3,
+            py: 2.5,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            borderBottom: '1px solid hsl(var(--border))',
+            flexShrink: 0,
+          },
+          ...(Array.isArray(headerSx) ? headerSx : headerSx ? [headerSx] : []),
+        ]}
       >
         <Box
           sx={{
@@ -163,19 +186,22 @@ const AgentRunDrawer = ({
           <Tabs
             value={safeActiveTab}
             onChange={(_, v) => setActiveTab(v as AgentRunDrawerTab)}
-            sx={{
-              minHeight: 42,
-              px: 3,
-              '& .MuiTab-root': {
+            sx={[
+              {
                 minHeight: 42,
-                textTransform: 'none',
-                fontSize: '0.85rem',
-                fontWeight: 500,
-                color: 'hsl(var(--muted-foreground))',
-                '&.Mui-selected': { color: 'hsl(var(--primary))' },
+                px: 3,
+                '& .MuiTab-root': {
+                  minHeight: 42,
+                  textTransform: 'none',
+                  fontSize: '0.85rem',
+                  fontWeight: 500,
+                  color: 'hsl(var(--muted-foreground))',
+                  '&.Mui-selected': { color: 'hsl(var(--primary))' },
+                },
+                '& .MuiTabs-indicator': { bgcolor: 'hsl(var(--primary))' },
               },
-              '& .MuiTabs-indicator': { bgcolor: 'hsl(var(--primary))' },
-            }}
+              ...(Array.isArray(tabsSx) ? tabsSx : tabsSx ? [tabsSx] : []),
+            ]}
           >
             {visibleTabs.includes('run') && (
               <Tab
@@ -225,7 +251,7 @@ const AgentRunDrawer = ({
       )}
 
       {/* Body */}
-      <Box sx={{ flex: 1, overflowY: 'auto' }}>
+      <Box sx={[{ flex: 1, overflowY: 'auto' }, ...(Array.isArray(bodySx) ? bodySx : bodySx ? [bodySx] : [])]}>
         {safeActiveTab === 'run' && (
           <Box sx={{ px: 2, py: 2 }}>
             <AgentUI

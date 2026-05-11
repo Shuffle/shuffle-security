@@ -18,6 +18,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import type { SxProps, Theme } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
 import {
   Activity,
@@ -139,9 +140,10 @@ const getRunSubtitle = (run: AgentRun): string => {
 interface RunRowProps {
   run: AgentRun;
   onClick: () => void;
+  sx?: SxProps<Theme>;
 }
 
-const AgentRunRow = ({ run, onClick }: RunRowProps) => {
+const AgentRunRow = ({ run, onClick, sx }: RunRowProps) => {
   const statusKey = (run.status || '').toUpperCase();
   const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.WAITING;
   const iconColor = getRunIconColor(run);
@@ -150,22 +152,25 @@ const AgentRunRow = ({ run, onClick }: RunRowProps) => {
   return (
     <Box
       onClick={onClick}
-      sx={{
-        borderRadius: 2,
-        border: '1px solid hsl(var(--border))',
-        bgcolor: 'hsl(var(--card))',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 2,
-        px: 2.5,
-        py: 2,
-        cursor: 'pointer',
-        transition: 'background 0.15s ease, border-color 0.15s ease',
-        '&:hover': {
-          bgcolor: 'hsla(var(--muted) / 0.5)',
-          borderColor: 'hsl(var(--muted-foreground) / 0.3)',
+      sx={[
+        {
+          borderRadius: 2,
+          border: '1px solid hsl(var(--border))',
+          bgcolor: 'hsl(var(--card))',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2,
+          px: 2.5,
+          py: 2,
+          cursor: 'pointer',
+          transition: 'background 0.15s ease, border-color 0.15s ease',
+          '&:hover': {
+            bgcolor: 'hsla(var(--muted) / 0.5)',
+            borderColor: 'hsl(var(--muted-foreground) / 0.3)',
+          },
         },
-      }}
+        ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
+      ]}
     >
       <Box
         sx={{
@@ -260,6 +265,14 @@ export interface AgentActivityListProps {
   emptyTitle?: string;
   /** Empty-state subtitle. */
   emptySubtitle?: string;
+  /** Optional className forwarded to the root container. */
+  className?: string;
+  /** Style overrides merged into the root container sx. */
+  sx?: SxProps<Theme>;
+  /** Style overrides for the filter/search toolbar. */
+  toolbarSx?: SxProps<Theme>;
+  /** Style overrides for each individual run row. */
+  rowSx?: SxProps<Theme>;
 }
 
 const AgentActivityList = ({
@@ -272,6 +285,10 @@ const AgentActivityList = ({
   limit = 50,
   emptyTitle = 'No agent activity found',
   emptySubtitle = 'The agent has not performed any actions yet',
+  className,
+  sx,
+  toolbarSx,
+  rowSx,
 }: AgentActivityListProps) => {
   const [runs, setRuns] = useState<AgentRun[]>([]);
   const [cursor, setCursor] = useState('');
@@ -348,9 +365,12 @@ const AgentActivityList = ({
     : runs;
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box
+      className={className}
+      sx={[{ display: 'flex', flexDirection: 'column', gap: 2 }, ...(Array.isArray(sx) ? sx : sx ? [sx] : [])]}
+    >
       {(showSearchBar || showStatusChips) && (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+        <Box sx={[{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }, ...(Array.isArray(toolbarSx) ? toolbarSx : toolbarSx ? [toolbarSx] : [])]}>
           {showSearchBar && (
             <TextField
               placeholder="Search results..."
@@ -452,6 +472,7 @@ const AgentActivityList = ({
               key={run.execution_id || idx}
               run={run}
               onClick={() => onRunClick?.(run)}
+              sx={rowSx}
             />
           ))}
           {hasMore && (

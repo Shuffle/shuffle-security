@@ -95,7 +95,7 @@ export default function App() {
 
 ## The components
 
-The library exports four React components — use one or all of them. They share state, so you can mix-and-match.
+The library exports six React components — use one or all of them. They share state, so you can mix-and-match.
 
 | Component | What it does | Live demo |
 |---|---|---|
@@ -103,7 +103,9 @@ The library exports four React components — use one or all of them. They share
 | [`<AppSearchDrawer />`](#2-appsearchdrawer--full-search-drawer) | Right-side drawer wrapping `<ShuffleMCP />` plus a "Your apps" status row. This is the exact "Add Ingestion Source" drawer used in production | [/shuffle-mcp-demo §2](https://security.shuffler.io/shuffle-mcp-demo) |
 | [`<AppDetailDrawer />`](#3-appdetaildrawer--single-app-config) | Right-side drawer for a single app: list/edit/test authentications and try the MCP `tools/call` endpoint inline | [/shuffle-mcp-demo §3](https://security.shuffler.io/shuffle-mcp-demo) |
 | [`<AgentUI />`](#4-agentui--start--debug-agents) | Standalone "What do you want to do?" hero prompt + live decision-by-decision debugger for `/api/v1/agent` runs. Drop-in replacement for the legacy Shuffle Core agent page | [/agents](https://security.shuffler.io/agents) |
-| `<AgentRunDrawer />` | Right-side drawer that hosts `<AgentUI />` in compact mode plus optional caller-provided **Permissions** and **Local LLM** tabs (slot-driven, no host context required). Replaces ad-hoc "Run Agent" sidebars. | [/shuffle-mcp-demo §1b](https://security.shuffler.io/shuffle-mcp-demo) |
+| [`<AgentRunDrawer />`](#5-agentrundrawer--run-agent-side-panel) | Right-side drawer that hosts `<AgentUI />` in compact mode plus optional caller-provided **Permissions** and **Local LLM** tabs (slot-driven, no host context required) | [/shuffle-mcp-demo §1b](https://security.shuffler.io/shuffle-mcp-demo) |
+| [`<AgentActivityList />`](#6-agentactivitylist--past-executions) | Searchable, status-filterable list of past `/api/v1/agent` runs. Pair with `<AgentExecutionDrawer />` to inspect any row in the canonical Simple/Detailed view | [/shuffle-mcp-demo §8](https://security.shuffler.io/shuffle-mcp-demo) |
+| [`<AgentExecutionDrawer />`](#7-agentexecutiondrawer--inspect-one-run) | Right-side drawer that pre-loads a single `AgentRun` into `<AgentUI />` (no `authorization` token required) for read-only inspection | [/agents](https://security.shuffler.io/agents) |
 
 ### 1. `<ShuffleMCP />` — inline search
 
@@ -248,8 +250,102 @@ Useful props:
 | `compact` / `hideHeroIcon` / `hideAppPicker` / `hideAttach` | `boolean` | Layout switches for embedding |
 | `maxWidth` | `number` | Max width of the centered card. Default `900` |
 | `onRun` | `(info) => void` | Fires whenever a run finishes (success or failure) |
+| `className` / `sx` / `contentSx` | `string` / `SxProps` | Style overrides for the root container and inner content column |
 
 Reference page in production: [`src/pages/dashboard/AgentsPage.tsx`](../pages/dashboard/AgentsPage.tsx) (mounted at [`/agents`](https://security.shuffler.io/agents)).
+
+### 5. `<AgentRunDrawer />` — Run Agent side panel
+
+Right-side drawer that embeds `<AgentUI />` in compact mode, with optional **Permissions** and **Local LLM** tabs you fill via slots. Zero host-app context required — pass `apiKey` / `apiBaseUrl` / `orgId` through `agentUIProps` to authenticate.
+
+```tsx
+import { useState } from 'react';
+import { AgentRunDrawer } from 'shuffle-mcps';
+
+const [open, setOpen] = useState(false);
+
+<AgentRunDrawer
+  open={open}
+  onClose={() => setOpen(false)}
+  agentUIProps={{ apiKey: user.apiKey, orgId: user.orgId }}
+  permissionsSlot={<MyPermissionsPanel />}   // optional — tab is hidden when omitted
+  localLLMSlot={<MyLocalLLMConfig />}        // optional — tab is hidden when omitted
+/>
+```
+
+Useful props:
+
+| Prop | Type | Description |
+|---|---|---|
+| `open` / `onClose` | `boolean` / `() => void` | Controlled open state |
+| `initialTab` | `'run' \| 'permissions' \| 'localLLM'` | Tab focused on open. Default `'run'` |
+| `permissionsSlot` / `localLLMSlot` | `ReactNode` | Render content for the optional tabs. Tab is hidden when omitted |
+| `agentUIProps` | `Partial<AgentUIProps>` | Forwarded to the embedded `<AgentUI />` |
+| `width` | `number` | Drawer width in px. Default `520` |
+| `title` / `subtitle` | `string` | Header copy |
+| `className` / `paperSx` / `headerSx` / `tabsSx` / `bodySx` | `string` / `SxProps` | Style overrides for the Drawer Paper, header bar, tab strip, and body container |
+
+### 6. `<AgentActivityList />` — past executions
+
+Searchable, status-filterable list of past `/api/v1/agent` runs. The component owns its own fetch + pagination loop. `onRunClick` lets the caller decide what happens on row click — typically opening `<AgentExecutionDrawer />`.
+
+```tsx
+import { useState } from 'react';
+import { AgentActivityList, AgentExecutionDrawer, type AgentRun } from 'shuffle-mcps';
+
+const [selectedRun, setSelectedRun] = useState<AgentRun | null>(null);
+
+<>
+  <AgentActivityList
+    apiKey={user.apiKey}
+    orgId={user.orgId}
+    onRunClick={setSelectedRun}
+  />
+
+  <AgentExecutionDrawer
+    open={!!selectedRun}
+    onClose={() => setSelectedRun(null)}
+    run={selectedRun}
+    apiKey={user.apiKey}
+    orgId={user.orgId}
+  />
+</>
+```
+
+Useful props:
+
+| Prop | Type | Description |
+|---|---|---|
+| `apiKey` / `apiBaseUrl` / `orgId` | `string` | Auth — same fallback semantics as `<AgentUI />` |
+| `onRunClick` | `(run: AgentRun) => void` | Row click handler |
+| `showSearchBar` / `showStatusChips` | `boolean` | Toggle the toolbar pieces. Default `true` |
+| `limit` | `number` | Page size. Default `50` |
+| `emptyTitle` / `emptySubtitle` | `string` | Empty-state copy |
+| `className` / `sx` / `toolbarSx` / `rowSx` | `string` / `SxProps` | Style overrides for the root container, toolbar, and each run row |
+
+### 7. `<AgentExecutionDrawer />` — inspect one run
+
+Right-side drawer that pre-loads a single `AgentRun` into `<AgentUI />` so you can inspect the Simple/Detailed view of any past execution without an `authorization` token.
+
+```tsx
+<AgentExecutionDrawer
+  open={!!selectedRun}
+  onClose={() => setSelectedRun(null)}
+  run={selectedRun}
+  apiKey={user.apiKey}
+  orgId={user.orgId}
+/>
+```
+
+Useful props:
+
+| Prop | Type | Description |
+|---|---|---|
+| `open` / `onClose` | `boolean` / `() => void` | Controlled open state |
+| `run` | `AgentRun \| null` | The run to display. When `null` and `open=true`, the drawer renders empty |
+| `width` | `number` | Drawer width in px. Default `720` |
+| `apiKey` / `apiBaseUrl` / `orgId` | `string` | Forwarded to the embedded `<AgentUI />` |
+| `className` / `paperSx` / `headerSx` / `bodySx` | `string` / `SxProps` | Style overrides for the Drawer Paper, header bar, and body container |
 
 ### Predefined search
 
@@ -363,6 +459,18 @@ For finer-grained overrides on `<ShuffleMCP />`, pass `customStyles` — every s
     input: { fontFamily: 'Inter, sans-serif' },
     gridItem: { background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' },
   }}
+/>
+```
+
+For the agent components (`<AgentUI />`, `<AgentRunDrawer />`, `<AgentExecutionDrawer />`, `<AgentActivityList />`), every entity in the layout is overridable via MUI `sx` props plus a `className` on the root. The slots are listed per-component in the tables above — typically `sx` (root), `paperSx` (drawer surface), `headerSx`, `tabsSx` / `toolbarSx`, `bodySx`, and `rowSx`. Each one accepts the standard `SxProps<Theme>` shape and is **merged on top of** the defaults, so you only specify what you want to change:
+
+```tsx
+<AgentRunDrawer
+  open={open}
+  onClose={() => setOpen(false)}
+  paperSx={{ background: 'hsl(var(--background))', boxShadow: 'none' }}
+  headerSx={{ py: 1.5 }}
+  tabsSx={{ '& .MuiTabs-indicator': { display: 'none' } }}
 />
 ```
 

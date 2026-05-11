@@ -9,6 +9,7 @@
  */
 
 import { Box, Drawer, IconButton, Tooltip, Typography } from '@mui/material';
+import type { SxProps, Theme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 
 import AgentUI from './AgentUI';
@@ -34,6 +35,14 @@ export interface AgentExecutionDrawerProps {
   apiBaseUrl?: string;
   /** Optional Shuffle Org ID, forwarded to the embedded AgentUI. */
   orgId?: string;
+  /** Optional className forwarded to the Drawer Paper. */
+  className?: string;
+  /** Style overrides merged into the Drawer Paper sx. */
+  paperSx?: SxProps<Theme>;
+  /** Style overrides for the header bar. */
+  headerSx?: SxProps<Theme>;
+  /** Style overrides for the body container that wraps the embedded AgentUI. */
+  bodySx?: SxProps<Theme>;
 }
 
 const AgentExecutionDrawer = ({
@@ -44,6 +53,10 @@ const AgentExecutionDrawer = ({
   apiKey,
   apiBaseUrl,
   orgId,
+  className,
+  paperSx,
+  headerSx,
+  bodySx,
 }: AgentExecutionDrawerProps) => {
   const statusKey = (run?.status || '').toUpperCase();
   const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.WAITING;
@@ -56,31 +69,38 @@ const AgentExecutionDrawer = ({
       onClose={onClose}
       slotProps={{
         paper: {
-          sx: {
-            width: { xs: '100%', sm: width },
-            maxWidth: '100vw',
-            bgcolor: 'hsl(var(--background))',
-            color: 'hsl(var(--foreground))',
-            backgroundImage: 'none',
-            borderLeft: '1px solid hsl(var(--border))',
-          },
+          className,
+          sx: [
+            {
+              width: { xs: '100%', sm: width },
+              maxWidth: '100vw',
+              bgcolor: 'hsl(var(--background))',
+              color: 'hsl(var(--foreground))',
+              backgroundImage: 'none',
+              borderLeft: '1px solid hsl(var(--border))',
+            },
+            ...(Array.isArray(paperSx) ? paperSx : paperSx ? [paperSx] : []),
+          ],
         },
       }}
     >
       {/* Header */}
       <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1.5,
-          px: 2.5,
-          py: 1.75,
-          borderBottom: '1px solid hsl(var(--border))',
-          position: 'sticky',
-          top: 0,
-          zIndex: 2,
-          bgcolor: 'hsl(var(--background))',
-        }}
+        sx={[
+          {
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            px: 2.5,
+            py: 1.75,
+            borderBottom: '1px solid hsl(var(--border))',
+            position: 'sticky',
+            top: 0,
+            zIndex: 2,
+            bgcolor: 'hsl(var(--background))',
+          },
+          ...(Array.isArray(headerSx) ? headerSx : headerSx ? [headerSx] : []),
+        ]}
       >
         <Box
           sx={{
@@ -160,7 +180,7 @@ const AgentExecutionDrawer = ({
       </Box>
 
       {/* Body — embedded AgentUI seeded with the pre-loaded run */}
-      <Box sx={{ flex: 1, overflowY: 'auto', pt: 3 }}>
+      <Box sx={[{ flex: 1, overflowY: 'auto', pt: 3 }, ...(Array.isArray(bodySx) ? bodySx : bodySx ? [bodySx] : [])]}>
         {run ? (
           <AgentUI
             key={run.execution_id}

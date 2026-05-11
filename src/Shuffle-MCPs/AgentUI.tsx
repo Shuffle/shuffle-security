@@ -34,6 +34,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import type { SxProps, Theme } from '@mui/material/styles';
 import AddIcon from '@mui/icons-material/Add';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -216,6 +217,12 @@ export interface AgentUIProps {
   apiBaseUrl?: string;
   /** Optional Shuffle Org ID — sent as the `Org-Id` header on every call. */
   orgId?: string;
+  /** Optional className forwarded to the root container. */
+  className?: string;
+  /** Style overrides merged into the root container sx. */
+  sx?: SxProps<Theme>;
+  /** Style overrides for the inner content card (the column under the run-switcher). */
+  contentSx?: SxProps<Theme>;
 }
 
 interface ExecutionData {
@@ -764,6 +771,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
   apiKey,
   apiBaseUrl,
   orgId,
+  className,
+  sx,
+  contentSx,
 }) => {
   // Per-instance API target. Props win over the shared API_CONFIG so the
   // component can be embedded against a different Shuffle backend without
@@ -1803,8 +1813,19 @@ const AgentUI: React.FC<AgentUIProps> = ({
 
   // ── Render ──
   return (
-    <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', pb: 4 }}>
-      <Box sx={{ width: '100%', maxWidth, display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <Box
+      className={className}
+      sx={[
+        { width: '100%', display: 'flex', justifyContent: 'center', pb: 4 },
+        ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
+      ]}
+    >
+      <Box
+        sx={[
+          { width: '100%', maxWidth, display: 'flex', flexDirection: 'column', gap: 3 },
+          ...(Array.isArray(contentSx) ? contentSx : contentSx ? [contentSx] : []),
+        ]}
+      >
         {showRunSwitcher && tabBar}
         {showStarter ? (
           <Box
