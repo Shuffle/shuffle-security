@@ -9173,7 +9173,7 @@ const IncidentDetailPage = () => {
       </AlertDialog>
 
       {/* Agent execution drawer — opened when clicking an agent row in the timeline */}
-      <AgentActionDrawer
+      <AgentExecutionDrawer
         open={!!selectedAgentRun}
         onClose={() => setSelectedAgentRun(null)}
         run={selectedAgentRun}
