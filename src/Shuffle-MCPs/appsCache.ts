@@ -91,7 +91,6 @@ export const invalidateAppsCache = (opts?: FetchAppsOptions) => {
  * Convenience wrapper for callers that already use API_CONFIG / getAuthHeader.
  * Coalesces against the same cache as `fetchApps`.
  */
-import { API_CONFIG, getAuthHeader } from './api';
 
 export const fetchAppsViaApiConfig = (): Promise<any[]> => {
   const headers = getAuthHeader();
