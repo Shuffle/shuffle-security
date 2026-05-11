@@ -261,15 +261,122 @@ function CodeBlock({ code }: { code: string }) {
   );
 }
 
+type ApiEndpoint = { method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'ALGOLIA'; path: string; description?: string };
+
+const METHOD_COLORS: Record<ApiEndpoint['method'], string> = {
+  GET: 'hsl(142 60% 55%)',
+  POST: 'hsl(40 90% 65%)',
+  PUT: 'hsl(210 80% 65%)',
+  DELETE: 'hsl(0 75% 65%)',
+  ALGOLIA: 'hsl(280 70% 70%)',
+};
+
+function ApiPanel({ apis }: { apis: ApiEndpoint[] }) {
+  return (
+    <Box
+      sx={{
+        mt: 2,
+        borderRadius: 1.5,
+        border: '1px solid hsl(var(--border))',
+        backgroundColor: 'hsl(var(--muted) / 0.4)',
+        p: 2,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        minWidth: 0,
+      }}
+    >
+      <Typography
+        variant="caption"
+        sx={{
+          fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+          fontSize: '0.7rem',
+          textTransform: 'uppercase',
+          letterSpacing: '0.08em',
+          color: 'hsl(var(--muted-foreground))',
+          mb: 1.25,
+        }}
+      >
+        Backend APIs called
+      </Typography>
+      <Stack spacing={1}>
+        {apis.map((api, i) => (
+          <Box key={i} sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+              <Box
+                component="span"
+                sx={{
+                  fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+                  fontSize: '0.68rem',
+                  fontWeight: 700,
+                  color: METHOD_COLORS[api.method],
+                  border: `1px solid ${METHOD_COLORS[api.method]}`,
+                  borderRadius: 0.5,
+                  px: 0.6,
+                  py: 0.05,
+                  flexShrink: 0,
+                  letterSpacing: '0.04em',
+                }}
+              >
+                {api.method}
+              </Box>
+              <Box
+                component="code"
+                sx={{
+                  fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+                  fontSize: '0.75rem',
+                  color: 'hsl(var(--foreground))',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+                title={api.path}
+              >
+                {api.path}
+              </Box>
+            </Box>
+            {api.description && (
+              <Typography
+                variant="caption"
+                sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem', pl: 0.25 }}
+              >
+                {api.description}
+              </Typography>
+            )}
+          </Box>
+        ))}
+      </Stack>
+      <Box sx={{ flex: 1 }} />
+      <Typography
+        variant="caption"
+        sx={{ mt: 1.5, color: 'hsl(var(--muted-foreground))', fontSize: '0.68rem' }}
+      >
+        Full reference:{' '}
+        <Box
+          component="a"
+          href="https://shuffler.io/docs/API"
+          target="_blank"
+          rel="noopener noreferrer"
+          sx={{ color: 'hsl(var(--primary))', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+        >
+          shuffler.io/docs/API
+        </Box>
+      </Typography>
+    </Box>
+  );
+}
+
 function DemoSection({
   title,
   description,
   code,
+  apis,
   children,
 }: {
   title: string;
   description: ReactNode;
   code: string;
+  apis?: ApiEndpoint[];
   children: ReactNode;
 }) {
   const [showCode, setShowCode] = useState(false);
@@ -309,7 +416,37 @@ function DemoSection({
       </Box>
 
       <Collapse in={showCode} unmountOnExit>
-        <CodeBlock code={code} />
+        {apis && apis.length > 0 ? (
+          <Box
+            sx={{
+              display: 'grid',
+              gap: 2,
+              gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1.6fr) minmax(0, 1fr)' },
+              alignItems: 'stretch',
+            }}
+          >
+            <Box sx={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  mt: 2,
+                  mb: -1,
+                  fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+                  fontSize: '0.7rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  color: 'hsl(var(--muted-foreground))',
+                }}
+              >
+                Frontend (React)
+              </Typography>
+              <CodeBlock code={code} />
+            </Box>
+            <ApiPanel apis={apis} />
+          </Box>
+        ) : (
+          <CodeBlock code={code} />
+        )}
       </Collapse>
     </Paper>
   );
@@ -600,6 +737,13 @@ const ShuffleMcpTestPage = () => {
           title="1. Agent UI — start &amp; debug"
           description={<><code>&lt;AgentUI /&gt;</code> — modern hero "What do you want to do?" prompt with MCP/app chips, plus a live decision timeline for debugging in-flight runs. Resumes from <code>?execution_id&amp;authorization</code> URL params. <Box component="button" type="button" onClick={scrollToActivity} sx={{ all: 'unset', cursor: 'pointer', color: 'hsl(var(--primary))', '&:hover': { textDecoration: 'underline' } }}>View past executions ↓</Box></>}
           code={SNIPPET_AGENT_UI}
+          apis={[
+            { method: 'POST', path: '/api/v1/agent', description: 'Submit prompt + selected MCP/app chips' },
+            { method: 'GET', path: '/api/v1/streams/results', description: 'Live decision-by-decision timeline' },
+            { method: 'GET', path: '/api/v1/apps/authentication', description: 'Resolve user-authenticated apps for chips' },
+            { method: 'GET', path: '/api/v1/apps/:id/config', description: 'Enrich chip metadata (icon, categories)' },
+            { method: 'POST', path: '/api/v1/apps/agent/run', description: 'Rerun a previous decision' },
+          ]}
         >
           <AgentUI maxWidth={820} />
         </DemoSection>
@@ -616,7 +760,12 @@ const [open, setOpen] = useState(false);
 <>
   <Button variant="contained" onClick={() => setOpen(true)}>Open Agent</Button>
   <AgentRunDrawer open={open} onClose={() => setOpen(false)} />
-</>`}
+          </>`}
+          apis={[
+            { method: 'POST', path: '/api/v1/agent', description: 'Submit prompt from the embedded AgentUI' },
+            { method: 'GET', path: '/api/v1/streams/results', description: 'Live decision timeline' },
+            { method: 'GET', path: '/api/v1/apps/authentication', description: 'Connected apps for the chips picker' },
+          ]}
         >
           <AgentRunDrawerDemo />
         </DemoSection>
@@ -625,6 +774,11 @@ const [open, setOpen] = useState(false);
           title="2. Inline search"
           description={<><code>&lt;ShuffleMCP /&gt;</code> — Algolia + private apps merged into one searchable list.</>}
           code={SNIPPET_INLINE_SEARCH}
+          apis={[
+            { method: 'ALGOLIA', path: 'appsearch index', description: 'Public 3k+ app catalog (Algolia search)' },
+            { method: 'GET', path: '/api/v1/apps', description: 'User-private apps merged into results (when apiKey is set)' },
+            { method: 'GET', path: '/api/v1/apps/authentication', description: 'Status dots: validated / configured / inactive' },
+          ]}
         >
           <ShuffleMCP
             inline
@@ -639,6 +793,11 @@ const [open, setOpen] = useState(false);
           title="3. Search drawer"
           description={<><code>&lt;AppSearchDrawer /&gt;</code> — the exact same drawer used on /incidents → "Add Ingestion Source".</>}
           code={SNIPPET_SEARCH_DRAWER}
+          apis={[
+            { method: 'ALGOLIA', path: 'appsearch index', description: 'Catalog search inside the drawer' },
+            { method: 'GET', path: '/api/v1/apps', description: 'Merged private apps' },
+            { method: 'GET', path: '/api/v1/apps/authentication', description: 'Auth status per result' },
+          ]}
         >
           <Button variant="contained" onClick={() => setSearchOpen(true)}>
             Open search drawer
@@ -649,6 +808,12 @@ const [open, setOpen] = useState(false);
           title="4. App detail / config drawer"
           description={<><code>&lt;AppDetailDrawer /&gt;</code> — auth + MCP "try it out" for a single app.</>}
           code={SNIPPET_DETAIL_DRAWER}
+          apis={[
+            { method: 'GET', path: '/api/v1/apps/:id/config', description: 'Resolve app metadata + auth schema' },
+            { method: 'GET', path: '/api/v1/apps/authentication', description: 'Existing auth entries for this app' },
+            { method: 'POST', path: '/api/v1/apps/authentication', description: 'Save / update auth' },
+            { method: 'POST', path: '/api/v1/apps/:name/mcp', description: 'Power the embedded "Try MCP" chat' },
+          ]}
         >
           <Stack direction="row" spacing={1}>
             {['Gmail', 'Slack', 'VirusTotal'].map(name => (
@@ -663,6 +828,13 @@ const [open, setOpen] = useState(false);
           title="5. Authentication (standalone)"
           description={<><code>&lt;AppAuthSection /&gt;</code> + <code>useAppLookup()</code> — drop the auth card anywhere by passing just an app name.</>}
           code={SNIPPET_AUTH_SECTION}
+          apis={[
+            { method: 'GET', path: '/api/v1/apps/:id/config', description: 'Auth field schema (apikey, oauth2, basic, …)' },
+            { method: 'GET', path: '/api/v1/apps/authentication', description: 'Existing entries for this app' },
+            { method: 'POST', path: '/api/v1/apps/authentication', description: 'Create or update an auth entry' },
+            { method: 'PUT', path: '/api/v1/apps/authentication/:id', description: 'Rename / edit existing auth' },
+            { method: 'GET', path: '/api/v1/docs/:name?location=openapi', description: 'OpenAPI spec for the app' },
+          ]}
         >
           <AppNamePicker value={authApp} onChange={setAuthApp} />
           <AuthSectionDemo appName={authApp} />
@@ -672,6 +844,10 @@ const [open, setOpen] = useState(false);
           title="6. Try MCP (standalone)"
           description={<><code>&lt;TryMcpSection /&gt;</code> — chat against an app's MCP tools. Resolves icon + id from the app name.</>}
           code={SNIPPET_TRY_MCP}
+          apis={[
+            { method: 'POST', path: '/api/v1/apps/:name/mcp', description: 'Send a chat message to the app\'s MCP tools' },
+            { method: 'GET', path: '/api/v1/apps/:id/config', description: 'Resolve icon, categories, auth' },
+          ]}
         >
           <AppNamePicker value={mcpApp} onChange={setMcpApp} />
           <TryMcpDemo appName={mcpApp} />
@@ -681,6 +857,11 @@ const [open, setOpen] = useState(false);
           title="7. Try individual actions (standalone)"
           description={<><code>&lt;SingulActionsPreview /&gt;</code> — full curl/python catalog with Play. Sorts the app's category to the top.</>}
           code={SNIPPET_TRY_ACTIONS}
+          apis={[
+            { method: 'POST', path: '/api/v1/singul', description: 'Execute a Singul-mapped action across any app' },
+            { method: 'POST', path: '/api/v1/apps/:id/run', description: 'Direct app action runner' },
+            { method: 'GET', path: '/api/v1/apps/:id/config', description: 'Categories + action catalog' },
+          ]}
         >
           <AppNamePicker value={actionsApp} onChange={setActionsApp} />
           <TryActionsDemo appName={actionsApp} />
@@ -703,7 +884,11 @@ const [run, setRun] = useState<AgentRun | null>(null);
     onClose={() => setRun(null)}
     run={run}
   />
-</>`}
+  </>`}
+            apis={[
+              { method: 'POST', path: '/api/v1/workflows/search', description: 'Paginated past agent runs' },
+              { method: 'GET', path: '/api/v1/streams/results', description: 'Inspect a single execution on row click' },
+            ]}
           >
             <AgentActivityList onRunClick={setSelectedRun} />
           </DemoSection>
