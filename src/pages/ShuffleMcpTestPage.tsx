@@ -857,6 +857,11 @@ const [open, setOpen] = useState(false);
           title="7. Try individual actions (standalone)"
           description={<><code>&lt;SingulActionsPreview /&gt;</code> — full curl/python catalog with Play. Sorts the app's category to the top.</>}
           code={SNIPPET_TRY_ACTIONS}
+          apis={[
+            { method: 'POST', path: '/api/v1/singul', description: 'Execute a Singul-mapped action across any app' },
+            { method: 'POST', path: '/api/v1/apps/:id/run', description: 'Direct app action runner' },
+            { method: 'GET', path: '/api/v1/apps/:id/config', description: 'Categories + action catalog' },
+          ]}
         >
           <AppNamePicker value={actionsApp} onChange={setActionsApp} />
           <TryActionsDemo appName={actionsApp} />
