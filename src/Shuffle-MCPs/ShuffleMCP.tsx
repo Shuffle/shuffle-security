@@ -594,7 +594,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
                 {displayResults.map((app, index) => renderAppItem(app, index))}
                 <div className="singul-end-of-results" style={{
                   padding: '10px 16px',
-                  color: 'rgba(255, 255, 255, 0.3)',
+                  color: 'hsl(var(--foreground) / 0.3)',
                   textAlign: 'center' as const,
                   fontSize: '11px',
                   gridColumn: '1 / -1',
