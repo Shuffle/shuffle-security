@@ -165,6 +165,12 @@ export interface AppAuthCardProps {
   onRefreshAuth?: () => Promise<void> | void;
   /** When true, do NOT auto-fill URL fields with the param.example value. */
   disableUrlPrefill?: boolean;
+  /** Hide the entire card header row (app icon, name, description, chips, docs, expand). Body stays expanded. */
+  hideHeader?: boolean;
+  /** Hide the "Configured / Not configured" and "Tested / Not tested" chips. */
+  hideStatusChips?: boolean;
+  /** Hide the documentation (book icon) link. */
+  hideDocsLink?: boolean;
 }
 
 const containerVariants = {
