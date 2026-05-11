@@ -256,8 +256,6 @@ const HostTerminalPage = () => {
       const startedAt = Date.now();
       const entryId = `${startedAt}-demo`;
       try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
-        const { terminalStorageKey, readStoredSession } = require('@/utils/terminalStorageKey');
         const key = terminalStorageKey(hostUuid);
         const stored = readStoredSession(hostUuid);
         stored.push({
