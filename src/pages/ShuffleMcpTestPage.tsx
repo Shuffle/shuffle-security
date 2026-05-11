@@ -884,7 +884,11 @@ const [run, setRun] = useState<AgentRun | null>(null);
     onClose={() => setRun(null)}
     run={run}
   />
-</>`}
+  </>`}
+            apis={[
+              { method: 'POST', path: '/api/v1/workflows/search', description: 'Paginated past agent runs' },
+              { method: 'GET', path: '/api/v1/streams/results', description: 'Inspect a single execution on row click' },
+            ]}
           >
             <AgentActivityList onRunClick={setSelectedRun} />
           </DemoSection>
