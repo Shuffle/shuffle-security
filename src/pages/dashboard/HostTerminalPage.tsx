@@ -289,6 +289,9 @@ const HostTerminalPage = () => {
   const [loadingEntries, setLoadingEntries] = useState<Set<number>>(new Set());
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
   const pollingActiveRef = useRef<Map<string, boolean>>(new Map());
+  // Tracks entries we've already auto-sideloaded full results for, so we don't
+  // re-fetch on every re-render when the user keeps a truncated entry expanded.
+  const autoSideloadedRef = useRef<Set<number>>(new Set());
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [pendingDisableRce, setPendingDisableRce] = useState<null | { actionId: string; actionName: string; isPredefined: boolean }>(null);
