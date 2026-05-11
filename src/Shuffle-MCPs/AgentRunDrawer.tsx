@@ -122,19 +122,21 @@ const AgentRunDrawer = ({
       anchor="right"
       open={open}
       onClose={onClose}
-      PaperProps={{
-        className,
-        sx: [
-          {
-            width: { xs: '100%', sm: width },
-            background: 'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)',
-            borderLeft: '1px solid hsl(var(--border))',
-            boxShadow: '-8px 0 32px hsla(0, 0%, 0%, 0.4)',
-            display: 'flex',
-            flexDirection: 'column',
-          },
-          ...(Array.isArray(paperSx) ? paperSx : paperSx ? [paperSx] : []),
-        ],
+      slotProps={{
+        paper: {
+          className,
+          sx: [
+            {
+              width: { xs: '100%', sm: width },
+              background: 'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)',
+              borderLeft: '1px solid hsl(var(--border))',
+              boxShadow: '-8px 0 32px hsla(0, 0%, 0%, 0.4)',
+              display: 'flex',
+              flexDirection: 'column',
+            },
+            ...(Array.isArray(paperSx) ? paperSx : paperSx ? [paperSx] : []),
+          ],
+        },
       }}
     >
       {/* Header */}
