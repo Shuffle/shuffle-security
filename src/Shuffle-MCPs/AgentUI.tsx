@@ -749,6 +749,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   compact = false,
   hideAppPicker = false,
   hideAttach = false,
+  disableStartTab = false,
   appPickerLabel = 'Select Apps / MCPs',
   appPickerTitle = 'Select Apps / MCPs',
   appPickerSubtitle = 'Pick the tools the agent is allowed to use for this run',
