@@ -635,7 +635,7 @@ const statusChipSx = (token: string) => ({
 });
 
 const drawerPaperSx = {
-  width: { xs: '100%', sm: 440 },
+  width: { xs: '100%', sm: 720 },
   bgcolor: 'hsl(var(--background))',
   backgroundImage: 'none',
   borderLeft: '1px solid hsl(var(--border))',
