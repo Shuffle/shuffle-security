@@ -15,13 +15,23 @@ Turn 3,000+ SaaS tools into MCP servers your agents can use. One search, one cli
 
 <table align="center">
   <tr>
+      <td align="center" width="50%">
+        <img src="https://github.com/user-attachments/assets/930d7e2b-61b4-4b1c-b90b-37a55cb6a98d" alt="Easy MCP debugger" width="380" style="border-radius: 12px;" />
+        <br/><sub><b>1. Easy to try out</b></sub>
+      </td> 
+      <td align="center" width="50%">
+        <img src="https://github.com/user-attachments/assets/ce7f650c-61f7-4b68-bc40-724283e684f4" alt="Easy MCP debugger" width="380" style="border-radius: 12px;" />
+        <br/><sub><b>2. Debugger with timeline</b></sub>
+      </td> 
+  </tr>
+  <tr>
     <td align="center" width="50%">
       <img src="https://security.shuffler.io/mcp/search-preview.png" alt="Search 3,000+ integrations" width="380" style="border-radius: 12px;" />
-      <br/><sub><b>1. Search any of 3,000+ tools</b></sub>
+      <br/><sub><b>2. Search any of 3,000+ tools</b></sub>
     </td>
     <td align="center" width="50%">
       <img src="https://security.shuffler.io/mcp/app-detail-preview.png" alt="Authenticate and use as MCP" width="380" style="border-radius: 12px;" />
-      <br/><sub><b>2. Authenticate — your agent uses it instantly</b></sub>
+      <br/><sub><b>3. Authenticate — your agent uses it instantly</b></sub>
     </td>
   </tr>
 </table>
