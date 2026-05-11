@@ -8,7 +8,7 @@ import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { fetchHostSupplements } from '@/lib/mergeMonitorHosts';
 import { getActiveUser, inferAgentPrivilege, type AgentPrivilege } from '@/components/monitors/hostActionDefinitions';
-import { registerHostIdentity } from '@/utils/terminalStorageKey';
+import { registerHostIdentity, terminalStorageKey, readStoredSession } from '@/utils/terminalStorageKey';
 import { hostUrlSegment, parseHostUrlSegment } from '@/utils/hostUrlSegment';
 import { useHostActions, type ActionDebugEntry } from '@/hooks/useHostActions';
 import { HostTerminalView } from '@/components/monitors/HostTerminalView';
