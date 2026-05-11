@@ -205,14 +205,8 @@ export default function AppDetailDrawer({
       let appsList: any[] | null = null;
       if (API_CONFIG.apiKey) {
         try {
-          const res = await fetch(getApiUrl('/api/v1/apps'), {
-            credentials: 'include',
-            headers: { ...getAuthHeader() },
-          });
-          if (res.ok) {
-            const apps = await res.json();
-            if (Array.isArray(apps)) appsList = apps;
-          }
+          const apps = await fetchAppsViaApiConfig();
+          if (Array.isArray(apps)) appsList = apps;
         } catch {}
       }
 
