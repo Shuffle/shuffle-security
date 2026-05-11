@@ -3,7 +3,7 @@
  * Selecting an app opens the AppDetailDrawer for full configuration.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Typography, IconButton, Drawer, Avatar, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -123,6 +123,10 @@ interface AppSearchDrawerProps {
   connectionPathApps?: ConnectionPathApp[];
   /** Apps to pin at the top of the ShuffleMCP search results (deduped by name). */
   pinnedApps?: Array<{ name: string; image_url: string; categories?: string[]; objectID?: string }>;
+  /** Highlight (pulsing ring) the matching app card after `highlightDelayMs` */
+  highlightAppName?: string;
+  /** Delay before the highlight kicks in (default 5000ms) */
+  highlightDelayMs?: number;
 }
 
 export default function AppSearchDrawer({
@@ -141,9 +145,21 @@ export default function AppSearchDrawer({
   priorityCategory,
   connectionPathApps,
   pinnedApps,
+  highlightAppName,
+  highlightDelayMs = 5000,
 }: AppSearchDrawerProps) {
   const [detailAppName, setDetailAppName] = useState<string | null>(null);
   const [detailAppId, setDetailAppId] = useState<string | null>(null);
+  const [highlightActive, setHighlightActive] = useState(false);
+
+  // Activate highlight only after the delay, so users get a chance to find
+  // the app on their own before we draw attention to it.
+  useEffect(() => {
+    setHighlightActive(false);
+    if (!open || !highlightAppName) return;
+    const t = setTimeout(() => setHighlightActive(true), highlightDelayMs);
+    return () => clearTimeout(t);
+  }, [open, highlightAppName, highlightDelayMs]);
 
   const handleClose = () => {
     setDetailAppName(null);
@@ -316,6 +332,17 @@ export default function AppSearchDrawer({
                 borderRadius: 8,
                 padding: 4,
               },
+              ...(highlightActive && highlightAppName ? {
+                [`& .singul-dropdown-item[data-app-name="${highlightAppName}"]`]: {
+                  borderColor: 'hsl(var(--primary)) !important',
+                  boxShadow: '0 0 0 2px hsl(var(--primary)), 0 0 18px 2px hsl(var(--primary) / 0.55)',
+                  animation: 'shuffleHighlightPulse 1.6s ease-in-out infinite',
+                },
+                '@keyframes shuffleHighlightPulse': {
+                  '0%, 100%': { boxShadow: '0 0 0 2px hsl(var(--primary)), 0 0 12px 1px hsl(var(--primary) / 0.4)' },
+                  '50%': { boxShadow: '0 0 0 2px hsl(var(--primary)), 0 0 24px 4px hsl(var(--primary) / 0.75)' },
+                },
+              } : {}),
             }}
           >
             <AnimatePresence mode="wait">

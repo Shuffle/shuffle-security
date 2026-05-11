@@ -499,9 +499,10 @@ const IncidentsPage = () => {
    // automation row down to the bare minimum: webhook + the highlighted "+"
    // button. Existing ingest icons, the arrow, and the entire Forward section
    // are hidden so the user can't be distracted from the one click we want.
-   const { active: demoActive, drawerOpen: demoDrawerOpen, step: demoStep, markStepCompleted, setStepCompleted } = useDemo();
+   const { active: demoActive, drawerOpen: demoDrawerOpen, step: demoStep, completedSteps: demoCompletedSteps, markStepCompleted, setStepCompleted } = useDemo();
    const demoStepId = TOUR_STEPS[demoStep]?.id;
    const isAddOutlookStep = demoActive && demoDrawerOpen && demoStepId === 'add-outlook';
+   const shouldHighlightOutlook = isAddOutlookStep && !demoCompletedSteps['add-outlook:outlook'];
 
    // Reconcile sub-goal completion with whatever apps are already injected.
    // Otherwise, returning to the tour after a reload would leave the goals
@@ -3217,6 +3218,7 @@ const IncidentsPage = () => {
             objectID: 'demo-microsoft-365-defender',
           },
         ] : undefined}
+        highlightAppName={shouldHighlightOutlook ? 'Outlook_Office365' : undefined}
         onSelectOverride={isAddOutlookStep ? (app) => {
           // Pretend-authenticate flow: only Outlook Office365 or Microsoft
           // 365 Defender advance the tour. Anything else falls through to the

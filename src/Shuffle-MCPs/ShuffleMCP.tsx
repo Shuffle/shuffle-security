@@ -434,6 +434,8 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
       <div
         key={app.objectID}
         className={`singul-dropdown-item ${selected ? 'singul-selected' : ''} ${authState.validated ? 'singul-validated' : ''} ${authState.configured ? 'singul-configured' : ''}`}
+        data-app-name={app.name}
+        data-object-id={app.objectID}
         style={{
           ...customStyles.dropdownItem,
           ...(selected ? customStyles.selectedItem : {}),
