@@ -1310,6 +1310,21 @@ const AgentUI: React.FC<AgentUIProps> = ({
       const n = Number(t) || 0;
       return n > 1e12 ? Math.floor(n / 1000) : n;
     };
+    const overallStatus = (execution?.status || agentData?.status || '').toUpperCase();
+    const runIsFinished = ['FINISHED', 'FAILURE', 'ABORTED', 'CANCELLED', 'CANCELED'].includes(overallStatus);
+    const runEndSec = toSec(agentData?.completed_at || execution?.completed_at);
+    // When the whole run has ended, cap any unfinished decisions at the run's
+    // end time (or the latest known timestamp) so they stop counting up.
+    let fallbackEnd = Math.floor(Date.now() / 1000);
+    if (runIsFinished) {
+      let maxKnown = runEndSec || 0;
+      for (const dec of agentData?.decisions || []) {
+        const rd = dec.run_details || {};
+        maxKnown = Math.max(maxKnown, toSec(rd.completed_at), toSec(rd.started_at));
+      }
+      fallbackEnd = maxKnown || fallbackEnd;
+    }
+
     const items: TimelineItem[] = [
       {
         label: 'AI Agent',
@@ -1332,7 +1347,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
         category: dec.category,
         status: rd.status,
         start_time: toSec(rd.started_at) || 0,
-        end_time: toSec(rd.completed_at) || Math.floor(Date.now() / 1000),
+        end_time: toSec(rd.completed_at) || fallbackEnd,
         details: dec,
       });
       if (dec.action === 'finish' || dec.category === 'finish' || dec.details?.action === 'finalise' || dec.action === 'finalise') {
