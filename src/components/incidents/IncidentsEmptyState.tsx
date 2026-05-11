@@ -10,6 +10,7 @@ import { ValidatedIngestionApp } from '@/Shuffle-MCPs/ingestionDetection';
 import { IngestionSourceButton } from './IngestionSourceButton';
 import { WebhookIngestionButton, WebhookIngestionInfo } from './WebhookIngestionButton';
 import { useEntityText } from '@/hooks/useEntityLabel';
+import { DemoModeCard } from '@/components/demo/DemoModeCard';
 
 interface IncidentsEmptyStateProps {
   ingestionApps?: ValidatedIngestionApp[];
@@ -186,6 +187,11 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
             )}
           </Box>
         )}
+
+        {/* Demo mode CTA — same component as the dashboard, compact variant */}
+        <Box sx={{ width: '100%', maxWidth: 520, mb: 3 }}>
+          <DemoModeCard compact />
+        </Box>
 
         {/* CTA buttons */}
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5 }}>

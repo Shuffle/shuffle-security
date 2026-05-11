@@ -67,7 +67,7 @@ const useLeftoverDemoCount = (active: boolean) => {
   });
 };
 
-export const DemoModeCard = () => {
+export const DemoModeCard = ({ compact = false }: { compact?: boolean } = {}) => {
   const { active, isSeeding, isCleaning, stats, startDemo, openTour, cleanup } = useDemo();
   const { userInfo } = useAuth();
   const { data: workflows } = useWorkflows();
@@ -100,24 +100,25 @@ export const DemoModeCard = () => {
     >
       <Box
         sx={{
-          mb: 4,
+          mb: compact ? 0 : 4,
           borderRadius: 2.5,
           border: '1px solid hsl(var(--primary) / 0.25)',
           background: 'linear-gradient(135deg, hsl(var(--primary) / 0.10), hsl(var(--primary) / 0.02))',
-          px: { xs: 2, sm: 2.5 },
-          py: { xs: 2.625, sm: 3.125 },
+          px: compact ? { xs: 1.5, sm: 2 } : { xs: 2, sm: 2.5 },
+          py: compact ? { xs: 1.5, sm: 1.75 } : { xs: 2.625, sm: 3.125 },
           display: 'flex',
           alignItems: { xs: 'flex-start', md: 'center' },
           flexDirection: { xs: 'column', md: 'row' },
-          gap: { xs: 1.5, md: 2 },
+          gap: compact ? { xs: 1.25, md: 1.5 } : { xs: 1.5, md: 2 },
+          textAlign: 'left',
         }}
       >
         {/* Icon */}
         <Box
           sx={{
-            width: 44,
-            height: 44,
-            borderRadius: 2,
+            width: compact ? 34 : 44,
+            height: compact ? 34 : 44,
+            borderRadius: compact ? 1.5 : 2,
             display: 'grid',
             placeItems: 'center',
             backgroundColor: 'hsl(var(--primary) / 0.15)',
@@ -125,13 +126,13 @@ export const DemoModeCard = () => {
             flexShrink: 0,
           }}
         >
-          <Sparkles size={22} />
+          <Sparkles size={compact ? 17 : 22} />
         </Box>
 
         {/* Body */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-            <Typography sx={{ fontSize: '0.95rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+            <Typography sx={{ fontSize: compact ? '0.85rem' : '0.95rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
               {active ? 'Demo mode is active' : `See the platform respond to a real ${entitySingularLower}`}
             </Typography>
             {active && (
@@ -149,7 +150,7 @@ export const DemoModeCard = () => {
               />
             )}
           </Box>
-          <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', mt: 0.5, lineHeight: 1.5 }}>
+          <Typography sx={{ fontSize: compact ? '0.74rem' : '0.8rem', color: 'hsl(var(--muted-foreground))', mt: 0.5, lineHeight: 1.5 }}>
             {active
               ? `${stats.incidents} ${entityPluralLower}, ${stats.assets} assets, ${stats.users} users loaded. Real IOCs, live enrichment and AI agents you can interact with — only the ${entitySingularLower} itself is seeded.`
               : warnReason
