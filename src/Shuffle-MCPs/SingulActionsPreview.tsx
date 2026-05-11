@@ -154,16 +154,18 @@ function pickDefaultCategory(categories?: string[]): string {
 function buildSingulCurl(
   appName: string,
   action: SingulAction | null,
-  opts?: { apiKey?: string | null; orgId?: string | null },
+  opts?: { apiKey?: string | null; orgId?: string | null; baseUrl?: string },
 ): string {
   const act = action?.name || '{action}';
   const body = {
     app: appName || '<appname>',
+    action: act,
     fields: action?.fields.length ? action.fields : [{ name: 'field1', value: 'value1' }],
   };
   const token = opts?.apiKey || 'YOUR_TOKEN';
   const orgLine = opts?.orgId ? `\n  -H "Org-Id: ${opts.orgId}" \\` : '';
-  return `curl -X POST https://singul.io/api/${act} \\
+  const base = (opts?.baseUrl || '').replace(/\/+$/, '');
+  return `curl -X POST ${base}/api/v1/singul \\
   -H "Authorization: Bearer ${token}" \\${orgLine}
   -d '${JSON.stringify(body, null, 2)}'`;
 }
@@ -305,7 +307,8 @@ const SingulActionsPreview = ({
     const apiKey = API_CONFIG.apiKey;
     const trackedOrg = getTrackedOrgId();
     const orgId = trackedOrg && activeOrgId && trackedOrg !== activeOrgId ? trackedOrg : null;
-    return { apiKey, orgId };
+    const baseUrl = API_CONFIG.baseUrl;
+    return { apiKey, orgId, baseUrl };
   }, [activeOrgId]);
 
   const buildSnippet = useCallback(
