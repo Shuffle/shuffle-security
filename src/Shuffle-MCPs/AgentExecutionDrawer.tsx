@@ -166,6 +166,23 @@ const AgentExecutionDrawer = ({
             </Box>
           )}
         </Box>
+        {run?.execution_id && (
+          <Tooltip title="Open in new tab">
+            <IconButton
+              component="a"
+              href={`/agents?execution_id=${encodeURIComponent(run.execution_id)}${run.authorization ? `&authorization=${encodeURIComponent(run.authorization)}` : ''}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              size="small"
+              sx={{
+                color: 'hsl(var(--muted-foreground))',
+                '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted))' },
+              }}
+            >
+              <OpenInNewIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
         <Tooltip title="Close">
           <IconButton
             onClick={onClose}
