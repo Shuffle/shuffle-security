@@ -944,6 +944,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
     setShowStarter(false);
     // Hard reset any prior run state so the new run starts from a clean slate.
     const browserStart = Math.floor(Date.now() / 1000);
+    activeExecutionIdRef.current = null;
     setExecution(null);
     setAgentActionResult(null);
     setOpenIndexes(new Set());
@@ -952,6 +953,16 @@ const AgentUI: React.FC<AgentUIProps> = ({
     setNowTick(browserStart);
     setLocalRunStart(browserStart);
     setAgentData({ original_input: text.trim() });
+    // Strip any prior execution_id from the URL immediately so a refresh or
+    // restored URL state cannot resurrect the previous run.
+    if (readUrlParams && typeof window !== 'undefined') {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('execution_id');
+        url.searchParams.delete('authorization');
+        window.history.replaceState({}, '', url.toString());
+      } catch { /* noop */ }
+    }
 
     const result = await runAgent({
       input: text.trim(),
