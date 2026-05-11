@@ -361,12 +361,13 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
     }
   }
 
-  // Resolve app icon for the tool used
+  // Resolve app icon for the tool used. `details.tool` may be a name or an ID.
   let toolApp: AgentUIApp | undefined;
   if (details?.tool && typeof details.tool === 'string' && details.tool !== 'singul') {
-    let tn = details.tool.toLowerCase().replace(/[\s-]+/g, '_');
+    const raw = details.tool;
+    let tn = raw.toLowerCase().replace(/[\s-]+/g, '_');
     if (tn.startsWith('app:')) tn = tn.split(':')[2] || tn;
-    toolApp = appsById[tn];
+    toolApp = appsById[raw] || appsById[tn];
   }
 
   // Question fields
