@@ -480,7 +480,12 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
         {/* Per-row actions: Approve/Deny, Rerun */}
         <Box
           sx={{ display: 'flex', alignItems: 'center', gap: 0.25, ml: 1, minWidth: 96, justifyContent: 'flex-end' }}
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            // Only swallow the click when it actually lands on a button —
+            // otherwise the empty area inside this row-actions box would
+            // block the parent's expand/collapse toggle.
+            if ((e.target as HTMLElement).closest('button, a')) e.stopPropagation();
+          }}
         >
           {item.type === 'decision'
             && details?.run_details?.status === 'WAITING'
