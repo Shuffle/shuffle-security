@@ -1745,6 +1745,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                     {agentRequestLoading ? <CircularProgress size={16} sx={{ color: 'inherit' }} /> : <SendIcon sx={{ fontSize: 18 }} />}
                   </IconButton>
                 </Box>
+                </Box>
               </Box>
             )}
           </Box>
