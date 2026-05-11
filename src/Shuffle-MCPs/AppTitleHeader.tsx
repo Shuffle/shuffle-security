@@ -126,7 +126,7 @@ export default function AppTitleHeader({
             size="small"
             sx={{
               textTransform: 'none', fontWeight: 600, fontSize: '0.72rem', borderRadius: 2, px: 1.5, py: 0.5, minHeight: 0, flexShrink: 0,
-              bgcolor: '#FF6600', '&:hover': { bgcolor: '#e55c00' },
+              bgcolor: 'hsl(var(--primary))', '&:hover': { bgcolor: 'hsl(var(--primary) / 0.85)' },
             }}
           >
             + Add
@@ -143,7 +143,7 @@ export default function AppTitleHeader({
               textTransform: 'none', fontWeight: 600, fontSize: '0.72rem', borderRadius: 2, px: 1.5, py: 0.5, minHeight: 0, flexShrink: 0,
               ...(isActivated
                 ? { color: 'hsl(var(--muted-foreground))', borderColor: 'hsl(var(--border))', '&:hover': { borderColor: 'hsl(var(--destructive))', color: 'hsl(var(--destructive))', bgcolor: 'hsla(var(--destructive) / 0.08)' } }
-                : { bgcolor: '#FF6600', '&:hover': { bgcolor: '#e55c00' } }),
+                : { bgcolor: 'hsl(var(--primary))', '&:hover': { bgcolor: 'hsl(var(--primary) / 0.85)' } }),
             }}
           >
             {activateLoading ? '…' : isActivated ? 'Deactivate' : 'Activate'}

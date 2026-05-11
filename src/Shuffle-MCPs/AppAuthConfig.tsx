@@ -843,7 +843,7 @@ export const AppAuthCard = ({
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   {param.name}
                   {param.required && (
-                    <Typography component="span" sx={{ color: '#ef4444', fontSize: '0.8rem' }}>*</Typography>
+                    <Typography component="span" sx={{ color: 'hsl(var(--destructive))', fontSize: '0.8rem' }}>*</Typography>
                   )}
                 </Box>
               }
@@ -859,13 +859,13 @@ export const AppAuthCard = ({
                 '& .MuiOutlinedInput-root': {
                   backgroundColor: 'hsl(var(--muted))',
                   borderRadius: 2,
-                  '& fieldset': { borderColor: fieldErrors[fieldKey] ? '#ef4444' : 'hsl(var(--border))' },
-                  '&:hover fieldset': { borderColor: fieldErrors[fieldKey] ? '#ef4444' : 'hsl(var(--border))' },
-                  '&.Mui-focused fieldset': { borderColor: fieldErrors[fieldKey] ? '#ef4444' : 'hsl(var(--primary))' },
+                  '& fieldset': { borderColor: fieldErrors[fieldKey] ? 'hsl(var(--destructive))' : 'hsl(var(--border))' },
+                  '&:hover fieldset': { borderColor: fieldErrors[fieldKey] ? 'hsl(var(--destructive))' : 'hsl(var(--border))' },
+                  '&.Mui-focused fieldset': { borderColor: fieldErrors[fieldKey] ? 'hsl(var(--destructive))' : 'hsl(var(--primary))' },
                 },
                 '& .MuiInputBase-input': { color: 'hsl(var(--foreground))' },
                 '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
-                '& .MuiFormHelperText-root': { color: fieldErrors[fieldKey] ? '#ef4444' : 'hsl(var(--muted-foreground))' },
+                '& .MuiFormHelperText-root': { color: fieldErrors[fieldKey] ? 'hsl(var(--destructive))' : 'hsl(var(--muted-foreground))' },
               }}
             />
           );
@@ -1386,19 +1386,19 @@ export const AppAuthCard = ({
                         height: 8,
                         borderRadius: '50%',
                         backgroundColor: localTestStatus === 'success' 
-                          ? '#22c55e' 
+                          ? 'hsl(var(--severity-low))' 
                           : localTestStatus === 'pending_validation'
-                          ? '#f59e0b'
+                          ? 'hsl(var(--severity-medium))'
                           : localTestStatus === 'error'
-                          ? '#ef4444'
-                          : '#9ca3af',
+                          ? 'hsl(var(--destructive))'
+                          : 'hsl(var(--muted-foreground))',
                         boxShadow: localTestStatus === 'success' 
-                          ? '0 0 8px rgba(34, 197, 94, 0.6)'
+                          ? '0 0 8px hsl(var(--severity-low) / 0.6)'
                           : localTestStatus === 'pending_validation'
-                          ? '0 0 8px rgba(245, 158, 11, 0.6)'
+                          ? '0 0 8px hsl(var(--severity-medium) / 0.6)'
                           : localTestStatus === 'error'
-                          ? '0 0 8px rgba(239, 68, 68, 0.6)'
-                          : '0 0 8px rgba(156, 163, 175, 0.4)',
+                          ? '0 0 8px hsl(var(--destructive) / 0.6)'
+                          : '0 0 8px hsl(var(--muted-foreground) / 0.4)',
                       }} />
                       <Typography sx={{ 
                         color: 'hsl(var(--muted-foreground))', 
@@ -1441,43 +1441,43 @@ export const AppAuthCard = ({
                           alignItems: 'center',
                           justifyContent: 'center',
                           backgroundColor: localTestStatus === 'success' 
-                            ? 'rgba(34, 197, 94, 0.1)' 
+                            ? 'hsl(var(--severity-low) / 0.1)' 
                             : localTestStatus === 'error'
-                            ? 'rgba(239, 68, 68, 0.1)'
+                            ? 'hsl(var(--destructive) / 0.1)'
                             : localTestStatus === 'pending_validation'
-                            ? 'rgba(245, 158, 11, 0.1)'
+                            ? 'hsl(var(--severity-medium) / 0.1)'
                             : isTested
-                            ? 'rgba(34, 197, 94, 0.1)'
+                            ? 'hsl(var(--severity-low) / 0.1)'
                             : isConfigured
-                            ? 'rgba(245, 158, 11, 0.1)' // Yellow for configured but not tested
-                            : 'rgba(156, 163, 175, 0.1)',
+                            ? 'hsl(var(--severity-medium) / 0.1)' // Yellow for configured but not tested
+                            : 'hsl(var(--muted-foreground) / 0.1)',
                           border: `1px solid ${
                             localTestStatus === 'success' 
-                              ? 'rgba(34, 197, 94, 0.2)' 
+                              ? 'hsl(var(--severity-low) / 0.2)' 
                               : localTestStatus === 'pending_validation'
-                              ? 'rgba(245, 158, 11, 0.2)'
+                              ? 'hsl(var(--severity-medium) / 0.2)'
                               : localTestStatus === 'error'
-                              ? 'rgba(239, 68, 68, 0.2)'
+                              ? 'hsl(var(--destructive) / 0.2)'
                               : isTested
-                              ? 'rgba(34, 197, 94, 0.2)'
+                              ? 'hsl(var(--severity-low) / 0.2)'
                               : isConfigured
-                              ? 'rgba(245, 158, 11, 0.2)' // Yellow for configured but not tested
-                              : 'rgba(156, 163, 175, 0.2)'
+                              ? 'hsl(var(--severity-medium) / 0.2)' // Yellow for configured but not tested
+                              : 'hsl(var(--muted-foreground) / 0.2)'
                           }`,
                           flexShrink: 0,
                         }}>
                           <CheckCircleIcon sx={{ 
                             color: localTestStatus === 'success' 
-                              ? '#22c55e' 
+                              ? 'hsl(var(--severity-low))' 
                               : localTestStatus === 'pending_validation'
-                              ? '#f59e0b'
+                              ? 'hsl(var(--severity-medium))'
                               : localTestStatus === 'error'
-                              ? '#ef4444'
+                              ? 'hsl(var(--destructive))'
                               : isTested
-                              ? '#22c55e'
+                              ? 'hsl(var(--severity-low))'
                               : isConfigured
-                              ? '#f59e0b' // Yellow for configured but not tested
-                              : '#9ca3af', 
+                              ? 'hsl(var(--severity-medium))' // Yellow for configured but not tested
+                              : 'hsl(var(--muted-foreground))', 
                             fontSize: 20 
                           }} />
                         </Box>
@@ -1574,15 +1574,15 @@ export const AppAuthCard = ({
                           </Box>
                           <Typography sx={{ 
                             color: localTestStatus === 'success' 
-                              ? '#22c55e' 
+                              ? 'hsl(var(--severity-low))' 
                               : localTestStatus === 'pending_validation'
-                              ? '#f59e0b'
+                              ? 'hsl(var(--severity-medium))'
                               : localTestStatus === 'error'
-                              ? '#ef4444'
+                              ? 'hsl(var(--destructive))'
                               : isTested
-                              ? '#22c55e'
+                              ? 'hsl(var(--severity-low))'
                               : isConfigured
-                              ? '#f59e0b' // Yellow for configured but not tested
+                              ? 'hsl(var(--severity-medium))' // Yellow for configured but not tested
                               : 'hsl(var(--muted-foreground))', 
                             fontSize: '0.75rem',
                             mt: 0.25,
@@ -1618,10 +1618,10 @@ export const AppAuthCard = ({
                             : <CheckCircleIcon sx={{ fontSize: 18 }} />
                         }
                         sx={{
-                          borderColor: authState.status === 'testing' ? 'transparent' : 'rgba(255, 102, 0, 0.5)',
+                          borderColor: authState.status === 'testing' ? 'transparent' : 'hsl(var(--primary) / 0.5)',
                           color: authState.status === 'testing' ? 'hsl(var(--foreground))' : 'hsl(var(--primary))',
                           background: authState.status === 'testing' 
-                            ? 'linear-gradient(90deg, rgba(255, 102, 0, 0.3) 0%, rgba(255, 102, 0, 0.5) 50%, rgba(255, 102, 0, 0.3) 100%)'
+                            ? 'linear-gradient(90deg, hsl(var(--primary) / 0.3) 0%, hsl(var(--primary) / 0.5) 50%, hsl(var(--primary) / 0.3) 100%)'
                             : 'transparent',
                           backgroundSize: authState.status === 'testing' ? '200% 100%' : 'auto',
                           animation: authState.status === 'testing' ? 'shimmer 1.5s infinite linear' : 'none',
@@ -1640,7 +1640,7 @@ export const AppAuthCard = ({
                           },
                           '&:hover': {
                             borderColor: 'hsl(var(--primary))',
-                            backgroundColor: authState.status === 'testing' ? undefined : 'rgba(255, 102, 0, 0.08)',
+                            backgroundColor: authState.status === 'testing' ? undefined : 'hsl(var(--primary) / 0.08)',
                           },
                           '&.Mui-disabled': {
                             color: authState.status === 'testing' ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
@@ -1661,11 +1661,11 @@ export const AppAuthCard = ({
                         <Alert
                           severity="error"
                           sx={{
-                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                            color: '#ef4444',
-                            border: '1px solid rgba(239, 68, 68, 0.2)',
+                            backgroundColor: 'hsl(var(--destructive) / 0.1)',
+                            color: 'hsl(var(--destructive))',
+                            border: '1px solid hsl(var(--destructive) / 0.2)',
                             borderRadius: 2,
-                            '& .MuiAlert-icon': { color: '#ef4444' },
+                            '& .MuiAlert-icon': { color: 'hsl(var(--destructive))' },
                           }}
                         >
                           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, width: '100%' }}>
@@ -1680,16 +1680,16 @@ export const AppAuthCard = ({
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 sx={{
-                                  borderColor: 'rgba(239, 68, 68, 0.5)',
-                                  color: '#ef4444',
+                                  borderColor: 'hsl(var(--destructive) / 0.5)',
+                                  color: 'hsl(var(--destructive))',
                                   textTransform: 'none',
                                   fontSize: '0.75rem',
                                   py: 0.5,
                                   px: 1.5,
                                   flexShrink: 0,
                                   '&:hover': {
-                                    borderColor: '#ef4444',
-                                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                    borderColor: 'hsl(var(--destructive))',
+                                    backgroundColor: 'hsl(var(--destructive) / 0.1)',
                                   },
                                 }}
                               >
@@ -1709,15 +1709,15 @@ export const AppAuthCard = ({
                           severity={localTestMessages.warningMessage ? "warning" : "success"}
                           sx={{
                             backgroundColor: localTestMessages.warningMessage 
-                              ? 'rgba(245, 158, 11, 0.1)' 
-                              : 'rgba(34, 197, 94, 0.1)',
-                            color: localTestMessages.warningMessage ? '#f59e0b' : '#22c55e',
+                              ? 'hsl(var(--severity-medium) / 0.1)' 
+                              : 'hsl(var(--severity-low) / 0.1)',
+                            color: localTestMessages.warningMessage ? 'hsl(var(--severity-medium))' : 'hsl(var(--severity-low))',
                             border: localTestMessages.warningMessage 
-                              ? '1px solid rgba(245, 158, 11, 0.2)' 
-                              : '1px solid rgba(34, 197, 94, 0.2)',
+                              ? '1px solid hsl(var(--severity-medium) / 0.2)' 
+                              : '1px solid hsl(var(--severity-low) / 0.2)',
                             borderRadius: 2,
                             '& .MuiAlert-icon': { 
-                              color: localTestMessages.warningMessage ? '#f59e0b' : '#22c55e' 
+                              color: localTestMessages.warningMessage ? 'hsl(var(--severity-medium))' : 'hsl(var(--severity-low))' 
                             },
                           }}
                         >
@@ -1744,11 +1744,11 @@ export const AppAuthCard = ({
                         <Alert
                           severity="warning"
                           sx={{
-                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                            color: '#f59e0b',
-                            border: '1px solid rgba(245, 158, 11, 0.2)',
+                            backgroundColor: 'hsl(var(--severity-medium) / 0.1)',
+                            color: 'hsl(var(--severity-medium))',
+                            border: '1px solid hsl(var(--severity-medium) / 0.2)',
                             borderRadius: 2,
-                            '& .MuiAlert-icon': { color: '#f59e0b' },
+                            '& .MuiAlert-icon': { color: 'hsl(var(--severity-medium))' },
                           }}
                         >
                           <Box>
@@ -1762,7 +1762,7 @@ export const AppAuthCard = ({
                               href={`${API_CONFIG.baseUrl}/admin?tab=app_auth`}
                               target="_blank"
                               sx={{ 
-                                color: '#f59e0b', 
+                                color: 'hsl(var(--severity-medium))', 
                                 fontWeight: 500,
                                 fontSize: '0.85rem',
                                 textDecoration: 'underline',
@@ -1793,12 +1793,12 @@ export const AppAuthCard = ({
                   <Alert
                     severity="warning"
                     sx={{
-                      backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                      color: '#f59e0b',
-                      border: '1px solid rgba(245, 158, 11, 0.2)',
+                      backgroundColor: 'hsl(var(--severity-medium) / 0.1)',
+                      color: 'hsl(var(--severity-medium))',
+                      border: '1px solid hsl(var(--severity-medium) / 0.2)',
                       borderRadius: 2,
                       mb: 2,
-                      '& .MuiAlert-icon': { color: '#f59e0b' },
+                      '& .MuiAlert-icon': { color: 'hsl(var(--severity-medium))' },
                     }}
                   >
                     <Typography sx={{ fontSize: '0.875rem' }}>
@@ -1823,9 +1823,9 @@ export const AppAuthCard = ({
                   <Alert
                     severity="error"
                     sx={{
-                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                      color: '#ef4444',
-                      border: '1px solid rgba(239, 68, 68, 0.3)',
+                      backgroundColor: 'hsl(var(--destructive) / 0.1)',
+                      color: 'hsl(var(--destructive))',
+                      border: '1px solid hsl(var(--destructive) / 0.3)',
                       borderRadius: 2,
                     }}
                   >
@@ -1835,11 +1835,11 @@ export const AppAuthCard = ({
                   <Alert
                     severity="info"
                     sx={{
-                      backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                      color: '#3b82f6',
-                      border: '1px solid rgba(59, 130, 246, 0.2)',
+                      backgroundColor: 'hsl(var(--severity-info) / 0.1)',
+                      color: 'hsl(var(--severity-info))',
+                      border: '1px solid hsl(var(--severity-info) / 0.2)',
                       borderRadius: 2,
-                      '& .MuiAlert-icon': { color: '#3b82f6' },
+                      '& .MuiAlert-icon': { color: 'hsl(var(--severity-info))' },
                     }}
                   >
                     <Box>
@@ -1861,9 +1861,9 @@ export const AppAuthCard = ({
                       <Alert
                         severity="error"
                         sx={{
-                          backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                          color: '#ef4444',
-                          border: '1px solid rgba(239, 68, 68, 0.3)',
+                          backgroundColor: 'hsl(var(--destructive) / 0.1)',
+                          color: 'hsl(var(--destructive))',
+                          border: '1px solid hsl(var(--destructive) / 0.3)',
                           borderRadius: 2,
                         }}
                       >
@@ -1879,16 +1879,16 @@ export const AppAuthCard = ({
                               target="_blank"
                               rel="noopener noreferrer"
                               sx={{
-                                borderColor: 'rgba(239, 68, 68, 0.5)',
-                                color: '#ef4444',
+                                borderColor: 'hsl(var(--destructive) / 0.5)',
+                                color: 'hsl(var(--destructive))',
                                 textTransform: 'none',
                                 fontSize: '0.75rem',
                                 py: 0.5,
                                 px: 1.5,
                                 flexShrink: 0,
                                 '&:hover': {
-                                  borderColor: '#ef4444',
-                                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                                  borderColor: 'hsl(var(--destructive))',
+                                  backgroundColor: 'hsl(var(--destructive) / 0.1)',
                                 },
                               }}
                             >
@@ -1905,9 +1905,9 @@ export const AppAuthCard = ({
                       <Alert
                         severity="error"
                         sx={{
-                          backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                          color: '#ef4444',
-                          border: '1px solid rgba(239, 68, 68, 0.3)',
+                          backgroundColor: 'hsl(var(--destructive) / 0.1)',
+                          color: 'hsl(var(--destructive))',
+                          border: '1px solid hsl(var(--destructive) / 0.3)',
                           borderRadius: 2,
                         }}
                       >
@@ -2245,9 +2245,9 @@ export const AppAuthConfig = ({
       <Alert
         severity="info"
         sx={{
-          backgroundColor: 'rgba(255, 102, 0, 0.1)',
+          backgroundColor: 'hsl(var(--primary) / 0.1)',
           color: 'hsl(var(--primary))',
-          border: '1px solid rgba(255, 102, 0, 0.3)',
+          border: '1px solid hsl(var(--primary) / 0.3)',
           borderRadius: 2,
         }}
       >
@@ -2285,9 +2285,9 @@ export const AppAuthConfig = ({
         sx={{
           mb: 3,
           background: validatedCount === totalCount 
-            ? 'rgba(34, 197, 94, 0.15)' 
-            : 'rgba(255, 152, 0, 0.15)',
-          color: validatedCount === totalCount ? '#22c55e' : '#ff9800',
+            ? 'hsl(var(--severity-low) / 0.15)' 
+            : 'hsl(var(--severity-medium) / 0.15)',
+          color: validatedCount === totalCount ? 'hsl(var(--severity-low))' : 'hsl(var(--severity-medium))',
           fontWeight: 600,
         }}
       />

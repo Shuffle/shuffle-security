@@ -44,6 +44,8 @@
   --severity-info: 210 90% 60%;
   --severity-low: 142 70% 45%;
   --severity-medium: 38 92% 50%;
+  --severity-high: 25 95% 53%;
+  --severity-critical: 0 84% 60%;
   --infra-email: 210 90% 60%;
 }
 
