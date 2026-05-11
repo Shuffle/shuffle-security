@@ -1813,8 +1813,19 @@ const AgentUI: React.FC<AgentUIProps> = ({
 
   // ── Render ──
   return (
-    <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', pb: 4 }}>
-      <Box sx={{ width: '100%', maxWidth, display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <Box
+      className={className}
+      sx={[
+        { width: '100%', display: 'flex', justifyContent: 'center', pb: 4 },
+        ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
+      ]}
+    >
+      <Box
+        sx={[
+          { width: '100%', maxWidth, display: 'flex', flexDirection: 'column', gap: 3 },
+          ...(Array.isArray(contentSx) ? contentSx : contentSx ? [contentSx] : []),
+        ]}
+      >
         {showRunSwitcher && tabBar}
         {showStarter ? (
           <Box
