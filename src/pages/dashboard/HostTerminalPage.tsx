@@ -840,6 +840,7 @@ const HostTerminalPage = () => {
           const isExpanded = expandedEntries.has(entry.entryId);
           const isLoading = loadingEntries.has(entry.entryId);
           const canReload = !isRunning && !!entry.executionId && !!entry.authorization;
+          const isTruncated = isOutputTruncated(entry.actionOutput) || isOutputTruncated(entry.error);
           // historyIndex 0 = most recent (last entry), 1 = second-to-last, etc.
           const isHistorySelected = historyIndex >= 0 && i === (actionHistory.length - 1 - historyIndex);
 
@@ -851,7 +852,15 @@ const HostTerminalPage = () => {
                 onClick={() => {
                   if (isRunning) return;
                   if (hasOutput) {
+                    const willExpand = !isExpanded;
                     toggleExpanded(entry.entryId);
+                    // Auto-sideload the full result if what we have on disk is
+                    // truncated (e.g. a screenshot output that exceeded the
+                    // localStorage cap). One-shot per entry per session.
+                    if (willExpand && isTruncated && canReload && !autoSideloadedRef.current.has(entry.entryId)) {
+                      autoSideloadedRef.current.add(entry.entryId);
+                      fetchEntryResult(entry);
+                    }
                   } else if (canReload) {
                     fetchEntryResult(entry);
                   }
