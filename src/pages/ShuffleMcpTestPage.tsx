@@ -808,6 +808,12 @@ const [open, setOpen] = useState(false);
           title="4. App detail / config drawer"
           description={<><code>&lt;AppDetailDrawer /&gt;</code> — auth + MCP "try it out" for a single app.</>}
           code={SNIPPET_DETAIL_DRAWER}
+          apis={[
+            { method: 'GET', path: '/api/v1/apps/:id/config', description: 'Resolve app metadata + auth schema' },
+            { method: 'GET', path: '/api/v1/apps/authentication', description: 'Existing auth entries for this app' },
+            { method: 'POST', path: '/api/v1/apps/authentication', description: 'Save / update auth' },
+            { method: 'POST', path: '/api/v1/apps/:name/mcp', description: 'Power the embedded "Try MCP" chat' },
+          ]}
         >
           <Stack direction="row" spacing={1}>
             {['Gmail', 'Slack', 'VirusTotal'].map(name => (
