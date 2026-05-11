@@ -536,7 +536,7 @@ const AppDetailPage = () => {
               <ApiCallViewer
                 config={{
                   method: 'POST',
-                  url: `${getApiUrl(`/api/v1/apps/${encodeURIComponent(appname || '')}/mcp`)}`,
+                  url: '/api/v1/mcp',
                   headers: {
                     'Authorization': `Bearer ${API_CONFIG.apiKey || '<your-api-key>'}`,
                   },
@@ -545,7 +545,9 @@ const AppDetailPage = () => {
                     method: 'tools/call',
                     params: {
                       tool_name: appname || '',
-                      tool_id: matchingEntries[0]?.app?.id || appname || '',
+                      ...(((matchingEntries[0]?.app?.id || appname || '') !== (appname || ''))
+                        ? { tool_id: matchingEntries[0]?.app?.id }
+                        : {}),
                       input: { text: '<your-prompt>' },
                     },
                   },
