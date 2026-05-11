@@ -24,7 +24,7 @@ import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import { useAgentActivity } from '@/hooks/useAgentActivity';
 import AgentActivityFeed from '@/components/agent/AgentActivityFeed';
 import AgentActivityStatsPanel from '@/components/agent/AgentActivityStats';
-import AgentPermissionsDrawer from '@/components/agent/AgentPermissionsDrawer';
+
 import AgentActionDrawer from '@/components/agent/AgentActionDrawer';
 import PermissionsPanel from '@/components/agent/PermissionsPanel';
 import LocalLLMConfig from '@/components/agent/LocalLLMConfig';
