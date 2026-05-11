@@ -186,19 +186,22 @@ const AgentRunDrawer = ({
           <Tabs
             value={safeActiveTab}
             onChange={(_, v) => setActiveTab(v as AgentRunDrawerTab)}
-            sx={{
-              minHeight: 42,
-              px: 3,
-              '& .MuiTab-root': {
+            sx={[
+              {
                 minHeight: 42,
-                textTransform: 'none',
-                fontSize: '0.85rem',
-                fontWeight: 500,
-                color: 'hsl(var(--muted-foreground))',
-                '&.Mui-selected': { color: 'hsl(var(--primary))' },
+                px: 3,
+                '& .MuiTab-root': {
+                  minHeight: 42,
+                  textTransform: 'none',
+                  fontSize: '0.85rem',
+                  fontWeight: 500,
+                  color: 'hsl(var(--muted-foreground))',
+                  '&.Mui-selected': { color: 'hsl(var(--primary))' },
+                },
+                '& .MuiTabs-indicator': { bgcolor: 'hsl(var(--primary))' },
               },
-              '& .MuiTabs-indicator': { bgcolor: 'hsl(var(--primary))' },
-            }}
+              ...(Array.isArray(tabsSx) ? tabsSx : tabsSx ? [tabsSx] : []),
+            ]}
           >
             {visibleTabs.includes('run') && (
               <Tab
