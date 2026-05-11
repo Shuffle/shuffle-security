@@ -3,6 +3,27 @@ import { toast } from '@/lib/toast';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { terminalStorageKey, readStoredSession } from '@/utils/terminalStorageKey';
 
+// localStorage caps — must mirror the per-entry truncation so a single huge
+// screenshot can't blow out quota and lose the rest of the session.
+const MAX_OUTPUT_CHARS = 20000;
+const MAX_ERROR_CHARS = 2000;
+const IMAGE_PREFIXES = ['iVBORw0KGgo', '/9j/', 'R0lGOD', 'UklGR'];
+const looksLikeBase64Image = (s: string | undefined): boolean => {
+  if (!s) return false;
+  const trimmed = s.trim();
+  const head = trimmed.slice(0, 16);
+  if (IMAGE_PREFIXES.some(p => head.startsWith(p))) return true;
+  if ((trimmed.startsWith('{') || trimmed.startsWith('[')) && /"(?:image|image_base64|imageBase64|screenshot|screenshot_base64|png|jpeg|jpg|b64|base64|data)"\s*:\s*"(?:data:image\/[a-z+.-]+;base64,)?(?:iVBORw0KGgo|\/9j\/|R0lGOD|UklGR)/i.test(trimmed)) return true;
+  return false;
+};
+const TRUNCATION_MARKER = '…[truncated ';
+export const isOutputTruncated = (s: string | undefined): boolean => !!s && s.includes(TRUNCATION_MARKER);
+const truncate = (s: string | undefined, n: number): string | undefined => {
+  if (!s) return s;
+  if (looksLikeBase64Image(s)) return s; // never split a base64 image
+  return s.length > n ? s.slice(0, n) + `\n…[truncated ${s.length - n} chars]` : s;
+};
+
 /**
  * Shared hook for executing response actions on a sensor host.
  *
