@@ -12,7 +12,7 @@ import { AgentUI } from '@/Shuffle-MCPs';
 const AgentsPage = () => {
   return (
     <Box sx={{ minHeight: '100vh', width: '100%', px: { xs: 2, md: 4 }, py: 3 }}>
-      <AgentUI maxWidth={1100} />
+      <AgentUI maxWidth={820} />
     </Box>
   );
 };
