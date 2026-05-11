@@ -793,6 +793,11 @@ const [open, setOpen] = useState(false);
           title="3. Search drawer"
           description={<><code>&lt;AppSearchDrawer /&gt;</code> — the exact same drawer used on /incidents → "Add Ingestion Source".</>}
           code={SNIPPET_SEARCH_DRAWER}
+          apis={[
+            { method: 'ALGOLIA', path: 'appsearch index', description: 'Catalog search inside the drawer' },
+            { method: 'GET', path: '/api/v1/apps', description: 'Merged private apps' },
+            { method: 'GET', path: '/api/v1/apps/authentication', description: 'Auth status per result' },
+          ]}
         >
           <Button variant="contained" onClick={() => setSearchOpen(true)}>
             Open search drawer
