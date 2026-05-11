@@ -26,6 +26,18 @@ export { default as AgentUI } from './AgentUI';
 export type { AgentUIProps, AgentUIApp } from './AgentUI';
 export { default as AgentRunDrawer } from './AgentRunDrawer';
 export type { AgentRunDrawerProps, AgentRunDrawerTab } from './AgentRunDrawer';
+export { default as AgentActivityList } from './AgentActivityList';
+export type { AgentActivityListProps } from './AgentActivityList';
+export { default as AgentExecutionDrawer } from './AgentExecutionDrawer';
+export type { AgentExecutionDrawerProps } from './AgentExecutionDrawer';
+export { searchAgentActivity } from './agentActivity';
+export type {
+  AgentRun,
+  AgentRunResult,
+  AgentDecision,
+  AgentActivityResponse,
+  AgentActivityParams,
+} from './agentActivity';
 export { useAppLookup } from './useAppLookup';
 export type { AppLookupResult } from './useAppLookup';
 export { IntegrationStatus, refreshAllIntegrationStatus } from './IntegrationStatus';
