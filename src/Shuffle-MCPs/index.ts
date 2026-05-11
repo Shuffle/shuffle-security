@@ -3,6 +3,13 @@
  * No host-app `@/` imports remain inside this folder (assets aside).
  */
 
+// Side-effect import: ensures shadcn-style token fallbacks (--card, --background,
+// --border, --foreground, --muted, --primary, etc.) are always defined when any
+// lib component is used standalone in a host app that does NOT define those
+// CSS custom properties. Host overrides still win (defaults use :where(:root),
+// specificity 0).
+import './shuffle-mcp.css';
+
 export { ShuffleMCP, default } from './ShuffleMCP';
 export type { ShuffleMCPHandle } from './ShuffleMCP';
 export { default as AppDetailDrawer } from './AppDetailDrawer';
