@@ -487,20 +487,29 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
               </span>
             </Tooltip>
           )}
-          {item.type === 'decision' && (
-            <Tooltip title="Rerun from this decision (clears all decisions after it)">
-              <span>
-                <IconButton
-                  size="small"
-                  disabled={agentRequestLoading || !details?.run_details?.id}
-                  onClick={() => details && onRerunDecision(details)}
-                  sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
-                >
-                  <RestartAltIcon sx={{ fontSize: 16 }} />
-                </IconButton>
-              </span>
-            </Tooltip>
-          )}
+          {item.type === 'decision' && (() => {
+            const action = details?.action;
+            const cat = item.category;
+            const isApiAction =
+              action !== 'ask' && cat !== 'ask' &&
+              action !== 'finish' && action !== 'finalise' && cat !== 'finish' && cat !== 'finalise' &&
+              action !== 'add_tool';
+            if (!isApiAction) return null;
+            return (
+              <Tooltip title="Rerun from this decision (clears all decisions after it)">
+                <span>
+                  <IconButton
+                    size="small"
+                    disabled={agentRequestLoading || !details?.run_details?.id}
+                    onClick={() => details && onRerunDecision(details)}
+                    sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
+                  >
+                    <RestartAltIcon sx={{ fontSize: 16 }} />
+                  </IconButton>
+                </span>
+              </Tooltip>
+            );
+          })()}
           {item.type === 'decision' && (details?.run_details as any)?.debug_url && (
             <Tooltip title="Open debug URL">
               <span>
