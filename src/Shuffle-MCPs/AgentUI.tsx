@@ -108,6 +108,7 @@ const deepParseJsonStrings = (obj: any, depth = 0): any => {
 import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
 import { getApiUrl, getAuthHeader, API_CONFIG } from '@/Shuffle-MCPs/api';
+import { fetchApps } from '@/Shuffle-MCPs/appsCache';
 import { toast } from '@/Shuffle-MCPs/toast';
 import { runAgent } from '@/Shuffle-MCPs/agentRun';
 
