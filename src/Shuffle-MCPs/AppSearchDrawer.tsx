@@ -299,7 +299,7 @@ export default function AppSearchDrawer({
                 gap: '12px',
               },
               '& .singul-results-grid .singul-dropdown-item': {
-                minHeight: 84,
+                minHeight: 80,
                 padding: '14px 16px',
                 alignItems: 'center',
               },
