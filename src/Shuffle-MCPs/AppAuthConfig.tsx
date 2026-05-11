@@ -528,6 +528,26 @@ export const AppAuthCard = ({
     }
   }, [auth?.parameters, disableUrlPrefill]);
 
+  // Sync externally-driven URL/endpoint changes (e.g. provider preset
+  // selectors) into the local form state so the field reflects the choice.
+  useEffect(() => {
+    const incoming = authState.credentials || {};
+    setLocalCredentials((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const [k, v] of Object.entries(incoming)) {
+        const lk = k.toLowerCase();
+        const isUrlish = lk.includes('url') || lk.includes('endpoint') || lk.includes('host');
+        if (isUrlish && typeof v === 'string' && v !== prev[k]) {
+          next[k] = v;
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authState.credentials]);
+
   const [docsOpen, setDocsOpen] = useState(false);
   const [docsContent, setDocsContent] = useState<string>('');
   const [docsLoading, setDocsLoading] = useState(false);
