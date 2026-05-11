@@ -109,7 +109,7 @@ import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
 import { getApiUrl, getAuthHeader, API_CONFIG } from '@/Shuffle-MCPs/api';
 import { toast } from '@/Shuffle-MCPs/toast';
-import { runAgent } from '@/services/agentRun';
+import { runAgent } from '@/Shuffle-MCPs/agentRun';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
