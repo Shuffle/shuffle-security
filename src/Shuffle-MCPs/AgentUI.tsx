@@ -313,6 +313,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
   maxWidth, questionAnswers, setQuestionAnswers, onSubmitQuestions,
   onRerunAgent, onRerunDecision, agentRequestLoading, getFormUrl,
 }) => {
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const validate = validateJson(item.details);
   const itemStart = item.start_time || 0;
   const itemEnd = item.end_time || itemStart;
