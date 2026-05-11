@@ -133,7 +133,11 @@ export const DemoModeCard = ({ compact = false }: { compact?: boolean } = {}) =>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
             <Typography sx={{ fontSize: compact ? '0.85rem' : '0.95rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-              {active ? 'Demo mode is active' : `See the platform respond to a real ${entitySingularLower}`}
+              {active
+                ? 'Demo mode is active'
+                : compact
+                  ? `Try a live ${entitySingularLower}`
+                  : `See the platform respond to a real ${entitySingularLower}`}
             </Typography>
             {active && (
               <Chip
@@ -150,13 +154,15 @@ export const DemoModeCard = ({ compact = false }: { compact?: boolean } = {}) =>
               />
             )}
           </Box>
-          <Typography sx={{ fontSize: compact ? '0.74rem' : '0.8rem', color: 'hsl(var(--muted-foreground))', mt: 0.5, lineHeight: 1.5 }}>
-            {active
-              ? `${stats.incidents} ${entityPluralLower}, ${stats.assets} assets, ${stats.users} users loaded. Real IOCs, live enrichment and AI agents you can interact with — only the ${entitySingularLower} itself is seeded.`
-              : warnReason
-                ? warnReason
-                : `We seed one realistic ${entitySingularLower}, then everything else is real: live threat-feed IOCs, real enrichments and AI agents you can actually approve or question. One-click cleanup when you are done.`}
-          </Typography>
+          {!(compact && !active) && (
+            <Typography sx={{ fontSize: compact ? '0.74rem' : '0.8rem', color: 'hsl(var(--muted-foreground))', mt: 0.5, lineHeight: 1.5 }}>
+              {active
+                ? `${stats.incidents} ${entityPluralLower}, ${stats.assets} assets, ${stats.users} users loaded. Real IOCs, live enrichment and AI agents you can interact with — only the ${entitySingularLower} itself is seeded.`
+                : warnReason
+                  ? warnReason
+                  : `We seed one realistic ${entitySingularLower}, then everything else is real: live threat-feed IOCs, real enrichments and AI agents you can actually approve or question. One-click cleanup when you are done.`}
+            </Typography>
+          )}
         </Box>
 
         {/* Actions */}
