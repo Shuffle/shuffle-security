@@ -553,7 +553,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
       </Box>
 
       {/* Question form (for ASK decisions) */}
-      {questions.length > 0 && (item.status === 'RUNNING' || item.status === 'WAITING') && (
+      {questions.length > 0 && !runFinished && (item.status === 'RUNNING' || item.status === 'WAITING') && (
         <Box sx={{ px: 4, pb: 2 }}>
           {(() => {
             const trySubmit = () => {
