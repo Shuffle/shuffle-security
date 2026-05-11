@@ -75,8 +75,22 @@ const MAX_OUTPUT_CHARS = 20000;
 const IMAGE_PREFIXES = ['iVBORw0KGgo', '/9j/', 'R0lGOD', 'UklGR'];
 const looksLikeBase64Image = (s: string | undefined): boolean => {
   if (!s) return false;
-  const head = s.trim().slice(0, 16);
-  return IMAGE_PREFIXES.some(p => head.startsWith(p));
+  const trimmed = s.trim();
+  const head = trimmed.slice(0, 16);
+  if (IMAGE_PREFIXES.some(p => head.startsWith(p))) return true;
+  // JSON-wrapped image payloads (e.g. screenshot action returns
+  // `[{"image":"iVBORw0KGgo...", "cursor":...}]`). Truncating these
+  // mid-base64 would destroy the screenshot, so treat them as images.
+  if ((trimmed.startsWith('{') || trimmed.startsWith('[')) && /"(?:image|image_base64|imageBase64|screenshot|screenshot_base64|png|jpeg|jpg|b64|base64|data)"\s*:\s*"(?:data:image\/[a-z+.-]+;base64,)?(?:iVBORw0KGgo|\/9j\/|R0lGOD|UklGR)/i.test(trimmed)) {
+    return true;
+  }
+  return false;
+};
+
+const TRUNCATION_MARKER = '…[truncated ';
+const isOutputTruncated = (s: string | undefined): boolean => {
+  if (!s) return false;
+  return s.includes(TRUNCATION_MARKER);
 };
 
 const truncate = (s: string | undefined, n: number): string | undefined => {
