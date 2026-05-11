@@ -707,6 +707,30 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // stale poll responses from a previous run after the user has started a
   // new one (otherwise an in-flight fetch can repaint the old execution).
   const activeExecutionIdRef = useRef<string | null>(null);
+  // Mirror of state used inside async callbacks (e.g. submitInput) so we can
+  // snapshot prior values for rollback without making the callback re-render
+  // on every state change.
+  const stateRef = useRef({
+    execution: null as ExecutionData | null,
+    agentData: {} as any,
+    agentActionResult: null as any,
+    openIndexes: new Set<number>(),
+    questionAnswers: {} as Record<string, { index: number; value: string }>,
+    continuationText: '',
+    localRunStart: null as number | null,
+    showStarter: true,
+  });
+
+  // Mirror state into stateRef on every render so async callbacks can read the
+  // current values without taking them as dependencies.
+  stateRef.current.execution = execution;
+  stateRef.current.agentData = agentData;
+  stateRef.current.agentActionResult = agentActionResult;
+  stateRef.current.openIndexes = openIndexes;
+  stateRef.current.questionAnswers = questionAnswers;
+  stateRef.current.continuationText = continuationText;
+  stateRef.current.localRunStart = localRunStart;
+  stateRef.current.showStarter = showStarter;
 
   // Reset / capture the local run start whenever a new execution begins.
   useEffect(() => {
@@ -958,28 +982,19 @@ const AgentUI: React.FC<AgentUIProps> = ({
     if (!text.trim()) return;
     setError(null);
     setAgentRequestLoading(true);
-    setShowStarter(false);
-    // Hard reset any prior run state so the new run starts from a clean slate.
-    const browserStart = Math.floor(Date.now() / 1000);
-    activeExecutionIdRef.current = null;
-    setExecution(null);
-    setAgentActionResult(null);
-    setOpenIndexes(new Set());
-    setQuestionAnswers({});
-    setContinuationText('');
-    setNowTick(browserStart);
-    setLocalRunStart(browserStart);
-    setAgentData({ original_input: text.trim() });
-    // Strip any prior execution_id from the URL immediately so a refresh or
-    // restored URL state cannot resurrect the previous run.
-    if (readUrlParams && typeof window !== 'undefined') {
-      try {
-        const url = new URL(window.location.href);
-        url.searchParams.delete('execution_id');
-        url.searchParams.delete('authorization');
-        window.history.replaceState({}, '', url.toString());
-      } catch { /* noop */ }
-    }
+
+    // Snapshot prior run state so a failed network request does not leave
+    // the user staring at an empty page with no way to retry. We only
+    // commit the destructive reset once the new run has been accepted.
+    const prevExecution = stateRef.current.execution;
+    const prevAgentData = stateRef.current.agentData;
+    const prevAgentActionResult = stateRef.current.agentActionResult;
+    const prevOpenIndexes = stateRef.current.openIndexes;
+    const prevQuestionAnswers = stateRef.current.questionAnswers;
+    const prevContinuationText = stateRef.current.continuationText;
+    const prevLocalRunStart = stateRef.current.localRunStart;
+    const prevActiveExecutionId = activeExecutionIdRef.current;
+    const prevShowStarter = stateRef.current.showStarter;
 
     const result = await runAgent({
       input: text.trim(),
@@ -1000,11 +1015,40 @@ const AgentUI: React.FC<AgentUIProps> = ({
     setAgentRequestLoading(false);
 
     if (!result.success) {
+      // Restore the previous run so the user can try Rerun again.
       setError(result.error || 'Agent run failed.');
-      setShowStarter(true);
-      setLocalRunStart(null);
+      activeExecutionIdRef.current = prevActiveExecutionId;
+      setExecution(prevExecution);
+      setAgentData(prevAgentData);
+      setAgentActionResult(prevAgentActionResult);
+      setOpenIndexes(prevOpenIndexes);
+      setQuestionAnswers(prevQuestionAnswers);
+      setContinuationText(prevContinuationText);
+      setLocalRunStart(prevLocalRunStart);
+      setShowStarter(prevShowStarter);
       onRun?.({ input: text, success: false, error: result.error });
       return;
+    }
+
+    // Success — now commit the hard reset before we paint the new run.
+    const browserStart = Math.floor(Date.now() / 1000);
+    setShowStarter(false);
+    activeExecutionIdRef.current = null;
+    setExecution(null);
+    setAgentActionResult(null);
+    setOpenIndexes(new Set());
+    setQuestionAnswers({});
+    setContinuationText('');
+    setNowTick(browserStart);
+    setLocalRunStart(browserStart);
+    setAgentData({ original_input: text.trim() });
+    if (readUrlParams && typeof window !== 'undefined') {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('execution_id');
+        url.searchParams.delete('authorization');
+        window.history.replaceState({}, '', url.toString());
+      } catch { /* noop */ }
     }
 
     const raw = result.rawData as any;
