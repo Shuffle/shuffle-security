@@ -356,7 +356,7 @@ export const DemoTourDrawer = () => {
             position: 'fixed',
             right: 24,
             bottom: 104,
-            zIndex: 1300,
+            zIndex: 2147483000,
             pointerEvents: 'auto',
             x: drag.x,
             y: drag.y,
