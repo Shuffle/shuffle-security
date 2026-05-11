@@ -24,6 +24,7 @@ import {
   TryMcpSection,
   SingulActionsPreview,
   AgentUI,
+  AgentRunDrawer,
   useAppLookup,
 } from '@/Shuffle-MCPs';
 import { useAuth } from '@/context/AuthContext';
