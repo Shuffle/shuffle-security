@@ -472,6 +472,7 @@ const AgentActivityList = ({
               key={run.execution_id || idx}
               run={run}
               onClick={() => onRunClick?.(run)}
+              sx={rowSx}
             />
           ))}
           {hasMore && (
