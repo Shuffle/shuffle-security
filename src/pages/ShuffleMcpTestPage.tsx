@@ -26,6 +26,8 @@ import {
   AgentUI,
   useAppLookup,
 } from '@/Shuffle-MCPs';
+import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
 import { API_CONFIG } from '@/Shuffle-MCPs/api';
 import { Box as MuiBox, Skeleton } from '@mui/material';
