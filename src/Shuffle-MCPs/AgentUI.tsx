@@ -360,7 +360,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
     (q) => questionAnswers[q.question]?.value
   );
 
-  const barColor =
+  const barColor = isProcessing ? 'hsl(var(--muted-foreground) / 0.45)' :
     item.status === 'IGNORED' ? STATUS_COLORS.warning :
     item.status === 'FINISHED' ? STATUS_COLORS.finished :
     item.status === 'FAILURE' || item.status === 'ABORTED' ? STATUS_COLORS.error :
