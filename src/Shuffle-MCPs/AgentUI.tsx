@@ -775,6 +775,10 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // Apps the caller has authenticated — used to resolve icons by name and as
   // suggestions in the picker. NOT auto-selected as `chosenApps`.
   const [availableApps, setAvailableApps] = useState<AgentUIApp[]>([]);
+  // Apps actually allowed for the current execution, derived from the agent's
+  // `allowed_actions` field (format: "app:<id>:<name>"). Falls back to
+  // `chosenApps` when the field is missing (legacy runs).
+  const [executionApps, setExecutionApps] = useState<AgentUIApp[]>([]);
   const [appSearchOpen, setAppSearchOpen] = useState(false);
   const [agentRequestLoading, setAgentRequestLoading] = useState(false);
   const [execution, setExecution] = useState<ExecutionData | null>(null);
@@ -990,6 +994,84 @@ const AgentUI: React.FC<AgentUIProps> = ({
     return () => { cancelled = true; };
   }, [autoLoadApps, apps, defaultApps, hasApiKey, resolveUrl, resolveHeaders]);
 
+
+  // Derive the apps actually allowed for the current execution from the
+  // agent's `allowed_actions` field. Format: "app:<id>:<name>". Resolves
+  // icons via `availableApps` (in-memory) first, then falls back to the
+  // global `/api/v1/apps` cache by id (preferred) or name.
+  useEffect(() => {
+    const raw = (agentData as any)?.allowed_actions;
+    if (!Array.isArray(raw) || raw.length === 0) {
+      setExecutionApps([]);
+      return;
+    }
+    const parsed: { id: string; name: string }[] = [];
+    const seen = new Set<string>();
+    for (const entry of raw) {
+      if (typeof entry !== 'string') continue;
+      const parts = entry.split(':');
+      if (parts.length < 3 || parts[0] !== 'app') continue;
+      const id = parts[1] || '';
+      const name = parts.slice(2).join(':') || '';
+      if (!name && !id) continue;
+      const key = `${id}|${name}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      parsed.push({ id, name });
+    }
+    if (parsed.length === 0) {
+      setExecutionApps([]);
+      return;
+    }
+
+    // First pass: resolve from availableApps without any network call.
+    const resolveFromAvailable = (id: string, name: string): AgentUIApp => {
+      const byId = id ? availableApps.find((a) => a.id === id) : undefined;
+      const byName = !byId && name
+        ? availableApps.find((a) => (a.name || '').toLowerCase() === name.toLowerCase())
+        : undefined;
+      const hit = byId || byName;
+      return { id: id || hit?.id, name: hit?.name || name, icon: hit?.icon };
+    };
+    const initial = parsed.map(({ id, name }) => resolveFromAvailable(id, name));
+    setExecutionApps(initial);
+
+    // Second pass: fill missing icons from the global apps cache (covers
+    // apps that the user has not authenticated yet).
+    if (initial.every((a) => !!a.icon)) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const all = await fetchApps({
+          baseUrl: API_CONFIG.baseUrl,
+          apiKey: apiKey || API_CONFIG.apiKey,
+          orgId: orgId || null,
+        });
+        if (cancelled || !Array.isArray(all) || all.length === 0) return;
+        const byIdMap = new Map<string, any>();
+        const byNameMap = new Map<string, any>();
+        for (const a of all) {
+          if (a?.id) byIdMap.set(String(a.id), a);
+          if (a?.name) byNameMap.set(String(a.name).toLowerCase(), a);
+        }
+        const next = initial.map((a) => {
+          if (a.icon) return a;
+          const hit = (a.id && byIdMap.get(a.id)) || byNameMap.get((a.name || '').toLowerCase());
+          if (!hit) return a;
+          return {
+            id: a.id || hit.id,
+            name: hit.name || a.name,
+            icon: hit.large_image || hit.image_url || hit.image || a.icon,
+          } as AgentUIApp;
+        });
+        if (!cancelled) setExecutionApps(next);
+      } catch {
+        // silent — fall back to initials
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify((agentData as any)?.allowed_actions || []), availableApps]);
 
   // ── Fetch execution result (poll-friendly) ──
   const getExecution = useCallback(async (executionId: string, authorization: string) => {
@@ -1792,13 +1874,13 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 </Typography>
               </Box>
               <AvatarGroup max={6} sx={{ '& .MuiAvatar-root': { width: 28, height: 28, borderColor: 'hsl(var(--border))' } }}>
-                {chosenApps.map((app, i) => (
-                  <Tooltip key={i} title={app.name.replace(/_/g, ' ')}>
+                {(executionApps.length > 0 ? executionApps : chosenApps).map((app, i) => (
+                  <Tooltip key={i} title={(app.name || '').replace(/_/g, ' ')}>
                     <Avatar
                       src={app.icon || undefined}
                       alt={app.name}
                       variant="rounded"
-                      onClick={() => navigate(`/apps/${encodeURIComponent(app.name.toLowerCase().replace(/\s+/g, '_'))}`)}
+                      onClick={() => navigate(`/apps/${encodeURIComponent((app.name || '').toLowerCase().replace(/\s+/g, '_'))}`)}
                       sx={{
                         bgcolor: 'hsl(var(--muted))',
                         cursor: 'pointer',
