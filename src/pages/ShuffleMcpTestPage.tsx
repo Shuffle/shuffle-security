@@ -381,7 +381,16 @@ function DemoSection({
 }) {
   const [showCode, setShowCode] = useState(false);
   return (
-    <Paper sx={{ p: 3 }}>
+    <Paper
+      elevation={0}
+      sx={{
+        p: 3,
+        backgroundColor: 'hsl(var(--card))',
+        backgroundImage: 'none',
+        border: '1px solid hsl(var(--border))',
+        color: 'hsl(var(--card-foreground))',
+      }}
+    >
       <Typography variant="h6" sx={{ mb: 1 }}>{title}</Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         {description}
