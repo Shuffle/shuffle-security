@@ -635,6 +635,27 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
         </Box>
       )}
 
+      {/* Unanswered questions (read-only) when the run finished without an answer */}
+      {open && runFinished && questions.length > 0 && (
+        <Box sx={{ px: 4, pb: 2 }}>
+          <Typography sx={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: 0.5, color: 'hsl(var(--muted-foreground))', mb: 1 }}>
+            {questions.length === 1 ? 'Question (unanswered)' : 'Questions (unanswered)'}
+          </Typography>
+          <Box sx={{
+            p: 2, borderRadius: 1.5,
+            border: '1px solid hsl(var(--border))',
+            bgcolor: 'hsl(var(--background))',
+            display: 'flex', flexDirection: 'column', gap: 1.5,
+          }}>
+            {questions.map((q, qi) => (
+              <Box key={qi} sx={{ fontSize: '0.85rem', color: 'hsl(var(--foreground))', '& p': { my: 0.5 } }}>
+                <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>{normalizeMarkdown(q.question)}</Markdown>
+              </Box>
+            ))}
+          </Box>
+        </Box>
+      )}
+
       {/* Raw JSON */}
       {open && (
         <Box sx={{ px: 4, pb: 2 }}>
