@@ -760,7 +760,12 @@ const [open, setOpen] = useState(false);
 <>
   <Button variant="contained" onClick={() => setOpen(true)}>Open Agent</Button>
   <AgentRunDrawer open={open} onClose={() => setOpen(false)} />
-</>`}
+          </>`}
+          apis={[
+            { method: 'POST', path: '/api/v1/agent', description: 'Submit prompt from the embedded AgentUI' },
+            { method: 'GET', path: '/api/v1/streams/results', description: 'Live decision timeline' },
+            { method: 'GET', path: '/api/v1/apps/authentication', description: 'Connected apps for the chips picker' },
+          ]}
         >
           <AgentRunDrawerDemo />
         </DemoSection>
