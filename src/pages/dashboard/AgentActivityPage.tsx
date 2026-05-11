@@ -24,8 +24,12 @@ import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import { useAgentActivity } from '@/hooks/useAgentActivity';
 import AgentActivityFeed from '@/components/agent/AgentActivityFeed';
 import AgentActivityStatsPanel from '@/components/agent/AgentActivityStats';
-import AgentPermissionsDrawer from '@/components/agent/AgentPermissionsDrawer';
+
 import AgentActionDrawer from '@/components/agent/AgentActionDrawer';
+import PermissionsPanel from '@/components/agent/PermissionsPanel';
+import LocalLLMConfig from '@/components/agent/LocalLLMConfig';
+import { AgentRunDrawer, type AgentRunDrawerTab } from '@/Shuffle-MCPs';
+import { useAuth } from '@/context/AuthContext';
 import { useAgentPermissions } from '@/hooks/useAgentPermissions';
 import type { AgentRun } from '@/services/agentActivity';
 import { usePageMeta } from '@/hooks/usePageMeta';
@@ -61,12 +65,15 @@ const AgentActivityPage = () => {
   } = useAgentActivity();
 
   const { enabledPermissions, totalPermissions } = useAgentPermissions();
+  const { userInfo } = useAuth();
+  const isSupport = userInfo?.support === true;
   const [permissionsOpen, setPermissionsOpen] = useState(false);
-  const [permissionsInitialTab, setPermissionsInitialTab] = useState(0);
+  const [permissionsInitialTab, setPermissionsInitialTab] = useState<AgentRunDrawerTab>('run');
   const [selectedRun, setSelectedRun] = useState<AgentRun | null>(null);
 
   const openDrawer = (tab: number) => {
-    setPermissionsInitialTab(tab);
+    const mapped: AgentRunDrawerTab = tab === 1 ? 'permissions' : tab === 2 ? 'localLLM' : 'run';
+    setPermissionsInitialTab(mapped);
     setPermissionsOpen(true);
   };
 
@@ -329,8 +336,16 @@ const AgentActivityPage = () => {
         </Box>
       </Box>
 
-      {/* Permissions drawer */}
-      <AgentPermissionsDrawer open={permissionsOpen} onClose={() => setPermissionsOpen(false)} initialTab={permissionsInitialTab} />
+      {/* Run / Permissions / Local LLM drawer (sourced from Shuffle-MCPs lib) */}
+      <AgentRunDrawer
+        open={permissionsOpen}
+        onClose={() => setPermissionsOpen(false)}
+        initialTab={permissionsInitialTab}
+        permissionsSlot={<PermissionsPanel compact />}
+        permissionsDisabled={!isSupport}
+        permissionsDisabledTooltip="Coming soon"
+        localLLMSlot={<LocalLLMConfig />}
+      />
 
       {/* Action/view drawer for selected run */}
       <AgentActionDrawer

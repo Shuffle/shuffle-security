@@ -42,7 +42,7 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { SHUFFLE_AUTOMATION_URL } from '@/Shuffle-MCPs/api';
 import { IntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
 import { SidebarSearchDialog } from './SidebarSearchDialog';
-import AgentPermissionsDrawer from '@/components/agent/AgentPermissionsDrawer';
+
 import { useEntityPreference, useSidebarTabs } from '@/hooks/useEntityLabel';
 import { SIDEBAR_NAV, SidebarChildSpec } from '@/config/sidebarNav';
 import { getRegionFlag } from '@/lib/regionFlag';

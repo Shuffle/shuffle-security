@@ -24,6 +24,7 @@ import {
   TryMcpSection,
   SingulActionsPreview,
   AgentUI,
+  AgentRunDrawer,
   useAppLookup,
 } from '@/Shuffle-MCPs';
 import { useAuth } from '@/context/AuthContext';
@@ -370,6 +371,18 @@ function TryActionsDemo({ appName }: { appName: string }) {
   return <SingulActionsPreview appName={appName} categories={lookup.categories} />;
 }
 
+const AgentRunDrawerDemo = () => {
+  const [open, setOpen] = useState(false);
+  return (
+    <Box>
+      <Button variant="contained" onClick={() => setOpen(true)}>
+        Open Agent drawer
+      </Button>
+      <AgentRunDrawer open={open} onClose={() => setOpen(false)} />
+    </Box>
+  );
+};
+
 const ShuffleMcpTestPage = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [detailApp, setDetailApp] = useState<string | null>(null);
@@ -503,6 +516,23 @@ const ShuffleMcpTestPage = () => {
           code={SNIPPET_AGENT_UI}
         >
           <AgentUI maxWidth={820} />
+        </DemoSection>
+
+        <DemoSection
+          title="1b. Agent Run drawer"
+          description={<><code>&lt;AgentRunDrawer /&gt;</code> — right-side drawer hosting the same <code>AgentUI</code> in a compact tab. Permissions and Local LLM tabs are slot-driven, so the drawer is fully standalone (no host context required).</>}
+          code={`import { useState } from 'react';
+import { Button } from '@mui/material';
+import { AgentRunDrawer } from '@shuffleio/shuffle-mcps';
+
+const [open, setOpen] = useState(false);
+
+<>
+  <Button variant="contained" onClick={() => setOpen(true)}>Open Agent</Button>
+  <AgentRunDrawer open={open} onClose={() => setOpen(false)} />
+</>`}
+        >
+          <AgentRunDrawerDemo />
         </DemoSection>
 
         <DemoSection

@@ -24,6 +24,8 @@ export type { TryMcpSectionProps } from './TryMcpSection';
 export { default as SingulActionsPreview } from './SingulActionsPreview';
 export { default as AgentUI } from './AgentUI';
 export type { AgentUIProps, AgentUIApp } from './AgentUI';
+export { default as AgentRunDrawer } from './AgentRunDrawer';
+export type { AgentRunDrawerProps, AgentRunDrawerTab } from './AgentRunDrawer';
 export { useAppLookup } from './useAppLookup';
 export type { AppLookupResult } from './useAppLookup';
 export { IntegrationStatus, refreshAllIntegrationStatus } from './IntegrationStatus';
