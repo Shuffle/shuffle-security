@@ -305,12 +305,13 @@ interface TimelineRowProps {
   onRerunAgent: () => void;
   onRerunDecision: (decision: any) => void;
   agentRequestLoading: boolean;
+  getFormUrl?: (decisionId: string) => string | null;
 }
 
 const TimelineRow: React.FC<TimelineRowProps> = ({
   item, index, open, onToggle, appsById, totalDuration, originalStartTime,
   maxWidth, questionAnswers, setQuestionAnswers, onSubmitQuestions,
-  onRerunAgent, onRerunDecision, agentRequestLoading,
+  onRerunAgent, onRerunDecision, agentRequestLoading, getFormUrl,
 }) => {
   const validate = validateJson(item.details);
   const itemStart = item.start_time || 0;
