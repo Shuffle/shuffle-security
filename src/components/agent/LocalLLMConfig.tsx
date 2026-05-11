@@ -188,7 +188,17 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
           bgcolor: 'hsla(var(--muted) / 0.3)',
         }}>
           <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
-            Configure an OpenAI-compatible endpoint for agent operations. Pick a common provider below, or choose "Custom / self-hosted" to enter your own URL. Credentials are saved securely via the app authentication system.
+            Configure an OpenAI-compatible endpoint for agent operations. Pick a common provider below, or choose "Custom / self-hosted" to enter your own URL. Credentials are saved securely via the app authentication system.{' '}
+            <Box
+              component="a"
+              href="https://shuffler.io/docs/AI"
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{ color: 'hsl(var(--primary))', textDecoration: 'underline' }}
+            >
+              Read the docs
+            </Box>
+            .
           </Typography>
         </Box>
       )}
@@ -196,19 +206,20 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
       {/* Endpoint preset selector */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
         <FormControl size="small" fullWidth>
-          <InputLabel
-            sx={{
-              color: 'hsl(var(--muted-foreground))',
-              '&.Mui-focused': { color: 'hsl(var(--primary))' },
-            }}
-          >
-            Endpoint preset
-          </InputLabel>
           <Select
             value={effectivePreset}
-            label="Endpoint preset"
             onChange={(e) => handlePresetChange(e.target.value as string)}
             displayEmpty
+            renderValue={(val) => {
+              if (!val) {
+                return (
+                  <Typography component="span" sx={{ color: 'hsl(var(--muted-foreground))', fontStyle: 'italic' }}>
+                    Select a provider…
+                  </Typography>
+                );
+              }
+              return val as string;
+            }}
             sx={{
               bgcolor: 'hsl(var(--card))',
               color: 'hsl(var(--foreground))',
@@ -227,9 +238,6 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
               },
             }}
           >
-            <MenuItem value="" disabled>
-              <em>Select a provider…</em>
-            </MenuItem>
             {ENDPOINT_PRESETS.map((p) => (
               <MenuItem key={p.label} value={p.label}>
                 {p.label}
