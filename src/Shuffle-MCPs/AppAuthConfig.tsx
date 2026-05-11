@@ -1126,6 +1126,7 @@ export const AppAuthCard = ({
                 <MenuBookIcon fontSize="small" />
               </IconButton>
             </Tooltip>
+            )}
             <IconButton
               size="small"
               sx={{
