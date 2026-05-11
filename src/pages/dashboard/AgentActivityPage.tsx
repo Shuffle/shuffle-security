@@ -22,16 +22,19 @@ import { motion } from 'framer-motion';
 import { Settings, Play } from 'lucide-react';
 import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import { useAgentActivity } from '@/hooks/useAgentActivity';
-import AgentActivityFeed from '@/components/agent/AgentActivityFeed';
 import AgentActivityStatsPanel from '@/components/agent/AgentActivityStats';
 
-import AgentActionDrawer from '@/components/agent/AgentActionDrawer';
 import PermissionsPanel from '@/components/agent/PermissionsPanel';
 import LocalLLMConfig from '@/components/agent/LocalLLMConfig';
-import { AgentRunDrawer, type AgentRunDrawerTab } from '@/Shuffle-MCPs';
+import {
+  AgentRunDrawer,
+  type AgentRunDrawerTab,
+  AgentActivityList,
+  AgentExecutionDrawer,
+  type AgentRun,
+} from '@/Shuffle-MCPs';
 import { useAuth } from '@/context/AuthContext';
 import { useAgentPermissions } from '@/hooks/useAgentPermissions';
-import type { AgentRun } from '@/services/agentActivity';
 import { usePageMeta } from '@/hooks/usePageMeta';
 
 const STATUS_FILTERS = [
