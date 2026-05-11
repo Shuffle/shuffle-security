@@ -25,8 +25,11 @@ import {
   SingulActionsPreview,
   AgentUI,
   AgentRunDrawer,
+  AgentActivityList,
+  AgentExecutionDrawer,
   useAppLookup,
 } from '@/Shuffle-MCPs';
+import type { AgentRun } from '@/Shuffle-MCPs';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
@@ -389,6 +392,11 @@ const ShuffleMcpTestPage = () => {
   const [authApp, setAuthApp] = useState('Gmail');
   const [mcpApp, setMcpApp] = useState('Slack');
   const [actionsApp, setActionsApp] = useState('VirusTotal');
+  const [selectedRun, setSelectedRun] = useState<AgentRun | null>(null);
+
+  const scrollToActivity = () => {
+    document.getElementById('agent-activity')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   // Default to dark mode for unauthenticated visitors on this public demo page.
   const { isAuthenticated, isLoading } = useAuth();
@@ -512,7 +520,7 @@ const ShuffleMcpTestPage = () => {
       <Stack spacing={4}>
         <DemoSection
           title="1. Agent UI — start &amp; debug"
-          description={<><code>&lt;AgentUI /&gt;</code> — modern hero "What do you want to do?" prompt with MCP/app chips, plus a live decision timeline for debugging in-flight runs. Resumes from <code>?execution_id&amp;authorization</code> URL params.</>}
+          description={<><code>&lt;AgentUI /&gt;</code> — modern hero "What do you want to do?" prompt with MCP/app chips, plus a live decision timeline for debugging in-flight runs. Resumes from <code>?execution_id&amp;authorization</code> URL params. <Box component="button" type="button" onClick={scrollToActivity} sx={{ all: 'unset', cursor: 'pointer', color: 'hsl(var(--primary))', '&:hover': { textDecoration: 'underline' } }}>View past executions ↓</Box></>}
           code={SNIPPET_AGENT_UI}
         >
           <AgentUI maxWidth={820} />
@@ -520,7 +528,7 @@ const ShuffleMcpTestPage = () => {
 
         <DemoSection
           title="1b. Agent Run drawer"
-          description={<><code>&lt;AgentRunDrawer /&gt;</code> — right-side drawer hosting the same <code>AgentUI</code> in a compact tab. Permissions and Local LLM tabs are slot-driven, so the drawer is fully standalone (no host context required).</>}
+          description={<><code>&lt;AgentRunDrawer /&gt;</code> — right-side drawer hosting the same <code>AgentUI</code> in a compact tab. Permissions and Local LLM tabs are slot-driven, so the drawer is fully standalone (no host context required). <Box component="button" type="button" onClick={scrollToActivity} sx={{ all: 'unset', cursor: 'pointer', color: 'hsl(var(--primary))', '&:hover': { textDecoration: 'underline' } }}>View past executions ↓</Box></>}
           code={`import { useState } from 'react';
 import { Button } from '@mui/material';
 import { AgentRunDrawer } from '@shuffleio/shuffle-mcps';
@@ -599,6 +607,29 @@ const [open, setOpen] = useState(false);
           <AppNamePicker value={actionsApp} onChange={setActionsApp} />
           <TryActionsDemo appName={actionsApp} />
         </DemoSection>
+
+        <Box id="agent-activity" sx={{ scrollMarginTop: 96 }}>
+          <DemoSection
+            title="8. Agent activity list"
+            description={<><code>&lt;AgentActivityList /&gt;</code> — past agent executions with search and status filters (All / Completed / Running / Failed). Click any row to open <code>&lt;AgentExecutionDrawer /&gt;</code> with the pre-loaded run.</>}
+            code={`import { useState } from 'react';
+import { AgentActivityList, AgentExecutionDrawer } from '@shuffleio/shuffle-mcps';
+import type { AgentRun } from '@shuffleio/shuffle-mcps';
+
+const [run, setRun] = useState<AgentRun | null>(null);
+
+<>
+  <AgentActivityList onRunClick={setRun} />
+  <AgentExecutionDrawer
+    open={run !== null}
+    onClose={() => setRun(null)}
+    run={run}
+  />
+</>`}
+          >
+            <AgentActivityList onRunClick={setSelectedRun} />
+          </DemoSection>
+        </Box>
       </Stack>
 
       <AppSearchDrawer
@@ -612,6 +643,12 @@ const [open, setOpen] = useState(false);
         open={detailApp !== null}
         onClose={() => setDetailApp(null)}
         appName={detailApp}
+      />
+
+      <AgentExecutionDrawer
+        open={selectedRun !== null}
+        onClose={() => setSelectedRun(null)}
+        run={selectedRun}
       />
     </Container>
     </>

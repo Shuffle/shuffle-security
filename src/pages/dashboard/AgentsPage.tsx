@@ -2,17 +2,31 @@
  * AgentsPage — standalone full-view of the Shuffle-MCPs AgentUI component.
  *
  * Mirrors the legacy /agents page from Shuffle Core: a single, full-width
- * surface for starting and debugging agent runs. Resumes from
- * `?execution_id=...&authorization=...` URL params.
+ * surface for starting and debugging agent runs, with a list of past
+ * executions below. Resumes from `?execution_id=...&authorization=...` URL
+ * params.
  */
 
-import { Box } from '@mui/material';
-import { AgentUI } from '@/Shuffle-MCPs';
+import { useState } from 'react';
+import { Box, Stack } from '@mui/material';
+import { AgentUI, AgentActivityList, AgentExecutionDrawer } from '@/Shuffle-MCPs';
+import type { AgentRun } from '@/Shuffle-MCPs';
 
 const AgentsPage = () => {
+  const [selectedRun, setSelectedRun] = useState<AgentRun | null>(null);
+
   return (
-    <Box sx={{ minHeight: '100vh', width: '100%', px: { xs: 2, md: 4 }, pt: '5vh', pb: 3 }}>
-      <AgentUI maxWidth={820} />
+    <Box sx={{ minHeight: '100vh', width: '100%', px: { xs: 2, md: 4 }, pt: '5vh', pb: 6 }}>
+      <Stack spacing={6} sx={{ maxWidth: 820, mx: 'auto' }}>
+        <AgentUI maxWidth={820} />
+        <AgentActivityList onRunClick={setSelectedRun} />
+      </Stack>
+
+      <AgentExecutionDrawer
+        open={selectedRun !== null}
+        onClose={() => setSelectedRun(null)}
+        run={selectedRun}
+      />
     </Box>
   );
 };
