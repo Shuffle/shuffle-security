@@ -289,6 +289,9 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
         apiAuthEntries={openaiEntries}
         onRefreshAuth={refreshAuth}
         disableUrlPrefill
+        hideHeader
+        hideStatusChips
+        hideDocsLink
       />
     </Box>
   );
