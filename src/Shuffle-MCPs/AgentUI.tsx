@@ -1689,8 +1689,11 @@ const AgentUI: React.FC<AgentUIProps> = ({
 
             {/* Continuation form (after a finish decision) */}
             {finishDecisionId && (
-              <Box sx={{ mt: 3 }}>
-                {/* Final answer is rendered above (Simple view / timeline finish row) — don't duplicate it here. */}
+              <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
+                <Box sx={{ width: '100%', maxWidth: 640 }}>
+                  <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', mb: 0.75, textAlign: 'center' }}>
+                    Continue this agent run with more details
+                  </Typography>
                 <Box
                   component="form"
                   onSubmit={(e) => {
@@ -1701,7 +1704,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   }}
                   sx={{
                     display: 'flex', alignItems: 'flex-end', gap: 1,
-                    p: 1.75, borderRadius: 999,
+                    p: 1.25, borderRadius: 999,
                     border: '1.5px solid hsl(var(--border))',
                     bgcolor: 'hsl(var(--card))',
                     '&:focus-within': {
@@ -1718,8 +1721,16 @@ const AgentUI: React.FC<AgentUIProps> = ({
                     placeholder={continuationPlaceholder}
                     value={continuationText}
                     onChange={(e) => setContinuationText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                        e.preventDefault();
+                        if (continuationText.trim() && !agentRequestLoading) {
+                          submitQuestions(finishDecisionId, { continue: continuationText }, true);
+                        }
+                      }
+                    }}
                     disabled={agentRequestLoading}
-                    sx={{ fontSize: '0.95rem', color: 'hsl(var(--foreground))', px: 2 }}
+                    sx={{ fontSize: '0.9rem', color: 'hsl(var(--foreground))', px: 2 }}
                   />
                   <IconButton
                     type="submit"
@@ -1733,6 +1744,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   >
                     {agentRequestLoading ? <CircularProgress size={16} sx={{ color: 'inherit' }} /> : <SendIcon sx={{ fontSize: 18 }} />}
                   </IconButton>
+                </Box>
                 </Box>
               </Box>
             )}
