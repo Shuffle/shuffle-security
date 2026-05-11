@@ -679,9 +679,10 @@ export const AutomationConfig = ({
 
     const enabledAppNames = enabledTools.map(tool => tool.name);
     const labels = AUTOMATION_WORKFLOW_LABELS[optionId] || [];
-    // Schedule-based automations (Assign & Escalate) have no app dependencies,
-    // so the generator must be allowed to fire with an empty app list.
-    const allowEmpty = optionId === 'assign_escalate';
+    // Allow firing with an empty app list — Assign & Escalate is schedule-based,
+    // and Automatic Ingestion / Forward Updates need to provision the workflow
+    // (and webhook trigger) even before any apps are wired in.
+    const allowEmpty = true;
     labels.forEach(label => {
       generateWorkflow({ label, enabledAppNames, category: 'cases', actionName, allowEmpty });
     });
