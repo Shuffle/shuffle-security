@@ -53,6 +53,10 @@ const AgentExecutionDrawer = ({
   apiKey,
   apiBaseUrl,
   orgId,
+  className,
+  paperSx,
+  headerSx,
+  bodySx,
 }: AgentExecutionDrawerProps) => {
   const statusKey = (run?.status || '').toUpperCase();
   const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.WAITING;
@@ -65,31 +69,38 @@ const AgentExecutionDrawer = ({
       onClose={onClose}
       slotProps={{
         paper: {
-          sx: {
-            width: { xs: '100%', sm: width },
-            maxWidth: '100vw',
-            bgcolor: 'hsl(var(--background))',
-            color: 'hsl(var(--foreground))',
-            backgroundImage: 'none',
-            borderLeft: '1px solid hsl(var(--border))',
-          },
+          className,
+          sx: [
+            {
+              width: { xs: '100%', sm: width },
+              maxWidth: '100vw',
+              bgcolor: 'hsl(var(--background))',
+              color: 'hsl(var(--foreground))',
+              backgroundImage: 'none',
+              borderLeft: '1px solid hsl(var(--border))',
+            },
+            ...(Array.isArray(paperSx) ? paperSx : paperSx ? [paperSx] : []),
+          ],
         },
       }}
     >
       {/* Header */}
       <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1.5,
-          px: 2.5,
-          py: 1.75,
-          borderBottom: '1px solid hsl(var(--border))',
-          position: 'sticky',
-          top: 0,
-          zIndex: 2,
-          bgcolor: 'hsl(var(--background))',
-        }}
+        sx={[
+          {
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            px: 2.5,
+            py: 1.75,
+            borderBottom: '1px solid hsl(var(--border))',
+            position: 'sticky',
+            top: 0,
+            zIndex: 2,
+            bgcolor: 'hsl(var(--background))',
+          },
+          ...(Array.isArray(headerSx) ? headerSx : headerSx ? [headerSx] : []),
+        ]}
       >
         <Box
           sx={{
