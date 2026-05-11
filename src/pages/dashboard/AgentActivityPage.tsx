@@ -336,8 +336,16 @@ const AgentActivityPage = () => {
         </Box>
       </Box>
 
-      {/* Permissions drawer */}
-      <AgentPermissionsDrawer open={permissionsOpen} onClose={() => setPermissionsOpen(false)} initialTab={permissionsInitialTab} />
+      {/* Run / Permissions / Local LLM drawer (sourced from Shuffle-MCPs lib) */}
+      <AgentRunDrawer
+        open={permissionsOpen}
+        onClose={() => setPermissionsOpen(false)}
+        initialTab={permissionsInitialTab}
+        permissionsSlot={<PermissionsPanel compact />}
+        permissionsDisabled={!isSupport}
+        permissionsDisabledTooltip="Coming soon"
+        localLLMSlot={<LocalLLMConfig />}
+      />
 
       {/* Action/view drawer for selected run */}
       <AgentActionDrawer
