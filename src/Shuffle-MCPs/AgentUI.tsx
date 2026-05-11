@@ -323,13 +323,20 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
   let displayType = item.type as string;
   let displayLabel = item.label?.replace(/_/g, ' ') || '';
   const details = item.details as AgentDecision | undefined;
-  if (details?.reason) displayLabel = details.reason;
-  if (details?.action === 'finish' || item.category === 'finish' || details?.action === 'finalise') {
-    displayType = 'finalise';
-  } else if (item.category === 'ask' || details?.action === 'ask') {
-    displayType = 'question';
-  } else if (details?.action === 'add_tool') {
-    displayType = 'add tool';
+  const isProcessing = item.category === 'processing';
+  if (isProcessing) {
+    displayType = 'processing';
+  } else if (details?.reason) {
+    displayLabel = details.reason;
+  }
+  if (!isProcessing) {
+    if (details?.action === 'finish' || item.category === 'finish' || details?.action === 'finalise') {
+      displayType = 'finalise';
+    } else if (item.category === 'ask' || details?.action === 'ask') {
+      displayType = 'question';
+    } else if (details?.action === 'add_tool') {
+      displayType = 'add tool';
+    }
   }
 
   // Resolve app icon for the tool used
@@ -353,7 +360,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
     (q) => questionAnswers[q.question]?.value
   );
 
-  const barColor =
+  const barColor = isProcessing ? 'hsl(var(--muted-foreground) / 0.45)' :
     item.status === 'IGNORED' ? STATUS_COLORS.warning :
     item.status === 'FINISHED' ? STATUS_COLORS.finished :
     item.status === 'FAILURE' || item.status === 'ABORTED' ? STATUS_COLORS.error :
@@ -378,10 +385,16 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
         }}
       >
         <Box sx={{ width: 24, display: 'flex', justifyContent: 'center' }}>
-          <StatusIcon status={item.status} />
+          {isProcessing ? (
+            <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'hsl(var(--muted-foreground) / 0.5)' }} />
+          ) : (
+            <StatusIcon status={item.status} />
+          )}
         </Box>
         <Box sx={{ width: 24, display: 'flex', justifyContent: 'center' }}>
-          {toolApp?.icon ? (
+          {isProcessing ? (
+            <Box sx={{ width: 22 }} />
+          ) : toolApp?.icon ? (
             <Avatar src={toolApp.icon} sx={{ width: 22, height: 22, bgcolor: 'transparent' }} variant="rounded" />
           ) : item.category === 'finalise' || details?.action === 'finish' ? (
             <CheckIcon sx={{ color: STATUS_COLORS.finished, fontSize: 18 }} />
@@ -394,12 +407,14 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
           size="small"
           sx={{
             height: 22,
-            bgcolor: 'hsl(var(--muted))',
-            color: 'hsl(var(--foreground))',
+            bgcolor: isProcessing ? 'transparent' : 'hsl(var(--muted))',
+            color: isProcessing ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
+            border: isProcessing ? '1px dashed hsl(var(--border))' : 'none',
             fontSize: '0.7rem',
             fontWeight: 500,
             textTransform: 'capitalize',
             minWidth: 80,
+            fontStyle: isProcessing ? 'italic' : 'normal',
           }}
         />
         <Box sx={{
@@ -493,6 +508,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
             const isApiAction =
               action !== 'ask' && cat !== 'ask' &&
               action !== 'finish' && action !== 'finalise' && cat !== 'finish' && cat !== 'finalise' &&
+              cat !== 'processing' &&
               action !== 'add_tool';
             if (!isApiAction) return null;
             return (
@@ -1194,6 +1210,34 @@ const AgentUI: React.FC<AgentUIProps> = ({
     }
 
     items.sort((a, b) => (a.start_time || 0) - (b.start_time || 0));
+
+    // Insert "processing" placeholder rows between consecutive decisions when
+    // there is meaningful dead time (the agent is thinking / the LLM is
+    // generating the next step). Skip the agent row itself — it spans the
+    // entire run and would always overlap.
+    const decisionItems = items.filter((it) => it.type === 'decision');
+    const runStart = items.find((it) => it.type === 'agent')?.start_time || 0;
+    const processingRows: TimelineItem[] = [];
+    let prevEnd = runStart;
+    for (const dec of decisionItems) {
+      const decStart = dec.start_time || 0;
+      const gap = decStart - prevEnd;
+      if (prevEnd > 0 && decStart > 0 && gap >= 0.5) {
+        processingRows.push({
+          label: 'Thinking',
+          type: 'decision',
+          category: 'processing',
+          status: 'FINISHED',
+          start_time: prevEnd,
+          end_time: decStart,
+          details: undefined as any,
+        });
+      }
+      prevEnd = dec.end_time || decStart;
+    }
+    items.push(...processingRows);
+    items.sort((a, b) => (a.start_time || 0) - (b.start_time || 0));
+
     const start = items.reduce((acc, it) => Math.min(acc, it.start_time || acc), Infinity);
     const end = items.reduce((acc, it) => Math.max(acc, it.end_time || acc), 0);
     const startSafe = start === Infinity ? 0 : start;
