@@ -4,6 +4,49 @@
  * https://github.com/Shuffle/singul.js
  */
 
+/* ============================================================================
+ * Standalone fallback tokens.
+ *
+ * The Shuffle-MCPs lib uses shadcn-style HSL CSS custom properties throughout
+ * its sx/styled code (e.g. `hsl(var(--card))`, `hsl(var(--border))`). When the
+ * lib is consumed in a host app that does NOT define those tokens (e.g. plain
+ * MUI apps like Shuffle Core), `var(--card)` resolves to nothing -> `hsl()` is
+ * invalid -> backgrounds render TRANSPARENT, which is what caused the
+ * AppDetailDrawer to look see-through.
+ *
+ * `:where(:root)` has specificity 0, so any host-defined `:root { --card: ... }`
+ * still wins. These defaults only kick in when the host has nothing.
+ *
+ * Values match the dark-theme defaults from the Shuffle Security host app.
+ * ============================================================================ */
+:where(:root) {
+  --background: 0 0% 10%;
+  --background-elevated: 0 0% 13%;
+  --background-surface: 0 0% 16%;
+  --foreground: 0 0% 98%;
+  --card: 0 0% 13%;
+  --card-foreground: 0 0% 100%;
+  --popover: 0 0% 13%;
+  --popover-foreground: 0 0% 100%;
+  --primary: 22 100% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 16%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 0 0% 16%;
+  --muted-foreground: 0 0% 65%;
+  --accent: 22 100% 50%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 20%;
+  --input: 0 0% 16%;
+  --ring: 22 100% 50%;
+  --severity-info: 210 90% 60%;
+  --severity-low: 142 70% 45%;
+  --severity-medium: 38 92% 50%;
+  --infra-email: 210 90% 60%;
+}
+
 .singul-container {
   /* ============================================================
    * Default theme: Shuffle-style dark (matches the rest of the app).
