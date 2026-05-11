@@ -88,6 +88,11 @@ const AgentRunDrawer = ({
   width = 520,
   title = 'Agent',
   subtitle = 'Run actions and manage permissions',
+  className,
+  paperSx,
+  headerSx,
+  tabsSx,
+  bodySx,
 }: AgentRunDrawerProps) => {
   const [activeTab, setActiveTab] = useState<AgentRunDrawerTab>(initialTab);
 
