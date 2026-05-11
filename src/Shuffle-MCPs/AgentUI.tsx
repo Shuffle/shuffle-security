@@ -385,10 +385,16 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
         }}
       >
         <Box sx={{ width: 24, display: 'flex', justifyContent: 'center' }}>
-          <StatusIcon status={item.status} />
+          {isProcessing ? (
+            <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'hsl(var(--muted-foreground) / 0.5)' }} />
+          ) : (
+            <StatusIcon status={item.status} />
+          )}
         </Box>
         <Box sx={{ width: 24, display: 'flex', justifyContent: 'center' }}>
-          {toolApp?.icon ? (
+          {isProcessing ? (
+            <Box sx={{ width: 22 }} />
+          ) : toolApp?.icon ? (
             <Avatar src={toolApp.icon} sx={{ width: 22, height: 22, bgcolor: 'transparent' }} variant="rounded" />
           ) : item.category === 'finalise' || details?.action === 'finish' ? (
             <CheckIcon sx={{ color: STATUS_COLORS.finished, fontSize: 18 }} />
@@ -401,12 +407,14 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
           size="small"
           sx={{
             height: 22,
-            bgcolor: 'hsl(var(--muted))',
-            color: 'hsl(var(--foreground))',
+            bgcolor: isProcessing ? 'transparent' : 'hsl(var(--muted))',
+            color: isProcessing ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
+            border: isProcessing ? '1px dashed hsl(var(--border))' : 'none',
             fontSize: '0.7rem',
             fontWeight: 500,
             textTransform: 'capitalize',
             minWidth: 80,
+            fontStyle: isProcessing ? 'italic' : 'normal',
           }}
         />
         <Box sx={{
