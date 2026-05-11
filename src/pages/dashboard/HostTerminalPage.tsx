@@ -885,8 +885,8 @@ const HostTerminalPage = () => {
                 ) : (
                   <ShieldX size={14} className="text-destructive shrink-0" />
                 )}
-                {!hasOutput && canReload && !isLoading && (
-                  <RefreshCw size={12} className="text-muted-foreground shrink-0" />
+                {(!hasOutput || isTruncated) && canReload && !isLoading && (
+                  <RefreshCw size={12} className={isTruncated ? "text-primary shrink-0" : "text-muted-foreground shrink-0"} />
                 )}
                 <span className="text-xs text-muted-foreground font-mono shrink-0">
                   {new Date(entry.startedAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
