@@ -160,7 +160,7 @@ const AgentExecutionDrawer = ({
       </Box>
 
       {/* Body — embedded AgentUI seeded with the pre-loaded run */}
-      <Box sx={{ flex: 1, overflowY: 'auto' }}>
+      <Box sx={{ flex: 1, overflowY: 'auto', pt: 3 }}>
         {run ? (
           <AgentUI
             key={run.execution_id}
@@ -178,6 +178,7 @@ const AgentExecutionDrawer = ({
             hideHeroIcon
             hideAppPicker
             hideAttach
+            disableStartTab
             compact
             maxWidth={width - 32}
             apiKey={apiKey}
