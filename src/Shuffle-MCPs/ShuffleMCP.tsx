@@ -113,18 +113,12 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
     }
     const fetchPrivateApps = async () => {
       try {
-        const response = await fetch(`${apiBaseUrl}${privateAppsPath}`, {
-          headers: {
-            // apiKey is optional — if omitted we rely on the browser session
-            // cookie (credentials: 'include'), which is how prod usually auths.
-            ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
-            ...(orgId ? { 'Org-Id': orgId } : {}),
-          },
-          credentials: 'include',
+        const apps = await fetchApps({
+          baseUrl: apiBaseUrl,
+          path: privateAppsPath,
+          apiKey: apiKey || null,
+          orgId: orgId || null,
         });
-        if (!response.ok) return;
-        const data = await response.json();
-        const apps = Array.isArray(data) ? data : (data?.data || []);
         // Normalize to AlgoliaSearchApp shape, tagged as 'private' source.
         const normalized: AlgoliaSearchApp[] = apps.map((a: any) => ({
           name: a.name || '',
