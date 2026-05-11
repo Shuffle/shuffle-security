@@ -1044,8 +1044,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
       try {
         const all = await fetchApps({
           baseUrl: API_CONFIG.baseUrl,
-          apiKey: API_CONFIG.apiKey,
-          orgId: API_CONFIG.orgId,
+          apiKey: apiKey || API_CONFIG.apiKey,
+          orgId: orgId || null,
         });
         if (cancelled || !Array.isArray(all) || all.length === 0) return;
         const byIdMap = new Map<string, any>();
