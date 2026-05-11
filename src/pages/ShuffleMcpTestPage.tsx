@@ -276,30 +276,16 @@ function ApiPanel({ apis }: { apis: ApiEndpoint[] }) {
   return (
     <Box
       sx={{
-        mt: 2,
         borderRadius: 1.5,
         border: '1px solid hsl(var(--border))',
         backgroundColor: 'hsl(var(--muted) / 0.4)',
         p: 2,
-        height: '100%',
+        flex: 1,
         display: 'flex',
         flexDirection: 'column',
         minWidth: 0,
       }}
     >
-      <Typography
-        variant="caption"
-        sx={{
-          fontFamily: '"JetBrains Mono", ui-monospace, monospace',
-          fontSize: '0.7rem',
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-          color: 'hsl(var(--muted-foreground))',
-          mb: 1.25,
-        }}
-      >
-        Backend APIs called
-      </Typography>
       <Stack spacing={1}>
         {apis.map((api, i) => (
           <Box key={i} sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
