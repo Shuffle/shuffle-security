@@ -1693,6 +1693,22 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   } else if (totalDuration && totalDuration > 0) {
                     durationSec = Math.round(totalDuration);
                   }
+                  // Detect a pending ASK decision (agent waiting on a user answer)
+                  const pendingAsk = (agentData?.decisions || []).slice().reverse().find((d) => {
+                    const isAsk = d.category === 'ask' || d.action === 'ask';
+                    const st = (d.run_details?.status || '').toUpperCase();
+                    return isAsk && (st === 'RUNNING' || st === 'WAITING');
+                  });
+                  const pendingQuestions: { question: string; index: number }[] = [];
+                  if (pendingAsk) {
+                    for (const f of pendingAsk.fields || []) {
+                      if (f.key === 'question' && f.value) {
+                        pendingQuestions.push({ question: f.value, index: pendingQuestions.length + 1 });
+                      }
+                    }
+                  }
+                  const pendingAnswered = pendingQuestions.every((q) => questionAnswers[q.question]?.value);
+
                   return (
                     <>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
