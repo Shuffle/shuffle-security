@@ -187,9 +187,10 @@ const AppMcpChat = ({ appName, appIcon, appId, categories }: AppMcpChatProps) =>
 
   const suggestions = useMemo(() => getSuggestions(appName, categories), [appName, categories]);
   const primaryCategory = useMemo(() => getPrimaryCategory(appName, categories), [appName, categories]);
+  const MIN_INPUT_LENGTH = 6;
   const runAction = async () => {
     const trimmed = input.trim();
-    if (!trimmed || runState === 'running') return;
+    if (trimmed.length < MIN_INPUT_LENGTH || runState === 'running') return;
 
     setQuery(trimmed);
     setInput('');
