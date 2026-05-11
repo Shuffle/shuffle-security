@@ -883,12 +883,15 @@ const AgentUI: React.FC<AgentUIProps> = ({
 
   const appsById = useMemo(() => {
     const m: Record<string, AgentUIApp> = {};
-    for (const a of chosenApps) {
-      const slug = a.name.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
-      m[slug] = a;
-    }
+    const add = (a: AgentUIApp) => {
+      if (!a?.name) return;
+      const slug = a.name.toLowerCase().replace(/[\s-]+/g, '_');
+      if (!m[slug] || (!m[slug].icon && a.icon)) m[slug] = a;
+    };
+    for (const a of chosenApps) add(a);
+    for (const a of executionApps) add(a);
     return m;
-  }, [chosenApps]);
+  }, [chosenApps, executionApps]);
 
   // Sync controlled `apps` prop into local state.
   useEffect(() => {
