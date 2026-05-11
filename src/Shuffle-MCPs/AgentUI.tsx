@@ -179,6 +179,24 @@ export interface AgentUIProps {
   executionId?: string;
   /** Authorization token paired with `executionId`. */
   authorization?: string;
+  /**
+   * Pre-loaded execution payload. When provided, AgentUI skips the starter
+   * and renders Simple/Detailed views immediately — no `/streams/results`
+   * fetch, no `authorization` token required. Useful for embedding inside
+   * a list/drawer that already has the execution data in hand. If the run
+   * is still EXECUTING and an `authorization` is also present, polling
+   * continues normally.
+   */
+  initialExecution?: {
+    execution_id?: string;
+    authorization?: string;
+    status?: string;
+    started_at?: number | string;
+    completed_at?: number | string;
+    results?: any[];
+    workflow?: { id?: string; name?: string };
+    [k: string]: any;
+  };
   /** Called whenever a run finishes (success or failure). */
   onRun?: (info: { input: string; success: boolean; executionId?: string; error?: string }) => void;
   /**
