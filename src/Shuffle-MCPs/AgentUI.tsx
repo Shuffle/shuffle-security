@@ -1195,6 +1195,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   type TabKey = 'start' | 'simple' | 'detailed';
   const activeTab: TabKey = showStarter ? 'start' : viewMode;
   const hasExecution = !!execution?.execution_id;
+  const showRunSwitcher = hasExecution || agentRequestLoading;
   const goToTab = (t: TabKey) => {
     if (t === 'start') {
       setShowStarter(true);
@@ -1267,7 +1268,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   return (
     <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', pb: 4 }}>
       <Box sx={{ width: '100%', maxWidth, display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {hasExecution && tabBar}
+        {showRunSwitcher && tabBar}
         {showStarter ? (
           <Box
             component="form"
@@ -1638,7 +1639,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                         </Box>
                       ) : isRunning ? (
                         <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))' }}>
-                          Waiting for the agent to finish. Switch to Detailed for the live timeline.
+                          Waiting for the agent to produce the first step.
                         </Typography>
                       ) : (
                         <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))' }}>
