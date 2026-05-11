@@ -377,15 +377,15 @@ const ShuffleMcpTestPage = () => {
   const [mcpApp, setMcpApp] = useState('Slack');
   const [actionsApp, setActionsApp] = useState('VirusTotal');
 
-  // Default to light mode for unauthenticated visitors on this public demo page.
+  // Default to dark mode for unauthenticated visitors on this public demo page.
   const { isAuthenticated, isLoading } = useAuth();
   const { setTheme } = useTheme();
-  const forcedLightRef = useRef(false);
+  const forcedThemeRef = useRef(false);
   useEffect(() => {
-    if (isLoading || forcedLightRef.current) return;
+    if (isLoading || forcedThemeRef.current) return;
     if (!isAuthenticated) {
-      forcedLightRef.current = true;
-      setTheme('light');
+      forcedThemeRef.current = true;
+      setTheme('dark');
     }
   }, [isAuthenticated, isLoading, setTheme]);
 
