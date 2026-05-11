@@ -438,7 +438,23 @@ function DemoSection({
               </Typography>
               <CodeBlock code={code} />
             </Box>
-            <ApiPanel apis={apis} />
+            <Box sx={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+              <Typography
+                variant="caption"
+                sx={{
+                  mt: 2,
+                  mb: 1,
+                  fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+                  fontSize: '0.7rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  color: 'hsl(var(--muted-foreground))',
+                }}
+              >
+                Backend APIs called
+              </Typography>
+              <ApiPanel apis={apis} />
+            </Box>
           </Box>
         ) : (
           <CodeBlock code={code} />
