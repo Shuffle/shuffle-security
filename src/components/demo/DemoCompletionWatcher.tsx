@@ -64,7 +64,17 @@ export const DemoCompletionWatcher = () => {
   useEffect(() => {
     if (!drawerOpen || !workflows) return;
     const webhookWf = workflows.find(w => w.name === 'Ingestion Webhook');
-    const done = !!webhookWf && !isWorkflowScheduleStopped(webhookWf);
+    // Mirror WebhookIngestionButton's source-of-truth exactly: the workflow
+    // is "enabled" iff its WEBHOOK trigger specifically is not stopped.
+    // (The previous check used isWorkflowScheduleStopped, which returns false
+    // as long as ANY trigger is running — that caused the gate to flip green
+    // even when the webhook trigger itself was still stopped.)
+    const webhookTrigger = webhookWf
+      ? (webhookWf.triggers || []).find(
+          (t: any) => t.trigger_type === 'WEBHOOK' || t.app_name === 'Webhook'
+        )
+      : null;
+    const done = !!webhookTrigger && (webhookTrigger.status || '').toLowerCase() !== 'stopped';
     if (done) {
       webhookMissingTicksRef.current = 0;
       setStepCompleted('ingest-webhook', true);
