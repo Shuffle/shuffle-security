@@ -392,6 +392,11 @@ const ShuffleMcpTestPage = () => {
   const [authApp, setAuthApp] = useState('Gmail');
   const [mcpApp, setMcpApp] = useState('Slack');
   const [actionsApp, setActionsApp] = useState('VirusTotal');
+  const [selectedRun, setSelectedRun] = useState<AgentRun | null>(null);
+
+  const scrollToActivity = () => {
+    document.getElementById('agent-activity')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   // Default to dark mode for unauthenticated visitors on this public demo page.
   const { isAuthenticated, isLoading } = useAuth();
