@@ -454,6 +454,7 @@ export const useHostActions = ({ onActionComplete }: UseHostActionsOptions = {})
   return {
     actionHistoryMap,
     actionExecuting,
+    loadingEntries,
     pendingDisableRce,
     setPendingDisableRce,
     confirmDisableRce,
@@ -461,5 +462,7 @@ export const useHostActions = ({ onActionComplete }: UseHostActionsOptions = {})
     abortHostAction,
     hydrateHost,
     getCommandHistory,
+    removeHistoryEntry,
+    fetchEntryResult,
   };
 };
