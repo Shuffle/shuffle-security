@@ -1158,37 +1158,81 @@ const AgentUI: React.FC<AgentUIProps> = ({
     setExecutionApps(initial);
 
     // Second pass: fill missing icons from the global apps cache (covers
-    // apps that the user has not authenticated yet).
+    // apps that the user has not authenticated yet). Lookup order:
+    //   1) /api/v1/apps — by id, then by lowercase+underscore name
+    //   2) Algolia      — by objectID, then by name
     if (initial.every((a) => !!a.icon)) return;
     let cancelled = false;
+    const norm = (s: string) => (s || '').toLowerCase().replace(/[\s-]+/g, '_');
     (async () => {
+      let next = initial;
+      // Pass A — /api/v1/apps cache.
       try {
         const all = await fetchApps({
           baseUrl: API_CONFIG.baseUrl,
           apiKey: apiKey || API_CONFIG.apiKey,
           orgId: orgId || null,
         });
-        if (cancelled || !Array.isArray(all) || all.length === 0) return;
-        const byIdMap = new Map<string, any>();
-        const byNameMap = new Map<string, any>();
-        for (const a of all) {
-          if (a?.id) byIdMap.set(String(a.id), a);
-          if (a?.name) byNameMap.set(String(a.name).toLowerCase(), a);
+        if (!cancelled && Array.isArray(all) && all.length > 0) {
+          const byIdMap = new Map<string, any>();
+          const byNameMap = new Map<string, any>();
+          for (const a of all) {
+            if (a?.id) byIdMap.set(String(a.id), a);
+            if (a?.name) byNameMap.set(norm(String(a.name)), a);
+          }
+          next = next.map((a) => {
+            if (a.icon) return a;
+            const hit = (a.id && byIdMap.get(a.id)) || byNameMap.get(norm(a.name || ''));
+            if (!hit) return a;
+            return {
+              id: a.id || hit.id,
+              name: hit.name || a.name,
+              icon: hit.large_image || hit.image_url || hit.image || a.icon,
+            } as AgentUIApp;
+          });
         }
-        const next = initial.map((a) => {
-          if (a.icon) return a;
-          const hit = (a.id && byIdMap.get(a.id)) || byNameMap.get((a.name || '').toLowerCase());
-          if (!hit) return a;
-          return {
-            id: a.id || hit.id,
-            name: hit.name || a.name,
-            icon: hit.large_image || hit.image_url || hit.image || a.icon,
-          } as AgentUIApp;
-        });
-        if (!cancelled) setExecutionApps(next);
-      } catch {
-        // silent — fall back to initials
+      } catch { /* fall through to Algolia */ }
+
+      // Pass B — Algolia (objectID, then name) for anything still missing.
+      const stillMissing = next.filter((a) => !a.icon);
+      if (stillMissing.length > 0) {
+        try {
+          const { algoliasearch } = await import('algoliasearch');
+          const client = algoliasearch('JNSS5CFDZZ', '33e4e3564f4f060e96e0531957bed552');
+          const resolved: Record<string, { name: string; icon: string; id: string }> = {};
+          await Promise.all(stillMissing.map(async (a) => {
+            try {
+              if (a.id) {
+                try {
+                  const obj = await (client as any).getObject({ indexName: 'appsearch', objectID: a.id });
+                  if (obj?.image_url) {
+                    resolved[a.id || a.name] = { name: obj.name || a.name, icon: obj.image_url, id: obj.objectID || a.id };
+                    return;
+                  }
+                } catch { /* not an objectID — fall through */ }
+              }
+              const res = await client.searchSingleIndex({
+                indexName: 'appsearch',
+                searchParams: { query: (a.name || '').replace(/_/g, ' '), hitsPerPage: 3 },
+              });
+              const hits = (res.hits as any[]) || [];
+              const match = hits.find((h) => norm(h.name || '') === norm(a.name || '')) || hits[0];
+              if (match?.image_url) {
+                resolved[a.id || a.name] = { name: match.name || a.name, icon: match.image_url, id: match.objectID || a.id || '' };
+              }
+            } catch { /* skip */ }
+          }));
+          if (Object.keys(resolved).length > 0) {
+            next = next.map((a) => {
+              if (a.icon) return a;
+              const r = resolved[a.id || a.name];
+              return r ? { id: r.id || a.id, name: r.name || a.name, icon: r.icon } : a;
+            });
+          }
+        } catch { /* algolia unavailable */ }
       }
+
+      if (!cancelled) setExecutionApps(next);
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
