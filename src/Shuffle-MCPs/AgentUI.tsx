@@ -456,6 +456,8 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
           overflow: 'hidden',
           '& p': { margin: 0 },
           '& pre, & code': { fontSize: '0.78rem' },
+          '& a': { color: 'hsl(var(--primary))', textDecoration: 'underline', textUnderlineOffset: '2px' },
+          '& a:hover': { opacity: 0.85 },
         }}>
           <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>{normalizeMarkdown(displayLabel)}</Markdown>
         </Box>
