@@ -1784,11 +1784,12 @@ const AgentUI: React.FC<AgentUIProps> = ({
                                 multiline
                                 minRows={2}
                                 placeholder="Your answer here…"
-                                defaultValue={questionAnswers[q.question]?.value || ''}
-                                onBlur={(e) => {
+                                value={questionAnswers[q.question]?.value || ''}
+                                onChange={(e) => {
+                                  const value = e.target.value;
                                   setQuestionAnswers((prev) => ({
                                     ...prev,
-                                    [q.question]: { index: qi, value: e.target.value },
+                                    [q.question]: { index: qi, value },
                                   }));
                                 }}
                                 size="small"
