@@ -14,12 +14,17 @@ import type { AgentRun } from '@/Shuffle-MCPs';
 
 const AgentsPage = () => {
   const [selectedRun, setSelectedRun] = useState<AgentRun | null>(null);
+  const [agentView, setAgentView] = useState<'start' | 'simple' | 'detailed'>('start');
 
   return (
     <Box sx={{ minHeight: '100vh', width: '100%', px: { xs: 2, md: 4 }, pt: '5vh', pb: 6 }}>
       <Stack spacing={6} sx={{ maxWidth: 820, mx: 'auto' }}>
-        <AgentUI maxWidth={820} />
-        <AgentActivityList onRunClick={setSelectedRun} />
+        <AgentUI maxWidth={820} onViewChange={setAgentView} />
+        {agentView === 'start' && (
+          <Box sx={{ pt: '12vh' }}>
+            <AgentActivityList onRunClick={setSelectedRun} />
+          </Box>
+        )}
       </Stack>
 
       <AgentExecutionDrawer
