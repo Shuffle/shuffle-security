@@ -123,27 +123,34 @@ const AgentRunDrawer = ({
       open={open}
       onClose={onClose}
       PaperProps={{
-        sx: {
-          width: { xs: '100%', sm: width },
-          background: 'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)',
-          borderLeft: '1px solid hsl(var(--border))',
-          boxShadow: '-8px 0 32px hsla(0, 0%, 0%, 0.4)',
-          display: 'flex',
-          flexDirection: 'column',
-        },
+        className,
+        sx: [
+          {
+            width: { xs: '100%', sm: width },
+            background: 'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)',
+            borderLeft: '1px solid hsl(var(--border))',
+            boxShadow: '-8px 0 32px hsla(0, 0%, 0%, 0.4)',
+            display: 'flex',
+            flexDirection: 'column',
+          },
+          ...(Array.isArray(paperSx) ? paperSx : paperSx ? [paperSx] : []),
+        ],
       }}
     >
       {/* Header */}
       <Box
-        sx={{
-          px: 3,
-          py: 2.5,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 2,
-          borderBottom: '1px solid hsl(var(--border))',
-          flexShrink: 0,
-        }}
+        sx={[
+          {
+            px: 3,
+            py: 2.5,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+            borderBottom: '1px solid hsl(var(--border))',
+            flexShrink: 0,
+          },
+          ...(Array.isArray(headerSx) ? headerSx : headerSx ? [headerSx] : []),
+        ]}
       >
         <Box
           sx={{
