@@ -1421,56 +1421,65 @@ const AgentUI: React.FC<AgentUIProps> = ({
             </Box>
 
             {!hideAppPicker && (
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 1 }}>
-              <Box
-                component="button"
-                type="button"
-                onClick={() => setAppSearchOpen(true)}
-                sx={{
-                  all: 'unset', cursor: 'pointer',
-                  display: 'inline-flex', alignItems: 'center', gap: 0.75,
-                  px: 1.75, py: 0.75,
-                  borderRadius: 999,
-                  border: '1px solid hsl(var(--border))',
-                  color: 'hsl(var(--muted-foreground))',
-                  fontSize: '0.85rem',
-                  '&:hover': { borderColor: 'hsl(var(--primary))', color: 'hsl(var(--primary))', bgcolor: 'hsla(var(--primary) / 0.08)' },
-                }}
-              >
-                <AddIcon sx={{ fontSize: 16 }} />
-                {appPickerLabel}
-              </Box>
-              {chosenApps.map((app, i) => (
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <Box sx={{
+                display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.5,
+                p: 0.5,
+                borderRadius: 999,
+                border: '1px solid hsl(var(--border))',
+                bgcolor: 'hsl(var(--card))',
+                maxWidth: '100%',
+              }}>
                 <Box
-                  key={`${app.name}-${i}`}
+                  component="button"
+                  type="button"
+                  onClick={() => setAppSearchOpen(true)}
                   sx={{
-                    display: 'inline-flex', alignItems: 'center', gap: 0.75,
-                    pl: 0.5, pr: 0.75, py: 0.5,
+                    all: 'unset', cursor: 'pointer',
+                    display: 'inline-flex', alignItems: 'center', gap: 0.5,
+                    px: 1.5, py: 0.5,
                     borderRadius: 999,
-                    border: '1px solid hsl(var(--border))',
-                    bgcolor: 'hsl(var(--card))',
-                    fontSize: '0.85rem',
-                    color: 'hsl(var(--foreground))',
+                    fontSize: '0.8rem', fontWeight: 600,
+                    color: 'hsl(var(--primary-foreground))',
+                    bgcolor: 'hsl(var(--primary))',
+                    transition: 'filter 0.12s ease',
+                    '&:hover': { filter: 'brightness(1.1)' },
                   }}
                 >
-                  <Avatar
-                    src={app.icon || undefined}
-                    alt={app.name}
-                    variant="rounded"
-                    sx={{ width: 22, height: 22, bgcolor: 'transparent' }}
-                  />
-                  <Typography sx={{ fontSize: '0.85rem', mx: 0.25, textTransform: 'capitalize' }}>
-                    {app.name.replace(/_/g, ' ')}
-                  </Typography>
-                  <IconButton
-                    size="small"
-                    onClick={() => setChosenApps((prev) => prev.filter((_, idx) => idx !== i))}
-                    sx={{ p: 0.25, color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--destructive))' } }}
-                  >
-                    <CloseIcon sx={{ fontSize: 14 }} />
-                  </IconButton>
+                  <AddIcon sx={{ fontSize: 14 }} />
+                  {appPickerLabel}
                 </Box>
-              ))}
+                {chosenApps.map((app, i) => (
+                  <Box
+                    key={`${app.name}-${i}`}
+                    sx={{
+                      display: 'inline-flex', alignItems: 'center', gap: 0.5,
+                      pl: 0.5, pr: 0.75, py: 0.25,
+                      borderRadius: 999,
+                      bgcolor: 'hsl(var(--muted) / 0.6)',
+                      fontSize: '0.8rem',
+                      color: 'hsl(var(--foreground))',
+                    }}
+                  >
+                    <Avatar
+                      src={app.icon || undefined}
+                      alt={app.name}
+                      variant="rounded"
+                      sx={{ width: 18, height: 18, bgcolor: 'transparent' }}
+                    />
+                    <Typography sx={{ fontSize: '0.8rem', mx: 0.25, textTransform: 'capitalize' }}>
+                      {app.name.replace(/_/g, ' ')}
+                    </Typography>
+                    <IconButton
+                      size="small"
+                      onClick={() => setChosenApps((prev) => prev.filter((_, idx) => idx !== i))}
+                      sx={{ p: 0.125, color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--destructive))' } }}
+                    >
+                      <CloseIcon sx={{ fontSize: 12 }} />
+                    </IconButton>
+                  </Box>
+                ))}
+              </Box>
             </Box>
             )}
 
