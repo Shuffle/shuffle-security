@@ -38,6 +38,7 @@ import ApiCallViewer from '@/Shuffle-MCPs/ApiCallViewer';
 import type { AlgoliaSearchApp } from './shuffle-mcp.helpers';
 import { useAppAuth } from '@/Shuffle-MCPs/useAppAuth';
 import { API_CONFIG, getApiUrl, getAuthHeader, getTrackedOrgId } from '@/Shuffle-MCPs/api';
+import { fetchAppsViaApiConfig } from '@/Shuffle-MCPs/appsCache';
 import AppTitleHeader from './AppTitleHeader';
 import AppAuthSection from './AppAuthSection';
 import TryMcpSection from './TryMcpSection';
