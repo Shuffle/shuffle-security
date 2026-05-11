@@ -431,7 +431,7 @@ const AgentActivityList = ({
           </Button>
         </Box>
       ) : filteredRuns.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 8 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', py: 8 }}>
           <Activity
             size={40}
             style={{ color: 'hsl(var(--muted-foreground))', marginBottom: 12 }}
