@@ -362,8 +362,12 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
   }
 
   // Resolve app icon for the tool used. `details.tool` may be a name or an ID.
+  // Skip finalise/question/finish actions — they use the agent's "core" tool.
   let toolApp: AgentUIApp | undefined;
-  if (details?.tool && typeof details.tool === 'string' && details.tool !== 'singul') {
+  const skipToolIcon =
+    item.category === 'finalise' || item.category === 'finish' || item.category === 'ask' ||
+    details?.action === 'finalise' || details?.action === 'finish' || details?.action === 'ask';
+  if (!skipToolIcon && details?.tool && typeof details.tool === 'string' && details.tool !== 'singul' && details.tool !== 'core') {
     const raw = details.tool;
     let tn = raw.toLowerCase().replace(/[\s-]+/g, '_');
     if (tn.startsWith('app:')) tn = tn.split(':')[2] || tn;
