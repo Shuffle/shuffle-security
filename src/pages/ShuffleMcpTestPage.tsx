@@ -371,6 +371,18 @@ function TryActionsDemo({ appName }: { appName: string }) {
   return <SingulActionsPreview appName={appName} categories={lookup.categories} />;
 }
 
+const AgentRunDrawerDemo = () => {
+  const [open, setOpen] = useState(false);
+  return (
+    <Box>
+      <Button variant="contained" onClick={() => setOpen(true)}>
+        Open Agent drawer
+      </Button>
+      <AgentRunDrawer open={open} onClose={() => setOpen(false)} />
+    </Box>
+  );
+};
+
 const ShuffleMcpTestPage = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [detailApp, setDetailApp] = useState<string | null>(null);
