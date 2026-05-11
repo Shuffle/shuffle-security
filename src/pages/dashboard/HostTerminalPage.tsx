@@ -248,45 +248,26 @@ const HostTerminalPage = () => {
   const checkinDate = resolvedHost?.checkin ? new Date(resolvedHost.checkin * 1000) : null;
   const isRecent = checkinDate ? (Date.now() - checkinDate.getTime()) < 5 * 60 * 1000 : false;
 
-  // Demo mode: fake "Isolate Host" success without hitting the backend.
+  // Demo mode: fake "Isolate Host" success without hitting the backend by
+  // writing directly to the canonical session storage, then hydrating.
   const customChipHandler = (id: string): boolean => {
     if (!isDemoHost) return false;
     if (id === 'isolate_host' && hostUuid) {
       const startedAt = Date.now();
       const entryId = `${startedAt}-demo`;
-      const sendingEntry: ActionDebugEntry = {
-        entryId,
-        hostUuid,
-        actionName: 'Isolate Host',
-        hostname,
-        status: 'sending',
-        requestBody: { demo: true, action: id, host: hostname },
-        startedAt,
-      };
-      // Push directly via the hook's history map by leveraging executeHostAction-style update.
-      // Simplest path: stash via setActionHistoryMap-equivalent through a custom setter.
-      // We don't have a public push helper, so dispatch a fake successful entry by
-      // calling executeHostAction with a no-op action would still hit the backend.
-      // Instead, write directly to localStorage and trigger hydrate.
-      hostActions.actionHistoryMap.set(hostUuid, [
-        ...(hostActions.actionHistoryMap.get(hostUuid) || []),
-        sendingEntry,
-      ]);
-      // Force a re-render by hydrating after the timer resolves.
-      setTimeout(() => {
-        const list = hostActions.actionHistoryMap.get(hostUuid) || [];
-        const idx = list.findIndex(e => e.entryId === entryId);
-        if (idx >= 0) {
-          list[idx] = {
-            ...list[idx],
-            status: 'success',
-            finishedAt: Date.now(),
-            actionOutput: `Network isolation policy applied to ${hostname}.\nAll outbound connections blocked except to the security platform.\nUser session preserved. Awaiting analyst review.`,
-            actionSuccess: true,
-          };
-        }
-        hostActions.hydrateHost(hostUuid);
-      }, 1200);
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
+        const { terminalStorageKey, readStoredSession } = require('@/utils/terminalStorageKey');
+        const key = terminalStorageKey(hostUuid);
+        const stored = readStoredSession(hostUuid);
+        stored.push({
+          entryId, actionName: 'Isolate Host', status: 'success',
+          startedAt, finishedAt: startedAt + 1200,
+          actionOutput: `Network isolation policy applied to ${hostname}.\nAll outbound connections blocked except to the security platform.\nUser session preserved. Awaiting analyst review.`,
+        });
+        localStorage.setItem(key, JSON.stringify(stored));
+        setTimeout(() => hostActions.hydrateHost(hostUuid), 300);
+      } catch { /* ignore */ }
       return true;
     }
     return true; // every other predefined action is a no-op in demo
