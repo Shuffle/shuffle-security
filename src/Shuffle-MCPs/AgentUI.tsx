@@ -707,6 +707,19 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // stale poll responses from a previous run after the user has started a
   // new one (otherwise an in-flight fetch can repaint the old execution).
   const activeExecutionIdRef = useRef<string | null>(null);
+  // Mirror of state used inside async callbacks (e.g. submitInput) so we can
+  // snapshot prior values for rollback without making the callback re-render
+  // on every state change.
+  const stateRef = useRef({
+    execution: null as ExecutionData | null,
+    agentData: {} as any,
+    agentActionResult: null as any,
+    openIndexes: new Set<number>(),
+    questionAnswers: {} as Record<string, { index: number; value: string }>,
+    continuationText: '',
+    localRunStart: null as number | null,
+    showStarter: true,
+  });
 
   // Reset / capture the local run start whenever a new execution begins.
   useEffect(() => {
