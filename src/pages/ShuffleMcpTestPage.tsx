@@ -25,8 +25,11 @@ import {
   SingulActionsPreview,
   AgentUI,
   AgentRunDrawer,
+  AgentActivityList,
+  AgentExecutionDrawer,
   useAppLookup,
 } from '@/Shuffle-MCPs';
+import type { AgentRun } from '@/Shuffle-MCPs';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
