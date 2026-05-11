@@ -911,6 +911,106 @@ const AgentUI: React.FC<AgentUIProps> = ({
     if (apps) setChosenApps(apps);
   }, [apps]);
 
+  // Resolve icons for tools referenced in the timeline that aren't already
+  // covered by chosenApps/executionApps. Lookup order:
+  //   1) /api/v1/apps cache — by id, then by lowercase+underscore name
+  //   2) Algolia — by objectID, then by name
+  useEffect(() => {
+    const decisions = (agentData as any)?.decisions || [];
+    if (!Array.isArray(decisions) || decisions.length === 0) return;
+
+    const norm = (s: string) => s.toLowerCase().replace(/[\s-]+/g, '_');
+    // Collect unique tool tokens (raw + slug variant) that we haven't resolved.
+    const wanted: { raw: string; slug: string }[] = [];
+    const seen = new Set<string>();
+    for (const dec of decisions) {
+      const tool = dec?.details?.tool ?? dec?.tool;
+      if (!tool || typeof tool !== 'string') continue;
+      if (tool === 'singul') continue;
+      let raw = tool;
+      let slug = norm(tool);
+      if (slug.startsWith('app:')) slug = slug.split(':')[2] || slug;
+      if (appsById[raw]?.icon || appsById[slug]?.icon) continue;
+      if (resolvedToolApps[raw]?.icon || resolvedToolApps[slug]?.icon) continue;
+      const key = `${raw}|${slug}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      wanted.push({ raw, slug });
+    }
+    if (wanted.length === 0) return;
+
+    let cancelled = false;
+    (async () => {
+      const found: Record<string, AgentUIApp> = {};
+
+      // Pass 1 — /api/v1/apps cache (id, then name).
+      try {
+        const all = await fetchApps({
+          baseUrl: apiBaseUrl ? apiBaseUrl.replace(/\/+$/, '') : API_CONFIG.baseUrl,
+          apiKey: apiKey || API_CONFIG.apiKey,
+          orgId: orgId || null,
+        });
+        if (Array.isArray(all) && all.length > 0) {
+          const byId = new Map<string, any>();
+          const byName = new Map<string, any>();
+          for (const a of all) {
+            if (a?.id) byId.set(String(a.id), a);
+            if (a?.name) byName.set(norm(String(a.name)), a);
+          }
+          for (const { raw, slug } of wanted) {
+            const hit = byId.get(raw) || byName.get(slug);
+            if (!hit) continue;
+            const icon = hit.large_image || hit.image_url || hit.image || '';
+            const app: AgentUIApp = { id: hit.id, name: hit.name || slug, icon };
+            found[raw] = app;
+            found[slug] = app;
+          }
+        }
+      } catch { /* fall through to Algolia */ }
+
+      // Pass 2 — Algolia (objectID, then name).
+      const stillMissing = wanted.filter(({ raw, slug }) => !found[raw] && !found[slug]);
+      if (stillMissing.length > 0) {
+        try {
+          const { algoliasearch } = await import('algoliasearch');
+          const client = algoliasearch('JNSS5CFDZZ', '33e4e3564f4f060e96e0531957bed552');
+          await Promise.all(stillMissing.map(async ({ raw, slug }) => {
+            try {
+              // Try objectID lookup first.
+              try {
+                const obj = await (client as any).getObject({ indexName: 'appsearch', objectID: raw });
+                if (obj?.image_url || obj?.name) {
+                  const app: AgentUIApp = { id: obj.objectID || raw, name: obj.name || slug, icon: obj.image_url || '' };
+                  found[raw] = app;
+                  found[slug] = app;
+                  return;
+                }
+              } catch { /* not an objectID — fall through */ }
+              // Then by name.
+              const res = await client.searchSingleIndex({
+                indexName: 'appsearch',
+                searchParams: { query: slug.replace(/_/g, ' '), hitsPerPage: 3 },
+              });
+              const hits = (res.hits as any[]) || [];
+              const match = hits.find((h) => norm(h.name || '') === slug) || hits[0];
+              if (match?.image_url || match?.name) {
+                const app: AgentUIApp = { id: match.objectID || raw, name: match.name || slug, icon: match.image_url || '' };
+                found[raw] = app;
+                found[slug] = app;
+              }
+            } catch { /* skip */ }
+          }));
+        } catch { /* algolia unavailable */ }
+      }
+
+      if (cancelled || Object.keys(found).length === 0) return;
+      setResolvedToolApps((prev) => ({ ...prev, ...found }));
+    })();
+
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify((agentData as any)?.decisions?.map((d: any) => d?.details?.tool || d?.tool) || []), appsById]);
+
   // Sideload missing app icons via Algolia (same source as the picker), so
   // built-in/default chips like "http" and "shuffle_tools" show their logo
   // even when the caller didn't pass one in.
