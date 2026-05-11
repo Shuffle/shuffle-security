@@ -398,7 +398,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
           {isProcessing ? (
             <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'hsl(var(--muted-foreground) / 0.5)' }} />
           ) : (
-            <StatusIcon status={item.status} />
+            <StatusIcon status={effectiveStatus} />
           )}
         </Box>
         <Box sx={{ width: 24, display: 'flex', justifyContent: 'center' }}>
