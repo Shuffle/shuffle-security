@@ -784,6 +784,11 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // `allowed_actions` field (format: "app:<id>:<name>"). Falls back to
   // `chosenApps` when the field is missing (legacy runs).
   const [executionApps, setExecutionApps] = useState<AgentUIApp[]>([]);
+  // Icons resolved on-demand for tools referenced in the timeline that are
+  // NOT in chosenApps/executionApps. Resolution order:
+  //   1) /api/v1/apps cache — match by id, then by lowercase+underscore name
+  //   2) Algolia — match by objectID, then by name
+  const [resolvedToolApps, setResolvedToolApps] = useState<Record<string, AgentUIApp>>({});
   const [appSearchOpen, setAppSearchOpen] = useState(false);
   const [agentRequestLoading, setAgentRequestLoading] = useState(false);
   const [execution, setExecution] = useState<ExecutionData | null>(null);
