@@ -61,6 +61,16 @@ export interface AgentRunDrawerProps {
   title?: string;
   /** Header subtitle. Default: "Run actions and manage permissions". */
   subtitle?: string;
+  /** Optional className forwarded to the Drawer Paper. */
+  className?: string;
+  /** Style overrides merged into the Drawer Paper sx. Use to override colors, padding, etc. */
+  paperSx?: SxProps<Theme>;
+  /** Style overrides for the header bar (icon + title + close). */
+  headerSx?: SxProps<Theme>;
+  /** Style overrides for the tab strip. */
+  tabsSx?: SxProps<Theme>;
+  /** Style overrides for the body container that wraps the active tab content. */
+  bodySx?: SxProps<Theme>;
 }
 
 const TAB_ORDER: AgentRunDrawerTab[] = ['run', 'permissions', 'localLLM'];
