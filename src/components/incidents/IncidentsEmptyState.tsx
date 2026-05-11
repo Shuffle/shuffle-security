@@ -199,7 +199,7 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
             {canSync ? (
               <>
                 <Button
-                  variant="contained"
+                  variant="outlined"
                   size="large"
                   disabled={isSyncing || isUpdatingApps}
                   startIcon={(isSyncing || isUpdatingApps) ? <CircularProgress size={18} color="inherit" /> : <PlayArrowIcon />}
@@ -211,9 +211,12 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
                     textTransform: 'none',
                     fontWeight: 600,
                     fontSize: '0.95rem',
-                    backgroundColor: '#FF6600',
-                    boxShadow: 'none',
-                    '&:hover': { backgroundColor: '#e55c00' },
+                    borderColor: 'hsl(var(--primary) / 0.5)',
+                    color: 'hsl(var(--primary))',
+                    '&:hover': {
+                      borderColor: 'hsl(var(--primary))',
+                      bgcolor: 'hsl(var(--primary) / 0.08)',
+                    },
                   }}
                 >
                   Sync Now
@@ -221,19 +224,18 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
                 <Button
                   component={Link}
                   to="/onboarding/sources"
-                  variant="outlined"
+                  variant="text"
                   size="large"
                   sx={{
                     px: 2.5,
                     py: 1.5,
                     borderRadius: 2,
                     textTransform: 'none',
-                    fontWeight: 600,
+                    fontWeight: 500,
                     fontSize: '0.95rem',
-                    borderColor: 'hsl(var(--border))',
-                    color: 'hsl(var(--foreground))',
+                    color: 'hsl(var(--muted-foreground))',
                     '&:hover': {
-                      borderColor: 'hsl(var(--muted-foreground))',
+                      color: 'hsl(var(--foreground))',
                       bgcolor: 'hsl(var(--muted) / 0.5)',
                     },
                   }}
@@ -242,16 +244,13 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
                 </Button>
               </>
             ) : hasNonWebhookSources && onToggleApp ? (
-              // Apps exist but none are enabled — surface the fastest path
-              // forward: flip the first disabled app on, right here, instead
-              // of bouncing the user to /onboarding/sources.
               (() => {
                 const firstDisabled = ingestionApps.find(a => !a.enabled);
                 const target = firstDisabled ?? ingestionApps[0];
                 const label = target ? `Enable ${target.name}` : 'Enable Sync';
                 return (
                   <Button
-                    variant="contained"
+                    variant="outlined"
                     size="large"
                     disabled={isUpdatingApps || !target}
                     startIcon={isUpdatingApps ? <CircularProgress size={18} color="inherit" /> : <PlayArrowIcon />}
@@ -263,9 +262,12 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
                       textTransform: 'none',
                       fontWeight: 600,
                       fontSize: '0.95rem',
-                      backgroundColor: '#FF6600',
-                      boxShadow: 'none',
-                      '&:hover': { backgroundColor: '#e55c00' },
+                      borderColor: 'hsl(var(--primary) / 0.5)',
+                      color: 'hsl(var(--primary))',
+                      '&:hover': {
+                        borderColor: 'hsl(var(--primary))',
+                        bgcolor: 'hsl(var(--primary) / 0.08)',
+                      },
                     }}
                   >
                     {label}
@@ -276,7 +278,7 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
               <Button
                 component={Link}
                 to="/onboarding/sources"
-                variant="contained"
+                variant="outlined"
                 size="large"
                 startIcon={<RocketLaunchIcon />}
                 sx={{
@@ -286,9 +288,12 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
                   textTransform: 'none',
                   fontWeight: 600,
                   fontSize: '0.95rem',
-                  backgroundColor: '#FF6600',
-                  boxShadow: 'none',
-                  '&:hover': { backgroundColor: '#e55c00' },
+                  borderColor: 'hsl(var(--primary) / 0.5)',
+                  color: 'hsl(var(--primary))',
+                  '&:hover': {
+                    borderColor: 'hsl(var(--primary))',
+                    bgcolor: 'hsl(var(--primary) / 0.08)',
+                  },
                 }}
               >
                 Set Up Ingestion
