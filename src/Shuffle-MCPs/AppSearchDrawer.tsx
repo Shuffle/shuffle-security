@@ -222,7 +222,7 @@ export default function AppSearchDrawer({
         </Box>
 
         {/* Search body */}
-        <Box sx={{ flex: '0 1 80vh', height: '80vh', maxHeight: '80vh', boxSizing: 'border-box', overflowY: 'auto', p: 3, minHeight: 0 }}>
+        <Box sx={{ flex: 1, boxSizing: 'border-box', overflow: 'hidden', p: 3, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
           {showPipelinesBanner && <ShufflePipelinesBanner />}
 
           {/* Your Apps — reuse IntegrationStatus */}
@@ -275,52 +275,75 @@ export default function AppSearchDrawer({
             </Box>
           )}
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key="search"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-            >
-              <ShuffleMCP
-                apiKey={API_CONFIG.apiKey || undefined}
-                apiBaseUrl={API_CONFIG.baseUrl}
-                placeholder={initialQuery ? `Search ${initialQuery} integrations...` : 'Search integrations...'}
-                layout="grid"
-                gridColumns={2}
-                inline={true}
-                initialFilterQuery={initialQuery}
-                hitsPerPage={12}
-                showDescription={false}
-                showCategories={true}
-                showCheckbox={false}
-                multiSelect={false}
-                preventDefault={true}
-                onAppSelected={handleAppSelected}
-                pinnedApps={pinnedApps?.map(p => ({
-                  name: p.name,
-                  image_url: p.image_url,
-                  categories: p.categories || [],
-                  objectID: p.objectID || `pinned-${p.name}`,
-                  description: '',
-                  creator: '',
-                  app_version: '1.0.0',
-                  time_edited: 0,
-                  generated: false,
-                  invalid: false,
-                  priority: 0,
-                  actions: 0,
-                  tags: [],
-                  accessible_by: [],
-                  action_labels: [],
-                  triggers: [],
-                  verified: true,
-                }))}
-                customStyles={singulStyles}
-              />
-            </motion.div>
-          </AnimatePresence>
+          <Box
+            sx={{
+              flex: 1,
+              minHeight: 0,
+              overflow: 'hidden',
+              '& .singul-container, & .singul-search-bar-container': {
+                height: '100%',
+                minHeight: 0,
+              },
+              '& .singul-search-bar-container': {
+                display: 'flex',
+                flexDirection: 'column',
+              },
+              '& .singul-results-container': {
+                flex: 1,
+                minHeight: 0,
+                maxHeight: 'none',
+                overflowY: 'auto',
+              },
+            }}
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key="search"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.2 }}
+                style={{ height: '100%', minHeight: 0 }}
+              >
+                <ShuffleMCP
+                  apiKey={API_CONFIG.apiKey || undefined}
+                  apiBaseUrl={API_CONFIG.baseUrl}
+                  placeholder={initialQuery ? `Search ${initialQuery} integrations...` : 'Search integrations...'}
+                  layout="grid"
+                  gridColumns={2}
+                  inline={true}
+                  initialFilterQuery={initialQuery}
+                  hitsPerPage={12}
+                  showDescription={false}
+                  showCategories={true}
+                  showCheckbox={false}
+                  multiSelect={false}
+                  preventDefault={true}
+                  onAppSelected={handleAppSelected}
+                  pinnedApps={pinnedApps?.map(p => ({
+                    name: p.name,
+                    image_url: p.image_url,
+                    categories: p.categories || [],
+                    objectID: p.objectID || `pinned-${p.name}`,
+                    description: '',
+                    creator: '',
+                    app_version: '1.0.0',
+                    time_edited: 0,
+                    generated: false,
+                    invalid: false,
+                    priority: 0,
+                    actions: 0,
+                    tags: [],
+                    accessible_by: [],
+                    action_labels: [],
+                    triggers: [],
+                    verified: true,
+                  }))}
+                  customStyles={singulStyles}
+                />
+              </motion.div>
+            </AnimatePresence>
+          </Box>
         </Box>
       </Drawer>
 
