@@ -332,6 +332,17 @@ export default function AppSearchDrawer({
                 borderRadius: 8,
                 padding: 4,
               },
+              ...(highlightActive && highlightAppName ? {
+                [`& .singul-dropdown-item[data-app-name="${highlightAppName}"]`]: {
+                  borderColor: 'hsl(var(--primary)) !important',
+                  boxShadow: '0 0 0 2px hsl(var(--primary)), 0 0 18px 2px hsl(var(--primary) / 0.55)',
+                  animation: 'shuffleHighlightPulse 1.6s ease-in-out infinite',
+                },
+                '@keyframes shuffleHighlightPulse': {
+                  '0%, 100%': { boxShadow: '0 0 0 2px hsl(var(--primary)), 0 0 12px 1px hsl(var(--primary) / 0.4)' },
+                  '50%': { boxShadow: '0 0 0 2px hsl(var(--primary)), 0 0 24px 4px hsl(var(--primary) / 0.75)' },
+                },
+              } : {}),
             }}
           >
             <AnimatePresence mode="wait">
