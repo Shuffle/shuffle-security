@@ -459,7 +459,21 @@ const ShuffleMcpTestPage = () => {
   const [selectedRun, setSelectedRun] = useState<AgentRun | null>(null);
 
   const scrollToActivity = () => {
-    document.getElementById('agent-activity')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const el = document.getElementById('agent-activity');
+    if (!el) return;
+    const startY = window.scrollY;
+    const targetY = el.getBoundingClientRect().top + startY - 24; // small top offset
+    const distance = targetY - startY;
+    const duration = Math.min(1400, Math.max(700, Math.abs(distance) * 0.6));
+    const startTime = performance.now();
+    // easeInOutCubic for a calm, deliberate scroll
+    const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+    const step = (now: number) => {
+      const t = Math.min(1, (now - startTime) / duration);
+      window.scrollTo(0, startY + distance * ease(t));
+      if (t < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
   };
 
   // Default to dark mode for unauthenticated visitors on this public demo page.
