@@ -294,9 +294,24 @@ export default function AppSearchDrawer({
                 maxHeight: 'none',
                 overflowY: 'auto',
               },
+              '& .singul-results-grid': {
+                gridAutoRows: '1fr',
+                gap: '12px',
+              },
               '& .singul-results-grid .singul-dropdown-item': {
-                minHeight: 56,
+                minHeight: 84,
+                padding: '14px 16px',
                 alignItems: 'center',
+              },
+              '& .singul-results-grid .singul-app-info': {
+                alignItems: 'center',
+                gap: '12px',
+              },
+              '& .singul-results-grid .singul-app-icon': {
+                width: 40,
+                height: 40,
+                borderRadius: 8,
+                padding: 4,
               },
             }}
           >
