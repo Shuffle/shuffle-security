@@ -536,7 +536,7 @@ const AppDetailPage = () => {
               <ApiCallViewer
                 config={{
                   method: 'POST',
-                  url: '/api/v1/mcp',
+                  url: `${(API_CONFIG.baseUrl || '').replace(/\/+$/, '')}/api/v1/mcp`,
                   headers: {
                     'Authorization': `Bearer ${API_CONFIG.apiKey || '<your-api-key>'}`,
                   },
