@@ -619,8 +619,11 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
                   <OpenInNewIcon sx={{ fontSize: 18 }} />
                 </IconButton>
               </Tooltip>
-            )}
-          </Box>
+                  )}
+                </Box>
+              </>
+            );
+          })()}
         </Box>
       )}
 
