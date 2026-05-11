@@ -280,7 +280,6 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
   const t = useEntityText();
   const [isConfiguring, setIsConfiguring] = useState(false);
   const [modifiedAction, setModifiedAction] = useState('');
-  const [timelineExpanded, setTimelineExpanded] = useState(false);
   const [questionAnswers, setQuestionAnswers] = useState<Record<number, string>>({});
 
   if (!item) return null;
@@ -292,7 +291,6 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
   const handleClose = () => {
     setIsConfiguring(false);
     setModifiedAction('');
-    setTimelineExpanded(false);
     setQuestionAnswers({});
     onClose();
   };
@@ -327,14 +325,6 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
       ? (SEVERITY_TOKEN_MAP[data.severityRaw.toLowerCase()] || '--severity-high')
       : null;
   const sevLabel = data.severity?.label || data.severityRaw || null;
-
-  // Timeline: show last N items, with expand for older ones
-  const totalTimeline = data.timeline.length;
-  const hasHiddenItems = totalTimeline > VISIBLE_TIMELINE_COUNT && !timelineExpanded;
-  const visibleTimeline = hasHiddenItems
-    ? data.timeline.slice(totalTimeline - VISIBLE_TIMELINE_COUNT)
-    : data.timeline;
-  const hiddenCount = totalTimeline - VISIBLE_TIMELINE_COUNT;
 
   return (
     <Drawer anchor="right" open={open} onClose={handleClose} PaperProps={{ sx: drawerPaperSx }}>
