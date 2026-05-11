@@ -377,6 +377,18 @@ const ShuffleMcpTestPage = () => {
   const [mcpApp, setMcpApp] = useState('Slack');
   const [actionsApp, setActionsApp] = useState('VirusTotal');
 
+  // Default to light mode for unauthenticated visitors on this public demo page.
+  const { isAuthenticated, isLoading } = useAuth();
+  const { setTheme } = useTheme();
+  const forcedLightRef = useRef(false);
+  useEffect(() => {
+    if (isLoading || forcedLightRef.current) return;
+    if (!isAuthenticated) {
+      forcedLightRef.current = true;
+      setTheme('light');
+    }
+  }, [isAuthenticated, isLoading, setTheme]);
+
   useEffect(() => {
     const TITLE = 'Shuffle MCP — React component library demo';
     const DESCRIPTION =
