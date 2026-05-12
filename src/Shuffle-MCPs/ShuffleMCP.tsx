@@ -435,7 +435,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
           ...customStyles.dropdownItem,
           ...(selected ? customStyles.selectedItem : {}),
         }}
-        onClick={() => selectApp(app)}
+        onClick={(e) => selectApp(app, e)}
       >
         <div className="singul-app-info" style={customStyles.appInfo}>
           {app.image_url && (
