@@ -11,7 +11,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from '@/lib/toast';
-import { seedForStep, cleanupDemoData, isDemoActive, getDemoStats, forceRecreateDemoIncidents, forceCreateSingleDemoIncident, countDemoIncidents, seedDemoWazuhImplantIncident, setPendingIndicatorReady } from '@/services/demoMode';
+import { seedForStep, cleanupDemoData, isDemoActive, getDemoStats, forceRecreateDemoIncidents, forceCreateSingleDemoIncident, countDemoIncidents, countDemoFocusIncidents, seedDemoWazuhImplantIncident, setPendingIndicatorReady } from '@/services/demoMode';
 import { enableLiveDemoEnvironment } from '@/services/demoLiveEnvironment';
 import { trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 import { applyEntityTerminology } from '@/lib/entityTerminology';
@@ -453,6 +453,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       const added = await seedForStep(stepDef.id);
       if (added > 0) {
         refreshStats();
+        if (stepDef.id === 'incidents-list') setHasDemoIncidents(true);
       }
     } catch {
       toast.error('Failed to add sample data for this step.');
@@ -716,7 +717,9 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     }
     let cancelled = false;
     const check = async () => {
-      const n = await countDemoIncidents();
+      const n = TOUR_STEPS[step]?.id === 'incidents-list'
+        ? await countDemoFocusIncidents()
+        : await countDemoIncidents();
       if (!cancelled) setHasDemoIncidents(n > 0);
     };
     check();
