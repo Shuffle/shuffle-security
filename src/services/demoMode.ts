@@ -395,6 +395,19 @@ const extractHost = (url: string): string | undefined => {
   try { return new URL(url).hostname || undefined; } catch { return undefined; }
 };
 
+const pickFallbackIocs = (): DemoIocOverrides => {
+  const out: DemoIocOverrides = {};
+  const ipKey = pickRandom(FALLBACK_IOC_IPS);
+  if (ipKey) out.attackerIp = ipKey;
+  const urlKey = pickRandom(FALLBACK_IOC_URLS);
+  if (urlKey) {
+    out.lureUrl = urlKey;
+    const host = extractHost(urlKey);
+    if (host) out.lureDomain = host;
+  }
+  return out;
+};
+
 /**
  * Pick a random IP from `ioc_ip` and a random URL from `ioc_url`.
  * If a category is empty (parser hasn't caught up yet), fall back to the
