@@ -217,7 +217,7 @@ export const DemoModeCard = ({ compact = false }: { compact?: boolean } = {}) =>
             <>
               {/* Demo data left over from a previous session — surface the
                   cleanup so the user is not stuck with seeded incidents. */}
-              {hasLeftoverDemoData && (
+              {hasLeftoverDemoData && !compact && (
                 <Button
                   onClick={cleanup}
                   disabled={isCleaning}
