@@ -671,7 +671,15 @@ export const seedForStep = async (stepId: string): Promise<number> => {
         return false;
     }
   })();
-  if (seeded.includes(stepId) && !looksEmpty) return 0;
+  if (seeded.includes(stepId) && !looksEmpty) {
+    if (stepId !== 'incidents-list') return 0;
+    const present = await countDemoFocusIncidents();
+    if (present > 0) return 0;
+    writeSeededSteps(seeded.filter(s => s !== stepId));
+    const nextIdx = readIndex();
+    delete nextIdx[DATASTORE_CATEGORIES.INCIDENTS];
+    writeIndex(nextIdx);
+  }
 
   const seeder = STEP_SEEDERS[stepId];
   if (!seeder) return 0;
