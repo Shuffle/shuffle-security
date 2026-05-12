@@ -416,7 +416,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
       return (
         <div
           key={app.objectID}
-          onClick={() => selectApp(app)}
+          onClick={(e) => selectApp(app, e)}
           onMouseEnter={() => setSelectedIndex(index)}
         >
           {renderItem(app, selected, () => selectApp(app), authState)}
