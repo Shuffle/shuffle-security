@@ -715,6 +715,14 @@ export const countDemoIncidents = async (): Promise<number> => {
   } catch { return 0; }
 };
 
+export const countDemoFocusIncidents = async (): Promise<number> => {
+  try {
+    const res = await getDatastoreByCategory(DATASTORE_CATEGORIES.INCIDENTS);
+    if (!res.success || !res.data) return 0;
+    return res.data.filter(item => isDemoFocusIncident(item.key, item.value)).length;
+  } catch { return 0; }
+};
+
 /**
  * Force-recreate the demo incidents:
  *  1. Delete any existing demo incidents (indexed + safety scan).
