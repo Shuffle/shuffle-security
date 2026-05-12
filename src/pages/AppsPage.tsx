@@ -340,9 +340,14 @@ export default function AppsPage() {
                     trackPredefinedEvent(GA_EVENTS.SEARCH_USED, query);
                   }
                 }}
-                onAppSelected={({ app }) => {
+                onAppSelected={({ app, ctrlKey, metaKey }) => {
+                  const url = `/apps/${encodeURIComponent(app.name.toLowerCase().replace(/[\s]+/g, '_'))}`;
+                  if (ctrlKey || metaKey) {
+                    window.open(url, '_blank');
+                    return;
+                  }
                   trackPredefinedEvent(GA_EVENTS.APP_VIEWED, app.name);
-                  navigate(`/apps/${encodeURIComponent(app.name.toLowerCase().replace(/[\s]+/g, '_'))}`);
+                  navigate(url);
                 }}
               />
             </Box>
