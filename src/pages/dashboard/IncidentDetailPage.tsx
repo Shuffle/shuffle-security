@@ -1051,7 +1051,7 @@ const IncidentDetailPage = () => {
         }
       }, 120);
       try {
-        toast.success('Question drafted for the AI agent — press Enter to send.', { duration: 3500 });
+        toast.success('Question drafted — press Enter to send.', { duration: 2500 });
       } catch { /* ignore */ }
     };
 
@@ -1080,7 +1080,7 @@ const IncidentDetailPage = () => {
           }
         }, 120);
         try {
-          toast.success('Sample question drafted for the AI Agent — press Enter to send.', { duration: 3500 });
+          toast.success('Question drafted — press Enter to send.', { duration: 2500 });
         } catch { /* ignore */ }
       };
       window.addEventListener('demo:inject-agent-mention', onInject);
