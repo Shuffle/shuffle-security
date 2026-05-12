@@ -453,7 +453,6 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       const added = await seedForStep(stepDef.id);
       if (added > 0) {
         refreshStats();
-        toast.success(`+${added} sample item${added === 1 ? '' : 's'} added`, { duration: 1800 });
       }
     } catch {
       toast.error('Failed to add sample data for this step.');
