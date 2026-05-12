@@ -265,6 +265,19 @@ const awaitPendingIndicators = async (): Promise<void> => {
   try { await pendingIndicatorReady; } catch { /* fall through to fallback */ }
 };
 
+const pickFallbackIocs = (): DemoIocOverrides => {
+  const out: DemoIocOverrides = {};
+  const ipKey = pickRandom(FALLBACK_IOC_IPS);
+  if (ipKey) out.attackerIp = ipKey;
+  const urlKey = pickRandom(FALLBACK_IOC_URLS);
+  if (urlKey) {
+    out.lureUrl = urlKey;
+    const host = extractHost(urlKey);
+    if (host) out.lureDomain = host;
+  }
+  return out;
+};
+
 /** Label of the workflow that ingests the configured threat feeds. */
 const THREAT_FEEDS_WORKFLOW_LABEL = 'Enable Threat feeds';
 /** Session guard so we only kick the workflow once per demo run. */
@@ -439,14 +452,18 @@ export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
 const resolveIocOverrides = async (): Promise<DemoIocOverrides> => {
   const cached = readIocOverrides();
   if (cached?.attackerIp && cached?.lureUrl && cached?.lureDomain) return cached;
-  // Wait for the live-environment bootstrap to populate `ioc_domain` so
-  // we pick a real indicator instead of the static fallback. Best-effort:
-  // if the poll times out, pickRandomIocs falls back to FALLBACK_IOC_*.
-  await awaitPendingIndicators();
-  const fresh = await pickRandomIocs();
+  // Never block incident creation on the async threat-feed parser. Step 4
+  // must always materialize immediately; live IOCs are best-effort only.
+  const fresh = pickFallbackIocs();
   // Merge with whatever was cached (in case only one half resolved earlier).
   const merged: DemoIocOverrides = { ...cached, ...fresh };
   if (merged.attackerIp || merged.lureDomain) writeIocOverrides(merged);
+  void awaitPendingIndicators().then(() => pickRandomIocs().then(live => {
+    const existing = readIocOverrides();
+    if (!existing?.attackerIp || !existing?.lureUrl || !existing?.lureDomain) {
+      writeIocOverrides({ ...merged, ...live });
+    }
+  }).catch(() => undefined));
   return merged;
 };
 
