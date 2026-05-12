@@ -77,6 +77,13 @@ export const getDemoStats = () => {
 const broadcastRefresh = (category: string) => {
   try {
     window.dispatchEvent(new CustomEvent('demo:refresh', { detail: { category } }));
+    if (category === DATASTORE_CATEGORIES.INCIDENTS) {
+      [600, 1800, 3500].forEach(delay => {
+        window.setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('demo:refresh', { detail: { category } }));
+        }, delay);
+      });
+    }
   } catch { /* SSR / older browsers */ }
 };
 
@@ -263,19 +270,6 @@ export const setPendingIndicatorReady = (p: Promise<boolean> | null) => {
 const awaitPendingIndicators = async (): Promise<void> => {
   if (!pendingIndicatorReady) return;
   try { await pendingIndicatorReady; } catch { /* fall through to fallback */ }
-};
-
-const pickFallbackIocs = (): DemoIocOverrides => {
-  const out: DemoIocOverrides = {};
-  const ipKey = pickRandom(FALLBACK_IOC_IPS);
-  if (ipKey) out.attackerIp = ipKey;
-  const urlKey = pickRandom(FALLBACK_IOC_URLS);
-  if (urlKey) {
-    out.lureUrl = urlKey;
-    const host = extractHost(urlKey);
-    if (host) out.lureDomain = host;
-  }
-  return out;
 };
 
 /** Label of the workflow that ingests the configured threat feeds. */
