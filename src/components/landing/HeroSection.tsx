@@ -188,7 +188,7 @@ export const HeroSection = () => {
                 You Control
               </Box>
             </Typography>
-          </motion.div>
+          </div>
 
           {/* Subtitle */}
           <motion.div
