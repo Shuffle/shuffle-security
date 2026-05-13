@@ -2092,13 +2092,6 @@ function UsecaseDetailContent({
         <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1.5 }}>
           Connection Path
         </Typography>
-        {['siem_case_management_1', 'edr_case_management_1', 'email_case_management_1'].includes(flow.id) ? (
-          <UsecaseAlluvialDiagram
-            sourceCategory={flow.source}
-            targetCategory={flow.target}
-            highlightCategory={flow.source}
-          />
-        ) : (
         <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
           {[
             { title: 'Source', meta: sourceCat, details: sourceDetails, categoryId: flow.source, appNames: categoryAppNames[flow.source] || [] },
@@ -2159,7 +2152,6 @@ function UsecaseDetailContent({
             );
           })}
         </Box>
-        )}
       </Box>
       )}
 
@@ -2936,7 +2928,6 @@ function UsecasesPageInner() {
               <UsecaseDetailContent
                 flowId={drawerFlowId ?? undefined}
                 hideBackNav
-                showConnectionPath
                 onNavigateUsecase={(id) => setDrawerFlowId(id || null)}
                 usecases={usecases}
                 isEnabled={drawerEnabled}
