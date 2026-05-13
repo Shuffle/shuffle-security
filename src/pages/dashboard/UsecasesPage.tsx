@@ -1705,6 +1705,7 @@ function UsecaseDetailContent({
   hideBackNav = false,
   hidePrevNext = false,
   showConnectionPath = false,
+  useAlluvialDiagram = false,
   onNavigateUsecase,
   usecases,
   isEnabled = false,
@@ -1717,6 +1718,7 @@ function UsecaseDetailContent({
   hideBackNav?: boolean;
   hidePrevNext?: boolean;
   showConnectionPath?: boolean;
+  useAlluvialDiagram?: boolean;
   onNavigateUsecase?: (flowId: string) => void;
   usecases: Usecase[];
   /** Whether this automation currently has a running workflow */
