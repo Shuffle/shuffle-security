@@ -2891,6 +2891,7 @@ function UsecasesPageInner() {
                 hasInterest={isSupport && interestNames.has(flow.label)}
                 canToggle={isAuthenticated && !!flow.automationLabel}
                 isAuthenticated={isAuthenticated}
+                hasValidatedSource={validatedCategories.has(flow.source)}
                 onToggled={handleUsecaseWorkflowGenerated}
                 onClick={() => setDrawerFlowId(flow.id)}
               />
