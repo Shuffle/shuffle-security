@@ -171,7 +171,7 @@ const AssignedToolsSection = ({
     };
   }, [agent, actionType]);
 
-  const icons = useAppIcons(useMemo(() => tools, [tools]));
+  const icons = useAppIcons(useMemo(() => tools.map((t) => t.name), [tools]));
 
   const labelText =
     agent === DEFAULT_AGENT
