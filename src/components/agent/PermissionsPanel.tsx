@@ -766,6 +766,7 @@ const PermissionsPanel = ({ compact = false }: PermissionsPanelProps) => {
   // ── Full page variant ──
   return (
     <>
+      <AssignedToolsSection />
       {/* Summary bar */}
       <Box
         sx={{
