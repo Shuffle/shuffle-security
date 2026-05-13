@@ -7708,7 +7708,7 @@ const IncidentDetailPage = () => {
       })()}
       </motion.div>
 
-      {activeTab === 2 && (
+      {activeTab === 2 && (<motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
         /* Observables Tab */
         <Box sx={{ 
           bgcolor: 'hsl(var(--card))', 
