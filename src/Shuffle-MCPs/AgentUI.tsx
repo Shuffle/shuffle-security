@@ -978,6 +978,11 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // stale poll responses from a previous run after the user has started a
   // new one (otherwise an in-flight fetch can repaint the old execution).
   const activeExecutionIdRef = useRef<string | null>(null);
+  // AbortController for the in-flight POST /api/v1/agent request, plus a
+  // generation counter so a slow request that resolves AFTER the user clicks
+  // "Cancel and go to Start" cannot repaint the UI or swap tabs back.
+  const runAbortRef = useRef<AbortController | null>(null);
+  const runGenerationRef = useRef(0);
   // Mirror of state used inside async callbacks (e.g. submitInput) so we can
   // snapshot prior values for rollback without making the callback re-render
   // on every state change.
@@ -1563,6 +1568,16 @@ const AgentUI: React.FC<AgentUIProps> = ({
     setError(null);
     setAgentRequestLoading(true);
 
+    // Mint a generation id for THIS submit. If the user aborts before the
+    // request resolves, abortAgent() will bump runGenerationRef so the stale
+    // resolution below short-circuits instead of swapping tabs back.
+    const myGeneration = ++runGenerationRef.current;
+    // Cancel any previous in-flight controller, then install a fresh one so
+    // abortAgent() can actually kill the underlying fetch.
+    try { runAbortRef.current?.abort(); } catch { /* noop */ }
+    const controller = new AbortController();
+    runAbortRef.current = controller;
+
     // Snapshot prior run state so a failed network request does not leave
     // the user staring at an empty page with no way to retry. We only
     // commit the destructive reset once the new run has been accepted.
@@ -1579,6 +1594,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
     const result = await runAgent({
       input: text.trim(),
       skipPolling: true,
+      signal: controller.signal,
       ...(apiKey ? { apiKey } : {}),
       ...(apiBaseUrl ? { apiBaseUrl } : {}),
       ...(orgId ? { orgId } : {}),
@@ -1591,6 +1607,30 @@ const AgentUI: React.FC<AgentUIProps> = ({
         return m ? { mimeType: m[1], data: m[2], name: img.name } : { mimeType: 'image/png', data: img.dataUrl, name: img.name };
       }) } : {}),
     });
+
+    // If the user aborted while we were waiting, drop this result on the floor.
+    // Do NOT touch UI state — abortAgent() already reset us to the Start tab.
+    if (myGeneration !== runGenerationRef.current || controller.signal.aborted) {
+      // Best-effort: if the backend still managed to spawn an execution
+      // before our fetch was aborted, ask it to abort that execution too.
+      const raw: any = (result as any)?.rawData;
+      const eid = raw?.execution_id;
+      const auth = raw?.authorization;
+      const wfId = raw?.workflow?.id;
+      if (eid && wfId) {
+        try {
+          fetch(
+            resolveUrl(`/api/v1/workflows/${wfId}/executions/${eid}/abort`),
+            {
+              method: 'GET',
+              credentials: 'include',
+              headers: { ...resolveHeaders(), ...(auth ? { Authorization: `Bearer ${auth}` } : {}) },
+            },
+          ).catch(() => { /* noop */ });
+        } catch { /* noop */ }
+      }
+      return;
+    }
 
     setAgentRequestLoading(false);
 
@@ -1762,6 +1802,14 @@ const AgentUI: React.FC<AgentUIProps> = ({
     const execId = execution?.execution_id;
     const auth = execution?.authorization;
     const wfId = (execution as any)?.workflow?.id;
+
+    // Bump the run-generation counter and abort any in-flight POST /agent
+    // request immediately. This guarantees a slow initial request that
+    // resolves AFTER the user clicks "Cancel" cannot repaint the UI or
+    // swap tabs back to the run view.
+    runGenerationRef.current += 1;
+    try { runAbortRef.current?.abort(); } catch { /* noop */ }
+    runAbortRef.current = null;
 
     // Helper: wipe local run state and return to the Start tab.
     const resetToStart = () => {

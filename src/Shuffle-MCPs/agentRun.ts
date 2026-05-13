@@ -52,6 +52,8 @@ export interface AgentRunRequest {
   apiKey?: string;
   apiBaseUrl?: string;
   orgId?: string;
+  /** Optional AbortSignal so callers can cancel the in-flight request. */
+  signal?: AbortSignal;
 }
 
 /** Build URL + headers honouring optional per-call overrides. */
@@ -307,6 +309,7 @@ export const runAgent = async (request: AgentRunRequest): Promise<AgentRunRespon
         ...agentHeaders,
       },
       body: JSON.stringify(payload),
+      signal: request.signal,
     });
 
     const rawText = await response.text();
@@ -370,11 +373,15 @@ export const runAgent = async (request: AgentRunRequest): Promise<AgentRunRespon
       status: response.status,
     };
   } catch (err) {
+    const aborted = err instanceof DOMException && err.name === 'AbortError';
     return {
       success: false,
       content: '',
-      error: `Network error — could not reach the agent. ${err instanceof Error ? err.message : ''}`,
+      error: aborted
+        ? 'Request aborted by user.'
+        : `Network error — could not reach the agent. ${err instanceof Error ? err.message : ''}`,
       status: 0,
+      ...(aborted ? { aborted: true } as any : {}),
     };
   }
 };
