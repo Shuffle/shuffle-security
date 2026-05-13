@@ -132,7 +132,8 @@ const AgentHandoffWatcher = () => {
       toast('AI Agent needs your attention (beta — support only)', {
         id: 'agent-handoff-batch',
         description: `${parts.join(' and ')} pending. Review them on the Agent page.`,
-        duration: 10000,
+        duration: 15000,
+        icon: <Sparkles size={18} />,
         action: {
           label: 'Review all',
           onClick: () => { window.location.href = '/agent'; },
@@ -154,7 +155,8 @@ const AgentHandoffWatcher = () => {
       toast('AI Agent needs approval (beta — support only)', {
         id: toastId,
         description: n.title || n.description || 'An agent action is paused waiting on you.',
-        duration: 10000,
+        duration: 15000,
+        icon: <Sparkles size={18} />,
         action: {
           label: 'Approve',
           onClick: async () => {
@@ -188,7 +190,8 @@ const AgentHandoffWatcher = () => {
       toast('AI Agent has a question (beta — support only)', {
         id: toastId,
         description: n.title || n.description || 'An agent run is paused waiting on your input.',
-        duration: 10000,
+        duration: 15000,
+        icon: <Sparkles size={18} />,
         action: {
           label: 'Answer now',
           onClick: () => setQuestionNotification(n),
