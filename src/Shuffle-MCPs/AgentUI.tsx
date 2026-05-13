@@ -786,7 +786,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
                 </Typography>
               </Box>
               <Button
-                variant="contained"
+                variant="outlined"
                 size="small"
                 startIcon={
                   <Avatar
@@ -2728,7 +2728,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                               </Typography>
                             </Box>
                             <Button
-                              variant="contained"
+                              variant="outlined"
                               size="small"
                               startIcon={
                                 <Avatar
