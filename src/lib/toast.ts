@@ -22,16 +22,25 @@ type LegacyOptions = {
   [key: string]: unknown;
 };
 
-const buttonStyle: React.CSSProperties = {
-  background: 'transparent',
+const baseButtonStyle: React.CSSProperties = {
+  background: 'hsl(var(--muted) / 0.6)',
   border: '1px solid hsl(var(--border))',
   color: 'hsl(var(--foreground))',
-  borderRadius: 6,
-  padding: '4px 10px',
-  fontSize: '0.8em',
+  borderRadius: 8,
+  padding: '6px 12px',
+  fontSize: '0.8125rem',
   fontWeight: 600,
+  letterSpacing: '-0.01em',
   cursor: 'pointer',
   lineHeight: 1.2,
+  transition: 'background 120ms ease, border-color 120ms ease, transform 120ms ease',
+};
+
+const primaryButtonStyle: React.CSSProperties = {
+  ...baseButtonStyle,
+  background: 'hsl(var(--primary))',
+  color: 'hsl(var(--primary-foreground))',
+  borderColor: 'hsl(var(--primary))',
 };
 
 const renderActions = (
@@ -45,22 +54,18 @@ const renderActions = (
   };
   return React.createElement(
     'div',
-    { style: { display: 'flex', gap: 8, marginTop: 8 } },
+    { style: { display: 'flex', gap: 8, marginTop: 12 } },
     cancel
       ? React.createElement(
           'button',
-          { type: 'button', style: buttonStyle, onClick: handleClick(cancel.onClick) },
+          { type: 'button', style: baseButtonStyle, onClick: handleClick(cancel.onClick) },
           cancel.label,
         )
       : null,
     action
       ? React.createElement(
           'button',
-          {
-            type: 'button',
-            style: { ...buttonStyle, background: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))', borderColor: 'hsl(var(--primary))' },
-            onClick: handleClick(action.onClick),
-          },
+          { type: 'button', style: primaryButtonStyle, onClick: handleClick(action.onClick) },
           action.label,
         )
       : null,
@@ -72,22 +77,76 @@ const buildContent = (
   opts?: LegacyOptions,
 ): ToastContent => {
   const description = opts?.description;
+  const icon = opts?.icon as React.ReactNode | undefined;
   const actions = renderActions(opts?.id, opts?.action, opts?.cancel);
-  if (!description && !actions) return message;
+  if (!description && !actions && !icon) return message;
+
+  const titleNode = React.createElement(
+    'div',
+    {
+      style: {
+        fontWeight: 600,
+        fontSize: '0.9375rem',
+        letterSpacing: '-0.01em',
+        lineHeight: 1.35,
+        color: 'hsl(var(--foreground))',
+      },
+    },
+    message as React.ReactNode,
+  );
+
+  const descNode = description
+    ? React.createElement(
+        'div',
+        {
+          style: {
+            fontSize: '0.8125rem',
+            lineHeight: 1.45,
+            marginTop: 4,
+            color: 'hsl(var(--muted-foreground))',
+          },
+        },
+        description,
+      )
+    : null;
+
+  const body = React.createElement(
+    'div',
+    { style: { display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 } },
+    titleNode,
+    descNode,
+    actions,
+  );
+
+  if (!icon) return body;
+
   return React.createElement(
     'div',
-    { style: { display: 'flex', flexDirection: 'column', gap: 2 } },
-    React.createElement('div', { style: { fontWeight: 600 } }, message as React.ReactNode),
-    description
-      ? React.createElement('div', { style: { fontSize: '0.85em', opacity: 0.85 } }, description)
-      : null,
-    actions,
+    { style: { display: 'flex', gap: 12, alignItems: 'flex-start' } },
+    React.createElement(
+      'div',
+      {
+        style: {
+          flexShrink: 0,
+          width: 32,
+          height: 32,
+          borderRadius: 8,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'hsl(var(--primary) / 0.12)',
+          color: 'hsl(var(--primary))',
+        },
+      },
+      icon,
+    ),
+    body,
   );
 };
 
 const mapOptions = (opts?: LegacyOptions): ToastOptions | undefined => {
   if (!opts) return undefined;
-  const { description: _d, duration, title: _t, action: _a, cancel: _c, id, ...rest } = opts;
+  const { description: _d, duration, title: _t, action: _a, cancel: _c, icon: _i, id, ...rest } = opts;
   const out: ToastOptions = { ...(rest as ToastOptions) };
   if (typeof duration === 'number') {
     // react-toastify uses `false` for sticky; Infinity is invalid and causes
