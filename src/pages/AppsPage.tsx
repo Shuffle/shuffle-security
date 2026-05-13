@@ -32,6 +32,14 @@ export default function AppsPage() {
     title: '3,000+ Integrations',
     description: 'Browse and connect 3,000+ security integrations — SIEM, EDR, Email, Cloud, ITSM, Threat Intel and more. Use your existing tools with Shuffle Security.',
     url: '/apps',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: '3,000+ Security Integrations',
+      description: 'Browse and connect 3,000+ security integrations across SIEM, EDR, Email, Cloud, ITSM, and Threat Intelligence categories.',
+      url: 'https://security.shuffler.io/apps',
+      isPartOf: { '@type': 'WebSite', name: 'Shuffle Security', url: 'https://security.shuffler.io' },
+    },
   });
 
   // Initialize from URL query param
