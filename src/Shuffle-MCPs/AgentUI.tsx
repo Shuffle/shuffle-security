@@ -892,6 +892,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   //   2) Algolia — match by objectID, then by name
   const [resolvedToolApps, setResolvedToolApps] = useState<Record<string, AgentUIApp>>({});
   const [appSearchOpen, setAppSearchOpen] = useState(false);
+  const [authDrawerApp, setAuthDrawerApp] = useState<{ name: string; id?: string | null } | null>(null);
   const [agentRequestLoading, setAgentRequestLoading] = useState(false);
   const [execution, setExecution] = useState<ExecutionData | null>(null);
   const [agentData, setAgentData] = useState<{ decisions?: AgentDecision[]; original_input?: string; status?: string; started_at?: number; completed_at?: number; [k: string]: any }>({});
