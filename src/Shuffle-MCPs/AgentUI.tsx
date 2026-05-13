@@ -2018,9 +2018,12 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const scheduleDisabledTooltip: React.ReactNode = scheduleDisabledReasons.length > 1 ? (
     <Box>
       <Box sx={{ fontWeight: 600, mb: 0.5 }}>Cannot schedule for {scheduleDisabledReasons.length} reasons:</Box>
-      <Box component="ol" sx={{ pl: 2.5, m: 0 }}>
+      <Box sx={{ m: 0 }}>
         {scheduleDisabledReasons.map((r, i) => (
-          <Box component="li" key={i} sx={{ mb: 0.25 }}>{r}</Box>
+          <Box key={i} sx={{ mb: 0.5, display: 'flex', gap: 0.75 }}>
+            <Box component="span" sx={{ fontWeight: 700, flexShrink: 0 }}>{i + 1}.</Box>
+            <Box component="span">{r}</Box>
+          </Box>
         ))}
       </Box>
     </Box>
