@@ -1857,15 +1857,17 @@ const AgentUI: React.FC<AgentUIProps> = ({
         </span>
       </Tooltip>
       <Box sx={{ width: '1px', height: 20, bgcolor: 'hsl(var(--border))', mx: 0.25 }} />
-      <Tooltip title="Schedule this prompt to run repeatedly on a cron schedule">
+      <Tooltip title={scheduleDisabledReason || 'Schedule this prompt to run repeatedly on a cron schedule'}>
         <span>
           <IconButton
             size="small"
-            onClick={(e) => setScheduleAnchor(e.currentTarget)}
+            onClick={(e) => { if (!scheduleDisabledReason) setScheduleAnchor(e.currentTarget); }}
+            disabled={Boolean(scheduleDisabledReason)}
             sx={{
               width: 30, height: 30,
               color: 'hsl(var(--muted-foreground))',
               '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted))' },
+              '&.Mui-disabled': { opacity: 0.4, color: 'hsl(var(--muted-foreground))' },
             }}
           >
             <ScheduleIcon sx={{ fontSize: 16 }} />
