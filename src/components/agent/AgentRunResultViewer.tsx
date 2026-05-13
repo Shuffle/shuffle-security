@@ -99,20 +99,38 @@ export const getFailureInfo = (run: AgentRun): { reason: string } | null => {
   return null;
 };
 
+/**
+ * Pull the subtree(s) of the parsed result that may contain real failure
+ * signals. We deliberately ONLY look at `decisions` and `decision_string` —
+ * the agent's own per-step records of what it did. Everything else
+ * (`input`, `messages`, `system`, prompts, etc.) is the prompt context we
+ * sent IN to the model, so matching error keywords there produces false
+ * positives like "Auth Failure (401/403)" appearing in the system prompt.
+ */
+const getDiagnosableScope = (parsed: any): unknown => {
+  if (!parsed || typeof parsed !== 'object') return null;
+  const scope: Record<string, unknown> = {};
+  if (parsed.decisions !== undefined) scope.decisions = parsed.decisions;
+  if (parsed.decision_string !== undefined) scope.decision_string = parsed.decision_string;
+  return Object.keys(scope).length > 0 ? scope : null;
+};
+
 /** Detect if the output content hints at an error/failure even if the run status is "finished" */
 export const hasOutputWarning = (run: AgentRun): boolean => {
   const { parsed } = parseRunResult(run);
   if (!parsed || typeof parsed !== 'object') return false;
 
-  // Explicit success: false
+  // Explicit success: false at the top of the run
   if (parsed.success === false) return true;
 
-  // Check the output string for error keywords
-  const output = typeof parsed.output === 'string' ? parsed.output.toLowerCase() : '';
-  if (!output) return false;
+  // Only look at the agent's own decision records — never the input/system prompt.
+  const scope = getDiagnosableScope(parsed);
+  if (!scope) return false;
+  const haystack = JSON.stringify(scope).toLowerCase();
+  if (!haystack) return false;
 
   const errorPatterns = ['error', 'failed', 'failure', 'exception', 'timed out', 'timeout', 'unauthorized', 'forbidden', 'not found', 'could not'];
-  return errorPatterns.some(p => output.includes(p));
+  return errorPatterns.some(p => haystack.includes(p));
 };
 
 /**
@@ -180,7 +198,13 @@ export const diagnoseOutputWarning = (run: AgentRun): OutputDiagnosis | null => 
   const { parsed, raw } = parseRunResult(run);
   if (!parsed || typeof parsed !== 'object') return null;
 
-  const entries = collectEntries(parsed);
+  // Restrict the search to the agent's own decision records — see
+  // getDiagnosableScope. Walking the full result picks up keywords from the
+  // system prompt and produces false-positive "Auth Failure" diagnoses.
+  const scope = getDiagnosableScope(parsed);
+  if (!scope) return null;
+
+  const entries = collectEntries(scope);
   if (raw && entries.length === 0) entries.push({ path: '', value: raw });
 
   const haystack = entries.map((e) => e.value).join('\n');
