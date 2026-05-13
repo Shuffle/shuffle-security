@@ -2838,14 +2838,18 @@ const AgentUI: React.FC<AgentUIProps> = ({
                                 );
                               })}
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Button
-                                  variant="contained"
-                                  size="small"
-                                  disabled={agentRequestLoading}
-                                  onClick={trySimpleSubmit}
-                                >
-                                  {agentRequestLoading ? <CircularProgress size={16} /> : 'Submit'}
-                                </Button>
+                                <Tooltip title={!pendingAnswered ? 'Please answer all questions first' : ''} placement="top" arrow>
+                                  <span>
+                                    <Button
+                                      variant="contained"
+                                      size="small"
+                                      disabled={agentRequestLoading || !pendingAnswered}
+                                      onClick={trySimpleSubmit}
+                                    >
+                                      {agentRequestLoading ? <CircularProgress size={16} /> : 'Submit'}
+                                    </Button>
+                                  </span>
+                                </Tooltip>
                                 {pendingAsk.run_details?.id && getFormUrl(pendingAsk.run_details.id) && (
                                   <Tooltip title="Answer in the Form UI" placement="right">
                                     <IconButton
