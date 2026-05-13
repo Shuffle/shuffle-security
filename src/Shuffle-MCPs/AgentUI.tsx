@@ -1828,7 +1828,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
     const runEndSec = toSec(agentData?.completed_at || execution?.completed_at);
     // When the whole run has ended, cap any unfinished decisions at the run's
     // end time (or the latest known timestamp) so they stop counting up.
-    let fallbackEnd = Math.floor(Date.now() / 1000);
+    let fallbackEnd = Date.now() / 1000;
     if (runIsFinished) {
       let maxKnown = runEndSec || 0;
       for (const dec of agentData?.decisions || []) {
