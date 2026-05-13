@@ -1841,9 +1841,15 @@ const AgentUI: React.FC<AgentUIProps> = ({
       });
       if (dec.action === 'finish' || dec.category === 'finish' || dec.details?.action === 'finalise' || dec.action === 'finalise') {
         finishId = rd.id || '';
-        finishAns = dec.reason || '';
-        if (Array.isArray(dec.fields) && dec.fields.length > 0) {
-          finishAns = dec.fields[0]?.value || finishAns;
+        const reasonText = (dec.reason || '').trim();
+        const fieldText = (Array.isArray(dec.fields) && dec.fields.length > 0 ? (dec.fields[0]?.value || '') : '').trim();
+        // Prefer whichever has more substance. Sometimes the field value is a
+        // short headline like "Task Failed" while the real explanation lives
+        // in `reason` — surface that to the user instead of the headline.
+        if (fieldText && reasonText && reasonText.length > fieldText.length * 1.5) {
+          finishAns = reasonText;
+        } else {
+          finishAns = fieldText || reasonText;
         }
       }
     }
