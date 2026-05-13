@@ -123,34 +123,87 @@ const AgentRunDiagnosisBanner = ({ run, sx, onJumpToEvidence }: Props) => {
                 }}>
                   Where this was found
                 </Typography>
-                <Box sx={{
-                  p: 0.75,
-                  borderRadius: 0.5,
-                  bgcolor: 'hsl(var(--background))',
-                  border: '1px solid hsl(var(--border))',
-                }}>
-                  <Typography sx={{
-                    fontSize: '0.65rem',
-                    fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
-                    color: 'hsl(var(--severity-medium))',
-                    fontWeight: 600,
-                    mb: 0.25,
-                    wordBreak: 'break-all',
-                  }}>
-                    results[0].result.{firstEvidence.path || '(root)'}
-                  </Typography>
-                  <Typography sx={{
-                    fontSize: '0.7rem',
-                    fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
-                    color: 'hsl(var(--foreground))',
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                    maxHeight: 80,
-                    overflow: 'auto',
-                  }}>
-                    {firstEvidence.value}
-                  </Typography>
-                </Box>
+                <Tooltip title={canJump ? 'Open this decision in the detailed timeline' : ''} placement="top" arrow>
+                  <Box
+                    {...(canJump
+                      ? {
+                          role: 'button' as const,
+                          tabIndex: 0,
+                          onClick: () => onJumpToEvidence!(jumpDecisionIndex!),
+                          onKeyDown: (e: React.KeyboardEvent) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              onJumpToEvidence!(jumpDecisionIndex!);
+                            }
+                          },
+                        }
+                      : {})}
+                    sx={{
+                      p: 0.75,
+                      borderRadius: 0.5,
+                      bgcolor: 'hsl(var(--background))',
+                      border: '1px solid hsl(var(--border))',
+                      position: 'relative',
+                      cursor: canJump ? 'pointer' : 'default',
+                      transition: 'border-color 0.15s ease, background 0.15s ease',
+                      ...(canJump && {
+                        '&:hover': {
+                          borderColor: 'hsl(var(--severity-medium))',
+                          bgcolor: 'hsla(var(--severity-medium) / 0.04)',
+                        },
+                        '&:focus-visible': {
+                          outline: 'none',
+                          borderColor: 'hsl(var(--severity-medium))',
+                          boxShadow: '0 0 0 2px hsla(var(--severity-medium) / 0.25)',
+                        },
+                      }),
+                    }}
+                  >
+                    {canJump && (
+                      <ArrowUpRight
+                        size={12}
+                        style={{
+                          position: 'absolute',
+                          top: 6,
+                          right: 6,
+                          color: 'hsl(var(--muted-foreground))',
+                        }}
+                      />
+                    )}
+                    <Typography sx={{
+                      fontSize: '0.65rem',
+                      fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
+                      color: 'hsl(var(--severity-medium))',
+                      fontWeight: 600,
+                      mb: 0.25,
+                      wordBreak: 'break-all',
+                      pr: canJump ? 2 : 0,
+                    }}>
+                      results[0].result.{firstEvidence.path || '(root)'}
+                    </Typography>
+                    <Typography sx={{
+                      fontSize: '0.7rem',
+                      fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
+                      color: 'hsl(var(--foreground))',
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word',
+                      maxHeight: 80,
+                      overflow: 'auto',
+                    }}>
+                      {firstEvidence.value}
+                    </Typography>
+                    {canJump && (
+                      <Typography sx={{
+                        mt: 0.5,
+                        fontSize: '0.65rem',
+                        color: 'hsl(var(--severity-medium))',
+                        fontWeight: 600,
+                      }}>
+                        Open Decision #{(jumpDecisionIndex ?? 0) + 1} in detailed timeline →
+                      </Typography>
+                    )}
+                  </Box>
+                </Tooltip>
               </Box>
             )}
           </Box>
