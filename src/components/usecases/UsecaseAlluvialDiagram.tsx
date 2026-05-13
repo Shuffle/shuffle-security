@@ -301,7 +301,10 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
         }
         placement="bottom"
         arrow
+        open={popoverOpen ? false : undefined}
         disableHoverListener={popoverOpen}
+        disableFocusListener={popoverOpen}
+        disableTouchListener={popoverOpen}
       >
         {isSample ? content : (
           <Box
