@@ -1819,7 +1819,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
     // Backend may return Unix milliseconds (UnixMillis) or seconds. Normalize to seconds.
     const toSec = (t: any): number => {
       const n = Number(t) || 0;
-      return n > 1e12 ? Math.floor(n / 1000) : n;
+      // Preserve sub-second precision so durations < 1s render as e.g. "0.8s"
+      // instead of being floored to 0.
+      return n > 1e12 ? n / 1000 : n;
     };
     const overallStatus = (execution?.status || agentData?.status || '').toUpperCase();
     const runIsFinished = ['FINISHED', 'FAILURE', 'ABORTED', 'CANCELLED', 'CANCELED'].includes(overallStatus);
