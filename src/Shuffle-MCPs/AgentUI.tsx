@@ -30,6 +30,7 @@ import {
   CircularProgress,
   IconButton,
   InputBase,
+  Popover,
   TextField,
   Tooltip,
   Typography,
@@ -44,6 +45,7 @@ import HourglassDisabledIcon from '@mui/icons-material/HourglassDisabled';
 import PauseIcon from '@mui/icons-material/Pause';
 import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import ScheduleIcon from '@mui/icons-material/Schedule';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
@@ -204,6 +206,12 @@ export interface AgentUIProps {
   onRun?: (info: { input: string; success: boolean; executionId?: string; error?: string }) => void;
   /** Called whenever the active top-level view changes (start / simple / detailed). */
   onViewChange?: (view: 'start' | 'simple' | 'detailed') => void;
+  /**
+   * Called when the user saves a recurring schedule (cron expression) for the
+   * current prompt. When omitted, a toast is shown indicating scheduling is
+   * not wired up in this embed.
+   */
+  onSchedule?: (info: { cron: string; input: string }) => void | Promise<void>;
   /**
    * Optional Shuffle API key. When provided, all `/api/v1/*` calls made by
    * this component (agent run, polling, app autoload, icon fallback) use it
@@ -771,6 +779,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   initialExecution,
   onRun,
   onViewChange,
+  onSchedule,
   apiKey,
   apiBaseUrl,
   orgId,
@@ -818,6 +827,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const [agentData, setAgentData] = useState<{ decisions?: AgentDecision[]; original_input?: string; status?: string; started_at?: number; completed_at?: number; [k: string]: any }>({});
   const [agentActionResult, setAgentActionResult] = useState<any>(null);
   const [showStarter, setShowStarter] = useState(true);
+  const [scheduleAnchor, setScheduleAnchor] = useState<HTMLElement | null>(null);
+  const [scheduleCron, setScheduleCron] = useState('0 * * * *');
+  const [scheduleSaving, setScheduleSaving] = useState(false);
   const [openIndexes, setOpenIndexes] = useState<Set<number>>(new Set());
   const [questionAnswers, setQuestionAnswers] = useState<Record<string, { index: number; value: string }>>({});
   const [simpleSubmitAttempted, setSimpleSubmitAttempted] = useState(false);
@@ -1814,6 +1826,133 @@ const AgentUI: React.FC<AgentUIProps> = ({
           </IconButton>
         </span>
       </Tooltip>
+      <Box sx={{ width: '1px', height: 20, bgcolor: 'hsl(var(--border))', mx: 0.25 }} />
+      <Tooltip title="Schedule this prompt to run repeatedly on a cron schedule">
+        <span>
+          <IconButton
+            size="small"
+            onClick={(e) => setScheduleAnchor(e.currentTarget)}
+            sx={{
+              width: 30, height: 30,
+              color: 'hsl(var(--muted-foreground))',
+              '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted))' },
+            }}
+          >
+            <ScheduleIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+        </span>
+      </Tooltip>
+      <Popover
+        open={Boolean(scheduleAnchor)}
+        anchorEl={scheduleAnchor}
+        onClose={() => setScheduleAnchor(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+        slotProps={{
+          paper: {
+            sx: {
+              mt: 1,
+              p: 2,
+              width: 320,
+              borderRadius: 2,
+              border: '1px solid hsl(var(--border))',
+              bgcolor: 'hsl(var(--card))',
+              color: 'hsl(var(--foreground))',
+              boxShadow: '0 8px 24px hsl(0 0% 0% / 0.35)',
+            },
+          },
+        }}
+      >
+        <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, mb: 0.5 }}>
+          Schedule recurring run
+        </Typography>
+        <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', mb: 1.5 }}>
+          Run this prompt automatically on a cron schedule.
+        </Typography>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1.5 }}>
+          {([
+            ['Every 15 min', '*/15 * * * *'],
+            ['Hourly', '0 * * * *'],
+            ['Daily 9am', '0 9 * * *'],
+            ['Weekly Mon', '0 9 * * 1'],
+          ] as const).map(([label, expr]) => (
+            <Chip
+              key={expr}
+              label={label}
+              size="small"
+              onClick={() => setScheduleCron(expr)}
+              sx={{
+                fontSize: '0.7rem',
+                bgcolor: scheduleCron === expr ? 'hsl(var(--primary) / 0.15)' : 'hsl(var(--muted))',
+                color: scheduleCron === expr ? 'hsl(var(--primary))' : 'hsl(var(--foreground))',
+                border: scheduleCron === expr ? '1px solid hsl(var(--primary))' : '1px solid transparent',
+                '&:hover': { bgcolor: 'hsl(var(--muted) / 0.8)' },
+              }}
+            />
+          ))}
+        </Box>
+        <TextField
+          fullWidth
+          size="small"
+          value={scheduleCron}
+          onChange={(e) => setScheduleCron(e.target.value)}
+          placeholder="* * * * *"
+          label="Cron expression"
+          InputLabelProps={{ sx: { fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))' } }}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              fontFamily: 'monospace',
+              fontSize: '0.85rem',
+              color: 'hsl(var(--foreground))',
+              '& fieldset': { borderColor: 'hsl(var(--border))' },
+              '&:hover fieldset': { borderColor: 'hsl(var(--muted-foreground))' },
+              '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
+            },
+          }}
+        />
+        <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', mt: 0.5, fontFamily: 'monospace' }}>
+          minute · hour · day · month · weekday
+        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2 }}>
+          <Button
+            size="small"
+            onClick={() => setScheduleAnchor(null)}
+            sx={{ height: 36, color: 'hsl(var(--muted-foreground))', textTransform: 'none' }}
+          >
+            Cancel
+          </Button>
+          <Button
+            size="small"
+            variant="contained"
+            disabled={!scheduleCron.trim() || scheduleSaving}
+            onClick={async () => {
+              const cron = scheduleCron.trim();
+              if (!cron) return;
+              setScheduleSaving(true);
+              try {
+                if (onSchedule) {
+                  await onSchedule({ cron, input: actionInput });
+                  toast({ title: 'Schedule saved', description: `Will run on \`${cron}\`` });
+                } else {
+                  toast({ title: 'Scheduling not configured', description: 'No handler is wired up for scheduled runs in this view.', variant: 'destructive' });
+                }
+                setScheduleAnchor(null);
+              } catch (err) {
+                toast({ title: 'Failed to save schedule', description: err instanceof Error ? err.message : String(err), variant: 'destructive' });
+              } finally {
+                setScheduleSaving(false);
+              }
+            }}
+            sx={{
+              height: 36, textTransform: 'none',
+              bgcolor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))',
+              '&:hover': { bgcolor: 'hsl(var(--primary))', filter: 'brightness(1.1)' },
+            }}
+          >
+            {scheduleSaving ? <CircularProgress size={14} sx={{ color: 'inherit' }} /> : 'Save schedule'}
+          </Button>
+        </Box>
+      </Popover>
     </Box>
   );
 
