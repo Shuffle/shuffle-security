@@ -4810,25 +4810,6 @@ const IncidentDetailPage = () => {
                   </Typography>
                 </Box>
               </Tooltip>
-                <Box
-                  sx={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    flexShrink: 0,
-                    border: '1px solid hsl(var(--severity-medium) / 0.5)',
-                    bgcolor: 'hsl(var(--severity-medium) / 0.12)',
-                    borderRadius: 999,
-                    px: 0.75,
-                    py: 0.1,
-                  }}
-                >
-                  <AlertTriangleIcon size={11} style={{ color: 'hsl(var(--severity-medium))' }} />
-                  <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--severity-medium))', fontWeight: 500 }}>
-                    Completed — needs attention
-                  </Typography>
-                </Box>
-              </Tooltip>
             ) : statusCfg && (
               <Typography sx={{ fontSize: '0.7rem', color: statusCfg.color, flexShrink: 0 }}>
                 {statusCfg.label}
