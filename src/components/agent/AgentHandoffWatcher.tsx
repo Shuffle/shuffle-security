@@ -89,6 +89,17 @@ const AgentHandoffWatcher = () => {
     }
   };
 
+  // Persist "Dismiss" clicks for the rest of the day so we don't keep
+  // re-toasting the same handoff bundle every poll. Key includes the date
+  // so the suppression naturally resets at midnight (local time).
+  const dismissKey = () => `agent-handoff-dismissed-${new Date().toISOString().slice(0, 10)}`;
+  const isDismissedToday = () => {
+    try { return localStorage.getItem(dismissKey()) === '1'; } catch { return false; }
+  };
+  const dismissForToday = () => {
+    try { localStorage.setItem(dismissKey(), '1'); } catch { /* ignore */ }
+  };
+
   useEffect(() => {
     if (!isAuthenticated) return;
     // Beta gate — only support users see the global handoff toasts for now.
@@ -109,6 +120,13 @@ const AgentHandoffWatcher = () => {
     const onDashboard = location.pathname === '/dashboard' || location.pathname === '/';
     if (onDashboard) {
       // Still mark them seen so we don't burst-toast when navigating away.
+      notifications.forEach((n) => toastedIds.current.add(n.id));
+      return;
+    }
+
+    // User dismissed for the rest of the day — stay quiet, but mark as seen
+    // so we don't burst-toast the backlog tomorrow.
+    if (isDismissedToday()) {
       notifications.forEach((n) => toastedIds.current.add(n.id));
       return;
     }
@@ -136,11 +154,11 @@ const AgentHandoffWatcher = () => {
         icon: <Sparkles size={18} />,
         action: {
           label: 'Review all',
-          onClick: () => { window.location.href = '/agent'; },
+          onClick: () => { window.location.href = '/dashboard'; },
         },
         cancel: {
           label: 'Dismiss',
-          onClick: () => { /* sonner closes the toast on cancel click */ },
+          onClick: () => { dismissForToday(); },
         },
       });
       return;
@@ -198,7 +216,7 @@ const AgentHandoffWatcher = () => {
         },
         cancel: {
           label: 'Dismiss',
-          onClick: () => { /* sonner closes the toast on cancel click */ },
+          onClick: () => { dismissForToday(); },
         },
       });
     }
