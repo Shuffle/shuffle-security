@@ -14,7 +14,7 @@
  * dimension of relevance. A correlated incident from yesterday at Critical
  * severity is materially different from one from 8 months ago at Low.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Box, Typography, Chip, CircularProgress, Tooltip } from '@mui/material';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import { getDatastoreItem } from '@/Shuffle-MCPs/datastore';
@@ -135,7 +135,7 @@ export const CorrelationContextStrip = ({ incidentKeys, category = 'shuffle-secu
       }
     });
     return () => { cancelled = true; };
-  }, [incidentKeys, category]);
+  }, [stableKeys, category]);
 
   if (incidentKeys.length === 0) return null;
 
