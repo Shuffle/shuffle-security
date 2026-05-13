@@ -2618,15 +2618,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
               bgcolor: 'hsl(var(--card))',
               mb: 2,
             }}>
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--foreground))', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {agentData?.original_input || actionInput || 'Agent run'}
-                </Typography>
-                <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>
-                  Status: {execution?.status || agentData?.status || '—'} · {execution?.execution_id?.slice(0, 8) || ''}
-                </Typography>
-              </Box>
-              <AvatarGroup max={6} sx={{ '& .MuiAvatar-root': { width: 28, height: 28, borderColor: 'hsl(var(--border))' } }}>
+              <AvatarGroup max={4} sx={{ '& .MuiAvatar-root': { width: 28, height: 28, borderColor: 'hsl(var(--border))', fontSize: '0.7rem' } }}>
                 {(executionApps.length > 0 ? executionApps : chosenApps).map((app, i) => (
                   <Tooltip key={i} title={(app.name || '').replace(/_/g, ' ')}>
                     <Avatar
@@ -2644,6 +2636,29 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   </Tooltip>
                 ))}
               </AvatarGroup>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--foreground))', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {agentData?.original_input || actionInput || 'Agent run'}
+                </Typography>
+                <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>
+                  Status: {execution?.status || agentData?.status || '—'} · {execution?.execution_id?.slice(0, 8) || ''}
+                </Typography>
+              </Box>
+              <Tooltip title="Rerun the agent with the same input">
+                <span>
+                  <IconButton
+                    size="small"
+                    disabled={agentRequestLoading}
+                    onClick={rerunAgent}
+                    sx={{
+                      color: 'hsl(var(--muted-foreground))',
+                      '&:hover': { color: 'hsl(var(--primary))', bgcolor: 'hsl(var(--muted))' },
+                    }}
+                  >
+                    <RestartAltIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                </span>
+              </Tooltip>
             </Box>
 
             {error && (
