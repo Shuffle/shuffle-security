@@ -16,6 +16,15 @@ const DocsPage = () => {
     title: docTitle,
     description: `Shuffle Security documentation — ${docTitle}. Learn how to set up and use the platform.`,
     url: `/docs/${slug}`,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'TechArticle',
+      headline: docTitle,
+      description: `Shuffle Security documentation — ${docTitle}.`,
+      url: `https://security.shuffler.io/docs/${slug}`,
+      author: { '@type': 'Organization', name: 'Shuffle Security' },
+      publisher: { '@type': 'Organization', name: 'Shuffle Security', url: 'https://security.shuffler.io' },
+    },
   });
 
   return (
