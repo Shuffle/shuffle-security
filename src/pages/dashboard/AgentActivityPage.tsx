@@ -54,16 +54,9 @@ const AgentActivityPage = () => {
     setPermissionsOpen(true);
   };
 
-  const [searchParams, setSearchParams] = useSearchParams();
-  useEffect(() => {
-    if (searchParams.get('openPermissions') === '1') {
-      setPermissionsInitialTab('permissions');
-      setPermissionsOpen(true);
-      const next = new URLSearchParams(searchParams);
-      next.delete('openPermissions');
-      setSearchParams(next, { replace: true });
-    }
-  }, [searchParams, setSearchParams]);
+  // Note: the legacy `?openPermissions=1` deep link is now handled by the
+  // global GlobalAgentDrawer mounted in DashboardLayout, so it works on
+  // every page (not just /agent).
 
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
