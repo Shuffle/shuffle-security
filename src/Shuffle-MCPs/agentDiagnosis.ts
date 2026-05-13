@@ -109,13 +109,28 @@ const getDiagnosableScope = (parsed: any): unknown => {
   if (!parsed || typeof parsed !== 'object') return null;
   const scope: Record<string, unknown> = {};
   if (Array.isArray(parsed.decisions)) {
-    const runDetails = parsed.decisions
-      .map((d: any) => (d && typeof d === 'object' ? d.run_details : undefined))
-      .filter((rd: unknown) => rd !== undefined && rd !== null);
-    if (runDetails.length > 0) scope.run_details = runDetails;
+    // Keep positional alignment with parsed.decisions[N] so an evidence
+    // path like `run_details[N]...` maps directly back to the Nth
+    // decision in the agent's timeline. Decisions without run_details
+    // are kept as `null` placeholders (the walker skips nulls).
+    const runDetails = parsed.decisions.map((d: any) =>
+      d && typeof d === 'object' && d.run_details ? d.run_details : null
+    );
+    if (runDetails.some((rd: unknown) => rd !== null)) scope.run_details = runDetails;
   }
   if (parsed.decision_string !== undefined) scope.decision_string = parsed.decision_string;
   return Object.keys(scope).length > 0 ? scope : null;
+};
+
+/** Extract the originating decision index (in parsed.decisions / agentData.decisions)
+ *  from a diagnosis evidence path like `run_details[3].result.error`.
+ *  Returns null if the path does not start at a decision row. */
+export const extractDecisionIndex = (path: string | undefined | null): number | null => {
+  if (!path) return null;
+  const m = /^run_details\[(\d+)\]/.exec(path);
+  if (!m) return null;
+  const n = Number(m[1]);
+  return Number.isFinite(n) ? n : null;
 };
 
 /** Detect if the output content hints at an error/failure even if the run status is "finished". */

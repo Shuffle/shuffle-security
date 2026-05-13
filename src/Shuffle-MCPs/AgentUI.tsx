@@ -464,11 +464,15 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
     STATUS_COLORS.running;
 
   return (
-    <Box sx={{
-      borderTop: index === 0 ? 'none' : '1px solid hsl(var(--border))',
-      bgcolor: open ? 'hsl(var(--muted) / 0.3)' : 'transparent',
-      transition: 'background 0.15s ease',
-    }}>
+    <Box
+      data-timeline-index={index}
+      sx={{
+        borderTop: index === 0 ? 'none' : '1px solid hsl(var(--border))',
+        bgcolor: open ? 'hsl(var(--muted) / 0.3)' : 'transparent',
+        transition: 'background 0.15s ease',
+        scrollMarginTop: 96,
+      }}
+    >
       <Box
         onClick={onToggle}
         sx={{
@@ -2636,7 +2640,44 @@ const AgentUI: React.FC<AgentUIProps> = ({
 
             {/* Shared diagnosis banner — same component used by drawers and
                 incident pages, so the user sees identical reasoning here. */}
-            <AgentRunDiagnosisBanner run={execution} sx={{ px: 0, pb: 0, mb: 1.5 }} />
+            <AgentRunDiagnosisBanner
+              run={execution}
+              sx={{ px: 0, pb: 0, mb: 1.5 }}
+              onJumpToEvidence={(decisionIndex) => {
+                // Locate the timeline row for the offending decision and
+                // expand + scroll to it on the detailed view, regardless of
+                // whether the user is currently on Simple or Detailed.
+                const dec = (agentData?.decisions || [])[decisionIndex];
+                let rowIndex = -1;
+                if (dec) {
+                  rowIndex = timeline.findIndex((it) => it.details === dec);
+                  if (rowIndex < 0 && dec.run_details?.id) {
+                    rowIndex = timeline.findIndex(
+                      (it) => (it.details as any)?.run_details?.id === dec.run_details.id
+                    );
+                  }
+                }
+                // Fall back to the agent row (0) if we cannot resolve.
+                const targetIndex = rowIndex >= 0 ? rowIndex : 0;
+                setOpenIndexes((prev) => {
+                  const next = new Set(prev);
+                  next.add(targetIndex);
+                  return next;
+                });
+                goToTab('detailed');
+                // Wait for the detailed view to mount, then scroll the row
+                // into view. requestAnimationFrame x2 ensures layout has
+                // settled after the tab switch.
+                requestAnimationFrame(() => {
+                  requestAnimationFrame(() => {
+                    const el = document.querySelector(
+                      `[data-timeline-index="${targetIndex}"]`
+                    ) as HTMLElement | null;
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  });
+                });
+              }}
+            />
 
             {/* Simple summary view */}
             {viewMode === 'simple' && (
