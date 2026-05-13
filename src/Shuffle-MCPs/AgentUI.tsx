@@ -2046,7 +2046,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
                     <IconButton
                       size="small"
                       onClick={() => setChosenApps((prev) => prev.filter((_, idx) => idx !== i))}
-                      sx={{ p: 0.125, color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--destructive))' } }}
+                      disabled={agentRequestLoading}
+                      sx={{ p: 0.125, color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--destructive))' }, '&.Mui-disabled': { opacity: 0.4 } }}
                     >
                       <CloseIcon sx={{ fontSize: 12 }} />
                     </IconButton>
