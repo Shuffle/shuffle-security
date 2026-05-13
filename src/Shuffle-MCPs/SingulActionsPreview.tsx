@@ -737,36 +737,140 @@ const SingulActionsPreview = ({
           </>
         )}
 
-        {(playLoading || playResult !== null) && (
-          <Box ref={responseRef} sx={{ mt: 1.5 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.5 }}>
-              <Box sx={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'hsl(140 60% 55%)' }} />
-              <Typography sx={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', letterSpacing: 0.4 }}>
-                response
-              </Typography>
+        {(playLoading || playResult !== null) && (() => {
+          const parsedResult = (() => {
+            if (!playResult) return null;
+            try {
+              const p = JSON.parse(playResult);
+              return typeof p === 'object' && p !== null ? p : null;
+            } catch { return null; }
+          })();
+          const needsAuth = !!parsedResult && (
+            parsedResult.action === 'app_authentication' ||
+            parsedResult.app_authentication === true
+          );
+          const pretty = appName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+          const handleAuthClick = () => {
+            if (onAuthenticate) {
+              onAuthenticate(appName);
+              return;
+            }
+            if (typeof document === 'undefined') return;
+            const target = document.getElementById('app-auth-section');
+            if (target) {
+              target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+          };
+          return (
+            <Box ref={responseRef} sx={{ mt: 1.5 }}>
+              {needsAuth && (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1.5,
+                    p: 1.5,
+                    mb: 1,
+                    borderRadius: 1.5,
+                    border: '1px solid hsla(var(--severity-medium) / 0.3)',
+                    bgcolor: 'hsla(var(--severity-medium) / 0.08)',
+                  }}
+                >
+                  <LockIcon sx={{ color: 'hsl(var(--severity-medium))', fontSize: 22 }} />
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                      {pretty} requires authentication
+                    </Typography>
+                    <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
+                      {typeof parsedResult?.reason === 'string' && parsedResult.reason
+                        ? parsedResult.reason
+                        : `Connect your ${pretty} account so this action can run, then try again.`}
+                    </Typography>
+                  </Box>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={
+                      <Avatar
+                        src={appIcon || undefined}
+                        alt=""
+                        variant="rounded"
+                        sx={{
+                          width: 18, height: 18, borderRadius: 0.5,
+                          bgcolor: 'hsl(var(--background) / 0.4)',
+                          color: 'hsl(var(--background))',
+                          fontSize: '0.7rem', fontWeight: 700,
+                          '& img': { objectFit: 'contain' },
+                        }}
+                      >
+                        {pretty.charAt(0)}
+                      </Avatar>
+                    }
+                    onClick={handleAuthClick}
+                    sx={{ height: 36, textTransform: 'none', fontWeight: 600, flexShrink: 0 }}
+                  >
+                    Authenticate {pretty}
+                  </Button>
+                </Box>
+              )}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.5 }}>
+                <Box sx={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: needsAuth ? 'hsl(var(--severity-medium))' : 'hsl(140 60% 55%)' }} />
+                <Typography sx={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', letterSpacing: 0.4 }}>
+                  response
+                </Typography>
+              </Box>
+              {parsedResult ? (
+                <Box
+                  sx={{
+                    p: 1.5,
+                    maxHeight: 320,
+                    overflow: 'auto',
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: 1.5,
+                    fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+                    '& .json-view': {
+                      fontSize: '0.72rem !important',
+                      fontFamily: 'inherit !important',
+                      bgcolor: 'transparent !important',
+                    },
+                  }}
+                >
+                  <JsonView
+                    src={deepParseJsonStrings(parsedResult)}
+                    dark
+                    collapsed={2}
+                    collapseStringMode="word"
+                    collapseStringsAfterLength={120}
+                    enableClipboard
+                    displaySize
+                  />
+                </Box>
+              ) : (
+                <Box
+                  component="pre"
+                  sx={{
+                    p: 1.5,
+                    maxHeight: 240,
+                    overflow: 'auto',
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: '0.7rem',
+                    lineHeight: 1.5,
+                    color: 'hsl(var(--foreground))',
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: 1.5,
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    m: 0,
+                  }}
+                >
+                  {playLoading && !playResult ? 'Running…' : playResult}
+                </Box>
+              )}
             </Box>
-            <Box
-              component="pre"
-              sx={{
-                p: 1.5,
-                maxHeight: 240,
-                overflow: 'auto',
-                fontFamily: "'JetBrains Mono', monospace",
-                fontSize: '0.7rem',
-                lineHeight: 1.5,
-                color: 'hsl(var(--foreground))',
-                backgroundColor: 'hsl(var(--background))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: 1.5,
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-                m: 0,
-              }}
-            >
-              {playLoading && !playResult ? 'Running…' : playResult}
-            </Box>
-          </Box>
-        )}
+          );
+        })()}
       </Box>
     </Box>
   );
