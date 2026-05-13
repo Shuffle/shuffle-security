@@ -8744,7 +8744,7 @@ const IncidentDetailPage = () => {
         </motion.div>
       )}
 
-      {activeTab === 5 && (
+      {activeTab === 5 && (<motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
         /* File Editor Tab */
         <Box sx={{
           bgcolor: 'action.hover',
