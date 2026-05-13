@@ -8838,6 +8838,7 @@ const IncidentDetailPage = () => {
             <HighlightedFileEditor value={fileContent} onChange={setFileContent} validateJson={true} onValidationChange={setFileJsonValid} />
           )}
         </Box>
+        </motion.div>
       )}
 
       {/* Changes tab content removed — revisions now in Activity sidebar */}
