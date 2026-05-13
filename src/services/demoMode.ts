@@ -467,10 +467,15 @@ export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
   const out: DemoIocOverrides = {};
   try {
     const ipRes = await getDatastoreByCategory(IOC_IP_CATEGORY);
-    const liveKeys = ipRes.success && ipRes.data
-      ? ipRes.data.map(i => i.key).filter(Boolean)
+    // Some threat-feed parsers store binary indicator IDs as keys, which
+    // decode into garbled UTF-8. Only accept items whose KEY is a real IP,
+    // or whose STIX value contains an extractable IPv4/IPv6.
+    const liveIps = ipRes.success && ipRes.data
+      ? ipRes.data
+          .map(i => looksLikeIp(i.key) ? i.key : extractIpFromStixValue((i as { value?: unknown }).value))
+          .filter((v): v is string => looksLikeIp(v))
       : [];
-    const ipKey = pickRandom(liveKeys.length > 0 ? liveKeys : FALLBACK_IOC_IPS);
+    const ipKey = pickRandom(liveIps.length > 0 ? liveIps : FALLBACK_IOC_IPS);
     if (ipKey) out.attackerIp = ipKey;
   } catch (err) {
     console.warn('[demo] pick ioc_ip failed', err);
@@ -479,10 +484,16 @@ export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
   }
   try {
     const urlRes = await getDatastoreByCategory(IOC_URL_CATEGORY);
-    const liveKeys = urlRes.success && urlRes.data
-      ? urlRes.data.map(i => i.key).filter(Boolean)
+    // Same defence as IPs: the key must be a printable URL, or we fall back
+    // to extracting the URL from the STIX 2.1 indicator pattern stored in
+    // the value. Anything else is rejected so we never render `4�}�7n�…`
+    // as a phishing lure.
+    const liveUrls = urlRes.success && urlRes.data
+      ? urlRes.data
+          .map(i => looksLikeUrl(i.key) ? i.key : extractUrlFromStixValue((i as { value?: unknown }).value))
+          .filter((v): v is string => looksLikeUrl(v))
       : [];
-    const urlKey = pickRandom(liveKeys.length > 0 ? liveKeys : FALLBACK_IOC_URLS);
+    const urlKey = pickRandom(liveUrls.length > 0 ? liveUrls : FALLBACK_IOC_URLS);
     if (urlKey) {
       out.lureUrl = urlKey;
       const host = extractHost(urlKey);
