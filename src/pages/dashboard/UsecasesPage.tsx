@@ -1771,10 +1771,10 @@ function UsecaseDetailContent({
     if (willBeEnabled && !hasValidatedSource) {
       const sourceName = flow.source ? categoryLabel(flow.source) : 'source';
       toast.warning(`No active ${sourceName} integration`, {
-        description: `Enabling ${flow.label} will not do anything until you connect and validate a ${sourceName} tool. The workflow has no input to react to and will be disabled again automatically.`,
+        description: `Enabling ${flow.label} will not do anything until you connect and validate a ${sourceName} tool. The workflow has no input to react to and may be disabled again automatically.`,
         duration: 9000,
       });
-      return;
+      // Continue and let the user enable it anyway — the backend will reflect reality.
     }
     setToggling(true);
     setOptimisticEnabled(willBeEnabled);
@@ -2066,27 +2066,19 @@ function UsecaseDetailContent({
                         px: 1.25,
                         bgcolor: effectiveEnabled
                           ? 'transparent'
-                          : !hasValidatedSource
-                            ? 'hsl(var(--muted))'
-                            : 'hsl(var(--primary, 24 100% 50%))',
+                          : 'hsl(var(--primary, 24 100% 50%))',
                         color: effectiveEnabled
                           ? 'hsl(var(--foreground))'
-                          : !hasValidatedSource
-                            ? 'hsl(var(--muted-foreground))'
-                            : 'hsl(var(--primary-foreground, 0 0% 100%))',
+                          : 'hsl(var(--primary-foreground, 0 0% 100%))',
                         border: effectiveEnabled
                           ? '1px solid hsl(var(--border))'
-                          : !hasValidatedSource
-                            ? '1px dashed hsl(var(--border))'
-                            : '1px solid transparent',
+                          : '1px solid transparent',
                         boxShadow: 'none',
                         '&:hover': {
                           bgcolor: effectiveEnabled
                             ? 'transparent'
-                            : !hasValidatedSource
-                              ? 'hsl(var(--muted))'
-                              : 'hsla(24, 100%, 50%, 0.9)',
-                          borderColor: effectiveEnabled ? 'hsl(var(--foreground) / 0.4)' : !hasValidatedSource ? 'hsl(var(--border))' : 'transparent',
+                            : 'hsla(24, 100%, 50%, 0.9)',
+                          borderColor: effectiveEnabled ? 'hsl(var(--foreground) / 0.4)' : 'transparent',
                           boxShadow: 'none',
                         },
                       }}
@@ -3044,10 +3036,10 @@ function UsecaseCard({
     const willBeEnabled = !effectiveEnabled;
     if (willBeEnabled && !hasValidatedSource) {
       toast.warning(`No active ${sourceCat} integration`, {
-        description: `Enabling ${flow.label} will not do anything until you connect and validate a ${sourceCat} tool. The workflow has no input to react to and will be disabled again automatically.`,
+        description: `Enabling ${flow.label} will not do anything until you connect and validate a ${sourceCat} tool. The workflow has no input to react to and may be disabled again automatically.`,
         duration: 9000,
       });
-      return;
+      // Continue and let the user enable it anyway — the backend will reflect reality.
     }
     setToggling(true);
     setOptimisticEnabled(willBeEnabled);
@@ -3253,28 +3245,20 @@ function UsecaseCard({
                     px: 1,
                     bgcolor: effectiveEnabled
                       ? 'transparent'
-                      : !hasValidatedSource
-                        ? 'hsl(var(--muted))'
-                        : 'hsl(var(--primary))',
+                      : 'hsl(var(--primary))',
                     color: effectiveEnabled
                       ? 'hsl(var(--foreground))'
-                      : !hasValidatedSource
-                        ? 'hsl(var(--muted-foreground))'
-                        : 'hsl(var(--primary-foreground))',
+                      : 'hsl(var(--primary-foreground))',
                     borderColor: effectiveEnabled
                       ? 'hsl(var(--border))'
-                      : !hasValidatedSource
-                        ? 'hsl(var(--border))'
-                        : 'transparent',
-                    borderStyle: !effectiveEnabled && !hasValidatedSource ? 'dashed' : 'solid',
+                      : 'transparent',
+                    borderStyle: 'solid',
                     boxShadow: 'none',
                     '&:hover': {
                       bgcolor: effectiveEnabled
                         ? 'transparent'
-                        : !hasValidatedSource
-                          ? 'hsl(var(--muted))'
-                          : 'hsl(var(--primary) / 0.9)',
-                      borderColor: effectiveEnabled ? 'hsl(var(--foreground) / 0.4)' : !hasValidatedSource ? 'hsl(var(--border))' : 'transparent',
+                        : 'hsl(var(--primary) / 0.9)',
+                      borderColor: effectiveEnabled ? 'hsl(var(--foreground) / 0.4)' : 'transparent',
                       boxShadow: 'none',
                     },
                   }}
