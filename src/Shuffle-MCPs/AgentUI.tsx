@@ -1551,6 +1551,15 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // ── Submit input ──
   const submitInput = useCallback(async (text: string) => {
     if (!text.trim()) return;
+    if (text.trim().length < 6) {
+      setError('Please enter at least 6 characters before starting the agent.');
+      toast({
+        title: 'Input too short',
+        description: 'The agent needs at least 6 characters to start.',
+        variant: 'destructive',
+      });
+      return;
+    }
     setError(null);
     setAgentRequestLoading(true);
 
@@ -2565,7 +2574,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 <span>
                   <IconButton
                     type="submit"
-                    disabled={actionInput.trim().length < 3 || agentRequestLoading}
+                    disabled={actionInput.trim().length < 6 || agentRequestLoading}
                     sx={{
                       width: 36, height: 36,
                       bgcolor: actionInput.trim().length >= 3 ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
