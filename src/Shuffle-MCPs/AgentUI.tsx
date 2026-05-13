@@ -1997,6 +1997,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
       return hasAnswerField || status === 'FINISHED';
     });
     const reasons: string[] = [];
+    if (isNotFinished) {
+      reasons.push('The agent is not finished running.');
+    }
     if (hadContinuation) {
       reasons.push('This run needed a follow-up message to continue, so the one-shot prompt did not succeed on its own. Refine the prompt until it finishes in one go before scheduling.');
     }
@@ -2010,7 +2013,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
       reasons.push('A question in this run was answered manually. Scheduled runs are unattended, so refine the prompt so the agent does not need to ask anything before scheduling.');
     }
     return { scheduleDisabledReasons: reasons };
-  }, [agentData]);
+  }, [agentData, execution?.status]);
   const scheduleDisabledReason = scheduleDisabledReasons[0] || '';
   const scheduleDisabledTooltip: React.ReactNode = scheduleDisabledReasons.length > 1 ? (
     <Box>
