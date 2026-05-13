@@ -65,6 +65,14 @@ export const DashboardLayout = ({ children, defaultCollapsed }: DashboardLayoutP
     }
   }, [sidebarCollapsed, isOnboarding]);
 
+  // Hydrate the agent-tools cache from the datastore once we have an active
+  // org. This keeps "Assigned tools" in sync across browsers/devices instead
+  // of being a per-browser localStorage list.
+  useEffect(() => {
+    if (!userInfo?.active_org?.id) return;
+    loadAgentToolsFromDatastore();
+  }, [userInfo?.active_org?.id]);
+
   return (
     <AppDetailProvider>
       <Box sx={{ display: 'flex', height: '100vh', backgroundColor: 'hsl(var(--background))', width: '100%' }}>
