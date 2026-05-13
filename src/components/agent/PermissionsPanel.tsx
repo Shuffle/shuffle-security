@@ -556,6 +556,8 @@ const PermissionsPanel = ({ compact = false }: PermissionsPanelProps) => {
           <Alert severity="error" sx={{ mb: 2, fontSize: '0.8rem' }}>{error}</Alert>
         )}
 
+        <AssignedToolsSection compact />
+
         {/* Categories — compact drawer style */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {categories.map((cat) => {
