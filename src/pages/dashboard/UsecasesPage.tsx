@@ -1705,6 +1705,7 @@ function UsecaseDetailContent({
   hideBackNav = false,
   hidePrevNext = false,
   showConnectionPath = false,
+  useAlluvialDiagram = false,
   onNavigateUsecase,
   usecases,
   isEnabled = false,
@@ -1717,6 +1718,7 @@ function UsecaseDetailContent({
   hideBackNav?: boolean;
   hidePrevNext?: boolean;
   showConnectionPath?: boolean;
+  useAlluvialDiagram?: boolean;
   onNavigateUsecase?: (flowId: string) => void;
   usecases: Usecase[];
   /** Whether this automation currently has a running workflow */
@@ -2092,6 +2094,13 @@ function UsecaseDetailContent({
         <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1.5 }}>
           Connection Path
         </Typography>
+        {useAlluvialDiagram && ['siem_case_management_1', 'edr_case_management_1', 'email_case_management_1'].includes(flow.id) ? (
+          <UsecaseAlluvialDiagram
+            sourceCategory={flow.source}
+            targetCategory={flow.target}
+            highlightCategory={flow.source}
+          />
+        ) : (
         <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
           {[
             { title: 'Source', meta: sourceCat, details: sourceDetails, categoryId: flow.source, appNames: categoryAppNames[flow.source] || [] },
@@ -2152,6 +2161,7 @@ function UsecaseDetailContent({
             );
           })}
         </Box>
+        )}
       </Box>
       )}
 
@@ -2581,6 +2591,7 @@ function UsecasesPageInner() {
         <UsecaseDetailContent
           flowId={drawerFlowId ?? undefined}
           showConnectionPath
+          useAlluvialDiagram
           onNavigateUsecase={(id) => {
             const f = usecases.find(u => u.id === id);
             const name = f?.label || id || '';
@@ -2928,6 +2939,7 @@ function UsecasesPageInner() {
               <UsecaseDetailContent
                 flowId={drawerFlowId ?? undefined}
                 hideBackNav
+                showConnectionPath
                 onNavigateUsecase={(id) => setDrawerFlowId(id || null)}
                 usecases={usecases}
                 isEnabled={drawerEnabled}
