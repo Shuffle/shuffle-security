@@ -116,6 +116,7 @@ import { getApiUrl, getAuthHeader, API_CONFIG } from '@/Shuffle-MCPs/api';
 import { fetchApps } from '@/Shuffle-MCPs/appsCache';
 import { toast } from '@/Shuffle-MCPs/toast';
 import { runAgent } from '@/Shuffle-MCPs/agentRun';
+import { parseScheduleHint } from '@/Shuffle-MCPs/scheduleHint';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -2014,6 +2015,20 @@ const AgentUI: React.FC<AgentUIProps> = ({
     }
     return { scheduleDisabledReasons: reasons };
   }, [agentData, execution?.status]);
+
+  // Detect natural-language scheduling intent in the prompt (e.g. "daily at 6 am",
+  // "next monday at 2am", "every 15 minutes"). Used to highlight the Schedule
+  // button and pre-seed the cron picker.
+  const scheduleHint = useMemo(() => parseScheduleHint(actionInput), [actionInput]);
+  // Track which hint we last auto-applied so we never overwrite a manual pick.
+  const lastAppliedHintRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!scheduleHint) return;
+    if (scheduleAnchor) return; // never override while popover is open
+    if (lastAppliedHintRef.current === scheduleHint.cron) return;
+    setScheduleCron(scheduleHint.cron);
+    lastAppliedHintRef.current = scheduleHint.cron;
+  }, [scheduleHint, scheduleAnchor]);
   const scheduleDisabledReason = scheduleDisabledReasons[0] || '';
   const scheduleDisabledTooltip: React.ReactNode = scheduleDisabledReasons.length > 1 ? (
     <Box>
@@ -2133,6 +2148,48 @@ const AgentUI: React.FC<AgentUIProps> = ({
         <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', mb: 1.5 }}>
           Run this prompt automatically on a cron schedule.
         </Typography>
+        {scheduleHint && (
+          <Box
+            sx={{
+              mb: 1.5,
+              p: 1,
+              borderRadius: 1.5,
+              border: '1px solid hsl(var(--primary) / 0.4)',
+              bgcolor: 'hsl(var(--primary) / 0.08)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+            }}
+          >
+            <ScheduleIcon sx={{ fontSize: 16, color: 'hsl(var(--primary))' }} />
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Box sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', mb: 0.25 }}>
+                Detected from your prompt
+              </Box>
+              <Box sx={{ fontSize: '0.78rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                {scheduleHint.label}
+              </Box>
+              <Box sx={{ fontSize: '0.68rem', fontFamily: 'monospace', color: 'hsl(var(--muted-foreground))' }}>
+                {scheduleHint.cron}
+              </Box>
+            </Box>
+            {scheduleCron !== scheduleHint.cron && (
+              <Button
+                size="small"
+                onClick={() => setScheduleCron(scheduleHint.cron)}
+                sx={{
+                  height: 28,
+                  textTransform: 'none',
+                  fontSize: '0.7rem',
+                  color: 'hsl(var(--primary))',
+                  '&:hover': { bgcolor: 'hsl(var(--primary) / 0.12)' },
+                }}
+              >
+                Use
+              </Button>
+            )}
+          </Box>
+        )}
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 0.5 }}>
           {([
             ['Every 5 min', '*/5 * * * *'],
@@ -2343,13 +2400,16 @@ const AgentUI: React.FC<AgentUIProps> = ({
               />
               {(() => {
                 const canSchedule = hasExecution && !scheduleDisabledReason;
+                const hintActive = Boolean(scheduleHint) && canSchedule;
                 const tip: React.ReactNode = scheduleDisabledReason
                   ? scheduleDisabledTooltip
-                  : hasExecution
-                    ? 'Schedule this prompt to run repeatedly on a cron schedule'
-                    : agentRequestLoading
-                      ? 'Scheduling unlocks once this run finishes successfully — you cannot schedule a prompt that has not completed yet.'
-                      : 'Scheduling is available after the prompt finishes a successful one-shot run. Submit it first, then come back here to set a cron schedule.';
+                  : hintActive
+                    ? `Detected schedule: ${scheduleHint!.label}. Click to review and save.`
+                    : hasExecution
+                      ? 'Schedule this prompt to run repeatedly on a cron schedule'
+                      : agentRequestLoading
+                        ? 'Scheduling unlocks once this run finishes successfully — you cannot schedule a prompt that has not completed yet.'
+                        : 'Scheduling is available after the prompt finishes a successful one-shot run. Submit it first, then come back here to set a cron schedule.';
                 return (
                   <Tooltip title={tip} placement="top" arrow>
                     <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
@@ -2358,13 +2418,39 @@ const AgentUI: React.FC<AgentUIProps> = ({
                         onClick={(e) => { if (canSchedule) setScheduleAnchor(e.currentTarget); }}
                         disabled={!canSchedule || agentRequestLoading}
                         sx={{
-                          width: 36, height: 36,
-                          color: 'hsl(var(--muted-foreground))',
-                          '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted))' },
+                          height: 36,
+                          minWidth: 36,
+                          px: hintActive ? 1.25 : 0,
+                          width: hintActive ? 'auto' : 36,
+                          borderRadius: hintActive ? 999 : '50%',
+                          gap: hintActive ? 0.75 : 0,
+                          color: hintActive ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                          bgcolor: hintActive ? 'hsl(var(--primary) / 0.12)' : 'transparent',
+                          border: hintActive ? '1px solid hsl(var(--primary) / 0.5)' : '1px solid transparent',
+                          '&:hover': hintActive
+                            ? { bgcolor: 'hsl(var(--primary) / 0.2)', color: 'hsl(var(--primary))' }
+                            : { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted))' },
                           '&.Mui-disabled': { opacity: 0.4, color: 'hsl(var(--muted-foreground))' },
+                          transition: 'all 160ms ease',
                         }}
                       >
                         <ScheduleIcon sx={{ fontSize: 18 }} />
+                        {hintActive && (
+                          <Box
+                            component="span"
+                            sx={{
+                              fontSize: '0.72rem',
+                              fontWeight: 600,
+                              lineHeight: 1,
+                              whiteSpace: 'nowrap',
+                              maxWidth: 180,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}
+                          >
+                            {scheduleHint!.label}
+                          </Box>
+                        )}
                       </IconButton>
                     </Box>
                   </Tooltip>
