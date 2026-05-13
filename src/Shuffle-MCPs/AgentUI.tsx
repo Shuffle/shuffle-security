@@ -2336,7 +2336,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
               display: 'flex',
               flexDirection: 'column',
               gap: 1,
-              borderRadius: attachedImages.length > 0 ? 4 : 999,
+              borderRadius: attachedImages.length > 0 ? 4 : '28px',
               border: '1.5px solid hsl(var(--border))',
               bgcolor: 'hsl(var(--card))',
               px: 3,
