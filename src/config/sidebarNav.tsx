@@ -126,8 +126,8 @@ export const SIDEBAR_NAV: SidebarItemSpec[] = [
       },
       {
         tabKey: 'detection_ioc_types',
-        label: 'IOC Types',
-        path: '/incidents/ioc-types',
+        label: 'Observables',
+        path: '/incidents/observables',
         icon: <FingerprintIcon fontSize="small" />,
       },
     ],
