@@ -5504,7 +5504,7 @@ const IncidentDetailPage = () => {
     // assigned, we render the indicator without a tools summary.
     const enabledAgentTools: string[] = (() => {
       try {
-        return getAssignedAgentTools();
+        return getAssignedAgentTools().map((t) => t.name);
       } catch {
         return [];
       }
