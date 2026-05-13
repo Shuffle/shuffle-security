@@ -2626,6 +2626,7 @@ function UsecasesPageInner() {
     const detailFlow = drawerFlowId ? usecases.find(u => u.id === drawerFlowId) : null;
     const detailEnabled = detailFlow ? isFlowVisuallyEnabled(detailFlow) : false;
     const detailCanToggle = isAuthenticated && !!detailFlow?.automationLabel;
+    const detailHasValidatedSource = detailFlow ? validatedCategories.has(detailFlow.source) : true;
     return (
       <Box sx={{ px: { xs: 2, md: 4 }, py: 4, maxWidth: 1200, width: '100%', mx: 'auto' }}>
         <UsecaseDetailContent
@@ -2641,6 +2642,7 @@ function UsecasesPageInner() {
           isEnabled={detailEnabled}
           canToggle={detailCanToggle}
           isAuthenticated={isAuthenticated}
+          hasValidatedSource={detailHasValidatedSource}
           onToggled={handleUsecaseWorkflowGenerated}
           workflows={workflows}
         />
