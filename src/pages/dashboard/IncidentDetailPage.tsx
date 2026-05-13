@@ -8586,7 +8586,7 @@ const IncidentDetailPage = () => {
         </motion.div>
        )}
 
-      {activeTab === 4 && (
+      {activeTab === 4 && (<motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
         /* Raw JSON Tab */
         <Box sx={{
           bgcolor: 'rgba(255,255,255,0.02)',
