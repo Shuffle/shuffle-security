@@ -74,11 +74,14 @@ const getRunIconColor = (run: AgentRun): string => {
 
 const formatDuration = (run: AgentRun): string => {
   if (run.started_at && run.completed_at) {
-    const startSec = Number(run.started_at);
-    const endSec = Number(run.completed_at);
-    if (!isNaN(startSec) && !isNaN(endSec)) {
-      const ms = (endSec - startSec) * 1000;
-      if (ms < 1000) return `${Math.round(ms)}ms`;
+    const start = Number(run.started_at);
+    const end = Number(run.completed_at);
+    if (!isNaN(start) && !isNaN(end)) {
+      // Backend may return Unix milliseconds or seconds. Normalize to ms
+      // while preserving sub-second precision.
+      const toMs = (n: number) => (n > 1e12 ? n : n * 1000);
+      const ms = Math.max(0, toMs(end) - toMs(start));
+      if (ms < 1000) return `${(ms / 1000).toFixed(2)}s`;
       if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
       return `${Math.floor(ms / 60000)}m ${Math.floor((ms % 60000) / 1000)}s`;
     }
