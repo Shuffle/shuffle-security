@@ -1,12 +1,15 @@
 /**
  * AssignedToolsSection — top-of-Permissions UI that shows which apps
- * the agent will use for a given (agent, actionType) pair, with chips
- * to remove and a button to add more via the AppSearchDrawer.
+ * the agent will use for a given (agent, actionType) pair.
+ *
+ * Styled to match the rest of PermissionsPanel: a category-style card
+ * with app pills that include the app icon (resolved from Algolia)
+ * and an inline remove button.
  */
 
-import { useEffect, useState } from 'react';
-import { Box, Typography, Chip, Button, Tooltip } from '@mui/material';
-import { Plus, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Box, Typography, IconButton, Tooltip, Button } from '@mui/material';
+import { Plus, X, Wrench, AppWindow } from 'lucide-react';
 import { AppSearchDrawer } from '@/Shuffle-MCPs';
 import {
   AGENT_TOOLS_CHANGED_EVENT,
@@ -23,6 +26,120 @@ interface Props {
   actionType?: string;
   compact?: boolean;
 }
+
+const norm = (s: string) => (s || '').toLowerCase().replace(/[\s-]+/g, '_');
+
+/** Lightweight Algolia lookup for app icons. Resolves once per name. */
+const useAppIcons = (names: string[]) => {
+  const [icons, setIcons] = useState<Record<string, string>>({});
+  const key = names.join('|');
+
+  useEffect(() => {
+    let cancelled = false;
+    const missing = names.filter((n) => !(n in icons));
+    if (missing.length === 0) return;
+    (async () => {
+      try {
+        const { algoliasearch } = await import('algoliasearch');
+        const client = algoliasearch('JNSS5CFDZZ', '33e4e3564f4f060e96e0531957bed552');
+        const resolved: Record<string, string> = {};
+        await Promise.all(
+          missing.map(async (name) => {
+            try {
+              const res = await client.searchSingleIndex({
+                indexName: 'appsearch',
+                searchParams: { query: name.replace(/_/g, ' '), hitsPerPage: 3 },
+              });
+              const hits = (res.hits as any[]) || [];
+              const match = hits.find((h) => norm(h.name || '') === norm(name)) || hits[0];
+              resolved[name] = match?.image_url || '';
+            } catch {
+              resolved[name] = '';
+            }
+          }),
+        );
+        if (!cancelled) setIcons((prev) => ({ ...prev, ...resolved }));
+      } catch {
+        /* offline / blocked — pills fall back to letter avatars */
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+
+  return icons;
+};
+
+const ToolPill = ({
+  name,
+  icon,
+  onRemove,
+}: {
+  name: string;
+  icon?: string;
+  onRemove: () => void;
+}) => {
+  const display = formatToolName(name);
+  return (
+    <Box
+      sx={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 0.75,
+        height: 30,
+        pl: 0.5,
+        pr: 0.5,
+        borderRadius: 1.5,
+        border: '1px solid hsl(var(--border))',
+        bgcolor: 'hsl(var(--muted) / 0.4)',
+        transition: 'all 120ms ease',
+        '&:hover': {
+          borderColor: 'hsl(var(--primary) / 0.5)',
+          bgcolor: 'hsl(var(--primary) / 0.06)',
+        },
+      }}
+    >
+      <Box
+        sx={{
+          width: 22,
+          height: 22,
+          borderRadius: 0.75,
+          bgcolor: 'hsl(var(--background))',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          overflow: 'hidden',
+          flexShrink: 0,
+        }}
+      >
+        {icon ? (
+          <img src={icon} alt={display} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+        ) : (
+          <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))' }}>
+            {display.charAt(0).toUpperCase()}
+          </Typography>
+        )}
+      </Box>
+      <Typography sx={{ fontSize: '0.78rem', fontWeight: 500, color: 'hsl(var(--foreground))', pr: 0.25 }}>
+        {display}
+      </Typography>
+      <Tooltip title="Remove tool">
+        <IconButton
+          size="small"
+          onClick={onRemove}
+          sx={{
+            width: 20,
+            height: 20,
+            color: 'hsl(var(--muted-foreground))',
+            '&:hover': { color: 'hsl(var(--destructive))', bgcolor: 'transparent' },
+          }}
+        >
+          <X size={12} />
+        </IconButton>
+      </Tooltip>
+    </Box>
+  );
+};
 
 const AssignedToolsSection = ({
   agent = DEFAULT_AGENT,
@@ -43,28 +160,56 @@ const AssignedToolsSection = ({
     };
   }, [agent, actionType]);
 
+  const icons = useAppIcons(useMemo(() => tools, [tools]));
+
   const labelText =
     agent === DEFAULT_AGENT
-      ? 'Tools the default agent can use'
-      : `Tools "${agent}" can use`;
+      ? 'Apps the default agent is allowed to use'
+      : `Apps "${agent}" is allowed to use`;
 
   return (
     <>
       <Box
         sx={{
           mb: compact ? 2.5 : 3,
-          p: compact ? 2 : 2.5,
           borderRadius: 2,
           border: '1px solid hsl(var(--border))',
           bgcolor: 'hsl(var(--card))',
+          overflow: 'hidden',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-          <Box>
-            <Typography sx={{ fontSize: compact ? '0.78rem' : '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+        {/* Header row — matches PermissionsPanel category headers */}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            px: compact ? 2 : 2.5,
+            py: 1.5,
+            borderBottom: '1px solid hsl(var(--border))',
+            bgcolor: 'hsl(var(--muted) / 0.25)',
+          }}
+        >
+          <Box
+            sx={{
+              width: 32,
+              height: 32,
+              borderRadius: 1.25,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              bgcolor: 'hsl(var(--primary) / 0.12)',
+              color: 'hsl(var(--primary))',
+              flexShrink: 0,
+            }}
+          >
+            <Wrench size={16} />
+          </Box>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography sx={{ fontSize: compact ? '0.82rem' : '0.9rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
               Assigned tools
             </Typography>
-            <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', mt: 0.25 }}>
+            <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', mt: 0.25 }}>
               {labelText}
             </Typography>
           </Box>
@@ -73,50 +218,56 @@ const AssignedToolsSection = ({
             startIcon={<Plus size={14} />}
             onClick={() => setPickerOpen(true)}
             sx={{
+              height: 30,
+              px: 1.25,
               border: '1px solid hsl(var(--border))',
-              borderRadius: 1.5,
-              color: 'hsl(var(--muted-foreground))',
+              borderRadius: 1.25,
+              color: 'hsl(var(--foreground))',
+              bgcolor: 'hsl(var(--background))',
               textTransform: 'none',
               fontSize: '0.75rem',
-              height: 28,
-              px: 1.25,
-              '&:hover': { bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--foreground))' },
+              fontWeight: 500,
+              '&:hover': {
+                bgcolor: 'hsl(var(--primary) / 0.08)',
+                borderColor: 'hsl(var(--primary) / 0.4)',
+                color: 'hsl(var(--primary))',
+              },
             }}
           >
             Add tool
           </Button>
         </Box>
 
-        {tools.length === 0 ? (
-          <Typography sx={{ fontSize: '0.78rem', color: 'hsl(var(--muted-foreground))', fontStyle: 'italic' }}>
-            No tools assigned yet — the agent will have nothing to call.
-          </Typography>
-        ) : (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
-            {tools.map((t) => (
-              <Tooltip key={t} title="Remove tool">
-                <Chip
-                  label={formatToolName(t)}
-                  size="small"
-                  onDelete={() => removeAgentTool(t, agent, actionType)}
-                  deleteIcon={<X size={12} />}
-                  sx={{
-                    height: 24,
-                    fontSize: '0.72rem',
-                    fontWeight: 500,
-                    bgcolor: 'hsl(var(--primary) / 0.12)',
-                    color: 'hsl(var(--primary))',
-                    border: '1px solid hsl(var(--primary) / 0.25)',
-                    '& .MuiChip-deleteIcon': {
-                      color: 'hsl(var(--primary))',
-                      '&:hover': { color: 'hsl(var(--primary))', opacity: 0.8 },
-                    },
-                  }}
+        {/* Body */}
+        <Box sx={{ px: compact ? 2 : 2.5, py: 1.75 }}>
+          {tools.length === 0 ? (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1.5,
+                py: 1,
+                color: 'hsl(var(--muted-foreground))',
+              }}
+            >
+              <AppWindow size={16} style={{ opacity: 0.6 }} />
+              <Typography sx={{ fontSize: '0.78rem' }}>
+                No tools assigned yet — the agent will have nothing to call.
+              </Typography>
+            </Box>
+          ) : (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+              {tools.map((t) => (
+                <ToolPill
+                  key={t}
+                  name={t}
+                  icon={icons[t]}
+                  onRemove={() => removeAgentTool(t, agent, actionType)}
                 />
-              </Tooltip>
-            ))}
-          </Box>
-        )}
+              ))}
+            </Box>
+          )}
+        </Box>
       </Box>
 
       <AppSearchDrawer
