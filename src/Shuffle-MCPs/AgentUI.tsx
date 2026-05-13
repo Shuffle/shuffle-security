@@ -19,7 +19,7 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Avatar,
   AvatarGroup,
@@ -926,7 +926,11 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const [simpleSubmitAttempted, setSimpleSubmitAttempted] = useState(false);
   const [continuationText, setContinuationText] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'simple' | 'detailed'>('simple');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialViewParam = searchParams.get('agentView');
+  const [viewMode, setViewMode] = useState<'simple' | 'detailed'>(
+    initialViewParam === 'detailed' ? 'detailed' : 'simple'
+  );
   const [attachedImages, setAttachedImages] = useState<{ dataUrl: string; name: string }[]>([]);
   const [nowTick, setNowTick] = useState(() => Math.floor(Date.now() / 1000));
   // Local fallback start timestamp captured the moment we first see an
@@ -1881,9 +1885,19 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const goToTab = (t: TabKey) => {
     if (t === 'start') {
       setShowStarter(true);
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('agentView');
+        return next;
+      }, { replace: true });
     } else {
       setShowStarter(false);
       setViewMode(t);
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.set('agentView', t);
+        return next;
+      }, { replace: true });
     }
   };
 
