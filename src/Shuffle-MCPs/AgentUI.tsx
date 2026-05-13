@@ -2644,9 +2644,10 @@ const AgentUI: React.FC<AgentUIProps> = ({
                               onClick={() => setAuthDrawerApp({ name: appName, id: appId })}
                               sx={{
                                 height: 36, textTransform: 'none', fontWeight: 600,
-                                bgcolor: 'hsl(var(--foreground))',
-                                color: 'hsl(var(--background))',
-                                '&:hover': { bgcolor: 'hsl(var(--foreground) / 0.88)' },
+                                bgcolor: 'hsl(var(--secondary))',
+                                color: 'hsl(var(--secondary-foreground))',
+                                border: '1px solid hsl(var(--border))',
+                                '&:hover': { bgcolor: 'hsl(var(--muted))' },
                               }}
                             >
                               Authenticate {pretty}
