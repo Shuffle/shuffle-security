@@ -44,6 +44,10 @@ export interface AgentExecutionDrawerProps {
   headerSx?: SxProps<Theme>;
   /** Style overrides for the body container that wraps the embedded AgentUI. */
   bodySx?: SxProps<Theme>;
+  /** Optional content rendered at the top of the body, before the embedded
+   *  AgentUI. Use this to inject a shared "Needs attention" / failure
+   *  diagnosis banner so the drawer mirrors the timeline status pill. */
+  topBanner?: React.ReactNode;
 }
 
 const AgentExecutionDrawer = ({
