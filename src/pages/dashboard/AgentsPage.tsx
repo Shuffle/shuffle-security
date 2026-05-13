@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { Box, Stack } from '@mui/material';
 import { AgentUI, AgentActivityList, AgentExecutionDrawer } from '@/Shuffle-MCPs';
 import type { AgentRun } from '@/Shuffle-MCPs';
+import AgentRunDiagnosisBanner from '@/components/agent/AgentRunDiagnosisBanner';
 
 const AgentsPage = () => {
   const [selectedRun, setSelectedRun] = useState<AgentRun | null>(null);
