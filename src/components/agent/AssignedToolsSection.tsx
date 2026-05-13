@@ -152,7 +152,7 @@ const AssignedToolsSection = ({
   actionType = DEFAULT_ACTION_TYPE,
   compact = false,
 }: Props) => {
-  const [tools, setTools] = useState<string[]>(() => getAgentTools(agent, actionType));
+  const [tools, setTools] = useState<ToolRef[]>(() => getAgentTools(agent, actionType));
   const [pickerOpen, setPickerOpen] = useState(false);
   // Same drawer the global INTEGRATIONS strip uses, so clicking an
   // assigned-tool pill opens the catalog detail page for that app
