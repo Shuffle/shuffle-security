@@ -119,17 +119,10 @@ export const CorrelationRow = ({ correlation, currentIncidentId, className, comp
   const ignoredObs = useIgnoredObservables();
   const isHidden = ignoredObs.isValueIgnored(correlation.key);
 
-  // Group refs by category, excluding the current incident itself and any
-  // refs coming from the per-org `ignored-observables` datastore — those are
-  // user-suppressed entries and should not count as a correlation match.
+  // Group refs by category through the shared visibility filter so rendered
+  // rows, badges, headers, and timeline pills all agree on what counts.
   const refsByCategory: Record<string, string[]> = {};
-  correlation.ref.forEach((r) => {
-    const [category, key] = r.split('|');
-    if (!category || !key) return;
-    if (category.toLowerCase() === 'ignored-observables') return;
-    if (category === 'shuffle-security_incidents' && currentIncidentId && key.toLowerCase() === currentIncidentId.toLowerCase()) {
-      return;
-    }
+  getVisibleCorrelationRefs(correlation, { currentIncidentId, isValueIgnored: ignoredObs.isValueIgnored }).forEach(({ category, key }) => {
     if (!refsByCategory[category]) refsByCategory[category] = [];
     refsByCategory[category].push(key);
   });
