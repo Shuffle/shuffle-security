@@ -3000,6 +3000,7 @@ function UsecaseCard({
   hasInterest = false,
   canToggle,
   isAuthenticated = true,
+  hasValidatedSource = true,
   onToggled,
   onClick,
 }: {
@@ -3010,6 +3011,7 @@ function UsecaseCard({
   hasInterest?: boolean;
   canToggle: boolean;
   isAuthenticated?: boolean;
+  hasValidatedSource?: boolean;
   onToggled?: (label: string, enabled: boolean) => void;
   onClick: () => void;
 }) {
@@ -3035,6 +3037,13 @@ function UsecaseCard({
     e.preventDefault();
     if (!flow.automationLabel || toggling) return;
     const willBeEnabled = !effectiveEnabled;
+    if (willBeEnabled && !hasValidatedSource) {
+      toast.warning(`No active ${sourceCat} integration`, {
+        description: `Enabling ${flow.label} will not do anything until you connect and validate a ${sourceCat} tool. The workflow has no input to react to and will be disabled again automatically.`,
+        duration: 9000,
+      });
+      return;
+    }
     setToggling(true);
     setOptimisticEnabled(willBeEnabled);
     try {
