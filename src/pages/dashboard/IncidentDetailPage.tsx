@@ -5408,10 +5408,9 @@ const IncidentDetailPage = () => {
     const enabledAgentTools: string[] = (() => {
       if (demoActive) return DEMO_AGENT_TOOLS;
       try {
-        const stored = localStorage.getItem('agent_enabled_tools');
-        if (!stored) return [];
-        const parsed = JSON.parse(stored);
-        return Array.isArray(parsed) ? parsed.filter((n: unknown) => typeof n === 'string') : [];
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const { getAgentTools } = require('@/lib/agentTools');
+        return getAgentTools();
       } catch {
         return [];
       }
