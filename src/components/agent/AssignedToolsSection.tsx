@@ -11,6 +11,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Box, Typography, IconButton, Tooltip, Button } from '@mui/material';
 import { Plus, X, Wrench, AppWindow } from 'lucide-react';
 import { AppSearchDrawer } from '@/Shuffle-MCPs';
+import { useAppDetailOptional } from '@/Shuffle-MCPs/AppDetailContext';
 import {
   AGENT_TOOLS_CHANGED_EVENT,
   DEFAULT_ACTION_TYPE,
