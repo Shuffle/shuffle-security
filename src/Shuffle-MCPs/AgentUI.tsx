@@ -2574,7 +2574,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 <span>
                   <IconButton
                     type="submit"
-                    disabled={actionInput.trim().length < 3 || agentRequestLoading}
+                    disabled={actionInput.trim().length < 6 || agentRequestLoading}
                     sx={{
                       width: 36, height: 36,
                       bgcolor: actionInput.trim().length >= 3 ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
