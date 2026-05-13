@@ -1764,6 +1764,14 @@ function UsecaseDetailContent({
   const handleToggle = async () => {
     if (!flow?.automationLabel || toggling) return;
     const willBeEnabled = !effectiveEnabled;
+    if (willBeEnabled && !hasValidatedSource) {
+      const sourceName = flow.source ? categoryLabel(flow.source) : 'source';
+      toast.warning(`No active ${sourceName} integration`, {
+        description: `Enabling ${flow.label} will not do anything until you connect and validate a ${sourceName} tool. The workflow has no input to react to and will be disabled again automatically.`,
+        duration: 9000,
+      });
+      return;
+    }
     setToggling(true);
     setOptimisticEnabled(willBeEnabled);
     try {
