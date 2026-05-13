@@ -75,14 +75,17 @@ const ToolPill = ({
   name,
   icon,
   onRemove,
+  onOpen,
 }: {
   name: string;
   icon?: string;
   onRemove: () => void;
+  onOpen?: () => void;
 }) => {
   const display = formatToolName(name);
   return (
     <Box
+      onClick={onOpen}
       sx={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -93,6 +96,7 @@ const ToolPill = ({
         borderRadius: 1.5,
         border: '1px solid hsl(var(--border))',
         bgcolor: 'hsl(var(--muted) / 0.4)',
+        cursor: onOpen ? 'pointer' : 'default',
         transition: 'all 120ms ease',
         '&:hover': {
           borderColor: 'hsl(var(--primary) / 0.5)',
@@ -127,7 +131,7 @@ const ToolPill = ({
       <Tooltip title="Remove tool">
         <IconButton
           size="small"
-          onClick={onRemove}
+          onClick={(e) => { e.stopPropagation(); onRemove(); }}
           sx={{
             width: 20,
             height: 20,
