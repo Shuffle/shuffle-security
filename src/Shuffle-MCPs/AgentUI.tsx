@@ -2165,27 +2165,6 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       >
                         <ScheduleIcon sx={{ fontSize: 18 }} />
                       </IconButton>
-                      {!canSchedule && (
-                        <Typography
-                          component="span"
-                          sx={{
-                            fontSize: '0.65rem',
-                            fontWeight: 600,
-                            color: 'hsl(var(--muted-foreground))',
-                            textTransform: 'uppercase',
-                            letterSpacing: 0.5,
-                            px: 0.75,
-                            py: 0.25,
-                            borderRadius: 999,
-                            border: '1px solid hsl(var(--border))',
-                            bgcolor: 'hsl(var(--muted) / 0.4)',
-                            whiteSpace: 'nowrap',
-                            pointerEvents: 'none',
-                          }}
-                        >
-                          {agentRequestLoading ? 'Locked while running' : 'Available after run'}
-                        </Typography>
-                      )}
                     </Box>
                   </Tooltip>
                 );
