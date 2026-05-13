@@ -395,6 +395,55 @@ const extractHost = (url: string): string | undefined => {
   try { return new URL(url).hostname || undefined; } catch { return undefined; }
 };
 
+/** A datastore key is "printable" only if every char is a normal ASCII
+ *  printable. The threat-feeds parser sometimes stores indicator hashes /
+ *  binary IDs as keys — those decode into garbled UTF-8 (replacement
+ *  characters) and must NEVER be surfaced as a URL/IP in the demo. */
+const isPrintableAscii = (s: string): boolean =>
+  typeof s === 'string' && s.length > 0 && /^[\x20-\x7E]+$/.test(s);
+
+/** True when `s` looks like a real http(s) URL we can safely render. */
+const looksLikeUrl = (s: string | undefined): s is string => {
+  if (!s || !isPrintableAscii(s)) return false;
+  if (!/^https?:\/\//i.test(s)) return false;
+  try { return Boolean(new URL(s).hostname); } catch { return false; }
+};
+
+/** True when `s` looks like a plain IPv4/IPv6 (printable, no garbage). */
+const looksLikeIp = (s: string | undefined): s is string => {
+  if (!s || !isPrintableAscii(s)) return false;
+  // IPv4
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(s)) return true;
+  // Loose IPv6 — at least one colon, hex+colon only.
+  if (/^[0-9a-fA-F:]+$/.test(s) && s.includes(':')) return true;
+  return false;
+};
+
+/** Best-effort: pull a URL out of a STIX 2.1 indicator pattern stored in
+ *  the datastore item's value, e.g. `[url:value = 'http://evil/...']`. */
+const extractUrlFromStixValue = (value: unknown): string | undefined => {
+  try {
+    const obj = typeof value === 'string' ? JSON.parse(value) : value;
+    const pattern = (obj as { pattern?: unknown })?.pattern;
+    if (typeof pattern !== 'string') return undefined;
+    const m = pattern.match(/url:value\s*=\s*'([^']+)'/i)
+      || pattern.match(/url:value\s*=\s*"([^"]+)"/i);
+    return m && looksLikeUrl(m[1]) ? m[1] : undefined;
+  } catch { return undefined; }
+};
+
+/** Same idea for IPv4/IPv6 addresses inside a STIX pattern. */
+const extractIpFromStixValue = (value: unknown): string | undefined => {
+  try {
+    const obj = typeof value === 'string' ? JSON.parse(value) : value;
+    const pattern = (obj as { pattern?: unknown })?.pattern;
+    if (typeof pattern !== 'string') return undefined;
+    const m = pattern.match(/ipv[46]-addr:value\s*=\s*'([^']+)'/i)
+      || pattern.match(/ipv[46]-addr:value\s*=\s*"([^"]+)"/i);
+    return m && looksLikeIp(m[1]) ? m[1] : undefined;
+  } catch { return undefined; }
+};
+
 const pickFallbackIocs = (): DemoIocOverrides => {
   const out: DemoIocOverrides = {};
   const ipKey = pickRandom(FALLBACK_IOC_IPS);
