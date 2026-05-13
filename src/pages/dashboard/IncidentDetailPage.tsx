@@ -7979,9 +7979,9 @@ const IncidentDetailPage = () => {
               const k = `${o.type}::${o.value}`;
               const c = obsCorrelations[k];
               if (!c?.data?.length) return 0;
-              const meaningful = filterMeaningfulCorrelations(c.data, id);
+              const meaningful = filterMeaningfulCorrelations(c.data, correlationVisibilityOptions);
               return meaningful.reduce(
-                (sum, x) => sum + getEffectiveCorrelationCount(x, id),
+                (sum, x) => sum + getEffectiveCorrelationCount(x, correlationVisibilityOptions),
                 0,
               );
             };
@@ -8163,14 +8163,14 @@ const IncidentDetailPage = () => {
                           if (corr?.loading) return <CircularProgress size={14} sx={{ mx: 0.5 }} />;
                           if (!corr?.data?.length) return null;
                           // Only count correlations with refs OTHER than the current incident.
-                          const meaningful = filterMeaningfulCorrelations(corr.data, id);
+                          const meaningful = filterMeaningfulCorrelations(corr.data, correlationVisibilityOptions);
                           if (meaningful.length === 0) return null;
                           // Total number of OTHER references across all meaningful
                           // correlations — this is the count the user actually
                           // cares about (e.g. "5 other incidents share this
                           // observable"), not the number of distinct keys.
                           const totalRefs = meaningful.reduce(
-                            (sum, c) => sum + getEffectiveCorrelationCount(c, id),
+                            (sum, c) => sum + getEffectiveCorrelationCount(c, correlationVisibilityOptions),
                             0,
                           );
                           // Highlight the badge in red when ANY correlation
