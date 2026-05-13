@@ -2148,6 +2148,48 @@ const AgentUI: React.FC<AgentUIProps> = ({
         <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', mb: 1.5 }}>
           Run this prompt automatically on a cron schedule.
         </Typography>
+        {scheduleHint && (
+          <Box
+            sx={{
+              mb: 1.5,
+              p: 1,
+              borderRadius: 1.5,
+              border: '1px solid hsl(var(--primary) / 0.4)',
+              bgcolor: 'hsl(var(--primary) / 0.08)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+            }}
+          >
+            <ScheduleIcon sx={{ fontSize: 16, color: 'hsl(var(--primary))' }} />
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Box sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', mb: 0.25 }}>
+                Detected from your prompt
+              </Box>
+              <Box sx={{ fontSize: '0.78rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                {scheduleHint.label}
+              </Box>
+              <Box sx={{ fontSize: '0.68rem', fontFamily: 'monospace', color: 'hsl(var(--muted-foreground))' }}>
+                {scheduleHint.cron}
+              </Box>
+            </Box>
+            {scheduleCron !== scheduleHint.cron && (
+              <Button
+                size="small"
+                onClick={() => setScheduleCron(scheduleHint.cron)}
+                sx={{
+                  height: 28,
+                  textTransform: 'none',
+                  fontSize: '0.7rem',
+                  color: 'hsl(var(--primary))',
+                  '&:hover': { bgcolor: 'hsl(var(--primary) / 0.12)' },
+                }}
+              >
+                Use
+              </Button>
+            )}
+          </Box>
+        )}
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 0.5 }}>
           {([
             ['Every 5 min', '*/5 * * * *'],
