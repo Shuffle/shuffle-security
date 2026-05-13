@@ -152,6 +152,12 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
     setHovered(false);
   }, []);
 
+  const openTooltip = useCallback(() => {
+    if (!popoverOpen && !confirmRemoveOpen) {
+      setTooltipOpen(true);
+    }
+  }, [confirmRemoveOpen, popoverOpen]);
+
   const handleClick = (e: React.MouseEvent<HTMLElement>) => {
     if (isSample) return;
     closeTooltip();
@@ -310,24 +316,20 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
         placement="bottom"
         arrow
         open={!popoverOpen && !confirmRemoveOpen && tooltipOpen}
-        onOpen={() => {
-          if (!popoverOpen && !confirmRemoveOpen) setTooltipOpen(true);
-        }}
-        onClose={closeTooltip}
         disableInteractive
-        disableHoverListener={popoverOpen}
-        disableFocusListener={popoverOpen}
-        disableTouchListener={popoverOpen}
+        disableHoverListener
+        disableFocusListener
+        disableTouchListener
       >
-        {isSample ? content : (
-          <Box
-            onMouseDown={closeTooltip}
-            onClick={handleClick}
-            sx={{ textDecoration: 'none', cursor: 'pointer' }}
-          >
-            {content}
-          </Box>
-        )}
+        <Box
+          onMouseEnter={openTooltip}
+          onMouseLeave={closeTooltip}
+          onMouseDown={closeTooltip}
+          onClick={isSample ? undefined : handleClick}
+          sx={{ textDecoration: 'none', cursor: 'pointer' }}
+        >
+          {content}
+        </Box>
       </Tooltip>
 
       {/* Popover — webhook or app actions */}
