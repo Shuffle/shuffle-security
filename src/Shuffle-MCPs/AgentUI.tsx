@@ -287,6 +287,43 @@ const validateJson = (raw: unknown): { valid: boolean; result: any } => {
   }
 };
 
+/**
+ * Detect whether a single decision came back asking for app authentication.
+ * Returns the app name (and optional id from `details.tool` when prefixed
+ * "app:<id>:<name>") so the caller can render an inline "Authenticate X"
+ * banner. Returns null when the decision did not request auth.
+ */
+const extractAuthRequest = (decision: any): { appName: string; appId: string | null } | null => {
+  if (!decision || typeof decision !== 'object') return null;
+  const raw = decision?.run_details?.raw_response;
+  let parsed: any = null;
+  if (typeof raw === 'string') {
+    try { parsed = JSON.parse(raw); } catch { parsed = null; }
+  } else if (raw && typeof raw === 'object') {
+    parsed = raw;
+  }
+  const needsAuth = parsed && (parsed.action === 'app_authentication' || parsed.app_authentication === true);
+  if (!needsAuth) return null;
+  let appName: string | undefined = parsed.app || parsed.app_name || parsed.appname;
+  let appId: string | null = null;
+  if (!appName && typeof decision?.tool === 'string') {
+    const t = decision.tool;
+    if (t.startsWith('app:')) {
+      const parts = t.split(':');
+      appId = parts[1] || null;
+      appName = parts[2] || t;
+    } else {
+      appName = t;
+    }
+  }
+  if (!appName) {
+    const f = (decision?.fields || []).find((x: any) => x?.key === 'app' || x?.key === 'app_name');
+    if (f?.value) appName = f.value;
+  }
+  if (!appName) return null;
+  return { appName, appId };
+};
+
 const STATUS_COLORS = {
   finished: 'hsl(142, 71%, 45%)',
   warning: 'hsl(38, 92%, 50%)',
@@ -348,13 +385,14 @@ interface TimelineRowProps {
   getFormUrl?: (decisionId: string) => string | null;
   runFinished?: boolean;
   onAuthenticateApp?: (appName: string, appId?: string | null) => void;
+  isAppAuthenticated?: (appName: string) => boolean;
 }
 
 const TimelineRow: React.FC<TimelineRowProps> = ({
   item, index, open, onToggle, appsById, totalDuration, originalStartTime,
   maxWidth, questionAnswers, setQuestionAnswers, onSubmitQuestions,
   onRerunAgent, onRerunDecision, agentRequestLoading, getFormUrl, runFinished,
-  onAuthenticateApp,
+  onAuthenticateApp, isAppAuthenticated,
 }) => {
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const validate = validateJson(item.details);
@@ -710,35 +748,17 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
         </Box>
       )}
 
-      {/* App authentication required banner — surfaces when the upstream
-          tool returned `action: "app_authentication"` so the user can
-          configure credentials inline without leaving the agent run. */}
-      {open && (() => {
-        const rawResp = (details?.run_details as any)?.raw_response;
-        let parsedRaw: any = null;
-        if (rawResp) {
-          if (typeof rawResp === 'string') {
-            try { parsedRaw = JSON.parse(rawResp); } catch { parsedRaw = null; }
-          } else if (typeof rawResp === 'object') {
-            parsedRaw = rawResp;
-          }
-        }
-        const needsAuth = parsedRaw && (parsedRaw.action === 'app_authentication' || parsedRaw.app_authentication === true);
-        if (!needsAuth) return null;
-        // Resolve app name from raw_response, decision.tool, or decision.fields.
-        let appName: string | undefined =
-          parsedRaw.app || parsedRaw.app_name || parsedRaw.appname;
-        if (!appName && typeof details?.tool === 'string') {
-          const t = details.tool;
-          appName = t.startsWith('app:') ? (t.split(':')[2] || t) : t;
-        }
-        if (!appName) {
-          const f = (details?.fields || []).find((x: any) => x?.key === 'app' || x?.key === 'app_name');
-          if (f?.value) appName = f.value;
-        }
-        if (!appName) return null;
-        const pretty = appName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-        const appId = appsById[appName]?.id || appsById[appName.toLowerCase()]?.id || null;
+      {/* App authentication required banner — surfaces whenever the upstream
+          tool returned `action: "app_authentication"`. Always visible
+          (regardless of expand state) so users do not have to click into
+          a failed step to discover that auth is missing. */}
+      {(() => {
+        const req = extractAuthRequest(details);
+        if (!req) return null;
+        if (isAppAuthenticated?.(req.appName)) return null;
+        const pretty = req.appName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+        const slug = req.appName.toLowerCase().replace(/[\s-]+/g, '_');
+        const appId = req.appId || appsById[req.appName]?.id || appsById[slug]?.id || null;
         return (
           <Box sx={{ px: 4, pb: 2 }}>
             <Box sx={{
@@ -766,7 +786,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
                 disabled={!onAuthenticateApp}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onAuthenticateApp?.(appName!, appId);
+                  onAuthenticateApp?.(req.appName, appId);
                 }}
               >
                 Authenticate {pretty}
@@ -1010,6 +1030,35 @@ const AgentUI: React.FC<AgentUIProps> = ({
     }
     return m;
   }, [chosenApps, executionApps, resolvedToolApps]);
+
+  // Predicate used by the auth banners — an app is considered authenticated
+  // when it appears in the caller's `availableApps` list (which is populated
+  // from /api/v1/apps/authentication and only includes valid entries).
+  const isAppAuthenticated = useCallback((appName: string) => {
+    if (!appName) return false;
+    const norm = (s: string) => s.toLowerCase().replace(/[\s-]+/g, '_');
+    const target = norm(appName);
+    return availableApps.some((a) => norm(a.name || '') === target);
+  }, [availableApps]);
+
+  // Unique apps (across all decisions) that returned `app_authentication`
+  // and are not yet authenticated. Powers the Simple-view banners.
+  const pendingAuthApps = useMemo(() => {
+    const decisions: any[] = (agentData?.decisions as any[]) || [];
+    const seen = new Set<string>();
+    const out: { appName: string; appId: string | null }[] = [];
+    for (const d of decisions) {
+      const req = extractAuthRequest(d);
+      if (!req) continue;
+      const slug = req.appName.toLowerCase().replace(/[\s-]+/g, '_');
+      if (seen.has(slug)) continue;
+      if (isAppAuthenticated(req.appName)) continue;
+      seen.add(slug);
+      const appId = req.appId || appsById[req.appName]?.id || appsById[slug]?.id || null;
+      out.push({ appName: req.appName, appId });
+    }
+    return out;
+  }, [agentData, appsById, isAppAuthenticated]);
 
   // Sync controlled `apps` prop into local state.
   useEffect(() => {
@@ -2500,6 +2549,41 @@ const AgentUI: React.FC<AgentUIProps> = ({
                           {durationSec != null ? ` · ${durationSec}s` : ''}
                         </Typography>
                       </Box>
+                      {pendingAuthApps.map(({ appName, appId }) => {
+                        const pretty = appName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+                        return (
+                          <Box
+                            key={`auth-${appName}`}
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1.5,
+                              p: 1.5,
+                              borderRadius: 1.5,
+                              border: '1px solid hsla(var(--severity-medium) / 0.3)',
+                              bgcolor: 'hsla(var(--severity-medium) / 0.08)',
+                            }}
+                          >
+                            <LockIcon sx={{ color: 'hsl(var(--severity-medium))', fontSize: 20 }} />
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                                {pretty} requires authentication
+                              </Typography>
+                              <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
+                                Connect your {pretty} account so the agent can complete this step, then rerun.
+                              </Typography>
+                            </Box>
+                            <Button
+                              variant="contained"
+                              size="small"
+                              startIcon={<LockIcon />}
+                              onClick={() => setAuthDrawerApp({ name: appName, id: appId })}
+                            >
+                              Authenticate {pretty}
+                            </Button>
+                          </Box>
+                        );
+                      })}
                       {finishAnswer ? (
                         <Box sx={{
                           p: 2, borderRadius: 1.5,
@@ -2687,6 +2771,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       getFormUrl={getFormUrl}
                       runFinished={detailedRunFinished}
                       onAuthenticateApp={(name, id) => setAuthDrawerApp({ name, id })}
+                      isAppAuthenticated={isAppAuthenticated}
                     />
                   ))}
                   {detailedRunFinished && (
