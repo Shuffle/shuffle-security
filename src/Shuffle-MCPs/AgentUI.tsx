@@ -110,6 +110,8 @@ const deepParseJsonStrings = (obj: any, depth = 0): any => {
 
 import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
+import AppDetailDrawer from '@/Shuffle-MCPs/AppDetailDrawer';
+import LockIcon from '@mui/icons-material/Lock';
 import { getApiUrl, getAuthHeader, API_CONFIG } from '@/Shuffle-MCPs/api';
 import { fetchApps } from '@/Shuffle-MCPs/appsCache';
 import { toast } from '@/Shuffle-MCPs/toast';
@@ -345,12 +347,14 @@ interface TimelineRowProps {
   agentRequestLoading: boolean;
   getFormUrl?: (decisionId: string) => string | null;
   runFinished?: boolean;
+  onAuthenticateApp?: (appName: string, appId?: string | null) => void;
 }
 
 const TimelineRow: React.FC<TimelineRowProps> = ({
   item, index, open, onToggle, appsById, totalDuration, originalStartTime,
   maxWidth, questionAnswers, setQuestionAnswers, onSubmitQuestions,
   onRerunAgent, onRerunDecision, agentRequestLoading, getFormUrl, runFinished,
+  onAuthenticateApp,
 }) => {
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const validate = validateJson(item.details);
@@ -706,6 +710,72 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
         </Box>
       )}
 
+      {/* App authentication required banner — surfaces when the upstream
+          tool returned `action: "app_authentication"` so the user can
+          configure credentials inline without leaving the agent run. */}
+      {open && (() => {
+        const rawResp = (details?.run_details as any)?.raw_response;
+        let parsedRaw: any = null;
+        if (rawResp) {
+          if (typeof rawResp === 'string') {
+            try { parsedRaw = JSON.parse(rawResp); } catch { parsedRaw = null; }
+          } else if (typeof rawResp === 'object') {
+            parsedRaw = rawResp;
+          }
+        }
+        const needsAuth = parsedRaw && (parsedRaw.action === 'app_authentication' || parsedRaw.app_authentication === true);
+        if (!needsAuth) return null;
+        // Resolve app name from raw_response, decision.tool, or decision.fields.
+        let appName: string | undefined =
+          parsedRaw.app || parsedRaw.app_name || parsedRaw.appname;
+        if (!appName && typeof details?.tool === 'string') {
+          const t = details.tool;
+          appName = t.startsWith('app:') ? (t.split(':')[2] || t) : t;
+        }
+        if (!appName) {
+          const f = (details?.fields || []).find((x: any) => x?.key === 'app' || x?.key === 'app_name');
+          if (f?.value) appName = f.value;
+        }
+        if (!appName) return null;
+        const pretty = appName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+        const appId = appsById[appName]?.id || appsById[appName.toLowerCase()]?.id || null;
+        return (
+          <Box sx={{ px: 4, pb: 2 }}>
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              p: 1.5,
+              borderRadius: 1.5,
+              border: '1px solid hsla(var(--severity-medium) / 0.3)',
+              bgcolor: 'hsla(var(--severity-medium) / 0.08)',
+            }}>
+              <LockIcon sx={{ color: 'hsl(var(--severity-medium))', fontSize: 20 }} />
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                  {pretty} requires authentication
+                </Typography>
+                <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
+                  Connect your {pretty} account so the agent can complete this step, then rerun the decision.
+                </Typography>
+              </Box>
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<LockIcon />}
+                disabled={!onAuthenticateApp}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAuthenticateApp?.(appName!, appId);
+                }}
+              >
+                Authenticate {pretty}
+              </Button>
+            </Box>
+          </Box>
+        );
+      })()}
+
       {/* Raw JSON */}
       {open && (
         <Box sx={{ px: 4, pb: 2 }}>
@@ -822,6 +892,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   //   2) Algolia — match by objectID, then by name
   const [resolvedToolApps, setResolvedToolApps] = useState<Record<string, AgentUIApp>>({});
   const [appSearchOpen, setAppSearchOpen] = useState(false);
+  const [authDrawerApp, setAuthDrawerApp] = useState<{ name: string; id?: string | null } | null>(null);
   const [agentRequestLoading, setAgentRequestLoading] = useState(false);
   const [execution, setExecution] = useState<ExecutionData | null>(null);
   const [agentData, setAgentData] = useState<{ decisions?: AgentDecision[]; original_input?: string; status?: string; started_at?: number; completed_at?: number; [k: string]: any }>({});
@@ -2564,6 +2635,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       agentRequestLoading={agentRequestLoading}
                       getFormUrl={getFormUrl}
                       runFinished={detailedRunFinished}
+                      onAuthenticateApp={(name, id) => setAuthDrawerApp({ name, id })}
                     />
                   ))}
                   {detailedRunFinished && (
@@ -2698,6 +2770,14 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 : [...prev, { name: app.name, icon: app.icon || known?.icon, id: app.id || known?.id || undefined }]
             );
           }}
+        />
+
+        <AppDetailDrawer
+          open={!!authDrawerApp}
+          onClose={() => setAuthDrawerApp(null)}
+          appName={authDrawerApp?.name || null}
+          appId={authDrawerApp?.id || null}
+          activeOrgId={orgId || null}
         />
       </Box>
     </Box>
