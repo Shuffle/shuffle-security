@@ -1999,25 +1999,29 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 bgcolor: 'hsl(var(--card))',
                 maxWidth: '100%',
               }}>
-                <Box
-                  component="button"
-                  type="button"
-                  onClick={() => setAppSearchOpen(true)}
-                  sx={{
-                    all: 'unset', cursor: 'pointer',
-                    display: 'inline-flex', alignItems: 'center', gap: 0.5,
-                    px: 1.5, py: 0.5,
-                    borderRadius: 999,
-                    fontSize: '0.8rem', fontWeight: 500,
-                    color: 'hsl(var(--muted-foreground))',
-                    bgcolor: 'transparent',
-                    transition: 'color 0.12s ease, background-color 0.12s ease',
-                    '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted) / 0.5)' },
-                  }}
-                >
-                  <AddIcon sx={{ fontSize: 14 }} />
-                  {appPickerLabel}
-                </Box>
+                <Tooltip title={agentRequestLoading ? 'Locked while the agent is running' : ''}>
+                  <Box
+                    component="button"
+                    type="button"
+                    onClick={() => { if (!agentRequestLoading) setAppSearchOpen(true); }}
+                    disabled={agentRequestLoading}
+                    sx={{
+                      all: 'unset', cursor: agentRequestLoading ? 'not-allowed' : 'pointer',
+                      display: 'inline-flex', alignItems: 'center', gap: 0.5,
+                      px: 1.5, py: 0.5,
+                      borderRadius: 999,
+                      fontSize: '0.8rem', fontWeight: 500,
+                      color: 'hsl(var(--muted-foreground))',
+                      bgcolor: 'transparent',
+                      opacity: agentRequestLoading ? 0.5 : 1,
+                      transition: 'color 0.12s ease, background-color 0.12s ease, opacity 0.12s ease',
+                      '&:hover': agentRequestLoading ? {} : { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted) / 0.5)' },
+                    }}
+                  >
+                    <AddIcon sx={{ fontSize: 14 }} />
+                    {appPickerLabel}
+                  </Box>
+                </Tooltip>
                 {chosenApps.map((app, i) => (
                   <Box
                     key={`${app.name}-${i}`}
