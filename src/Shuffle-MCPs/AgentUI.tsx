@@ -1442,13 +1442,17 @@ const AgentUI: React.FC<AgentUIProps> = ({
       });
       // Discard stale responses: if the user has since started a different
       // run (or cleared this one), do not write old data back into state.
-      if (activeExecutionIdRef.current && activeExecutionIdRef.current !== executionId) return;
+      // Discard stale responses: only accept when the ref still matches the
+      // execution we fetched. (Submitting a new run briefly clears the ref;
+      // any in-flight poll from the previous run must be dropped, not written
+      // back into state — otherwise the UI snaps to the old execution.)
+      if (activeExecutionIdRef.current !== executionId) return;
       if (!resp.ok) {
         setError(`Could not fetch execution (${resp.status}).`);
         return;
       }
       const json = await resp.json();
-      if (activeExecutionIdRef.current && activeExecutionIdRef.current !== executionId) return;
+      if (activeExecutionIdRef.current !== executionId) return;
       if (json?.success === false) {
         setError(json.reason || 'Failed to load agent data.');
         return;
