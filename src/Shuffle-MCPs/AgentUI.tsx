@@ -2124,22 +2124,6 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   if (e.target) e.target.value = '';
                 }}
               />
-              {!hideAttach && (
-              <IconButton
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={agentRequestLoading}
-                title={attachedImages.length > 0 ? `Add image (${attachedImages.length} attached)` : 'Attach image'}
-                sx={{
-                  width: 36, height: 36,
-                  color: attachedImages.length > 0 ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
-                  bgcolor: attachedImages.length > 0 ? 'hsla(var(--primary) / 0.1)' : 'transparent',
-                  '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted))' },
-                }}
-              >
-                <AttachFileIcon sx={{ fontSize: 18 }} />
-              </IconButton>
-              )}
               {(() => {
                 const canSchedule = hasExecution && !scheduleDisabledReason;
                 const tip = scheduleDisabledReason
@@ -2169,6 +2153,22 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   </Tooltip>
                 );
               })()}
+              {!hideAttach && (
+              <IconButton
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={agentRequestLoading}
+                title={attachedImages.length > 0 ? `Add image (${attachedImages.length} attached)` : 'Attach image'}
+                sx={{
+                  width: 36, height: 36,
+                  color: attachedImages.length > 0 ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                  bgcolor: attachedImages.length > 0 ? 'hsla(var(--primary) / 0.1)' : 'transparent',
+                  '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted))' },
+                }}
+              >
+                <AttachFileIcon sx={{ fontSize: 18 }} />
+              </IconButton>
+              )}
               <Tooltip title={submitTooltip} placement="top" arrow>
                 <span>
                   <IconButton
