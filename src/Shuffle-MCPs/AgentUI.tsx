@@ -3017,6 +3017,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       runFinished={detailedRunFinished}
                       onAuthenticateApp={(name, id) => setAuthDrawerApp({ name, id })}
                       isAppAuthenticated={isAppAuthenticated}
+                      highlight={highlightedIndex === i}
                     />
                   ))}
                   {detailedRunFinished && (
