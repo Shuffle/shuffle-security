@@ -288,7 +288,7 @@ const AssignedToolsSection = ({
         title="Assign tool"
         subtitle="Pick an app the agent is allowed to use"
         onQuickSelect={(app) => {
-          addAgentTool(app.name, agent, actionType);
+          addAgentTool({ name: app.name, id: app.id || app.name }, agent, actionType);
           setPickerOpen(false);
         }}
       />
