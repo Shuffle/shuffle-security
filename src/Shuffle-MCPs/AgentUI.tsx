@@ -47,6 +47,7 @@ import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import ScheduleIcon from '@mui/icons-material/Schedule';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import StopCircleIcon from '@mui/icons-material/StopCircle';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
