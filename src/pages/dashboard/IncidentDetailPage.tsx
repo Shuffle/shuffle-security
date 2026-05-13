@@ -7136,26 +7136,18 @@ const IncidentDetailPage = () => {
       <Box sx={isPublicView ? { pointerEvents: 'none', '& input, & textarea, & select, & button:not([data-public-ok])': { opacity: 0.7 } } : {}}>
       {activeTab === 1 && (
         /* Tasks Tab — uses the exact same kanban as the simplified view (/incidents-simple) */
-        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
-          <TaskKanbanBoard
-            tasks={visibleTasks}
-            onTasksChange={setTasks}
-            incidentId={id || 'new'}
-            currentUser={currentUsername || 'You'}
-          />
-        </motion.div>
+        <TaskKanbanBoard
+          tasks={visibleTasks}
+          onTasksChange={setTasks}
+          incidentId={id || 'new'}
+          currentUser={currentUsername || 'You'}
+        />
       )}
 
       {/* Details Tab — kept mounted (just hidden) when other tabs are active
           so local UI state inside it (e.g. EmailThreadPanel collapsed/expanded,
-          description view mode) survives a tab switch. Animated via opacity
-          rather than remount so that state is preserved. */}
-      <motion.div
-        initial={false}
-        animate={{ opacity: activeTab === 0 ? 1 : 0, y: activeTab === 0 ? 0 : 6 }}
-        transition={{ duration: 0.2, ease: 'easeOut' }}
-        style={{ display: activeTab === 0 ? 'block' : 'none' }}
-      >
+          description view mode) survives a tab switch. */}
+      <Box sx={{ display: activeTab === 0 ? 'block' : 'none' }}>
       {(() => {
         const hasEmail = !!incident && isEmailContent(editedMessage || '', rawDescriptionHtml || '', incident.rawOCSF);
         const descriptionBody = (
@@ -7706,9 +7698,9 @@ const IncidentDetailPage = () => {
         </Box>
         );
       })()}
-      </motion.div>
+      </Box>
 
-      {activeTab === 2 && (<motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
+      {activeTab === 2 && (
         /* Observables Tab */
         <Box sx={{ 
           bgcolor: 'hsl(var(--card))', 
@@ -8489,10 +8481,9 @@ const IncidentDetailPage = () => {
             })()}
           </Popover>
         </Box>
-        </motion.div>
       )}
 
-      {activeTab === 3 && (<motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
+      {activeTab === 3 && (
         /* Correlations Tab */
         <Box sx={{
           bgcolor: 'hsl(var(--card))', 
@@ -8583,10 +8574,9 @@ const IncidentDetailPage = () => {
             </Box>
           )}
         </Box>
-        </motion.div>
        )}
 
-      {activeTab === 4 && (<motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
+      {activeTab === 4 && (
         /* Raw JSON Tab */
         <Box sx={{
           bgcolor: 'rgba(255,255,255,0.02)',
@@ -8710,10 +8700,9 @@ const IncidentDetailPage = () => {
             onValidationChange={setRawJsonValid}
           />
         </Box>
-        </motion.div>
       )}
 
-      {activeTab === 6 && unmappedOriginal && (<motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
+      {activeTab === 6 && unmappedOriginal && (
         /* Original Data Tab */
         <Box sx={{
           bgcolor: 'action.hover',
@@ -8741,10 +8730,9 @@ const IncidentDetailPage = () => {
             editable={false}
           />
         </Box>
-        </motion.div>
       )}
 
-      {activeTab === 5 && (<motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
+      {activeTab === 5 && (
         /* File Editor Tab */
         <Box sx={{
           bgcolor: 'action.hover',
@@ -8838,7 +8826,6 @@ const IncidentDetailPage = () => {
             <HighlightedFileEditor value={fileContent} onChange={setFileContent} validateJson={true} onValidationChange={setFileJsonValid} />
           )}
         </Box>
-        </motion.div>
       )}
 
       {/* Changes tab content removed — revisions now in Activity sidebar */}
