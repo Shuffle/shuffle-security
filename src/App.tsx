@@ -128,7 +128,7 @@ const ThemedApp = () => {
         closeOnClick
         pauseOnHover
         draggable
-        icon
+        
         hideProgressBar={false}
         style={{ width: 'auto', maxWidth: 420 }}
       />
