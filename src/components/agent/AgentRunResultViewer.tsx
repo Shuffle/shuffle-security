@@ -562,7 +562,17 @@ const AgentRunResultViewer = ({ run }: AgentRunResultViewerProps) => {
                   Where this was found
                 </Typography>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                  {diagnosis.evidence.map((ev, idx) => (
+                  {(() => {
+                    // Dedupe identical errors by value — only show the first
+                    // occurrence, with a count of how many times it repeated.
+                    const seen = new Map<string, { ev: typeof diagnosis.evidence[number]; count: number; firstIdx: number }>();
+                    diagnosis.evidence.forEach((ev, idx) => {
+                      const key = String(ev.value ?? '');
+                      const entry = seen.get(key);
+                      if (entry) entry.count += 1;
+                      else seen.set(key, { ev, count: 1, firstIdx: idx });
+                    });
+                    return Array.from(seen.values()).map(({ ev, count, firstIdx: idx }) => (
                     <Box
                       key={`${ev.path}-${idx}`}
                       sx={{
@@ -593,8 +603,19 @@ const AgentRunResultViewer = ({ run }: AgentRunResultViewerProps) => {
                       }}>
                         {ev.value}
                       </Typography>
+                      {count > 1 && (
+                        <Typography sx={{
+                          fontSize: '0.65rem',
+                          color: 'hsl(var(--muted-foreground))',
+                          mt: 0.5,
+                          fontStyle: 'italic',
+                        }}>
+                          Repeated {count} times
+                        </Typography>
+                      )}
                     </Box>
-                  ))}
+                    ));
+                  })()}
                 </Box>
                 <Typography sx={{
                   fontSize: '0.65rem',
