@@ -1841,7 +1841,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // Schedule guardrails: do not allow scheduling when the run required a
   // continuation (the oneshot prompt did not work) or did not perform any
   // actual app/tool actions (nothing meaningful would run on a schedule).
-  const { scheduleDisabledReason } = useMemo(() => {
+  const { scheduleDisabledReasons } = useMemo(() => {
     const decisions: any[] = (agentData?.decisions as any[]) || [];
     const NON_ACTION_CATS = new Set(['finish', 'finalise', 'ask', 'agent', 'processing']);
     const NON_ACTION_ACTIONS = new Set(['finish', 'finalise', 'ask']);
@@ -1859,14 +1859,65 @@ const AgentUI: React.FC<AgentUIProps> = ({
       if (NON_ACTION_ACTIONS.has(act)) return false;
       return true;
     }).length;
+    // A decision failed if its run_details.status is FAILURE/ABORTED, or the
+    // parsed raw_response reports success: false. We deliberately ignore
+    // ASK/FINISH categories — those are agent-internal control steps.
+    const failedDecision = decisions.some((d) => {
+      const cat = String(d?.category || '').toLowerCase();
+      const act = String(d?.action || '').toLowerCase();
+      if (NON_ACTION_CATS.has(cat) || NON_ACTION_ACTIONS.has(act)) return false;
+      const status = String(d?.run_details?.status || '').toUpperCase();
+      if (status === 'FAILURE' || status === 'ABORTED') return true;
+      const raw = d?.run_details?.raw_response;
+      let parsed: any = null;
+      if (typeof raw === 'string') {
+        try { parsed = JSON.parse(raw); } catch { parsed = null; }
+      } else if (raw && typeof raw === 'object') {
+        parsed = raw;
+      }
+      if (parsed && parsed.success === false) return true;
+      if (parsed && parsed.action === 'app_authentication') return true;
+      return false;
+    });
+    // A question was answered if an ASK decision has an "answer" field, OR if
+    // its run finished (the agent submits answers to advance ask runs from
+    // WAITING to FINISHED). Either way the prompt cannot run unattended.
+    const answeredQuestion = decisions.some((d) => {
+      const cat = String(d?.category || '').toLowerCase();
+      const act = String(d?.action || '').toLowerCase();
+      const isAsk = cat === 'ask' || act === 'ask';
+      if (!isAsk) return false;
+      const hasAnswerField = Array.isArray(d?.fields)
+        && d.fields.some((f: any) => String(f?.key || '').toLowerCase() === 'answer' && f?.value);
+      const status = String(d?.run_details?.status || '').toUpperCase();
+      return hasAnswerField || status === 'FINISHED';
+    });
+    const reasons: string[] = [];
     if (hadContinuation) {
-      return { scheduleDisabledReason: 'Cannot schedule: this run needed a follow-up message ("Add more details to continue this task…"), so the one-shot prompt did not succeed on its own. Refine the prompt until it finishes in one go before scheduling.' };
+      reasons.push('This run needed a follow-up message to continue, so the one-shot prompt did not succeed on its own. Refine the prompt until it finishes in one go before scheduling.');
     }
     if (actionCount === 0) {
-      return { scheduleDisabledReason: 'After running, agent runs can be scheduled to run regularly.' };
+      reasons.push('This run did not perform any app or tool actions, so a scheduled run would have nothing meaningful to do.');
     }
-    return { scheduleDisabledReason: '' };
+    if (failedDecision) {
+      reasons.push('A decision in this run failed. Fix the failing step (for example, authenticate the app or correct the input) and rerun successfully before scheduling.');
+    }
+    if (answeredQuestion) {
+      reasons.push('A question in this run was answered manually. Scheduled runs are unattended, so refine the prompt so the agent does not need to ask anything before scheduling.');
+    }
+    return { scheduleDisabledReasons: reasons };
   }, [agentData]);
+  const scheduleDisabledReason = scheduleDisabledReasons[0] || '';
+  const scheduleDisabledTooltip: React.ReactNode = scheduleDisabledReasons.length > 1 ? (
+    <Box>
+      <Box sx={{ fontWeight: 600, mb: 0.5 }}>Cannot schedule for {scheduleDisabledReasons.length} reasons:</Box>
+      <Box component="ul" sx={{ pl: 2, m: 0 }}>
+        {scheduleDisabledReasons.map((r, i) => (
+          <Box component="li" key={i} sx={{ mb: 0.25 }}>{r}</Box>
+        ))}
+      </Box>
+    </Box>
+  ) : scheduleDisabledReasons.length === 1 ? `Cannot schedule: ${scheduleDisabledReasons[0]}` : '';
 
   // Rendered inline (not a nested component) so it isn't remounted on every
   // parent re-render — the live duration ticker would otherwise reset hover
