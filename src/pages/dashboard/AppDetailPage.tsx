@@ -570,7 +570,7 @@ const AppDetailPage = () => {
                 }}
               />
             </Box>
-            <SingulActionsPreview appName={appname || ''} categories={appInfo?.categories} />
+            <SingulActionsPreview appName={appname || ''} appIcon={resolvedImage} categories={appInfo?.categories} />
           </>
         ) : (
           <Box sx={{ mb: 4 }}>
