@@ -1065,6 +1065,10 @@ const toast = {
     if (typeof window !== 'undefined') console.error('[toast]', msg);
     sonnerToast.error(msg, opts);
   },
+  warning: (msg: string, opts?: { duration?: number; description?: string }) => {
+    if (typeof window !== 'undefined') console.warn('[toast]', msg);
+    sonnerToast.warning(msg, opts);
+  },
 };
 
 // ============================================================================
@@ -1711,6 +1715,7 @@ function UsecaseDetailContent({
   isEnabled = false,
   canToggle = false,
   isAuthenticated = true,
+  hasValidatedSource = true,
   onToggled,
   workflows = [],
 }: {
@@ -1727,6 +1732,8 @@ function UsecaseDetailContent({
   canToggle?: boolean;
   /** Whether the viewer is logged in — drives the guest CTA banner */
   isAuthenticated?: boolean;
+  /** Whether the user has at least one validated source-tool feeding this flow's source category */
+  hasValidatedSource?: boolean;
   /** Called after successful generation so the parent can trust the requested workflow state */
   onToggled?: (label: string, enabled: boolean) => void;
   /** Org workflows from /api/v1/workflows — used to render the "Linked Workflows" section */
@@ -1761,6 +1768,14 @@ function UsecaseDetailContent({
   const handleToggle = async () => {
     if (!flow?.automationLabel || toggling) return;
     const willBeEnabled = !effectiveEnabled;
+    if (willBeEnabled && !hasValidatedSource) {
+      const sourceName = flow.source ? categoryLabel(flow.source) : 'source';
+      toast.warning(`No active ${sourceName} integration`, {
+        description: `Enabling ${flow.label} will not do anything until you connect and validate a ${sourceName} tool. The workflow has no input to react to and will be disabled again automatically.`,
+        duration: 9000,
+      });
+      return;
+    }
     setToggling(true);
     setOptimisticEnabled(willBeEnabled);
     try {
@@ -2013,48 +2028,73 @@ function UsecaseDetailContent({
                   Coming soon
                 </Box>
               ) : canToggle && flow.automationLabel && (
-                <Button
-                  size="small"
-                  variant="contained"
-                  disableElevation
-                  onClick={handleToggle}
-                  disabled={toggling}
-                  startIcon={
-                    toggling ? (
-                      <CircularProgress size={12} sx={{ color: 'inherit' }} />
-                    ) : effectiveEnabled ? (
-                      <PowerOff size={14} />
-                    ) : (
-                      <Power size={14} />
-                    )
+                <Tooltip
+                  title={
+                    !effectiveEnabled && !hasValidatedSource
+                      ? `No active ${flow.source ? categoryLabel(flow.source) : 'source'} integration is connected. Enabling will not do anything until a ${flow.source ? categoryLabel(flow.source) : 'source'} tool is authenticated — the workflow will be disabled again automatically.`
+                      : ''
                   }
-                  sx={{
-                    flexShrink: 0,
-                    textTransform: 'none',
-                    fontSize: '0.78rem',
-                    fontWeight: 600,
-                    minHeight: 0,
-                    py: 0.6,
-                    px: 1.25,
-                    bgcolor: effectiveEnabled
-                      ? 'transparent'
-                      : 'hsl(var(--primary, 24 100% 50%))',
-                    color: effectiveEnabled
-                      ? 'hsl(var(--foreground))'
-                      : 'hsl(var(--primary-foreground, 0 0% 100%))',
-                    border: effectiveEnabled ? '1px solid hsl(var(--border))' : '1px solid transparent',
-                    boxShadow: 'none',
-                    '&:hover': {
-                      bgcolor: effectiveEnabled
-                        ? 'transparent'
-                        : 'hsla(24, 100%, 50%, 0.9)',
-                      borderColor: effectiveEnabled ? 'hsl(var(--foreground) / 0.4)' : 'transparent',
-                      boxShadow: 'none',
-                    },
-                  }}
+                  placement="top"
+                  arrow
+                  disableHoverListener={effectiveEnabled || hasValidatedSource}
+                  disableFocusListener={effectiveEnabled || hasValidatedSource}
+                  disableTouchListener={effectiveEnabled || hasValidatedSource}
                 >
-                  {effectiveEnabled ? 'Disable' : 'Enable'}
-                </Button>
+                  <span>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      disableElevation
+                      onClick={handleToggle}
+                      disabled={toggling}
+                      startIcon={
+                        toggling ? (
+                          <CircularProgress size={12} sx={{ color: 'inherit' }} />
+                        ) : effectiveEnabled ? (
+                          <PowerOff size={14} />
+                        ) : (
+                          <Power size={14} />
+                        )
+                      }
+                      sx={{
+                        flexShrink: 0,
+                        textTransform: 'none',
+                        fontSize: '0.78rem',
+                        fontWeight: 600,
+                        minHeight: 0,
+                        py: 0.6,
+                        px: 1.25,
+                        bgcolor: effectiveEnabled
+                          ? 'transparent'
+                          : !hasValidatedSource
+                            ? 'hsl(var(--muted))'
+                            : 'hsl(var(--primary, 24 100% 50%))',
+                        color: effectiveEnabled
+                          ? 'hsl(var(--foreground))'
+                          : !hasValidatedSource
+                            ? 'hsl(var(--muted-foreground))'
+                            : 'hsl(var(--primary-foreground, 0 0% 100%))',
+                        border: effectiveEnabled
+                          ? '1px solid hsl(var(--border))'
+                          : !hasValidatedSource
+                            ? '1px dashed hsl(var(--border))'
+                            : '1px solid transparent',
+                        boxShadow: 'none',
+                        '&:hover': {
+                          bgcolor: effectiveEnabled
+                            ? 'transparent'
+                            : !hasValidatedSource
+                              ? 'hsl(var(--muted))'
+                              : 'hsla(24, 100%, 50%, 0.9)',
+                          borderColor: effectiveEnabled ? 'hsl(var(--foreground) / 0.4)' : !hasValidatedSource ? 'hsl(var(--border))' : 'transparent',
+                          boxShadow: 'none',
+                        },
+                      }}
+                    >
+                      {effectiveEnabled ? 'Disable' : 'Enable'}
+                    </Button>
+                  </span>
+                </Tooltip>
               )}
             </Box>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1.25 }}>
@@ -2586,6 +2626,7 @@ function UsecasesPageInner() {
     const detailFlow = drawerFlowId ? usecases.find(u => u.id === drawerFlowId) : null;
     const detailEnabled = detailFlow ? isFlowVisuallyEnabled(detailFlow) : false;
     const detailCanToggle = isAuthenticated && !!detailFlow?.automationLabel;
+    const detailHasValidatedSource = detailFlow ? validatedCategories.has(detailFlow.source) : true;
     return (
       <Box sx={{ px: { xs: 2, md: 4 }, py: 4, maxWidth: 1200, width: '100%', mx: 'auto' }}>
         <UsecaseDetailContent
@@ -2601,6 +2642,7 @@ function UsecasesPageInner() {
           isEnabled={detailEnabled}
           canToggle={detailCanToggle}
           isAuthenticated={isAuthenticated}
+          hasValidatedSource={detailHasValidatedSource}
           onToggled={handleUsecaseWorkflowGenerated}
           workflows={workflows}
         />
@@ -2849,6 +2891,7 @@ function UsecasesPageInner() {
                 hasInterest={isSupport && interestNames.has(flow.label)}
                 canToggle={isAuthenticated && !!flow.automationLabel}
                 isAuthenticated={isAuthenticated}
+                hasValidatedSource={validatedCategories.has(flow.source)}
                 onToggled={handleUsecaseWorkflowGenerated}
                 onClick={() => setDrawerFlowId(flow.id)}
               />
@@ -2930,6 +2973,7 @@ function UsecasesPageInner() {
             const drawerFlow = drawerFlowId ? usecases.find(u => u.id === drawerFlowId) : null;
             const drawerEnabled = drawerFlow ? isFlowVisuallyEnabled(drawerFlow) : false;
             const drawerCanToggle = isAuthenticated && !!drawerFlow?.automationLabel;
+            const drawerHasValidatedSource = drawerFlow ? validatedCategories.has(drawerFlow.source) : true;
             return (
               <UsecaseDetailContent
                 flowId={drawerFlowId ?? undefined}
@@ -2940,6 +2984,7 @@ function UsecasesPageInner() {
                 isEnabled={drawerEnabled}
                 canToggle={drawerCanToggle}
                 isAuthenticated={isAuthenticated}
+                hasValidatedSource={drawerHasValidatedSource}
                 onToggled={handleUsecaseWorkflowGenerated}
                 workflows={workflows}
               />
@@ -2960,6 +3005,7 @@ function UsecaseCard({
   hasInterest = false,
   canToggle,
   isAuthenticated = true,
+  hasValidatedSource = true,
   onToggled,
   onClick,
 }: {
@@ -2970,6 +3016,7 @@ function UsecaseCard({
   hasInterest?: boolean;
   canToggle: boolean;
   isAuthenticated?: boolean;
+  hasValidatedSource?: boolean;
   onToggled?: (label: string, enabled: boolean) => void;
   onClick: () => void;
 }) {
@@ -2995,6 +3042,13 @@ function UsecaseCard({
     e.preventDefault();
     if (!flow.automationLabel || toggling) return;
     const willBeEnabled = !effectiveEnabled;
+    if (willBeEnabled && !hasValidatedSource) {
+      toast.warning(`No active ${sourceCat} integration`, {
+        description: `Enabling ${flow.label} will not do anything until you connect and validate a ${sourceCat} tool. The workflow has no input to react to and will be disabled again automatically.`,
+        duration: 9000,
+      });
+      return;
+    }
     setToggling(true);
     setOptimisticEnabled(willBeEnabled);
     try {
@@ -3162,41 +3216,73 @@ function UsecaseCard({
               Notify me
             </Button>
           ) : canToggle ? (
-            <Button
-              size="small"
-              variant={effectiveEnabled ? 'outlined' : 'contained'}
-              disableElevation
-              onClick={handleToggle}
-              disabled={toggling}
-              startIcon={
-                toggling ? (
-                  <CircularProgress size={12} sx={{ color: 'inherit' }} />
-                ) : effectiveEnabled ? (
-                  <PowerOff size={12} />
-                ) : (
-                  <Power size={12} />
-                )
+            <Tooltip
+              title={
+                !effectiveEnabled && !hasValidatedSource
+                  ? `No active ${sourceCat} integration is connected. Enabling will not do anything until a ${sourceCat} tool is authenticated — the workflow will be disabled again automatically.`
+                  : ''
               }
-              sx={{
-                textTransform: 'none',
-                fontSize: '0.7rem',
-                fontWeight: 600,
-                minHeight: 0,
-                py: 0.4,
-                px: 1,
-                bgcolor: effectiveEnabled ? 'transparent' : 'hsl(var(--primary))',
-                color: effectiveEnabled ? 'hsl(var(--foreground))' : 'hsl(var(--primary-foreground))',
-                borderColor: effectiveEnabled ? 'hsl(var(--border))' : 'transparent',
-                boxShadow: 'none',
-                '&:hover': {
-                  bgcolor: effectiveEnabled ? 'transparent' : 'hsl(var(--primary) / 0.9)',
-                  borderColor: effectiveEnabled ? 'hsl(var(--foreground) / 0.4)' : 'transparent',
-                  boxShadow: 'none',
-                },
-              }}
+              placement="top"
+              arrow
+              disableHoverListener={effectiveEnabled || hasValidatedSource}
+              disableFocusListener={effectiveEnabled || hasValidatedSource}
+              disableTouchListener={effectiveEnabled || hasValidatedSource}
             >
-              {effectiveEnabled ? 'Disable' : 'Enable'}
-            </Button>
+              <span onClick={(e) => e.stopPropagation()}>
+                <Button
+                  size="small"
+                  variant={effectiveEnabled ? 'outlined' : 'contained'}
+                  disableElevation
+                  onClick={handleToggle}
+                  disabled={toggling}
+                  startIcon={
+                    toggling ? (
+                      <CircularProgress size={12} sx={{ color: 'inherit' }} />
+                    ) : effectiveEnabled ? (
+                      <PowerOff size={12} />
+                    ) : (
+                      <Power size={12} />
+                    )
+                  }
+                  sx={{
+                    textTransform: 'none',
+                    fontSize: '0.7rem',
+                    fontWeight: 600,
+                    minHeight: 0,
+                    py: 0.4,
+                    px: 1,
+                    bgcolor: effectiveEnabled
+                      ? 'transparent'
+                      : !hasValidatedSource
+                        ? 'hsl(var(--muted))'
+                        : 'hsl(var(--primary))',
+                    color: effectiveEnabled
+                      ? 'hsl(var(--foreground))'
+                      : !hasValidatedSource
+                        ? 'hsl(var(--muted-foreground))'
+                        : 'hsl(var(--primary-foreground))',
+                    borderColor: effectiveEnabled
+                      ? 'hsl(var(--border))'
+                      : !hasValidatedSource
+                        ? 'hsl(var(--border))'
+                        : 'transparent',
+                    borderStyle: !effectiveEnabled && !hasValidatedSource ? 'dashed' : 'solid',
+                    boxShadow: 'none',
+                    '&:hover': {
+                      bgcolor: effectiveEnabled
+                        ? 'transparent'
+                        : !hasValidatedSource
+                          ? 'hsl(var(--muted))'
+                          : 'hsl(var(--primary) / 0.9)',
+                      borderColor: effectiveEnabled ? 'hsl(var(--foreground) / 0.4)' : !hasValidatedSource ? 'hsl(var(--border))' : 'transparent',
+                      boxShadow: 'none',
+                    },
+                  }}
+                >
+                  {effectiveEnabled ? 'Disable' : 'Enable'}
+                </Button>
+              </span>
+            </Tooltip>
           ) : (
             <Button
               component={Link}
