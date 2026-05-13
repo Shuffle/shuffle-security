@@ -37,34 +37,49 @@ export interface Correlation {
   ref: string[];
 }
 
+interface CorrelationVisibilityOptions {
+  currentIncidentId?: string;
+  isValueIgnored?: (value: string) => boolean;
+}
+
+export const getVisibleCorrelationRefs = (
+  correlation: Pick<Correlation, 'key' | 'ref'>,
+  options: CorrelationVisibilityOptions = {},
+): Array<{ category: string; key: string }> => {
+  if (!correlation?.ref?.length) return [];
+  if (options.isValueIgnored?.(String(correlation.key || ''))) return [];
+  const currentIncidentId = options.currentIncidentId?.toLowerCase();
+
+  return correlation.ref.reduce<Array<{ category: string; key: string }>>((acc, r) => {
+    const [category, key] = r.split('|');
+    if (!category || !key) return acc;
+    if (category.toLowerCase() === 'ignored-observables') return acc;
+    if (
+      category === 'shuffle-security_incidents' &&
+      currentIncidentId &&
+      key.toLowerCase() === currentIncidentId
+    ) {
+      return acc;
+    }
+    acc.push({ category, key });
+    return acc;
+  }, []);
+};
+
 /**
  * Count the effective correlation refs after filtering out the current incident.
  * Mirrors the filtering logic inside CorrelationRow so callers can show accurate
  * "X correlations" counts without including self-references.
  */
 export const getEffectiveCorrelationCount = (
-  correlation: Pick<Correlation, 'ref'>,
-  currentIncidentId?: string,
-): number => {
-  if (!correlation?.ref?.length) return 0;
-  let count = 0;
-  for (const r of correlation.ref) {
-    const [category, key] = r.split('|');
-    if (!category || !key) continue;
-    // Refs from the per-org `ignored-observables` datastore should not count
-    // as a correlation match — keep this in sync with CorrelationRow render.
-    if (category.toLowerCase() === 'ignored-observables') continue;
-    if (
-      category === 'shuffle-security_incidents' &&
-      currentIncidentId &&
-      key.toLowerCase() === currentIncidentId.toLowerCase()
-    ) {
-      continue;
-    }
-    count += 1;
-  }
-  return count;
-};
+  correlation: Pick<Correlation, 'key' | 'ref'>,
+  currentIncidentIdOrOptions?: string | CorrelationVisibilityOptions,
+): number => getVisibleCorrelationRefs(
+  correlation,
+  typeof currentIncidentIdOrOptions === 'string'
+    ? { currentIncidentId: currentIncidentIdOrOptions }
+    : currentIncidentIdOrOptions,
+).length;
 
 /**
  * Returns only correlations that have at least one ref OTHER than the current
@@ -72,8 +87,8 @@ export const getEffectiveCorrelationCount = (
  */
 export const filterMeaningfulCorrelations = <T extends Pick<Correlation, 'ref'>>(
   correlations: T[],
-  currentIncidentId?: string,
-): T[] => correlations.filter((c) => getEffectiveCorrelationCount(c, currentIncidentId) > 0);
+  currentIncidentIdOrOptions?: string | CorrelationVisibilityOptions,
+): T[] => correlations.filter((c) => getEffectiveCorrelationCount(c as T & Pick<Correlation, 'key'>, currentIncidentIdOrOptions) > 0);
 
 interface CorrelationRowProps {
   correlation: Correlation;
