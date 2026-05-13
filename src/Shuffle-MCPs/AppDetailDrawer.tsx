@@ -347,6 +347,15 @@ export default function AppDetailDrawer({
   const authState = authStates[appName || ''] || { systemId: appName || '', status: 'pending' as const, credentials: {} };
   const hasValidAuth = matchingEntries.some(e => e.validation?.valid === true);
   const hasAnyAuth = matchingEntries.length > 0;
+  // If the app has any authentication entry, it must already exist in the
+  // tenant — Shuffle does not allow auth on an un-activated app. Treat as
+  // activated even if `/api/v1/apps` didn't surface an `activated:true` row
+  // (name-mismatch / cache lag is common for renamed apps like "Gmail" vs
+  // "google_mail"). This keeps the header from showing a stale "Activate"
+  // button when the sidebar already shows the app as Verified.
+  const effectiveActivated = isActivated === null
+    ? (hasAnyAuth ? true : null)
+    : (isActivated || hasAnyAuth);
   const authCount = matchingEntries.length;
   const displayName = (appInfo?.name || appName || '').replace(/_/g, ' ');
 
