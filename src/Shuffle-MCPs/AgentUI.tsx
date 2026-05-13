@@ -1979,7 +1979,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
         </span>
       </Tooltip>
       <Box sx={{ width: '1px', height: 20, bgcolor: 'hsl(var(--border))', mx: 0.25 }} />
-      <Tooltip title={scheduleDisabledReason || 'Schedule this prompt to run repeatedly on a cron schedule'}>
+      <Tooltip title={scheduleDisabledTooltip || 'Schedule this prompt to run repeatedly on a cron schedule'}>
         <span>
           <IconButton
             size="small"
