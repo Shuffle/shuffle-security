@@ -603,8 +603,19 @@ const AgentRunResultViewer = ({ run }: AgentRunResultViewerProps) => {
                       }}>
                         {ev.value}
                       </Typography>
+                      {count > 1 && (
+                        <Typography sx={{
+                          fontSize: '0.65rem',
+                          color: 'hsl(var(--muted-foreground))',
+                          mt: 0.5,
+                          fontStyle: 'italic',
+                        }}>
+                          Repeated {count} times
+                        </Typography>
+                      )}
                     </Box>
-                  ))}
+                    ));
+                  })()}
                 </Box>
                 <Typography sx={{
                   fontSize: '0.65rem',
