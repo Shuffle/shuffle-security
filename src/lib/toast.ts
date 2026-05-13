@@ -103,19 +103,19 @@ const baseToast = (message: ToastContent, opts?: LegacyOptions) =>
 
 export const toast = Object.assign(baseToast, {
   success: (message: ToastContent, opts?: LegacyOptions) =>
-    rtToast.success(buildContent(message, opts?.description), mapOptions(opts)),
+    rtToast.success(buildContent(message, opts), mapOptions(opts)),
   error: (message: ToastContent, opts?: LegacyOptions) =>
-    rtToast.error(buildContent(message, opts?.description), mapOptions(opts)),
+    rtToast.error(buildContent(message, opts), mapOptions(opts)),
   info: (message: ToastContent, opts?: LegacyOptions) =>
-    rtToast.info(buildContent(message, opts?.description), mapOptions(opts)),
+    rtToast.info(buildContent(message, opts), mapOptions(opts)),
   warning: (message: ToastContent, opts?: LegacyOptions) =>
-    rtToast.warning(buildContent(message, opts?.description), mapOptions(opts)),
+    rtToast.warning(buildContent(message, opts), mapOptions(opts)),
   message: (message: ToastContent, opts?: LegacyOptions) =>
-    rtToast(buildContent(message, opts?.description), mapOptions(opts)),
+    rtToast(buildContent(message, opts), mapOptions(opts)),
   dismiss: (id?: string | number) => rtToast.dismiss(id as never),
   promise: rtToast.promise.bind(rtToast),
   loading: (message: ToastContent, opts?: LegacyOptions) =>
-    rtToast.loading(buildContent(message, opts?.description), mapOptions(opts)),
+    rtToast.loading(buildContent(message, opts), mapOptions(opts)),
 });
 
 export default toast;
