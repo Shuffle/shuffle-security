@@ -464,11 +464,15 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
     STATUS_COLORS.running;
 
   return (
-    <Box sx={{
-      borderTop: index === 0 ? 'none' : '1px solid hsl(var(--border))',
-      bgcolor: open ? 'hsl(var(--muted) / 0.3)' : 'transparent',
-      transition: 'background 0.15s ease',
-    }}>
+    <Box
+      data-timeline-index={index}
+      sx={{
+        borderTop: index === 0 ? 'none' : '1px solid hsl(var(--border))',
+        bgcolor: open ? 'hsl(var(--muted) / 0.3)' : 'transparent',
+        transition: 'background 0.15s ease',
+        scrollMarginTop: 96,
+      }}
+    >
       <Box
         onClick={onToggle}
         sx={{
