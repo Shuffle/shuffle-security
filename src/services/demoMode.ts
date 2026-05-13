@@ -517,8 +517,19 @@ export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
  * a fresh pick if nothing is cached.
  */
 const resolveIocOverrides = async (): Promise<DemoIocOverrides> => {
-  const cached = readIocOverrides();
-  if (cached?.attackerIp && cached?.lureUrl && cached?.lureDomain) return cached;
+  const rawCached = readIocOverrides();
+  // Defensive: an earlier run may have cached a binary/garbled value before
+  // we added the printable-key validators. Drop any cached field that no
+  // longer passes validation so we never re-render a corrupt URL.
+  const cached: DemoIocOverrides | null = rawCached ? {
+    attackerIp: looksLikeIp(rawCached.attackerIp) ? rawCached.attackerIp : undefined,
+    lureUrl: looksLikeUrl(rawCached.lureUrl) ? rawCached.lureUrl : undefined,
+    lureDomain: rawCached.lureDomain && isPrintableAscii(rawCached.lureDomain) ? rawCached.lureDomain : undefined,
+  } : null;
+  if (cached?.attackerIp && cached?.lureUrl && cached?.lureDomain) {
+    if (JSON.stringify(cached) !== JSON.stringify(rawCached)) writeIocOverrides(cached);
+    return cached;
+  }
   // Never block incident creation on the async threat-feed parser. Step 4
   // must always materialize immediately; live IOCs are best-effort only.
   const fresh = pickFallbackIocs();
