@@ -126,37 +126,87 @@ export const hasOutputWarning = (run: AgentRun): boolean => {
  * 401/403 bodies that the upstream tool returned in nested fields like
  * `result`, `error`, `body`, `data`, etc.
  */
+export type DiagnosisEvidence = {
+  /** Dotted JSON path inside the parsed run result, e.g. `error.message` or `results[0].body`. */
+  path: string;
+  /** Trimmed snippet of the value at that path. */
+  value: string;
+};
+
 export type OutputDiagnosis = {
   kind: 'auth' | 'permission' | 'not_found' | 'rate_limit' | 'network' | 'validation' | 'generic';
   status?: number;
   title: string;
   explanation: string;
   remediation: string;
+  /** Short snippet (legacy — kept for backwards-compat tooltips). */
   snippet?: string;
+  /** WHERE in the run result the diagnosis came from. Up to 3 entries. */
+  evidence: DiagnosisEvidence[];
+};
+
+/** Internal: every primitive value inside `parsed`, with its JSON path. */
+type ResultEntry = { path: string; value: string };
+
+const collectEntries = (root: unknown): ResultEntry[] => {
+  const out: ResultEntry[] = [];
+  const walk = (v: unknown, path: string, depth: number): void => {
+    if (depth > 8 || v == null) return;
+    if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
+      out.push({ path, value: String(v) });
+      return;
+    }
+    if (Array.isArray(v)) {
+      v.forEach((item, i) => walk(item, `${path}[${i}]`, depth + 1));
+      return;
+    }
+    if (typeof v === 'object') {
+      for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+        const next = path ? `${path}.${k}` : k;
+        walk(val, next, depth + 1);
+      }
+    }
+  };
+  walk(root, '', 0);
+  return out;
+};
+
+const trimEvidenceValue = (v: string, max = 180): string => {
+  const cleaned = v.replace(/\s+/g, ' ').trim();
+  return cleaned.length <= max ? cleaned : `${cleaned.slice(0, max).trim()}…`;
 };
 
 export const diagnoseOutputWarning = (run: AgentRun): OutputDiagnosis | null => {
   const { parsed, raw } = parseRunResult(run);
   if (!parsed || typeof parsed !== 'object') return null;
 
-  // Build a single searchable haystack from every string-y field we can find.
-  const haystackParts: string[] = [];
-  const collect = (v: unknown, depth = 0): void => {
-    if (depth > 6 || v == null) return;
-    if (typeof v === 'string') { haystackParts.push(v); return; }
-    if (typeof v === 'number' || typeof v === 'boolean') { haystackParts.push(String(v)); return; }
-    if (Array.isArray(v)) { v.forEach(item => collect(item, depth + 1)); return; }
-    if (typeof v === 'object') {
-      for (const val of Object.values(v as Record<string, unknown>)) collect(val, depth + 1);
-    }
-  };
-  collect(parsed);
-  if (raw && haystackParts.length === 0) haystackParts.push(raw);
-  const haystack = haystackParts.join('\n');
+  const entries = collectEntries(parsed);
+  if (raw && entries.length === 0) entries.push({ path: '', value: raw });
+
+  const haystack = entries.map((e) => e.value).join('\n');
   const lower = haystack.toLowerCase();
 
-  // Try to extract an explicit HTTP status code.
+  /** Find up to `max` entries whose value matches `test`. */
+  const findEvidence = (test: (lowerVal: string, val: string) => boolean, max = 3): DiagnosisEvidence[] => {
+    const out: DiagnosisEvidence[] = [];
+    for (const e of entries) {
+      if (test(e.value.toLowerCase(), e.value)) {
+        out.push({ path: e.path || '(root)', value: trimEvidenceValue(e.value) });
+        if (out.length >= max) break;
+      }
+    }
+    return out;
+  };
+
+  const findEvidenceByRegex = (re: RegExp, max = 3): DiagnosisEvidence[] =>
+    findEvidence((l) => re.test(l), max);
+
+  const findEvidenceByKeywords = (needles: string[], max = 3): DiagnosisEvidence[] =>
+    findEvidence((l) => needles.some((n) => l.includes(n.toLowerCase())), max);
+
+  // Try to extract an explicit HTTP status code AND remember which entry it came from.
   let status: number | undefined;
+  let statusEvidence: DiagnosisEvidence | null = null;
   const statusPatterns = [
     /\bhttp[\s/]?(\d{3})\b/i,
     /\bstatus[\s:_-]+(\d{3})\b/i,
@@ -166,15 +216,21 @@ export const diagnoseOutputWarning = (run: AgentRun): OutputDiagnosis | null => 
     /\((\d{3})\)/,
     /\b(4\d{2}|5\d{2})\b/,
   ];
-  for (const re of statusPatterns) {
-    const m = haystack.match(re);
-    if (m) {
-      const n = Number(m[1]);
-      if (n >= 400 && n < 600) { status = n; break; }
+  outer: for (const re of statusPatterns) {
+    for (const e of entries) {
+      const m = e.value.match(re);
+      if (m) {
+        const n = Number(m[1]);
+        if (n >= 400 && n < 600) {
+          status = n;
+          statusEvidence = { path: e.path || '(root)', value: trimEvidenceValue(e.value) };
+          break outer;
+        }
+      }
     }
   }
 
-  // Pull a short snippet around the first error keyword we find.
+  // Pull a short snippet around the first error keyword we find (legacy field).
   const findSnippet = (needles: string[]): string | undefined => {
     for (const needle of needles) {
       const i = lower.indexOf(needle);
@@ -187,10 +243,18 @@ export const diagnoseOutputWarning = (run: AgentRun): OutputDiagnosis | null => 
     return undefined;
   };
 
+  /** Merge status evidence (if any) into the front of keyword-based evidence. */
+  const withStatusEvidence = (ev: DiagnosisEvidence[]): DiagnosisEvidence[] => {
+    if (!statusEvidence) return ev;
+    const dedup = ev.filter((e) => e.path !== statusEvidence!.path);
+    return [statusEvidence, ...dedup].slice(0, 3);
+  };
+
   if (
     status === 401 ||
     /\b(unauthori[sz]ed|invalid[_\s-]*(api[_\s-]*key|token|credentials?)|authentication[_\s-]*(failed|required)|missing[_\s-]*(api[_\s-]*key|token|authorization)|bearer[_\s-]*token|expired[_\s-]*token)\b/.test(lower)
   ) {
+    const ev = findEvidenceByRegex(/unauthori[sz]ed|invalid[_\s-]*(api[_\s-]*key|token|credentials?)|authentication[_\s-]*(failed|required)|missing[_\s-]*(api[_\s-]*key|token|authorization)|bearer[_\s-]*token|expired[_\s-]*token|\b401\b/);
     return {
       kind: 'auth',
       status,
@@ -198,6 +262,7 @@ export const diagnoseOutputWarning = (run: AgentRun): OutputDiagnosis | null => 
       explanation: 'The upstream service rejected the request because the credentials were missing, invalid, or expired.',
       remediation: 'Open the integration in Apps → Authentication, reconnect or paste a fresh API key/token, then re-run the action.',
       snippet: findSnippet(['401', 'unauthorized', 'invalid api', 'invalid token', 'authentication']),
+      evidence: withStatusEvidence(ev),
     };
   }
 
@@ -205,6 +270,7 @@ export const diagnoseOutputWarning = (run: AgentRun): OutputDiagnosis | null => 
     status === 403 ||
     /\b(forbidden|permission[_\s-]*denied|not[_\s-]*allowed|access[_\s-]*denied|insufficient[_\s-]*(scope|permission|privileges?)|missing[_\s-]*scope)\b/.test(lower)
   ) {
+    const ev = findEvidenceByRegex(/forbidden|permission[_\s-]*denied|not[_\s-]*allowed|access[_\s-]*denied|insufficient[_\s-]*(scope|permission|privileges?)|missing[_\s-]*scope|\b403\b/);
     return {
       kind: 'permission',
       status,
@@ -212,10 +278,12 @@ export const diagnoseOutputWarning = (run: AgentRun): OutputDiagnosis | null => 
       explanation: 'The credentials are valid, but the connected account does not have permission (or scope) to perform this action.',
       remediation: 'Re-authenticate the integration with the missing scope, or grant the connected account permission for this resource in the source app.',
       snippet: findSnippet(['403', 'forbidden', 'permission', 'scope', 'access denied']),
+      evidence: withStatusEvidence(ev),
     };
   }
 
   if (status === 429 || /\b(rate[_\s-]*limit|too[_\s-]*many[_\s-]*requests|quota[_\s-]*exceeded|throttled)\b/.test(lower)) {
+    const ev = findEvidenceByRegex(/rate[_\s-]*limit|too[_\s-]*many[_\s-]*requests|quota[_\s-]*exceeded|throttled|\b429\b/);
     return {
       kind: 'rate_limit',
       status,
@@ -223,10 +291,12 @@ export const diagnoseOutputWarning = (run: AgentRun): OutputDiagnosis | null => 
       explanation: 'The upstream service is throttling requests from this integration.',
       remediation: 'Wait a minute and re-run, or reduce how often this action fires. Check the integration\'s rate-limit settings if the problem keeps happening.',
       snippet: findSnippet(['429', 'rate limit', 'too many', 'quota', 'throttled']),
+      evidence: withStatusEvidence(ev),
     };
   }
 
   if (status === 404 || /\b(not[_\s-]*found|no such|does not exist|unknown[_\s-]*(id|resource))\b/.test(lower)) {
+    const ev = findEvidenceByRegex(/not[_\s-]*found|no such|does not exist|unknown[_\s-]*(id|resource)|\b404\b/);
     return {
       kind: 'not_found',
       status,
@@ -234,10 +304,12 @@ export const diagnoseOutputWarning = (run: AgentRun): OutputDiagnosis | null => 
       explanation: 'The action ran, but the target resource (record, ticket, channel, file) could not be located.',
       remediation: 'Verify the ID or path the agent used is correct, and that the connected account can see that resource.',
       snippet: findSnippet(['404', 'not found', 'no such', 'does not exist']),
+      evidence: withStatusEvidence(ev),
     };
   }
 
   if (status === 400 || status === 422 || /\b(bad[_\s-]*request|validation[_\s-]*(error|failed)|invalid[_\s-]*(parameter|field|argument|body|payload))\b/.test(lower)) {
+    const ev = findEvidenceByRegex(/bad[_\s-]*request|validation[_\s-]*(error|failed)|invalid[_\s-]*(parameter|field|argument|body|payload)|\b400\b|\b422\b/);
     return {
       kind: 'validation',
       status,
@@ -245,6 +317,7 @@ export const diagnoseOutputWarning = (run: AgentRun): OutputDiagnosis | null => 
       explanation: 'The upstream service rejected the request because the parameters were missing or malformed.',
       remediation: 'Check the action\'s required fields and the values the agent sent. The Debug section below shows the exact payload.',
       snippet: findSnippet(['400', '422', 'bad request', 'validation', 'invalid']),
+      evidence: withStatusEvidence(ev),
     };
   }
 
@@ -252,6 +325,7 @@ export const diagnoseOutputWarning = (run: AgentRun): OutputDiagnosis | null => 
     (typeof status === 'number' && status >= 500) ||
     /\b(timeout|timed[_\s-]*out|econnrefused|enotfound|network[_\s-]*error|connection[_\s-]*(refused|reset|closed)|service[_\s-]*unavailable|bad[_\s-]*gateway|gateway[_\s-]*timeout)\b/.test(lower)
   ) {
+    const ev = findEvidenceByRegex(/timeout|timed[_\s-]*out|econnrefused|enotfound|network[_\s-]*error|connection[_\s-]*(refused|reset|closed)|service[_\s-]*unavailable|bad[_\s-]*gateway|gateway[_\s-]*timeout|\b5\d{2}\b/);
     return {
       kind: 'network',
       status,
@@ -259,26 +333,41 @@ export const diagnoseOutputWarning = (run: AgentRun): OutputDiagnosis | null => 
       explanation: 'The integration could not reach the upstream service, or the service returned a server error.',
       remediation: 'Re-run the action shortly. If it keeps failing, check the upstream service\'s status page and the integration\'s base URL.',
       snippet: findSnippet(['500', '502', '503', '504', 'timeout', 'timed out', 'unavailable']),
+      evidence: withStatusEvidence(ev),
     };
   }
 
-  const reason =
-    (typeof (parsed as { reason?: unknown }).reason === 'string' && (parsed as { reason: string }).reason) ||
-    (typeof (parsed as { error?: unknown }).error === 'string' && (parsed as { error: string }).error) ||
-    (typeof (parsed as { message?: unknown }).message === 'string' && (parsed as { message: string }).message) ||
-    undefined;
+  // Generic — pull `reason`/`error`/`message` directly so we can show its path.
+  const namedFields: Array<keyof typeof parsed & string> = ['reason', 'error', 'message'];
+  let namedReason: string | undefined;
+  let namedEvidence: DiagnosisEvidence | null = null;
+  for (const k of namedFields) {
+    const v = (parsed as Record<string, unknown>)[k];
+    if (typeof v === 'string' && v.trim()) {
+      namedReason = v;
+      namedEvidence = { path: k, value: trimEvidenceValue(v) };
+      break;
+    }
+  }
 
-  if ((parsed as { success?: unknown }).success === false || reason) {
+  if ((parsed as { success?: unknown }).success === false || namedReason) {
+    const ev: DiagnosisEvidence[] = [];
+    if (namedEvidence) ev.push(namedEvidence);
+    if ((parsed as { success?: unknown }).success === false) {
+      ev.push({ path: 'success', value: 'false' });
+    }
     return {
       kind: 'generic',
       status,
       title: status ? `Action failed (HTTP ${status})` : 'Action failed',
-      explanation: reason || 'The action returned a failure but did not include a recognizable error code.',
+      explanation: namedReason || 'The action returned a failure but did not include a recognizable error code.',
       remediation: 'Open the Debug section below to see the full response from the integration.',
-      snippet: reason,
+      snippet: namedReason,
+      evidence: withStatusEvidence(ev).slice(0, 3),
     };
   }
 
+  const ev = findEvidenceByKeywords(['error', 'failed', 'exception', 'could not']);
   return {
     kind: 'generic',
     status,
@@ -286,6 +375,7 @@ export const diagnoseOutputWarning = (run: AgentRun): OutputDiagnosis | null => 
     explanation: 'The result contains words that often indicate a problem, but no specific error code was returned.',
     remediation: 'Open the Debug section below to inspect the raw response.',
     snippet: findSnippet(['error', 'failed', 'exception', 'could not']),
+    evidence: withStatusEvidence(ev),
   };
 };
 
@@ -427,22 +517,61 @@ const AgentRunResultViewer = ({ run }: AgentRunResultViewerProps) => {
               </Box>{' '}
               {diagnosis.remediation}
             </Typography>
-            {diagnosis.snippet && (
-              <Box sx={{
-                mt: 0.75,
-                p: 0.75,
-                borderRadius: 0.5,
-                bgcolor: 'hsl(var(--background))',
-                border: '1px solid hsl(var(--border))',
-                fontSize: '0.7rem',
-                fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
-                color: 'hsl(var(--muted-foreground))',
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-                maxHeight: 80,
-                overflow: 'auto',
-              }}>
-                {diagnosis.snippet}
+            {diagnosis.evidence && diagnosis.evidence.length > 0 && (
+              <Box sx={{ mt: 0.75 }}>
+                <Typography sx={{
+                  fontSize: '0.65rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  color: 'hsl(var(--muted-foreground))',
+                  mb: 0.5,
+                }}>
+                  Where this was found
+                </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                  {diagnosis.evidence.map((ev, idx) => (
+                    <Box
+                      key={`${ev.path}-${idx}`}
+                      sx={{
+                        p: 0.75,
+                        borderRadius: 0.5,
+                        bgcolor: 'hsl(var(--background))',
+                        border: '1px solid hsl(var(--border))',
+                      }}
+                    >
+                      <Typography sx={{
+                        fontSize: '0.65rem',
+                        fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
+                        color: 'hsl(var(--severity-medium))',
+                        fontWeight: 600,
+                        mb: 0.25,
+                        wordBreak: 'break-all',
+                      }}>
+                        results[0].result.{ev.path || '(root)'}
+                      </Typography>
+                      <Typography sx={{
+                        fontSize: '0.7rem',
+                        fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
+                        color: 'hsl(var(--foreground))',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-word',
+                        maxHeight: 80,
+                        overflow: 'auto',
+                      }}>
+                        {ev.value}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+                <Typography sx={{
+                  fontSize: '0.65rem',
+                  color: 'hsl(var(--muted-foreground))',
+                  mt: 0.5,
+                  fontStyle: 'italic',
+                }}>
+                  Open the Debug section below to see the full response.
+                </Typography>
               </Box>
             )}
           </Box>
