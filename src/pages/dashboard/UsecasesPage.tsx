@@ -2591,6 +2591,7 @@ function UsecasesPageInner() {
         <UsecaseDetailContent
           flowId={drawerFlowId ?? undefined}
           showConnectionPath
+          useAlluvialDiagram
           onNavigateUsecase={(id) => {
             const f = usecases.find(u => u.id === id);
             const name = f?.label || id || '';
