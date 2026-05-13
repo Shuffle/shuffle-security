@@ -2161,6 +2161,7 @@ function UsecaseDetailContent({
             );
           })}
         </Box>
+        )}
       </Box>
       )}
 
