@@ -2140,6 +2140,33 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 <AttachFileIcon sx={{ fontSize: 18 }} />
               </IconButton>
               )}
+              {(() => {
+                const canSchedule = hasExecution && !scheduleDisabledReason;
+                const tip = scheduleDisabledReason
+                  ? scheduleDisabledReason
+                  : hasExecution
+                    ? 'Schedule this prompt to run repeatedly on a cron schedule'
+                    : 'Run this prompt once successfully — then you can schedule it to repeat on a cron schedule.';
+                return (
+                  <Tooltip title={tip} placement="top" arrow>
+                    <span>
+                      <IconButton
+                        type="button"
+                        onClick={(e) => { if (canSchedule) setScheduleAnchor(e.currentTarget); }}
+                        disabled={!canSchedule || agentRequestLoading}
+                        sx={{
+                          width: 36, height: 36,
+                          color: 'hsl(var(--muted-foreground))',
+                          '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted))' },
+                          '&.Mui-disabled': { opacity: 0.4, color: 'hsl(var(--muted-foreground))' },
+                        }}
+                      >
+                        <ScheduleIcon sx={{ fontSize: 18 }} />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                );
+              })()}
               <Tooltip title={submitTooltip} placement="top" arrow>
                 <span>
                   <IconButton
