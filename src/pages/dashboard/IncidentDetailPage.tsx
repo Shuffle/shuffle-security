@@ -5795,14 +5795,14 @@ const IncidentDetailPage = () => {
             position: 'relative',
           }}
         >
-          <FingerprintIcon sx={{ fontSize: 11, color: '#ff6600' }} />
+          <FingerprintIcon sx={{ fontSize: 11, color: 'hsl(var(--muted-foreground))' }} />
         </Box>
         <CircularProgress size={10} thickness={6} sx={{ color: '#ff6600', flexShrink: 0 }} />
         <Typography
           variant="caption"
           sx={{ fontSize: '0.7rem', fontWeight: 500, color: 'inherit', lineHeight: 1 }}
         >
-          Running indicator check on your message…
+          Checking your message for observables…
         </Typography>
       </Box>
     );
