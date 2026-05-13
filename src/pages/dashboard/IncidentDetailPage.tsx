@@ -33,6 +33,7 @@ import {
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import { motion, LayoutGroup } from 'framer-motion';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -5791,10 +5792,12 @@ const IncidentDetailPage = () => {
             justifyContent: 'center',
             flexShrink: 0,
             background: 'rgba(0, 0, 0, 0.25)',
+            position: 'relative',
           }}
         >
-          <CircularProgress size={10} thickness={6} sx={{ color: '#ff6600' }} />
+          <FingerprintIcon sx={{ fontSize: 11, color: '#ff6600' }} />
         </Box>
+        <CircularProgress size={10} thickness={6} sx={{ color: '#ff6600', flexShrink: 0 }} />
         <Typography
           variant="caption"
           sx={{ fontSize: '0.7rem', fontWeight: 500, color: 'inherit', lineHeight: 1 }}
