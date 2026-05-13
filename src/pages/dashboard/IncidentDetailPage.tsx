@@ -5409,9 +5409,7 @@ const IncidentDetailPage = () => {
     const enabledAgentTools: string[] = (() => {
       if (demoActive) return DEMO_AGENT_TOOLS;
       try {
-        // eslint-disable-next-line @typescript-eslint/no-var-requires
-        const { getAgentTools } = require('@/lib/agentTools');
-        return getAgentTools();
+        return getAssignedAgentTools();
       } catch {
         return [];
       }
