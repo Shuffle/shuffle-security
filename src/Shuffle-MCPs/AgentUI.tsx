@@ -2660,7 +2660,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 incident pages, so the user sees identical reasoning here. */}
             <AgentRunDiagnosisBanner
               run={execution}
-              sx={{ px: 0, pb: 0, mb: 1.5 }}
+              sx={{ px: 0, pb: 0, mb: 2 }}
               onJumpToEvidence={(decisionIndex) => {
                 // Locate the timeline row for the offending decision and
                 // expand + scroll to it on the detailed view, regardless of
