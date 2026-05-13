@@ -2901,14 +2901,9 @@ function UsecasesPageInner() {
                   const id = drawerFlowId;
                   const name = usecases.find(u => u.id === id)?.label || id || '';
                   const slug = slugify(name);
-                  // When already on security.shuffler.io, navigate internally to
-                  // the in-app full details page. Otherwise (preview / dev /
-                  // embedded host), pop open the canonical public page.
-                  if (typeof window !== 'undefined' && window.location.hostname === 'security.shuffler.io') {
-                    navigate(`/usecases/${slug}/details`);
-                  } else {
-                    window.open(`https://security.shuffler.io/usecases/${slug}/details`, '_blank', 'noopener,noreferrer');
-                  }
+                  // Always navigate in the same view — no new tab.
+                  navigate(`/usecases/${slug}/details`);
+                  setDrawerFlowId(null);
                 }}
                 endIcon={<ExternalLink size={14} />}
                 sx={{
