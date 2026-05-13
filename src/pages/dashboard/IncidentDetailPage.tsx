@@ -1433,10 +1433,40 @@ const IncidentDetailPage = () => {
   // Filtered view of correlations that drops any whose key matches an
   // ignored observable value. Used by every "Correlations (N)" badge and the
   // timeline so the count agrees with what the user actually sees.
-  const visibleCorrelations = useMemo(
-    () => correlations.filter(c => !ignoredObs.isValueIgnored(c.key)),
-    [correlations, ignoredObs],
-  );
+  // Unify the two correlation sources we have on the page so the
+  // Correlations tab — and every count/badge derived from it — sees the
+  // SAME set the per-observable inline lookups already see:
+  //
+  //  1. `correlations` — incident-level buckets returned by the backend
+  //     for `{ type: 'datastore', key: incident.id }`. Authoritative when
+  //     present, but can lag because the backend hasn't yet linked a
+  //     freshly-seen value back to this incident's record.
+  //  2. `obsCorrelations` — live per-value lookups (`{ type: 'value', key }`)
+  //     that drive the "1 corr" badge on each observable row. These can
+  //     surface matches before #1 catches up.
+  //
+  // Merge by correlation key, unioning `ref` lists and taking the max
+  // `amount` so a value-hit never reduces a richer datastore-hit. Filter
+  // out entries the user has chosen to ignore.
+  const visibleCorrelations = useMemo(() => {
+    const merged = new Map<string, { key: string; amount: number; ref: string[] }>();
+    const add = (c: { key: string; amount: number; ref: string[] }) => {
+      if (!c?.key) return;
+      const k = String(c.key).toLowerCase();
+      const existing = merged.get(k);
+      if (!existing) {
+        merged.set(k, { key: c.key, amount: c.amount || (c.ref?.length ?? 0), ref: [...(c.ref || [])] });
+        return;
+      }
+      const refSet = new Set(existing.ref);
+      (c.ref || []).forEach(r => refSet.add(r));
+      existing.ref = Array.from(refSet);
+      existing.amount = Math.max(existing.amount || 0, c.amount || 0, existing.ref.length);
+    };
+    correlations.forEach(add);
+    Object.values(obsCorrelations).forEach(entry => (entry?.data || []).forEach(add));
+    return Array.from(merged.values()).filter(c => !ignoredObs.isValueIgnored(c.key));
+  }, [correlations, obsCorrelations, ignoredObs]);
 
   // ---------------------------------------------------------------------
   // Merge candidate suggestions
