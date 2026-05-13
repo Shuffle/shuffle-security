@@ -1,14 +1,18 @@
 /**
- * AgentRunDiagnosisBanner — shared "Needs attention / Failed" banner that
- * shows the same diagnosis (title, explanation, remediation, and the FIRST
- * piece of evidence) used everywhere a single agent run is displayed.
+ * AgentRunDiagnosisBanner — compact, dismissible "nudge" shown above an
+ * agent run when it failed or its output looks suspicious.
  *
- * Returns `null` when the run has no failure and no output warning, so it
- * is safe to mount unconditionally above other content.
+ * Designed to be unobtrusive: a single line with an icon, short message,
+ * an optional jump-to-evidence affordance, and a dismiss (X) button that
+ * permanently hides the banner for that exact execution.
+ *
+ * Returns `null` when the run has no failure / warning, or when the user
+ * has already dismissed the banner for this execution id.
  */
 
-import { Box, Tooltip, Typography } from '@mui/material';
-import { AlertTriangle, ArrowUpRight, HelpCircle } from 'lucide-react';
+import { Box, IconButton, Tooltip, Typography } from '@mui/material';
+import { AlertTriangle, ArrowUpRight, HelpCircle, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   diagnoseOutputWarning,
   extractDecisionIndex,
@@ -21,15 +25,51 @@ interface Props {
   run: DiagnosableRun | null | undefined;
   /** Outer padding wrapper. Defaults to `{ px: 2.5, pb: 0.5 }`. */
   sx?: Record<string, unknown>;
-  /** When provided, the "Where this was found" evidence box becomes a button
-   *  that asks the host to jump to the underlying decision (e.g. switch to
-   *  the detailed timeline, expand that row, scroll to it). The decision
-   *  index is the original index in `agentData.decisions`. */
+  /** When provided, the banner becomes clickable and asks the host to jump
+   *  to the underlying decision (e.g. switch to the detailed timeline,
+   *  expand that row, scroll to it). */
   onJumpToEvidence?: (decisionIndex: number) => void;
+  /** Stable id used to persist dismissals per-execution. Falls back to
+   *  `run.execution_id` if present. When neither is available, dismiss
+   *  still works for the current mount but is not persisted. */
+  executionId?: string;
 }
 
-const AgentRunDiagnosisBanner = ({ run, sx, onJumpToEvidence }: Props) => {
-  if (!run) return null;
+const DISMISS_PREFIX = 'agent-diagnosis-dismissed::';
+
+const readDismissed = (key: string | null): boolean => {
+  if (!key || typeof window === 'undefined') return false;
+  try {
+    return window.localStorage.getItem(DISMISS_PREFIX + key) === '1';
+  } catch {
+    return false;
+  }
+};
+
+const writeDismissed = (key: string | null) => {
+  if (!key || typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(DISMISS_PREFIX + key, '1');
+  } catch {
+    /* ignore */
+  }
+};
+
+const AgentRunDiagnosisBanner = ({ run, sx, onJumpToEvidence, executionId }: Props) => {
+  const dismissKey = useMemo(() => {
+    if (executionId) return executionId;
+    const fromRun = (run as any)?.execution_id;
+    return typeof fromRun === 'string' && fromRun ? fromRun : null;
+  }, [executionId, run]);
+
+  const [dismissed, setDismissed] = useState<boolean>(() => readDismissed(dismissKey));
+
+  // Re-sync if the underlying execution changes.
+  useEffect(() => {
+    setDismissed(readDismissed(dismissKey));
+  }, [dismissKey]);
+
+  if (!run || dismissed) return null;
 
   const status = (run.status || '').toUpperCase();
   const isFailed = status === 'FAILED' || status === 'ABORTED';
@@ -39,176 +79,114 @@ const AgentRunDiagnosisBanner = ({ run, sx, onJumpToEvidence }: Props) => {
 
   if (!failureInfo && !diagnosis) return null;
 
-  // Show only the FIRST evidence entry — repeated identical errors are noise.
+  const isCritical = !!failureInfo;
+  const tone = isCritical ? 'critical' : 'medium';
+  const Icon = isCritical ? AlertTriangle : HelpCircle;
+
+  const message = isCritical
+    ? failureInfo!.reason
+    : `${diagnosis!.title} — ${diagnosis!.remediation}`;
+
   const firstEvidence = diagnosis?.evidence?.[0] || null;
   const jumpDecisionIndex = firstEvidence ? extractDecisionIndex(firstEvidence.path) : null;
   const canJump = !!(onJumpToEvidence && jumpDecisionIndex !== null);
 
+  const handleDismiss = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    writeDismissed(dismissKey);
+    setDismissed(true);
+  };
+
+  const handleJump = () => {
+    if (canJump) onJumpToEvidence!(jumpDecisionIndex!);
+  };
+
   return (
     <Box sx={{ px: 2.5, pb: 0.5, ...(sx || {}) }}>
-      {failureInfo && (
-        <Box sx={{
+      <Box
+        {...(canJump
+          ? {
+              role: 'button' as const,
+              tabIndex: 0,
+              onClick: handleJump,
+              onKeyDown: (e: React.KeyboardEvent) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleJump();
+                }
+              },
+            }
+          : {})}
+        sx={{
           display: 'flex',
-          alignItems: 'flex-start',
+          alignItems: 'center',
           gap: 1,
-          px: 1.5,
-          py: 1,
-          mb: 1.5,
+          px: 1.25,
+          py: 0.5,
           borderRadius: 1,
-          bgcolor: 'hsla(var(--severity-critical) / 0.08)',
-          border: '1px solid hsla(var(--severity-critical) / 0.2)',
-        }}>
-          <AlertTriangle size={14} style={{ color: 'hsl(var(--severity-critical))', marginTop: 2, flexShrink: 0 }} />
-          <Typography sx={{
-            fontSize: '0.78rem',
-            color: 'hsl(var(--severity-critical))',
-            lineHeight: 1.5,
-            wordBreak: 'break-word',
-          }}>
-            {failureInfo.reason}
-          </Typography>
-        </Box>
-      )}
-
-      {diagnosis && (
-        <Box sx={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: 1,
-          px: 1.5,
-          py: 1,
-          mb: 1.5,
-          borderRadius: 1,
-          bgcolor: 'hsla(var(--severity-medium) / 0.08)',
-          border: '1px solid hsla(var(--severity-medium) / 0.2)',
-        }}>
-          <HelpCircle size={14} style={{ color: 'hsl(var(--severity-medium))', marginTop: 2, flexShrink: 0 }} />
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography sx={{
-              fontSize: '0.78rem',
-              fontWeight: 600,
-              color: 'hsl(var(--severity-medium))',
-              lineHeight: 1.4,
-              mb: 0.25,
-            }}>
-              {diagnosis.title}
-            </Typography>
-            <Typography sx={{
-              fontSize: '0.74rem',
-              color: 'hsl(var(--foreground))',
-              lineHeight: 1.5,
-              mb: 0.5,
-            }}>
-              {diagnosis.explanation}
-            </Typography>
-            <Typography sx={{
-              fontSize: '0.74rem',
-              color: 'hsl(var(--foreground))',
-              lineHeight: 1.5,
-            }}>
-              <Box component="span" sx={{ fontWeight: 600, color: 'hsl(var(--severity-medium))' }}>
-                How to fix:
-              </Box>{' '}
-              {diagnosis.remediation}
-            </Typography>
-            {firstEvidence && (
-              <Box sx={{ mt: 0.75 }}>
-                <Typography sx={{
-                  fontSize: '0.65rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase',
-                  color: 'hsl(var(--muted-foreground))',
-                  mb: 0.5,
-                }}>
-                  Where this was found
-                </Typography>
-                <Tooltip title={canJump ? 'Open this decision in the detailed timeline' : ''} placement="top" arrow>
-                  <Box
-                    {...(canJump
-                      ? {
-                          role: 'button' as const,
-                          tabIndex: 0,
-                          onClick: () => onJumpToEvidence!(jumpDecisionIndex!),
-                          onKeyDown: (e: React.KeyboardEvent) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.preventDefault();
-                              onJumpToEvidence!(jumpDecisionIndex!);
-                            }
-                          },
-                        }
-                      : {})}
-                    sx={{
-                      p: 0.75,
-                      borderRadius: 0.5,
-                      bgcolor: 'hsl(var(--background))',
-                      border: '1px solid hsl(var(--border))',
-                      position: 'relative',
-                      cursor: canJump ? 'pointer' : 'default',
-                      transition: 'border-color 0.15s ease, background 0.15s ease',
-                      ...(canJump && {
-                        '&:hover': {
-                          borderColor: 'hsl(var(--severity-medium))',
-                          bgcolor: 'hsla(var(--severity-medium) / 0.04)',
-                        },
-                        '&:focus-visible': {
-                          outline: 'none',
-                          borderColor: 'hsl(var(--severity-medium))',
-                          boxShadow: '0 0 0 2px hsla(var(--severity-medium) / 0.25)',
-                        },
-                      }),
-                    }}
-                  >
-                    {canJump && (
-                      <ArrowUpRight
-                        size={12}
-                        style={{
-                          position: 'absolute',
-                          top: 6,
-                          right: 6,
-                          color: 'hsl(var(--muted-foreground))',
-                        }}
-                      />
-                    )}
-                    <Typography sx={{
-                      fontSize: '0.65rem',
-                      fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
-                      color: 'hsl(var(--severity-medium))',
-                      fontWeight: 600,
-                      mb: 0.25,
-                      wordBreak: 'break-all',
-                      pr: canJump ? 2 : 0,
-                    }}>
-                      results[0].result.{firstEvidence.path || '(root)'}
-                    </Typography>
-                    <Typography sx={{
-                      fontSize: '0.7rem',
-                      fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace',
-                      color: 'hsl(var(--foreground))',
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'break-word',
-                      maxHeight: 80,
-                      overflow: 'auto',
-                    }}>
-                      {firstEvidence.value}
-                    </Typography>
-                    {canJump && (
-                      <Typography sx={{
-                        mt: 0.5,
-                        fontSize: '0.65rem',
-                        color: 'hsl(var(--severity-medium))',
-                        fontWeight: 600,
-                      }}>
-                        Open Decision #{(jumpDecisionIndex ?? 0) + 1} in detailed timeline →
-                      </Typography>
-                    )}
-                  </Box>
-                </Tooltip>
-              </Box>
-            )}
-          </Box>
-        </Box>
-      )}
+          bgcolor: `hsla(var(--severity-${tone}) / 0.06)`,
+          border: `1px solid hsla(var(--severity-${tone}) / 0.18)`,
+          cursor: canJump ? 'pointer' : 'default',
+          transition: 'background 0.15s ease, border-color 0.15s ease',
+          ...(canJump && {
+            '&:hover': {
+              bgcolor: `hsla(var(--severity-${tone}) / 0.1)`,
+              borderColor: `hsla(var(--severity-${tone}) / 0.35)`,
+            },
+            '&:focus-visible': {
+              outline: 'none',
+              borderColor: `hsl(var(--severity-${tone}))`,
+              boxShadow: `0 0 0 2px hsla(var(--severity-${tone}) / 0.25)`,
+            },
+          }),
+        }}
+      >
+        <Icon
+          size={13}
+          style={{ color: `hsl(var(--severity-${tone}))`, flexShrink: 0 }}
+        />
+        <Typography
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            fontSize: '0.74rem',
+            color: 'hsl(var(--foreground))',
+            lineHeight: 1.4,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+          title={message}
+        >
+          {message}
+        </Typography>
+        {canJump && (
+          <Tooltip title={`Open Decision #${(jumpDecisionIndex ?? 0) + 1} in detailed timeline`} placement="top" arrow>
+            <ArrowUpRight
+              size={13}
+              style={{ color: `hsl(var(--severity-${tone}))`, flexShrink: 0 }}
+            />
+          </Tooltip>
+        )}
+        <Tooltip title="Dismiss for this execution" placement="top" arrow>
+          <IconButton
+            size="small"
+            onClick={handleDismiss}
+            sx={{
+              p: 0.25,
+              ml: 0.25,
+              color: 'hsl(var(--muted-foreground))',
+              '&:hover': {
+                color: 'hsl(var(--foreground))',
+                bgcolor: 'hsla(var(--foreground) / 0.06)',
+              },
+            }}
+            aria-label="Dismiss diagnosis"
+          >
+            <X size={12} />
+          </IconButton>
+        </Tooltip>
+      </Box>
     </Box>
   );
 };
