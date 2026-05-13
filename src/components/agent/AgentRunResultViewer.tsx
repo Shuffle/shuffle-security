@@ -101,16 +101,24 @@ export const getFailureInfo = (run: AgentRun): { reason: string } | null => {
 
 /**
  * Pull the subtree(s) of the parsed result that may contain real failure
- * signals. We deliberately ONLY look at `decisions` and `decision_string` —
- * the agent's own per-step records of what it did. Everything else
- * (`input`, `messages`, `system`, prompts, etc.) is the prompt context we
- * sent IN to the model, so matching error keywords there produces false
- * positives like "Auth Failure (401/403)" appearing in the system prompt.
+ * signals. We deliberately ONLY look at:
+ *   • `decision_string` — the agent's own final summary
+ *   • each `decisions[i].run_details` — the actual upstream tool result
+ *
+ * Everything else (input, messages, system prompts, the decision's own
+ * `fields`/parameters that echo what we asked for) is request context. If
+ * we matched error keywords there we would flag the run as broken just
+ * because the prompt happened to mention "Auth Failure" or "error".
  */
 const getDiagnosableScope = (parsed: any): unknown => {
   if (!parsed || typeof parsed !== 'object') return null;
   const scope: Record<string, unknown> = {};
-  if (parsed.decisions !== undefined) scope.decisions = parsed.decisions;
+  if (Array.isArray(parsed.decisions)) {
+    const runDetails = parsed.decisions
+      .map((d: any) => (d && typeof d === 'object' ? d.run_details : undefined))
+      .filter((rd: unknown) => rd !== undefined && rd !== null);
+    if (runDetails.length > 0) scope.run_details = runDetails;
+  }
   if (parsed.decision_string !== undefined) scope.decision_string = parsed.decision_string;
   return Object.keys(scope).length > 0 ? scope : null;
 };
