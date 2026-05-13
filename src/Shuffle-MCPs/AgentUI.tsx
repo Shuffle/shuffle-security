@@ -471,9 +471,15 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
       data-timeline-index={index}
       sx={{
         borderTop: index === 0 ? 'none' : '1px solid hsl(var(--border))',
-        bgcolor: open ? 'hsl(var(--muted) / 0.3)' : 'transparent',
-        transition: 'background 0.15s ease',
+        bgcolor: highlight
+          ? 'hsla(var(--severity-medium) / 0.12)'
+          : open
+            ? 'hsl(var(--muted) / 0.3)'
+            : 'transparent',
+        transition: 'background 0.6s ease, box-shadow 0.6s ease',
         scrollMarginTop: 96,
+        position: 'relative',
+        boxShadow: highlight ? 'inset 0 0 0 2px hsla(var(--severity-medium) / 0.55)' : 'none',
       }}
     >
       <Box
