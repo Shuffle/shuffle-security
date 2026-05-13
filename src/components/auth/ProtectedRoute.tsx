@@ -11,8 +11,13 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
 
-  // Allow public access when authorization + org params are present (shared links)
-  const hasPublicAccess = searchParams.has('authorization') && searchParams.has('org');
+  // Allow public access when an authorization token is present alongside a
+  // resource selector — `org` for shared incident links, `execution_id` for
+  // shared agent run links. Both are pre-authorized via the token in the URL,
+  // so the login wall would just block a legitimately scoped page.
+  const hasPublicAccess =
+    searchParams.has('authorization') &&
+    (searchParams.has('org') || searchParams.has('execution_id'));
   if (hasPublicAccess) {
     return <>{children}</>;
   }
