@@ -28,7 +28,7 @@ function setMetaTag(property: string, content: string, isOg = false) {
 
 export function usePageMeta({ title, description, image, url, type = 'website', jsonLd }: PageMeta) {
   useEffect(() => {
-    const fullTitle = title === BASE_TITLE ? title : `${title} | ${BASE_TITLE}`;
+    const fullTitle = title === BASE_TITLE || title.includes(BASE_TITLE) ? title : `${title} | ${BASE_TITLE}`;
     const fullUrl = url ? `${BASE_URL}${url}` : window.location.href;
     const img = image || DEFAULT_IMAGE;
 
