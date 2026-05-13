@@ -483,15 +483,15 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
       }}
     >
       <Box
-        onClick={onToggle}
+        onClick={isProcessing ? undefined : onToggle}
         sx={{
           display: 'flex',
           alignItems: 'center',
           gap: 1.5,
           px: 2,
           py: 1.25,
-          cursor: 'pointer',
-          '&:hover': { bgcolor: 'hsl(var(--muted) / 0.4)' },
+          cursor: isProcessing ? 'default' : 'pointer',
+          '&:hover': isProcessing ? {} : { bgcolor: 'hsl(var(--muted) / 0.4)' },
         }}
       >
         <Box sx={{ width: 24, display: 'flex', justifyContent: 'center' }}>
