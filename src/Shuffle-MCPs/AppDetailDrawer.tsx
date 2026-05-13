@@ -542,7 +542,7 @@ export default function AppDetailDrawer({
                   appId={matchingEntries[0]?.app?.id || matchingEntries[0]?.id || appName || ''}
                   categories={appInfo?.categories}
                 />
-                <SingulActionsPreview appName={appName || ''} categories={appInfo?.categories} activeOrgId={activeOrgId} />
+                <SingulActionsPreview appName={appName || ''} appIcon={resolvedImage} categories={appInfo?.categories} activeOrgId={activeOrgId} />
               </>
             )}
           </>
