@@ -47,6 +47,7 @@ import {
 } from 'lucide-react';
 import { useAgentPermissions, RiskLevel, AgentPermissionCategory, AgentPermission } from '@/hooks/useAgentPermissions';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
+import AssignedToolsSection from '@/components/agent/AssignedToolsSection';
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   Radar: <Radar size={20} />,
@@ -555,6 +556,8 @@ const PermissionsPanel = ({ compact = false }: PermissionsPanelProps) => {
           <Alert severity="error" sx={{ mb: 2, fontSize: '0.8rem' }}>{error}</Alert>
         )}
 
+        <AssignedToolsSection compact />
+
         {/* Categories — compact drawer style */}
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
           {categories.map((cat) => {
@@ -763,6 +766,7 @@ const PermissionsPanel = ({ compact = false }: PermissionsPanelProps) => {
   // ── Full page variant ──
   return (
     <>
+      <AssignedToolsSection />
       {/* Summary bar */}
       <Box
         sx={{

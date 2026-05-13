@@ -3,7 +3,8 @@
  * Shows real-time agent execution feed, stats, and activity overview
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -28,7 +29,7 @@ import {
   AgentExecutionDrawer,
   type AgentRun,
 } from '@/Shuffle-MCPs';
-import { useAuth } from '@/context/AuthContext';
+
 import { useAgentPermissions } from '@/hooks/useAgentPermissions';
 import { usePageMeta } from '@/hooks/usePageMeta';
 
@@ -42,8 +43,7 @@ const AgentActivityPage = () => {
   const { stats, refresh } = useAgentActivity();
 
   const { enabledPermissions, totalPermissions } = useAgentPermissions();
-  const { userInfo } = useAuth();
-  const isSupport = userInfo?.support === true;
+  
   const [permissionsOpen, setPermissionsOpen] = useState(false);
   const [permissionsInitialTab, setPermissionsInitialTab] = useState<AgentRunDrawerTab>('run');
   const [selectedRun, setSelectedRun] = useState<AgentRun | null>(null);
@@ -54,6 +54,16 @@ const AgentActivityPage = () => {
     setPermissionsOpen(true);
   };
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get('openPermissions') === '1') {
+      setPermissionsInitialTab('permissions');
+      setPermissionsOpen(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete('openPermissions');
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   return (
     <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
@@ -158,29 +168,22 @@ const AgentActivityPage = () => {
             >
               Run Agent
             </Button>
-            <Tooltip title="Coming soon">
-              <span>
-                <Button
-                  size="small"
-                  startIcon={<Settings size={14} />}
-                  disabled
-                  sx={{
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: 1.5,
-                    color: 'hsl(var(--muted-foreground))',
-                    textTransform: 'none',
-                    fontSize: '0.8rem',
-                    px: 1.5,
-                    '&.Mui-disabled': {
-                      color: 'hsl(var(--muted-foreground) / 0.5)',
-                      borderColor: 'hsl(var(--border))',
-                    },
-                  }}
-                >
-                  Permissions
-                </Button>
-              </span>
-            </Tooltip>
+            <Button
+              size="small"
+              startIcon={<Settings size={14} />}
+              onClick={() => openDrawer(1)}
+              sx={{
+                border: '1px solid hsl(var(--border))',
+                borderRadius: 1.5,
+                color: 'hsl(var(--muted-foreground))',
+                textTransform: 'none',
+                fontSize: '0.8rem',
+                px: 1.5,
+                '&:hover': { bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--foreground))' },
+              }}
+            >
+              Permissions
+            </Button>
           </Box>
         </Box>
 
@@ -206,8 +209,6 @@ const AgentActivityPage = () => {
         onClose={() => setPermissionsOpen(false)}
         initialTab={permissionsInitialTab}
         permissionsSlot={<PermissionsPanel compact />}
-        permissionsDisabled={!isSupport}
-        permissionsDisabledTooltip="Coming soon"
         localLLMSlot={<LocalLLMConfig />}
       />
 
