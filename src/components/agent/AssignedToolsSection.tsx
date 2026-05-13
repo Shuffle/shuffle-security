@@ -273,6 +273,7 @@ const AssignedToolsSection = ({
                   name={t}
                   icon={icons[t]}
                   onRemove={() => removeAgentTool(t, agent, actionType)}
+                  onOpen={appDetail ? () => appDetail.openApp(t) : undefined}
                 />
               ))}
             </Box>
