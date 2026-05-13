@@ -47,6 +47,7 @@ import {
 } from 'lucide-react';
 import { useAgentPermissions, RiskLevel, AgentPermissionCategory, AgentPermission } from '@/hooks/useAgentPermissions';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
+import AssignedToolsSection from '@/components/agent/AssignedToolsSection';
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   Radar: <Radar size={20} />,
