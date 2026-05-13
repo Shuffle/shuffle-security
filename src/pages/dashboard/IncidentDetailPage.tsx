@@ -9147,6 +9147,7 @@ const IncidentDetailPage = () => {
         open={!!selectedAgentRun}
         onClose={() => setSelectedAgentRun(null)}
         run={selectedAgentRun}
+        topBanner={<AgentRunDiagnosisBanner run={selectedAgentRun} />}
       />
     </motion.div>
   );
