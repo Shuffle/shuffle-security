@@ -98,12 +98,16 @@ export const useSourceAppImage = (
     fetchAuthenticatedApps(crossOrgId)
       .then((authData) => {
         if (cancelled) return;
-        const match = authData.find((a) => {
-          const appName = (a.app?.name || '').toLowerCase().replace(/[\s_-]/g, '');
-          return appName === normalized;
-        });
-        if (match?.app?.large_image) {
-          setImage(match.app.large_image);
+        // Exact normalized-name match first; otherwise loose contains-match
+        // so aliases like `outlook_office365` still hit a connected
+        // `Microsoft Outlook` auth.
+        const candidates = authData.map((a) => ({
+          a, name: (a.app?.name || '').toLowerCase().replace(/[\s_-]/g, ''),
+        })).filter((c) => c.name);
+        const match = candidates.find((c) => c.name === normalized)
+          || candidates.find((c) => c.name.includes(normalized) || normalized.includes(c.name));
+        if (match?.a.app?.large_image) {
+          setImage(match.a.app.large_image);
           return;
         }
         // No authenticated match — try the public Algolia catalog.
