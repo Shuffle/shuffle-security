@@ -2780,7 +2780,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                         </Typography>
                         <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
                           {decisionCount} step{decisionCount === 1 ? '' : 's'}
-                          {durationSec != null ? ` · ${durationSec}s` : ''}
+                          {durationSec != null ? ` · ${durationSec.toFixed(1)}s` : ''}
                         </Typography>
                         <Box sx={{ flexGrow: 1 }} />
                         <Tooltip title="Rerun the agent with the same input">
