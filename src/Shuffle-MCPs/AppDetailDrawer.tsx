@@ -173,33 +173,36 @@ export default function AppDetailDrawer({
     const searchName = appName.replace(/_/g, ' ');
 
     (async () => {
-      // Algolia lookup (best-effort — may fail with 429 or be unavailable).
-      // Skip entirely when the caller already passed an appId.
+      // Algolia lookup — also runs when caller passed an appId, so we still get
+      // the image/description/categories that the caller didn't have.
       let algoliaId: string | null = appId || null;
-      if (!algoliaId) {
-        try {
-          const { algoliasearch } = await import('algoliasearch');
-          const client = algoliasearch('JNSS5CFDZZ', '33e4e3564f4f060e96e0531957bed552');
-          const res = await client.search({
-            requests: [{ indexName: 'appsearch', query: searchName, hitsPerPage: 10 }],
-          });
-          const hits = (res as any)?.results?.[0]?.hits || [];
-          const match = hits.find((h: any) =>
+      try {
+        const { algoliasearch } = await import('algoliasearch');
+        const client = algoliasearch('JNSS5CFDZZ', '33e4e3564f4f060e96e0531957bed552');
+        const res = await client.search({
+          requests: [{ indexName: 'appsearch', query: searchName, hitsPerPage: 10 }],
+        });
+        const hits = (res as any)?.results?.[0]?.hits || [];
+        const match =
+          (algoliaId && hits.find((h: any) => h.objectID === algoliaId)) ||
+          hits.find((h: any) =>
             h.name?.toLowerCase().replace(/[\s_\-]+/g, '_') === normalizedName
-          ) || (hits.length > 0 ? hits[0] : null);
+          ) ||
+          (hits.length > 0 ? hits[0] : null);
 
-          if (match) {
+        if (match) {
+          if (!algoliaId) {
             algoliaId = match.objectID;
             setResolvedAlgoliaId(algoliaId);
-            setAppInfo({
-              name: match.name || searchName,
-              description: match.description || '',
-              large_image: match.image_url || '',
-              categories: match.categories || [],
-            });
           }
-        } catch {}
-      }
+          setAppInfo({
+            name: match.name || searchName,
+            description: match.description || '',
+            large_image: match.image_url || '',
+            categories: match.categories || [],
+          });
+        }
+      } catch {}
 
       // Fallback: if Algolia didn't resolve an id, look it up via /api/v1/apps
       // This also doubles as our activation check below.
