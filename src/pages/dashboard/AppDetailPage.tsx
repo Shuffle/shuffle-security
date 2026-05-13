@@ -385,6 +385,12 @@ const AppDetailPage = () => {
   const hasValidAuth = matchingEntries.some(e => e.validation?.valid === true);
   const hasAnyAuth = matchingEntries.length > 0;
   const authCount = matchingEntries.length;
+  // If the app has any authentication entry it must already be present in
+  // the tenant — auth cannot exist on an un-activated app. Avoid showing a
+  // stale "Activate" button when the app is clearly already in use.
+  const effectiveActivated = isActivated === null
+    ? (hasAnyAuth ? true : null)
+    : (isActivated || hasAnyAuth);
 
   const [authExpanded, setAuthExpanded] = useState(!hasValidAuth);
   const displayName = (appInfo?.name || appname || '').replace(/_/g, ' ');
