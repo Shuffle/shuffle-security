@@ -2683,6 +2683,13 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   return next;
                 });
                 goToTab('detailed');
+                // Pulse the row + its output box so the user can see exactly
+                // which step the diagnosis was pulled from. Auto-clears after
+                // a couple seconds; re-clicking restarts the pulse.
+                setHighlightedIndex(targetIndex);
+                window.setTimeout(() => {
+                  setHighlightedIndex((curr) => (curr === targetIndex ? null : curr));
+                }, 2800);
                 // Wait for the detailed view to mount, then scroll the row
                 // into view. requestAnimationFrame x2 ensures layout has
                 // settled after the tab switch.
