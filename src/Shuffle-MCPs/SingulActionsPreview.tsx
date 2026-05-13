@@ -20,12 +20,46 @@ import {
   TextField,
   IconButton,
   Tooltip,
+  Avatar,
 } from '@mui/material';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
+import LockIcon from '@mui/icons-material/Lock';
 import { Code2, Terminal } from 'lucide-react';
 import { API_CONFIG, getApiUrl, getAuthHeader, getTrackedOrgId } from '@/Shuffle-MCPs/api';
+import JsonView from 'react18-json-view';
+import 'react18-json-view/src/style.css';
+import 'react18-json-view/src/dark.css';
+
+/** Recursively parse JSON-looking strings into objects/arrays so JsonView can collapse them. */
+const deepParseJsonStrings = (obj: any, depth = 0): any => {
+  if (depth > 5) return obj;
+  if (typeof obj === 'string') {
+    const trimmed = obj.trim();
+    if (
+      (trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+      (trimmed.startsWith('[') && trimmed.endsWith(']'))
+    ) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (typeof parsed === 'object' && parsed !== null) {
+          return deepParseJsonStrings(parsed, depth + 1);
+        }
+      } catch { /* ignore */ }
+    }
+    return obj;
+  }
+  if (Array.isArray(obj)) return obj.map((item) => deepParseJsonStrings(item, depth + 1));
+  if (obj && typeof obj === 'object') {
+    const result: Record<string, any> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      result[key] = deepParseJsonStrings(value, depth + 1);
+    }
+    return result;
+  }
+  return obj;
+};
 
 interface SingulAction {
   name: string;
