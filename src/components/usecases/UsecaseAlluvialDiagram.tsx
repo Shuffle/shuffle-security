@@ -1607,32 +1607,23 @@ export default function UsecaseAlluvialDiagram({
             });
             import('sonner').then(({ toast }) => toast.success(`${matchedApp.name.replace(/_/g, ' ')} added to ingestion sources`));
           } else if (searchOpen === 'right') {
-            // Add to forward workflow
-            setForwardAppNames(prev => {
-              const next = new Set(prev || []);
-              next.add(normalizeAppName(matchedApp.name));
-              return next;
-            });
             setHiddenApps(prev => {
               const next = new Set(prev);
               next.delete(matchedApp.name.toLowerCase());
               return next;
             });
-            // Trigger forward workflow update
-            fetch(getApiUrl('/api/v2/workflows/generate'), {
-              method: 'POST',
-              credentials: 'include',
-              headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                label: 'Forward Tickets',
-                app_name: matchedApp.name,
-                category: 'cases',
-              }),
-            }).then(() => {
-              import('sonner').then(({ toast }) => toast.success(`${matchedApp.name.replace(/_/g, ' ')} added to forwarding`));
-            }).catch(() => {
-              import('sonner').then(({ toast }) => toast.error('Failed to update forwarding'));
-            });
+            // Activate the app in the tenant first (no-op if already active),
+            // then push the FULL desired Forward Tickets list and verify.
+            (async () => {
+              try {
+                if (matchedApp.id) {
+                  await fetch(getApiUrl(`/api/v1/apps/${matchedApp.id}/activate`), {
+                    method: 'POST', credentials: 'include', headers: { ...getAuthHeader() },
+                  });
+                }
+              } catch {}
+              handleToggleForward(matchedApp.name, true);
+            })();
           }
           setSearchOpen(null);
           return true; // Handled — don't open detail drawer
