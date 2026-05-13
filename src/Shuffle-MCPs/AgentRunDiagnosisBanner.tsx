@@ -28,7 +28,7 @@ interface Props {
   onJumpToEvidence?: (decisionIndex: number) => void;
 }
 
-const AgentRunDiagnosisBanner = ({ run, sx }: Props) => {
+const AgentRunDiagnosisBanner = ({ run, sx, onJumpToEvidence }: Props) => {
   if (!run) return null;
 
   const status = (run.status || '').toUpperCase();
@@ -41,6 +41,8 @@ const AgentRunDiagnosisBanner = ({ run, sx }: Props) => {
 
   // Show only the FIRST evidence entry — repeated identical errors are noise.
   const firstEvidence = diagnosis?.evidence?.[0] || null;
+  const jumpDecisionIndex = firstEvidence ? extractDecisionIndex(firstEvidence.path) : null;
+  const canJump = !!(onJumpToEvidence && jumpDecisionIndex !== null);
 
   return (
     <Box sx={{ px: 2.5, pb: 0.5, ...(sx || {}) }}>
