@@ -606,20 +606,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
               </Tooltip>
             </>
           )}
-          {item.type === 'agent' && (
-            <Tooltip title="Rerun the agent with the same input">
-              <span>
-                <IconButton
-                  size="small"
-                  disabled={agentRequestLoading}
-                  onClick={onRerunAgent}
-                  sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
-                >
-                  <RestartAltIcon sx={{ fontSize: 16 }} />
-                </IconButton>
-              </span>
-            </Tooltip>
-          )}
+          {item.type === 'agent' && null}
           {item.type === 'decision' && (() => {
             const action = details?.action;
             const cat = item.category;
@@ -2866,18 +2853,6 @@ const AgentUI: React.FC<AgentUIProps> = ({
                           {durationSec != null ? ` · ${durationSec.toFixed(2)}s` : ''}
                         </Typography>
                         <Box sx={{ flexGrow: 1 }} />
-                        <Tooltip title="Rerun the agent with the same input">
-                          <span>
-                            <IconButton
-                              size="small"
-                              disabled={agentRequestLoading}
-                              onClick={rerunAgent}
-                              sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
-                            >
-                              <RestartAltIcon sx={{ fontSize: 16 }} />
-                            </IconButton>
-                          </span>
-                        </Tooltip>
                       </Box>
                       {pendingAuthApps.map(({ appName, appId, icon }) => {
                         const pretty = appName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
