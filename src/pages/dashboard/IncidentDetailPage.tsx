@@ -1448,6 +1448,11 @@ const IncidentDetailPage = () => {
   // Merge by correlation key, unioning `ref` lists and taking the max
   // `amount` so a value-hit never reduces a richer datastore-hit. Filter
   // out entries the user has chosen to ignore.
+  const correlationVisibilityOptions = useMemo(() => ({
+    currentIncidentId: id,
+    isValueIgnored: ignoredObs.isValueIgnored,
+  }), [id, ignoredObs.isValueIgnored]);
+
   const visibleCorrelations = useMemo(() => {
     const merged = new Map<string, { key: string; amount: number; ref: string[] }>();
     const add = (c: { key: string; amount: number; ref: string[] }) => {
@@ -1465,8 +1470,8 @@ const IncidentDetailPage = () => {
     };
     correlations.forEach(add);
     Object.values(obsCorrelations).forEach(entry => (entry?.data || []).forEach(add));
-    return Array.from(merged.values()).filter(c => !ignoredObs.isValueIgnored(c.key));
-  }, [correlations, obsCorrelations, ignoredObs]);
+    return filterMeaningfulCorrelations(Array.from(merged.values()), correlationVisibilityOptions);
+  }, [correlations, obsCorrelations, correlationVisibilityOptions]);
 
   // ---------------------------------------------------------------------
   // Merge candidate suggestions
