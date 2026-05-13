@@ -2549,7 +2549,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                           {durationSec != null ? ` · ${durationSec}s` : ''}
                         </Typography>
                       </Box>
-                      {pendingAuthApps.map(({ appName, appId }) => {
+                      {pendingAuthApps.map(({ appName, appId, icon }) => {
                         const pretty = appName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
                         return (
                           <Box
@@ -2564,7 +2564,20 @@ const AgentUI: React.FC<AgentUIProps> = ({
                               bgcolor: 'hsla(var(--severity-medium) / 0.08)',
                             }}
                           >
-                            <LockIcon sx={{ color: 'hsl(var(--severity-medium))', fontSize: 20 }} />
+                            <Avatar
+                              src={icon || undefined}
+                              alt={pretty}
+                              variant="rounded"
+                              sx={{
+                                width: 32, height: 32, borderRadius: 1,
+                                bgcolor: 'hsl(var(--muted))',
+                                color: 'hsl(var(--foreground))',
+                                fontSize: '0.85rem', fontWeight: 700,
+                                '& img': { objectFit: 'contain', p: 0.25 },
+                              }}
+                            >
+                              {pretty.charAt(0)}
+                            </Avatar>
                             <Box sx={{ flex: 1, minWidth: 0 }}>
                               <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
                                 {pretty} requires authentication
@@ -2576,8 +2589,29 @@ const AgentUI: React.FC<AgentUIProps> = ({
                             <Button
                               variant="contained"
                               size="small"
-                              startIcon={<LockIcon />}
+                              startIcon={
+                                <Avatar
+                                  src={icon || undefined}
+                                  alt=""
+                                  variant="rounded"
+                                  sx={{
+                                    width: 18, height: 18, borderRadius: 0.5,
+                                    bgcolor: 'hsl(var(--background) / 0.4)',
+                                    color: 'hsl(var(--background))',
+                                    fontSize: '0.7rem', fontWeight: 700,
+                                    '& img': { objectFit: 'contain' },
+                                  }}
+                                >
+                                  {pretty.charAt(0)}
+                                </Avatar>
+                              }
                               onClick={() => setAuthDrawerApp({ name: appName, id: appId })}
+                              sx={{
+                                height: 36, textTransform: 'none', fontWeight: 600,
+                                bgcolor: 'hsl(var(--foreground))',
+                                color: 'hsl(var(--background))',
+                                '&:hover': { bgcolor: 'hsl(var(--foreground) / 0.88)' },
+                              }}
                             >
                               Authenticate {pretty}
                             </Button>
