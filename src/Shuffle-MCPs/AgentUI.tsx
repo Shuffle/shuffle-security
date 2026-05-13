@@ -207,6 +207,12 @@ export interface AgentUIProps {
   /** Called whenever the active top-level view changes (start / simple / detailed). */
   onViewChange?: (view: 'start' | 'simple' | 'detailed') => void;
   /**
+   * Called when the user saves a recurring schedule (cron expression) for the
+   * current prompt. When omitted, a toast is shown indicating scheduling is
+   * not wired up in this embed.
+   */
+  onSchedule?: (info: { cron: string; input: string }) => void | Promise<void>;
+  /**
    * Optional Shuffle API key. When provided, all `/api/v1/*` calls made by
    * this component (agent run, polling, app autoload, icon fallback) use it
    * via `Authorization: Bearer <apiKey>`. When omitted, falls back to the
