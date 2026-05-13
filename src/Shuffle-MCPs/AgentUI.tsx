@@ -2146,10 +2146,12 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   ? scheduleDisabledReason
                   : hasExecution
                     ? 'Schedule this prompt to run repeatedly on a cron schedule'
-                    : 'Run this prompt once successfully — then you can schedule it to repeat on a cron schedule.';
+                    : agentRequestLoading
+                      ? 'Scheduling unlocks once this run finishes successfully — you cannot schedule a prompt that has not completed yet.'
+                      : 'Scheduling is available after the prompt finishes a successful one-shot run. Submit it first, then come back here to set a cron schedule.';
                 return (
                   <Tooltip title={tip} placement="top" arrow>
-                    <span>
+                    <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
                       <IconButton
                         type="button"
                         onClick={(e) => { if (canSchedule) setScheduleAnchor(e.currentTarget); }}
@@ -2163,7 +2165,28 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       >
                         <ScheduleIcon sx={{ fontSize: 18 }} />
                       </IconButton>
-                    </span>
+                      {!canSchedule && (
+                        <Typography
+                          component="span"
+                          sx={{
+                            fontSize: '0.65rem',
+                            fontWeight: 600,
+                            color: 'hsl(var(--muted-foreground))',
+                            textTransform: 'uppercase',
+                            letterSpacing: 0.5,
+                            px: 0.75,
+                            py: 0.25,
+                            borderRadius: 999,
+                            border: '1px solid hsl(var(--border))',
+                            bgcolor: 'hsl(var(--muted) / 0.4)',
+                            whiteSpace: 'nowrap',
+                            pointerEvents: 'none',
+                          }}
+                        >
+                          {agentRequestLoading ? 'Locked while running' : 'Available after run'}
+                        </Typography>
+                      )}
+                    </Box>
                   </Tooltip>
                 );
               })()}
