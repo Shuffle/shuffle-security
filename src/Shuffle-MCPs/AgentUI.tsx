@@ -1031,6 +1031,35 @@ const AgentUI: React.FC<AgentUIProps> = ({
     return m;
   }, [chosenApps, executionApps, resolvedToolApps]);
 
+  // Predicate used by the auth banners — an app is considered authenticated
+  // when it appears in the caller's `availableApps` list (which is populated
+  // from /api/v1/apps/authentication and only includes valid entries).
+  const isAppAuthenticated = useCallback((appName: string) => {
+    if (!appName) return false;
+    const norm = (s: string) => s.toLowerCase().replace(/[\s-]+/g, '_');
+    const target = norm(appName);
+    return availableApps.some((a) => norm(a.name || '') === target);
+  }, [availableApps]);
+
+  // Unique apps (across all decisions) that returned `app_authentication`
+  // and are not yet authenticated. Powers the Simple-view banners.
+  const pendingAuthApps = useMemo(() => {
+    const decisions: any[] = (agentData?.decisions as any[]) || [];
+    const seen = new Set<string>();
+    const out: { appName: string; appId: string | null }[] = [];
+    for (const d of decisions) {
+      const req = extractAuthRequest(d);
+      if (!req) continue;
+      const slug = req.appName.toLowerCase().replace(/[\s-]+/g, '_');
+      if (seen.has(slug)) continue;
+      if (isAppAuthenticated(req.appName)) continue;
+      seen.add(slug);
+      const appId = req.appId || appsById[req.appName]?.id || appsById[slug]?.id || null;
+      out.push({ appName: req.appName, appId });
+    }
+    return out;
+  }, [agentData, appsById, isAppAuthenticated]);
+
   // Sync controlled `apps` prop into local state.
   useEffect(() => {
     if (apps) setChosenApps(apps);
