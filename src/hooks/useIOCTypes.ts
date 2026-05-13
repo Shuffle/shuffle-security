@@ -74,7 +74,7 @@ export const DEFAULT_IOC_TYPES: IOCType[] = [
   // the match from starting in the middle of an alphanumeric run, and the
   // trailing class stops at whitespace, quotes, brackets, or commas so JSON
   // / HTML / CSV context is not swallowed.
-  { name: 'url', regex: '(?:^|(?<=[^A-Za-z0-9._%+\\-]))(?:h(?:tt|xx)ps?(?:://|\\[://\\])|)[A-Za-z0-9](?:[A-Za-z0-9\\-]*[A-Za-z0-9])?(?:(?:\\.|\\[\\.\\]|\\(\\.\\))[A-Za-z0-9](?:[A-Za-z0-9\\-]*[A-Za-z0-9])?)*(?:\\.|\\[\\.\\]|\\(\\.\\))[A-Za-z]{2,24}(?:\\[?\\/\\]?|[?#])[^\\s"\'<>\\{\\}\\[\\],]*', description: 'URL — matches embedded URLs, including defanged forms (host[.]tld, hxxp://)', category: 'common', enabled: true },
+  { name: 'url', regex: '(?:^|(?<=[^A-Za-z0-9._%+\\-]))(?:(?:h(?:tt|xx)ps?(?:://|\\[://\\]))(?:\\d{1,3}(?:\\.|\\[\\.\\]|\\(\\.\\))){3}\\d{1,3}(?::\\d{1,5})?(?:[\\/?#][^\\s"\'<>\\{\\}\\[\\],]*)?|(?:h(?:tt|xx)ps?(?:://|\\[://\\])|)[A-Za-z0-9](?:[A-Za-z0-9\\-]*[A-Za-z0-9])?(?:(?:\\.|\\[\\.\\]|\\(\\.\\))[A-Za-z0-9](?:[A-Za-z0-9\\-]*[A-Za-z0-9])?)*(?:\\.|\\[\\.\\]|\\(\\.\\))[A-Za-z]{2,24}(?::\\d{1,5})?(?:\\[?\\/\\]?|[?#])[^\\s"\'<>\\{\\}\\[\\],]*)', description: 'URL — matches embedded URLs, defanged forms (host[.]tld, hxxp://), and IP-based URLs with optional port', category: 'common', enabled: true },
   // IPv4: each octet 0-255, but no leading zeros (e.g. "026" historically meant
   // octal 22 — modern parsers either reject it or interpret unexpectedly, so we
   // treat it as invalid). Strict octet: 25[0-5] | 2[0-4]X | 1XX | [1-9]?X.
