@@ -416,7 +416,7 @@ const SingulActionsPreview = ({
   const lineCount = useMemo(() => Math.max(snippet.split('\n').length, 1), [snippet]);
 
   return (
-    <Box sx={{ mb: 3, opacity: isDisabled ? 0.55 : 1 }}>
+    <Box sx={{ mt: 5, mb: 3, opacity: isDisabled ? 0.55 : 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
         <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '0.95rem' }}>
           Try individual actions

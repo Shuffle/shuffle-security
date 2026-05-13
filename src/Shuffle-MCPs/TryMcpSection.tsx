@@ -21,7 +21,7 @@ export interface TryMcpSectionProps {
 export default function TryMcpSection({ appName, appIcon, appId, categories }: TryMcpSectionProps) {
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.15 }}>
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ mt: 5, mb: 3 }}>
         <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '0.95rem', mb: 1.5 }}>
           Try MCP
         </Typography>
