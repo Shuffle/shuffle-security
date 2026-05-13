@@ -1885,9 +1885,19 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const goToTab = (t: TabKey) => {
     if (t === 'start') {
       setShowStarter(true);
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('agentView');
+        return next;
+      }, { replace: true });
     } else {
       setShowStarter(false);
       setViewMode(t);
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.set('agentView', t);
+        return next;
+      }, { replace: true });
     }
   };
 
