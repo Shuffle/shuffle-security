@@ -3245,28 +3245,20 @@ function UsecaseCard({
                     px: 1,
                     bgcolor: effectiveEnabled
                       ? 'transparent'
-                      : !hasValidatedSource
-                        ? 'hsl(var(--muted))'
-                        : 'hsl(var(--primary))',
+                      : 'hsl(var(--primary))',
                     color: effectiveEnabled
                       ? 'hsl(var(--foreground))'
-                      : !hasValidatedSource
-                        ? 'hsl(var(--muted-foreground))'
-                        : 'hsl(var(--primary-foreground))',
+                      : 'hsl(var(--primary-foreground))',
                     borderColor: effectiveEnabled
                       ? 'hsl(var(--border))'
-                      : !hasValidatedSource
-                        ? 'hsl(var(--border))'
-                        : 'transparent',
-                    borderStyle: !effectiveEnabled && !hasValidatedSource ? 'dashed' : 'solid',
+                      : 'transparent',
+                    borderStyle: 'solid',
                     boxShadow: 'none',
                     '&:hover': {
                       bgcolor: effectiveEnabled
                         ? 'transparent'
-                        : !hasValidatedSource
-                          ? 'hsl(var(--muted))'
-                          : 'hsl(var(--primary) / 0.9)',
-                      borderColor: effectiveEnabled ? 'hsl(var(--foreground) / 0.4)' : !hasValidatedSource ? 'hsl(var(--border))' : 'transparent',
+                        : 'hsl(var(--primary) / 0.9)',
+                      borderColor: effectiveEnabled ? 'hsl(var(--foreground) / 0.4)' : 'transparent',
                       boxShadow: 'none',
                     },
                   }}
