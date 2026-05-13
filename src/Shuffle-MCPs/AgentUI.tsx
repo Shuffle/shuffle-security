@@ -1767,6 +1767,36 @@ const AgentUI: React.FC<AgentUIProps> = ({
     }
   };
 
+  // Schedule guardrails: do not allow scheduling when the run required a
+  // continuation (the oneshot prompt did not work) or did not perform any
+  // actual app/tool actions (nothing meaningful would run on a schedule).
+  const { scheduleDisabledReason } = useMemo(() => {
+    const decisions: any[] = (agentData?.decisions as any[]) || [];
+    const NON_ACTION_CATS = new Set(['finish', 'finalise', 'ask', 'agent', 'processing']);
+    const NON_ACTION_ACTIONS = new Set(['finish', 'finalise', 'ask']);
+    const finishCount = decisions.filter(
+      (d) => d?.action === 'finish' || d?.action === 'finalise' || d?.category === 'finish' || d?.category === 'finalise',
+    ).length;
+    const continuedAfterFinish = decisions.some((d) =>
+      Array.isArray(d?.fields) && d.fields.some((f: any) => String(f?.key || '').toLowerCase() === 'continue' && f?.value),
+    );
+    const hadContinuation = finishCount > 1 || continuedAfterFinish;
+    const actionCount = decisions.filter((d) => {
+      const cat = String(d?.category || '').toLowerCase();
+      const act = String(d?.action || '').toLowerCase();
+      if (NON_ACTION_CATS.has(cat)) return false;
+      if (NON_ACTION_ACTIONS.has(act)) return false;
+      return true;
+    }).length;
+    if (hadContinuation) {
+      return { scheduleDisabledReason: 'Cannot schedule: this run needed a follow-up message ("Add more details to continue this task…"), so the one-shot prompt did not succeed on its own. Refine the prompt until it finishes in one go before scheduling.' };
+    }
+    if (actionCount === 0) {
+      return { scheduleDisabledReason: 'Cannot schedule: no app actions were performed in this run. Either no app permissions were granted, or none of the selected apps were used. There is nothing to repeat on a schedule.' };
+    }
+    return { scheduleDisabledReason: '' };
+  }, [agentData]);
+
   // Rendered inline (not a nested component) so it isn't remounted on every
   // parent re-render — the live duration ticker would otherwise reset hover
   // state every second and swallow clicks.
@@ -1827,15 +1857,17 @@ const AgentUI: React.FC<AgentUIProps> = ({
         </span>
       </Tooltip>
       <Box sx={{ width: '1px', height: 20, bgcolor: 'hsl(var(--border))', mx: 0.25 }} />
-      <Tooltip title="Schedule this prompt to run repeatedly on a cron schedule">
+      <Tooltip title={scheduleDisabledReason || 'Schedule this prompt to run repeatedly on a cron schedule'}>
         <span>
           <IconButton
             size="small"
-            onClick={(e) => setScheduleAnchor(e.currentTarget)}
+            onClick={(e) => { if (!scheduleDisabledReason) setScheduleAnchor(e.currentTarget); }}
+            disabled={Boolean(scheduleDisabledReason)}
             sx={{
               width: 30, height: 30,
               color: 'hsl(var(--muted-foreground))',
               '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted))' },
+              '&.Mui-disabled': { opacity: 0.4, color: 'hsl(var(--muted-foreground))' },
             }}
           >
             <ScheduleIcon sx={{ fontSize: 16 }} />
