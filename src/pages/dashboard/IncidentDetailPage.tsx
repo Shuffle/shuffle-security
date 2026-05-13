@@ -212,6 +212,7 @@ interface DisplayIncident {
 // Status and severity colors now imported from shared config
 import { statusConfig, severityColors, getOCSFStatus } from '@/config/incidentConfig';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { getAgentTools as getAssignedAgentTools } from '@/lib/agentTools';
 
 /**
  * Normalize any timestamp (Unix seconds, ms, µs, ns, ISO string, numeric string) to ms epoch.
