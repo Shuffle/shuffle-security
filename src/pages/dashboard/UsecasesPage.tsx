@@ -2028,48 +2028,73 @@ function UsecaseDetailContent({
                   Coming soon
                 </Box>
               ) : canToggle && flow.automationLabel && (
-                <Button
-                  size="small"
-                  variant="contained"
-                  disableElevation
-                  onClick={handleToggle}
-                  disabled={toggling}
-                  startIcon={
-                    toggling ? (
-                      <CircularProgress size={12} sx={{ color: 'inherit' }} />
-                    ) : effectiveEnabled ? (
-                      <PowerOff size={14} />
-                    ) : (
-                      <Power size={14} />
-                    )
+                <Tooltip
+                  title={
+                    !effectiveEnabled && !hasValidatedSource
+                      ? `No active ${flow.source ? categoryLabel(flow.source) : 'source'} integration is connected. Enabling will not do anything until a ${flow.source ? categoryLabel(flow.source) : 'source'} tool is authenticated — the workflow will be disabled again automatically.`
+                      : ''
                   }
-                  sx={{
-                    flexShrink: 0,
-                    textTransform: 'none',
-                    fontSize: '0.78rem',
-                    fontWeight: 600,
-                    minHeight: 0,
-                    py: 0.6,
-                    px: 1.25,
-                    bgcolor: effectiveEnabled
-                      ? 'transparent'
-                      : 'hsl(var(--primary, 24 100% 50%))',
-                    color: effectiveEnabled
-                      ? 'hsl(var(--foreground))'
-                      : 'hsl(var(--primary-foreground, 0 0% 100%))',
-                    border: effectiveEnabled ? '1px solid hsl(var(--border))' : '1px solid transparent',
-                    boxShadow: 'none',
-                    '&:hover': {
-                      bgcolor: effectiveEnabled
-                        ? 'transparent'
-                        : 'hsla(24, 100%, 50%, 0.9)',
-                      borderColor: effectiveEnabled ? 'hsl(var(--foreground) / 0.4)' : 'transparent',
-                      boxShadow: 'none',
-                    },
-                  }}
+                  placement="top"
+                  arrow
+                  disableHoverListener={effectiveEnabled || hasValidatedSource}
+                  disableFocusListener={effectiveEnabled || hasValidatedSource}
+                  disableTouchListener={effectiveEnabled || hasValidatedSource}
                 >
-                  {effectiveEnabled ? 'Disable' : 'Enable'}
-                </Button>
+                  <span>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      disableElevation
+                      onClick={handleToggle}
+                      disabled={toggling}
+                      startIcon={
+                        toggling ? (
+                          <CircularProgress size={12} sx={{ color: 'inherit' }} />
+                        ) : effectiveEnabled ? (
+                          <PowerOff size={14} />
+                        ) : (
+                          <Power size={14} />
+                        )
+                      }
+                      sx={{
+                        flexShrink: 0,
+                        textTransform: 'none',
+                        fontSize: '0.78rem',
+                        fontWeight: 600,
+                        minHeight: 0,
+                        py: 0.6,
+                        px: 1.25,
+                        bgcolor: effectiveEnabled
+                          ? 'transparent'
+                          : !hasValidatedSource
+                            ? 'hsl(var(--muted))'
+                            : 'hsl(var(--primary, 24 100% 50%))',
+                        color: effectiveEnabled
+                          ? 'hsl(var(--foreground))'
+                          : !hasValidatedSource
+                            ? 'hsl(var(--muted-foreground))'
+                            : 'hsl(var(--primary-foreground, 0 0% 100%))',
+                        border: effectiveEnabled
+                          ? '1px solid hsl(var(--border))'
+                          : !hasValidatedSource
+                            ? '1px dashed hsl(var(--border))'
+                            : '1px solid transparent',
+                        boxShadow: 'none',
+                        '&:hover': {
+                          bgcolor: effectiveEnabled
+                            ? 'transparent'
+                            : !hasValidatedSource
+                              ? 'hsl(var(--muted))'
+                              : 'hsla(24, 100%, 50%, 0.9)',
+                          borderColor: effectiveEnabled ? 'hsl(var(--foreground) / 0.4)' : !hasValidatedSource ? 'hsl(var(--border))' : 'transparent',
+                          boxShadow: 'none',
+                        },
+                      }}
+                    >
+                      {effectiveEnabled ? 'Disable' : 'Enable'}
+                    </Button>
+                  </span>
+                </Tooltip>
               )}
             </Box>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1.25 }}>
