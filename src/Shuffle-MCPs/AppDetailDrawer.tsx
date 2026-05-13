@@ -515,21 +515,23 @@ export default function AppDetailDrawer({
             )}
 
             {/* Authentication section */}
-            <AppAuthSection
-              displayName={displayName}
-              algoliaApp={algoliaApp}
-              resolvedAlgoliaId={resolvedAlgoliaId}
-              authState={authState}
-              expanded={authExpanded}
-              onToggle={() => setAuthExpanded(prev => !prev)}
-              authCount={authCount}
-              isAuthenticated={isAuthenticated}
-              matchingEntries={matchingEntries}
-              onAuthChange={handleAuthChange}
-              onTestConnection={(appId, authId) => handleTestConnection(appName || appId, authId)}
-              onSaveAuth={(appId, creds) => handleSaveAuth(appId, creds, appName || undefined)}
-              onRefreshAuth={refreshAuth}
-            />
+            <Box id="app-auth-section">
+              <AppAuthSection
+                displayName={displayName}
+                algoliaApp={algoliaApp}
+                resolvedAlgoliaId={resolvedAlgoliaId}
+                authState={authState}
+                expanded={authExpanded}
+                onToggle={() => setAuthExpanded(prev => !prev)}
+                authCount={authCount}
+                isAuthenticated={isAuthenticated}
+                matchingEntries={matchingEntries}
+                onAuthChange={handleAuthChange}
+                onTestConnection={(appId, authId) => handleTestConnection(appName || appId, authId)}
+                onSaveAuth={(appId, creds) => handleSaveAuth(appId, creds, appName || undefined)}
+                onRefreshAuth={refreshAuth}
+              />
+            </Box>
 
             {/* MCP Chat + individual actions */}
             {isAuthenticated && (
@@ -540,7 +542,7 @@ export default function AppDetailDrawer({
                   appId={matchingEntries[0]?.app?.id || matchingEntries[0]?.id || appName || ''}
                   categories={appInfo?.categories}
                 />
-                <SingulActionsPreview appName={appName || ''} categories={appInfo?.categories} activeOrgId={activeOrgId} />
+                <SingulActionsPreview appName={appName || ''} appIcon={resolvedImage} categories={appInfo?.categories} activeOrgId={activeOrgId} />
               </>
             )}
           </>
