@@ -43,7 +43,7 @@ const AgentActivityPage = () => {
   const { stats, refresh } = useAgentActivity();
 
   const { enabledPermissions, totalPermissions } = useAgentPermissions();
-  const { userInfo: _userInfo } = useAuth();
+  
   const [permissionsOpen, setPermissionsOpen] = useState(false);
   const [permissionsInitialTab, setPermissionsInitialTab] = useState<AgentRunDrawerTab>('run');
   const [selectedRun, setSelectedRun] = useState<AgentRun | null>(null);
