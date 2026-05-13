@@ -8713,7 +8713,7 @@ const IncidentDetailPage = () => {
         </motion.div>
       )}
 
-      {activeTab === 6 && unmappedOriginal && (
+      {activeTab === 6 && unmappedOriginal && (<motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
         /* Original Data Tab */
         <Box sx={{
           bgcolor: 'action.hover',
