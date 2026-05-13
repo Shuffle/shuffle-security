@@ -572,7 +572,7 @@ const AgentRunResultViewer = ({ run }: AgentRunResultViewerProps) => {
                       if (entry) entry.count += 1;
                       else seen.set(key, { ev, count: 1, firstIdx: idx });
                     });
-                    return Array.from(seen.values()).map(({ ev, count, firstIdx: idx }) => (
+                    return Array.from(seen.values()).slice(0, 1).map(({ ev, count, firstIdx: idx }) => (
                     <Box
                       key={`${ev.path}-${idx}`}
                       sx={{
