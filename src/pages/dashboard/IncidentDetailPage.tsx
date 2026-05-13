@@ -213,6 +213,7 @@ interface DisplayIncident {
 import { statusConfig, severityColors, getOCSFStatus } from '@/config/incidentConfig';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { getAgentTools as getAssignedAgentTools } from '@/lib/agentTools';
+import { openAgentDrawer } from '@/lib/agentDrawer';
 
 /**
  * Normalize any timestamp (Unix seconds, ms, µs, ns, ISO string, numeric string) to ms epoch.
@@ -5594,9 +5595,9 @@ const IncidentDetailPage = () => {
                 disableInteractive
               >
                 <Box
-                  component={Link}
-                  to="/agent?openPermissions=1"
-                  onClick={(e) => e.stopPropagation()}
+                  component="button"
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); openAgentDrawer('permissions'); }}
                   sx={{
                     fontWeight: 600,
                     color: 'rgba(236, 81, 124, 0.95)',
@@ -5604,7 +5605,9 @@ const IncidentDetailPage = () => {
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
                     maxWidth: 220,
-                    textDecoration: 'none',
+                    background: 'transparent',
+                    border: 'none',
+                    p: 0,
                     borderBottom: '1px dashed rgba(236, 81, 124, 0.5)',
                     cursor: 'pointer',
                     '&:hover': {
@@ -5621,21 +5624,24 @@ const IncidentDetailPage = () => {
             <>
               <span>AI Agent has no tools —</span>
               <Box
-                component={Link}
-                to="/agent?openPermissions=1"
-                onClick={(e) => e.stopPropagation()}
+                component="button"
+                type="button"
+                onClick={(e) => { e.stopPropagation(); openAgentDrawer('permissions'); }}
                 sx={{
                   fontWeight: 600,
                   color: 'rgba(236, 81, 124, 0.95)',
-                  textDecoration: 'none',
+                  background: 'transparent',
+                  border: 'none',
+                  p: 0,
                   borderBottom: '1px dashed rgba(236, 81, 124, 0.5)',
+                  cursor: 'pointer',
                   '&:hover': {
                     color: 'rgba(236, 81, 124, 1)',
                     borderBottomColor: 'rgba(236, 81, 124, 0.9)',
                   },
                 }}
               >
-                Assign default tools
+                Assign tools
               </Box>
             </>
           )}
