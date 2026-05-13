@@ -541,7 +541,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
         }}>
           <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>{normalizeMarkdown(displayLabel)}</Markdown>
         </Box>
-        <Tooltip title={`Duration: ${dur.toFixed(1)}s · ${itemStart ? new Date(itemStart * 1000).toLocaleString() : ''}`}>
+        <Tooltip title={`Duration: ${dur.toFixed(2)}s · ${itemStart ? new Date(itemStart * 1000).toLocaleString() : ''}`}>
           <Box sx={{ width: maxWidth, position: 'relative', height: 10, flexShrink: 0 }}>
             {dur > 0 && (
               <Box sx={{
@@ -558,7 +558,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
           </Box>
         </Tooltip>
         <Box sx={{ width: 60, fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', textAlign: 'right' }}>
-          {dur > 0 ? `${dur.toFixed(1)}s` : ''}
+          {dur > 0 ? `${dur.toFixed(2)}s` : ''}
         </Box>
         {/* Per-row actions: Approve/Deny, Rerun */}
         <Box
@@ -2780,7 +2780,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                         </Typography>
                         <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
                           {decisionCount} step{decisionCount === 1 ? '' : 's'}
-                          {durationSec != null ? ` · ${durationSec.toFixed(1)}s` : ''}
+                          {durationSec != null ? ` · ${durationSec.toFixed(2)}s` : ''}
                         </Typography>
                         <Box sx={{ flexGrow: 1 }} />
                         <Tooltip title="Rerun the agent with the same input">
