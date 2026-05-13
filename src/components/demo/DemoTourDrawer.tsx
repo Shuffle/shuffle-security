@@ -561,17 +561,17 @@ export const DemoTourDrawer = () => {
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, ml: isBottom ? 0 : 'auto' }}>
-                <Tooltip title={isBottom ? 'Dock to right' : 'Dock to bottom'} arrow>
+                <Tooltip title={isBottom ? 'Dock to right' : 'Dock to bottom'} arrow slotProps={{ popper: { sx: { zIndex: 10000 } } }}>
                   <IconButton onClick={toggleDock} size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                     {isBottom ? <PanelRight size={15} /> : <PanelBottom size={15} />}
                   </IconButton>
                 </Tooltip>
-                <Tooltip title="Minimize" arrow>
+                <Tooltip title="Minimize" arrow slotProps={{ popper: { sx: { zIndex: 10000 } } }}>
                   <IconButton onClick={minimizeTour} size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                     <Minus size={16} />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title="Close demo mode" arrow>
+                <Tooltip title="Close demo mode" arrow slotProps={{ popper: { sx: { zIndex: 10000 } } }}>
                   <IconButton onClick={closeTour} size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                     <X size={16} />
                   </IconButton>
