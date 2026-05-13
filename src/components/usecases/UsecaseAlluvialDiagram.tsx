@@ -135,6 +135,7 @@ function getStatusColor(app: AppNode): string {
 function AppBubble({ app, size = 40, highlighted = false, isSample = false, disabled = false, side = 'left', onClickApp, onRemoveApp, onToggleSync, onVisitApp, webhookInfo, onWebhookToggled }: { app: AppNode; size?: number; highlighted?: boolean; isSample?: boolean; disabled?: boolean; side?: 'left' | 'right'; onClickApp?: (appName: string) => void; onRemoveApp?: (appName: string) => void; onToggleSync?: (appName: string, enabled: boolean) => void; onVisitApp?: (appName: string) => void; webhookInfo?: { url: string | null; exists: boolean; enabled: boolean; workflowId: string | null }; onWebhookToggled?: () => void }) {
   const [imgFailed, setImgFailed] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const [tooltipOpen, setTooltipOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -146,13 +147,26 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
   const isWebhook = app.id === 'webhook-ingestion';
   const webhookEnabled = webhookOptimistic !== null ? webhookOptimistic : (webhookInfo?.enabled ?? false);
 
+  const closeTooltip = useCallback(() => {
+    setTooltipOpen(false);
+    setHovered(false);
+  }, []);
+
+  const openTooltip = useCallback(() => {
+    if (!popoverOpen && !confirmRemoveOpen) {
+      setTooltipOpen(true);
+    }
+  }, [confirmRemoveOpen, popoverOpen]);
+
   const handleClick = (e: React.MouseEvent<HTMLElement>) => {
     if (isSample) return;
+    closeTooltip();
     setAnchorEl(e.currentTarget);
   };
 
   const handleToggle = () => {
     setAnchorEl(null);
+    closeTooltip();
     onToggleSync?.(app.name, !isEnabled);
   };
 
@@ -301,26 +315,31 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
         }
         placement="bottom"
         arrow
-        open={popoverOpen ? false : undefined}
-        disableHoverListener={popoverOpen}
-        disableFocusListener={popoverOpen}
-        disableTouchListener={popoverOpen}
+        open={!popoverOpen && !confirmRemoveOpen && tooltipOpen}
+        disableInteractive
+        disableHoverListener
+        disableFocusListener
+        disableTouchListener
       >
-        {isSample ? content : (
-          <Box
-            onClick={handleClick}
-            sx={{ textDecoration: 'none', cursor: 'pointer' }}
-          >
-            {content}
-          </Box>
-        )}
+        <Box
+          onMouseEnter={openTooltip}
+          onMouseLeave={closeTooltip}
+          onMouseDown={closeTooltip}
+          onClick={isSample ? undefined : handleClick}
+          sx={{ textDecoration: 'none', cursor: 'pointer' }}
+        >
+          {content}
+        </Box>
       </Tooltip>
 
       {/* Popover — webhook or app actions */}
       <Popover
         open={popoverOpen}
         anchorEl={anchorEl}
-        onClose={() => setAnchorEl(null)}
+        onClose={() => {
+          setAnchorEl(null);
+          closeTooltip();
+        }}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         transformOrigin={{ vertical: 'top', horizontal: 'center' }}
         sx={{ zIndex: 1600 }}
