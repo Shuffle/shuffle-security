@@ -1569,8 +1569,23 @@ const IncidentDetailPage = () => {
     probeOrgs();
   }, [id, subOrgs, parentOrg, userInfo?.active_org?.id, crossOrgId, searchParams]);
 
-  // Fetch agent runs for this incident — deferred until incident loaded
-  const { runsForIncident: agentRuns, isLoading: agentRunsLoading, refetch: refetchAgentRuns } = useIncidentAgentRuns(!loading ? id : undefined);
+  // Fetch agent runs for this incident — deferred until incident loaded.
+  // While an @AIAgent comment is awaiting a reply, poll fast (5s); otherwise
+  // we fall back to a 60s cadence inside the hook.
+  const hasPendingAgentMention = useMemo(() => {
+    return activity.some((a: any) => {
+      if (a?.ai_handled !== true) return false;
+      const text = String(a?.content || '');
+      if (!/@\s*ai[\s_-]*agent\b/i.test(text)) return false;
+      const replied = activity.some((r: any) => {
+        if (r?.replyToId !== a.id) return false;
+        const u = r?.user || '';
+        return /agent|ai\s*agent|aiagent/i.test(u);
+      });
+      return !replied;
+    });
+  }, [activity]);
+  const { runsForIncident: agentRuns, isLoading: agentRunsLoading, refetch: refetchAgentRuns } = useIncidentAgentRuns(!loading ? id : undefined, hasPendingAgentMention);
   const [selectedAgentRun, setSelectedAgentRun] = useState<AgentRun | null>(null);
 
   // Load incident function (reusable for refresh)
