@@ -1908,6 +1908,21 @@ const AgentUI: React.FC<AgentUIProps> = ({
   }, [activeTab, onViewChange]);
   const goToTab = (t: TabKey) => {
     if (t === 'start') {
+      // Seed the starter form with the current run's prompt + tools so the
+      // user can tweak and resubmit instead of starting from a blank slate.
+      const runInput =
+        agentData?.original_input ||
+        (() => {
+          const msgs = (agentData as any)?.input?.messages || [];
+          const m = msgs.find((m: any) => m?.role === 'user');
+          return m?.content || '';
+        })();
+      if (runInput && typeof runInput === 'string') {
+        setActionInput(runInput);
+      }
+      if (executionApps.length > 0) {
+        setChosenApps(executionApps);
+      }
       setShowStarter(true);
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
