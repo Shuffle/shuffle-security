@@ -62,6 +62,7 @@ const AgentExecutionDrawer = ({
   paperSx,
   headerSx,
   bodySx,
+  topBanner,
 }: AgentExecutionDrawerProps) => {
   const statusKey = (run?.status || '').toUpperCase();
   const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.WAITING;
