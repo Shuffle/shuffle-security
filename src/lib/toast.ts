@@ -146,7 +146,7 @@ const buildContent = (
 
 const mapOptions = (opts?: LegacyOptions): ToastOptions | undefined => {
   if (!opts) return undefined;
-  const { description: _d, duration, title: _t, action: _a, cancel: _c, id, ...rest } = opts;
+  const { description: _d, duration, title: _t, action: _a, cancel: _c, icon: _i, id, ...rest } = opts;
   const out: ToastOptions = { ...(rest as ToastOptions) };
   if (typeof duration === 'number') {
     // react-toastify uses `false` for sticky; Infinity is invalid and causes
