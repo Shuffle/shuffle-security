@@ -1711,6 +1711,7 @@ function UsecaseDetailContent({
   isEnabled = false,
   canToggle = false,
   isAuthenticated = true,
+  hasValidatedSource = true,
   onToggled,
   workflows = [],
 }: {
@@ -1727,6 +1728,8 @@ function UsecaseDetailContent({
   canToggle?: boolean;
   /** Whether the viewer is logged in — drives the guest CTA banner */
   isAuthenticated?: boolean;
+  /** Whether the user has at least one validated source-tool feeding this flow's source category */
+  hasValidatedSource?: boolean;
   /** Called after successful generation so the parent can trust the requested workflow state */
   onToggled?: (label: string, enabled: boolean) => void;
   /** Org workflows from /api/v1/workflows — used to render the "Linked Workflows" section */
