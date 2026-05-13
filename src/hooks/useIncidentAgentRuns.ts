@@ -1,10 +1,11 @@
 /**
  * Hook to fetch and cache agent activity for the incidents context.
  *
- * - When called WITHOUT an incident key (e.g. list views), uses a 60s staleTime
- *   so it fires at most once per minute.
- * - When called WITH an incident key (detail page), polls every 15s and treats
- *   data as immediately stale so in-flight runs become visible quickly.
+ * Polling strategy (detail context only):
+ *   - Active @AIAgent mention awaiting a reply  → every 5s
+ *   - A run is currently in-flight              → every 5s
+ *   - Otherwise                                  → every 60s
+ * List/non-detail callers do not poll; they rely on a 60s staleTime.
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -13,29 +14,28 @@ import { getAgentRunsForIncident } from '@/lib/agentParsers';
 
 const AGENT_RUNS_QUERY_KEY = ['agent-activity-incidents'];
 
-export const useIncidentAgentRuns = (incidentKey?: string) => {
+export const useIncidentAgentRuns = (
+  incidentKey?: string,
+  hasPendingAgentMention = false,
+) => {
   const isDetailContext = !!incidentKey;
 
   const { data: allRuns = [], isLoading, error, refetch } = useQuery<AgentRun[]>({
     queryKey: AGENT_RUNS_QUERY_KEY,
     queryFn: async () => {
-      // Bump the limit on detail pages so we don't miss a fresh in-flight run
-      // when there are many recent executions.
       const result = await searchAgentActivity({ limit: isDetailContext ? 100 : 50 });
       return result.success ? result.runs : [];
     },
-    // On the incident detail page, refresh aggressively so newly-started runs
-    // show up quickly. Poll faster while ANY run is currently in-flight so
-    // status flips (Running -> Completed) appear in near real-time.
     staleTime: isDetailContext ? 0 : 60_000,
     refetchInterval: isDetailContext
       ? (query) => {
+          if (hasPendingAgentMention) return 5_000;
           const runs = (query.state.data as AgentRun[] | undefined) || [];
           const hasInFlight = runs.some((r) => {
             const s = (r.status || '').toUpperCase();
             return s === 'EXECUTING' || s === 'WAITING' || s === 'RUNNING';
           });
-          return hasInFlight ? 4_000 : 15_000;
+          return hasInFlight ? 5_000 : 60_000;
         }
       : false,
     refetchOnWindowFocus: isDetailContext,
