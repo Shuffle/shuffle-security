@@ -3912,6 +3912,11 @@ const IncidentDetailPage = () => {
           </Box>
         </Box>
       )}
+      {/* Inline enrichment CTA — mirrors the Observables-tab banner so users
+          can enable automatic extraction without leaving the timeline. Shown
+          while the incident is fresh, just after a comment, or while the
+          user is typing a new comment. */}
+      {showEnrichmentInlineCTA && renderEnrichmentInlineCTA()}
       {/* Comment Input */}
       <Box sx={{ p: 2, borderBottom: '1px solid hsl(var(--border-subtle))' }}>
         <Box sx={{ display: 'flex', gap: 1 }}>
