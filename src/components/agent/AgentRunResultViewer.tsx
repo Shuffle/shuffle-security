@@ -198,7 +198,13 @@ export const diagnoseOutputWarning = (run: AgentRun): OutputDiagnosis | null => 
   const { parsed, raw } = parseRunResult(run);
   if (!parsed || typeof parsed !== 'object') return null;
 
-  const entries = collectEntries(parsed);
+  // Restrict the search to the agent's own decision records — see
+  // getDiagnosableScope. Walking the full result picks up keywords from the
+  // system prompt and produces false-positive "Auth Failure" diagnoses.
+  const scope = getDiagnosableScope(parsed);
+  if (!scope) return null;
+
+  const entries = collectEntries(scope);
   if (raw && entries.length === 0) entries.push({ path: '', value: raw });
 
   const haystack = entries.map((e) => e.value).join('\n');
