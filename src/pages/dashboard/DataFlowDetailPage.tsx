@@ -773,7 +773,7 @@ export const UsecaseDetailContent = ({
         })()}
         title={`Add ${searchDrawerQuery || ''} Tool`}
         subtitle="Search and authenticate an integration"
-        showPipelinesBanner={searchDrawerQuery?.toLowerCase() === 'siem'}
+        
       />
     </Box>
   );

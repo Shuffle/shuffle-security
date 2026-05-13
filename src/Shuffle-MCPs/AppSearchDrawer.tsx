@@ -239,7 +239,7 @@ export default function AppSearchDrawer({
 
         {/* Search body */}
         <Box sx={{ flex: 1, boxSizing: 'border-box', overflow: 'hidden', p: 3, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-          {showPipelinesBanner && <ShufflePipelinesBanner />}
+          
 
           {/* Connection path apps — shown first */}
           {connectionPathApps && connectionPathApps.length > 0 && (
