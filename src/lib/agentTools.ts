@@ -1,15 +1,25 @@
 /**
  * Agent tools assignment.
  *
- * Stores which tool/app names are assigned to which agent + action type.
- * Multiple agents can exist (default name "default"), each with multiple
- * action types (e.g. "timeline_reply", "task_reply"). The shape is a flat
- * array so it serializes cleanly and is easy to extend.
+ * Stores which tool/app references are assigned to which agent + action type.
+ * Each tool is stored as a `{ name, id }` object so downstream consumers
+ * (workflow generation, Algolia lookups) can resolve the canonical app
+ * without re-searching by name. Multiple agents can exist (default name
+ * "default"), each with multiple action types (e.g. "timeline_reply",
+ * "task_reply"). The shape is a flat array so it serializes cleanly:
  *
  *   [
- *     { agent: 'default', actionType: 'timeline_reply', tools: ['Wazuh', ...] },
+ *     {
+ *       agent: 'default',
+ *       actionType: 'timeline_reply',
+ *       tools: [{ name: 'Wazuh', id: 'wazuh' }, ...]
+ *     },
  *     ...
  *   ]
+ *
+ * Backward-compat: legacy entries persisted as plain strings are coerced
+ * into `{ name: <str>, id: <str> }` on read so older datastore values keep
+ * working until the next write upgrades them in-place.
  *
  * Persistence: backed by the Shuffle datastore under category
  * `shuffle-security_agent_tools` / key `config`. localStorage is used purely
@@ -33,11 +43,34 @@ export const AGENT_TOOLS_CHANGED_EVENT = 'agent-tools-changed';
 export const DEFAULT_AGENT = 'default';
 export const DEFAULT_ACTION_TYPE = 'timeline_reply';
 
+export interface ToolRef {
+  /** Display name from the catalog (e.g. "Microsoft Defender"). */
+  name: string;
+  /** Canonical app id — Algolia `objectID` when available; falls back to name. */
+  id: string;
+}
+
 export interface AgentToolsEntry {
   agent: string;
   actionType: string;
-  tools: string[];
+  tools: ToolRef[];
 }
+
+const coerceTool = (raw: unknown): ToolRef | null => {
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
+    return { name: trimmed, id: trimmed };
+  }
+  if (raw && typeof raw === 'object') {
+    const obj = raw as Record<string, unknown>;
+    const name = typeof obj.name === 'string' ? obj.name.trim() : '';
+    const id = typeof obj.id === 'string' && obj.id.trim() ? obj.id.trim() : name;
+    if (!name) return null;
+    return { name, id };
+  }
+  return null;
+};
 
 const sanitize = (parsed: unknown): AgentToolsEntry[] => {
   if (!Array.isArray(parsed)) return [];
@@ -46,7 +79,9 @@ const sanitize = (parsed: unknown): AgentToolsEntry[] => {
     .map((e: any) => ({
       agent: e.agent,
       actionType: e.actionType,
-      tools: e.tools.filter((t: unknown) => typeof t === 'string'),
+      tools: (e.tools as unknown[])
+        .map(coerceTool)
+        .filter((t): t is ToolRef => !!t),
     }));
 };
 
@@ -105,41 +140,65 @@ export const loadAgentToolsFromDatastore = async (): Promise<AgentToolsEntry[]> 
 export const getAgentTools = (
   agent: string = DEFAULT_AGENT,
   actionType: string = DEFAULT_ACTION_TYPE,
-): string[] => {
+): ToolRef[] => {
   const all = readAll();
   return all.find((e) => e.agent === agent && e.actionType === actionType)?.tools ?? [];
 };
 
+const dedupeTools = (tools: ToolRef[]): ToolRef[] => {
+  const seen = new Set<string>();
+  const out: ToolRef[] = [];
+  for (const t of tools) {
+    const key = (t.id || t.name).toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(t);
+  }
+  return out;
+};
+
 export const setAgentTools = (
-  tools: string[],
+  tools: ToolRef[],
   agent: string = DEFAULT_AGENT,
   actionType: string = DEFAULT_ACTION_TYPE,
 ) => {
   const all = readAll();
   const idx = all.findIndex((e) => e.agent === agent && e.actionType === actionType);
-  const dedup = Array.from(new Set(tools.filter((t) => typeof t === 'string' && t.trim().length > 0)));
+  const dedup = dedupeTools(tools.filter((t) => t && typeof t.name === 'string' && t.name.trim().length > 0));
   if (idx >= 0) all[idx] = { agent, actionType, tools: dedup };
   else all.push({ agent, actionType, tools: dedup });
   writeAll(all);
 };
 
 export const addAgentTool = (
-  tool: string,
+  tool: ToolRef,
   agent: string = DEFAULT_AGENT,
   actionType: string = DEFAULT_ACTION_TYPE,
 ) => {
+  const ref = coerceTool(tool);
+  if (!ref) return;
   const current = getAgentTools(agent, actionType);
-  if (current.includes(tool)) return;
-  setAgentTools([...current, tool], agent, actionType);
+  const key = (ref.id || ref.name).toLowerCase();
+  if (current.some((t) => (t.id || t.name).toLowerCase() === key)) return;
+  setAgentTools([...current, ref], agent, actionType);
 };
 
+/**
+ * Remove a tool by its canonical id. Falls back to name match for legacy
+ * entries that were persisted before ids were tracked.
+ */
 export const removeAgentTool = (
-  tool: string,
+  toolId: string,
   agent: string = DEFAULT_AGENT,
   actionType: string = DEFAULT_ACTION_TYPE,
 ) => {
+  const target = (toolId || '').toLowerCase();
   const current = getAgentTools(agent, actionType);
-  setAgentTools(current.filter((t) => t !== tool), agent, actionType);
+  setAgentTools(
+    current.filter((t) => (t.id || '').toLowerCase() !== target && t.name.toLowerCase() !== target),
+    agent,
+    actionType,
+  );
 };
 
 export const formatToolName = (name: string): string =>

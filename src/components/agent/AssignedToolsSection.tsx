@@ -20,6 +20,7 @@ import {
   formatToolName,
   getAgentTools,
   removeAgentTool,
+  type ToolRef,
 } from '@/lib/agentTools';
 
 interface Props {
@@ -151,7 +152,7 @@ const AssignedToolsSection = ({
   actionType = DEFAULT_ACTION_TYPE,
   compact = false,
 }: Props) => {
-  const [tools, setTools] = useState<string[]>(() => getAgentTools(agent, actionType));
+  const [tools, setTools] = useState<ToolRef[]>(() => getAgentTools(agent, actionType));
   const [pickerOpen, setPickerOpen] = useState(false);
   // Same drawer the global INTEGRATIONS strip uses, so clicking an
   // assigned-tool pill opens the catalog detail page for that app
@@ -170,7 +171,7 @@ const AssignedToolsSection = ({
     };
   }, [agent, actionType]);
 
-  const icons = useAppIcons(useMemo(() => tools, [tools]));
+  const icons = useAppIcons(useMemo(() => tools.map((t) => t.name), [tools]));
 
   const labelText =
     agent === DEFAULT_AGENT
@@ -269,11 +270,11 @@ const AssignedToolsSection = ({
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
               {tools.map((t) => (
                 <ToolPill
-                  key={t}
-                  name={t}
-                  icon={icons[t]}
-                  onRemove={() => removeAgentTool(t, agent, actionType)}
-                  onOpen={appDetail ? () => appDetail.openApp(t) : undefined}
+                  key={t.id || t.name}
+                  name={t.name}
+                  icon={icons[t.name]}
+                  onRemove={() => removeAgentTool(t.id || t.name, agent, actionType)}
+                  onOpen={appDetail ? () => appDetail.openApp(t.name) : undefined}
                 />
               ))}
             </Box>
@@ -287,7 +288,7 @@ const AssignedToolsSection = ({
         title="Assign tool"
         subtitle="Pick an app the agent is allowed to use"
         onQuickSelect={(app) => {
-          addAgentTool(app.name, agent, actionType);
+          addAgentTool({ name: app.name, id: app.id || app.name }, agent, actionType);
           setPickerOpen(false);
         }}
       />
