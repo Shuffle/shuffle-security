@@ -117,6 +117,7 @@ import { fetchApps } from '@/Shuffle-MCPs/appsCache';
 import { toast } from '@/Shuffle-MCPs/toast';
 import { runAgent } from '@/Shuffle-MCPs/agentRun';
 import { parseScheduleHint } from '@/Shuffle-MCPs/scheduleHint';
+import AgentRunDiagnosisBanner from '@/Shuffle-MCPs/AgentRunDiagnosisBanner';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -2626,6 +2627,10 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 fontSize: '0.85rem',
               }}>{error}</Box>
             )}
+
+            {/* Shared diagnosis banner — same component used by drawers and
+                incident pages, so the user sees identical reasoning here. */}
+            <AgentRunDiagnosisBanner run={execution} sx={{ px: 0, pb: 0, mb: 1.5 }} />
 
             {/* Simple summary view */}
             {viewMode === 'simple' && (
