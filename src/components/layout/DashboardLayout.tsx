@@ -6,6 +6,7 @@ import { MobileBottomNav } from './MobileBottomNav';
 import { AppDetailProvider, useAppDetail } from '@/Shuffle-MCPs/AppDetailContext';
 import AppDetailDrawer from '@/components/shared/AppDetailDrawer';
 import AgentHandoffWatcher from '@/components/agent/AgentHandoffWatcher';
+import GlobalAgentDrawer from '@/components/agent/GlobalAgentDrawer';
 import { useAuth } from '@/context/AuthContext';
 
 const drawerWidth = 260;
@@ -123,6 +124,9 @@ export const DashboardLayout = ({ children, defaultCollapsed }: DashboardLayoutP
             questions) as toasts on every page. Polls once per minute via the
             shared useAgentNotifications query. */}
         <AgentHandoffWatcher />
+        {/* Global Agent (Run / Permissions / Local LLM) drawer — mounted once
+            so any page can open it via openAgentDrawer(tab). */}
+        <GlobalAgentDrawer />
       </Box>
     </AppDetailProvider>
   );
