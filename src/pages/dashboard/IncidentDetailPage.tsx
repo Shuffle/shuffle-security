@@ -5593,7 +5593,8 @@ const IncidentDetailPage = () => {
             </>
           ) : (
             <>
-              <span>AI Agent has no tools —</span>
+              <span>Answering without tools — limited capability.</span>
+              <span style={{ marginLeft: 4 }} />
               <Box
                 component="button"
                 type="button"
