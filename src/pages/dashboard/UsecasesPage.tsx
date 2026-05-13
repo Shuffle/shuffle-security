@@ -2983,9 +2983,10 @@ function UsecasesPageInner() {
                   const id = drawerFlowId;
                   const name = usecases.find(u => u.id === id)?.label || id || '';
                   const slug = slugify(name);
-                  // Always navigate in the same view — no new tab.
+                  // Navigate to the details route. Do NOT call setDrawerFlowId(null)
+                  // — that helper navigates to /usecases and would clobber this nav,
+                  // and clearing the state nulls the flow the details view needs.
                   navigate(`/usecases/${slug}/details`);
-                  setDrawerFlowId(null);
                 }}
                 endIcon={<ExternalLink size={14} />}
                 sx={{
