@@ -138,6 +138,7 @@ import { isAIAssignee, deduplicateTasks, htmlToPlainText, decodeHtmlEntities, de
 import { useIncidentAgentRuns } from '@/hooks/useIncidentAgentRuns';
 import { useSourceAppImage } from '@/hooks/useSourceAppImage';
 import { AgentExecutionDrawer } from '@/Shuffle-MCPs';
+import AgentRunDiagnosisBanner from '@/components/agent/AgentRunDiagnosisBanner';
 import { getRunTitle, getRunIconColor, formatDuration as formatAgentRunDuration, getTimeAgo as getAgentTimeAgo, STATUS_CONFIG as AGENT_STATUS_CONFIG } from '@/components/agent/AgentRunHeader';
 import { getFailureInfo as getAgentFailureInfo, hasOutputWarning as hasAgentOutputWarning, diagnoseOutputWarning as diagnoseAgentOutputWarning } from '@/components/agent/AgentRunResultViewer';
 import AgentRunStatusBadge from '@/components/agent/AgentRunStatusBadge';
