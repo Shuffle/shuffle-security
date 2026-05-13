@@ -5390,13 +5390,11 @@ const IncidentDetailPage = () => {
     // timeout has elapsed we show a muted "timed out" pill instead.
     // Read the agent's currently-enabled tools (set on the Agent Permissions
     // drawer). We surface up to 3 names inline so users can see exactly what
-    // capabilities the agent has access to while it's responding.
-    // In demo mode we fake a realistic toolset so the inline placeholder
-    // always reads convincingly during the guided tour, regardless of what
-    // the user has configured locally.
-    const DEMO_AGENT_TOOLS = ['Wazuh', 'Outlook Office365', 'Microsoft Defender 365'];
+    // capabilities the agent has access to while it's responding. We
+    // intentionally DO NOT fall back to a hardcoded demo list — surfacing
+    // tool names that were never configured is misleading. If nothing is
+    // assigned, we render the indicator without a tools summary.
     const enabledAgentTools: string[] = (() => {
-      if (demoActive) return DEMO_AGENT_TOOLS;
       try {
         return getAssignedAgentTools();
       } catch {
