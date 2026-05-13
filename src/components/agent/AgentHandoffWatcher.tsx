@@ -216,7 +216,7 @@ const AgentHandoffWatcher = () => {
         },
         cancel: {
           label: 'Dismiss',
-          onClick: () => { /* sonner closes the toast on cancel click */ },
+          onClick: () => { dismissForToday(); },
         },
       });
     }
