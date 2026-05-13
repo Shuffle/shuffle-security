@@ -1792,7 +1792,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
       return { scheduleDisabledReason: 'Cannot schedule: this run needed a follow-up message ("Add more details to continue this task…"), so the one-shot prompt did not succeed on its own. Refine the prompt until it finishes in one go before scheduling.' };
     }
     if (actionCount === 0) {
-      return { scheduleDisabledReason: 'Cannot schedule: no app actions were performed in this run. Either no app permissions were granted, or none of the selected apps were used. There is nothing to repeat on a schedule.' };
+      return { scheduleDisabledReason: 'After running, agent runs can be scheduled to run regularly.' };
     }
     return { scheduleDisabledReason: '' };
   }, [agentData]);
