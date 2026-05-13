@@ -795,56 +795,123 @@ export default function UsecaseAlluvialDiagram({
     }, 3000);
   }, [allApps, ingestAppNames]);
 
-  // Toggle forwarding: add/remove app from Forward Tickets workflow
+  /**
+   * Re-fetch the Forward Tickets workflow and sync `forwardAppNames` from
+   * the backend (workflow is the source of truth, mirroring AutomationConfig
+   * on /onboarding/automate). Returns the freshly-extracted Set, or null if
+   * the workflow could not be fetched / parsed.
+   */
+  const refreshForwardWorkflow = useCallback(async (): Promise<Set<string> | null> => {
+    try {
+      const res = await fetch(getApiUrl('/api/v1/workflows'), {
+        credentials: 'include',
+        headers: { ...getAuthHeader() },
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      const workflows = Array.isArray(data) ? data : (data.workflows || []);
+      const forwardWf = findForwardTicketsWorkflow(workflows);
+      if (!forwardWf) {
+        setForwardAppNames(new Set());
+        return new Set();
+      }
+      const fresh = extractWorkflowAppNames(forwardWf);
+      setForwardAppNames(fresh);
+      return fresh;
+    } catch (err) {
+      console.warn('[AlluvialDiagram] refreshForwardWorkflow failed:', err);
+      return null;
+    }
+  }, []);
+
+  /**
+   * Push the desired full Forward Tickets app set to the backend (single
+   * source-of-truth pattern used by /onboarding/automate AutomationConfig).
+   * Sends every active app on every change, then re-fetches the workflow to
+   * verify the new state landed. Reverts optimistic UI on mismatch.
+   */
+  const pushForwardWorkflow = useCallback(async (
+    desiredAppNames: string[],
+    intent: { action: 'add' | 'remove' | 'sync'; appName?: string },
+  ): Promise<boolean> => {
+    const { toast } = await import('sonner');
+    try {
+      const res = await fetch(getApiUrl('/api/v2/workflows/generate'), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          label: 'Forward Tickets',
+          app_name: desiredAppNames.join(','),
+          category: 'cases',
+        }),
+      });
+      if (!res.ok) {
+        throw new Error(`generate failed: HTTP ${res.status}`);
+      }
+
+      // Verify the workflow now matches the desired state
+      const verified = await refreshForwardWorkflow();
+      const target = intent.appName ? normalizeAppName(intent.appName) : null;
+      const verb = intent.action === 'remove' ? 'removed from' : 'added to';
+      const label = intent.appName ? intent.appName.replace(/_/g, ' ') : 'Forwarding';
+
+      if (verified && target) {
+        const present = verified.has(target);
+        const expectedPresent = intent.action !== 'remove';
+        if (present !== expectedPresent) {
+          toast.warning(
+            `${label} not yet ${verb} forwarding`,
+            { description: 'The Forward Tickets workflow did not pick up the change. Check the workflow.' },
+          );
+          return false;
+        }
+      }
+      if (intent.action !== 'sync') {
+        toast.success(`${label} ${verb} forwarding`);
+      }
+      return true;
+    } catch (error) {
+      console.error('Failed to update Forward Tickets workflow:', error);
+      toast.error('Failed to update forwarding');
+      // Revert optimistic state from the workflow (real source of truth)
+      await refreshForwardWorkflow();
+      return false;
+    }
+  }, [refreshForwardWorkflow]);
+
+  // Toggle forwarding: add/remove app from Forward Tickets workflow.
+  // Mirrors the /onboarding/automate "Forward" pattern: send the FULL list
+  // of currently-forwarded apps every time, then verify by re-fetching.
   const handleToggleForward = useCallback((appName: string, enabled: boolean) => {
+    const normalized = normalizeAppName(appName);
+
+    // Optimistic UI update
     setForwardAppNames(prev => {
       const next = new Set(prev || []);
-      const normalized = normalizeAppName(appName);
-      if (enabled) {
-        next.add(normalized);
-      } else {
-        next.delete(normalized);
-      }
+      if (enabled) next.add(normalized); else next.delete(normalized);
       return next;
     });
 
-    // Update the backend
-    (async () => {
-      try {
-        const { toast } = await import('sonner');
-        if (enabled) {
-          await fetch(getApiUrl('/api/v2/workflows/generate'), {
-            method: 'POST',
-            credentials: 'include',
-            headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              label: 'Forward Tickets',
-              app_name: appName,
-              category: 'cases',
-            }),
-          });
-          toast.success(`${appName.replace(/_/g, ' ')} enabled for forwarding`);
-        } else {
-          await fetch(getApiUrl('/api/v2/workflows/generate'), {
-            method: 'POST',
-            credentials: 'include',
-            headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              label: 'Forward Tickets',
-              app_name: appName,
-              category: 'cases',
-              action_name: 'remove',
-            }),
-          });
-          toast.success(`${appName.replace(/_/g, ' ')} disabled for forwarding`);
-        }
-      } catch (error) {
-        console.error('Failed to update forwarding:', error);
-        const { toast } = await import('sonner');
-        toast.error('Failed to update forwarding');
-      }
-    })();
-  }, []);
+    // Build the desired full list (current ± this toggle), de-normalized to
+    // the app names the backend expects.
+    const currentSet = new Set(forwardAppNames || []);
+    if (enabled) currentSet.add(normalized); else currentSet.delete(normalized);
+
+    // Resolve normalized names back to display names (prefer allApps lookup,
+    // fall back to the raw input name for the toggled app).
+    const desiredAppNames: string[] = [];
+    currentSet.forEach(norm => {
+      const match = allApps.find(a => normalizeAppName(a.name) === norm);
+      if (match) desiredAppNames.push(match.name);
+      else if (norm === normalized) desiredAppNames.push(appName);
+    });
+
+    pushForwardWorkflow(desiredAppNames, {
+      action: enabled ? 'add' : 'remove',
+      appName,
+    });
+  }, [forwardAppNames, allApps, pushForwardWorkflow]);
 
   useEffect(() => {
     if (!isLoggedIn) { setLoading(false); return; }
