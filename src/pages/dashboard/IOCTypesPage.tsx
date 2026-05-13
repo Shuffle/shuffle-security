@@ -57,9 +57,9 @@ const getDefaultIOCTypes = (): IOCType[] =>
 const IOCTypesPage = () => {
 
   usePageMeta({
-    title: 'IOC types',
-    description: 'Configure indicator of compromise (IOC) types and enrichment priorities.',
-    url: '/incidents/ioc-types',
+    title: 'Observables',
+    description: 'Configure observable / indicator of compromise (IOC) types and enrichment priorities.',
+    url: '/incidents/observables',
   });
   const enrichmentStatus = useEnrichmentStatus();
   const { items, isLoading, error, fetchItems, addItem, removeItem } = useDatastore({ category: CATEGORY });
@@ -365,7 +365,7 @@ const IOCTypesPage = () => {
       <ThreatIntelAutomationBanner />
       <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Typography variant="h5" sx={{ fontWeight: 600 }}>IOC Types</Typography>
+          <Typography variant="h5" sx={{ fontWeight: 600 }}>Observables</Typography>
           {isLoading && <CircularProgress size={20} />}
           <Chip label={`${iocTypes.length} types`} size="small" variant="outlined" />
           <Chip label={`${enabledCount} enabled`} size="small" sx={{ bgcolor: 'hsl(var(--severity-low) / 0.12)', color: 'hsl(var(--severity-low))' }} />
