@@ -123,7 +123,7 @@ const AgentRunDiagnosisBanner = ({ run, sx, onJumpToEvidence, executionId }: Pro
           gap: 1,
           px: 1.25,
           py: 0.5,
-          borderRadius: 1,
+          borderRadius: 2,
           bgcolor: `hsla(var(--severity-${tone}) / 0.06)`,
           border: `1px solid hsla(var(--severity-${tone}) / 0.18)`,
           cursor: canJump ? 'pointer' : 'default',
