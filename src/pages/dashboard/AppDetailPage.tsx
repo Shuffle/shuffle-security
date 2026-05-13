@@ -512,21 +512,23 @@ const AppDetailPage = () => {
 
         {/* Authentication section */}
         {isAuthenticated ? (
-          <AppAuthSection
-            displayName={displayName}
-            algoliaApp={algoliaApp}
-            resolvedAlgoliaId={appInfo?.algoliaId || null}
-            authState={authState}
-            expanded={authExpanded}
-            onToggle={() => setAuthExpanded(prev => !prev)}
-            authCount={authCount}
-            isAuthenticated={isAuthenticated}
-            matchingEntries={matchingEntries}
-            onAuthChange={handleAuthChange}
-            onTestConnection={(appId, authId) => handleTestConnection(appname || appId, authId)}
-            onSaveAuth={(appId, creds) => handleSaveAuth(appname || appId, creds)}
-            onRefreshAuth={refreshAuth}
-          />
+          <Box id="app-auth-section">
+            <AppAuthSection
+              displayName={displayName}
+              algoliaApp={algoliaApp}
+              resolvedAlgoliaId={appInfo?.algoliaId || null}
+              authState={authState}
+              expanded={authExpanded}
+              onToggle={() => setAuthExpanded(prev => !prev)}
+              authCount={authCount}
+              isAuthenticated={isAuthenticated}
+              matchingEntries={matchingEntries}
+              onAuthChange={handleAuthChange}
+              onTestConnection={(appId, authId) => handleTestConnection(appname || appId, authId)}
+              onSaveAuth={(appId, creds) => handleSaveAuth(appname || appId, creds)}
+              onRefreshAuth={refreshAuth}
+            />
+          </Box>
         ) : (
           <Box sx={{ mb: 4 }}>
             <GuestLockedSection
