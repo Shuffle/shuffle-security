@@ -2086,12 +2086,19 @@ const AgentUI: React.FC<AgentUIProps> = ({
         <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', mb: 1.5 }}>
           Run this prompt automatically on a cron schedule.
         </Typography>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1.5 }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 0.5 }}>
           {([
+            ['Every 5 min', '*/5 * * * *'],
             ['Every 15 min', '*/15 * * * *'],
+            ['Every 30 min', '*/30 * * * *'],
             ['Hourly', '0 * * * *'],
+            ['Every 4 hours', '0 */4 * * *'],
+            ['Every 12 hours', '0 */12 * * *'],
             ['Daily 9am', '0 9 * * *'],
+            ['Daily midnight', '0 0 * * *'],
+            ['Weekdays 9am', '0 9 * * 1-5'],
             ['Weekly Mon', '0 9 * * 1'],
+            ['Monthly 1st', '0 9 1 * *'],
           ] as const).map(([label, expr]) => (
             <Chip
               key={expr}
@@ -2108,28 +2115,6 @@ const AgentUI: React.FC<AgentUIProps> = ({
             />
           ))}
         </Box>
-        <TextField
-          fullWidth
-          size="small"
-          value={scheduleCron}
-          onChange={(e) => setScheduleCron(e.target.value)}
-          placeholder="* * * * *"
-          label="Cron expression"
-          InputLabelProps={{ sx: { fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))' } }}
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              fontFamily: 'monospace',
-              fontSize: '0.85rem',
-              color: 'hsl(var(--foreground))',
-              '& fieldset': { borderColor: 'hsl(var(--border))' },
-              '&:hover fieldset': { borderColor: 'hsl(var(--muted-foreground))' },
-              '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
-            },
-          }}
-        />
-        <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', mt: 0.5, fontFamily: 'monospace' }}>
-          minute · hour · day · month · weekday
-        </Typography>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2 }}>
           <Button
             size="small"
