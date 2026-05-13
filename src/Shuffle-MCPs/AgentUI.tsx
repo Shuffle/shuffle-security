@@ -287,6 +287,43 @@ const validateJson = (raw: unknown): { valid: boolean; result: any } => {
   }
 };
 
+/**
+ * Detect whether a single decision came back asking for app authentication.
+ * Returns the app name (and optional id from `details.tool` when prefixed
+ * "app:<id>:<name>") so the caller can render an inline "Authenticate X"
+ * banner. Returns null when the decision did not request auth.
+ */
+const extractAuthRequest = (decision: any): { appName: string; appId: string | null } | null => {
+  if (!decision || typeof decision !== 'object') return null;
+  const raw = decision?.run_details?.raw_response;
+  let parsed: any = null;
+  if (typeof raw === 'string') {
+    try { parsed = JSON.parse(raw); } catch { parsed = null; }
+  } else if (raw && typeof raw === 'object') {
+    parsed = raw;
+  }
+  const needsAuth = parsed && (parsed.action === 'app_authentication' || parsed.app_authentication === true);
+  if (!needsAuth) return null;
+  let appName: string | undefined = parsed.app || parsed.app_name || parsed.appname;
+  let appId: string | null = null;
+  if (!appName && typeof decision?.tool === 'string') {
+    const t = decision.tool;
+    if (t.startsWith('app:')) {
+      const parts = t.split(':');
+      appId = parts[1] || null;
+      appName = parts[2] || t;
+    } else {
+      appName = t;
+    }
+  }
+  if (!appName) {
+    const f = (decision?.fields || []).find((x: any) => x?.key === 'app' || x?.key === 'app_name');
+    if (f?.value) appName = f.value;
+  }
+  if (!appName) return null;
+  return { appName, appId };
+};
+
 const STATUS_COLORS = {
   finished: 'hsl(142, 71%, 45%)',
   warning: 'hsl(38, 92%, 50%)',
