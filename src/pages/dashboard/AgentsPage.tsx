@@ -32,6 +32,7 @@ const AgentsPage = () => {
         open={selectedRun !== null}
         onClose={() => setSelectedRun(null)}
         run={selectedRun}
+        topBanner={<AgentRunDiagnosisBanner run={selectedRun} />}
       />
     </Box>
   );
