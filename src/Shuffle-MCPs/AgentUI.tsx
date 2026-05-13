@@ -2747,7 +2747,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   if (isRunning && effectiveStart) {
                     durationSec = Math.max(0, nowTick - effectiveStart);
                   } else if (totalDuration && totalDuration > 0) {
-                    durationSec = Math.round(totalDuration);
+                    durationSec = totalDuration;
                   }
                   // Detect a pending ASK decision (agent waiting on a user answer)
                   const pendingAsk = (agentData?.decisions || []).slice().reverse().find((d) => {
