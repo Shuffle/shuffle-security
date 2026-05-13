@@ -841,8 +841,14 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
             sx={{
               p: 2,
               borderRadius: 1.5,
-              border: '1px solid hsl(var(--border))',
+              border: highlight
+                ? '1px solid hsl(var(--severity-medium))'
+                : '1px solid hsl(var(--border))',
               bgcolor: 'hsl(var(--background))',
+              boxShadow: highlight
+                ? '0 0 0 3px hsla(var(--severity-medium) / 0.25)'
+                : 'none',
+              transition: 'border-color 0.6s ease, box-shadow 0.6s ease',
               overflow: 'auto',
               maxHeight: 400,
               fontFamily: '"JetBrains Mono", ui-monospace, monospace',
