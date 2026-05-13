@@ -2936,7 +2936,6 @@ function UsecasesPageInner() {
               <UsecaseDetailContent
                 flowId={drawerFlowId ?? undefined}
                 hideBackNav
-                showConnectionPath
                 onNavigateUsecase={(id) => setDrawerFlowId(id || null)}
                 usecases={usecases}
                 isEnabled={drawerEnabled}
