@@ -388,13 +388,16 @@ interface TimelineRowProps {
   runFinished?: boolean;
   onAuthenticateApp?: (appName: string, appId?: string | null) => void;
   isAppAuthenticated?: (appName: string) => boolean;
+  /** When true, briefly draw attention to this row + its output. Used after
+   *  a "jump to evidence" click from the diagnosis banner. */
+  highlight?: boolean;
 }
 
 const TimelineRow: React.FC<TimelineRowProps> = ({
   item, index, open, onToggle, appsById, totalDuration, originalStartTime,
   maxWidth, questionAnswers, setQuestionAnswers, onSubmitQuestions,
   onRerunAgent, onRerunDecision, agentRequestLoading, getFormUrl, runFinished,
-  onAuthenticateApp, isAppAuthenticated,
+  onAuthenticateApp, isAppAuthenticated, highlight = false,
 }) => {
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const validate = validateJson(item.details);
@@ -468,9 +471,15 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
       data-timeline-index={index}
       sx={{
         borderTop: index === 0 ? 'none' : '1px solid hsl(var(--border))',
-        bgcolor: open ? 'hsl(var(--muted) / 0.3)' : 'transparent',
-        transition: 'background 0.15s ease',
+        bgcolor: highlight
+          ? 'hsla(var(--severity-medium) / 0.12)'
+          : open
+            ? 'hsl(var(--muted) / 0.3)'
+            : 'transparent',
+        transition: 'background 0.6s ease, box-shadow 0.6s ease',
         scrollMarginTop: 96,
+        position: 'relative',
+        boxShadow: highlight ? 'inset 0 0 0 2px hsla(var(--severity-medium) / 0.55)' : 'none',
       }}
     >
       <Box
@@ -832,8 +841,14 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
             sx={{
               p: 2,
               borderRadius: 1.5,
-              border: '1px solid hsl(var(--border))',
+              border: highlight
+                ? '1px solid hsl(var(--severity-medium))'
+                : '1px solid hsl(var(--border))',
               bgcolor: 'hsl(var(--background))',
+              boxShadow: highlight
+                ? '0 0 0 3px hsla(var(--severity-medium) / 0.25)'
+                : 'none',
+              transition: 'border-color 0.6s ease, box-shadow 0.6s ease',
               overflow: 'auto',
               maxHeight: 400,
               fontFamily: '"JetBrains Mono", ui-monospace, monospace',
@@ -951,6 +966,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const [scheduleCron, setScheduleCron] = useState('0 * * * *');
   const [scheduleSaving, setScheduleSaving] = useState(false);
   const [openIndexes, setOpenIndexes] = useState<Set<number>>(new Set());
+  // Briefly pulses a row + its output box after the diagnosis banner's
+  // "Where this was found" jump. Cleared on a timer.
+  const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const [questionAnswers, setQuestionAnswers] = useState<Record<string, { index: number; value: string }>>({});
   const [simpleSubmitAttempted, setSimpleSubmitAttempted] = useState(false);
   const [continuationText, setContinuationText] = useState('');
@@ -2665,6 +2683,13 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   return next;
                 });
                 goToTab('detailed');
+                // Pulse the row + its output box so the user can see exactly
+                // which step the diagnosis was pulled from. Auto-clears after
+                // a couple seconds; re-clicking restarts the pulse.
+                setHighlightedIndex(targetIndex);
+                window.setTimeout(() => {
+                  setHighlightedIndex((curr) => (curr === targetIndex ? null : curr));
+                }, 2800);
                 // Wait for the detailed view to mount, then scroll the row
                 // into view. requestAnimationFrame x2 ensures layout has
                 // settled after the tab switch.
@@ -2999,6 +3024,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       runFinished={detailedRunFinished}
                       onAuthenticateApp={(name, id) => setAuthDrawerApp({ name, id })}
                       isAppAuthenticated={isAppAuthenticated}
+                      highlight={highlightedIndex === i}
                     />
                   ))}
                   {detailedRunFinished && (
