@@ -11,7 +11,7 @@ import { ShuffleMCP, AppDetailDrawer } from '@/Shuffle-MCPs';
 import type { AppSelectedEvent } from '@/Shuffle-MCPs';
 import { API_CONFIG } from '@/Shuffle-MCPs/api';
 import { ShufflePipelinesBanner } from '@/Shuffle-MCPs/ShufflePipelinesBanner';
-import { IntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
+
 
 // Singul styles — compact dark theme
 const singulStyles = {
@@ -240,13 +240,6 @@ export default function AppSearchDrawer({
         {/* Search body */}
         <Box sx={{ flex: 1, boxSizing: 'border-box', overflow: 'hidden', p: 3, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
           {showPipelinesBanner && <ShufflePipelinesBanner />}
-
-          {/* Your Apps — reuse IntegrationStatus */}
-          {API_CONFIG.apiKey && (
-            <Box sx={{ mb: 2.5 }}>
-              <IntegrationStatus collapsed={false} showAll hideAddButton priorityCategory={priorityCategory} />
-            </Box>
-          )}
 
           {/* Connection path apps — shown first */}
           {connectionPathApps && connectionPathApps.length > 0 && (
