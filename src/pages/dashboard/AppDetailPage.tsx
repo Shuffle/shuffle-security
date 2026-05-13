@@ -504,7 +504,7 @@ const AppDetailPage = () => {
           hasAnyAuth={hasAnyAuth}
           isAuthenticated={isAuthenticated}
           categories={appInfo?.categories}
-          isActivated={isActivated}
+          isActivated={effectiveActivated}
           activateLoading={activateLoading}
           onActivateToggle={handleActivateToggle}
         />
