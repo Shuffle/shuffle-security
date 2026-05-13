@@ -1945,6 +1945,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // actual app/tool actions (nothing meaningful would run on a schedule).
   const { scheduleDisabledReasons } = useMemo(() => {
     const decisions: any[] = (agentData?.decisions as any[]) || [];
+    const runStatus = String(execution?.status || agentData?.status || '').toUpperCase();
+    const isNotFinished = runStatus !== '' && !['FINISHED', 'FAILURE', 'ABORTED', 'CANCELLED', 'CANCELED'].includes(runStatus);
     const NON_ACTION_CATS = new Set(['finish', 'finalise', 'ask', 'agent', 'processing']);
     const NON_ACTION_ACTIONS = new Set(['finish', 'finalise', 'ask']);
     const finishCount = decisions.filter(
