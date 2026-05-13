@@ -8377,7 +8377,7 @@ const IncidentDetailPage = () => {
                               );
                             }
                             // Drop correlations whose only ref is the current incident itself.
-                            const meaningfulCorr = filterMeaningfulCorrelations(corr.data, id);
+                            const meaningfulCorr = filterMeaningfulCorrelations(corr.data, correlationVisibilityOptions);
                             if (meaningfulCorr.length === 0) {
                               return (
                                 <Box sx={{ mt: 0.5, display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -8492,7 +8492,7 @@ const IncidentDetailPage = () => {
               const value = valueParts.join('::');
               // Reuse the same filtering logic as the inline view so the popover
               // never shows correlations whose only ref is the current incident.
-              const meaningful = filterMeaningfulCorrelations(corr?.data || [], id);
+              const meaningful = filterMeaningfulCorrelations(corr?.data || [], correlationVisibilityOptions);
               return (
                 <Box sx={{ p: 2 }}>
                   <Typography variant="caption" sx={{ fontWeight: 600, textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', letterSpacing: '0.05em', fontSize: '0.65rem' }}>
