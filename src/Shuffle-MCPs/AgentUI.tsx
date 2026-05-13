@@ -966,6 +966,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const [scheduleCron, setScheduleCron] = useState('0 * * * *');
   const [scheduleSaving, setScheduleSaving] = useState(false);
   const [openIndexes, setOpenIndexes] = useState<Set<number>>(new Set());
+  // Briefly pulses a row + its output box after the diagnosis banner's
+  // "Where this was found" jump. Cleared on a timer.
+  const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const [questionAnswers, setQuestionAnswers] = useState<Record<string, { index: number; value: string }>>({});
   const [simpleSubmitAttempted, setSimpleSubmitAttempted] = useState(false);
   const [continuationText, setContinuationText] = useState('');
