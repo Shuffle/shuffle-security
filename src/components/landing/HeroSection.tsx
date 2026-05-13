@@ -153,12 +153,8 @@ export const HeroSection = () => {
 
       <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
         <Box sx={{ textAlign: 'center' }}>
-          {/* Main headline */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-          >
+          {/* Main headline - rendered immediately for LCP */}
+          <div>
             <Typography
               variant="h1"
               sx={{
@@ -192,7 +188,7 @@ export const HeroSection = () => {
                 You Control
               </Box>
             </Typography>
-          </motion.div>
+          </div>
 
           {/* Subtitle */}
           <motion.div
