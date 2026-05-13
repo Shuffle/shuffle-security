@@ -2186,10 +2186,37 @@ function UsecaseDetailContent({
                   </Box>
                 </Box>
               </Box>
-              <Typography sx={{ fontSize: '0.64rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', mb: 0.75 }}>
-                Your Tools
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.75 }}>
+                <Typography sx={{ fontSize: '0.64rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  Your Tools
+                </Typography>
+                <Tooltip title={`Add ${endpoint.meta?.label || endpoint.title} tool`} placement="top" arrow>
+                  <IconButton
+                    size="small"
+                    onClick={() => setAddToolFor({
+                      side: endpoint.title === 'Source' ? 'source' : 'destination',
+                      categoryId: endpoint.categoryId,
+                    })}
+                    sx={{
+                      width: 18,
+                      height: 18,
+                      p: 0,
+                      border: '1px dashed hsla(var(--muted-foreground) / 0.4)',
+                      color: 'hsl(var(--muted-foreground))',
+                      transition: 'all 0.15s ease',
+                      '&:hover': {
+                        borderColor: 'hsl(var(--primary))',
+                        color: 'hsl(var(--primary))',
+                        bgcolor: 'hsla(var(--primary) / 0.08)',
+                      },
+                    }}
+                  >
+                    <Plus size={11} />
+                  </IconButton>
+                </Tooltip>
+              </Box>
               <IntegrationStatusLite
+                key={`${endpoint.categoryId}-${integrationsRefreshKey}`}
                 filterApps={appNamesWithShuffle}
                 isResolving={!categoryAppsResolved}
                 syntheticApps={synthetic}
