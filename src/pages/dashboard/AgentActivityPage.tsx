@@ -217,8 +217,6 @@ const AgentActivityPage = () => {
         onClose={() => setPermissionsOpen(false)}
         initialTab={permissionsInitialTab}
         permissionsSlot={<PermissionsPanel compact />}
-        permissionsDisabled={!isSupport}
-        permissionsDisabledTooltip="Coming soon"
         localLLMSlot={<LocalLLMConfig />}
       />
 
