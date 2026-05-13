@@ -75,6 +75,17 @@ const getComponents = (mode: 'light' | 'dark') => {
       },
     },
     MuiTooltip: {
+      defaultProps: {
+        // Tooltips render via a Popper portal at MUI's default tooltip
+        // z-index (1500). Drawers / Dialogs in this app frequently sit
+        // above that (we use 9999 for in-Dialog popovers per project
+        // convention), which left tooltips rendering UNDER the panel
+        // that owns the trigger. Bumping the popper z-index here fixes
+        // every tooltip globally without per-call overrides.
+        slotProps: {
+          popper: { sx: { zIndex: 10000 } },
+        },
+      },
       styleOverrides: {
         tooltip: {
           backgroundColor: tooltipBg,
