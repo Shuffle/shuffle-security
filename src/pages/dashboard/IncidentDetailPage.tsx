@@ -8583,6 +8583,7 @@ const IncidentDetailPage = () => {
             </Box>
           )}
         </Box>
+        </motion.div>
        )}
 
       {activeTab === 4 && (
