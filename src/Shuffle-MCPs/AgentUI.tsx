@@ -2549,6 +2549,41 @@ const AgentUI: React.FC<AgentUIProps> = ({
                           {durationSec != null ? ` · ${durationSec}s` : ''}
                         </Typography>
                       </Box>
+                      {pendingAuthApps.map(({ appName, appId }) => {
+                        const pretty = appName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+                        return (
+                          <Box
+                            key={`auth-${appName}`}
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1.5,
+                              p: 1.5,
+                              borderRadius: 1.5,
+                              border: '1px solid hsla(var(--severity-medium) / 0.3)',
+                              bgcolor: 'hsla(var(--severity-medium) / 0.08)',
+                            }}
+                          >
+                            <LockIcon sx={{ color: 'hsl(var(--severity-medium))', fontSize: 20 }} />
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                                {pretty} requires authentication
+                              </Typography>
+                              <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
+                                Connect your {pretty} account so the agent can complete this step, then rerun.
+                              </Typography>
+                            </Box>
+                            <Button
+                              variant="contained"
+                              size="small"
+                              startIcon={<LockIcon />}
+                              onClick={() => setAuthDrawerApp({ name: appName, id: appId })}
+                            >
+                              Authenticate {pretty}
+                            </Button>
+                          </Box>
+                        );
+                      })}
                       {finishAnswer ? (
                         <Box sx={{
                           p: 2, borderRadius: 1.5,
