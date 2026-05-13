@@ -2689,6 +2689,19 @@ const AgentUI: React.FC<AgentUIProps> = ({
                           {decisionCount} step{decisionCount === 1 ? '' : 's'}
                           {durationSec != null ? ` · ${durationSec}s` : ''}
                         </Typography>
+                        <Box sx={{ flexGrow: 1 }} />
+                        <Tooltip title="Rerun the agent with the same input">
+                          <span>
+                            <IconButton
+                              size="small"
+                              disabled={agentRequestLoading}
+                              onClick={rerunAgent}
+                              sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
+                            >
+                              <RestartAltIcon sx={{ fontSize: 16 }} />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
                       </Box>
                       {pendingAuthApps.map(({ appName, appId, icon }) => {
                         const pretty = appName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
