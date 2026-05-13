@@ -8489,6 +8489,7 @@ const IncidentDetailPage = () => {
             })()}
           </Popover>
         </Box>
+        </motion.div>
       )}
 
       {activeTab === 3 && (
