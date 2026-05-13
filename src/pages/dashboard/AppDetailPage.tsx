@@ -396,6 +396,20 @@ const AppDetailPage = () => {
       : `Connect ${displayName} to Shuffle Security. Automate workflows, run AI-powered actions, and integrate with 3,000+ tools.`,
     image: resolvedImage || undefined,
     url: `/apps/${appname}`,
+    jsonLd: displayName
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: `${displayName} Integration`,
+          description: appInfo?.description
+            ? `${displayName} — ${appInfo.description}. Connect and automate with Shuffle Security.`
+            : `Connect ${displayName} to Shuffle Security and automate workflows.`,
+          image: resolvedImage || undefined,
+          url: `https://security.shuffler.io/apps/${appname}`,
+          brand: { '@type': 'Brand', name: 'Shuffle Security' },
+          category: 'Security Integration',
+        }
+      : undefined,
   });
 
   const isLoadingAll = appLoading || (isAuthenticated && appAuthLoading) || authLoading;
