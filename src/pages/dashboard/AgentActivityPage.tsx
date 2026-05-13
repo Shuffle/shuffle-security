@@ -3,8 +3,7 @@
  * Shows real-time agent execution feed, stats, and activity overview
  */
 
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useState } from 'react';
 import {
   Box,
   Typography,
