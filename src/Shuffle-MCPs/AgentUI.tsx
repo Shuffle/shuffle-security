@@ -771,20 +771,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
               border: '1px solid hsla(var(--severity-medium) / 0.3)',
               bgcolor: 'hsla(var(--severity-medium) / 0.08)',
             }}>
-              <Avatar
-                src={icon || undefined}
-                alt={pretty}
-                variant="rounded"
-                sx={{
-                  width: 32, height: 32, borderRadius: 1,
-                  bgcolor: 'hsl(var(--muted))',
-                  color: 'hsl(var(--foreground))',
-                  fontSize: '0.85rem', fontWeight: 700,
-                  '& img': { objectFit: 'contain', p: 0.25 },
-                }}
-              >
-                {pretty.charAt(0)}
-              </Avatar>
+              <LockIcon sx={{ color: 'hsl(var(--severity-medium))', fontSize: 22 }} />
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
                   {pretty} requires authentication
@@ -2600,20 +2587,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                               bgcolor: 'hsla(var(--severity-medium) / 0.08)',
                             }}
                           >
-                            <Avatar
-                              src={icon || undefined}
-                              alt={pretty}
-                              variant="rounded"
-                              sx={{
-                                width: 32, height: 32, borderRadius: 1,
-                                bgcolor: 'hsl(var(--muted))',
-                                color: 'hsl(var(--foreground))',
-                                fontSize: '0.85rem', fontWeight: 700,
-                                '& img': { objectFit: 'contain', p: 0.25 },
-                              }}
-                            >
-                              {pretty.charAt(0)}
-                            </Avatar>
+                            <LockIcon sx={{ color: 'hsl(var(--severity-medium))', fontSize: 22 }} />
                             <Box sx={{ flex: 1, minWidth: 0 }}>
                               <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
                                 {pretty} requires authentication
