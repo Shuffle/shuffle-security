@@ -3044,10 +3044,10 @@ function UsecaseCard({
     const willBeEnabled = !effectiveEnabled;
     if (willBeEnabled && !hasValidatedSource) {
       toast.warning(`No active ${sourceCat} integration`, {
-        description: `Enabling ${flow.label} will not do anything until you connect and validate a ${sourceCat} tool. The workflow has no input to react to and will be disabled again automatically.`,
+        description: `Enabling ${flow.label} will not do anything until you connect and validate a ${sourceCat} tool. The workflow has no input to react to and may be disabled again automatically.`,
         duration: 9000,
       });
-      return;
+      // Continue and let the user enable it anyway — the backend will reflect reality.
     }
     setToggling(true);
     setOptimisticEnabled(willBeEnabled);
