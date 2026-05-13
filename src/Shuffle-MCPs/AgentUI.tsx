@@ -978,6 +978,11 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // stale poll responses from a previous run after the user has started a
   // new one (otherwise an in-flight fetch can repaint the old execution).
   const activeExecutionIdRef = useRef<string | null>(null);
+  // AbortController for the in-flight POST /api/v1/agent request, plus a
+  // generation counter so a slow request that resolves AFTER the user clicks
+  // "Cancel and go to Start" cannot repaint the UI or swap tabs back.
+  const runAbortRef = useRef<AbortController | null>(null);
+  const runGenerationRef = useRef(0);
   // Mirror of state used inside async callbacks (e.g. submitInput) so we can
   // snapshot prior values for rollback without making the callback re-render
   // on every state change.
