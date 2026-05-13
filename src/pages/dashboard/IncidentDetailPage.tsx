@@ -1055,7 +1055,7 @@ const IncidentDetailPage = () => {
         }
       }, 120);
       try {
-        toast.success('Question drafted — press Enter to send.', { duration: 2500 });
+        // toast suppressed during demo (distracting)
       } catch { /* ignore */ }
     };
 
@@ -1084,7 +1084,7 @@ const IncidentDetailPage = () => {
           }
         }, 120);
         try {
-          toast.success('Question drafted — press Enter to send.', { duration: 2500 });
+          // toast suppressed during demo (distracting)
         } catch { /* ignore */ }
       };
       window.addEventListener('demo:inject-agent-mention', onInject);
