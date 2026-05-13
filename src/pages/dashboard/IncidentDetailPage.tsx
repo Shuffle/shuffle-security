@@ -139,7 +139,7 @@ import { useIncidentAgentRuns } from '@/hooks/useIncidentAgentRuns';
 import { useSourceAppImage } from '@/hooks/useSourceAppImage';
 import { AgentExecutionDrawer } from '@/Shuffle-MCPs';
 import { getRunTitle, getRunIconColor, formatDuration as formatAgentRunDuration, getTimeAgo as getAgentTimeAgo, STATUS_CONFIG as AGENT_STATUS_CONFIG } from '@/components/agent/AgentRunHeader';
-import { getFailureInfo as getAgentFailureInfo, hasOutputWarning as hasAgentOutputWarning } from '@/components/agent/AgentRunResultViewer';
+import { getFailureInfo as getAgentFailureInfo, hasOutputWarning as hasAgentOutputWarning, diagnoseOutputWarning as diagnoseAgentOutputWarning } from '@/components/agent/AgentRunResultViewer';
 import { AlertTriangle as AlertTriangleIcon, Loader2 as Loader2Icon } from 'lucide-react';
 import { Zap as ZapIcon } from 'lucide-react';
 import type { AgentRun } from '@/services/agentActivity';
@@ -4651,9 +4651,50 @@ const IncidentDetailPage = () => {
         const isFailed = status === 'FAILED' || status === 'ABORTED';
         const failureInfo = isFailed ? getAgentFailureInfo(run) : null;
         const isRunning = status === 'EXECUTING' || status === 'RUNNING';
-        const hasWarning = !skip.skipped && (isFailed || (!isRunning && hasAgentOutputWarning(run)));
-        const warningReason = failureInfo?.reason
-          || 'The agent completed but the output suggests it may need a human to review or assist.';
+        const outputDiagnosis = !skip.skipped && !isRunning && !isFailed && hasAgentOutputWarning(run)
+          ? diagnoseAgentOutputWarning(run)
+          : null;
+        const hasWarning = !skip.skipped && (isFailed || !!outputDiagnosis);
+        // Build a rich tooltip node so the analyst sees WHY the run needs
+        // attention (diagnosis title + explanation + how to fix), not just
+        // a generic "may need a human" sentence.
+        const warningTooltip: React.ReactNode = (() => {
+          if (failureInfo) {
+            return (
+              <Box sx={{ maxWidth: 320, py: 0.25 }}>
+                <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, mb: 0.5 }}>
+                  Action failed
+                </Typography>
+                <Typography sx={{ fontSize: '0.7rem', lineHeight: 1.4, opacity: 0.95 }}>
+                  {failureInfo.reason}
+                </Typography>
+                <Typography sx={{ fontSize: '0.65rem', mt: 0.75, opacity: 0.7 }}>
+                  Click for details and how to fix.
+                </Typography>
+              </Box>
+            );
+          }
+          if (outputDiagnosis) {
+            return (
+              <Box sx={{ maxWidth: 320, py: 0.25 }}>
+                <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, mb: 0.5 }}>
+                  {outputDiagnosis.title}
+                </Typography>
+                <Typography sx={{ fontSize: '0.7rem', lineHeight: 1.4, opacity: 0.95 }}>
+                  {outputDiagnosis.explanation}
+                </Typography>
+                <Typography sx={{ fontSize: '0.7rem', lineHeight: 1.4, mt: 0.5 }}>
+                  <Box component="span" sx={{ fontWeight: 600 }}>How to fix: </Box>
+                  {outputDiagnosis.remediation}
+                </Typography>
+                <Typography sx={{ fontSize: '0.65rem', mt: 0.75, opacity: 0.7 }}>
+                  Click for full details.
+                </Typography>
+              </Box>
+            );
+          }
+          return 'The agent completed but the output suggests it may need a human to review or assist. Click for details.';
+        })();
         return (
           <Box
             key={`agent-${run.execution_id}`}
@@ -4745,7 +4786,7 @@ const IncidentDetailPage = () => {
                 </Typography>
               </Box>
             ) : hasWarning ? (
-              <Tooltip title={warningReason} arrow>
+              <Tooltip title={warningTooltip} arrow placement="top">
                 <Box
                   sx={{
                     display: 'inline-flex',
@@ -4761,7 +4802,11 @@ const IncidentDetailPage = () => {
                 >
                   <AlertTriangleIcon size={11} style={{ color: 'hsl(var(--severity-medium))' }} />
                   <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--severity-medium))', fontWeight: 500 }}>
-                    Completed — needs attention
+                    {failureInfo
+                      ? 'Failed — needs attention'
+                      : outputDiagnosis
+                        ? `Needs attention — ${outputDiagnosis.title.replace(/\s*\(HTTP \d+\)/i, '')}`
+                        : 'Completed — needs attention'}
                   </Typography>
                 </Box>
               </Tooltip>
