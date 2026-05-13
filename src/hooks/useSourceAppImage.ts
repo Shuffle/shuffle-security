@@ -67,13 +67,28 @@ export const useSourceAppImage = (
         });
         if (cancelled) return;
         const hits = ((res as any)?.results?.[0]?.hits || []) as any[];
-        // Require an EXACT normalized-name match. Falling back to hits[0]
-        // would surface unrelated brand logos (e.g. AWS) for generic
-        // search terms like "Manual" or "Custom Script".
-        const match = hits.find((h) => {
+        // Mirror the agent system's `useAppLookup` resolution order so the
+        // Incidents view always renders the same logo as the Apps drawer:
+        //   1. Exact normalized-name match (best — guarantees correctness).
+        //   2. Loose match where one normalized name starts-with / contains
+        //      the other — handles aliases like `outlook_office365` →
+        //      `Microsoft Outlook` / `Office 365`.
+        //   3. The Algolia top hit — the search index already ranks by
+        //      relevance, so the first hit for a real product name (Wazuh,
+        //      Outlook, Office 365) is virtually always correct. The
+        //      NON_APP_SOURCES guard above is what keeps this from
+        //      surfacing brand logos for `Manual` / `Custom` etc.
+        const exact = hits.find((h) => {
           const name = (h.name || '').toLowerCase().replace(/[\s_-]/g, '');
           return name === normalized;
         });
+        const loose = exact || hits.find((h) => {
+          const name = (h.name || '').toLowerCase().replace(/[\s_-]/g, '');
+          if (!name) return false;
+          return name.startsWith(normalized) || normalized.startsWith(name)
+            || name.includes(normalized) || normalized.includes(name);
+        });
+        const match = loose || hits[0];
         if (match?.image_url) setImage(match.image_url);
       } catch {
         /* ignore — image is optional */
