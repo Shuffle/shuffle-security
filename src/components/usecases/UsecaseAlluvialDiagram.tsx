@@ -1570,10 +1570,13 @@ export default function UsecaseAlluvialDiagram({
             setHiddenApps(prev => { const next = new Set(prev); next.delete(addedAppName.toLowerCase()); return next; });
             import('sonner').then(({ toast }) => toast.success(`${addedAppName.replace(/_/g, ' ')} added to ingestion sources`));
           } else {
-            setForwardAppNames(prev => { const next = new Set(prev || []); next.add(normalizeAppName(addedAppName)); return next; });
+            // Optimistic UI: show immediately on the destination column,
+            // then push the FULL desired Forward Tickets list to the backend
+            // and verify the workflow picked it up (mirrors the
+            // /onboarding/automate "Forward" pattern).
             setManualDestApps(prev => { const next = new Set(prev); next.add(normalizeAppName(addedAppName)); return next; });
             setHiddenApps(prev => { const next = new Set(prev); next.delete(addedAppName.toLowerCase()); return next; });
-            import('sonner').then(({ toast }) => toast.success(`${addedAppName.replace(/_/g, ' ')} added to forwarding`));
+            handleToggleForward(addedAppName, true);
           }
           setSearchOpen(null);
         } : undefined}
