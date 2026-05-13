@@ -926,7 +926,11 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const [simpleSubmitAttempted, setSimpleSubmitAttempted] = useState(false);
   const [continuationText, setContinuationText] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'simple' | 'detailed'>('simple');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialViewParam = searchParams.get('agentView');
+  const [viewMode, setViewMode] = useState<'simple' | 'detailed'>(
+    initialViewParam === 'detailed' ? 'detailed' : 'simple'
+  );
   const [attachedImages, setAttachedImages] = useState<{ dataUrl: string; name: string }[]>([]);
   const [nowTick, setNowTick] = useState(() => Math.floor(Date.now() / 1000));
   // Local fallback start timestamp captured the moment we first see an
