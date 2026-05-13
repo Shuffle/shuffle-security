@@ -51,6 +51,9 @@ export const getEffectiveCorrelationCount = (
   for (const r of correlation.ref) {
     const [category, key] = r.split('|');
     if (!category || !key) continue;
+    // Refs from the per-org `ignored-observables` datastore should not count
+    // as a correlation match — keep this in sync with CorrelationRow render.
+    if (category.toLowerCase() === 'ignored-observables') continue;
     if (
       category === 'shuffle-security_incidents' &&
       currentIncidentId &&
