@@ -42,9 +42,8 @@ import {
 import {
   searchAgentActivity,
   listAgentScheduleWorkflows,
-  getAgentSchedulePrompt,
   getAgentScheduleConfig,
-  updateAgentSchedulePrompt,
+  updateAgentScheduleConfig,
   stopAgentSchedule,
   type AgentRun,
   type AgentScheduleWorkflow,
