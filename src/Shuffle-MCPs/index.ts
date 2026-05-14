@@ -52,6 +52,13 @@ export type {
 } from './agentActivity';
 export { useAppLookup } from './useAppLookup';
 export type { AppLookupResult } from './useAppLookup';
+export {
+  resolveApp,
+  resolveApps,
+  seedResolvedApp,
+  invalidateResolvedApps,
+} from './resolveApp';
+export type { ResolvedApp } from './resolveApp';
 export { IntegrationStatus, refreshAllIntegrationStatus } from './IntegrationStatus';
 export { useAppAuth } from './useAppAuth';
 export { AppDetailProvider, useAppDetail } from './AppDetailContext';
