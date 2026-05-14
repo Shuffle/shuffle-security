@@ -220,6 +220,7 @@ export const useScheduleAgentRun = () => {
         credentials: 'include',
         headers: { ...getAuthHeader() },
       }).catch(() => {});
+      step('schedule', 'error', 'network');
       throw new Error(
         `Could not reach the scheduler — workflow rolled back. ${err instanceof Error ? err.message : ''}`.trim(),
       );
@@ -240,10 +241,12 @@ export const useScheduleAgentRun = () => {
       } catch {
         /* keep raw text */
       }
+      step('schedule', 'error', `HTTP ${schedRes.status}`);
       throw new Error(
         `Scheduler rejected the cron \`${cron}\` (HTTP ${schedRes.status})${detail ? `: ${detail}` : ''}. The workflow has been deleted — please adjust the schedule and try again.`,
       );
     }
+    step('schedule', 'done', cron);
 
     return { workflowId, name, cron };
   }, []);
