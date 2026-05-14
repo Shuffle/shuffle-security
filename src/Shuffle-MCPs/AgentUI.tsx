@@ -2298,6 +2298,37 @@ const AgentUI: React.FC<AgentUIProps> = ({
     setScheduleCron(scheduleHint.cron);
     lastAppliedHintRef.current = scheduleHint.cron;
   }, [scheduleHint, scheduleAnchor]);
+
+  // Compile structured recurrence controls into a 5-field cron expression.
+  // Skipped if the user has manually overridden via preset chip / advanced
+  // cron text field — that override is cleared whenever they touch a
+  // structured control again.
+  useEffect(() => {
+    if (cronManualOverrideRef.current) return;
+    const m = Math.max(0, Math.min(59, schedMinute));
+    const h = Math.max(0, Math.min(23, schedHour));
+    const n = Math.max(1, Math.floor(schedInterval || 1));
+    let cron = '';
+    if (schedFreq === 'minutes') {
+      cron = `*/${n} * * * *`;
+    } else if (schedFreq === 'hours') {
+      cron = `${m} */${n} * * *`;
+    } else if (schedFreq === 'days') {
+      cron = n === 1 ? `${m} ${h} * * *` : `${m} ${h} */${n} * *`;
+    } else if (schedFreq === 'weeks') {
+      // Cron has no native "every N weeks", so we use the weekday set and
+      // surface a small note in the UI when interval > 1.
+      const days = schedWeekdays.size > 0
+        ? [...schedWeekdays].sort((a, b) => a - b).join(',')
+        : '*';
+      cron = `${m} ${h} * * ${days}`;
+    } else if (schedFreq === 'months') {
+      const dom = Math.max(1, Math.min(31, schedDayOfMonth));
+      cron = n === 1 ? `${m} ${h} ${dom} * *` : `${m} ${h} ${dom} */${n} *`;
+    }
+    if (cron) setScheduleCron(cron);
+  }, [schedFreq, schedInterval, schedHour, schedMinute, schedWeekdays, schedDayOfMonth]);
+
   const scheduleDisabledReason = scheduleDisabledReasons[0] || '';
   const scheduleDisabledTooltip: React.ReactNode = scheduleDisabledReasons.length > 1 ? (
     <Box>
