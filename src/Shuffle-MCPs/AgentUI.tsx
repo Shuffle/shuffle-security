@@ -2876,21 +2876,23 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   </Tooltip>
                 ) : null;
               })()}
-              <Tooltip title="Go back to Start with the same prompt and tools pre-filled">
-                <span>
-                  <IconButton
-                    size="small"
-                    disabled={agentRequestLoading}
-                    onClick={rerunAgent}
-                    sx={{
-                      color: 'hsl(var(--muted-foreground))',
-                      '&:hover': { color: 'hsl(var(--primary))', bgcolor: 'hsl(var(--muted))' },
-                    }}
-                  >
-                    <RestartAltIcon sx={{ fontSize: 18 }} />
-                  </IconButton>
-                </span>
-              </Tooltip>
+              {!disableStartTab && (
+                <Tooltip title="Go back to Start with the same prompt and tools pre-filled">
+                  <span>
+                    <IconButton
+                      size="small"
+                      disabled={agentRequestLoading}
+                      onClick={rerunAgent}
+                      sx={{
+                        color: 'hsl(var(--muted-foreground))',
+                        '&:hover': { color: 'hsl(var(--primary))', bgcolor: 'hsl(var(--muted))' },
+                      }}
+                    >
+                      <RestartAltIcon sx={{ fontSize: 18 }} />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              )}
             </Box>
 
             {error && (
