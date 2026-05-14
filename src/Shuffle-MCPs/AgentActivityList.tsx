@@ -42,9 +42,8 @@ import {
 import {
   searchAgentActivity,
   listAgentScheduleWorkflows,
-  getAgentSchedulePrompt,
   getAgentScheduleConfig,
-  updateAgentSchedulePrompt,
+  updateAgentScheduleConfig,
   stopAgentSchedule,
   type AgentRun,
   type AgentScheduleWorkflow,
@@ -380,6 +379,7 @@ const AgentActivityList = ({
   const [workflowFilter, setWorkflowFilter] = useState('');
   const [editOpen, setEditOpen] = useState(false);
   const [editPrompt, setEditPrompt] = useState('');
+  const [editApps, setEditApps] = useState('');
   const [editLoading, setEditLoading] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
@@ -394,10 +394,12 @@ const AgentActivityList = ({
     setEditOpen(true);
     setEditError(null);
     setEditPrompt('');
+    setEditApps('');
     setEditLoading(true);
     try {
-      const { prompt } = await getAgentSchedulePrompt(workflowFilter, { apiKey, apiBaseUrl, orgId });
+      const { prompt, apps } = await getAgentScheduleConfig(workflowFilter, { apiKey, apiBaseUrl, orgId });
       setEditPrompt(prompt);
+      setEditApps(apps.join(', '));
     } catch (e) {
       setEditError(e instanceof Error ? e.message : 'Failed to load prompt');
     } finally {
@@ -420,14 +422,15 @@ const AgentActivityList = ({
     setEditSaving(true);
     setEditError(null);
     try {
-      await updateAgentSchedulePrompt(workflowFilter, editPrompt, { apiKey, apiBaseUrl, orgId });
+      const apps = editApps.split(',').map((s) => s.trim()).filter(Boolean);
+      await updateAgentScheduleConfig(workflowFilter, { prompt: editPrompt, apps }, { apiKey, apiBaseUrl, orgId });
       setEditOpen(false);
     } catch (e) {
-      setEditError(e instanceof Error ? e.message : 'Failed to save prompt');
+      setEditError(e instanceof Error ? e.message : 'Failed to save changes');
     } finally {
       setEditSaving(false);
     }
-  }, [workflowFilter, editPrompt, apiKey, apiBaseUrl, orgId]);
+  }, [workflowFilter, editPrompt, editApps, apiKey, apiBaseUrl, orgId]);
 
   const confirmStop = useCallback(async () => {
     if (!workflowFilter) return;
@@ -665,7 +668,7 @@ const AgentActivityList = ({
               '&:hover': { bgcolor: 'hsl(var(--muted))' },
             }}
           >
-            Edit prompt
+            Edit
           </Button>
           {onTryWorkflow && (
             <Button
@@ -775,7 +778,7 @@ const AgentActivityList = ({
         slotProps={{ paper: { sx: { bgcolor: 'hsl(var(--card))', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))' } } }}
       >
         <DialogTitle sx={{ fontSize: '1rem', fontWeight: 600 }}>
-          Edit prompt — {selectedAgentWorkflow?.name || 'Schedule'}
+          Edit — {selectedAgentWorkflow?.name || 'Schedule'}
         </DialogTitle>
         <DialogContent>
           {editLoading ? (
@@ -783,23 +786,51 @@ const AgentActivityList = ({
               <CircularProgress size={24} sx={{ color: 'hsl(var(--primary))' }} />
             </Box>
           ) : (
-            <TextField
-              autoFocus
-              fullWidth
-              multiline
-              minRows={6}
-              maxRows={20}
-              value={editPrompt}
-              onChange={(e) => setEditPrompt(e.target.value)}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  bgcolor: 'hsl(var(--background))',
-                  color: 'hsl(var(--foreground))',
-                  fontSize: '0.85rem',
-                  '& fieldset': { borderColor: 'hsl(var(--border))' },
-                },
-              }}
-            />
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box>
+                <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', mb: 0.75, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                  Prompt
+                </Typography>
+                <TextField
+                  autoFocus
+                  fullWidth
+                  multiline
+                  minRows={6}
+                  maxRows={20}
+                  value={editPrompt}
+                  onChange={(e) => setEditPrompt(e.target.value)}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: 'hsl(var(--background))',
+                      color: 'hsl(var(--foreground))',
+                      fontSize: '0.85rem',
+                      '& fieldset': { borderColor: 'hsl(var(--border))' },
+                    },
+                  }}
+                />
+              </Box>
+              <Box>
+                <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', mb: 0.75, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                  MCPs
+                </Typography>
+                <TextField
+                  fullWidth
+                  value={editApps}
+                  onChange={(e) => setEditApps(e.target.value)}
+                  placeholder="appname1, appname2, appname3"
+                  helperText="Comma-separated app names the agent can call."
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: 'hsl(var(--background))',
+                      color: 'hsl(var(--foreground))',
+                      fontSize: '0.85rem',
+                      '& fieldset': { borderColor: 'hsl(var(--border))' },
+                    },
+                    '& .MuiFormHelperText-root': { color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem', ml: 0 },
+                  }}
+                />
+              </Box>
+            </Box>
           )}
           {editError && (
             <Typography sx={{ mt: 1, color: 'hsl(var(--severity-critical, 0 72% 55%))', fontSize: '0.8rem' }}>

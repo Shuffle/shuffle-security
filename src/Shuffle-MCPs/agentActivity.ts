@@ -252,6 +252,38 @@ export const updateAgentSchedulePrompt = async (
   if (!res.ok) throw new Error(`Failed to update workflow: ${res.statusText}`);
 };
 
+/** Update both the prompt and the selected app names on a scheduled agent
+ *  workflow. The `apps` array is joined with commas and written verbatim
+ *  to the AI Agent action's `app_name` parameter. */
+export const updateAgentScheduleConfig = async (
+  workflowId: string,
+  config: { prompt: string; apps: string[] },
+  params: { apiKey?: string; apiBaseUrl?: string; orgId?: string } = {},
+): Promise<void> => {
+  const { apiKey, apiBaseUrl, orgId } = params;
+  const workflow = await getWorkflow(workflowId, params);
+  const found = findAgentInputParam(workflow);
+  if (!found) throw new Error('No AI Agent action found on this workflow');
+  found.param.value = config.prompt;
+  const action = found.action;
+  const appsValue = (config.apps || []).map((s) => String(s || '').trim()).filter(Boolean).join(',');
+  const params_: any[] = action.parameters || [];
+  const appNameParam = params_.find((x) => x?.name === 'app_name');
+  if (appNameParam) {
+    appNameParam.value = appsValue;
+  } else {
+    params_.push({ name: 'app_name', value: appsValue, required: true, description: 'The name of the app to run the LLM query against' });
+    action.parameters = params_;
+  }
+  const res = await fetch(resolveUrl(`/api/v1/workflows/${workflowId}`, apiBaseUrl), {
+    method: 'PUT',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...resolveHeaders(apiKey, orgId) },
+    body: JSON.stringify(workflow),
+  });
+  if (!res.ok) throw new Error(`Failed to update workflow: ${res.statusText}`);
+};
+
 /** Stop the schedule entirely by deleting the wrapper workflow. */
 export const stopAgentSchedule = async (
   workflowId: string,
