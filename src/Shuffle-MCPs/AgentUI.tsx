@@ -1140,23 +1140,29 @@ const AgentUI: React.FC<AgentUIProps> = ({
     // Collect unique tool tokens (raw + slug variant) that we haven't resolved.
     const wanted: { raw: string; slug: string }[] = [];
     const seen = new Set<string>();
+    const consider = (raw: string) => {
+      if (!raw || typeof raw !== 'string') return;
+      let slug = norm(raw);
+      if (slug.startsWith('app:')) slug = slug.split(':')[2] || slug;
+      if (appsById[raw]?.icon || appsById[slug]?.icon) return;
+      if (resolvedToolApps[raw]?.icon || resolvedToolApps[slug]?.icon) return;
+      const key = `${raw}|${slug}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      wanted.push({ raw, slug });
+    };
     for (const dec of decisions) {
       const action = dec?.action || dec?.details?.action;
       const category = dec?.category || dec?.details?.category;
-      if (action === 'finish' || action === 'finalise' || action === 'ask') continue;
-      if (category === 'finish' || category === 'finalise' || category === 'ask') continue;
-      const tool = dec?.details?.tool ?? dec?.tool;
-      if (!tool || typeof tool !== 'string') continue;
-      if (tool === 'singul' || tool === 'core') continue;
-      let raw = tool;
-      let slug = norm(tool);
-      if (slug.startsWith('app:')) slug = slug.split(':')[2] || slug;
-      if (appsById[raw]?.icon || appsById[slug]?.icon) continue;
-      if (resolvedToolApps[raw]?.icon || resolvedToolApps[slug]?.icon) continue;
-      const key = `${raw}|${slug}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      wanted.push({ raw, slug });
+      // Tool tokens — skip terminal/ask steps.
+      if (action !== 'finish' && action !== 'finalise' && action !== 'ask' &&
+          category !== 'finish' && category !== 'finalise' && category !== 'ask') {
+        const tool = dec?.details?.tool ?? dec?.tool;
+        if (tool && tool !== 'singul' && tool !== 'core') consider(tool);
+      }
+      // App auth requests — banner needs the icon too.
+      const req = extractAuthRequest(dec);
+      if (req?.appName) consider(req.appName);
     }
     if (wanted.length === 0) return;
 
