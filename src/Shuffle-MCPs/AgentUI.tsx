@@ -1591,6 +1591,33 @@ const AgentUI: React.FC<AgentUIProps> = ({
     const prevLocalRunStart = stateRef.current.localRunStart;
     const prevActiveExecutionId = activeExecutionIdRef.current;
     const prevShowStarter = stateRef.current.showStarter;
+    const prevViewMode = viewMode;
+
+    // Hard reset NOW — kill the previous run's poll loop, blank the
+    // execution/timeline state, drop the previous execution_id +
+    // agentView from the URL, and reset the view to simple. Otherwise
+    // the previous run's poll keeps writing into state during the
+    // in-flight request and the user sees the old "Detailed" tab flash
+    // back in.
+    activeExecutionIdRef.current = null;
+    setExecution(null);
+    setAgentData({ original_input: text.trim() });
+    setAgentActionResult(null);
+    setOpenIndexes(new Set());
+    setQuestionAnswers({});
+    setContinuationText('');
+    setLocalRunStart(null);
+    setViewMode('simple');
+    setShowStarter(false);
+    if (readUrlParams && typeof window !== 'undefined') {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('execution_id');
+        url.searchParams.delete('authorization');
+        url.searchParams.delete('agentView');
+        window.history.replaceState({}, '', url.toString());
+      } catch { /* noop */ }
+    }
 
     const result = await runAgent({
       input: text.trim(),
