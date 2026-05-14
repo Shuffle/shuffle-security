@@ -72,7 +72,7 @@ export const useScheduleAgentRun = () => {
           'Prompt:',
           input,
         ].join('\n'),
-        outputFormat: 'raw',
+        outputFormat: 'formatting',
       });
       if (success && result) {
         const cleaned = result.replace(/^```[a-zA-Z]*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
