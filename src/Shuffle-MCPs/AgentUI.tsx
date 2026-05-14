@@ -1834,13 +1834,22 @@ const AgentUI: React.FC<AgentUIProps> = ({
     if (executionApps.length > 0) {
       setChosenApps(executionApps);
     }
+    // When the Start tab is hidden (e.g. embedded in the execution drawer),
+    // there is no Start view to bounce to — just resubmit immediately with
+    // the previous prompt + tools.
+    if (disableStartTab) {
+      if (input && typeof input === 'string' && input.trim().length >= 6) {
+        submitInput(input);
+      }
+      return;
+    }
     setShowStarter(true);
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       next.delete('agentView');
       return next;
     }, { replace: true });
-  }, [agentData, actionInput, executionApps, setSearchParams]);
+  }, [agentData, actionInput, executionApps, setSearchParams, disableStartTab, submitInput]);
 
   // ── Abort the currently running agent execution ──
   // If the agent has not produced an execution_id yet (i.e. the initial
