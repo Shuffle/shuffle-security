@@ -2458,6 +2458,13 @@ const AgentUI: React.FC<AgentUIProps> = ({
           </IconButton>
         </span>
       </Tooltip>
+    </Box>
+  );
+
+  // Popover is rendered outside `tabBar` so it still mounts when the tab bar
+  // is hidden (e.g. on the Start view where `showRunSwitcher` is false). The
+  // schedule (clock) icon in the chat composer shares the same anchor state.
+  const schedulePopover = (
       <Popover
         open={Boolean(scheduleAnchor)}
         anchorEl={scheduleAnchor}
