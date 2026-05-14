@@ -69,7 +69,7 @@ export const useScheduleAgentRun = () => {
           'Prompt:',
           input,
         ].join('\n'),
-        outputFormat: 'json',
+        outputFormat: 'raw',
       });
       if (success && result) {
         const cleaned = result.replace(/^```[a-zA-Z]*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
