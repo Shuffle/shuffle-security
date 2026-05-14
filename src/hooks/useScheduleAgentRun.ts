@@ -52,8 +52,11 @@ export const useScheduleAgentRun = () => {
 
     // 1. Short name + description (raw text response, parsed locally).
     step('name', 'active');
-    let name = 'Scheduled Agent Run';
-    let description = (input || '').slice(0, 140);
+    const promptText = (input || '').trim();
+    const fallbackName = promptText.slice(0, 40) || 'Scheduled Agent Run';
+    const fallbackDescription = promptText || 'Scheduled Agent Run';
+    let name = '';
+    let description = '';
     try {
       const { success, result } = await askAI({
         query: [
@@ -88,6 +91,8 @@ export const useScheduleAgentRun = () => {
     } catch (e) {
       console.warn('[schedule] AI name generation failed, using fallback', e);
     }
+    if (!name) name = fallbackName;
+    if (!description) description = fallbackDescription;
     step('name', 'done', name);
 
     // 2. Create the workflow.
