@@ -56,14 +56,34 @@ export const useScheduleAgentRun = () => {
     let description = (input || '').slice(0, 140);
     try {
       const { success, result } = await askAI({
-        query: `Generate a SHORT workflow name (max 6 words) and a one-sentence description (max 20 words) for the following scheduled AI Agent prompt.\n\nReturn ONLY two lines of raw plain text in this EXACT format, with no markdown, no code fences, no JSON, no extra commentary:\nName: <the name>\nDescription: <the description>\n\nPrompt:\n${input}`,
-        outputFormat: 'raw',
+        query: [
+          'You are naming a scheduled AI Agent workflow based on the user prompt below.',
+          'The name and description MUST be specific to what the prompt actually does — not generic. Reference the concrete subject, action, or target from the prompt (for example "Daily phishing inbox triage" or "Hourly EDR alert summary"), never placeholders like "Scheduled Agent Run".',
+          '',
+          'Return ONLY a single JSON object, no markdown, no code fences, no commentary, in this EXACT shape:',
+          '{',
+          '  "name": "<3-6 words, Title Case, specific to the prompt>",',
+          '  "description": "<one sentence, max 20 words, summarising what this scheduled run does>"',
+          '}',
+          '',
+          'Prompt:',
+          input,
+        ].join('\n'),
+        outputFormat: 'json',
       });
       if (success && result) {
-        const nameMatch = result.match(/^\s*Name\s*:\s*(.+?)\s*$/im);
-        const descMatch = result.match(/^\s*Description\s*:\s*(.+?)\s*$/im);
-        if (nameMatch?.[1]) name = nameMatch[1].replace(/^["']|["']$/g, '').slice(0, 80);
-        if (descMatch?.[1]) description = descMatch[1].replace(/^["']|["']$/g, '').slice(0, 240);
+        const cleaned = result.replace(/^```[a-zA-Z]*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+        try {
+          const parsed = JSON.parse(cleaned);
+          if (parsed?.name) name = String(parsed.name).replace(/^["']|["']$/g, '').slice(0, 80);
+          if (parsed?.description) description = String(parsed.description).replace(/^["']|["']$/g, '').slice(0, 240);
+        } catch {
+          // Fallback: try to recover from a near-miss response.
+          const nameMatch = result.match(/"name"\s*:\s*"([^"]+)"/i);
+          const descMatch = result.match(/"description"\s*:\s*"([^"]+)"/i);
+          if (nameMatch?.[1]) name = nameMatch[1].slice(0, 80);
+          if (descMatch?.[1]) description = descMatch[1].slice(0, 240);
+        }
       }
     } catch (e) {
       console.warn('[schedule] AI name generation failed, using fallback', e);
