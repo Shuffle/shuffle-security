@@ -1619,9 +1619,15 @@ const AgentUI: React.FC<AgentUIProps> = ({
     setExecution(null);
     setAgentData({ original_input: text.trim() });
     setAgentActionResult(null);
+    setExecutionApps([]);
+    setResolvedToolApps({});
+    setHighlightedIndex(null);
     setOpenIndexes(new Set());
     setQuestionAnswers({});
     setContinuationText('');
+    setSimpleSubmitAttempted(false);
+    setSubmitAttempted(false);
+    setError(null);
     setLocalRunStart(null);
     setViewMode('simple');
     setShowStarter(false);
