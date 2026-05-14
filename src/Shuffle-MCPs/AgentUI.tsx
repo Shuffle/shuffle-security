@@ -2051,29 +2051,38 @@ const AgentUI: React.FC<AgentUIProps> = ({
     // the Thinking rows in-place so they stay between the two decisions whose
     // gap they represent. Do NOT re-sort afterwards — that would clump them.
     const withProcessing: TimelineItem[] = [];
-    let prevDecEnd = 0;
-    let prevDecSeen = false;
+    const agentItem = items.find((it) => it.type === 'agent');
+    const runStart = agentItem?.start_time || 0;
+    const runEnd = agentItem?.end_time || 0;
+    let prevDecEnd = runStart;
+    const pushThinking = (from: number, to: number) => {
+      if (from > 0 && to > 0 && to - from >= 0.5) {
+        withProcessing.push({
+          label: 'Thinking',
+          type: 'decision',
+          category: 'processing',
+          status: 'FINISHED',
+          start_time: from,
+          end_time: to,
+          details: undefined as any,
+        });
+      }
+    };
     for (const it of items) {
-      if (it.type === 'decision' && !isFinalise(it)) {
+      if (it.type === 'decision') {
         const decStart = it.start_time || 0;
-        if (prevDecSeen && prevDecEnd > 0 && decStart > 0 && decStart - prevDecEnd >= 0.5) {
-          withProcessing.push({
-            label: 'Thinking',
-            type: 'decision',
-            category: 'processing',
-            status: 'FINISHED',
-            start_time: prevDecEnd,
-            end_time: decStart,
-            details: undefined as any,
-          });
-        }
+        // Insert Thinking before this decision (works for first decision after
+        // run start, gaps between decisions, and the gap before Finalise).
+        pushThinking(prevDecEnd, decStart);
         withProcessing.push(it);
         prevDecEnd = it.end_time || decStart || prevDecEnd;
-        prevDecSeen = prevDecSeen || decStart > 0;
       } else {
         withProcessing.push(it);
       }
     }
+    // Tail: if the last decision finished well before the run ended and there
+    // was no Finalise, surface that trailing dead time too.
+    if (runEnd > 0) pushThinking(prevDecEnd, runEnd);
     items.length = 0;
     items.push(...withProcessing);
 
