@@ -2774,16 +2774,29 @@ const AgentUI: React.FC<AgentUIProps> = ({
                     {appPickerLabel}
                   </Box>
                 </Tooltip>
-                {chosenApps.map((app, i) => (
-                  <Box
+                {chosenApps.map((app, i) => {
+                  const slug = (app.name || '').toLowerCase().replace(/[\s-]+/g, '_');
+                  const NO_AUTH = new Set(['http', 'shuffle_tools', 'shuffle-tools', 'tools', 'singul', 'core', 'webhook', 'email']);
+                  const needsAuth = !NO_AUTH.has(slug) && !isAppAuthenticated(app.name || '');
+                  return (
+                  <Tooltip
                     key={`${app.name}-${i}`}
+                    title={needsAuth ? `${(app.name || '').replace(/_/g, ' ')} is not authenticated yet — click to set it up` : ''}
+                    arrow
+                  >
+                  <Box
+                    onClick={needsAuth && !agentRequestLoading ? () => setAuthDrawerApp({ name: app.name, id: app.id || null }) : undefined}
                     sx={{
                       display: 'inline-flex', alignItems: 'center', gap: 0.5,
                       pl: 0.5, pr: 0.75, py: 0.25,
                       borderRadius: 999,
-                      bgcolor: 'hsl(var(--muted) / 0.6)',
+                      bgcolor: needsAuth ? 'hsl(var(--severity-medium) / 0.12)' : 'hsl(var(--muted) / 0.6)',
+                      border: needsAuth ? '1px solid hsl(var(--severity-medium) / 0.55)' : '1px solid transparent',
                       fontSize: '0.8rem',
                       color: 'hsl(var(--foreground))',
+                      cursor: needsAuth && !agentRequestLoading ? 'pointer' : 'default',
+                      transition: 'background-color 0.12s ease',
+                      '&:hover': needsAuth && !agentRequestLoading ? { bgcolor: 'hsl(var(--severity-medium) / 0.18)' } : {},
                     }}
                   >
                     <Avatar
@@ -2795,19 +2808,73 @@ const AgentUI: React.FC<AgentUIProps> = ({
                     <Typography sx={{ fontSize: '0.8rem', mx: 0.25, textTransform: 'capitalize' }}>
                       {app.name.replace(/_/g, ' ')}
                     </Typography>
+                    {needsAuth && (
+                      <WarningIcon sx={{ fontSize: 14, color: 'hsl(var(--severity-medium))', mr: 0.25 }} />
+                    )}
                     <IconButton
                       size="small"
-                      onClick={() => setChosenApps((prev) => prev.filter((_, idx) => idx !== i))}
+                      onClick={(e) => { e.stopPropagation(); setChosenApps((prev) => prev.filter((_, idx) => idx !== i)); }}
                       disabled={agentRequestLoading}
                       sx={{ p: 0.125, color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--destructive))' }, '&.Mui-disabled': { opacity: 0.4 } }}
                     >
                       <CloseIcon sx={{ fontSize: 12 }} />
                     </IconButton>
                   </Box>
-                ))}
+                  </Tooltip>
+                  );
+                })}
               </Box>
             </Box>
             )}
+
+            {/* Pre-run auth advisory — non-blocking. Lists chosen apps that
+                are not yet authenticated and offers a one-click CTA to open
+                the app drawer to set them up. The agent can still run
+                without these — Shuffle will request auth mid-run if needed. */}
+            {!hideAppPicker && (() => {
+              const NO_AUTH = new Set(['http', 'shuffle_tools', 'shuffle-tools', 'tools', 'singul', 'core', 'webhook', 'email']);
+              const unauthed = chosenApps.filter((a) => {
+                const slug = (a.name || '').toLowerCase().replace(/[\s-]+/g, '_');
+                return !NO_AUTH.has(slug) && !isAppAuthenticated(a.name || '');
+              });
+              if (unauthed.length === 0) return null;
+              return (
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: -0.5 }}>
+                  <Box sx={{
+                    display: 'inline-flex', alignItems: 'center', gap: 1,
+                    px: 1.25, py: 0.5,
+                    borderRadius: 999,
+                    border: '1px solid hsl(var(--severity-medium) / 0.45)',
+                    bgcolor: 'hsl(var(--severity-medium) / 0.08)',
+                    fontSize: '0.75rem',
+                    color: 'hsl(var(--foreground))',
+                    maxWidth: '100%',
+                  }}>
+                    <WarningIcon sx={{ fontSize: 14, color: 'hsl(var(--severity-medium))' }} />
+                    <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
+                      {unauthed.length === 1
+                        ? `${unauthed[0].name.replace(/_/g, ' ')} is not authenticated.`
+                        : `${unauthed.length} apps are not authenticated.`}
+                    </Typography>
+                    <Box
+                      component="button"
+                      type="button"
+                      onClick={() => setAuthDrawerApp({ name: unauthed[0].name, id: unauthed[0].id || null })}
+                      sx={{
+                        all: 'unset', cursor: 'pointer',
+                        fontSize: '0.75rem', fontWeight: 600,
+                        color: 'hsl(var(--primary))',
+                        textTransform: 'capitalize',
+                        '&:hover': { textDecoration: 'underline' },
+                      }}
+                    >
+                      Set up {unauthed[0].name.replace(/_/g, ' ')} →
+                    </Box>
+                  </Box>
+                </Box>
+              );
+            })()}
+
 
             {error && (
               <Box sx={{
