@@ -20,12 +20,8 @@ const AgentsPage = () => {
   const scheduleAgentRun = useScheduleAgentRun();
 
   const handleSchedule = useCallback(
-    async ({ cron, input }: { cron: string; input: string }) => {
-      const { name } = await scheduleAgentRun({ cron, input });
-      toast({
-        title: 'Schedule started',
-        description: `"${name}" will run on \`${cron}\``,
-      });
+    async (info: Parameters<NonNullable<React.ComponentProps<typeof AgentUI>['onSchedule']>>[0]) => {
+      await scheduleAgentRun(info);
     },
     [scheduleAgentRun],
   );
