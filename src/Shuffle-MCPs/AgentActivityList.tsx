@@ -390,6 +390,48 @@ const AgentActivityList = ({
     >
       {(showSearchBar || showStatusChips) && (
         <Box sx={[{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5, flexWrap: 'wrap' }, ...(Array.isArray(toolbarSx) ? toolbarSx : toolbarSx ? [toolbarSx] : [])]}>
+          <Select
+            size="small"
+            value={workflowFilter}
+            onChange={(e) => setWorkflowFilter(String(e.target.value))}
+            displayEmpty
+            renderValue={(val) => {
+              if (!val) return 'All Agent runs';
+              const wf = agentWorkflows.find((w) => w.id === val);
+              return wf?.name || 'Selected workflow';
+            }}
+            sx={{
+              height: 36,
+              minWidth: 200,
+              maxWidth: 260,
+              fontSize: '0.85rem',
+              bgcolor: 'hsl(var(--card))',
+              color: 'hsl(var(--foreground))',
+              borderRadius: 1.5,
+              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--border))' },
+              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--muted-foreground) / 0.3)' },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--primary))' },
+            }}
+            MenuProps={{
+              slotProps: {
+                paper: {
+                  sx: {
+                    bgcolor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    color: 'hsl(var(--foreground))',
+                    maxHeight: 320,
+                  },
+                },
+              },
+            }}
+          >
+            <MenuItem value="" sx={{ fontSize: '0.85rem' }}>All Agent runs</MenuItem>
+            {agentWorkflows.map((w) => (
+              <MenuItem key={w.id} value={w.id} sx={{ fontSize: '0.85rem' }}>
+                {w.name}
+              </MenuItem>
+            ))}
+          </Select>
           {showSearchBar && (
             <TextField
               placeholder="Search results..."
@@ -443,48 +485,6 @@ const AgentActivityList = ({
                 }}
               />
             ))}
-          <Select
-            size="small"
-            value={workflowFilter}
-            onChange={(e) => setWorkflowFilter(String(e.target.value))}
-            displayEmpty
-            renderValue={(val) => {
-              if (!val) return 'All agentic workflows';
-              const wf = agentWorkflows.find((w) => w.id === val);
-              return wf?.name || 'Selected workflow';
-            }}
-            sx={{
-              height: 28,
-              minWidth: 200,
-              maxWidth: 260,
-              fontSize: '0.75rem',
-              bgcolor: 'hsl(var(--card))',
-              color: 'hsl(var(--foreground))',
-              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--border))' },
-              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--muted-foreground) / 0.3)' },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--primary))' },
-              '& .MuiSelect-select': { py: 0.5 },
-            }}
-            MenuProps={{
-              slotProps: {
-                paper: {
-                  sx: {
-                    bgcolor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    color: 'hsl(var(--foreground))',
-                    maxHeight: 320,
-                  },
-                },
-              },
-            }}
-          >
-            <MenuItem value="" sx={{ fontSize: '0.8rem' }}>All agentic workflows</MenuItem>
-            {agentWorkflows.map((w) => (
-              <MenuItem key={w.id} value={w.id} sx={{ fontSize: '0.8rem' }}>
-                {w.name}
-              </MenuItem>
-            ))}
-          </Select>
           {isLoading && runs.length > 0 && (
             <CircularProgress size={16} sx={{ color: 'hsl(var(--primary))', ml: 0.5 }} />
           )}
