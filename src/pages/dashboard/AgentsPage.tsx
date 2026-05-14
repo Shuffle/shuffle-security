@@ -18,8 +18,8 @@ const AgentsPage = () => {
   const [agentView, setAgentView] = useState<'start' | 'simple' | 'detailed'>('start');
   const scheduleAgentRun = useScheduleAgentRun();
 
-  const handleSchedule = useCallback(
-    async (info: Parameters<NonNullable<React.ComponentProps<typeof AgentUI>['onSchedule']>>[0]) => {
+  const handleSchedule = useCallback<NonNullable<AgentUIProps['onSchedule']>>(
+    async (info) => {
       await scheduleAgentRun(info);
     },
     [scheduleAgentRun],
