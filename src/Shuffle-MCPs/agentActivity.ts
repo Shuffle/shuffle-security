@@ -211,7 +211,9 @@ export const getAgentSchedulePrompt = async (
   return { workflow, prompt: String(found?.param?.value || '') };
 };
 
-/** Update the AI Agent prompt on a scheduled agent workflow. */
+/** Update the AI Agent prompt on a scheduled agent workflow. Overwrites
+ *  the `input` parameter with exactly what the caller passes — no merging,
+ *  no appended boilerplate. */
 export const updateAgentSchedulePrompt = async (
   workflowId: string,
   newPrompt: string,
@@ -221,12 +223,7 @@ export const updateAgentSchedulePrompt = async (
   const workflow = await getWorkflow(workflowId, params);
   const found = findAgentInputParam(workflow);
   if (!found) throw new Error('No AI Agent action found on this workflow');
-  // Preserve the trailing instructions appended at schedule time, if present.
-  const oldVal = String(found.param.value || '');
-  const tailMarker = '\n\nReturn ONLY the final result requested above';
-  const tailIdx = oldVal.indexOf(tailMarker);
-  const tail = tailIdx >= 0 ? oldVal.slice(tailIdx) : '';
-  found.param.value = `${newPrompt}${tail}`;
+  found.param.value = newPrompt;
   const res = await fetch(resolveUrl(`/api/v1/workflows/${workflowId}`, apiBaseUrl), {
     method: 'PUT',
     credentials: 'include',
