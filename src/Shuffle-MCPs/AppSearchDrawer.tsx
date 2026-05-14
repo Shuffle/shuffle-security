@@ -431,6 +431,16 @@ export default function AppSearchDrawer({
                   selectedApps={multiSelect ? projectedSelectedApps : undefined}
                   preventDefault={true}
                   onAppSelected={handleAppSelected}
+                  onSelectionChange={multiSelect && onSelectionChange ? (apps) => {
+                    onSelectionChange(
+                      apps.map((a: any) => ({
+                        name: a.name,
+                        id: (a.objectID && !String(a.objectID).startsWith('name:') && !String(a.objectID).startsWith('pinned-')) ? a.objectID : null,
+                        icon: a.image_url || '',
+                        categories: a.categories || [],
+                      }))
+                    );
+                  } : undefined}
                   pinnedApps={pinnedApps?.map(p => ({
                     name: p.name,
                     image_url: p.image_url,
