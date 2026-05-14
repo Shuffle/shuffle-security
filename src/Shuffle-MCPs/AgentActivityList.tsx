@@ -668,7 +668,7 @@ const AgentActivityList = ({
               '&:hover': { bgcolor: 'hsl(var(--muted))' },
             }}
           >
-            Edit prompt
+            Edit
           </Button>
           {onTryWorkflow && (
             <Button
