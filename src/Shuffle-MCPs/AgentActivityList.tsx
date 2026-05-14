@@ -394,10 +394,12 @@ const AgentActivityList = ({
     setEditOpen(true);
     setEditError(null);
     setEditPrompt('');
+    setEditApps('');
     setEditLoading(true);
     try {
-      const { prompt } = await getAgentSchedulePrompt(workflowFilter, { apiKey, apiBaseUrl, orgId });
+      const { prompt, apps } = await getAgentScheduleConfig(workflowFilter, { apiKey, apiBaseUrl, orgId });
       setEditPrompt(prompt);
+      setEditApps(apps.join(', '));
     } catch (e) {
       setEditError(e instanceof Error ? e.message : 'Failed to load prompt');
     } finally {
@@ -420,14 +422,15 @@ const AgentActivityList = ({
     setEditSaving(true);
     setEditError(null);
     try {
-      await updateAgentSchedulePrompt(workflowFilter, editPrompt, { apiKey, apiBaseUrl, orgId });
+      const apps = editApps.split(',').map((s) => s.trim()).filter(Boolean);
+      await updateAgentScheduleConfig(workflowFilter, { prompt: editPrompt, apps }, { apiKey, apiBaseUrl, orgId });
       setEditOpen(false);
     } catch (e) {
-      setEditError(e instanceof Error ? e.message : 'Failed to save prompt');
+      setEditError(e instanceof Error ? e.message : 'Failed to save changes');
     } finally {
       setEditSaving(false);
     }
-  }, [workflowFilter, editPrompt, apiKey, apiBaseUrl, orgId]);
+  }, [workflowFilter, editPrompt, editApps, apiKey, apiBaseUrl, orgId]);
 
   const confirmStop = useCallback(async () => {
     if (!workflowFilter) return;
