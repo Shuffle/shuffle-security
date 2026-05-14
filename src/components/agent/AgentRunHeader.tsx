@@ -3,6 +3,7 @@
  * Used in both the Activity Feed cards and the Action Drawer header.
  */
 
+import { useEffect, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import {
   CheckCircle,
