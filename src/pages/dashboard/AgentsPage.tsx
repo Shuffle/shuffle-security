@@ -117,10 +117,16 @@ const AgentsPage = () => {
         },
         {
           name: 'input',
-          value: `${input}\n\n$exec`,
+          value: `${input}\n\nReturn ONLY the final result requested above as raw plain text. Do not include explanations, reasoning steps, preamble, markdown formatting, code fences, or JSON wrapping unless the user explicitly asked for that exact format. If the request implies a list, return one item per line.\n\n$exec`,
           required: true,
           multiline: true,
           description: 'The input data for the LLM query',
+        },
+        {
+          name: 'output_format',
+          value: 'raw',
+          required: false,
+          description: 'Return raw text output instead of JSON',
         },
       ],
       isStartNode: true,
@@ -160,21 +166,57 @@ const AgentsPage = () => {
     });
     if (!putRes.ok) throw new Error(`Update workflow failed (${putRes.status})`);
 
-    // 4. Start the schedule.
-    const schedRes = await fetch(getApiUrl(`/api/v1/workflows/${workflowId}/schedule`), {
-      method: 'POST',
-      credentials: 'include',
-      headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: 'Schedule',
-        frequency: 'cron',
-        execution_argument: '',
-        environment: 'cloud',
-        id: triggerId,
-        start: actionId,
-      }),
-    });
-    if (!schedRes.ok) throw new Error(`Start schedule failed (${schedRes.status})`);
+    // 4. Start the schedule. If this fails, roll back by deleting the workflow.
+    let schedRes: Response;
+    try {
+      schedRes = await fetch(getApiUrl(`/api/v1/workflows/${workflowId}/schedule`), {
+        method: 'POST',
+        credentials: 'include',
+        headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: 'Schedule',
+          frequency: 'cron',
+          cron,
+          execution_argument: '',
+          environment: 'cloud',
+          id: triggerId,
+          start: actionId,
+          parameters: [
+            { name: 'cron', value: cron },
+            { name: 'execution_argument', value: '' },
+          ],
+        }),
+      });
+    } catch (err) {
+      await fetch(getApiUrl(`/api/v1/workflows/${workflowId}`), {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: { ...getAuthHeader() },
+      }).catch(() => {});
+      throw new Error(
+        `Could not reach the scheduler — workflow rolled back. ${err instanceof Error ? err.message : ''}`.trim(),
+      );
+    }
+
+    if (!schedRes.ok) {
+      const errText = await schedRes.text().catch(() => '');
+      await fetch(getApiUrl(`/api/v1/workflows/${workflowId}`), {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: { ...getAuthHeader() },
+      }).catch(() => {});
+
+      let detail = errText;
+      try {
+        const parsed = JSON.parse(errText);
+        detail = parsed?.reason || parsed?.error || parsed?.message || errText;
+      } catch {
+        /* keep raw text */
+      }
+      throw new Error(
+        `Scheduler rejected the cron \`${cron}\` (HTTP ${schedRes.status})${detail ? `: ${detail}` : ''}. The workflow has been deleted — please adjust the schedule and try again.`,
+      );
+    }
 
     toast({
       title: 'Schedule started',
