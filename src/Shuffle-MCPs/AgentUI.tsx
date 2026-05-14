@@ -2810,7 +2810,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   await onSchedule({
                     cron,
                     input: actionInput || '',
-                    apps: chosenApps.map((a) => a?.name).filter((n): n is string => !!n),
+                    apps: chosenApps.filter((a) => !!a?.name).map((a) => ({ name: a.name, id: a.id, icon: a.icon })),
                     onStep: (ev) => {
                       setScheduleSteps((prev) => prev.map((p) => p.id === ev.id ? { ...p, state: ev.state, detail: ev.detail } : p));
                     },
