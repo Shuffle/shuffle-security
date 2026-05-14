@@ -152,6 +152,27 @@ const getRunSubtitle = (run: AgentRun): string => {
 
 // ── Run row ──────────────────────────────────────────────────────────────────
 
+/** Extract distinct tools/apps used in this run from results + decisions. */
+const getRunTools = (run: AgentRun): string[] => {
+  const out = new Set<string>();
+  const add = (v?: string) => {
+    if (!v) return;
+    const s = String(v).trim();
+    if (!s) return;
+    // Skip the agent itself.
+    if (/^(ai\s*agent|shuffle\s*agent|shuffle_agent)$/i.test(s)) return;
+    out.add(s);
+  };
+  (run.results || []).forEach((r) => {
+    add(r?.action?.app_name);
+    if (!r?.action?.app_name) add(r?.action?.label);
+  });
+  (run.decisions || []).forEach((d) => {
+    add(typeof d?.tool === 'string' ? d.tool : undefined);
+  });
+  return Array.from(out).slice(0, 6);
+};
+
 interface RunRowProps {
   run: AgentRun;
   onClick: () => void;
@@ -163,6 +184,7 @@ const AgentRunRow = ({ run, onClick, sx }: RunRowProps) => {
   const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.WAITING;
   const iconColor = getRunIconColor(run);
   const duration = formatDuration(run);
+  const tools = getRunTools(run);
 
   return (
     <Box
@@ -248,6 +270,43 @@ const AgentRunRow = ({ run, onClick, sx }: RunRowProps) => {
           )}
         </Box>
       </Box>
+
+      {tools.length > 0 && (
+        <Box
+          sx={{
+            display: { xs: 'none', sm: 'flex' },
+            alignItems: 'center',
+            gap: 0.5,
+            flexWrap: 'wrap',
+            justifyContent: 'flex-end',
+            maxWidth: 220,
+            flexShrink: 0,
+          }}
+        >
+          {tools.map((t) => (
+            <Tooltip key={t} title={t} arrow>
+              <Chip
+                label={t}
+                size="small"
+                sx={{
+                  height: 20,
+                  fontSize: '0.68rem',
+                  maxWidth: 120,
+                  bgcolor: 'hsla(var(--muted) / 0.5)',
+                  color: 'hsl(var(--muted-foreground))',
+                  border: '1px solid hsl(var(--border))',
+                  '& .MuiChip-label': {
+                    px: 0.75,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  },
+                }}
+              />
+            </Tooltip>
+          ))}
+        </Box>
+      )}
     </Box>
   );
 };
