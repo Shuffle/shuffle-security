@@ -2856,7 +2856,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
           ...(Array.isArray(contentSx) ? contentSx : contentSx ? [contentSx] : []),
         ]}
       >
-        {(showRunSwitcher || showStarter) && tabBar}
+        {showRunSwitcher && tabBar}
         {showStarter ? (
           <Box
             component="form"
