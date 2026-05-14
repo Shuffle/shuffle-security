@@ -211,6 +211,25 @@ export const getAgentSchedulePrompt = async (
   return { workflow, prompt: String(found?.param?.value || '') };
 };
 
+/** Read the AI Agent prompt + selected app names from a scheduled agent
+ *  workflow. Apps are parsed from the AI Agent action's `app_name`
+ *  parameter (comma-separated). */
+export const getAgentScheduleConfig = async (
+  workflowId: string,
+  params: { apiKey?: string; apiBaseUrl?: string; orgId?: string } = {},
+): Promise<{ workflow: any; prompt: string; apps: string[] }> => {
+  const workflow = await getWorkflow(workflowId, params);
+  const found = findAgentInputParam(workflow);
+  const prompt = String(found?.param?.value || '');
+  const action = found?.action;
+  const appNameParam: any = (action?.parameters || []).find((x: any) => x?.name === 'app_name');
+  const apps = String(appNameParam?.value || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  return { workflow, prompt, apps };
+};
+
 /** Update the AI Agent prompt on a scheduled agent workflow. Overwrites
  *  the `input` parameter with exactly what the caller passes — no merging,
  *  no appended boilerplate. */
