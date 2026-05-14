@@ -2003,7 +2003,24 @@ const AgentUI: React.FC<AgentUIProps> = ({
       }
     }
 
-    items.sort((a, b) => (a.start_time || 0) - (b.start_time || 0));
+    // Sort: Agent row always first; then by start_time when present;
+    // otherwise preserve insertion order (the index `i` in the decisions list).
+    const sortItems = (arr: TimelineItem[]) => {
+      const indexed = arr.map((it, i) => ({ it, i }));
+      indexed.sort((a, b) => {
+        if (a.it.type === 'agent' && b.it.type !== 'agent') return -1;
+        if (b.it.type === 'agent' && a.it.type !== 'agent') return 1;
+        const aHas = (a.it.start_time || 0) > 0;
+        const bHas = (b.it.start_time || 0) > 0;
+        if (aHas && bHas) return (a.it.start_time || 0) - (b.it.start_time || 0);
+        if (aHas) return -1;
+        if (bHas) return 1;
+        return a.i - b.i;
+      });
+      arr.length = 0;
+      arr.push(...indexed.map((x) => x.it));
+    };
+    sortItems(items);
 
     // Insert "processing" placeholder rows between consecutive decisions when
     // there is meaningful dead time (the agent is thinking / the LLM is
