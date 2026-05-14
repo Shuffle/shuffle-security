@@ -78,6 +78,8 @@ export interface AgentActivityParams {
   apiBaseUrl?: string;
   /** Optional Shuffle Org ID — sent as the `Org-Id` header. */
   orgId?: string;
+  /** Workflow ID to search. Defaults to the synthetic 'AGENT' grouping. */
+  workflowId?: string;
 }
 
 const resolveUrl = (path: string, baseUrl?: string): string =>
@@ -92,7 +94,7 @@ const resolveHeaders = (apiKey?: string, orgId?: string): Record<string, string>
 };
 
 /**
- * Search agent workflow executions (workflow_id = "AGENT").
+ * Search agent workflow executions (workflow_id = "AGENT" by default).
  */
 export const searchAgentActivity = async (
   params: AgentActivityParams = {}
@@ -107,10 +109,11 @@ export const searchAgentActivity = async (
     apiKey,
     apiBaseUrl,
     orgId,
+    workflowId = 'AGENT',
   } = params;
 
   const payload = {
-    workflow_id: 'AGENT',
+    workflow_id: workflowId,
     cursor,
     limit,
     status,
