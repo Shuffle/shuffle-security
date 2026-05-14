@@ -189,6 +189,9 @@ export interface AgentUIProps {
   submitOverride?: (info: { input: string; apps: Array<{ name: string; id?: string; icon?: string }> }) => void | Promise<void>;
   /** When set, renders the submit control as a wider labelled button instead of the icon-only send button. */
   submitLabel?: string;
+  /** Force-disable the schedule (clock) button. Optional tooltip override. */
+  disableSchedule?: boolean;
+  disableScheduleTooltip?: string;
   /** Placeholder for the post-finish continuation field. */
   continuationPlaceholder?: string;
   /** Read `?execution_id` & `?authorization` from window URL on mount. */
@@ -934,6 +937,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
   submitIcon,
   submitOverride,
   submitLabel,
+  disableSchedule,
+  disableScheduleTooltip,
   continuationPlaceholder = 'Add more details to continue this task…',
   readUrlParams = true,
   executionId,
@@ -2975,15 +2980,17 @@ const AgentUI: React.FC<AgentUIProps> = ({
               {(() => {
                 const allowWithoutExecution = showStarter;
                 const promptTooShort = showStarter && (actionInput || '').trim().length < 6;
-                const canSchedule = (hasExecution || allowWithoutExecution) && !scheduleDisabledReason && !promptTooShort;
+                const canSchedule = (hasExecution || allowWithoutExecution) && !scheduleDisabledReason && !promptTooShort && !disableSchedule;
                 const hintActive = Boolean(scheduleHint) && canSchedule;
-                const tip: React.ReactNode = scheduleDisabledReason
-                  ? scheduleDisabledTooltip
-                  : promptTooShort
-                    ? 'Type at least 6 characters of prompt before scheduling.'
-                    : hintActive
-                      ? `Detected schedule: ${scheduleHint!.label}. Click to review and save.`
-                      : 'Schedule this prompt to run repeatedly on a cron schedule';
+                const tip: React.ReactNode = disableSchedule
+                  ? (disableScheduleTooltip || 'Scheduling is disabled while editing')
+                  : scheduleDisabledReason
+                    ? scheduleDisabledTooltip
+                    : promptTooShort
+                      ? 'Type at least 6 characters of prompt before scheduling.'
+                      : hintActive
+                        ? `Detected schedule: ${scheduleHint!.label}. Click to review and save.`
+                        : 'Schedule this prompt to run repeatedly on a cron schedule';
                 return (
                   <Tooltip title={tip} placement="top" arrow>
                     <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
@@ -3049,26 +3056,45 @@ const AgentUI: React.FC<AgentUIProps> = ({
               <Tooltip title={submitTooltip} placement="top" arrow>
                 <span>
                   {submitLabel ? (
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      disabled={actionInput.trim().length < 6 || agentRequestLoading}
-                      startIcon={agentRequestLoading ? <CircularProgress size={14} sx={{ color: 'inherit' }} /> : null}
-                      sx={{
-                        height: 36,
-                        px: 2,
-                        textTransform: 'none',
-                        fontSize: '0.85rem',
-                        fontWeight: 600,
-                        boxShadow: 'none',
-                        bgcolor: 'hsl(var(--primary))',
-                        color: 'hsl(var(--primary-foreground))',
-                        '&:hover': { bgcolor: 'hsl(var(--primary))', filter: 'brightness(1.1)', boxShadow: 'none' },
-                        '&.Mui-disabled': { bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' },
-                      }}
-                    >
-                      {submitLabel}
-                    </Button>
+                    <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                      <Tooltip title="Try this prompt without saving" placement="top" arrow>
+                        <IconButton
+                          type="button"
+                          onClick={() => submitInput(actionInput)}
+                          disabled={actionInput.trim().length < 6 || agentRequestLoading}
+                          sx={{
+                            width: 36, height: 36,
+                            bgcolor: 'transparent',
+                            border: '1px solid hsl(var(--border))',
+                            color: 'hsl(var(--foreground))',
+                            '&:hover': { bgcolor: 'hsl(var(--muted))' },
+                            '&.Mui-disabled': { color: 'hsl(var(--muted-foreground))' },
+                          }}
+                        >
+                          <PlayArrowRoundedIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        disabled={actionInput.trim().length < 6 || agentRequestLoading}
+                        startIcon={agentRequestLoading ? <CircularProgress size={14} sx={{ color: 'inherit' }} /> : null}
+                        sx={{
+                          height: 36,
+                          px: 2,
+                          textTransform: 'none',
+                          fontSize: '0.85rem',
+                          fontWeight: 600,
+                          boxShadow: 'none',
+                          bgcolor: 'hsl(var(--primary))',
+                          color: 'hsl(var(--primary-foreground))',
+                          '&:hover': { bgcolor: 'hsl(var(--primary))', filter: 'brightness(1.1)', boxShadow: 'none' },
+                          '&.Mui-disabled': { bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' },
+                        }}
+                      >
+                        {submitLabel}
+                      </Button>
+                    </Box>
                   ) : (
                     <IconButton
                       type="submit"

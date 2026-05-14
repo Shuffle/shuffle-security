@@ -101,8 +101,10 @@ const AgentsPage = () => {
           defaultInput={prefill.input}
           defaultApps={prefill.apps.length > 0 ? prefill.apps : undefined}
           submitOverride={editing ? handleSaveEdit : undefined}
-          submitLabel={editing ? 'Save changes' : undefined}
-          submitTooltip={editing ? '⌘+Enter to save changes' : undefined}
+          submitLabel={editing ? 'Save' : undefined}
+          submitTooltip={editing ? '⌘+Enter to save' : undefined}
+          disableSchedule={Boolean(editing)}
+          disableScheduleTooltip={editing ? 'Scheduling is disabled while editing an existing schedule' : undefined}
         />
         {agentView === 'start' && (
           <Box sx={{ pt: '12vh' }}>
