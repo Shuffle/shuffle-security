@@ -3,6 +3,7 @@
  * Used in both the Activity Feed cards and the Action Drawer header.
  */
 
+import { useEffect, useState } from 'react';
 import { Box, Typography } from '@mui/material';
 import {
   CheckCircle,
@@ -56,21 +57,26 @@ export const getRunIconColor = (run: AgentRun): string => {
   return 'hsl(var(--primary))';
 };
 
-export const formatDuration = (run: AgentRun): string => {
-  if (run.started_at && run.completed_at) {
-    const start = Number(run.started_at);
-    const end = Number(run.completed_at);
-    if (!isNaN(start) && !isNaN(end)) {
-      // Backend may return Unix milliseconds or seconds. Normalize to ms
-      // while preserving sub-second precision.
-      const toMs = (n: number) => (n > 1e12 ? n : n * 1000);
-      const ms = Math.max(0, toMs(end) - toMs(start));
-      if (ms < 1000) return `${(ms / 1000).toFixed(2)}s`;
-      if (ms < 60000) return `${(ms / 1000).toFixed(2)}s`;
-      return `${Math.floor(ms / 60000)}m ${Math.floor((ms % 60000) / 1000)}s`;
-    }
+const toMs = (n: number) => (n > 1e12 ? n : n * 1000);
+
+const formatMs = (ms: number): string => {
+  ms = Math.max(0, ms);
+  if (ms < 1000) return `${(ms / 1000).toFixed(2)}s`;
+  if (ms < 60000) return `${Math.round(ms / 1000)}s`;
+  return `${Math.floor(ms / 60000)}m ${Math.floor((ms % 60000) / 1000)}s`;
+};
+
+export const formatDuration = (run: AgentRun, nowMs: number = Date.now()): string => {
+  const start = run.started_at != null ? Number(run.started_at) : NaN;
+  const end = run.completed_at != null ? Number(run.completed_at) : NaN;
+  if (!isNaN(start)) {
+    const startMs = toMs(start);
+    const status = (run.status || '').toUpperCase();
+    const isInProgress = status === 'EXECUTING' || status === 'WAITING' || status === 'RUNNING';
+    const endMs = !isNaN(end) && !isInProgress ? toMs(end) : nowMs;
+    return formatMs(endMs - startMs);
   }
-  if (run.duration) return `${run.duration.toFixed(2)}s`;
+  if (run.duration) return formatMs(run.duration * 1000);
   return '';
 };
 
@@ -154,7 +160,15 @@ const AgentRunHeader = ({ run, onClick, showChevron, isExpanded }: AgentRunHeade
     ? { icon: <MinusCircle size={16} />, color: skipColor, label: 'Skipped' }
     : baseStatusCfg;
   const iconColor = isSkipped ? skipColor : getRunIconColor(run);
-  const duration = formatDuration(run);
+  const status = (run.status || '').toUpperCase();
+  const isInProgress = status === 'EXECUTING' || status === 'WAITING' || status === 'RUNNING';
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!isInProgress) return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [isInProgress]);
+  const duration = formatDuration(run, now);
   const isFailed = !isSkipped && (run.status?.toUpperCase() === 'FAILED' || run.status?.toUpperCase() === 'ABORTED');
   const failureInfo = isFailed ? getFailureInfo(run) : null;
   const isUnsure = !isSkipped && !isFailed && hasOutputWarning(run);
