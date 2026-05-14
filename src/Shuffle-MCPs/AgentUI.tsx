@@ -2480,7 +2480,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
             {scheduleCron !== scheduleHint.cron && (
               <Button
                 size="small"
-                onClick={() => setScheduleCron(scheduleHint.cron)}
+                onClick={() => { cronManualOverrideRef.current = true; setScheduleCron(scheduleHint.cron); }}
                 sx={{
                   height: 28,
                   textTransform: 'none',
