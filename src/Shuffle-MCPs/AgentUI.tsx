@@ -189,6 +189,9 @@ export interface AgentUIProps {
   submitOverride?: (info: { input: string; apps: Array<{ name: string; id?: string; icon?: string }> }) => void | Promise<void>;
   /** When set, renders the submit control as a wider labelled button instead of the icon-only send button. */
   submitLabel?: string;
+  /** Force-disable the schedule (clock) button. Optional tooltip override. */
+  disableSchedule?: boolean;
+  disableScheduleTooltip?: string;
   /** Placeholder for the post-finish continuation field. */
   continuationPlaceholder?: string;
   /** Read `?execution_id` & `?authorization` from window URL on mount. */
