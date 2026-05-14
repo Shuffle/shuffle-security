@@ -2436,7 +2436,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
             sx: {
               mt: 1,
               p: 2,
-              width: 320,
+              width: 360,
               borderRadius: 2,
               border: '1px solid hsl(var(--border))',
               bgcolor: 'hsl(var(--card))',
