@@ -1236,7 +1236,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
 
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify((agentData as any)?.decisions?.map((d: any) => d?.details?.tool || d?.tool) || []), appsById]);
+  }, [JSON.stringify((agentData as any)?.decisions?.map((d: any) => [d?.details?.tool || d?.tool, extractAuthRequest(d)?.appName]) || []), appsById]);
 
   // Sideload missing app icons via Algolia (same source as the picker), so
   // built-in/default chips like "http" and "shuffle_tools" show their logo
