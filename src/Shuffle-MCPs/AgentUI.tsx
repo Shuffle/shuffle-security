@@ -1526,7 +1526,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // `authorization` token required.
   useEffect(() => {
     if (!initialExecution || !initialExecution.execution_id) return;
-    setShowStarter(false);
+    if (!userPickedStartRef.current) setShowStarter(false);
     activeExecutionIdRef.current = initialExecution.execution_id;
     setExecution(initialExecution as ExecutionData);
     let actionResult: any = null;
