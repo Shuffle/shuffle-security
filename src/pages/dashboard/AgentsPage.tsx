@@ -34,11 +34,11 @@ const AgentsPage = () => {
   );
 
 
-  const handleEditWorkflow = useCallback(({ workflowId, name, prompt, apps }: { workflowId: string; name: string; prompt: string; apps: string[] }) => {
+  const handleEditWorkflow = useCallback(({ workflowId, name, prompt, apps }: { workflowId: string; name: string; prompt: string; apps: Array<{ name: string; id?: string }> }) => {
     setEditing({ workflowId, name });
     setPrefill((prev) => ({
       input: prompt,
-      apps: apps.map((n) => ({ name: n })),
+      apps: apps.map((a) => ({ name: a.name, id: a.id })),
       key: prev.key + 1,
     }));
     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -50,7 +50,7 @@ const AgentsPage = () => {
       try {
         await updateAgentScheduleConfig(
           editing.workflowId,
-          { prompt: input, apps: apps.map((a) => a.name) },
+          { prompt: input, apps: apps.map((a) => ({ name: a.name, id: a.id })) },
         );
         toast({ title: 'Schedule updated', description: `Saved changes to "${editing.name}".` });
         setEditing(null);
