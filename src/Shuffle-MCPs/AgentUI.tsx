@@ -543,7 +543,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
         }}>
           <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>{normalizeMarkdown(displayLabel)}</Markdown>
         </Box>
-        <Tooltip title={hasTiming ? `Duration: ${dur < 1 ? dur.toFixed(2) : Math.round(dur)}s · ${new Date(itemStart * 1000).toLocaleString()}` : 'No timing data'}>
+        <Tooltip title={hasTiming ? `Duration: ${dur.toFixed(2)}s · ${new Date(itemStart * 1000).toLocaleString()}` : 'No timing data'}>
           <Box sx={{ width: maxWidth, position: 'relative', height: 10, flexShrink: 0 }}>
             {dur > 0 && (
               <Box sx={{
