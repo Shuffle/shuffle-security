@@ -166,10 +166,10 @@ export const useScheduleAgentRun = () => {
       type: 'ACTION',
       parameters: [
         {
-          name: 'tool_name',
-          value: buildToolName(apps || []),
+          name: 'app_name',
+          value: buildAppNameValue(apps || []),
           required: true,
-          description: 'Comma-separated list of tools (e.g. app:<objectID>:<slug>) the agent is allowed to use.',
+          description: 'Comma-separated list of app names the agent is allowed to use.',
         },
         {
           name: 'input',
