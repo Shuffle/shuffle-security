@@ -1626,7 +1626,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
     setQuestionAnswers({});
     setContinuationText('');
     setSimpleSubmitAttempted(false);
-    setSubmitAttempted(false);
+    
     setError(null);
     setLocalRunStart(null);
     setViewMode('simple');
