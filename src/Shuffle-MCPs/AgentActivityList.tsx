@@ -355,7 +355,7 @@ const AgentActivityList = ({
   apiBaseUrl,
   orgId,
   onRunClick,
-  onTryWorkflow,
+  
   onEditWorkflow,
   showSearchBar = true,
   showStatusChips = true,
