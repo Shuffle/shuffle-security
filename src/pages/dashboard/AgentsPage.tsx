@@ -10,12 +10,17 @@
 import { useCallback, useState } from 'react';
 import { Box, Stack } from '@mui/material';
 import { AgentUI, AgentActivityList, AgentExecutionDrawer } from '@/Shuffle-MCPs';
-import type { AgentRun, AgentUIProps } from '@/Shuffle-MCPs';
+import type { AgentRun, AgentUIApp, AgentUIProps } from '@/Shuffle-MCPs';
 import { useScheduleAgentRun } from '@/hooks/useScheduleAgentRun';
 
 const AgentsPage = () => {
   const [selectedRun, setSelectedRun] = useState<AgentRun | null>(null);
   const [agentView, setAgentView] = useState<'start' | 'simple' | 'detailed'>('start');
+  const [prefill, setPrefill] = useState<{ input: string; apps: AgentUIApp[]; key: number }>({
+    input: '',
+    apps: [],
+    key: 0,
+  });
   const scheduleAgentRun = useScheduleAgentRun();
 
   const handleSchedule = useCallback<NonNullable<AgentUIProps['onSchedule']>>(
@@ -25,13 +30,29 @@ const AgentsPage = () => {
     [scheduleAgentRun],
   );
 
+  const handleTryWorkflow = useCallback(({ prompt, apps }: { prompt: string; apps: string[] }) => {
+    setPrefill((prev) => ({
+      input: prompt,
+      apps: apps.map((name) => ({ name })),
+      key: prev.key + 1,
+    }));
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   return (
     <Box sx={{ minHeight: '100vh', width: '100%', px: { xs: 2, md: 4 }, pt: '5vh', pb: 6 }}>
       <Stack spacing={6} sx={{ maxWidth: 820, mx: 'auto' }}>
-        <AgentUI maxWidth={820} onViewChange={setAgentView} onSchedule={handleSchedule} />
+        <AgentUI
+          key={prefill.key}
+          maxWidth={820}
+          onViewChange={setAgentView}
+          onSchedule={handleSchedule}
+          defaultInput={prefill.input}
+          defaultApps={prefill.apps.length > 0 ? prefill.apps : undefined}
+        />
         {agentView === 'start' && (
           <Box sx={{ pt: '12vh' }}>
-            <AgentActivityList onRunClick={setSelectedRun} />
+            <AgentActivityList onRunClick={setSelectedRun} onTryWorkflow={handleTryWorkflow} />
           </Box>
         )}
       </Stack>
