@@ -1591,6 +1591,33 @@ const AgentUI: React.FC<AgentUIProps> = ({
     const prevLocalRunStart = stateRef.current.localRunStart;
     const prevActiveExecutionId = activeExecutionIdRef.current;
     const prevShowStarter = stateRef.current.showStarter;
+    const prevViewMode = viewMode;
+
+    // Hard reset NOW — kill the previous run's poll loop, blank the
+    // execution/timeline state, drop the previous execution_id +
+    // agentView from the URL, and reset the view to simple. Otherwise
+    // the previous run's poll keeps writing into state during the
+    // in-flight request and the user sees the old "Detailed" tab flash
+    // back in.
+    activeExecutionIdRef.current = null;
+    setExecution(null);
+    setAgentData({ original_input: text.trim() });
+    setAgentActionResult(null);
+    setOpenIndexes(new Set());
+    setQuestionAnswers({});
+    setContinuationText('');
+    setLocalRunStart(null);
+    setViewMode('simple');
+    setShowStarter(false);
+    if (readUrlParams && typeof window !== 'undefined') {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('execution_id');
+        url.searchParams.delete('authorization');
+        url.searchParams.delete('agentView');
+        window.history.replaceState({}, '', url.toString());
+      } catch { /* noop */ }
+    }
 
     const result = await runAgent({
       input: text.trim(),
@@ -1647,30 +1674,17 @@ const AgentUI: React.FC<AgentUIProps> = ({
       setContinuationText(prevContinuationText);
       setLocalRunStart(prevLocalRunStart);
       setShowStarter(prevShowStarter);
+      setViewMode(prevViewMode);
       onRun?.({ input: text, success: false, error: result.error });
       return;
     }
 
-    // Success — now commit the hard reset before we paint the new run.
+    // Success — start the live timer for the new run. The destructive
+    // reset already happened up-front, so all we need to do here is
+    // seed the timer reference for elapsed-time rendering.
     const browserStart = Math.floor(Date.now() / 1000);
-    setShowStarter(false);
-    activeExecutionIdRef.current = null;
-    setExecution(null);
-    setAgentActionResult(null);
-    setOpenIndexes(new Set());
-    setQuestionAnswers({});
-    setContinuationText('');
     setNowTick(browserStart);
     setLocalRunStart(browserStart);
-    setAgentData({ original_input: text.trim() });
-    if (readUrlParams && typeof window !== 'undefined') {
-      try {
-        const url = new URL(window.location.href);
-        url.searchParams.delete('execution_id');
-        url.searchParams.delete('authorization');
-        window.history.replaceState({}, '', url.toString());
-      } catch { /* noop */ }
-    }
 
     const raw = result.rawData as any;
     const eid = raw?.execution_id;
@@ -1707,7 +1721,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
       }
       onRun?.({ input: text, success: true, executionId: eid });
     }
-  }, [chosenApps, getExecution, onRun, attachedImages, readUrlParams]);
+  }, [chosenApps, getExecution, onRun, attachedImages, readUrlParams, viewMode]);
 
   // Auto-submit on mount when caller provides a defaultInput + autoSubmit.
   const autoSubmittedRef = useRef(false);
