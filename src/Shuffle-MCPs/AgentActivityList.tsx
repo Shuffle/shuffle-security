@@ -152,6 +152,27 @@ const getRunSubtitle = (run: AgentRun): string => {
 
 // ── Run row ──────────────────────────────────────────────────────────────────
 
+/** Extract distinct tools/apps used in this run from results + decisions. */
+const getRunTools = (run: AgentRun): string[] => {
+  const out = new Set<string>();
+  const add = (v?: string) => {
+    if (!v) return;
+    const s = String(v).trim();
+    if (!s) return;
+    // Skip the agent itself.
+    if (/^(ai\s*agent|shuffle\s*agent|shuffle_agent)$/i.test(s)) return;
+    out.add(s);
+  };
+  (run.results || []).forEach((r) => {
+    add(r?.action?.app_name);
+    if (!r?.action?.app_name) add(r?.action?.label);
+  });
+  (run.decisions || []).forEach((d) => {
+    add(typeof d?.tool === 'string' ? d.tool : undefined);
+  });
+  return Array.from(out).slice(0, 6);
+};
+
 interface RunRowProps {
   run: AgentRun;
   onClick: () => void;
