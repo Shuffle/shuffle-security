@@ -41,11 +41,12 @@ export interface ScheduleStepEvent {
 export interface ScheduleAgentRunArgs {
   cron: string;
   input: string;
+  apps?: string[];
   onStep?: (event: ScheduleStepEvent) => void;
 }
 
 export const useScheduleAgentRun = () => {
-  return useCallback(async ({ cron, input, onStep }: ScheduleAgentRunArgs) => {
+  return useCallback(async ({ cron, input, apps, onStep }: ScheduleAgentRunArgs) => {
     const step = (id: ScheduleStepId, state: ScheduleStepState, detail?: string) => {
       try { onStep?.({ id, state, detail }); } catch { /* ignore */ }
     };
