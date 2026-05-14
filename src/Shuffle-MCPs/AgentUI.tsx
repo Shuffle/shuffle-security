@@ -3172,8 +3172,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
                                       size="small"
                                       disabled={agentRequestLoading || !pendingAnswered}
                                       onClick={trySimpleSubmit}
+                                      startIcon={agentRequestLoading ? <CircularProgress size={14} sx={{ color: 'hsl(var(--primary-foreground))' }} /> : undefined}
                                     >
-                                      {agentRequestLoading ? <CircularProgress size={16} /> : 'Submit'}
+                                      {agentRequestLoading ? 'Submitting…' : 'Submit'}
                                     </Button>
                                   </span>
                                 </Tooltip>
