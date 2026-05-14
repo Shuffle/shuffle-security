@@ -71,16 +71,23 @@ export const useScheduleAgentRun = () => {
     step('name', 'done', name);
 
     // 2. Create the workflow.
+    step('workflow', 'active');
     const createRes = await fetch(getApiUrl('/api/v1/workflows'), {
       method: 'POST',
       credentials: 'include',
       headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, description }),
     });
-    if (!createRes.ok) throw new Error(`Create workflow failed (${createRes.status})`);
+    if (!createRes.ok) {
+      step('workflow', 'error', `HTTP ${createRes.status}`);
+      throw new Error(`Create workflow failed (${createRes.status})`);
+    }
     const created = await createRes.json();
     const workflowId: string = created.id || created._id || created.workflow_id;
-    if (!workflowId) throw new Error('Workflow created but no id returned');
+    if (!workflowId) {
+      step('workflow', 'error', 'no id returned');
+      throw new Error('Workflow created but no id returned');
+    }
 
     // 3. Build trigger + action + branch and PUT the full workflow.
     const triggerId = uuid();
