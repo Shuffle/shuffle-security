@@ -398,13 +398,6 @@ const AgentActivityList = ({
     }
   }, [workflowFilter, selectedAgentWorkflow, apiKey, apiBaseUrl, orgId, onEditWorkflow]);
 
-  const handleTryWorkflow = useCallback(async () => {
-    if (!workflowFilter) return;
-    try {
-      const { prompt, apps } = await getAgentScheduleConfig(workflowFilter, { apiKey, apiBaseUrl, orgId });
-      onTryWorkflow?.({ prompt, apps });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load workflow');
     }
   }, [workflowFilter, apiKey, apiBaseUrl, orgId, onTryWorkflow]);
 
