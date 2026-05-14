@@ -446,15 +446,7 @@ export const diagnoseOutputWarning = (run: DiagnosableRun): OutputDiagnosis | nu
     };
   }
 
-  const ev = findEvidenceByKeywords(['error', 'failed', 'exception', 'could not']);
-  return {
-    kind: 'generic',
-    status,
-    title: 'Output may need review',
-    explanation:
-      'The result contains words that often indicate a problem, but no specific error code was returned.',
-    remediation: 'Open the Debug section below to inspect the raw response.',
-    snippet: findSnippet(['error', 'failed', 'exception', 'could not']),
-    evidence: withStatusEvidence(ev),
-  };
+  // No specific signal found — do NOT surface a generic "may need review"
+  // banner. It is too vague to be actionable and just adds noise.
+  return null;
 };
