@@ -210,7 +210,6 @@ const AgentActivityPage = () => {
         open={!!selectedRun}
         onClose={() => setSelectedRun(null)}
         run={selectedRun}
-        topBanner={<AgentRunDiagnosisBanner run={selectedRun} />}
       />
     </motion.div>
   );
