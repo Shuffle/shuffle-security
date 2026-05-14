@@ -400,12 +400,12 @@ const AgentActivityList = ({
     setEditOpen(true);
     setEditError(null);
     setEditPrompt('');
-    setEditApps('');
+    setEditApps([]);
     setEditLoading(true);
     try {
       const { prompt, apps } = await getAgentScheduleConfig(workflowFilter, { apiKey, apiBaseUrl, orgId });
       setEditPrompt(prompt);
-      setEditApps(apps.join(', '));
+      setEditApps(apps.map((name) => ({ name })));
     } catch (e) {
       setEditError(e instanceof Error ? e.message : 'Failed to load prompt');
     } finally {
