@@ -184,7 +184,7 @@ export const SIDEBAR_NAV: SidebarItemSpec[] = [
     tabKey: 'agents',
     label: 'Agents',
     icon: <AgentIcon size={20} />,
-    path: '/agent',
+    path: '/agents',
   },
   {
     tabKey: 'documentation',
