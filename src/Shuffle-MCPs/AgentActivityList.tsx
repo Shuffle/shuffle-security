@@ -675,6 +675,87 @@ const AgentActivityList = ({
           )}
         </Box>
       )}
+
+      <Dialog
+        open={editOpen}
+        onClose={() => (editSaving ? null : setEditOpen(false))}
+        fullWidth
+        maxWidth="md"
+        slotProps={{ paper: { sx: { bgcolor: 'hsl(var(--card))', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))' } } }}
+      >
+        <DialogTitle sx={{ fontSize: '1rem', fontWeight: 600 }}>
+          Edit prompt — {selectedAgentWorkflow?.name || 'Schedule'}
+        </DialogTitle>
+        <DialogContent>
+          {editLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress size={24} sx={{ color: 'hsl(var(--primary))' }} />
+            </Box>
+          ) : (
+            <TextField
+              autoFocus
+              fullWidth
+              multiline
+              minRows={6}
+              maxRows={20}
+              value={editPrompt}
+              onChange={(e) => setEditPrompt(e.target.value)}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  bgcolor: 'hsl(var(--background))',
+                  color: 'hsl(var(--foreground))',
+                  fontSize: '0.85rem',
+                  '& fieldset': { borderColor: 'hsl(var(--border))' },
+                },
+              }}
+            />
+          )}
+          {editError && (
+            <Typography sx={{ mt: 1, color: 'hsl(var(--severity-critical, 0 72% 55%))', fontSize: '0.8rem' }}>
+              {editError}
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setEditOpen(false)} disabled={editSaving} sx={{ textTransform: 'none', color: 'hsl(var(--muted-foreground))' }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={savePrompt}
+            disabled={editSaving || editLoading || !editPrompt.trim()}
+            sx={{ textTransform: 'none', bgcolor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))', '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' } }}
+          >
+            {editSaving ? <CircularProgress size={16} sx={{ color: 'hsl(var(--primary-foreground))', mr: 1 }} /> : null}
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={stopOpen}
+        onClose={() => (stopLoading ? null : setStopOpen(false))}
+        slotProps={{ paper: { sx: { bgcolor: 'hsl(var(--card))', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))' } } }}
+      >
+        <DialogTitle sx={{ fontSize: '1rem', fontWeight: 600 }}>Stop schedule?</DialogTitle>
+        <DialogContent>
+          <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))' }}>
+            This will stop "{selectedAgentWorkflow?.name}" and delete the scheduled workflow. Past executions remain visible. This cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setStopOpen(false)} disabled={stopLoading} sx={{ textTransform: 'none', color: 'hsl(var(--muted-foreground))' }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmStop}
+            disabled={stopLoading}
+            sx={{ textTransform: 'none', bgcolor: 'hsl(var(--severity-critical, 0 72% 55%))', color: 'hsl(var(--primary-foreground))', '&:hover': { bgcolor: 'hsla(var(--severity-critical, 0 72% 55%) / 0.9)' } }}
+          >
+            {stopLoading ? <CircularProgress size={16} sx={{ color: 'hsl(var(--primary-foreground))', mr: 1 }} /> : null}
+            Stop schedule
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
