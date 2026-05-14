@@ -181,6 +181,14 @@ export interface AgentUIProps {
   submitTooltip?: string;
   /** Custom icon for the submit button. */
   submitIcon?: React.ReactNode;
+  /**
+   * When provided, the submit button + Cmd/Ctrl+Enter call this instead of
+   * running the agent. Used for "edit existing scheduled workflow" mode where
+   * the same starter UI is reused for editing the prompt + apps.
+   */
+  submitOverride?: (info: { input: string; apps: Array<{ name: string; id?: string; icon?: string }> }) => void | Promise<void>;
+  /** When set, renders the submit control as a wider labelled button instead of the icon-only send button. */
+  submitLabel?: string;
   /** Placeholder for the post-finish continuation field. */
   continuationPlaceholder?: string;
   /** Read `?execution_id` & `?authorization` from window URL on mount. */
@@ -924,6 +932,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
   appPickerSubtitle = 'Pick the tools the agent is allowed to use for this run',
   submitTooltip = '⌘+Enter to send',
   submitIcon,
+  submitOverride,
+  submitLabel,
   continuationPlaceholder = 'Add more details to continue this task…',
   readUrlParams = true,
   executionId,
@@ -2155,10 +2165,18 @@ const AgentUI: React.FC<AgentUIProps> = ({
       return next;
     });
 
+  const handlePrimarySubmit = useCallback(() => {
+    if (submitOverride) {
+      submitOverride({ input: actionInput, apps: chosenApps });
+    } else {
+      submitInput(actionInput);
+    }
+  }, [submitOverride, actionInput, chosenApps, submitInput]);
+
   const onKeyDown = (e: React.KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       e.preventDefault();
-      submitInput(actionInput);
+      handlePrimarySubmit();
     }
   };
 
@@ -2837,7 +2855,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
         {showStarter ? (
           <Box
             component="form"
-            onSubmit={(e) => { e.preventDefault(); submitInput(actionInput); }}
+            onSubmit={(e) => { e.preventDefault(); handlePrimarySubmit(); }}
             sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: compact ? 2 : 3, py: compact ? 2 : 4 }}
           >
             {!hideHeroIcon && !compact && (
@@ -3030,19 +3048,42 @@ const AgentUI: React.FC<AgentUIProps> = ({
               )}
               <Tooltip title={submitTooltip} placement="top" arrow>
                 <span>
-                  <IconButton
-                    type="submit"
-                    disabled={actionInput.trim().length < 6 || agentRequestLoading}
-                    sx={{
-                      width: 36, height: 36,
-                      bgcolor: actionInput.trim().length >= 3 ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
-                      color: actionInput.trim().length >= 3 ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))',
-                      '&:hover': actionInput.trim().length >= 3 ? { filter: 'brightness(1.1)', bgcolor: 'hsl(var(--primary))' } : {},
-                      '&.Mui-disabled': { bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' },
-                    }}
-                  >
-                    {agentRequestLoading ? <CircularProgress size={16} sx={{ color: 'inherit' }} /> : (submitIcon ?? <PlayArrowRoundedIcon />)}
-                  </IconButton>
+                  {submitLabel ? (
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      disabled={actionInput.trim().length < 6 || agentRequestLoading}
+                      startIcon={agentRequestLoading ? <CircularProgress size={14} sx={{ color: 'inherit' }} /> : null}
+                      sx={{
+                        height: 36,
+                        px: 2,
+                        textTransform: 'none',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        boxShadow: 'none',
+                        bgcolor: 'hsl(var(--primary))',
+                        color: 'hsl(var(--primary-foreground))',
+                        '&:hover': { bgcolor: 'hsl(var(--primary))', filter: 'brightness(1.1)', boxShadow: 'none' },
+                        '&.Mui-disabled': { bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' },
+                      }}
+                    >
+                      {submitLabel}
+                    </Button>
+                  ) : (
+                    <IconButton
+                      type="submit"
+                      disabled={actionInput.trim().length < 6 || agentRequestLoading}
+                      sx={{
+                        width: 36, height: 36,
+                        bgcolor: actionInput.trim().length >= 3 ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
+                        color: actionInput.trim().length >= 3 ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))',
+                        '&:hover': actionInput.trim().length >= 3 ? { filter: 'brightness(1.1)', bgcolor: 'hsl(var(--primary))' } : {},
+                        '&.Mui-disabled': { bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' },
+                      }}
+                    >
+                      {agentRequestLoading ? <CircularProgress size={16} sx={{ color: 'inherit' }} /> : (submitIcon ?? <PlayArrowRoundedIcon />)}
+                    </IconButton>
+                  )}
                 </span>
               </Tooltip>
               </Box>

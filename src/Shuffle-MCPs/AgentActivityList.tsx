@@ -9,7 +9,6 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  Avatar,
   Box,
   Button,
   Chip,
@@ -18,7 +17,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  IconButton,
   InputAdornment,
   MenuItem,
   Select,
@@ -28,9 +26,6 @@ import {
 } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
 import SearchIcon from '@mui/icons-material/Search';
-import AddIcon from '@mui/icons-material/Add';
-import CloseIcon from '@mui/icons-material/Close';
-import AppSearchDrawer from './AppSearchDrawer';
 import {
   Activity,
   AlertCircle,
@@ -48,7 +43,6 @@ import {
   searchAgentActivity,
   listAgentScheduleWorkflows,
   getAgentScheduleConfig,
-  updateAgentScheduleConfig,
   stopAgentSchedule,
   type AgentRun,
   type AgentScheduleWorkflow,
@@ -336,6 +330,8 @@ export interface AgentActivityListProps {
   onRunClick?: (run: AgentRun) => void;
   /** Called when "Try it" is clicked on a selected scheduled workflow. */
   onTryWorkflow?: (info: { prompt: string; apps: string[] }) => void;
+  /** Called when "Edit" is clicked on a selected scheduled workflow. */
+  onEditWorkflow?: (info: { workflowId: string; name: string; prompt: string; apps: string[] }) => void;
   /** Show the search box. Default: true. */
   showSearchBar?: boolean;
   /** Show the status filter chips. Default: true. */
@@ -362,6 +358,7 @@ const AgentActivityList = ({
   orgId,
   onRunClick,
   onTryWorkflow,
+  onEditWorkflow,
   showSearchBar = true,
   showStatusChips = true,
   limit = 50,
@@ -382,13 +379,6 @@ const AgentActivityList = ({
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [agentWorkflows, setAgentWorkflows] = useState<AgentScheduleWorkflow[]>([]);
   const [workflowFilter, setWorkflowFilter] = useState('');
-  const [editOpen, setEditOpen] = useState(false);
-  const [editPrompt, setEditPrompt] = useState('');
-  const [editApps, setEditApps] = useState<Array<{ name: string; id?: string | null; icon?: string }>>([]);
-  const [appPickerOpen, setAppPickerOpen] = useState(false);
-  const [editLoading, setEditLoading] = useState(false);
-  const [editSaving, setEditSaving] = useState(false);
-  const [editError, setEditError] = useState<string | null>(null);
   const [stopOpen, setStopOpen] = useState(false);
   const [stopLoading, setStopLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
@@ -397,21 +387,18 @@ const AgentActivityList = ({
 
   const openEditPrompt = useCallback(async () => {
     if (!workflowFilter) return;
-    setEditOpen(true);
-    setEditError(null);
-    setEditPrompt('');
-    setEditApps([]);
-    setEditLoading(true);
     try {
       const { prompt, apps } = await getAgentScheduleConfig(workflowFilter, { apiKey, apiBaseUrl, orgId });
-      setEditPrompt(prompt);
-      setEditApps(apps.map((name) => ({ name })));
+      onEditWorkflow?.({
+        workflowId: workflowFilter,
+        name: selectedAgentWorkflow?.name || 'Schedule',
+        prompt,
+        apps,
+      });
     } catch (e) {
-      setEditError(e instanceof Error ? e.message : 'Failed to load prompt');
-    } finally {
-      setEditLoading(false);
+      setError(e instanceof Error ? e.message : 'Failed to load workflow');
     }
-  }, [workflowFilter, apiKey, apiBaseUrl, orgId]);
+  }, [workflowFilter, selectedAgentWorkflow, apiKey, apiBaseUrl, orgId, onEditWorkflow]);
 
   const handleTryWorkflow = useCallback(async () => {
     if (!workflowFilter) return;
@@ -422,21 +409,6 @@ const AgentActivityList = ({
       setError(e instanceof Error ? e.message : 'Failed to load workflow');
     }
   }, [workflowFilter, apiKey, apiBaseUrl, orgId, onTryWorkflow]);
-
-  const savePrompt = useCallback(async () => {
-    if (!workflowFilter) return;
-    setEditSaving(true);
-    setEditError(null);
-    try {
-      const apps = editApps.map((a) => String(a.name || '').trim()).filter(Boolean);
-      await updateAgentScheduleConfig(workflowFilter, { prompt: editPrompt, apps }, { apiKey, apiBaseUrl, orgId });
-      setEditOpen(false);
-    } catch (e) {
-      setEditError(e instanceof Error ? e.message : 'Failed to save changes');
-    } finally {
-      setEditSaving(false);
-    }
-  }, [workflowFilter, editPrompt, editApps, apiKey, apiBaseUrl, orgId]);
 
   const confirmStop = useCallback(async () => {
     if (!workflowFilter) return;
@@ -775,152 +747,6 @@ const AgentActivityList = ({
           )}
         </Box>
       )}
-
-      <Dialog
-        open={editOpen}
-        onClose={() => (editSaving ? null : setEditOpen(false))}
-        fullWidth
-        maxWidth="md"
-        slotProps={{ paper: { sx: { bgcolor: 'hsl(var(--card))', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))' } } }}
-      >
-        <DialogTitle sx={{ fontSize: '1rem', fontWeight: 600 }}>
-          Edit — {selectedAgentWorkflow?.name || 'Schedule'}
-        </DialogTitle>
-        <DialogContent>
-          {editLoading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress size={24} sx={{ color: 'hsl(var(--primary))' }} />
-            </Box>
-          ) : (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Box>
-                <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', mb: 0.75, textTransform: 'uppercase', letterSpacing: 0.4 }}>
-                  Prompt
-                </Typography>
-                <TextField
-                  autoFocus
-                  fullWidth
-                  multiline
-                  minRows={6}
-                  maxRows={20}
-                  value={editPrompt}
-                  onChange={(e) => setEditPrompt(e.target.value)}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      bgcolor: 'hsl(var(--background))',
-                      color: 'hsl(var(--foreground))',
-                      fontSize: '0.85rem',
-                      '& fieldset': { borderColor: 'hsl(var(--border))' },
-                    },
-                  }}
-                />
-              </Box>
-              <Box>
-                <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', mb: 0.75, textTransform: 'uppercase', letterSpacing: 0.4 }}>
-                  MCPs
-                </Typography>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    alignItems: 'center',
-                    gap: 0.75,
-                    p: 1,
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: 1,
-                    bgcolor: 'hsl(var(--background))',
-                    minHeight: 44,
-                  }}
-                >
-                  <Box
-                    onClick={() => setAppPickerOpen(true)}
-                    sx={{
-                      display: 'inline-flex', alignItems: 'center', gap: 0.5,
-                      cursor: 'pointer',
-                      px: 1.25, py: 0.5,
-                      borderRadius: 999,
-                      fontSize: '0.8rem', fontWeight: 500,
-                      color: 'hsl(var(--muted-foreground))',
-                      bgcolor: 'transparent',
-                      transition: 'color 0.12s ease, background-color 0.12s ease',
-                      '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted) / 0.5)' },
-                    }}
-                  >
-                    <AddIcon sx={{ fontSize: 14 }} />
-                    Add MCP
-                  </Box>
-                  {editApps.map((app, i) => (
-                    <Box
-                      key={`${app.name}-${i}`}
-                      sx={{
-                        display: 'inline-flex', alignItems: 'center', gap: 0.5,
-                        pl: 0.5, pr: 0.75, py: 0.25,
-                        borderRadius: 999,
-                        bgcolor: 'hsl(var(--muted) / 0.6)',
-                        fontSize: '0.8rem',
-                        color: 'hsl(var(--foreground))',
-                      }}
-                    >
-                      <Avatar
-                        src={app.icon || undefined}
-                        alt={app.name}
-                        variant="rounded"
-                        sx={{ width: 18, height: 18, bgcolor: 'transparent' }}
-                      />
-                      <Typography sx={{ fontSize: '0.8rem', mx: 0.25, textTransform: 'capitalize' }}>
-                        {app.name.replace(/_/g, ' ')}
-                      </Typography>
-                      <IconButton
-                        size="small"
-                        onClick={() => setEditApps((prev) => prev.filter((_, idx) => idx !== i))}
-                        sx={{ p: 0.125, color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--destructive))' } }}
-                      >
-                        <CloseIcon sx={{ fontSize: 12 }} />
-                      </IconButton>
-                    </Box>
-                  ))}
-                </Box>
-              </Box>
-            </Box>
-          )}
-          {editError && (
-            <Typography sx={{ mt: 1, color: 'hsl(var(--severity-critical, 0 72% 55%))', fontSize: '0.8rem' }}>
-              {editError}
-            </Typography>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2 }}>
-          <Button onClick={() => setEditOpen(false)} disabled={editSaving} sx={{ textTransform: 'none', color: 'hsl(var(--muted-foreground))' }}>
-            Cancel
-          </Button>
-          <Button
-            onClick={savePrompt}
-            disabled={editSaving || editLoading || !editPrompt.trim()}
-            sx={{ textTransform: 'none', bgcolor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))', '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' } }}
-          >
-            {editSaving ? <CircularProgress size={16} sx={{ color: 'hsl(var(--primary-foreground))', mr: 1 }} /> : null}
-            Save
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <AppSearchDrawer
-        open={appPickerOpen}
-        onClose={() => setAppPickerOpen(false)}
-        title="Select MCPs"
-        subtitle="Choose which apps the scheduled agent can call."
-        multiSelect
-        selectedApps={editApps.map((a) => ({ name: a.name, id: a.id || null, icon: a.icon }))}
-        onSelectionChange={(next) => {
-          setEditApps(
-            next.map((app) => ({
-              name: app.name,
-              id: app.id || undefined,
-              icon: app.icon || undefined,
-            })),
-          );
-        }}
-      />
 
       <Dialog
         open={stopOpen}
