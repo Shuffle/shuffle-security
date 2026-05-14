@@ -160,7 +160,15 @@ const AgentRunHeader = ({ run, onClick, showChevron, isExpanded }: AgentRunHeade
     ? { icon: <MinusCircle size={16} />, color: skipColor, label: 'Skipped' }
     : baseStatusCfg;
   const iconColor = isSkipped ? skipColor : getRunIconColor(run);
-  const duration = formatDuration(run);
+  const status = (run.status || '').toUpperCase();
+  const isInProgress = status === 'EXECUTING' || status === 'WAITING' || status === 'RUNNING';
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!isInProgress) return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [isInProgress]);
+  const duration = formatDuration(run, now);
   const isFailed = !isSkipped && (run.status?.toUpperCase() === 'FAILED' || run.status?.toUpperCase() === 'ABORTED');
   const failureInfo = isFailed ? getFailureInfo(run) : null;
   const isUnsure = !isSkipped && !isFailed && hasOutputWarning(run);
