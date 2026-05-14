@@ -364,6 +364,7 @@ const AgentActivityList = ({
   orgId,
   onRunClick,
   onTryWorkflow,
+  onEditWorkflow,
   showSearchBar = true,
   showStatusChips = true,
   limit = 50,
