@@ -819,22 +819,67 @@ const AgentActivityList = ({
                 <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', mb: 0.75, textTransform: 'uppercase', letterSpacing: 0.4 }}>
                   MCPs
                 </Typography>
-                <TextField
-                  fullWidth
-                  value={editApps}
-                  onChange={(e) => setEditApps(e.target.value)}
-                  placeholder="appname1, appname2, appname3"
-                  helperText="Comma-separated app names the agent can call."
+                <Box
                   sx={{
-                    '& .MuiOutlinedInput-root': {
-                      bgcolor: 'hsl(var(--background))',
-                      color: 'hsl(var(--foreground))',
-                      fontSize: '0.85rem',
-                      '& fieldset': { borderColor: 'hsl(var(--border))' },
-                    },
-                    '& .MuiFormHelperText-root': { color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem', ml: 0 },
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    gap: 0.75,
+                    p: 1,
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: 1,
+                    bgcolor: 'hsl(var(--background))',
+                    minHeight: 44,
                   }}
-                />
+                >
+                  <Box
+                    onClick={() => setAppPickerOpen(true)}
+                    sx={{
+                      display: 'inline-flex', alignItems: 'center', gap: 0.5,
+                      cursor: 'pointer',
+                      px: 1.25, py: 0.5,
+                      borderRadius: 999,
+                      fontSize: '0.8rem', fontWeight: 500,
+                      color: 'hsl(var(--muted-foreground))',
+                      bgcolor: 'transparent',
+                      transition: 'color 0.12s ease, background-color 0.12s ease',
+                      '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted) / 0.5)' },
+                    }}
+                  >
+                    <AddIcon sx={{ fontSize: 14 }} />
+                    Add MCP
+                  </Box>
+                  {editApps.map((app, i) => (
+                    <Box
+                      key={`${app.name}-${i}`}
+                      sx={{
+                        display: 'inline-flex', alignItems: 'center', gap: 0.5,
+                        pl: 0.5, pr: 0.75, py: 0.25,
+                        borderRadius: 999,
+                        bgcolor: 'hsl(var(--muted) / 0.6)',
+                        fontSize: '0.8rem',
+                        color: 'hsl(var(--foreground))',
+                      }}
+                    >
+                      <Avatar
+                        src={app.icon || undefined}
+                        alt={app.name}
+                        variant="rounded"
+                        sx={{ width: 18, height: 18, bgcolor: 'transparent' }}
+                      />
+                      <Typography sx={{ fontSize: '0.8rem', mx: 0.25, textTransform: 'capitalize' }}>
+                        {app.name.replace(/_/g, ' ')}
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        onClick={() => setEditApps((prev) => prev.filter((_, idx) => idx !== i))}
+                        sx={{ p: 0.125, color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--destructive))' } }}
+                      >
+                        <CloseIcon sx={{ fontSize: 12 }} />
+                      </IconButton>
+                    </Box>
+                  ))}
+                </Box>
               </Box>
             </Box>
           )}
