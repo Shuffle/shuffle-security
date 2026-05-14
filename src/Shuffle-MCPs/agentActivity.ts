@@ -242,10 +242,34 @@ export const stopAgentSchedule = async (
   params: { apiKey?: string; apiBaseUrl?: string; orgId?: string } = {},
 ): Promise<void> => {
   const { apiKey, apiBaseUrl, orgId } = params;
+  const headers = { ...resolveHeaders(apiKey, orgId) };
+
+  // 1. Delete the schedule trigger(s) first so the cron stops firing.
+  try {
+    const workflow = await getWorkflow(workflowId, params);
+    const triggers: any[] = workflow?.triggers || [];
+    const scheduleIds = triggers
+      .filter((t) => (t?.trigger_type || '').toUpperCase() === 'SCHEDULE')
+      .map((t) => t?.id || t?.id_ || t?._id_)
+      .filter(Boolean);
+    await Promise.all(
+      scheduleIds.map((sid) =>
+        fetch(resolveUrl(`/api/v1/workflows/${workflowId}/schedule/${sid}`, apiBaseUrl), {
+          method: 'DELETE',
+          credentials: 'include',
+          headers,
+        }).catch(() => undefined),
+      ),
+    );
+  } catch {
+    // Non-fatal — proceed to delete the workflow regardless.
+  }
+
+  // 2. Delete the workflow itself.
   const res = await fetch(resolveUrl(`/api/v1/workflows/${workflowId}`, apiBaseUrl), {
     method: 'DELETE',
     credentials: 'include',
-    headers: { ...resolveHeaders(apiKey, orgId) },
+    headers,
   });
   if (!res.ok) throw new Error(`Failed to stop schedule: ${res.statusText}`);
 };
