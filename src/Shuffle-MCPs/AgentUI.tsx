@@ -442,17 +442,23 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
     toolApp = appsById[raw] || appsById[tn];
   }
 
-  // Question fields
-  const questions: { question: string; index: number }[] = [];
+  // Question fields. A field counts as "answered" when either the upstream
+  // payload already carries an `answer` value on the field itself, or the
+  // user has typed an answer locally in `questionAnswers`.
+  const questions: { question: string; index: number; preAnswer?: string }[] = [];
   if (item.category === 'ask' || details?.action === 'ask') {
     for (const f of details?.fields || []) {
       if (f.key === 'question' && f.value) {
-        questions.push({ question: f.value, index: questions.length + 1 });
+        const preAnswer = typeof (f as any).answer === 'string' ? (f as any).answer.trim() : '';
+        questions.push({ question: f.value, index: questions.length + 1, preAnswer: preAnswer || undefined });
       }
     }
   }
   const questionsAnswered = questions.every(
-    (q) => questionAnswers[q.question]?.value
+    (q) => q.preAnswer || questionAnswers[q.question]?.value
+  );
+  const unansweredQuestions = questions.filter(
+    (q) => !q.preAnswer && !questionAnswers[q.question]?.value
   );
 
   // If the run as a whole has finished, treat any still-RUNNING/WAITING rows
