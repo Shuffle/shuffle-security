@@ -186,9 +186,14 @@ export const useScheduleAgentRun = () => {
       headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
       body: JSON.stringify(updated),
     });
-    if (!putRes.ok) throw new Error(`Update workflow failed (${putRes.status})`);
+    if (!putRes.ok) {
+      step('workflow', 'error', `HTTP ${putRes.status}`);
+      throw new Error(`Update workflow failed (${putRes.status})`);
+    }
+    step('workflow', 'done', name);
 
     // 4. Start the schedule. If this fails, roll back by deleting the workflow.
+    step('schedule', 'active');
     let schedRes: Response;
     try {
       schedRes = await fetch(getApiUrl(`/api/v1/workflows/${workflowId}/schedule`), {
