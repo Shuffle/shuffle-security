@@ -2045,32 +2045,37 @@ const AgentUI: React.FC<AgentUIProps> = ({
     };
     sortItems(items);
 
-    // Insert "processing" placeholder rows between consecutive decisions when
-    // there is meaningful dead time (the agent is thinking / the LLM is
-    // generating the next step). Skip the agent row itself — it spans the
-    // entire run and would always overlap.
-    const decisionItems = items.filter((it) => it.type === 'decision');
-    const runStart = items.find((it) => it.type === 'agent')?.start_time || 0;
-    const processingRows: TimelineItem[] = [];
-    let prevEnd = runStart;
-    for (const dec of decisionItems) {
-      const decStart = dec.start_time || 0;
-      const gap = decStart - prevEnd;
-      if (prevEnd > 0 && decStart > 0 && gap >= 0.5) {
-        processingRows.push({
-          label: 'Thinking',
-          type: 'decision',
-          category: 'processing',
-          status: 'FINISHED',
-          start_time: prevEnd,
-          end_time: decStart,
-          details: undefined as any,
-        });
+    // Insert "processing" placeholder rows inline between consecutive decisions
+    // when there is meaningful dead time (the agent is thinking / the LLM is
+    // generating the next step). Walk the already-sorted items list and splice
+    // the Thinking rows in-place so they stay between the two decisions whose
+    // gap they represent. Do NOT re-sort afterwards — that would clump them.
+    const withProcessing: TimelineItem[] = [];
+    let prevDecEnd = 0;
+    let prevDecSeen = false;
+    for (const it of items) {
+      if (it.type === 'decision' && !isFinalise(it)) {
+        const decStart = it.start_time || 0;
+        if (prevDecSeen && prevDecEnd > 0 && decStart > 0 && decStart - prevDecEnd >= 0.5) {
+          withProcessing.push({
+            label: 'Thinking',
+            type: 'decision',
+            category: 'processing',
+            status: 'FINISHED',
+            start_time: prevDecEnd,
+            end_time: decStart,
+            details: undefined as any,
+          });
+        }
+        withProcessing.push(it);
+        prevDecEnd = it.end_time || decStart || prevDecEnd;
+        prevDecSeen = prevDecSeen || decStart > 0;
+      } else {
+        withProcessing.push(it);
       }
-      prevEnd = dec.end_time || decStart;
     }
-    items.push(...processingRows);
-    sortItems(items);
+    items.length = 0;
+    items.push(...withProcessing);
 
     const start = items.reduce((acc, it) => Math.min(acc, it.start_time || acc), Infinity);
     const end = items.reduce((acc, it) => Math.max(acc, it.end_time || acc), 0);
