@@ -2513,7 +2513,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
             type="number"
             value={schedInterval}
             onChange={(e) => { cronManualOverrideRef.current = false; setSchedInterval(Math.max(1, Number(e.target.value) || 1)); }}
-            inputProps={{ min: 1, max: 999, style: { padding: '6px 8px', width: 48, textAlign: 'center', fontSize: '0.8rem' } }}
+            slotProps={{ htmlInput: { min: 1, max: 999, style: { padding: '6px 8px', width: 48, textAlign: 'center', fontSize: '0.8rem' } } }}
             sx={{
               '& .MuiOutlinedInput-root': {
                 bgcolor: 'hsl(var(--muted))',
@@ -2564,7 +2564,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 setSchedHour(Number.isFinite(hh) ? hh : 9);
                 setSchedMinute(Number.isFinite(mm) ? mm : 0);
               }}
-              inputProps={{ style: { padding: '6px 8px', fontSize: '0.8rem' } }}
+              slotProps={{ htmlInput: { style: { padding: '6px 8px', fontSize: '0.8rem' } } }}
               sx={{
                 '& .MuiOutlinedInput-root': {
                   bgcolor: 'hsl(var(--muted))',
@@ -2641,7 +2641,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
               type="number"
               value={schedDayOfMonth}
               onChange={(e) => { cronManualOverrideRef.current = false; setSchedDayOfMonth(Math.max(1, Math.min(31, Number(e.target.value) || 1))); }}
-              inputProps={{ min: 1, max: 31, style: { padding: '6px 8px', width: 56, textAlign: 'center', fontSize: '0.8rem' } }}
+              slotProps={{ htmlInput: { min: 1, max: 31, style: { padding: '6px 8px', width: 56, textAlign: 'center', fontSize: '0.8rem' } } }}
               sx={{
                 '& .MuiOutlinedInput-root': {
                   bgcolor: 'hsl(var(--muted))',
@@ -2708,7 +2708,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
               value={scheduleCron}
               onChange={(e) => { cronManualOverrideRef.current = true; setScheduleCron(e.target.value); }}
               placeholder="0 9 * * 1-5"
-              inputProps={{ style: { fontFamily: 'monospace', fontSize: '0.78rem', padding: '6px 8px' } }}
+              slotProps={{ htmlInput: { style: { fontFamily: 'monospace', fontSize: '0.78rem', padding: '6px 8px' } } }}
               sx={{
                 mt: 0.75,
                 '& .MuiOutlinedInput-root': {
