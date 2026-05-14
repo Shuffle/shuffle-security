@@ -178,12 +178,6 @@ export const useScheduleAgentRun = () => {
           multiline: true,
           description: 'The input data for the LLM query',
         },
-        {
-          name: 'output_format',
-          value: 'raw',
-          required: false,
-          description: 'Return raw text output instead of JSON',
-        },
       ],
       isStartNode: true,
       run_magic_output: false,
