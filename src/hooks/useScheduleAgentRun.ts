@@ -169,10 +169,10 @@ export const useScheduleAgentRun = () => {
       type: 'ACTION',
       parameters: [
         {
-          name: 'app_name',
-          value: (apps && apps.length > 0 ? apps.map((a) => String(a || '').trim()).filter(Boolean).join(',') : ''),
+          name: 'tool_name',
+          value: buildToolName(apps || []),
           required: true,
-          description: 'The name of the app to run the LLM query against',
+          description: 'Comma-separated list of tools (e.g. app:<objectID>:<slug>) the agent is allowed to use.',
         },
         {
           name: 'input',
