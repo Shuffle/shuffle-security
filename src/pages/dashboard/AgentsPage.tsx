@@ -45,6 +45,7 @@ const AgentsPage = () => {
         open={selectedRun !== null}
         onClose={() => setSelectedRun(null)}
         run={selectedRun}
+        onSchedule={handleSchedule}
       />
     </Box>
   );
