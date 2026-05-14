@@ -778,7 +778,7 @@ const AgentActivityList = ({
         slotProps={{ paper: { sx: { bgcolor: 'hsl(var(--card))', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))' } } }}
       >
         <DialogTitle sx={{ fontSize: '1rem', fontWeight: 600 }}>
-          Edit prompt — {selectedAgentWorkflow?.name || 'Schedule'}
+          Edit — {selectedAgentWorkflow?.name || 'Schedule'}
         </DialogTitle>
         <DialogContent>
           {editLoading ? (
@@ -786,23 +786,51 @@ const AgentActivityList = ({
               <CircularProgress size={24} sx={{ color: 'hsl(var(--primary))' }} />
             </Box>
           ) : (
-            <TextField
-              autoFocus
-              fullWidth
-              multiline
-              minRows={6}
-              maxRows={20}
-              value={editPrompt}
-              onChange={(e) => setEditPrompt(e.target.value)}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  bgcolor: 'hsl(var(--background))',
-                  color: 'hsl(var(--foreground))',
-                  fontSize: '0.85rem',
-                  '& fieldset': { borderColor: 'hsl(var(--border))' },
-                },
-              }}
-            />
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box>
+                <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', mb: 0.75, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                  Prompt
+                </Typography>
+                <TextField
+                  autoFocus
+                  fullWidth
+                  multiline
+                  minRows={6}
+                  maxRows={20}
+                  value={editPrompt}
+                  onChange={(e) => setEditPrompt(e.target.value)}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: 'hsl(var(--background))',
+                      color: 'hsl(var(--foreground))',
+                      fontSize: '0.85rem',
+                      '& fieldset': { borderColor: 'hsl(var(--border))' },
+                    },
+                  }}
+                />
+              </Box>
+              <Box>
+                <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', mb: 0.75, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                  MCPs
+                </Typography>
+                <TextField
+                  fullWidth
+                  value={editApps}
+                  onChange={(e) => setEditApps(e.target.value)}
+                  placeholder="appname1, appname2, appname3"
+                  helperText="Comma-separated app names the agent can call."
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: 'hsl(var(--background))',
+                      color: 'hsl(var(--foreground))',
+                      fontSize: '0.85rem',
+                      '& fieldset': { borderColor: 'hsl(var(--border))' },
+                    },
+                    '& .MuiFormHelperText-root': { color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem', ml: 0 },
+                  }}
+                />
+              </Box>
+            </Box>
           )}
           {editError && (
             <Typography sx={{ mt: 1, color: 'hsl(var(--severity-critical, 0 72% 55%))', fontSize: '0.8rem' }}>
