@@ -181,6 +181,14 @@ export interface AgentUIProps {
   submitTooltip?: string;
   /** Custom icon for the submit button. */
   submitIcon?: React.ReactNode;
+  /**
+   * When provided, the submit button + Cmd/Ctrl+Enter call this instead of
+   * running the agent. Used for "edit existing scheduled workflow" mode where
+   * the same starter UI is reused for editing the prompt + apps.
+   */
+  submitOverride?: (info: { input: string; apps: Array<{ name: string; id?: string; icon?: string }> }) => void | Promise<void>;
+  /** When set, renders the submit control as a wider labelled button instead of the icon-only send button. */
+  submitLabel?: string;
   /** Placeholder for the post-finish continuation field. */
   continuationPlaceholder?: string;
   /** Read `?execution_id` & `?authorization` from window URL on mount. */
