@@ -1513,7 +1513,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
       auth = params.get('authorization');
     }
     if (eid && auth) {
-      setShowStarter(false);
+      if (!userPickedStartRef.current) setShowStarter(false);
       activeExecutionIdRef.current = eid;
       setExecution({ execution_id: eid, authorization: auth, status: 'EXECUTING' });
       getExecution(eid, auth);
