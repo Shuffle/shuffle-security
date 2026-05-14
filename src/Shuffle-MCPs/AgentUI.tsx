@@ -2365,7 +2365,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
         {(['start', 'simple', 'detailed'] as TabKey[]).map((t) => {
           const active = activeTab === t;
           const label = t === 'start' ? 'Start' : t === 'simple' ? 'Simple' : 'Detailed';
-          const disabled = t === 'start' && disableStartTab;
+          const disabled = (t === 'start' && disableStartTab) || ((t === 'simple' || t === 'detailed') && !hasExecution);
           return (
             <Box
               key={t}
