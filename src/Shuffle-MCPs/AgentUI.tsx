@@ -2730,17 +2730,20 @@ const AgentUI: React.FC<AgentUIProps> = ({
             disabled={!scheduleCron.trim() || scheduleSaving}
             onClick={async () => {
               const cron = scheduleCron.trim();
+              console.log('[AgentUI] Save schedule clicked', { cron, hasOnSchedule: typeof onSchedule === 'function', inputLen: actionInput?.length });
               if (!cron) return;
               setScheduleSaving(true);
               try {
                 if (onSchedule) {
-                  await onSchedule({ cron, input: actionInput });
+                  await onSchedule({ cron, input: actionInput || '' });
                   toast({ title: 'Schedule saved', description: 'This prompt will now run on the selected schedule.' });
+                  setScheduleAnchor(null);
                 } else {
                   toast({ title: 'Scheduling not configured', description: 'No handler is wired up for scheduled runs in this view.', variant: 'destructive' });
+                  setScheduleAnchor(null);
                 }
-                setScheduleAnchor(null);
               } catch (err) {
+                console.error('[AgentUI] Schedule failed', err);
                 toast({ title: 'Failed to save schedule', description: err instanceof Error ? err.message : String(err), variant: 'destructive' });
               } finally {
                 setScheduleSaving(false);
