@@ -2244,22 +2244,28 @@ const AgentUI: React.FC<AgentUIProps> = ({
     });
     const reasons: string[] = [];
     if (isNotFinished) {
-      reasons.push('The agent is not finished running.');
-    }
-    if (hadContinuation) {
-      reasons.push('This run needed a follow-up message to continue, so the one-shot prompt did not succeed on its own. Refine the prompt until it finishes in one go before scheduling.');
-    }
-    if (actionCount === 0) {
-      reasons.push('This run did not perform any app or tool actions, so a scheduled run would have nothing meaningful to do.');
-    }
-    if (failedDecision) {
-      reasons.push('A decision in this run failed. Fix the failing step (for example, authenticate the app or correct the input) and rerun successfully before scheduling.');
-    }
-    if (answeredQuestion) {
-      reasons.push('A question in this run was answered manually. Scheduled runs are unattended, so refine the prompt so the agent does not need to ask anything before scheduling.');
+      reasons.push('Wait for the agent to finish before scheduling.');
+    } else if (showStarter) {
+      // On the Start view, a finished + validated run is always considered
+      // ready to schedule. Quality gates (continuations, missing actions,
+      // failed steps, manual answers) are only surfaced in Simple/Detailed
+      // views where the user is actively reviewing the run.
+    } else {
+      if (hadContinuation) {
+        reasons.push('This run needed a follow-up message to continue, so the one-shot prompt did not succeed on its own. Refine the prompt until it finishes in one go before scheduling.');
+      }
+      if (actionCount === 0) {
+        reasons.push('This run did not perform any app or tool actions, so a scheduled run would have nothing meaningful to do.');
+      }
+      if (failedDecision) {
+        reasons.push('A decision in this run failed. Fix the failing step (for example, authenticate the app or correct the input) and rerun successfully before scheduling.');
+      }
+      if (answeredQuestion) {
+        reasons.push('A question in this run was answered manually. Scheduled runs are unattended, so refine the prompt so the agent does not need to ask anything before scheduling.');
+      }
     }
     return { scheduleDisabledReasons: reasons };
-  }, [agentData, execution?.status]);
+  }, [agentData, execution?.status, showStarter]);
 
   // Detect natural-language scheduling intent in the prompt (e.g. "daily at 6 am",
   // "next monday at 2am", "every 15 minutes"). Used to highlight the Schedule
