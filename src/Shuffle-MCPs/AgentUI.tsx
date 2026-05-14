@@ -990,6 +990,11 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // "Cancel and go to Start" cannot repaint the UI or swap tabs back.
   const runAbortRef = useRef<AbortController | null>(null);
   const runGenerationRef = useRef(0);
+  // Sticky flag set when the user manually clicks the "Start" tab while a run
+  // is loaded. Prevents downstream effects (URL sync, initialExecution attach,
+  // etc.) from flipping back to Simple/Detailed when a poll response lands.
+  // Cleared the moment the user actually submits a new run.
+  const userPickedStartRef = useRef(false);
   // Mirror of state used inside async callbacks (e.g. submitInput) so we can
   // snapshot prior values for rollback without making the callback re-render
   // on every state change.
@@ -1508,7 +1513,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
       auth = params.get('authorization');
     }
     if (eid && auth) {
-      setShowStarter(false);
+      if (!userPickedStartRef.current) setShowStarter(false);
       activeExecutionIdRef.current = eid;
       setExecution({ execution_id: eid, authorization: auth, status: 'EXECUTING' });
       getExecution(eid, auth);
@@ -1521,7 +1526,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // `authorization` token required.
   useEffect(() => {
     if (!initialExecution || !initialExecution.execution_id) return;
-    setShowStarter(false);
+    if (!userPickedStartRef.current) setShowStarter(false);
     activeExecutionIdRef.current = initialExecution.execution_id;
     setExecution(initialExecution as ExecutionData);
     let actionResult: any = null;
@@ -1615,6 +1620,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
     setLocalRunStart(null);
     setViewMode('simple');
     setShowStarter(false);
+    // The user is starting a new run — drop any sticky "manual Start" pin so
+    // future polls/effects can populate Simple/Detailed normally.
+    userPickedStartRef.current = false;
     if (readUrlParams && typeof window !== 'undefined') {
       try {
         const url = new URL(window.location.href);
@@ -2145,6 +2153,10 @@ const AgentUI: React.FC<AgentUIProps> = ({
         setChosenApps(executionApps);
       }
       setShowStarter(true);
+      // Pin: user manually chose Start. Stay here even when polls land or
+      // initialExecution is re-attached, until they explicitly start a new run
+      // or click Simple/Detailed themselves.
+      userPickedStartRef.current = true;
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
         next.delete('agentView');
@@ -2152,6 +2164,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
       }, { replace: true });
     } else {
       setShowStarter(false);
+      userPickedStartRef.current = false;
       setViewMode(t);
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
