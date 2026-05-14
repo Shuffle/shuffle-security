@@ -10,8 +10,7 @@
 import { useCallback, useState } from 'react';
 import { Box, Stack } from '@mui/material';
 import { AgentUI, AgentActivityList, AgentExecutionDrawer } from '@/Shuffle-MCPs';
-import type { AgentRun } from '@/Shuffle-MCPs';
-import { toast } from '@/Shuffle-MCPs/toast';
+import type { AgentRun, AgentUIProps } from '@/Shuffle-MCPs';
 import { useScheduleAgentRun } from '@/hooks/useScheduleAgentRun';
 
 const AgentsPage = () => {
@@ -19,13 +18,9 @@ const AgentsPage = () => {
   const [agentView, setAgentView] = useState<'start' | 'simple' | 'detailed'>('start');
   const scheduleAgentRun = useScheduleAgentRun();
 
-  const handleSchedule = useCallback(
-    async ({ cron, input }: { cron: string; input: string }) => {
-      const { name } = await scheduleAgentRun({ cron, input });
-      toast({
-        title: 'Schedule started',
-        description: `"${name}" will run on \`${cron}\``,
-      });
+  const handleSchedule = useCallback<NonNullable<AgentUIProps['onSchedule']>>(
+    async (info) => {
+      await scheduleAgentRun(info);
     },
     [scheduleAgentRun],
   );

@@ -33,7 +33,7 @@ import { useAgentPermissions } from '@/hooks/useAgentPermissions';
 import AgentRunDiagnosisBanner from '@/components/agent/AgentRunDiagnosisBanner';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useScheduleAgentRun } from '@/hooks/useScheduleAgentRun';
-import { toast } from '@/Shuffle-MCPs/toast';
+import type { AgentUIProps } from '@/Shuffle-MCPs';
 
 const AgentActivityPage = () => {
 
@@ -57,13 +57,9 @@ const AgentActivityPage = () => {
     setPermissionsOpen(true);
   };
 
-  const handleSchedule = useCallback(
-    async ({ cron, input }: { cron: string; input: string }) => {
-      const { name } = await scheduleAgentRun({ cron, input });
-      toast({
-        title: 'Schedule started',
-        description: `"${name}" will run on \`${cron}\``,
-      });
+  const handleSchedule = useCallback<NonNullable<AgentUIProps['onSchedule']>>(
+    async (info) => {
+      await scheduleAgentRun(info);
     },
     [scheduleAgentRun],
   );

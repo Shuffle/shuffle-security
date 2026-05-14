@@ -8,8 +8,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { AgentRunDrawer, type AgentRunDrawerTab } from '@/Shuffle-MCPs';
-import { toast } from '@/Shuffle-MCPs/toast';
+import { AgentRunDrawer, type AgentRunDrawerTab, type AgentUIProps } from '@/Shuffle-MCPs';
 import PermissionsPanel from '@/components/agent/PermissionsPanel';
 import LocalLLMConfig from '@/components/agent/LocalLLMConfig';
 import {
@@ -25,13 +24,9 @@ const GlobalAgentDrawer = () => {
   const navigate = useNavigate();
   const scheduleAgentRun = useScheduleAgentRun();
 
-  const handleSchedule = useCallback(
-    async ({ cron, input }: { cron: string; input: string }) => {
-      const { name } = await scheduleAgentRun({ cron, input });
-      toast({
-        title: 'Schedule started',
-        description: `"${name}" will run on \`${cron}\``,
-      });
+  const handleSchedule = useCallback<NonNullable<AgentUIProps['onSchedule']>>(
+    async (info) => {
+      await scheduleAgentRun(info);
     },
     [scheduleAgentRun],
   );
