@@ -404,9 +404,10 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
   const validate = validateJson(item.details);
   const itemStart = item.start_time || 0;
   const itemEnd = item.end_time || itemStart;
-  const dur = Math.max(0, itemEnd - itemStart);
-  const offset = totalDuration > 0 ? ((itemStart - originalStartTime) / totalDuration) * maxWidth : 0;
-  const width = totalDuration > 0 ? Math.max(4, (dur / totalDuration) * maxWidth) : 0;
+  const hasTiming = itemStart > 0 && itemEnd >= itemStart;
+  const dur = hasTiming ? Math.max(0, itemEnd - itemStart) : 0;
+  const offset = totalDuration > 0 && hasTiming ? ((itemStart - originalStartTime) / totalDuration) * maxWidth : 0;
+  const width = totalDuration > 0 && hasTiming ? Math.max(4, (dur / totalDuration) * maxWidth) : 0;
 
   // Adapt label based on action/category
   let displayType = item.type as string;
