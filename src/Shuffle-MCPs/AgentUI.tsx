@@ -2064,7 +2064,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
     const pushThinking = (from: number, to: number) => {
       if (from > 0 && to > 0 && to - from >= 0.5) {
         withProcessing.push({
-          label: 'Thinking',
+          label: '',
           type: 'decision',
           category: 'processing',
           status: 'FINISHED',
