@@ -43,12 +43,13 @@ import {
   searchAgentActivity,
   listAgentScheduleWorkflows,
   getAgentSchedulePrompt,
+  getAgentScheduleConfig,
   updateAgentSchedulePrompt,
   stopAgentSchedule,
   type AgentRun,
   type AgentScheduleWorkflow,
 } from './agentActivity';
-import { Pencil, StopCircle } from 'lucide-react';
+import { Pencil, Play, StopCircle } from 'lucide-react';
 
 // ── Status / icon helpers ────────────────────────────────────────────────────
 
