@@ -2725,10 +2725,44 @@ const AgentUI: React.FC<AgentUIProps> = ({
             cron: {scheduleCron || '—'}
           </Typography>
         </Box>
+        {scheduleSaving && (
+          <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 0.75, p: 1.25, borderRadius: 1, bgcolor: 'hsl(var(--muted))', border: '1px solid hsl(var(--border))' }}>
+            {scheduleSteps.map((s) => {
+              const label =
+                s.id === 'name' ? 'Generating name & description'
+                : s.id === 'workflow' ? 'Creating workflow'
+                : 'Enabling schedule';
+              const color =
+                s.state === 'done' ? 'hsl(var(--primary))'
+                : s.state === 'error' ? 'hsl(var(--destructive))'
+                : s.state === 'active' ? 'hsl(var(--foreground))'
+                : 'hsl(var(--muted-foreground))';
+              return (
+                <Box key={s.id} sx={{ display: 'flex', alignItems: 'center', gap: 1, fontSize: '0.78rem', color }}>
+                  <Box sx={{ width: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {s.state === 'active' && <CircularProgress size={12} sx={{ color: 'hsl(var(--primary))' }} />}
+                    {s.state === 'done' && <Box sx={{ fontSize: '0.85rem', lineHeight: 1, color: 'hsl(var(--primary))' }}>✓</Box>}
+                    {s.state === 'error' && <Box sx={{ fontSize: '0.85rem', lineHeight: 1, color: 'hsl(var(--destructive))' }}>!</Box>}
+                    {s.state === 'pending' && <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'hsl(var(--muted-foreground))', opacity: 0.4 }} />}
+                  </Box>
+                  <Box component="span" sx={{ fontFamily: 'inherit' }}>
+                    {label}
+                    {s.detail && s.state !== 'pending' && (
+                      <Box component="span" sx={{ ml: 0.75, color: 'hsl(var(--muted-foreground))', fontFamily: 'monospace', fontSize: '0.72rem' }}>
+                        — {s.detail}
+                      </Box>
+                    )}
+                  </Box>
+                </Box>
+              );
+            })}
+          </Box>
+        )}
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, mt: 2 }}>
           <Button
             size="small"
             onClick={() => setScheduleAnchor(null)}
+            disabled={scheduleSaving}
             sx={{ height: 36, color: 'hsl(var(--muted-foreground))', textTransform: 'none' }}
           >
             Cancel
@@ -2741,10 +2775,21 @@ const AgentUI: React.FC<AgentUIProps> = ({
               const cron = scheduleCron.trim();
               console.log('[AgentUI] Save schedule clicked', { cron, hasOnSchedule: typeof onSchedule === 'function', inputLen: actionInput?.length });
               if (!cron) return;
+              setScheduleSteps([
+                { id: 'name', state: 'pending' },
+                { id: 'workflow', state: 'pending' },
+                { id: 'schedule', state: 'pending' },
+              ]);
               setScheduleSaving(true);
               try {
                 if (onSchedule) {
-                  await onSchedule({ cron, input: actionInput || '' });
+                  await onSchedule({
+                    cron,
+                    input: actionInput || '',
+                    onStep: (ev) => {
+                      setScheduleSteps((prev) => prev.map((p) => p.id === ev.id ? { ...p, state: ev.state, detail: ev.detail } : p));
+                    },
+                  });
                   toast({ title: 'Schedule saved', description: 'This prompt will now run on the selected schedule.' });
                   setScheduleAnchor(null);
                 } else {
