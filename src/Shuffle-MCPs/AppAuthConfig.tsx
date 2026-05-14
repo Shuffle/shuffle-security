@@ -672,18 +672,40 @@ export const AppAuthCard = ({
                   onClick={() => {
                     const authUrl = `https://shuffler.io/appauth?app_id=${app.objectID}&source=shuffle`;
                     const popup = window.open(authUrl, '_blank', 'width=600,height=700');
-                    if (popup && onRefreshAuth) {
-                      const authPollTimer = setInterval(() => {
-                        onRefreshAuth();
-                      }, 3000);
-                      const closePollTimer = setInterval(() => {
-                        if (popup.closed) {
-                          clearInterval(closePollTimer);
-                          clearInterval(authPollTimer);
-                          onRefreshAuth();
-                        }
-                      }, 500);
-                    }
+                    if (!onRefreshAuth) return;
+                    const baselineCount = entries.length;
+                    const startedAt = Date.now();
+                    const MAX_MS = 5 * 60 * 1000; // 5 minutes
+                    let stopped = false;
+                    const stop = () => {
+                      if (stopped) return;
+                      stopped = true;
+                      clearInterval(authPollTimer);
+                      clearInterval(closePollTimer);
+                    };
+                    const tick = async () => {
+                      try { await onRefreshAuth(); } catch {}
+                      // Stop as soon as a new auth entry for this app shows up
+                      try {
+                        const fresh = (entries || []).filter(
+                          (e) => (e.app?.name || '').toLowerCase() === (app.name || '').toLowerCase()
+                        );
+                        if (fresh.length > baselineCount) stop();
+                      } catch {}
+                      if (Date.now() - startedAt > MAX_MS) stop();
+                    };
+                    // Fire immediately, then every 2s regardless of popup state
+                    tick();
+                    const authPollTimer = setInterval(tick, 2000);
+                    const closePollTimer = setInterval(() => {
+                      // popup may be null if blocked; in that case rely on auth poll + timeout
+                      if (popup && popup.closed) {
+                        // One last refresh after window closes
+                        tick();
+                        // Keep polling briefly in case backend writes the auth a moment later
+                        setTimeout(() => { tick(); stop(); }, 4000);
+                      }
+                    }, 500);
                   }}
                   sx={{
                     py: 1.5,
