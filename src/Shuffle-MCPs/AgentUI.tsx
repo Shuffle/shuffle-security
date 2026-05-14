@@ -978,6 +978,22 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const [scheduleAnchor, setScheduleAnchor] = useState<HTMLElement | null>(null);
   const [scheduleCron, setScheduleCron] = useState('0 * * * *');
   const [scheduleSaving, setScheduleSaving] = useState(false);
+  // Structured recurrence controls (Google-Calendar style). These compile
+  // down to a 5-field cron expression in `scheduleCron`. The advanced cron
+  // text field at the bottom of the popover lets power users override.
+  type SchedFreq = 'minutes' | 'hours' | 'days' | 'weeks' | 'months';
+  const [schedFreq, setSchedFreq] = useState<SchedFreq>('hours');
+  const [schedInterval, setSchedInterval] = useState<number>(1);
+  const [schedHour, setSchedHour] = useState<number>(9);
+  const [schedMinute, setSchedMinute] = useState<number>(0);
+  // Cron day-of-week: 0=Sun .. 6=Sat
+  const [schedWeekdays, setSchedWeekdays] = useState<Set<number>>(() => new Set([1]));
+  const [schedDayOfMonth, setSchedDayOfMonth] = useState<number>(1);
+  const [schedAdvancedOpen, setSchedAdvancedOpen] = useState<boolean>(false);
+  // When the user clicks a preset chip or types a custom cron, we mark the
+  // structured controls "dirty" so the auto-compile effect doesn't clobber
+  // it on the same render.
+  const cronManualOverrideRef = useRef<boolean>(false);
   const [openIndexes, setOpenIndexes] = useState<Set<number>>(new Set());
   // Briefly pulses a row + its output box after the diagnosis banner's
   // "Where this was found" jump. Cleared on a timer.
