@@ -349,27 +349,36 @@ const buildToolName = (apps: AgentUIApp[]): string => {
 
 const StatusIcon: React.FC<{ status?: string }> = ({ status }) => {
   const s = (status || '').toUpperCase();
+  let node: React.ReactNode;
+  let label: string;
   if (s === 'RUNNING' || s === 'EXECUTING' || s === '') {
-    return <CircularProgress size={18} sx={{ color: STATUS_COLORS.running }} />;
+    node = <CircularProgress size={18} sx={{ color: STATUS_COLORS.running }} />;
+    label = 'Running';
+  } else if (s === 'WAITING') {
+    node = <PauseIcon sx={{ color: STATUS_COLORS.running, fontSize: 20 }} />;
+    label = 'Waiting for input';
+  } else if (s === 'FINISHED' || s === 'SUCCESS') {
+    node = <CheckCircleIcon sx={{ color: STATUS_COLORS.finished, fontSize: 20 }} />;
+    label = 'Finished successfully';
+  } else if (s === 'ABORTED' || s === 'FAILURE') {
+    node = <ErrorIcon sx={{ color: STATUS_COLORS.error, fontSize: 20 }} />;
+    label = s === 'ABORTED' ? 'Aborted' : 'Failed';
+  } else if (s === 'IGNORED' || s === 'IGNORE') {
+    node = <WarningIcon sx={{ color: STATUS_COLORS.warning, fontSize: 20 }} />;
+    label = 'Ignored — skipped after run finished';
+  } else {
+    node = <HourglassDisabledIcon sx={{ color: 'hsl(var(--muted-foreground))', fontSize: 20 }} />;
+    label = 'Pending';
   }
-  if (s === 'WAITING') {
-    return (
-      <Tooltip title="Waiting for input">
-        <PauseIcon sx={{ color: STATUS_COLORS.running, fontSize: 20 }} />
-      </Tooltip>
-    );
-  }
-  if (s === 'FINISHED' || s === 'SUCCESS') {
-    return <CheckCircleIcon sx={{ color: STATUS_COLORS.finished, fontSize: 20 }} />;
-  }
-  if (s === 'ABORTED' || s === 'FAILURE') {
-    return <ErrorIcon sx={{ color: STATUS_COLORS.error, fontSize: 20 }} />;
-  }
-  if (s === 'IGNORED' || s === 'IGNORE') {
-    return <WarningIcon sx={{ color: STATUS_COLORS.warning, fontSize: 20 }} />;
-  }
-  return <HourglassDisabledIcon sx={{ color: 'hsl(var(--muted-foreground))', fontSize: 20 }} />;
+  return (
+    <Tooltip title={label} arrow>
+      <Box sx={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+        {node}
+      </Box>
+    </Tooltip>
+  );
 };
+
 
 interface TimelineRowProps {
   item: TimelineItem;
