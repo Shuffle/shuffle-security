@@ -1774,6 +1774,10 @@ const AgentUI: React.FC<AgentUIProps> = ({
   }, [execution, getExecution]);
 
   // ── Rerun the whole agent with the original input ──
+  // Instead of silently re-submitting (which leaves the user staring at the
+  // same screen wondering if anything happened), bounce them back to the
+  // Start tab with the prompt + tools pre-filled so they can review and
+  // hit Start themselves.
   const rerunAgent = useCallback(() => {
     const input =
       agentData?.original_input ||
@@ -1783,13 +1787,19 @@ const AgentUI: React.FC<AgentUIProps> = ({
         const m = msgs.find((m: any) => m?.role === 'user' && !String(m?.role).includes('USER CONTEXT'));
         return m?.content || '';
       })();
-    if (!input) {
-      toast({ title: 'Nothing to rerun', description: 'No original input found for this execution.', variant: 'destructive' });
-      return;
+    if (input && typeof input === 'string') {
+      setActionInput(input);
     }
-    setActionInput(input);
-    submitInput(input);
-  }, [agentData, actionInput, submitInput]);
+    if (executionApps.length > 0) {
+      setChosenApps(executionApps);
+    }
+    setShowStarter(true);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete('agentView');
+      return next;
+    }, { replace: true });
+  }, [agentData, actionInput, executionApps, setSearchParams]);
 
   // ── Abort the currently running agent execution ──
   // If the agent has not produced an execution_id yet (i.e. the initial
