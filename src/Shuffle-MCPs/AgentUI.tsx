@@ -1020,25 +1020,30 @@ const AgentUI: React.FC<AgentUIProps> = ({
   stateRef.current.localRunStart = localRunStart;
   stateRef.current.showStarter = showStarter;
 
-  // Reset / capture the local run start whenever a new execution begins.
+  // Reset / capture the local run start. Seed as soon as the user submits
+  // (so the counter ticks from t=0 even before /agent returns), and keep it
+  // pinned until the run is cleared. Without this, the "0s/1s" counter
+  // freezes because the backend's `started_at` keeps catching up to `now`
+  // on every poll.
   useEffect(() => {
-    if (execution?.execution_id) {
+    if (execution?.execution_id || agentRequestLoading) {
       setLocalRunStart((prev) => prev ?? Math.floor(Date.now() / 1000));
-    } else if (!agentRequestLoading) {
+    } else {
       setLocalRunStart(null);
     }
   }, [execution?.execution_id, agentRequestLoading]);
 
-  // Tick every second while a run is in progress so the Simple view duration
-  // counts up live instead of being frozen at "1s".
+  // Tick every second while anything run-related is in flight. Deps are
+  // intentionally minimal so the interval is NOT torn down and recreated on
+  // every poll response — that was making the "Xs" counter look frozen at 1s.
   useEffect(() => {
     const status = (execution?.status || agentData?.status || '').toUpperCase();
     const TERMINAL = ['FINISHED', 'FAILURE', 'ABORTED', 'CANCELLED', 'CANCELED'];
     if (TERMINAL.includes(status)) return;
-    if (!execution?.execution_id && !agentRequestLoading && !localRunStart) return;
     const id = setInterval(() => setNowTick(Math.floor(Date.now() / 1000)), 1000);
     return () => clearInterval(id);
-  }, [execution?.execution_id, execution?.status, agentData?.status, agentRequestLoading, localRunStart]);
+  }, [execution?.status, agentData?.status]);
+
 
   const readImageAsDataUrl = (file: File): Promise<{ dataUrl: string; name: string } | null> =>
     new Promise((resolve) => {
@@ -2957,10 +2962,14 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   const rawStartedAt = agentData?.started_at || execution?.started_at || 0;
                   // Normalize: backend may return Unix milliseconds (UnixMillis) or seconds.
                   const startedAtSec = rawStartedAt > 1e12 ? Math.floor(rawStartedAt / 1000) : rawStartedAt;
-                  // Prefer the backend's started_at, but fall back to our local
-                  // capture so the counter always ticks from t=0 instead of
-                  // freezing at "1s" while we wait for the first poll response.
-                  const effectiveStart = startedAtSec || localRunStart || 0;
+                  // Prefer our locally-captured start while the run is in
+                  // progress — the backend's `started_at` is sometimes
+                  // restamped on every poll, which made the counter look
+                  // frozen at "1s". Once finished, prefer the backend value
+                  // so the displayed total matches the recorded run.
+                  const effectiveStart = isRunning
+                    ? (localRunStart || startedAtSec || 0)
+                    : (startedAtSec || localRunStart || 0);
                   let durationSec: number | null = null;
                   if (isRunning && effectiveStart) {
                     durationSec = Math.max(0, nowTick - effectiveStart);
