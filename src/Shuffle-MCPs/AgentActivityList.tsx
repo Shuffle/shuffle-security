@@ -331,6 +331,7 @@ const AgentActivityList = ({
           apiKey,
           apiBaseUrl,
           orgId,
+          workflowId: workflowFilter || 'AGENT',
         });
         if (result.success) {
           setRuns((prev) => (append ? [...prev, ...result.runs] : result.runs));
@@ -345,13 +346,22 @@ const AgentActivityList = ({
         setIsLoading(false);
       }
     },
-    [statusFilter, limit, apiKey, apiBaseUrl, orgId],
+    [statusFilter, limit, apiKey, apiBaseUrl, orgId, workflowFilter],
   );
 
   useEffect(() => {
     fetchRuns(false, '');
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statusFilter, apiKey, apiBaseUrl, orgId]);
+  }, [statusFilter, apiKey, apiBaseUrl, orgId, workflowFilter]);
+
+  // Load the agentic workflow list (workflow_type = AGENT_SCHEDULE) once.
+  useEffect(() => {
+    let cancelled = false;
+    listAgentScheduleWorkflows({ apiKey, apiBaseUrl, orgId })
+      .then((items) => { if (!cancelled) setAgentWorkflows(items); })
+      .catch(() => { /* non-fatal — dropdown stays "All" only */ });
+    return () => { cancelled = true; };
+  }, [apiKey, apiBaseUrl, orgId]);
 
   const loadMore = useCallback(() => {
     if (cursor && !isLoading) fetchRuns(true, cursor);
