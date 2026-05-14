@@ -256,9 +256,8 @@ export const updateAgentSchedulePrompt = async (
 };
 
 /** Update both the prompt and the selected apps on a scheduled agent
- *  workflow. The `apps` array is encoded as `app:<id>:<slug>` (or `<slug>`
- *  when no id is known) and written verbatim to the AI Agent action's
- *  `tool_name` parameter. */
+ *  workflow. The `apps` array is written as a comma-separated list of app
+ *  names to the AI Agent action's `app_name` parameter. */
 export const updateAgentScheduleConfig = async (
   workflowId: string,
   config: { prompt: string; apps: Array<{ name: string; id?: string }> },
@@ -270,29 +269,23 @@ export const updateAgentScheduleConfig = async (
   if (!found) throw new Error('No AI Agent action found on this workflow');
   found.param.value = config.prompt;
   const action = found.action;
-  const toolValue = (config.apps || [])
+  const appValue = (config.apps || [])
     .filter((a) => !!a?.name)
-    .map((a) => {
-      const slug = a.name.toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
-      return a.id ? `app:${a.id}:${slug}` : slug;
-    })
+    .map((a) => a.name)
     .join(',');
   const params_: any[] = action.parameters || [];
-  const toolNameParam = params_.find((x) => x?.name === 'tool_name');
-  if (toolNameParam) {
-    toolNameParam.value = toolValue;
+  const appNameParam = params_.find((x) => x?.name === 'app_name');
+  if (appNameParam) {
+    appNameParam.value = appValue;
   } else {
     params_.push({
-      name: 'tool_name',
-      value: toolValue,
+      name: 'app_name',
+      value: appValue,
       required: true,
-      description: 'Comma-separated list of tools (e.g. app:<objectID>:<slug>) the agent is allowed to use.',
+      description: 'Comma-separated list of app names the agent is allowed to use.',
     });
     action.parameters = params_;
   }
-  // Clear any legacy `app_name` so the two parameters cannot drift apart.
-  const appNameParam = params_.find((x) => x?.name === 'app_name');
-  if (appNameParam) appNameParam.value = '';
   const res = await fetch(resolveUrl(`/api/v1/workflows/${workflowId}`, apiBaseUrl), {
     method: 'PUT',
     credentials: 'include',
