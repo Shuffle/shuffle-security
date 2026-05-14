@@ -2980,15 +2980,17 @@ const AgentUI: React.FC<AgentUIProps> = ({
               {(() => {
                 const allowWithoutExecution = showStarter;
                 const promptTooShort = showStarter && (actionInput || '').trim().length < 6;
-                const canSchedule = (hasExecution || allowWithoutExecution) && !scheduleDisabledReason && !promptTooShort;
+                const canSchedule = (hasExecution || allowWithoutExecution) && !scheduleDisabledReason && !promptTooShort && !disableSchedule;
                 const hintActive = Boolean(scheduleHint) && canSchedule;
-                const tip: React.ReactNode = scheduleDisabledReason
-                  ? scheduleDisabledTooltip
-                  : promptTooShort
-                    ? 'Type at least 6 characters of prompt before scheduling.'
-                    : hintActive
-                      ? `Detected schedule: ${scheduleHint!.label}. Click to review and save.`
-                      : 'Schedule this prompt to run repeatedly on a cron schedule';
+                const tip: React.ReactNode = disableSchedule
+                  ? (disableScheduleTooltip || 'Scheduling is disabled while editing')
+                  : scheduleDisabledReason
+                    ? scheduleDisabledTooltip
+                    : promptTooShort
+                      ? 'Type at least 6 characters of prompt before scheduling.'
+                      : hintActive
+                        ? `Detected schedule: ${scheduleHint!.label}. Click to review and save.`
+                        : 'Schedule this prompt to run repeatedly on a cron schedule';
                 return (
                   <Tooltip title={tip} placement="top" arrow>
                     <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
