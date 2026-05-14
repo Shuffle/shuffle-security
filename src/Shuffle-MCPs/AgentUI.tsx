@@ -2153,6 +2153,10 @@ const AgentUI: React.FC<AgentUIProps> = ({
         setChosenApps(executionApps);
       }
       setShowStarter(true);
+      // Pin: user manually chose Start. Stay here even when polls land or
+      // initialExecution is re-attached, until they explicitly start a new run
+      // or click Simple/Detailed themselves.
+      userPickedStartRef.current = true;
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
         next.delete('agentView');
@@ -2160,6 +2164,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
       }, { replace: true });
     } else {
       setShowStarter(false);
+      userPickedStartRef.current = false;
       setViewMode(t);
       setSearchParams((prev) => {
         const next = new URLSearchParams(prev);
