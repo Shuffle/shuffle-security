@@ -1674,30 +1674,17 @@ const AgentUI: React.FC<AgentUIProps> = ({
       setContinuationText(prevContinuationText);
       setLocalRunStart(prevLocalRunStart);
       setShowStarter(prevShowStarter);
+      setViewMode(prevViewMode);
       onRun?.({ input: text, success: false, error: result.error });
       return;
     }
 
-    // Success — now commit the hard reset before we paint the new run.
+    // Success — start the live timer for the new run. The destructive
+    // reset already happened up-front, so all we need to do here is
+    // seed the timer reference for elapsed-time rendering.
     const browserStart = Math.floor(Date.now() / 1000);
-    setShowStarter(false);
-    activeExecutionIdRef.current = null;
-    setExecution(null);
-    setAgentActionResult(null);
-    setOpenIndexes(new Set());
-    setQuestionAnswers({});
-    setContinuationText('');
     setNowTick(browserStart);
     setLocalRunStart(browserStart);
-    setAgentData({ original_input: text.trim() });
-    if (readUrlParams && typeof window !== 'undefined') {
-      try {
-        const url = new URL(window.location.href);
-        url.searchParams.delete('execution_id');
-        url.searchParams.delete('authorization');
-        window.history.replaceState({}, '', url.toString());
-      } catch { /* noop */ }
-    }
 
     const raw = result.rawData as any;
     const eid = raw?.execution_id;
