@@ -385,13 +385,6 @@ const AgentActivityList = ({
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [agentWorkflows, setAgentWorkflows] = useState<AgentScheduleWorkflow[]>([]);
   const [workflowFilter, setWorkflowFilter] = useState('');
-  const [editOpen, setEditOpen] = useState(false);
-  const [editPrompt, setEditPrompt] = useState('');
-  const [editApps, setEditApps] = useState<Array<{ name: string; id?: string | null; icon?: string }>>([]);
-  const [appPickerOpen, setAppPickerOpen] = useState(false);
-  const [editLoading, setEditLoading] = useState(false);
-  const [editSaving, setEditSaving] = useState(false);
-  const [editError, setEditError] = useState<string | null>(null);
   const [stopOpen, setStopOpen] = useState(false);
   const [stopLoading, setStopLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
@@ -400,21 +393,18 @@ const AgentActivityList = ({
 
   const openEditPrompt = useCallback(async () => {
     if (!workflowFilter) return;
-    setEditOpen(true);
-    setEditError(null);
-    setEditPrompt('');
-    setEditApps([]);
-    setEditLoading(true);
     try {
       const { prompt, apps } = await getAgentScheduleConfig(workflowFilter, { apiKey, apiBaseUrl, orgId });
-      setEditPrompt(prompt);
-      setEditApps(apps.map((name) => ({ name })));
+      onEditWorkflow?.({
+        workflowId: workflowFilter,
+        name: selectedAgentWorkflow?.name || 'Schedule',
+        prompt,
+        apps,
+      });
     } catch (e) {
-      setEditError(e instanceof Error ? e.message : 'Failed to load prompt');
-    } finally {
-      setEditLoading(false);
+      setError(e instanceof Error ? e.message : 'Failed to load workflow');
     }
-  }, [workflowFilter, apiKey, apiBaseUrl, orgId]);
+  }, [workflowFilter, selectedAgentWorkflow, apiKey, apiBaseUrl, orgId, onEditWorkflow]);
 
   const handleTryWorkflow = useCallback(async () => {
     if (!workflowFilter) return;
@@ -425,21 +415,6 @@ const AgentActivityList = ({
       setError(e instanceof Error ? e.message : 'Failed to load workflow');
     }
   }, [workflowFilter, apiKey, apiBaseUrl, orgId, onTryWorkflow]);
-
-  const savePrompt = useCallback(async () => {
-    if (!workflowFilter) return;
-    setEditSaving(true);
-    setEditError(null);
-    try {
-      const apps = editApps.map((a) => String(a.name || '').trim()).filter(Boolean);
-      await updateAgentScheduleConfig(workflowFilter, { prompt: editPrompt, apps }, { apiKey, apiBaseUrl, orgId });
-      setEditOpen(false);
-    } catch (e) {
-      setEditError(e instanceof Error ? e.message : 'Failed to save changes');
-    } finally {
-      setEditSaving(false);
-    }
-  }, [workflowFilter, editPrompt, editApps, apiKey, apiBaseUrl, orgId]);
 
   const confirmStop = useCallback(async () => {
     if (!workflowFilter) return;
