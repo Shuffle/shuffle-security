@@ -379,6 +379,7 @@ const AgentActivityList = ({
   const [workflowFilter, setWorkflowFilter] = useState('');
   const [editOpen, setEditOpen] = useState(false);
   const [editPrompt, setEditPrompt] = useState('');
+  const [editApps, setEditApps] = useState('');
   const [editLoading, setEditLoading] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
