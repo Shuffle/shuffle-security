@@ -47,7 +47,7 @@ import {
   type AgentRun,
   type AgentScheduleWorkflow,
 } from './agentActivity';
-import { Pencil, Play, StopCircle } from 'lucide-react';
+import { Pencil, StopCircle } from 'lucide-react';
 
 // ── Status / icon helpers ────────────────────────────────────────────────────
 
@@ -328,8 +328,6 @@ export interface AgentActivityListProps {
   orgId?: string;
   /** Called when a run row is clicked. */
   onRunClick?: (run: AgentRun) => void;
-  /** Called when "Try it" is clicked on a selected scheduled workflow. */
-  onTryWorkflow?: (info: { prompt: string; apps: string[] }) => void;
   /** Called when "Edit" is clicked on a selected scheduled workflow. */
   onEditWorkflow?: (info: { workflowId: string; name: string; prompt: string; apps: string[] }) => void;
   /** Show the search box. Default: true. */
@@ -357,7 +355,7 @@ const AgentActivityList = ({
   apiBaseUrl,
   orgId,
   onRunClick,
-  onTryWorkflow,
+  
   onEditWorkflow,
   showSearchBar = true,
   showStatusChips = true,
@@ -400,15 +398,6 @@ const AgentActivityList = ({
     }
   }, [workflowFilter, selectedAgentWorkflow, apiKey, apiBaseUrl, orgId, onEditWorkflow]);
 
-  const handleTryWorkflow = useCallback(async () => {
-    if (!workflowFilter) return;
-    try {
-      const { prompt, apps } = await getAgentScheduleConfig(workflowFilter, { apiKey, apiBaseUrl, orgId });
-      onTryWorkflow?.({ prompt, apps });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load workflow');
-    }
-  }, [workflowFilter, apiKey, apiBaseUrl, orgId, onTryWorkflow]);
 
   const confirmStop = useCallback(async () => {
     if (!workflowFilter) return;
@@ -648,25 +637,6 @@ const AgentActivityList = ({
           >
             Edit
           </Button>
-          {onTryWorkflow && (
-            <Button
-              size="small"
-              startIcon={<Play size={14} />}
-              onClick={handleTryWorkflow}
-              sx={{
-                height: 36,
-                border: '1px solid hsl(var(--border))',
-                borderRadius: 1.5,
-                color: 'hsl(var(--foreground))',
-                textTransform: 'none',
-                fontSize: '0.8rem',
-                px: 1.5,
-                '&:hover': { bgcolor: 'hsl(var(--muted))' },
-              }}
-            >
-              Try it
-            </Button>
-          )}
           <Button
             size="small"
             startIcon={<StopCircle size={14} />}
