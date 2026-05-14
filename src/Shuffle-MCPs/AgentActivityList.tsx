@@ -13,6 +13,10 @@ import {
   Button,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   InputAdornment,
   MenuItem,
   Select,
@@ -38,9 +42,13 @@ import {
 import {
   searchAgentActivity,
   listAgentScheduleWorkflows,
+  getAgentSchedulePrompt,
+  updateAgentSchedulePrompt,
+  stopAgentSchedule,
   type AgentRun,
   type AgentScheduleWorkflow,
 } from './agentActivity';
+import { Pencil, StopCircle } from 'lucide-react';
 
 // ── Status / icon helpers ────────────────────────────────────────────────────
 
@@ -307,7 +315,63 @@ const AgentActivityList = ({
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [agentWorkflows, setAgentWorkflows] = useState<AgentScheduleWorkflow[]>([]);
   const [workflowFilter, setWorkflowFilter] = useState('');
+  const [editOpen, setEditOpen] = useState(false);
+  const [editPrompt, setEditPrompt] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [stopOpen, setStopOpen] = useState(false);
+  const [stopLoading, setStopLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const selectedAgentWorkflow = agentWorkflows.find((w) => w.id === workflowFilter) || null;
+
+  const openEditPrompt = useCallback(async () => {
+    if (!workflowFilter) return;
+    setEditOpen(true);
+    setEditError(null);
+    setEditPrompt('');
+    setEditLoading(true);
+    try {
+      const { prompt } = await getAgentSchedulePrompt(workflowFilter, { apiKey, apiBaseUrl, orgId });
+      setEditPrompt(prompt);
+    } catch (e) {
+      setEditError(e instanceof Error ? e.message : 'Failed to load prompt');
+    } finally {
+      setEditLoading(false);
+    }
+  }, [workflowFilter, apiKey, apiBaseUrl, orgId]);
+
+  const savePrompt = useCallback(async () => {
+    if (!workflowFilter) return;
+    setEditSaving(true);
+    setEditError(null);
+    try {
+      await updateAgentSchedulePrompt(workflowFilter, editPrompt, { apiKey, apiBaseUrl, orgId });
+      setEditOpen(false);
+    } catch (e) {
+      setEditError(e instanceof Error ? e.message : 'Failed to save prompt');
+    } finally {
+      setEditSaving(false);
+    }
+  }, [workflowFilter, editPrompt, apiKey, apiBaseUrl, orgId]);
+
+  const confirmStop = useCallback(async () => {
+    if (!workflowFilter) return;
+    setStopLoading(true);
+    try {
+      await stopAgentSchedule(workflowFilter, { apiKey, apiBaseUrl, orgId });
+      setStopOpen(false);
+      // Refresh workflow list and clear the filter so list goes back to "All".
+      const items = await listAgentScheduleWorkflows({ apiKey, apiBaseUrl, orgId });
+      setAgentWorkflows(items);
+      setWorkflowFilter('');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to stop schedule');
+    } finally {
+      setStopLoading(false);
+    }
+  }, [workflowFilter, apiKey, apiBaseUrl, orgId]);
 
   const updateSearchQuery = useCallback((q: string) => {
     setSearchQuery(q);
@@ -390,6 +454,48 @@ const AgentActivityList = ({
     >
       {(showSearchBar || showStatusChips) && (
         <Box sx={[{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5, flexWrap: 'wrap' }, ...(Array.isArray(toolbarSx) ? toolbarSx : toolbarSx ? [toolbarSx] : [])]}>
+          <Select
+            size="small"
+            value={workflowFilter}
+            onChange={(e) => setWorkflowFilter(String(e.target.value))}
+            displayEmpty
+            renderValue={(val) => {
+              if (!val) return 'All Agent runs';
+              const wf = agentWorkflows.find((w) => w.id === val);
+              return wf?.name || 'Selected workflow';
+            }}
+            sx={{
+              height: 36,
+              minWidth: 200,
+              maxWidth: 260,
+              fontSize: '0.85rem',
+              bgcolor: 'hsl(var(--card))',
+              color: 'hsl(var(--foreground))',
+              borderRadius: 1.5,
+              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--border))' },
+              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--muted-foreground) / 0.3)' },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--primary))' },
+            }}
+            MenuProps={{
+              slotProps: {
+                paper: {
+                  sx: {
+                    bgcolor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    color: 'hsl(var(--foreground))',
+                    maxHeight: 320,
+                  },
+                },
+              },
+            }}
+          >
+            <MenuItem value="" sx={{ fontSize: '0.85rem' }}>All Agent runs</MenuItem>
+            {agentWorkflows.map((w) => (
+              <MenuItem key={w.id} value={w.id} sx={{ fontSize: '0.85rem' }}>
+                {w.name}
+              </MenuItem>
+            ))}
+          </Select>
           {showSearchBar && (
             <TextField
               placeholder="Search results..."
@@ -443,51 +549,68 @@ const AgentActivityList = ({
                 }}
               />
             ))}
-          <Select
-            size="small"
-            value={workflowFilter}
-            onChange={(e) => setWorkflowFilter(String(e.target.value))}
-            displayEmpty
-            renderValue={(val) => {
-              if (!val) return 'All agentic workflows';
-              const wf = agentWorkflows.find((w) => w.id === val);
-              return wf?.name || 'Selected workflow';
-            }}
-            sx={{
-              height: 28,
-              minWidth: 200,
-              maxWidth: 260,
-              fontSize: '0.75rem',
-              bgcolor: 'hsl(var(--card))',
-              color: 'hsl(var(--foreground))',
-              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--border))' },
-              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--muted-foreground) / 0.3)' },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--primary))' },
-              '& .MuiSelect-select': { py: 0.5 },
-            }}
-            MenuProps={{
-              slotProps: {
-                paper: {
-                  sx: {
-                    bgcolor: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    color: 'hsl(var(--foreground))',
-                    maxHeight: 320,
-                  },
-                },
-              },
-            }}
-          >
-            <MenuItem value="" sx={{ fontSize: '0.8rem' }}>All agentic workflows</MenuItem>
-            {agentWorkflows.map((w) => (
-              <MenuItem key={w.id} value={w.id} sx={{ fontSize: '0.8rem' }}>
-                {w.name}
-              </MenuItem>
-            ))}
-          </Select>
           {isLoading && runs.length > 0 && (
             <CircularProgress size={16} sx={{ color: 'hsl(var(--primary))', ml: 0.5 }} />
           )}
+        </Box>
+      )}
+
+      {selectedAgentWorkflow && (
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            p: 1.5,
+            borderRadius: 2,
+            border: '1px solid hsl(var(--border))',
+            bgcolor: 'hsl(var(--card))',
+          }}
+        >
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {selectedAgentWorkflow.name}
+            </Typography>
+            {selectedAgentWorkflow.description && (
+              <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {selectedAgentWorkflow.description}
+              </Typography>
+            )}
+          </Box>
+          <Button
+            size="small"
+            startIcon={<Pencil size={14} />}
+            onClick={openEditPrompt}
+            sx={{
+              height: 36,
+              border: '1px solid hsl(var(--border))',
+              borderRadius: 1.5,
+              color: 'hsl(var(--foreground))',
+              textTransform: 'none',
+              fontSize: '0.8rem',
+              px: 1.5,
+              '&:hover': { bgcolor: 'hsl(var(--muted))' },
+            }}
+          >
+            Edit prompt
+          </Button>
+          <Button
+            size="small"
+            startIcon={<StopCircle size={14} />}
+            onClick={() => setStopOpen(true)}
+            sx={{
+              height: 36,
+              border: '1px solid hsl(var(--severity-critical, 0 72% 55%) / 0.4)',
+              borderRadius: 1.5,
+              color: 'hsl(var(--severity-critical, 0 72% 55%))',
+              textTransform: 'none',
+              fontSize: '0.8rem',
+              px: 1.5,
+              '&:hover': { bgcolor: 'hsla(var(--severity-critical, 0 72% 55%) / 0.08)' },
+            }}
+          >
+            Stop schedule
+          </Button>
         </Box>
       )}
 
@@ -551,6 +674,87 @@ const AgentActivityList = ({
           )}
         </Box>
       )}
+
+      <Dialog
+        open={editOpen}
+        onClose={() => (editSaving ? null : setEditOpen(false))}
+        fullWidth
+        maxWidth="md"
+        slotProps={{ paper: { sx: { bgcolor: 'hsl(var(--card))', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))' } } }}
+      >
+        <DialogTitle sx={{ fontSize: '1rem', fontWeight: 600 }}>
+          Edit prompt — {selectedAgentWorkflow?.name || 'Schedule'}
+        </DialogTitle>
+        <DialogContent>
+          {editLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress size={24} sx={{ color: 'hsl(var(--primary))' }} />
+            </Box>
+          ) : (
+            <TextField
+              autoFocus
+              fullWidth
+              multiline
+              minRows={6}
+              maxRows={20}
+              value={editPrompt}
+              onChange={(e) => setEditPrompt(e.target.value)}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  bgcolor: 'hsl(var(--background))',
+                  color: 'hsl(var(--foreground))',
+                  fontSize: '0.85rem',
+                  '& fieldset': { borderColor: 'hsl(var(--border))' },
+                },
+              }}
+            />
+          )}
+          {editError && (
+            <Typography sx={{ mt: 1, color: 'hsl(var(--severity-critical, 0 72% 55%))', fontSize: '0.8rem' }}>
+              {editError}
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setEditOpen(false)} disabled={editSaving} sx={{ textTransform: 'none', color: 'hsl(var(--muted-foreground))' }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={savePrompt}
+            disabled={editSaving || editLoading || !editPrompt.trim()}
+            sx={{ textTransform: 'none', bgcolor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))', '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' } }}
+          >
+            {editSaving ? <CircularProgress size={16} sx={{ color: 'hsl(var(--primary-foreground))', mr: 1 }} /> : null}
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={stopOpen}
+        onClose={() => (stopLoading ? null : setStopOpen(false))}
+        slotProps={{ paper: { sx: { bgcolor: 'hsl(var(--card))', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))' } } }}
+      >
+        <DialogTitle sx={{ fontSize: '1rem', fontWeight: 600 }}>Stop schedule?</DialogTitle>
+        <DialogContent>
+          <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))' }}>
+            This will stop "{selectedAgentWorkflow?.name}" and delete the scheduled workflow. Past executions remain visible. This cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={() => setStopOpen(false)} disabled={stopLoading} sx={{ textTransform: 'none', color: 'hsl(var(--muted-foreground))' }}>
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmStop}
+            disabled={stopLoading}
+            sx={{ textTransform: 'none', bgcolor: 'hsl(var(--severity-critical, 0 72% 55%))', color: 'hsl(var(--primary-foreground))', '&:hover': { bgcolor: 'hsla(var(--severity-critical, 0 72% 55%) / 0.9)' } }}
+          >
+            {stopLoading ? <CircularProgress size={16} sx={{ color: 'hsl(var(--primary-foreground))', mr: 1 }} /> : null}
+            Stop schedule
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

@@ -173,5 +173,83 @@ export const listAgentScheduleWorkflows = async (
     .map((w) => ({ id: w.id || w._id, name: w.name || 'Untitled', description: w.description }));
 };
 
+/** Find the AI Agent action's `input` parameter inside a workflow. */
+const findAgentInputParam = (workflow: any): { action: any; param: any } | null => {
+  const actions: any[] = workflow?.actions || [];
+  for (const a of actions) {
+    if ((a?.app_name || '').toLowerCase().includes('ai agent') || a?.app_id === 'shuffle_agent') {
+      const params: any[] = a?.parameters || [];
+      const p = params.find((x) => x?.name === 'input');
+      if (p) return { action: a, param: p };
+    }
+  }
+  return null;
+};
+
+/** Fetch a single workflow by ID. */
+export const getWorkflow = async (
+  workflowId: string,
+  params: { apiKey?: string; apiBaseUrl?: string; orgId?: string } = {},
+): Promise<any> => {
+  const { apiKey, apiBaseUrl, orgId } = params;
+  const res = await fetch(resolveUrl(`/api/v1/workflows/${workflowId}`, apiBaseUrl), {
+    method: 'GET',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...resolveHeaders(apiKey, orgId) },
+  });
+  if (!res.ok) throw new Error(`Failed to fetch workflow: ${res.statusText}`);
+  return res.json();
+};
+
+/** Read the AI Agent prompt from a scheduled agent workflow. */
+export const getAgentSchedulePrompt = async (
+  workflowId: string,
+  params: { apiKey?: string; apiBaseUrl?: string; orgId?: string } = {},
+): Promise<{ workflow: any; prompt: string }> => {
+  const workflow = await getWorkflow(workflowId, params);
+  const found = findAgentInputParam(workflow);
+  return { workflow, prompt: String(found?.param?.value || '') };
+};
+
+/** Update the AI Agent prompt on a scheduled agent workflow. */
+export const updateAgentSchedulePrompt = async (
+  workflowId: string,
+  newPrompt: string,
+  params: { apiKey?: string; apiBaseUrl?: string; orgId?: string } = {},
+): Promise<void> => {
+  const { apiKey, apiBaseUrl, orgId } = params;
+  const workflow = await getWorkflow(workflowId, params);
+  const found = findAgentInputParam(workflow);
+  if (!found) throw new Error('No AI Agent action found on this workflow');
+  // Preserve the trailing instructions appended at schedule time, if present.
+  const oldVal = String(found.param.value || '');
+  const tailMarker = '\n\nReturn ONLY the final result requested above';
+  const tailIdx = oldVal.indexOf(tailMarker);
+  const tail = tailIdx >= 0 ? oldVal.slice(tailIdx) : '';
+  found.param.value = `${newPrompt}${tail}`;
+  const res = await fetch(resolveUrl(`/api/v1/workflows/${workflowId}`, apiBaseUrl), {
+    method: 'PUT',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...resolveHeaders(apiKey, orgId) },
+    body: JSON.stringify(workflow),
+  });
+  if (!res.ok) throw new Error(`Failed to update workflow: ${res.statusText}`);
+};
+
+/** Stop the schedule entirely by deleting the wrapper workflow. */
+export const stopAgentSchedule = async (
+  workflowId: string,
+  params: { apiKey?: string; apiBaseUrl?: string; orgId?: string } = {},
+): Promise<void> => {
+  const { apiKey, apiBaseUrl, orgId } = params;
+  const res = await fetch(resolveUrl(`/api/v1/workflows/${workflowId}`, apiBaseUrl), {
+    method: 'DELETE',
+    credentials: 'include',
+    headers: { ...resolveHeaders(apiKey, orgId) },
+  });
+  if (!res.ok) throw new Error(`Failed to stop schedule: ${res.statusText}`);
+};
+
 // Re-export so consumers can read base config if needed.
 export { API_CONFIG };
+
