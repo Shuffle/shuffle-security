@@ -2953,17 +2953,14 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 }}
               />
               {(() => {
-                const canSchedule = hasExecution && !scheduleDisabledReason;
+                const allowWithoutExecution = showStarter;
+                const canSchedule = (hasExecution || allowWithoutExecution) && !scheduleDisabledReason;
                 const hintActive = Boolean(scheduleHint) && canSchedule;
                 const tip: React.ReactNode = scheduleDisabledReason
                   ? scheduleDisabledTooltip
                   : hintActive
                     ? `Detected schedule: ${scheduleHint!.label}. Click to review and save.`
-                    : hasExecution
-                      ? 'Schedule this prompt to run repeatedly on a cron schedule'
-                      : agentRequestLoading
-                        ? 'Scheduling unlocks once this run finishes successfully — you cannot schedule a prompt that has not completed yet.'
-                        : 'Scheduling is available after the prompt finishes a successful one-shot run. Submit it first, then come back here to set a cron schedule.';
+                    : 'Schedule this prompt to run repeatedly on a cron schedule';
                 return (
                   <Tooltip title={tip} placement="top" arrow>
                     <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
