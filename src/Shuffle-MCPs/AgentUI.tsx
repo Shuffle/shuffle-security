@@ -1620,6 +1620,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
     setLocalRunStart(null);
     setViewMode('simple');
     setShowStarter(false);
+    // The user is starting a new run — drop any sticky "manual Start" pin so
+    // future polls/effects can populate Simple/Detailed normally.
+    userPickedStartRef.current = false;
     if (readUrlParams && typeof window !== 'undefined') {
       try {
         const url = new URL(window.location.href);
