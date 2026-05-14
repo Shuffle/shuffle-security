@@ -108,7 +108,6 @@ const AgentsPage = () => {
           <Box sx={{ pt: '12vh' }}>
             <AgentActivityList
               onRunClick={setSelectedRun}
-              onTryWorkflow={handleTryWorkflow}
               onEditWorkflow={handleEditWorkflow}
             />
           </Box>
