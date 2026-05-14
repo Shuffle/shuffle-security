@@ -618,11 +618,8 @@ const IncidentDetailPage = () => {
   const scheduleAgentRun = useScheduleAgentRun();
 
   const handleScheduleAgentRun = useCallback(
-    async ({ cron, input }: { cron: string; input: string }) => {
-      const { name } = await scheduleAgentRun({ cron, input });
-      toast.success('Schedule started', {
-        description: `"${name}" will run on \`${cron}\``,
-      });
+    async (info: Parameters<ReturnType<typeof useScheduleAgentRun>>[0]) => {
+      await scheduleAgentRun(info);
     },
     [scheduleAgentRun],
   );
