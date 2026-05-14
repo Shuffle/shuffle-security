@@ -2539,7 +2539,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
               '& .MuiSelect-icon': { color: 'hsl(var(--muted-foreground))' },
               '& .MuiSelect-select': { py: '6px' },
             }}
-            MenuProps={{ PaperProps: { sx: { bgcolor: 'hsl(var(--popover))', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))' } } }}
+            MenuProps={{ slotProps: { paper: { sx: { bgcolor: 'hsl(var(--popover))', color: 'hsl(var(--foreground))', border: '1px solid hsl(var(--border))' } } } }}
           >
             <MenuItem value="minutes" sx={{ fontSize: '0.8rem' }}>{schedInterval === 1 ? 'minute' : 'minutes'}</MenuItem>
             <MenuItem value="hours" sx={{ fontSize: '0.8rem' }}>{schedInterval === 1 ? 'hour' : 'hours'}</MenuItem>
