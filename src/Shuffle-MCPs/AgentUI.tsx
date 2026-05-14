@@ -2450,7 +2450,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
           Schedule recurring run
         </Typography>
         <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', mb: 1.5 }}>
-          Run this prompt automatically on a cron schedule.
+          Choose how often this prompt should run. The schedule keeps running until you remove it.
         </Typography>
         {scheduleHint && (
           <Box
