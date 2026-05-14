@@ -7,7 +7,7 @@ import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 
 export interface AIConversationOptions {
   query: string;
-  outputFormat?: 'raw' | 'json';
+  outputFormat?: 'raw' | 'json' | 'formatting' | (string & {});
 }
 
 export interface AIConversationResponse {
@@ -21,7 +21,7 @@ export interface AIConversationResponse {
  */
 export const askAI = async ({
   query,
-  outputFormat = 'raw',
+  outputFormat = 'formatting',
 }: AIConversationOptions): Promise<AIConversationResponse> => {
   try {
     const res = await fetch(getApiUrl('/api/v1/conversation'), {
