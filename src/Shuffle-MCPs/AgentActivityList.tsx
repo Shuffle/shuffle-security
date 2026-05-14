@@ -373,7 +373,7 @@ const AgentActivityList = ({
       sx={[{ display: 'flex', flexDirection: 'column', gap: 2 }, ...(Array.isArray(sx) ? sx : sx ? [sx] : [])]}
     >
       {(showSearchBar || showStatusChips) && (
-        <Box sx={[{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }, ...(Array.isArray(toolbarSx) ? toolbarSx : toolbarSx ? [toolbarSx] : [])]}>
+        <Box sx={[{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5, flexWrap: 'wrap' }, ...(Array.isArray(toolbarSx) ? toolbarSx : toolbarSx ? [toolbarSx] : [])]}>
           {showSearchBar && (
             <TextField
               placeholder="Search results..."
