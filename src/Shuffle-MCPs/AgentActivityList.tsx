@@ -556,6 +556,65 @@ const AgentActivityList = ({
         </Box>
       )}
 
+      {selectedAgentWorkflow && (
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            p: 1.5,
+            borderRadius: 2,
+            border: '1px solid hsl(var(--border))',
+            bgcolor: 'hsl(var(--card))',
+          }}
+        >
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {selectedAgentWorkflow.name}
+            </Typography>
+            {selectedAgentWorkflow.description && (
+              <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {selectedAgentWorkflow.description}
+              </Typography>
+            )}
+          </Box>
+          <Button
+            size="small"
+            startIcon={<Pencil size={14} />}
+            onClick={openEditPrompt}
+            sx={{
+              height: 36,
+              border: '1px solid hsl(var(--border))',
+              borderRadius: 1.5,
+              color: 'hsl(var(--foreground))',
+              textTransform: 'none',
+              fontSize: '0.8rem',
+              px: 1.5,
+              '&:hover': { bgcolor: 'hsl(var(--muted))' },
+            }}
+          >
+            Edit prompt
+          </Button>
+          <Button
+            size="small"
+            startIcon={<StopCircle size={14} />}
+            onClick={() => setStopOpen(true)}
+            sx={{
+              height: 36,
+              border: '1px solid hsl(var(--severity-critical, 0 72% 55%) / 0.4)',
+              borderRadius: 1.5,
+              color: 'hsl(var(--severity-critical, 0 72% 55%))',
+              textTransform: 'none',
+              fontSize: '0.8rem',
+              px: 1.5,
+              '&:hover': { bgcolor: 'hsla(var(--severity-critical, 0 72% 55%) / 0.08)' },
+            }}
+          >
+            Stop schedule
+          </Button>
+        </Box>
+      )}
+
       {isLoading && runs.length === 0 ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
           <CircularProgress size={28} sx={{ color: 'hsl(var(--primary))' }} />
