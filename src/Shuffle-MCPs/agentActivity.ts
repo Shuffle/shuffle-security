@@ -212,9 +212,8 @@ export const getAgentSchedulePrompt = async (
 };
 
 /** Read the AI Agent prompt + selected app names from a scheduled agent
- *  workflow. Apps are parsed from the AI Agent action's `tool_name`
- *  parameter (comma-separated, format `app:<objectID>:<slug>` or `<slug>`),
- *  with a fallback to the legacy `app_name` parameter. */
+ *  workflow. Apps are parsed from the AI Agent action's `app_name`
+ *  parameter (comma-separated list of app names). */
 export const getAgentScheduleConfig = async (
   workflowId: string,
   params: { apiKey?: string; apiBaseUrl?: string; orgId?: string } = {},
@@ -224,23 +223,13 @@ export const getAgentScheduleConfig = async (
   const prompt = String(found?.param?.value || '');
   const action = found?.action;
   const actionParams: any[] = action?.parameters || [];
-  const toolNameParam = actionParams.find((x) => x?.name === 'tool_name');
   const appNameParam = actionParams.find((x) => x?.name === 'app_name');
-  const raw = String(toolNameParam?.value || appNameParam?.value || '');
+  const raw = String(appNameParam?.value || '');
   const apps = raw
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean)
-    .map((entry) => {
-      // Format: `app:<objectID>:<slug>` or just `<slug>`/`<name>`.
-      if (entry.startsWith('app:')) {
-        const parts = entry.split(':');
-        const id = parts[1] || undefined;
-        const slug = parts.slice(2).join(':') || '';
-        return { name: slug || entry, id };
-      }
-      return { name: entry };
-    });
+    .map((name) => ({ name }));
   return { workflow, prompt, apps };
 };
 
