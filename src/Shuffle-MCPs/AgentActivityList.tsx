@@ -904,6 +904,24 @@ const AgentActivityList = ({
         </DialogActions>
       </Dialog>
 
+      <AppSearchDrawer
+        open={appPickerOpen}
+        onClose={() => setAppPickerOpen(false)}
+        title="Select MCPs"
+        subtitle="Choose which apps the scheduled agent can call."
+        multiSelect
+        selectedApps={editApps.map((a) => ({ name: a.name, id: a.id || null, icon: a.icon }))}
+        onSelectionChange={(next) => {
+          setEditApps(
+            next.map((app) => ({
+              name: app.name,
+              id: app.id || undefined,
+              icon: app.icon || undefined,
+            })),
+          );
+        }}
+      />
+
       <Dialog
         open={stopOpen}
         onClose={() => (stopLoading ? null : setStopOpen(false))}
