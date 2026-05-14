@@ -184,6 +184,7 @@ const AgentRunRow = ({ run, onClick, sx }: RunRowProps) => {
   const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.WAITING;
   const iconColor = getRunIconColor(run);
   const duration = formatDuration(run);
+  const tools = getRunTools(run);
 
   return (
     <Box
