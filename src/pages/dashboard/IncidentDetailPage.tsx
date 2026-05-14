@@ -217,6 +217,7 @@ import { statusConfig, severityColors, getOCSFStatus } from '@/config/incidentCo
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { getAgentTools as getAssignedAgentTools } from '@/lib/agentTools';
 import { openAgentDrawer } from '@/lib/agentDrawer';
+import { useScheduleAgentRun } from '@/hooks/useScheduleAgentRun';
 
 /**
  * Normalize any timestamp (Unix seconds, ms, µs, ns, ISO string, numeric string) to ms epoch.
@@ -614,6 +615,17 @@ const IncidentDetailPage = () => {
   const { userInfo } = useAuth();
   const { openApp } = useAppDetail();
   const currentUsername = userInfo?.username || '';
+  const scheduleAgentRun = useScheduleAgentRun();
+
+  const handleScheduleAgentRun = useCallback(
+    async ({ cron, input }: { cron: string; input: string }) => {
+      const { name } = await scheduleAgentRun({ cron, input });
+      toast.success('Schedule started', {
+        description: `"${name}" will run on \`${cron}\``,
+      });
+    },
+    [scheduleAgentRun],
+  );
 
   // Parse namespaced org ID from sub-org incidents (format: "orgId::incidentId")
   const crossOrgId = useMemo(() => {
@@ -9290,6 +9302,7 @@ const IncidentDetailPage = () => {
         open={!!selectedAgentRun}
         onClose={() => setSelectedAgentRun(null)}
         run={selectedAgentRun}
+        onSchedule={handleScheduleAgentRun}
       />
     </motion.div>
   );

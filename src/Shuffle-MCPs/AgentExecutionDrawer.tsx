@@ -13,7 +13,7 @@ import type { SxProps, Theme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
-import AgentUI from './AgentUI';
+import AgentUI, { type AgentUIProps } from './AgentUI';
 import AgentIcon from './AgentIcon';
 import {
   STATUS_CONFIG,
@@ -48,6 +48,8 @@ export interface AgentExecutionDrawerProps {
    *  AgentUI. Use this to inject a shared "Needs attention" / failure
    *  diagnosis banner so the drawer mirrors the timeline status pill. */
   topBanner?: React.ReactNode;
+  /** Handler for scheduling the loaded agent prompt from the execution view. */
+  onSchedule?: AgentUIProps['onSchedule'];
 }
 
 const AgentExecutionDrawer = ({
@@ -63,6 +65,7 @@ const AgentExecutionDrawer = ({
   headerSx,
   bodySx,
   topBanner,
+  onSchedule,
 }: AgentExecutionDrawerProps) => {
   const statusKey = (run?.status || '').toUpperCase();
   const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.WAITING;
@@ -228,6 +231,7 @@ const AgentExecutionDrawer = ({
             apiKey={apiKey}
             apiBaseUrl={apiBaseUrl}
             orgId={orgId}
+            onSchedule={onSchedule}
           />
         ) : null}
       </Box>

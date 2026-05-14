@@ -3,7 +3,7 @@
  * Shows real-time agent execution feed, stats, and activity overview
  */
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   Box,
   Typography,
@@ -32,6 +32,8 @@ import {
 import { useAgentPermissions } from '@/hooks/useAgentPermissions';
 import AgentRunDiagnosisBanner from '@/components/agent/AgentRunDiagnosisBanner';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { useScheduleAgentRun } from '@/hooks/useScheduleAgentRun';
+import { toast } from '@/Shuffle-MCPs/toast';
 
 const AgentActivityPage = () => {
 
@@ -43,6 +45,7 @@ const AgentActivityPage = () => {
   const { stats, refresh } = useAgentActivity();
 
   const { enabledPermissions, totalPermissions } = useAgentPermissions();
+  const scheduleAgentRun = useScheduleAgentRun();
   
   const [permissionsOpen, setPermissionsOpen] = useState(false);
   const [permissionsInitialTab, setPermissionsInitialTab] = useState<AgentRunDrawerTab>('run');
@@ -53,6 +56,17 @@ const AgentActivityPage = () => {
     setPermissionsInitialTab(mapped);
     setPermissionsOpen(true);
   };
+
+  const handleSchedule = useCallback(
+    async ({ cron, input }: { cron: string; input: string }) => {
+      const { name } = await scheduleAgentRun({ cron, input });
+      toast({
+        title: 'Schedule started',
+        description: `"${name}" will run on \`${cron}\``,
+      });
+    },
+    [scheduleAgentRun],
+  );
 
   // Note: the legacy `?openPermissions=1` deep link is now handled by the
   // global GlobalAgentDrawer mounted in DashboardLayout, so it works on
@@ -203,6 +217,7 @@ const AgentActivityPage = () => {
         initialTab={permissionsInitialTab}
         permissionsSlot={<PermissionsPanel compact />}
         localLLMSlot={<LocalLLMConfig />}
+        agentUIProps={{ onSchedule: handleSchedule }}
       />
 
       {/* Execution view drawer (sourced from Shuffle-MCPs lib) */}
@@ -210,6 +225,7 @@ const AgentActivityPage = () => {
         open={!!selectedRun}
         onClose={() => setSelectedRun(null)}
         run={selectedRun}
+        onSchedule={handleSchedule}
       />
     </motion.div>
   );
