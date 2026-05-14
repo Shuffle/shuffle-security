@@ -2003,18 +2003,27 @@ const AgentUI: React.FC<AgentUIProps> = ({
       }
     }
 
-    // Sort: Agent row always first; then by start_time when present;
-    // otherwise preserve insertion order (the index `i` in the decisions list).
+    // Sort: Agent row pinned to top, Finalise pinned to bottom, everything
+    // else preserves insertion order (the index `i` from the decisions array).
+    // Timestamps are intentionally NOT used — they're often missing or 0,
+    // which would scatter rows unpredictably.
+    const isFinalise = (it: TimelineItem) => {
+      const det: any = it.details || {};
+      const cat = (it.category || '').toLowerCase();
+      const act = (det.action || '').toLowerCase();
+      return cat === 'finish' || cat === 'finalise' || act === 'finish' || act === 'finalise';
+    };
+    const rank = (it: TimelineItem) => {
+      if (it.type === 'agent') return 0;
+      if (isFinalise(it)) return 2;
+      return 1;
+    };
     const sortItems = (arr: TimelineItem[]) => {
       const indexed = arr.map((it, i) => ({ it, i }));
       indexed.sort((a, b) => {
-        if (a.it.type === 'agent' && b.it.type !== 'agent') return -1;
-        if (b.it.type === 'agent' && a.it.type !== 'agent') return 1;
-        const aHas = (a.it.start_time || 0) > 0;
-        const bHas = (b.it.start_time || 0) > 0;
-        if (aHas && bHas) return (a.it.start_time || 0) - (b.it.start_time || 0);
-        if (aHas) return -1;
-        if (bHas) return 1;
+        const ra = rank(a.it);
+        const rb = rank(b.it);
+        if (ra !== rb) return ra - rb;
         return a.i - b.i;
       });
       arr.length = 0;
