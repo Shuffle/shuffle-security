@@ -91,6 +91,8 @@ export const useScheduleAgentRun = () => {
     } catch (e) {
       console.warn('[schedule] AI name generation failed, using fallback', e);
     }
+    if (!name) name = fallbackName;
+    if (!description) description = fallbackDescription;
     step('name', 'done', name);
 
     // 2. Create the workflow.
