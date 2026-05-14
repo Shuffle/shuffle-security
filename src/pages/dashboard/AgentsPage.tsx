@@ -175,7 +175,7 @@ const AgentsPage = () => {
         headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: 'Schedule',
-          frequency: 'cron',
+          frequency: cron,
           cron,
           execution_argument: '',
           environment: 'cloud',
