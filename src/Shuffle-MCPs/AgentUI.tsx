@@ -932,6 +932,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
   appPickerSubtitle = 'Pick the tools the agent is allowed to use for this run',
   submitTooltip = '⌘+Enter to send',
   submitIcon,
+  submitOverride,
+  submitLabel,
   continuationPlaceholder = 'Add more details to continue this task…',
   readUrlParams = true,
   executionId,
