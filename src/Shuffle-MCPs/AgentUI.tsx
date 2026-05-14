@@ -715,8 +715,9 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
                         size="small"
                         disabled={agentRequestLoading || !questionsAnswered}
                         onClick={trySubmit}
+                        startIcon={agentRequestLoading ? <CircularProgress size={14} sx={{ color: 'hsl(var(--primary-foreground))' }} /> : undefined}
                       >
-                        {agentRequestLoading ? <CircularProgress size={16} /> : 'Submit'}
+                        {agentRequestLoading ? 'Submitting…' : 'Submit'}
                       </Button>
                     </span>
                   </Tooltip>
