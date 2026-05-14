@@ -270,6 +270,43 @@ const AgentRunRow = ({ run, onClick, sx }: RunRowProps) => {
           )}
         </Box>
       </Box>
+
+      {tools.length > 0 && (
+        <Box
+          sx={{
+            display: { xs: 'none', sm: 'flex' },
+            alignItems: 'center',
+            gap: 0.5,
+            flexWrap: 'wrap',
+            justifyContent: 'flex-end',
+            maxWidth: 220,
+            flexShrink: 0,
+          }}
+        >
+          {tools.map((t) => (
+            <Tooltip key={t} title={t} arrow>
+              <Chip
+                label={t}
+                size="small"
+                sx={{
+                  height: 20,
+                  fontSize: '0.68rem',
+                  maxWidth: 120,
+                  bgcolor: 'hsla(var(--muted) / 0.5)',
+                  color: 'hsl(var(--muted-foreground))',
+                  border: '1px solid hsl(var(--border))',
+                  '& .MuiChip-label': {
+                    px: 0.75,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  },
+                }}
+              />
+            </Tooltip>
+          ))}
+        </Box>
+      )}
     </Box>
   );
 };
