@@ -3458,12 +3458,20 @@ const AgentUI: React.FC<AgentUIProps> = ({
           onClose={() => setAppSearchOpen(false)}
           title={appPickerTitle}
           subtitle={appPickerSubtitle}
-          onQuickSelect={(app) => {
-            const known = availableApps.find((a) => a.name?.toLowerCase() === app.name?.toLowerCase());
-            setChosenApps((prev) =>
-              prev.some((a) => a.name === app.name)
-                ? prev
-                : [...prev, { name: app.name, icon: app.icon || known?.icon, id: app.id || known?.id || undefined }]
+          multiSelect
+          selectedApps={chosenApps.map((a) => ({ name: a.name, id: a.id || null, icon: a.icon }))}
+          onSelectionChange={(next) => {
+            setChosenApps(
+              next.map((app) => {
+                const known = availableApps.find(
+                  (a) => a.name?.toLowerCase() === app.name?.toLowerCase(),
+                );
+                return {
+                  name: app.name,
+                  icon: app.icon || known?.icon,
+                  id: app.id || known?.id || undefined,
+                };
+              }),
             );
           }}
         />

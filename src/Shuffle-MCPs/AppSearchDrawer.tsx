@@ -127,7 +127,17 @@ interface AppSearchDrawerProps {
   highlightAppName?: string;
   /** Delay before the highlight kicks in (default 5000ms) */
   highlightDelayMs?: number;
+  /** Enable multi-select: clicking apps toggles them in/out of the selection,
+   *  drawer stays open, and the picker shows checkboxes + a primary-bordered
+   *  highlight on already-chosen rows. */
+  multiSelect?: boolean;
+  /** Currently chosen apps (used to highlight rows in multi-select mode).
+   *  Match is by objectID first, then by normalized name. */
+  selectedApps?: Array<{ name: string; id?: string | null; icon?: string }>;
+  /** Fires whenever the selection changes in multi-select mode. */
+  onSelectionChange?: (apps: Array<{ name: string; id: string | null; icon: string; categories: string[] }>) => void;
 }
+
 
 export default function AppSearchDrawer({
   open,
@@ -147,6 +157,9 @@ export default function AppSearchDrawer({
   pinnedApps,
   highlightAppName,
   highlightDelayMs = 5000,
+  multiSelect = false,
+  selectedApps,
+  onSelectionChange,
 }: AppSearchDrawerProps) {
   const [detailAppName, setDetailAppName] = useState<string | null>(null);
   const [detailAppId, setDetailAppId] = useState<string | null>(null);
@@ -167,6 +180,29 @@ export default function AppSearchDrawer({
     onClose();
   };
 
+  // Project caller-supplied selection to the AlgoliaSearchApp shape that
+  // ShuffleMCP's `selectedApps` prop expects. Only `objectID` and `name` are
+  // used for matching; the rest are placeholders.
+  const projectedSelectedApps = (selectedApps || []).map((a) => ({
+    objectID: a.id || `name:${(a.name || '').toLowerCase().replace(/[\s-]+/g, '_')}`,
+    name: a.name,
+    image_url: a.icon || '',
+    description: '',
+    categories: [],
+    creator: '',
+    app_version: '1.0.0',
+    time_edited: 0,
+    generated: false,
+    invalid: false,
+    priority: 0,
+    actions: 0,
+    tags: [],
+    accessible_by: [],
+    action_labels: [],
+    triggers: [],
+    verified: true,
+  })) as any[];
+
   const handleAppSelected = (detail: AppSelectedEvent) => {
     const algoliaId = (detail.app as any).objectID || null;
     const appInfo = {
@@ -175,6 +211,37 @@ export default function AppSearchDrawer({
       categories: detail.app.categories || [],
       id: algoliaId,
     };
+
+    // Multi-select mode: toggle in/out of the chosen list, keep the drawer open.
+    if (multiSelect && onSelectionChange) {
+      const norm = (s: string) => (s || '').toLowerCase().replace(/[\s-]+/g, '_');
+      const current = selectedApps || [];
+      const targetSlug = norm(appInfo.name);
+      const exists = current.some(
+        (a) => (a.id && a.id === appInfo.id) || norm(a.name) === targetSlug,
+      );
+      const next = exists
+        ? current.filter(
+            (a) => !((a.id && a.id === appInfo.id) || norm(a.name) === targetSlug),
+          ).map((a) => ({
+            name: a.name,
+            id: a.id ?? null,
+            icon: a.icon || '',
+            categories: [] as string[],
+          }))
+        : [
+            ...current.map((a) => ({
+              name: a.name,
+              id: a.id ?? null,
+              icon: a.icon || '',
+              categories: [] as string[],
+            })),
+            appInfo,
+          ];
+      onSelectionChange(next);
+      return;
+    }
+
     if (onQuickSelect) {
       onQuickSelect(appInfo);
       onClose();
@@ -186,6 +253,7 @@ export default function AppSearchDrawer({
     setDetailAppName(detail.app.name);
     setDetailAppId(algoliaId);
   };
+
 
   return (
     <>
@@ -358,8 +426,9 @@ export default function AppSearchDrawer({
                   hitsPerPage={12}
                   showDescription={false}
                   showCategories={true}
-                  showCheckbox={false}
-                  multiSelect={false}
+                  showCheckbox={multiSelect}
+                  multiSelect={multiSelect}
+                  selectedApps={multiSelect ? projectedSelectedApps : undefined}
                   preventDefault={true}
                   onAppSelected={handleAppSelected}
                   pinnedApps={pinnedApps?.map(p => ({

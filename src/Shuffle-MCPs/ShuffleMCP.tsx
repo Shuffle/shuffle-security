@@ -355,10 +355,17 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
     }
   }, [isOpen, results, selectedIndex, selectApp]);
 
-  // Check if app is selected
+  // Check if app is selected. Matches by objectID first, then falls back to
+  // normalized name so callers can pre-select apps without knowing the
+  // canonical Algolia objectID (e.g. AgentUI's chosenApps).
   const isAppSelected = useCallback((app: AlgoliaSearchApp) => {
-    return internalSelectedApps.some((a) => a.objectID === app.objectID);
+    const norm = (s?: string) => (s || '').toLowerCase().replace(/[\s-]+/g, '_');
+    const target = norm(app.name);
+    return internalSelectedApps.some(
+      (a) => a.objectID === app.objectID || (target && norm(a.name) === target),
+    );
   }, [internalSelectedApps]);
+
 
   // Filter the user's private apps client-side by the current query.
   const filteredPrivateApps = useMemo(() => {
