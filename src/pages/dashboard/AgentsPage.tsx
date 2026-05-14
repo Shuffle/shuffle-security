@@ -10,8 +10,7 @@
 import { useCallback, useState } from 'react';
 import { Box, Stack } from '@mui/material';
 import { AgentUI, AgentActivityList, AgentExecutionDrawer } from '@/Shuffle-MCPs';
-import type { AgentRun } from '@/Shuffle-MCPs';
-import { toast } from '@/Shuffle-MCPs/toast';
+import type { AgentRun, AgentUIProps } from '@/Shuffle-MCPs';
 import { useScheduleAgentRun } from '@/hooks/useScheduleAgentRun';
 
 const AgentsPage = () => {
