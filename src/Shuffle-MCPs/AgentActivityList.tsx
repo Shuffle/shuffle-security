@@ -329,7 +329,7 @@ export interface AgentActivityListProps {
   /** Called when a run row is clicked. */
   onRunClick?: (run: AgentRun) => void;
   /** Called when "Edit" is clicked on a selected scheduled workflow. */
-  onEditWorkflow?: (info: { workflowId: string; name: string; prompt: string; apps: string[] }) => void;
+  onEditWorkflow?: (info: { workflowId: string; name: string; prompt: string; apps: Array<{ name: string; id?: string }> }) => void;
   /** Show the search box. Default: true. */
   showSearchBar?: boolean;
   /** Show the status filter chips. Default: true. */
