@@ -7431,11 +7431,8 @@ const IncidentDetailPage = () => {
               the left column. Collapsed by default; users open it for the
               raw / readable / rendered views without losing focus on the
               parsed thread. */}
-          {hasEmail && (
-            <Section title="Description" icon={DescriptionIcon} defaultOpen={false} storageKey="shuffle-incident-description-open">
-              {descriptionBody}
-            </Section>
-          )}
+          {/* Description hidden entirely when an Email Thread is present. */}
+
 
 
           {/* Metadata Section */}
