@@ -10,15 +10,35 @@
 
 import { Box, Typography, IconButton, Tooltip } from '@mui/material';
 import { Sparkles, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useDemo } from '@/context/DemoContext';
 
 export const DemoResumePill = () => {
   const { drawerOpen, wasStarted, resumeDismissed, resumeTour, dismissResumePrompt } = useDemo();
+  const location = useLocation();
+
+  // Mirror DemoTourDrawer's "on demo object" detection: hide this pill
+  // whenever the user is viewing a demo-seeded object, because the glowing
+  // "DEMO DATA / Re-open demo tour" anchor pill is already shown for that
+  // case and two side-by-side demo CTAs are noisy.
+  const onDemoObjectByUrl = /\/demo-[a-z0-9-]+/i.test(location.pathname);
+  const [inlineDemoActive, setInlineDemoActive] = useState(false);
+  useEffect(() => {
+    const onCtx = (e: Event) => {
+      const detail = (e as CustomEvent<{ active: boolean }>).detail;
+      setInlineDemoActive(!!detail?.active);
+    };
+    window.addEventListener('demo-object-context', onCtx as EventListener);
+    return () => window.removeEventListener('demo-object-context', onCtx as EventListener);
+  }, []);
+  useEffect(() => { setInlineDemoActive(false); }, [location.pathname]);
+  const onDemoObject = onDemoObjectByUrl || inlineDemoActive;
 
   // Show whenever a demo run was started but the drawer is not currently
   // visible (e.g. after a page refresh — `shuffle_demo_active` survives but
   // `drawerOpen` resets to false).
-  if (drawerOpen || !wasStarted || resumeDismissed) return null;
+  if (drawerOpen || !wasStarted || resumeDismissed || onDemoObject) return null;
 
   return (
     <Box
