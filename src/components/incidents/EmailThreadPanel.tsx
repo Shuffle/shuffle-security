@@ -44,6 +44,7 @@ DOMPurify.addHook('afterSanitizeAttributes', (node) => {
   }
 });
 import { resolveEmailThread, type ResolvedEmailThread } from '@/lib/emailThreadAdapters';
+import { IncidentSection } from './IncidentSection';
 import { confirmExternalLinkClick } from '@/utils/safeExternalLinks';
 
 export interface EmailMessage {
