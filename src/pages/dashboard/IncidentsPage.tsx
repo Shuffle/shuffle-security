@@ -509,8 +509,8 @@ const IncidentsPage = () => {
    // locked even though both apps are visibly present in the Ingest bar.
    useEffect(() => {
      if (!demoActive) return;
-     const hasOutlook = demoInjectedApps.some(a => /outlook|office365/i.test(a.name));
-     if (hasOutlook) markStepCompleted('add-outlook:outlook');
+     const hasEmail = demoInjectedApps.some(a => /outlook|office365|gmail/i.test(a.name));
+     if (hasEmail) markStepCompleted('add-outlook:outlook');
    }, [demoActive, demoInjectedApps, markStepCompleted]);
 
    // Demo step #3 ("ingest-webhook"): the "Enable the AI Agent automation"
@@ -3219,7 +3219,7 @@ const IncidentsPage = () => {
           fetchIngestionApps();
         }}
         title="Add Ingestion Source"
-        subtitle={isAddOutlookStep ? 'Add both "Outlook Office365" and "Microsoft 365 Defender" — we will pretend-authenticate them for the demo' : 'Search and authenticate a tool to ingest incidents from'}
+        subtitle={isAddOutlookStep ? 'Add either "Outlook Office365" or "Gmail" — we will pretend-authenticate it for the demo' : 'Search and authenticate a tool to ingest incidents from'}
         pinnedApps={isAddOutlookStep ? [
           {
             name: 'Outlook_Office365',
@@ -3228,25 +3228,25 @@ const IncidentsPage = () => {
             objectID: 'demo-outlook-office365',
           },
           {
-            name: 'Microsoft_365_Defender',
-            image_url: 'https://storage.googleapis.com/shuffle_public/app_images/Microsoft_365_Defender_29c926c37334c191666f6470caa05e1c.png',
-            categories: ['edr'],
-            objectID: 'demo-microsoft-365-defender',
+            name: 'Gmail',
+            image_url: 'https://storage.googleapis.com/shuffle_public/app_images/Gmail_75c603cbe11936ae1abf2c800ff8a9e5.png',
+            categories: ['email'],
+            objectID: 'demo-gmail',
           },
         ] : undefined}
         highlightAppName={shouldHighlightOutlook ? 'Outlook_Office365' : undefined}
         onSelectOverride={isAddOutlookStep ? (app) => {
-          // Pretend-authenticate flow: only Outlook Office365 or Microsoft
-          // 365 Defender advance the tour. Anything else falls through to the
-          // normal detail drawer so the user isn't trapped if they explore.
+          // Pretend-authenticate flow: Outlook Office365 or Gmail advance the
+          // tour. Anything else falls through to the normal detail drawer so
+          // the user is not trapped if they explore.
           const norm = app.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-          const isOutlook = norm.includes('outlook') || norm.includes('office365');
-          if (isOutlook) {
+          const isEmailApp = norm.includes('outlook') || norm.includes('office365') || norm.includes('gmail');
+          if (isEmailApp) {
             // Close the search drawer and run the fake auth experience.
             setAppSearchOpen(false);
             setFakeAuth({ name: app.name, image: app.icon || '' });
-            // After ~1.6s, finish "auth": inject the app into Ingest. Mark
-            // the step done when Outlook has been added.
+            // After ~1.6s, finish "auth": inject the app into Ingest and mark
+            // the email sub-goal as complete.
             setTimeout(() => {
               setDemoInjectedApps(prev => {
                 if (prev.some(a => a.name.toLowerCase() === app.name.toLowerCase())) return prev;
@@ -3261,15 +3261,14 @@ const IncidentsPage = () => {
                     category: 'email',
                   },
                 ];
-                // Mark the sub-goal as complete.
-                if (isOutlook) markStepCompleted('add-outlook:outlook');
+                markStepCompleted('add-outlook:outlook');
                 return next;
               });
               setFakeAuth(null);
               // No toast in demo mode — the success toast was overlapping the
               // "Next" button on the demo flow, and the visual state change in
               // the source list already makes the connection obvious.
-              void app; void isOutlook;
+              void app;
             }, 1600);
             return true; // prevent the detail drawer from opening
           }

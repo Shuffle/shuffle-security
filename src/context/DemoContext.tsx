@@ -86,22 +86,22 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     id: 'add-outlook',
-    title: 'Add ingestion source',
-    body: 'Pull alerts in from the tools you already use. Follow the highlighted spot — the goal on the right will tick off as you go.',
+    title: 'Add an email source',
+    body: 'Pull alerts in from the email tools you already use. Pick either Outlook Office365 or Gmail — we will pretend-authenticate it for the demo.',
     bullets: [
       'Click the highlighted "+" button',
-      'Add "Outlook Office365" — we will pretend-authenticate it',
+      'Add Outlook Office365 OR Gmail — we will pretend-authenticate it',
     ],
     // No `route` here on purpose — the previous welcome step required the
     // user to navigate to /incidents themselves, so we should not yank them
     // away if they happen to be elsewhere. The spotlight + sidebar
     // highlight will guide them back if needed.
     requirement: {
-      label: 'Add Outlook Office365',
+      label: 'Add Outlook Office365 or Gmail',
       targetSelector: '[data-tour="add-ingestion-source-button"]',
     },
     subGoals: [
-      { id: 'add-outlook:outlook', label: 'Add Outlook Office365' },
+      { id: 'add-outlook:outlook', label: 'Add Outlook Office365 or Gmail' },
     ],
   },
   {
