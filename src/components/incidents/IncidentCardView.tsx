@@ -890,7 +890,7 @@ export const IncidentCardView = ({
           >
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
               <Typography sx={{ fontWeight: 600, fontSize: '0.95rem', color: 'hsl(var(--foreground))' }}>
-                Want more incidents flowing in?
+                Want more incidents handled for you?
               </Typography>
               <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
                 Connect another security tool or enable a webhook to expand automatic ingestion.
