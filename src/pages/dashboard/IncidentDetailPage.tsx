@@ -149,6 +149,7 @@ import type { AgentRun } from '@/services/agentActivity';
 import { getAgentSkipInfo } from '@/lib/agentParsers';
 import HighlightedFileEditor from '@/components/incidents/HighlightedFileEditor';
 import EmailThreadPanel, { isEmailContent } from '@/components/incidents/EmailThreadPanel';
+import { IncidentSection } from '@/components/incidents/IncidentSection';
 import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
 import { useIsSupport } from '@/hooks/useIsSupport';
 import { useAssignEscalateStatus } from '@/hooks/useAssignEscalateStatus';
@@ -519,87 +520,9 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
   }
 };
 
-// Collapsible Section Component
-const Section = forwardRef<HTMLDivElement, { 
-  title: string; 
-  icon: React.ElementType; 
-  children: React.ReactNode; 
-  defaultOpen?: boolean;
-  badge?: string | number;
-  /** Optional localStorage key to persist the open/closed state across
-   *  navigation. Users typically follow a consistent workflow per incident
-   *  page, so e.g. "always show Description" should stick. */
-  storageKey?: string;
-}>(({ 
-  title, 
-  icon: Icon, 
-  children, 
-  defaultOpen = true,
-  badge,
-  storageKey,
-}, ref) => {
-  const [open, setOpen] = useState(() => {
-    if (!storageKey || typeof window === 'undefined') return defaultOpen;
-    try {
-      const v = localStorage.getItem(storageKey);
-      if (v === '1') return true;
-      if (v === '0') return false;
-    } catch { /* ignore */ }
-    return defaultOpen;
-  });
-  useEffect(() => {
-    if (!storageKey) return;
-    try { localStorage.setItem(storageKey, open ? '1' : '0'); } catch { /* ignore */ }
-  }, [open, storageKey]);
-  
-  return (
-    <Box ref={ref} sx={{ 
-      bgcolor: 'hsl(var(--card))', 
-      borderRadius: 2, 
-      border: '1px solid hsl(var(--border))',
-      overflow: 'hidden',
-    }}>
-      <Box 
-        onClick={() => setOpen(!open)}
-        sx={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: 1.5, 
-          px: 2.5, 
-          py: 2,
-          cursor: 'pointer',
-          '&:hover': { bgcolor: 'hsl(var(--muted))' },
-        }}
-      >
-        <Icon sx={{ fontSize: 20, color: 'text.secondary' }} />
-        <Typography variant="subtitle2" sx={{ flex: 1, fontWeight: 600 }}>
-          {title}
-        </Typography>
-        {badge !== undefined && (
-          <Chip 
-            label={badge} 
-            size="small" 
-            variant="outlined"
-            sx={{ 
-              height: 20, 
-              fontSize: '0.7rem',
-              bgcolor: 'transparent',
-              color: '#ff6600',
-              borderColor: 'rgba(255, 102, 0, 0.4)',
-            }} 
-          />
-        )}
-        {open ? <ExpandLessIcon sx={{ color: 'text.secondary' }} /> : <ExpandMoreIcon sx={{ color: 'text.secondary' }} />}
-      </Box>
-      <Collapse in={open}>
-        <Box sx={{ px: 2.5, pb: 2.5 }}>
-          {children}
-        </Box>
-      </Collapse>
-    </Box>
-  );
-});
-Section.displayName = 'Section';
+// Canonical collapsible panel — see src/components/incidents/IncidentSection.tsx.
+// Aliased as `Section` so existing call sites keep working.
+const Section = IncidentSection;
 
 const IncidentDetailPage = () => {
 
@@ -3737,6 +3660,70 @@ const IncidentDetailPage = () => {
   //     timeline with a vertical rail. Single source of truth so behaviour
   //     stays in sync everywhere.
   // ===========================================================================
+  // Filter chip rendered in the IncidentSection `actions` slot. Extracted so
+  // both call sites (inline + sidebar) get the exact same control.
+  const renderTimelineActionsChip = () => {
+    if (timelineCollapsed) return null;
+    const filterDefs = [
+      { key: 'revisions' as const, label: 'Changes', count: revisions.length },
+      { key: 'agent' as const, label: 'Agent', count: agentRuns.length },
+      { key: 'manual' as const, label: 'Comments', count: activity.length },
+      { key: 'tasks' as const, label: 'Tasks', count: visibleTasks.length },
+      { key: 'observables' as const, label: 'Observables', count: visibleObservablesCount },
+      { key: 'correlations' as const, label: 'Correlations', count: visibleCorrelations.length },
+    ];
+    const activeCount = filterDefs.filter(f => isFilterActive(f.key)).length;
+    const allActive = activeCount === filterDefs.length;
+    return (
+      <Tooltip title="Filter timeline" arrow>
+        <Chip
+          icon={<FilterListIcon sx={{ fontSize: 14, ml: '6px !important', color: 'inherit !important' }} />}
+          label={
+            <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+              <span>Filters</span>
+              <Box
+                component="span"
+                sx={{
+                  fontSize: '0.65rem',
+                  opacity: 0.8,
+                  fontVariantNumeric: 'tabular-nums',
+                  px: 0.5,
+                  borderRadius: '4px',
+                  bgcolor: allActive ? 'transparent' : 'rgba(255, 102, 0, 0.18)',
+                  border: allActive ? 'none' : '1px solid rgba(255, 102, 0, 0.35)',
+                }}
+              >
+                {allActive ? 'All' : `${activeCount}/${filterDefs.length}`}
+              </Box>
+            </Box>
+          }
+          size="small"
+          onClick={(e) => setTimelineFilterAnchor(e.currentTarget)}
+          sx={{
+            height: 24,
+            fontSize: '0.7rem',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            border: '1px solid hsl(var(--border))',
+            bgcolor: 'transparent',
+            color: 'text.secondary',
+            '& .MuiChip-label': { px: 0.875 },
+            '&:hover': { bgcolor: 'hsl(var(--muted))' },
+          }}
+        />
+      </Tooltip>
+    );
+  };
+
+  // Loading spinner shown next to the "Timeline" title in the IncidentSection
+  // `badge` slot. Used to indicate revisions are still being fetched.
+  const renderTimelineBadge = () =>
+    revisionsLoading ? <CircularProgress size={14} sx={{ color: '#ff6600' }} /> : null;
+
+  // Body of the Timeline panel (everything below the header). The header,
+  // chevron and collapse behaviour are owned by the surrounding
+  // <IncidentSection> at each call site so it stays visually identical to
+  // Description / Email Thread / Metadata.
   const renderTimelinePanel = (variant: 'sidebar' | 'inline' = 'sidebar') => (
     <>
       {/* Agent runs loading indicator */}
@@ -3747,86 +3734,6 @@ const IncidentDetailPage = () => {
           '& .MuiLinearProgress-bar': { bgcolor: 'hsl(var(--primary))' },
         }} />
       )}
-      {/* Timeline header — entire bar toggles collapse, chevron sits far right
-          to match the Section pattern used by Description / Email Thread. */}
-      <Box
-        onClick={() => setTimelineCollapsed(v => !v)}
-        sx={{
-          px: 2,
-          py: 1.5,
-          borderBottom: '1px solid hsl(var(--border))',
-          cursor: 'pointer',
-          '&:hover': { bgcolor: 'hsl(var(--muted))' },
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, flexWrap: 'wrap' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <HistoryIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Timeline</Typography>
-            {revisionsLoading && <CircularProgress size={14} sx={{ color: '#ff6600' }} />}
-          </Box>
-          {!timelineCollapsed && (() => {
-            const filterDefs = [
-              { key: 'revisions' as const, label: 'Changes', count: revisions.length },
-              { key: 'agent' as const, label: 'Agent', count: agentRuns.length },
-              { key: 'manual' as const, label: 'Comments', count: activity.length },
-              { key: 'tasks' as const, label: 'Tasks', count: visibleTasks.length },
-              { key: 'observables' as const, label: 'Observables', count: visibleObservablesCount },
-              { key: 'correlations' as const, label: 'Correlations', count: visibleCorrelations.length },
-            ];
-            const activeCount = filterDefs.filter(f => isFilterActive(f.key)).length;
-            const allActive = activeCount === filterDefs.length;
-            return (
-              <Box
-                onClick={(e) => e.stopPropagation()}
-                sx={{ display: 'flex', alignItems: 'center', ml: 'auto' }}
-              >
-                <Tooltip title="Filter timeline" arrow>
-                  <Chip
-                    icon={<FilterListIcon sx={{ fontSize: 14, ml: '6px !important', color: 'inherit !important' }} />}
-                    label={
-                      <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
-                        <span>Filters</span>
-                        <Box
-                          component="span"
-                          sx={{
-                            fontSize: '0.65rem',
-                            opacity: 0.8,
-                            fontVariantNumeric: 'tabular-nums',
-                            px: 0.5,
-                            borderRadius: '4px',
-                            bgcolor: allActive ? 'transparent' : 'rgba(255, 102, 0, 0.18)',
-                            border: allActive ? 'none' : '1px solid rgba(255, 102, 0, 0.35)',
-                          }}
-                        >
-                          {allActive ? 'All' : `${activeCount}/${filterDefs.length}`}
-                        </Box>
-                      </Box>
-                    }
-                    size="small"
-                    onClick={(e) => setTimelineFilterAnchor(e.currentTarget)}
-                    sx={{
-                      height: 24,
-                      fontSize: '0.7rem',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      border: '1px solid hsl(var(--border))',
-                      bgcolor: 'transparent',
-                      color: 'text.secondary',
-                      '& .MuiChip-label': { px: 0.875 },
-                      '&:hover': { bgcolor: 'hsl(var(--muted))' },
-                    }}
-                  />
-                </Tooltip>
-              </Box>
-            );
-          })()}
-          {/* Chevron — far right, mirroring the Section pattern. */}
-          {timelineCollapsed
-            ? <ExpandMoreIcon sx={{ color: 'text.secondary', ml: timelineCollapsed ? 'auto' : 0.5 }} />
-            : <ExpandLessIcon sx={{ color: 'text.secondary', ml: 0.5 }} />}
-        </Box>
-      </Box>
 
       {/* Timeline filters dropdown — single menu replacing the chip row. */}
       <Menu
@@ -3885,7 +3792,7 @@ const IncidentDetailPage = () => {
         })}
       </Menu>
 
-      {!timelineCollapsed && (<>
+      {/* Body content. Collapse is handled by the surrounding IncidentSection. */}
       {/* Bad-data warning — surfaced inside the Timeline so users notice the
           drift right where they would inspect / roll back changes. Triggered
           by the same OCSF-recovery fallback that powers the top-of-page banner. */}
@@ -4165,7 +4072,7 @@ const IncidentDetailPage = () => {
             to the message they relate to instead of floating at the top. */}
         {renderTimelineFeedItems()}
       </Box>
-      </>)}
+      
     </>
   );
 
@@ -7502,19 +7409,19 @@ const IncidentDetailPage = () => {
           {/* Inline Timeline — the heart of the Details tab. Renders the same
               comment input + unified feed as the right sidebar, but styled
               with a vertical rail so the chronology reads at a glance. */}
-          <Box
-            data-tour="incident-activity-feed"
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              bgcolor: 'hsl(var(--card))',
-              borderRadius: 2,
-              border: '1px solid hsl(var(--border))',
-              overflow: 'hidden',
-              ...(isPublicView ? { pointerEvents: 'none' } : {}),
-            }}
-          >
-            {renderTimelinePanel('inline')}
+          <Box sx={isPublicView ? { pointerEvents: 'none' } : undefined}>
+            <IncidentSection
+              title="Timeline"
+              icon={HistoryIcon}
+              open={!timelineCollapsed}
+              onOpenChange={(o) => setTimelineCollapsed(!o)}
+              badge={renderTimelineBadge()}
+              actions={renderTimelineActionsChip()}
+              bodyPadded={false}
+              dataTour="incident-activity-feed"
+            >
+              {renderTimelinePanel('inline')}
+            </IncidentSection>
           </Box>
           </Box>
 
@@ -8994,20 +8901,19 @@ const IncidentDetailPage = () => {
         {/* Right Timeline Sidebar — hidden on Details (inlined there) and on Original / Translation / OCSF tabs */}
         {activeTab !== 0 && activeTab !== 4 && activeTab !== 5 && activeTab !== 6 && (
         <Box sx={{ width: { xs: '100%', lg: 380 }, flexShrink: 0, order: { xs: 2, lg: 0 } }}>
-          <Box
-            data-tour="incident-activity-feed"
-            sx={{
-              width: '100%',
-              display: 'flex',
-              flexDirection: 'column',
-              bgcolor: 'hsl(var(--card))',
-              borderRadius: 2,
-              border: '1px solid hsl(var(--border))',
-              overflow: 'hidden',
-              ...(isPublicView ? { pointerEvents: 'none' } : {}),
-            }}
-          >
-            {renderTimelinePanel('sidebar')}
+          <Box sx={{ width: '100%', ...(isPublicView ? { pointerEvents: 'none' } : {}) }}>
+            <IncidentSection
+              title="Timeline"
+              icon={HistoryIcon}
+              open={!timelineCollapsed}
+              onOpenChange={(o) => setTimelineCollapsed(!o)}
+              badge={renderTimelineBadge()}
+              actions={renderTimelineActionsChip()}
+              bodyPadded={false}
+              dataTour="incident-activity-feed"
+            >
+              {renderTimelinePanel('sidebar')}
+            </IncidentSection>
           </Box>
         </Box>
         )}

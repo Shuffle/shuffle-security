@@ -44,6 +44,7 @@ DOMPurify.addHook('afterSanitizeAttributes', (node) => {
   }
 });
 import { resolveEmailThread, type ResolvedEmailThread } from '@/lib/emailThreadAdapters';
+import { IncidentSection } from './IncidentSection';
 import { confirmExternalLinkClick } from '@/utils/safeExternalLinks';
 
 export interface EmailMessage {
@@ -409,128 +410,88 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
 
   if (messages.length === 0) return null;
 
-  const panel = (
-    <Box
-      data-tour="incident-email-thread"
-      sx={{
-      border: '1px solid hsl(var(--border))',
-      borderRadius: 1.5,
-      bgcolor: 'hsl(var(--card))',
-      overflow: 'hidden',
-      // When floating, fill the popout window and let inner regions scroll.
-      ...(poppedOut ? { display: 'flex', flexDirection: 'column', height: '100%' } : {}),
-    }}>
-      {/* Thread header — click to collapse the whole panel */}
-      <Box
-        onClick={() => setThreadCollapsed(c => {
-          const next = !c;
-          // When the user expands the email thread (collapsed -> not
-          // collapsed), broadcast it so the demo tour can tick off the
-          // "open email thread" sub-goal on step #5.
-          if (next === false) {
-            try { window.dispatchEvent(new CustomEvent('demo:email-thread-opened')); } catch { /* ignore */ }
-          }
-          return next;
-        })}
+  // Header badges (message count + parsed-from chip). Rendered next to the
+  // title in IncidentSection's `badge` slot.
+  const headerBadge = (
+    <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}>
+      <Chip
+        label={`${messages.length} message${messages.length !== 1 ? 's' : ''}`}
+        size="small"
+        variant="outlined"
         sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          px: 2,
-          py: 1.25,
-          borderBottom: threadCollapsed ? 'none' : '1px solid hsl(var(--border))',
-          bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
-          cursor: 'pointer',
-          '&:hover': {
-            bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
-          },
+          height: 18,
+          fontSize: '0.65rem',
+          bgcolor: 'transparent',
+          borderColor: 'rgba(255, 102, 0, 0.4)',
+          color: '#ff6600',
         }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <EmailIcon sx={{ fontSize: 18, color: '#ff6600' }} />
-          <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: '0.8rem' }}>
-            Email Thread
-          </Typography>
+      />
+      {sourceLabel && (
+        <Tooltip title={`Parsed from structured ${sourceLabel} payload (unmapped_original)`} arrow>
           <Chip
-            label={`${messages.length} message${messages.length !== 1 ? 's' : ''}`}
+            label={sourceLabel}
             size="small"
             variant="outlined"
             sx={{
               height: 18,
               fontSize: '0.65rem',
               bgcolor: 'transparent',
-              borderColor: 'rgba(255, 102, 0, 0.4)',
-              color: '#ff6600',
+              borderColor: 'hsl(var(--border))',
+              color: 'text.secondary',
             }}
           />
-          {sourceLabel && (
-            <Tooltip title={`Parsed from structured ${sourceLabel} payload (unmapped_original)`} arrow>
-              <Chip
-                label={sourceLabel}
-                size="small"
-                variant="outlined"
-                sx={{
-                  height: 18,
-                  fontSize: '0.65rem',
-                  bgcolor: 'transparent',
-                  borderColor: 'hsl(var(--border))',
-                  color: 'text.secondary',
-                }}
-              />
-            </Tooltip>
-          )}
-        </Box>
-        <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }} onClick={(e) => e.stopPropagation()}>
-          {onReply && (
-            <Tooltip title="Reply">
-              <IconButton size="small" onClick={() => setShowReplyBox(!showReplyBox)} sx={{
-                color: showReplyBox ? '#ff6600' : 'text.secondary',
-                '&:hover': { color: '#ff6600' },
-              }}>
-                <ReplyIcon sx={{ fontSize: 18 }} />
-              </IconButton>
-            </Tooltip>
-          )}
-          {onForward && (
-            <Tooltip title="Forward">
-              <IconButton size="small" onClick={onForward} sx={{
-                color: 'text.secondary',
-                '&:hover': { color: '#ff6600' },
-              }}>
-                <ForwardIcon sx={{ fontSize: 18 }} />
-              </IconButton>
-            </Tooltip>
-          )}
-          <Tooltip title={poppedOut ? 'Dock back inline' : 'Open in popout window'}>
-            <IconButton
-              size="small"
-              onClick={() => {
-                setPoppedOut(p => !p);
-                // Auto-expand when popping out — a collapsed popout window is useless.
-                if (!poppedOut) setThreadCollapsed(false);
-              }}
-              sx={{
-                color: poppedOut ? '#ff6600' : 'text.secondary',
-                '&:hover': { color: '#ff6600' },
-              }}
-            >
-              {poppedOut ? <CloseIcon sx={{ fontSize: 18 }} /> : <OpenInNewIcon sx={{ fontSize: 16 }} />}
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={threadCollapsed ? 'Expand' : 'Collapse'}>
-            <IconButton
-              size="small"
-              onClick={() => setThreadCollapsed(c => !c)}
-              sx={{ color: 'text.secondary', '&:hover': { color: '#ff6600' } }}
-            >
-              {threadCollapsed ? <ExpandMoreIcon sx={{ fontSize: 18 }} /> : <ExpandLessIcon sx={{ fontSize: 18 }} />}
-            </IconButton>
-          </Tooltip>
-        </Box>
-      </Box>
+        </Tooltip>
+      )}
+    </Box>
+  );
 
-      <Collapse in={!threadCollapsed}>
+  // Right-side action buttons (reply / forward / popout). Rendered in
+  // IncidentSection's `actions` slot.
+  const headerActions = (
+    <>
+      {onReply && (
+        <Tooltip title="Reply">
+          <IconButton size="small" onClick={() => setShowReplyBox(!showReplyBox)} sx={{
+            color: showReplyBox ? '#ff6600' : 'text.secondary',
+            '&:hover': { color: '#ff6600' },
+          }}>
+            <ReplyIcon sx={{ fontSize: 18 }} />
+          </IconButton>
+        </Tooltip>
+      )}
+      {onForward && (
+        <Tooltip title="Forward">
+          <IconButton size="small" onClick={onForward} sx={{
+            color: 'text.secondary',
+            '&:hover': { color: '#ff6600' },
+          }}>
+            <ForwardIcon sx={{ fontSize: 18 }} />
+          </IconButton>
+        </Tooltip>
+      )}
+      <Tooltip title={poppedOut ? 'Dock back inline' : 'Open in popout window'}>
+        <IconButton
+          size="small"
+          onClick={() => {
+            setPoppedOut(p => !p);
+            if (!poppedOut) setThreadCollapsed(false);
+          }}
+          sx={{
+            color: poppedOut ? '#ff6600' : 'text.secondary',
+            '&:hover': { color: '#ff6600' },
+          }}
+        >
+          {poppedOut ? <CloseIcon sx={{ fontSize: 18 }} /> : <OpenInNewIcon sx={{ fontSize: 16 }} />}
+        </IconButton>
+      </Tooltip>
+    </>
+  );
 
+  // Body of the email panel — subject line, message list, and the reply box.
+  // Shared by both the inline IncidentSection and the popped-out floating
+  // window so behaviour stays identical in both surfaces.
+  const panelBody = (
+    <>
       {/* Subject line */}
       {threadSubject && (
         <Box sx={{ px: 2, py: 1, borderBottom: '1px solid hsl(var(--border))' }}>
@@ -543,8 +504,6 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
       {/* Messages */}
       <Box sx={{ maxHeight: poppedOut ? 'none' : 500, flex: poppedOut ? 1 : 'unset', overflow: 'auto' }}>
         {messages.map((msg, idx) => {
-          // Latest defaults to expanded but is now collapsible too — toggling
-          // collapses it; older messages start collapsed and toggle open.
           const isExpanded = msg.isLatest ? !expandedMessages.has(msg.id) : expandedMessages.has(msg.id);
           const { name, email } = extractEmail(msg.from);
           const avatarColor = hashColor(msg.from);
@@ -553,7 +512,6 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
             <Box key={msg.id} sx={{
               borderBottom: idx < messages.length - 1 ? '1px solid hsl(var(--border))' : 'none',
             }}>
-              {/* Message header - always visible, click to toggle */}
               <Box
                 onClick={() => toggleMessage(msg.id)}
                 sx={{
@@ -638,10 +596,8 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
                 </Box>
               </Box>
 
-              {/* Message body - collapsible for older messages */}
               <Collapse in={isExpanded}>
                 <Box sx={{ px: 2, pb: 1.5 }}>
-                  {/* To / CC row */}
                   {(msg.to || msg.cc) && (
                     <Box sx={{ display: 'flex', gap: 2, mb: 1, flexWrap: 'wrap' }}>
                       {msg.to && (
@@ -656,23 +612,12 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
                       )}
                     </Box>
                   )}
-                  {/* Body — render sanitized HTML when available, otherwise plain text */}
-                  <Box sx={{
-                    pl: 5.5, // align with text after avatar
-                  }}>
+                  <Box sx={{ pl: 5.5 }}>
                     {msg.bodyHtml ? (
-                      // Render the provider HTML inside its own white "page"
-                      // so it looks like a real email client and provider
-                      // colors (dark text, brand accents) read correctly.
-                      // We do NOT try to recolor the email to match our dark
-                      // theme — that turned everything orange/illegible.
                       <Box
                         sx={{
                           backgroundColor: '#ffffff',
                           color: '#1f1f1f',
-                          // Always-visible border so the white "page" reads
-                          // as a card in BOTH dark and light mode (in light
-                          // mode, white-on-white had no edge).
                           border: '1px solid #d0d7de',
                           borderRadius: 1,
                           p: 2,
@@ -691,20 +636,11 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
                             color: '#5f6368',
                           },
                         }}
-                        // Intercept ALL link clicks inside the foreign HTML:
-                        // confirm with the user, then open in a new window
-                        // with noopener/noreferrer. Provider HTML often wraps
-                        // huge blocks (e.g. a whole notification card) in a
-                        // single <a>, so we cannot trust them to navigate.
                         onClick={confirmExternalLinkClick}
                         dangerouslySetInnerHTML={{
                           __html: DOMPurify.sanitize(msg.bodyHtml, {
                             FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed'],
                             FORBID_ATTR: ['onerror', 'onload', 'onclick'],
-                            // Force every anchor to open in a new tab with
-                            // safe rel attributes; our click handler also
-                            // enforces this, but belt-and-suspenders for
-                            // middle-click / cmd-click which bypass onClick.
                             ADD_ATTR: ['target', 'rel'],
                           }),
                         }}
@@ -727,7 +663,6 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
           );
         })}
       </Box>
-      </Collapse>
 
       {/* Reply box */}
       <Collapse in={showReplyBox}>
@@ -765,7 +700,6 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
             </Box>
           </Box>
 
-          {/* Recipient header rows — make it explicit who the reply is going to */}
           <Stack spacing={0} sx={{
             mb: 1,
             border: '1px solid hsl(var(--border))',
@@ -866,10 +800,80 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
           </Box>
         </Box>
       </Collapse>
+    </>
+  );
+
+  // Inline panel — uses the canonical IncidentSection so it visually matches
+  // Description / Timeline / Metadata (same border, radius, header height,
+  // padding and chevron behaviour).
+  const inlinePanel = (
+    <IncidentSection
+      title="Email Thread"
+      icon={EmailIcon}
+      iconColor="#ff6600"
+      open={!threadCollapsed}
+      onOpenChange={(o) => {
+        setThreadCollapsed(!o);
+        if (o) {
+          try { window.dispatchEvent(new CustomEvent('demo:email-thread-opened')); } catch { /* ignore */ }
+        }
+      }}
+      badge={headerBadge}
+      actions={headerActions}
+      bodyPadded={false}
+      dataTour="incident-email-thread"
+    >
+      {panelBody}
+    </IncidentSection>
+  );
+
+  // Floating popout window keeps its custom chrome (drag handle, dock-back
+  // button) — the IncidentSection shape is for in-page sections, not for a
+  // floating window.
+  const panel = (
+    <Box
+      data-tour="incident-email-thread"
+      sx={{
+        border: '1px solid hsl(var(--border))',
+        borderRadius: 2,
+        bgcolor: 'hsl(var(--card))',
+        overflow: 'hidden',
+        ...(poppedOut ? { display: 'flex', flexDirection: 'column', height: '100%' } : {}),
+      }}
+    >
+      <Box
+        onClick={() => setThreadCollapsed(c => !c)}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1.5,
+          px: 2.5,
+          py: 2,
+          borderBottom: threadCollapsed ? 'none' : '1px solid hsl(var(--border))',
+          cursor: 'pointer',
+          '&:hover': { bgcolor: 'hsl(var(--muted))' },
+        }}
+      >
+        <EmailIcon sx={{ fontSize: 20, color: '#ff6600' }} />
+        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+          Email Thread
+        </Typography>
+        {headerBadge}
+        <Box sx={{ flex: 1 }} />
+        <Box onClick={(e) => e.stopPropagation()} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          {headerActions}
+        </Box>
+        {threadCollapsed
+          ? <ExpandMoreIcon sx={{ color: 'text.secondary' }} />
+          : <ExpandLessIcon sx={{ color: 'text.secondary' }} />}
+      </Box>
+      <Collapse in={!threadCollapsed}>
+        {panelBody}
+      </Collapse>
     </Box>
   );
 
-  if (!poppedOut) return panel;
+  if (!poppedOut) return inlinePanel;
 
   // Popped out: render an inline placeholder so the user can see where the
   // thread "lives", and the real panel as a draggable floating window via
