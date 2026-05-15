@@ -27,6 +27,7 @@ import {
   hasOutputWarning,
   type OutputDiagnosis,
 } from '@/components/agent/AgentRunResultViewer';
+import AgentDiagnosisCtas, { diagnosisHasCtas } from '@/Shuffle-MCPs/AgentDiagnosisCtas';
 
 /** Same shape as the IncidentDetailPage helper — kept inline so consumers
  *  do not need to recreate it. */
