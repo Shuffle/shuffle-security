@@ -3229,7 +3229,7 @@ const IncidentsPage = () => {
           },
           {
             name: 'Gmail',
-            image_url: 'https://storage.googleapis.com/shuffle_public/app_images/Gmail_75c603cbe11936ae1abf2c800ff8a9e5.png',
+            image_url: 'https://storage.googleapis.com/shuffle_public/app_images/Gmail_794e51c3c1a8b24b89ccc573a3defc47.png',
             categories: ['email'],
             objectID: 'demo-gmail',
           },
