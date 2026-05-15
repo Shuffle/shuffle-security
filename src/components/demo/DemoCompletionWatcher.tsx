@@ -172,45 +172,8 @@ export const DemoCompletionWatcher = () => {
   // Step #5 starts with two "notice this" goals (Title, Description/Email).
   // They flip complete only when the user hovers the actual element on the
   // page itself. Hovering the goal row in the drawer just previews the
-  // spotlight (via `hoveredGoalSelector`) — it does NOT count as "noticed",
-  // otherwise the user can complete the step without ever looking at the
-  // real UI.
-  useEffect(() => {
-    if (!drawerOpen) return;
-    const stepId = TOUR_STEPS[step]?.id;
-    if (stepId !== 'incident-detail') return;
-
-    const targets: Array<{ goalId: string; selector: string }> = [
-      { goalId: 'incident-detail:hover-title', selector: '[data-tour="incident-title"]' },
-      // hover-description was intentionally removed — opening the Email
-      // Thread (a click, not a hover) is now the required action so the
-      // user actually sees the full thread details.
-    ];
-
-    // Direct hover on the page element. We attach listeners to whatever
-    // matches at this moment and re-bind via a small interval so newly
-    // rendered targets (description loads async) get covered.
-    const cleanups: Array<() => void> = [];
-    const bind = () => {
-      targets.forEach(t => {
-        const el = document.querySelector(t.selector) as HTMLElement | null;
-        if (!el || (el as any).__demoHoverBound) return;
-        const handler = () => markStepCompleted(t.goalId);
-        el.addEventListener('mouseenter', handler, { once: true });
-        (el as any).__demoHoverBound = true;
-        cleanups.push(() => {
-          el.removeEventListener('mouseenter', handler);
-          delete (el as any).__demoHoverBound;
-        });
-      });
-    };
-    bind();
-    const id = window.setInterval(bind, 1500);
-    return () => {
-      window.clearInterval(id);
-      cleanups.forEach(fn => fn());
-    };
-  }, [drawerOpen, step, markStepCompleted]);
+  // hover-title sub-goal removed — step 5 now starts with the Email Thread
+  // as the first focus target, not the incident title.
 
   // Comment-sent — listens for the custom event dispatched by the incident
   // detail page when the user adds a comment. Doubles as "ask the agent".
