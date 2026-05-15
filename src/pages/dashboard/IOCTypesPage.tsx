@@ -559,26 +559,27 @@ const IOCTypesPage = () => {
                           />
                         </TableCell>
                         <TableCell align="right" sx={{ width: 110 }}>
-                          {type.enabled ? (
-                            <Tooltip title={`Items in datastore category "ioc_${type.name}"`} arrow>
-                              <Chip
-                                label={
-                                  countsLoading && observableCounts?.[type.name] === undefined
-                                    ? '…'
-                                    : (observableCounts?.[type.name] ?? 0).toLocaleString()
-                                }
-                                size="small"
-                                variant="outlined"
-                                sx={{
-                                  fontVariantNumeric: 'tabular-nums',
-                                  fontWeight: 600,
-                                  height: 22,
-                                  borderColor: (observableCounts?.[type.name] ?? 0) > 0 ? 'hsl(var(--primary) / 0.5)' : 'hsl(var(--border))',
-                                  color: (observableCounts?.[type.name] ?? 0) > 0 ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
-                                }}
-                              />
-                            </Tooltip>
-                          ) : (
+                          {type.enabled ? (() => {
+                            const count = observableCounts ? observableCounts[type.name] : undefined;
+                            const showSpinner = countsLoading && count === undefined;
+                            const value = count ?? 0;
+                            return (
+                              <Tooltip title={`Items in datastore category "ioc_${type.name}"`} arrow>
+                                <Chip
+                                  label={showSpinner ? '…' : value.toLocaleString()}
+                                  size="small"
+                                  variant="outlined"
+                                  sx={{
+                                    fontVariantNumeric: 'tabular-nums',
+                                    fontWeight: 600,
+                                    height: 22,
+                                    borderColor: value > 0 ? 'hsl(var(--primary) / 0.5)' : 'hsl(var(--border))',
+                                    color: value > 0 ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                                  }}
+                                />
+                              </Tooltip>
+                            );
+                          })() : (
                             <Typography component="span" sx={{ color: 'text.disabled', fontSize: '0.75rem' }}>—</Typography>
                           )}
                         </TableCell>
