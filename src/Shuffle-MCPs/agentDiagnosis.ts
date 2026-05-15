@@ -224,21 +224,34 @@ const TOKEN_LIMIT_PATTERN = /\b(ai[_\s-]*token[_\s-]*limit|token[_\s-]*limit|lim
 
 export const diagnoseOutputWarning = (run: DiagnosableRun): OutputDiagnosis | null => {
   const { parsed, raw } = parseRunResult(run);
-  if (!parsed || typeof parsed !== 'object') {
-    if (raw && TOKEN_LIMIT_PATTERN.test(raw.toLowerCase())) {
-      return {
-        kind: 'token_limit',
-        title: 'AI token limit reached',
-        explanation:
-          'The agent stopped because the prompt, context, and generated output exceeded the configured AI token limit.',
-        remediation:
-          'Reduce the input size or connected context and re-run, or connect an API vendor/self-hosted model with a higher limit.',
-        snippet: trimEvidenceValue(raw),
-        evidence: [{ path: '(root)', value: trimEvidenceValue(raw) }],
-      };
+
+  // Token-limit detection runs FIRST and against the FULL payload (raw +
+  // parsed), not the narrow decision-only scope. The "AI Token limit
+  // reached" message is unambiguous and can appear in any field —
+  // top-level reason, message, error, or even a wrapping AGENT result —
+  // so we must not miss it just because the scope walker excluded it.
+  const tokenLimitHaystack = (() => {
+    let s = raw || '';
+    if (parsed && typeof parsed === 'object') {
+      try { s += '\n' + JSON.stringify(parsed); } catch { /* ignore */ }
     }
-    return null;
+    return s.toLowerCase();
+  })();
+  if (TOKEN_LIMIT_PATTERN.test(tokenLimitHaystack)) {
+    const evidenceValue = raw ? trimEvidenceValue(raw) : 'AI token limit reached';
+    return {
+      kind: 'token_limit',
+      title: 'AI token limit reached',
+      explanation:
+        'The agent stopped because the prompt, context, and generated output exceeded the configured AI token limit.',
+      remediation:
+        'Reduce the input size or connected context and re-run, or connect an API vendor/self-hosted model with a higher limit.',
+      snippet: evidenceValue,
+      evidence: [{ path: '(root)', value: evidenceValue }],
+    };
   }
+
+  if (!parsed || typeof parsed !== 'object') return null;
 
   const scope = getDiagnosableScope(parsed);
   if (!scope) return null;
