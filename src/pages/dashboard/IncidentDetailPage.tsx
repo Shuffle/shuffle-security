@@ -4085,7 +4085,7 @@ const IncidentDetailPage = () => {
             triggered it — see renderIndicatorCheckPlaceholder() inside renderThread().
             Standardised to match the "AI Agent processing" pill so loaders attach
             to the message they relate to instead of floating at the top. */}
-        {renderTimelineFeedItems()}
+        {renderTimelineFeedItems(variant)}
       </Box>
       
     </>
@@ -4093,7 +4093,7 @@ const IncidentDetailPage = () => {
 
   // Builder for the unified timeline items (revisions + agent runs + comments).
   // Returns an array of JSX nodes (or a single empty-state node).
-  const renderTimelineFeedItems = () => {
+  const renderTimelineFeedItems = (variant: 'sidebar' | 'inline' = 'sidebar') => {
     type StepKind = 'task-created' | 'task-completed' | 'task-status-changed' | 'observable-added' | 'correlation-found' | 'incident-created';
     type TimelineItem =
       | { type: 'revision'; timestamp: number; data: any; idx: number; parsedCurrent: any; parsedPrevious: any | null }
