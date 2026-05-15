@@ -239,7 +239,7 @@ export const IocDetailsCard = ({ correlations, compact = false }: IocDetailsCard
                   </Typography>
                   <Box sx={{ mt: 0.5, display: 'flex', flexDirection: 'column', gap: 0.4 }}>
                     {refs.slice(0, 6).map((r, ri) => {
-                      const label = r.source_name || (r.url ? new URL(r.url).hostname : 'reference');
+                      const label = resolveFeedLabel(r, feeds);
                       return r.url ? (
                         <Tooltip key={ri} title={r.url} arrow>
                           <MuiLink
