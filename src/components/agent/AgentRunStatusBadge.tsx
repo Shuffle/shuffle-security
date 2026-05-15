@@ -100,6 +100,11 @@ const buildTooltip = (
         <Typography sx={{ fontSize: '0.65rem', mt: 0.75, opacity: 0.7 }}>
           Click for full details.
         </Typography>
+        {diagnosisHasCtas(diagnosis) && (
+          <Box sx={{ mt: 1, pt: 0.75, borderTop: '1px solid rgba(255,255,255,0.12)' }}>
+            <AgentDiagnosisCtas diagnosis={diagnosis} compact tone="medium" />
+          </Box>
+        )}
       </Box>
     );
   }
