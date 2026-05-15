@@ -3660,6 +3660,70 @@ const IncidentDetailPage = () => {
   //     timeline with a vertical rail. Single source of truth so behaviour
   //     stays in sync everywhere.
   // ===========================================================================
+  // Filter chip rendered in the IncidentSection `actions` slot. Extracted so
+  // both call sites (inline + sidebar) get the exact same control.
+  const renderTimelineActionsChip = () => {
+    if (timelineCollapsed) return null;
+    const filterDefs = [
+      { key: 'revisions' as const, label: 'Changes', count: revisions.length },
+      { key: 'agent' as const, label: 'Agent', count: agentRuns.length },
+      { key: 'manual' as const, label: 'Comments', count: activity.length },
+      { key: 'tasks' as const, label: 'Tasks', count: visibleTasks.length },
+      { key: 'observables' as const, label: 'Observables', count: visibleObservablesCount },
+      { key: 'correlations' as const, label: 'Correlations', count: visibleCorrelations.length },
+    ];
+    const activeCount = filterDefs.filter(f => isFilterActive(f.key)).length;
+    const allActive = activeCount === filterDefs.length;
+    return (
+      <Tooltip title="Filter timeline" arrow>
+        <Chip
+          icon={<FilterListIcon sx={{ fontSize: 14, ml: '6px !important', color: 'inherit !important' }} />}
+          label={
+            <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
+              <span>Filters</span>
+              <Box
+                component="span"
+                sx={{
+                  fontSize: '0.65rem',
+                  opacity: 0.8,
+                  fontVariantNumeric: 'tabular-nums',
+                  px: 0.5,
+                  borderRadius: '4px',
+                  bgcolor: allActive ? 'transparent' : 'rgba(255, 102, 0, 0.18)',
+                  border: allActive ? 'none' : '1px solid rgba(255, 102, 0, 0.35)',
+                }}
+              >
+                {allActive ? 'All' : `${activeCount}/${filterDefs.length}`}
+              </Box>
+            </Box>
+          }
+          size="small"
+          onClick={(e) => setTimelineFilterAnchor(e.currentTarget)}
+          sx={{
+            height: 24,
+            fontSize: '0.7rem',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            border: '1px solid hsl(var(--border))',
+            bgcolor: 'transparent',
+            color: 'text.secondary',
+            '& .MuiChip-label': { px: 0.875 },
+            '&:hover': { bgcolor: 'hsl(var(--muted))' },
+          }}
+        />
+      </Tooltip>
+    );
+  };
+
+  // Loading spinner shown next to the "Timeline" title in the IncidentSection
+  // `badge` slot. Used to indicate revisions are still being fetched.
+  const renderTimelineBadge = () =>
+    revisionsLoading ? <CircularProgress size={14} sx={{ color: '#ff6600' }} /> : null;
+
+  // Body of the Timeline panel (everything below the header). The header,
+  // chevron and collapse behaviour are owned by the surrounding
+  // <IncidentSection> at each call site so it stays visually identical to
+  // Description / Email Thread / Metadata.
   const renderTimelinePanel = (variant: 'sidebar' | 'inline' = 'sidebar') => (
     <>
       {/* Agent runs loading indicator */}
@@ -3670,86 +3734,6 @@ const IncidentDetailPage = () => {
           '& .MuiLinearProgress-bar': { bgcolor: 'hsl(var(--primary))' },
         }} />
       )}
-      {/* Timeline header — entire bar toggles collapse, chevron sits far right
-          to match the Section pattern used by Description / Email Thread. */}
-      <Box
-        onClick={() => setTimelineCollapsed(v => !v)}
-        sx={{
-          px: 2,
-          py: 1.5,
-          borderBottom: '1px solid hsl(var(--border))',
-          cursor: 'pointer',
-          '&:hover': { bgcolor: 'hsl(var(--muted))' },
-        }}
-      >
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, flexWrap: 'wrap' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <HistoryIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>Timeline</Typography>
-            {revisionsLoading && <CircularProgress size={14} sx={{ color: '#ff6600' }} />}
-          </Box>
-          {!timelineCollapsed && (() => {
-            const filterDefs = [
-              { key: 'revisions' as const, label: 'Changes', count: revisions.length },
-              { key: 'agent' as const, label: 'Agent', count: agentRuns.length },
-              { key: 'manual' as const, label: 'Comments', count: activity.length },
-              { key: 'tasks' as const, label: 'Tasks', count: visibleTasks.length },
-              { key: 'observables' as const, label: 'Observables', count: visibleObservablesCount },
-              { key: 'correlations' as const, label: 'Correlations', count: visibleCorrelations.length },
-            ];
-            const activeCount = filterDefs.filter(f => isFilterActive(f.key)).length;
-            const allActive = activeCount === filterDefs.length;
-            return (
-              <Box
-                onClick={(e) => e.stopPropagation()}
-                sx={{ display: 'flex', alignItems: 'center', ml: 'auto' }}
-              >
-                <Tooltip title="Filter timeline" arrow>
-                  <Chip
-                    icon={<FilterListIcon sx={{ fontSize: 14, ml: '6px !important', color: 'inherit !important' }} />}
-                    label={
-                      <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
-                        <span>Filters</span>
-                        <Box
-                          component="span"
-                          sx={{
-                            fontSize: '0.65rem',
-                            opacity: 0.8,
-                            fontVariantNumeric: 'tabular-nums',
-                            px: 0.5,
-                            borderRadius: '4px',
-                            bgcolor: allActive ? 'transparent' : 'rgba(255, 102, 0, 0.18)',
-                            border: allActive ? 'none' : '1px solid rgba(255, 102, 0, 0.35)',
-                          }}
-                        >
-                          {allActive ? 'All' : `${activeCount}/${filterDefs.length}`}
-                        </Box>
-                      </Box>
-                    }
-                    size="small"
-                    onClick={(e) => setTimelineFilterAnchor(e.currentTarget)}
-                    sx={{
-                      height: 24,
-                      fontSize: '0.7rem',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      border: '1px solid hsl(var(--border))',
-                      bgcolor: 'transparent',
-                      color: 'text.secondary',
-                      '& .MuiChip-label': { px: 0.875 },
-                      '&:hover': { bgcolor: 'hsl(var(--muted))' },
-                    }}
-                  />
-                </Tooltip>
-              </Box>
-            );
-          })()}
-          {/* Chevron — far right, mirroring the Section pattern. */}
-          {timelineCollapsed
-            ? <ExpandMoreIcon sx={{ color: 'text.secondary', ml: timelineCollapsed ? 'auto' : 0.5 }} />
-            : <ExpandLessIcon sx={{ color: 'text.secondary', ml: 0.5 }} />}
-        </Box>
-      </Box>
 
       {/* Timeline filters dropdown — single menu replacing the chip row. */}
       <Menu
