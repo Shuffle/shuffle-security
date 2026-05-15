@@ -1,8 +1,9 @@
-import { Alert, Box, Button, CircularProgress, Typography } from '@mui/material';
+import { Alert, Box, Button, CircularProgress, Tooltip, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { useIsSupport } from '@/hooks/useIsSupport';
 
 /**
  * Shared "Threat Intel Automation: Active/Inactive" banner.
@@ -16,12 +17,31 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
  */
 const ThreatIntelAutomationBanner = ({ sx }: { sx?: object }) => {
   const isAdmin = useIsAdmin();
+  const isSupportUser = useIsSupport();
   const enrichmentStatus = useEnrichmentStatus();
   const automationEnabled = enrichmentStatus.active;
   const automationAction = enrichmentStatus.action;
 
   if (!isAdmin) return null;
   if (enrichmentStatus.isLoading || automationEnabled === null) return null;
+
+  const tooltipContent = (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, py: 0.5, maxWidth: 360 }}>
+      {enrichmentStatus.checks.map((c) => (
+        <Box key={c.label} sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <CheckCircleIcon sx={{ fontSize: 13, color: c.active ? 'hsl(var(--severity-low))' : 'hsl(var(--destructive))' }} />
+            <Typography variant="caption" sx={{ fontSize: '0.7rem', fontWeight: 600 }}>{c.label}</Typography>
+          </Box>
+          {isSupportUser && (
+            <Typography variant="caption" sx={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.75)', pl: 2.5, lineHeight: 1.3 }}>
+              {c.detail}
+            </Typography>
+          )}
+        </Box>
+      ))}
+    </Box>
+  );
 
   return (
     <Alert
@@ -42,9 +62,11 @@ const ThreatIntelAutomationBanner = ({ sx }: { sx?: object }) => {
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-          Threat Intel Automation: {automationEnabled ? 'Active' : 'Inactive'}
-        </Typography>
+        <Tooltip title={tooltipContent} arrow placement="top">
+          <Typography variant="body2" sx={{ fontWeight: 500, cursor: 'help', textDecoration: 'underline dotted', textUnderlineOffset: 3 }}>
+            Threat Intel Automation: {automationEnabled ? 'Active' : 'Inactive'}
+          </Typography>
+        </Tooltip>
         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
           {automationEnabled
             ? '— Incidents will be automatically enriched with threat intelligence from enabled feeds.'
