@@ -7873,11 +7873,18 @@ const IncidentDetailPage = () => {
               </Typography>
               <Tooltip
                 title={
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, py: 0.5 }}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, py: 0.5, maxWidth: 360 }}>
                     {enrichmentStatus.checks.map((c) => (
-                      <Box key={c.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                        <CheckCircleIcon sx={{ fontSize: 13, color: c.active ? 'hsl(var(--severity-low))' : 'hsl(var(--destructive))' }} />
-                        <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>{c.label}</Typography>
+                      <Box key={c.label} sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                          <CheckCircleIcon sx={{ fontSize: 13, color: c.active ? 'hsl(var(--severity-low))' : 'hsl(var(--destructive))' }} />
+                          <Typography variant="caption" sx={{ fontSize: '0.7rem', fontWeight: 600 }}>{c.label}</Typography>
+                        </Box>
+                        {isSupportUser && (
+                          <Typography variant="caption" sx={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.7)', pl: 2.5, lineHeight: 1.3 }}>
+                            {c.detail}
+                          </Typography>
+                        )}
                       </Box>
                     ))}
                   </Box>
