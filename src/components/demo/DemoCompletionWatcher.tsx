@@ -168,12 +168,10 @@ export const DemoCompletionWatcher = () => {
     return () => window.removeEventListener('demo:email-thread-opened', onOpen);
   }, [drawerOpen, step, markStepCompleted]);
 
-  // ─── orientation sub-goals: complete on hover ──────────────────────────────
-  // Step #5 starts with two "notice this" goals (Title, Description/Email).
-  // They flip complete only when the user hovers the actual element on the
-  // page itself. Hovering the goal row in the drawer just previews the
-  // hover-title sub-goal removed — step 5 now starts with the Email Thread
-  // as the first focus target, not the incident title.
+  // Step #5 now starts with the Email Thread as the first focus target —
+  // the previous "hover the title / description" orientation sub-goals were
+  // removed so the user is pulled straight into the message body.
+
 
   // Comment-sent — listens for the custom event dispatched by the incident
   // detail page when the user adds a comment. Doubles as "ask the agent".
