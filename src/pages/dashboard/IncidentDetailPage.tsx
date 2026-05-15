@@ -7896,7 +7896,7 @@ const IncidentDetailPage = () => {
               value={obsFilterText}
               onChange={(e) => setObsFilterText(e.target.value)}
               placeholder="Search observables..."
-              sx={{ ...inputSx, minWidth: 160, flex: 1, maxWidth: 280 }}
+              sx={{ ...inputSx, minWidth: 160, flex: 1, maxWidth: 280, '& .MuiOutlinedInput-root': { ...(inputSx as any)['& .MuiOutlinedInput-root'], height: 36 } }}
               InputProps={{
                 startAdornment: <SearchIcon sx={{ fontSize: 16, color: 'text.disabled', mr: 0.5 }} />,
               }}
