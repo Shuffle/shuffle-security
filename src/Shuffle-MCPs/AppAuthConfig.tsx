@@ -34,6 +34,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import CloseIcon from '@mui/icons-material/Close';
 import type { AlgoliaSearchApp } from '@/Shuffle-MCPs';
+import { AppFallbackIcon } from '@/Shuffle-MCPs/AppFallbackIcon';
 import { API_CONFIG, getApiUrl, getAuthHeader, isDevEnvironment, isCloudDomain } from '@/Shuffle-MCPs/api';
 import { getIngestionCategory } from '@/Shuffle-MCPs/ingestionDetection';
 import ReactMarkdown from 'react-markdown';
