@@ -8206,8 +8206,8 @@ const IncidentDetailPage = () => {
                         </Typography>
                         {/* Correlation badge */}
                         {(() => {
-                          const obsKey = `${obs.type}::${obs.value}`;
-                          const corr = obsCorrelations[obsKey];
+                           const obsKey = `${String(obs.type || '').toLowerCase()}::${String(obs.value || '').toLowerCase()}`;
+                           const corr = obsCorrelations[obsKey];
                           if (corr?.loading) return <CircularProgress size={14} sx={{ mx: 0.5 }} />;
                           if (!corr?.data?.length) return null;
                           // Only count correlations with refs OTHER than the current incident.
