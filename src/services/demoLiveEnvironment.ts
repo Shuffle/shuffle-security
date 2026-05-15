@@ -36,7 +36,7 @@ import {
   extractWorkflowAppNames,
 } from '@/Shuffle-MCPs/ingestionDetection';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
-import { getDatastoreByCategory, setDatastoreItems, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
+import { getDatastoreByCategory, setDatastoreItems, deleteDatastoreItems, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 // Canonical seeders + workflow generator — SAME functions used by the
 // Threat Feeds page, IOC Types page, and the onboarding AutomationConfig.
 // Keeping a single source of truth means changes there propagate to demo
