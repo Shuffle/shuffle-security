@@ -11,6 +11,7 @@ import type { AlgoliaSearchApp, AppSelectedEvent, ShuffleMCPProps, AppAuthentica
 import AppDetailDrawer from './AppDetailDrawer';
 import './shuffle-mcp.css';
 import { fetchApps } from './appsCache';
+import { AppFallbackIcon } from './AppFallbackIcon';
 
 const DEFAULT_ALGOLIA_APP_ID = 'JNSS5CFDZZ';
 const DEFAULT_ALGOLIA_API_KEY = '33e4e3564f4f060e96e0531957bed552';
@@ -445,30 +446,39 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
         onClick={() => selectApp(app)}
       >
         <div className="singul-app-info" style={customStyles.appInfo}>
-          {app.image_url && (
-            <div style={{ position: 'relative', flexShrink: 0 }}>
-              <img
-                src={app.image_url}
-                alt={app.name}
-                className="singul-app-icon"
-                style={customStyles.appIcon}
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <AppFallbackIcon
+              name={app.name || ''}
+              imageUrl={app.image_url}
+              size={28}
+              className="singul-app-icon"
+              style={customStyles.appIcon as React.CSSProperties}
+            />
+            {/* Color-coded status dot: green=tested, yellow=configured, blue=activated/selected, gray=inactive */}
+            {!hideAuthStatus && (
+              <span
+                className={`singul-status-dot ${
+                  authState.validated ? 'singul-dot-validated' :
+                  authState.configured ? 'singul-dot-configured' :
+                  selected ? 'singul-dot-activated' :
+                  'singul-dot-inactive'
+                }`}
               />
-              {/* Color-coded status dot: green=tested, yellow=configured, blue=activated/selected, gray=inactive */}
-              {!hideAuthStatus && (
-                <span
-                  className={`singul-status-dot ${
-                    authState.validated ? 'singul-dot-validated' :
-                    authState.configured ? 'singul-dot-configured' :
-                    selected ? 'singul-dot-activated' :
-                    'singul-dot-inactive'
-                  }`}
-                />
-              )}
-            </div>
-          )}
+            )}
+          </div>
           <div className="singul-app-details" style={customStyles.appDetails}>
-            <span className="singul-app-name" style={customStyles.appName}>
-              {app.name.replace(/_/g, ' ')}
+            <span
+              className="singul-app-name"
+              style={{
+                ...customStyles.appName,
+                ...(!app.name || /^untitled$/i.test(app.name.trim())
+                  ? { fontStyle: 'italic', color: 'hsl(var(--muted-foreground))' }
+                  : {}),
+              }}
+            >
+              {!app.name || /^untitled$/i.test(app.name.trim())
+                ? 'Untitled app'
+                : app.name.replace(/_/g, ' ')}
               {app.source === 'private' && (
                 <Tooltip
                   title="Private apps are apps you have activated in your organization, or your own custom apps — not just from the public Algolia catalog."
