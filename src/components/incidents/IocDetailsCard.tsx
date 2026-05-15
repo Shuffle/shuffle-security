@@ -17,8 +17,8 @@ const loadThreatFeeds = async (): Promise<ThreatFeed[]> => {
   threatFeedsPromise = (async () => {
     try {
       const res = await getDatastoreByCategory(DATASTORE_CATEGORIES.THREAT_FEEDS);
-      const items = (res?.items || []).map((it: { key: string; value: string }) => {
-        try { return JSON.parse(it.value) as ThreatFeed; } catch { return null; }
+      const items = (res?.data || []).map((it) => {
+        try { return JSON.parse(String(it.value)) as ThreatFeed; } catch { return null; }
       }).filter(Boolean) as ThreatFeed[];
       threatFeedsCache = items;
       return items;
