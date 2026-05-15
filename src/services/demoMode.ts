@@ -445,7 +445,7 @@ const extractIpFromStixValue = (value: unknown): string | undefined => {
 };
 
 const pickFallbackIocs = (): DemoIocOverrides => {
-  const out: DemoIocOverrides = {};
+  const out: DemoIocOverrides = { usedFallback: true };
   const ipKey = pickRandom(FALLBACK_IOC_IPS);
   if (ipKey) out.attackerIp = ipKey;
   const urlKey = pickRandom(FALLBACK_IOC_URLS);
@@ -455,6 +455,40 @@ const pickFallbackIocs = (): DemoIocOverrides => {
     if (host) out.lureDomain = host;
   }
   return out;
+};
+
+/**
+ * Build a minimal STIX 2.1 indicator object for a fallback URL and write it
+ * to the `ioc_url` datastore so the demo's Known-IOC machinery surfaces the
+ * URL exactly the same way as a live threat-feed entry. Best-effort —
+ * failures are logged and swallowed so they never block incident seeding.
+ */
+const seedFallbackUrlIndicator = async (url: string): Promise<void> => {
+  try {
+    const nowIso = new Date().toISOString();
+    const indicator = {
+      type: 'indicator',
+      spec_version: '2.1',
+      id: `indicator--demo-fallback-${Math.random().toString(36).slice(2, 10)}`,
+      created: nowIso,
+      modified: nowIso,
+      indicator_types: ['malicious-activity'],
+      pattern: `[url:value = '${url.replace(/'/g, "\\'")}']`,
+      pattern_type: 'stix',
+      valid_from: nowIso,
+      labels: ['demo-fallback'],
+      external_references: [
+        {
+          source_name: 'Shuffle Security Demo',
+          description: 'Static fallback IOC injected by demo mode (no live threat-feed indicator was available).',
+        },
+      ],
+    };
+    await setDatastoreItem(url, JSON.stringify(indicator), IOC_URL_CATEGORY);
+    broadcastRefresh(IOC_URL_CATEGORY);
+  } catch (err) {
+    console.warn('[demo] seedFallbackUrlIndicator failed', err);
+  }
 };
 
 /**
