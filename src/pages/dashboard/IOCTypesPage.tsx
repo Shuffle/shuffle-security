@@ -286,6 +286,60 @@ const IOCTypesPage = () => {
   const enabledCount = useMemo(() => iocTypes.filter(t => t.enabled).length, [iocTypes]);
   const enabledNames = useMemo(() => iocTypes.filter(t => t.enabled).map(t => t.name), [iocTypes]);
   const { data: observableCounts, isLoading: countsLoading } = useObservableCounts(enabledNames);
+  const queryClient = useQueryClient();
+  const [deletingType, setDeletingType] = useState<string | null>(null);
+
+  /**
+   * Delete every observable in the `ioc_<typeName>` datastore category.
+   * Paginates the category to gather all keys, then bulk-deletes them.
+   * Used by the trash icon next to the IOC count on each row.
+   */
+  const handleDeleteAllForType = async (typeName: string) => {
+    const category = `ioc_${typeName}`;
+    const total = observableCounts?.[typeName] ?? 0;
+    if (total === 0) return;
+    const ok = window.confirm(
+      `Delete all ${total.toLocaleString()} observable${total === 1 ? '' : 's'} of type "${typeName}"?\n\nThis removes every entry from datastore category "${category}" and cannot be undone.`,
+    );
+    if (!ok) return;
+    setDeletingType(typeName);
+    try {
+      const { getDatastoreByCategory, deleteDatastoreItems } = await import('@/Shuffle-MCPs/datastore');
+      const keys: string[] = [];
+      let cursor: string | undefined;
+      // Page through every entry — backend caps page size, so loop until empty.
+      // Hard ceiling protects against pathological responses.
+      for (let i = 0; i < 200; i++) {
+        const res = await getDatastoreByCategory(category, cursor, 100);
+        if (!res.success) throw new Error(res.error || 'Failed to list observables');
+        const items = (res.data || []) as Array<{ key?: string; Key?: string }>;
+        for (const it of items) {
+          const k = it?.key ?? it?.Key;
+          if (typeof k === 'string' && k) keys.push(k);
+        }
+        if (!res.cursor || items.length === 0) break;
+        cursor = res.cursor;
+      }
+      if (keys.length === 0) {
+        toast.success(`No items to delete in "${category}".`);
+      } else {
+        const result = await deleteDatastoreItems(keys, category);
+        if (result.success) {
+          toast.success(`Deleted ${result.deleted} observable${result.deleted === 1 ? '' : 's'} from "${category}".`);
+        } else {
+          toast.error(`Deleted ${result.deleted} of ${keys.length}; ${result.failed.length} failed.`);
+        }
+      }
+      // Refresh the count chips immediately.
+      await queryClient.invalidateQueries({ queryKey: ['observable-counts'] });
+    } catch (err) {
+      console.error('[IOCTypesPage] Failed to delete IOCs:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to delete observables');
+    } finally {
+      setDeletingType(null);
+    }
+  };
+
 
   // Test regex pattern
   const testRegex = (pattern: string, value: string): boolean | null => {
