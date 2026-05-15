@@ -227,20 +227,46 @@ export const useEnrichmentStatus = (
     }
   }, [validateWorkflowIds, refetchAll]);
 
-  const serverActive = useMemo(() => {
-    const hasThreatFeeds = !!workflows?.some(
-      (w) => w.name === THREAT_FEEDS_WORKFLOW && w.background_processing === true,
-    );
-    const hasIOCExtraction = !!workflows?.some(
-      (w) => w.name === IOC_EXTRACTION_WORKFLOW && w.background_processing === true,
-    );
+  const serverDetails = useMemo(() => {
+    const tfMatch = workflows?.find((w) => w.name === THREAT_FEEDS_WORKFLOW);
+    const iocMatch = workflows?.find((w) => w.name === IOC_EXTRACTION_WORKFLOW);
     const automations: CategoryAutomation[] = categoryConfig?.automations || [];
     const enrichAutomation = automations.find(
       (a) => a.type === 'enrich' || a.name === 'Enrich',
     );
-    const hasEnrichEnabled = !!enrichAutomation?.enabled;
-    return { hasThreatFeeds, hasIOCExtraction, hasEnrichEnabled };
+
+    const wfId = (w: { id?: string } | undefined) => (w?.id ? ` (id: ${w.id})` : '');
+    const tfDetail = !tfMatch
+      ? `No workflow named "${THREAT_FEEDS_WORKFLOW}" found in /api/v1/workflows for this org.`
+      : tfMatch.background_processing === true
+        ? `Workflow "${THREAT_FEEDS_WORKFLOW}" found with background_processing=true${wfId(tfMatch as { id?: string })}.`
+        : `Workflow "${THREAT_FEEDS_WORKFLOW}" found but background_processing=${String((tfMatch as { background_processing?: boolean }).background_processing)}${wfId(tfMatch as { id?: string })}. Re-generate via /api/v2/workflows/generate to flip it on.`;
+
+    const iocDetail = !iocMatch
+      ? `No workflow named "${IOC_EXTRACTION_WORKFLOW}" found in /api/v1/workflows for this org.`
+      : iocMatch.background_processing === true
+        ? `Workflow "${IOC_EXTRACTION_WORKFLOW}" found with background_processing=true${wfId(iocMatch as { id?: string })}.`
+        : `Workflow "${IOC_EXTRACTION_WORKFLOW}" found but background_processing=${String((iocMatch as { background_processing?: boolean }).background_processing)}${wfId(iocMatch as { id?: string })}. Re-generate via /api/v2/workflows/generate to flip it on.`;
+
+    const enrichDetail = !categoryConfig
+      ? `category_config not returned by /list_cache?category=${DATASTORE_CATEGORIES.INCIDENTS} (org may not have any incidents yet, or the request failed).`
+      : !enrichAutomation
+        ? `category_config.automations on "${DATASTORE_CATEGORIES.INCIDENTS}" has no entry with type="enrich" or name="Enrich".`
+        : enrichAutomation.enabled
+          ? `Automation "${enrichAutomation.name || enrichAutomation.type}" on "${DATASTORE_CATEGORIES.INCIDENTS}" has enabled=true.`
+          : `Automation "${enrichAutomation.name || enrichAutomation.type}" on "${DATASTORE_CATEGORIES.INCIDENTS}" exists but enabled=false.`;
+
+    return {
+      hasThreatFeeds: !!tfMatch && tfMatch.background_processing === true,
+      hasIOCExtraction: !!iocMatch && iocMatch.background_processing === true,
+      hasEnrichEnabled: !!enrichAutomation?.enabled,
+      tfDetail,
+      iocDetail,
+      enrichDetail,
+    };
   }, [workflows, categoryConfig]);
+
+  const serverActive = serverDetails;
 
   // Clear optimistic override once the server-side state catches up to
   // what we expect, OR after a 15s safety timeout — whichever comes first.
@@ -264,9 +290,9 @@ export const useEnrichmentStatus = (
 
   const result = useMemo(() => {
     const checks: EnrichmentStatusCheck[] = [
-      { label: 'Threat feeds', active: serverActive.hasThreatFeeds },
-      { label: 'IOC extraction', active: serverActive.hasIOCExtraction },
-      { label: 'Enrich automation', active: serverActive.hasEnrichEnabled },
+      { label: 'Threat feeds', active: serverActive.hasThreatFeeds, detail: serverDetails.tfDetail },
+      { label: 'IOC extraction', active: serverActive.hasIOCExtraction, detail: serverDetails.iocDetail },
+      { label: 'Enrich automation', active: serverActive.hasEnrichEnabled, detail: serverDetails.enrichDetail },
     ];
     const computedActive =
       serverActive.hasThreatFeeds &&
@@ -277,7 +303,7 @@ export const useEnrichmentStatus = (
       checks,
       isLoading,
     };
-  }, [serverActive, isLoading, optimistic]);
+  }, [serverActive, serverDetails, isLoading, optimistic]);
 
   return {
     ...result,
