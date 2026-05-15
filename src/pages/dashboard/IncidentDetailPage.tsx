@@ -8345,7 +8345,8 @@ const IncidentDetailPage = () => {
                           </Box>
                           {/* Inline correlations */}
                           {(() => {
-                            const obsKey = `${obs.type}::${obs.value}`;
+                            const lowerValue = String(obs.value || '').toLowerCase();
+                            const obsKey = `${String(obs.type || '').toLowerCase()}::${lowerValue}`;
                             const corr = obsCorrelations[obsKey];
                             // Trigger fetch if not yet loaded
                             if (!corr && obs.value) {
@@ -8361,7 +8362,7 @@ const IncidentDetailPage = () => {
                                   method: 'POST',
                                   credentials: 'include',
                                   headers: { 'Content-Type': 'application/json', ...getAuthHeader(), ...crossOrgHeaders },
-                                  body: JSON.stringify({ type: 'value', key: obs.value }),
+                                  body: JSON.stringify({ type: 'value', key: lowerValue }),
                                 }).then(async r => {
                                   if (r.ok) {
                                     const data = await r.json();
