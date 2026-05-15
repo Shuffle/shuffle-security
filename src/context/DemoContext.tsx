@@ -336,6 +336,15 @@ export interface DemoContextValue {
    *  losing focus on the drawer. Cleared on mouse-leave. */
   hoveredGoalSelector: string | null;
   setHoveredGoalSelector: (selector: string | null) => void;
+  /** True when a demo run was previously started but never finished or
+   *  cleaned up. Drives the floating "Continue demo" pill. */
+  wasStarted: boolean;
+  /** True when the user explicitly dismissed the resume pill (X icon). */
+  resumeDismissed: boolean;
+  /** Re-open the tour from the last step the user was on. */
+  resumeTour: () => void;
+  /** Hide the resume pill until the next demo run is started. */
+  dismissResumePrompt: () => void;
 }
 
 // DemoContext + useDemo are defined in ./demoContextObject so HMR cannot
@@ -376,6 +385,12 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
   const [hasDemoIncidents, setHasDemoIncidents] = useState(false);
   const [attentionPulse, setAttentionPulse] = useState(0);
   const [hoveredGoalSelector, setHoveredGoalSelector] = useState<string | null>(null);
+  const [wasStarted, setWasStarted] = useState<boolean>(() => {
+    try { return localStorage.getItem('shuffle_demo_started') === 'true'; } catch { return false; }
+  });
+  const [resumeDismissed, setResumeDismissed] = useState<boolean>(() => {
+    try { return localStorage.getItem('shuffle_demo_resume_dismissed') === 'true'; } catch { return false; }
+  });
 
   // GA dedupe: each step view fires at most once per session, each completion
   // fires at most once per step. Refs survive re-renders without retriggering.
@@ -465,6 +480,12 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     try {
       // Mark active immediately so the dashboard CTA flips state, even before any data lands.
       localStorage.setItem('shuffle_demo_active', 'true');
+      // Persistent "started but not finished" flag — drives the floating
+      // resume pill if the user closes the drawer without finishing.
+      try { localStorage.setItem('shuffle_demo_started', 'true'); } catch { /* ignore */ }
+      try { localStorage.removeItem('shuffle_demo_resume_dismissed'); } catch { /* ignore */ }
+      setWasStarted(true);
+      setResumeDismissed(false);
       setActive(true);
       setStep(0);
       setDrawerOpen(true);
@@ -543,7 +564,32 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     setDrawerOpen(false);
     setActive(false);
     try { localStorage.removeItem('shuffle_demo_active'); } catch { /* ignore */ }
+    // If they reached the final step, treat the demo as finished and stop
+    // showing the resume pill.
+    if (isOnFinalStep) {
+      try { localStorage.removeItem('shuffle_demo_started'); } catch { /* ignore */ }
+      try { localStorage.removeItem('shuffle_demo_resume_dismissed'); } catch { /* ignore */ }
+      setWasStarted(false);
+      setResumeDismissed(false);
+    }
   }, [step]);
+
+  const resumeTour = useCallback(() => {
+    setActive(true);
+    setDrawerOpen(true);
+    setMinimized(false);
+    setResumeDismissed(false);
+    try { localStorage.setItem('shuffle_demo_active', 'true'); } catch { /* ignore */ }
+    try { localStorage.setItem('shuffle_demo_minimized', 'false'); } catch { /* ignore */ }
+    try { localStorage.removeItem('shuffle_demo_resume_dismissed'); } catch { /* ignore */ }
+    setAttentionPulse(p => p + 1);
+    navigateForStep(step);
+  }, [navigateForStep, step]);
+
+  const dismissResumePrompt = useCallback(() => {
+    setResumeDismissed(true);
+    try { localStorage.setItem('shuffle_demo_resume_dismissed', 'true'); } catch { /* ignore */ }
+  }, []);
 
   const isStepUnlocked = useCallback((s: TourStep | undefined): boolean => {
     if (!s) return true;
@@ -618,6 +664,10 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       setDrawerOpen(false);
       setStep(0);
       setCompletedSteps({});
+      setWasStarted(false);
+      setResumeDismissed(false);
+      try { localStorage.removeItem('shuffle_demo_started'); } catch { /* ignore */ }
+      try { localStorage.removeItem('shuffle_demo_resume_dismissed'); } catch { /* ignore */ }
       viewedStepsRef.current = new Set();
       completedStepsGARef.current = new Set();
       refreshStats();
@@ -787,6 +837,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     isOnIncidentDetail,
     attentionPulse,
     hoveredGoalSelector, setHoveredGoalSelector,
+    wasStarted, resumeDismissed, resumeTour, dismissResumePrompt,
   }), [
     active, isSeeding, isCleaning, drawerOpen, minimized, dock, step, stats,
     completedSteps, currentStepUnlocked,
@@ -800,6 +851,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     isOnIncidentDetail,
     attentionPulse,
     hoveredGoalSelector,
+    wasStarted, resumeDismissed, resumeTour, dismissResumePrompt,
   ]);
 
   return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;

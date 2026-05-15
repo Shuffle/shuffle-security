@@ -98,6 +98,7 @@ import { DemoProvider } from '@/context/DemoContext';
 import { DemoTourDrawer } from '@/components/demo/DemoTourDrawer';
 import { DemoSpotlight } from '@/components/demo/DemoSpotlight';
 import { DemoCompletionWatcher } from '@/components/demo/DemoCompletionWatcher';
+import { DemoResumePill } from '@/components/demo/DemoResumePill';
 
 /** Layout that conditionally shows sidebar for authenticated users, navbar + content for guests */
 const ConditionalDashboardLayout = () => {
@@ -158,6 +159,7 @@ const ThemedApp = () => {
           <DemoTourDrawer />
           <DemoSpotlight />
           <DemoCompletionWatcher />
+          <DemoResumePill />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/apps" element={<AppsPage />} />
