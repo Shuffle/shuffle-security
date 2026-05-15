@@ -565,9 +565,14 @@ const resolveIocOverrides = async (): Promise<DemoIocOverrides> => {
     attackerIp: looksLikeIp(rawCached.attackerIp) ? rawCached.attackerIp : undefined,
     lureUrl: looksLikeUrl(rawCached.lureUrl) ? rawCached.lureUrl : undefined,
     lureDomain: rawCached.lureDomain && isPrintableAscii(rawCached.lureDomain) ? rawCached.lureDomain : undefined,
+    usedFallback: rawCached.usedFallback === true ? true : undefined,
   } : null;
   if (cached?.attackerIp && cached?.lureUrl && cached?.lureDomain) {
     if (JSON.stringify(cached) !== JSON.stringify(rawCached)) writeIocOverrides(cached);
+    // Re-seed the STIX indicator on every resolve when we are still on
+    // fallback values, so the `ioc_url` datastore reflects the URL the
+    // user is actually seeing in the incident.
+    if (cached.usedFallback && cached.lureUrl) void seedFallbackUrlIndicator(cached.lureUrl);
     return cached;
   }
   // Never block incident creation on the async threat-feed parser. Step 4
@@ -576,6 +581,9 @@ const resolveIocOverrides = async (): Promise<DemoIocOverrides> => {
   // Merge with whatever was cached (in case only one half resolved earlier).
   const merged: DemoIocOverrides = { ...cached, ...fresh };
   if (merged.attackerIp || merged.lureDomain) writeIocOverrides(merged);
+  // Mirror the static fallback URL into the `ioc_url` datastore as a STIX
+  // 2.1 indicator so Known-IOC chips light up exactly like a live feed.
+  if (merged.usedFallback && merged.lureUrl) void seedFallbackUrlIndicator(merged.lureUrl);
   void awaitPendingIndicators().then(() => pickRandomIocs().then(live => {
     const existing = readIocOverrides();
     if (!existing?.attackerIp || !existing?.lureUrl || !existing?.lureDomain) {
