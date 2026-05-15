@@ -134,6 +134,17 @@ const getDiagnosableScope = (parsed: any): unknown => {
       d && typeof d === 'object' && d.run_details ? d.run_details : null
     );
     if (runDetails.some((rd: unknown) => rd !== null)) scope.run_details = runDetails;
+    const finalDecisions = parsed.decisions.map((d: any) => {
+      if (!d || typeof d !== 'object') return null;
+      const action = String(d.action || d.details?.action || '').toLowerCase();
+      const category = String(d.category || '').toLowerCase();
+      if (!['finish', 'finalise'].includes(action) && !['finish', 'finalise'].includes(category)) return null;
+      return {
+        reason: d.reason,
+        fields: Array.isArray(d.fields) ? d.fields.map((f: any) => f?.value).filter(Boolean) : undefined,
+      };
+    });
+    if (finalDecisions.some((d: unknown) => d !== null)) scope.decisions = finalDecisions;
   }
   if (parsed.decision_string !== undefined) scope.decision_string = parsed.decision_string;
   return Object.keys(scope).length > 0 ? scope : null;
