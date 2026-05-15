@@ -3792,7 +3792,7 @@ const IncidentDetailPage = () => {
         })}
       </Menu>
 
-      {!timelineCollapsed && (<>
+      {/* Body content. Collapse is handled by the surrounding IncidentSection. */}
       {/* Bad-data warning — surfaced inside the Timeline so users notice the
           drift right where they would inspect / roll back changes. Triggered
           by the same OCSF-recovery fallback that powers the top-of-page banner. */}
