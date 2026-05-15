@@ -273,6 +273,7 @@ export const DemoTourDrawer = () => {
           title="You are viewing fake demo data. Click to re-open the demo tour."
           arrow
           placement="left"
+          slotProps={{ popper: { sx: { zIndex: 2147483647 } } }}
         >
           <Box
             onClick={openTour}
