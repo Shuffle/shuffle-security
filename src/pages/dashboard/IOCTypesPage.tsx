@@ -304,12 +304,9 @@ const IOCTypesPage = () => {
     );
     if (!ok) return;
     setDeletingType(typeName);
+    setDeletingProgress(0);
     try {
       const { getDatastoreByCategory, deleteDatastoreItems } = await import('@/Shuffle-MCPs/datastore');
-      // Interleave: fetch a page, delete it, then fetch again. Track keys we've
-      // already attempted so eventual-consistency on the list endpoint (which
-      // can return just-deleted items for a moment) doesn't make us think the
-      // dataset is empty when there's still more to come.
       let totalDeleted = 0;
       let totalFailed = 0;
       const attempted = new Set<string>();
@@ -327,8 +324,6 @@ const IOCTypesPage = () => {
           }
         }
         if (keys.length === 0) {
-          // Could be truly empty, or eventual consistency still serving stale
-          // data. Retry a couple of times before declaring done.
           emptyStreak += 1;
           if (emptyStreak >= 3) break;
           await new Promise(r => setTimeout(r, 600));
@@ -338,6 +333,7 @@ const IOCTypesPage = () => {
         const result = await deleteDatastoreItems(keys, category);
         totalDeleted += result.deleted;
         totalFailed += result.failed.length;
+        setDeletingProgress(totalDeleted);
       }
       if (totalDeleted === 0 && totalFailed === 0) {
         toast.success(`No items to delete in "${category}".`);
@@ -346,13 +342,13 @@ const IOCTypesPage = () => {
       } else {
         toast.error(`Deleted ${totalDeleted}; ${totalFailed} failed.`);
       }
-      // Refresh the count chips immediately.
       await queryClient.invalidateQueries({ queryKey: ['observable-counts'] });
     } catch (err) {
       console.error('[IOCTypesPage] Failed to delete IOCs:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to delete observables');
     } finally {
       setDeletingType(null);
+      setDeletingProgress(0);
     }
   };
 
