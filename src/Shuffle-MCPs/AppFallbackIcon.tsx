@@ -129,13 +129,19 @@ export const AppFallbackIcon = ({
   className,
   alt,
 }: AppFallbackIconProps) => {
-  const [src, setSrc] = useState<string>(imageUrl || '');
+  // Initial src: prop > persisted-localStorage hit > empty (will lookup).
+  const [src, setSrc] = useState<string>(() => imageUrl || readPersistedFresh(norm(name || '')) || '');
   const [errored, setErrored] = useState(false);
   const lookedUpRef = useRef(false);
 
+  // Remember a working caller-provided URL so future reloads skip the network.
+  useEffect(() => {
+    if (imageUrl && name) writePersisted(norm(name), imageUrl);
+  }, [imageUrl, name]);
+
   // Reset when props change
   useEffect(() => {
-    setSrc(imageUrl || '');
+    setSrc(imageUrl || readPersistedFresh(norm(name || '')) || '');
     setErrored(false);
     lookedUpRef.current = false;
   }, [imageUrl, name]);
