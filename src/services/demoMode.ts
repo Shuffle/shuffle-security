@@ -424,29 +424,142 @@ const looksLikeIp = (s: string | undefined): s is string => {
   return false;
 };
 
+/** Refang a defanged URL/host so the `looksLikeUrl` check accepts it. */
+const refangCandidate = (s: string): string =>
+  s.replace(/^hxxps?/i, m => m.toLowerCase().replace('hxxp', 'http'))
+    .replace(/\[\.\]/g, '.')
+    .replace(/\(\.\)/g, '.')
+    .replace(/\[:\/\/\]/g, '://');
+
 /** Best-effort: pull a URL out of a STIX 2.1 indicator pattern stored in
- *  the datastore item's value, e.g. `[url:value = 'http://evil/...']`. */
+ *  the datastore item's value, e.g. `[url:value = 'http://evil/...']`.
+ *  Also accepts `domain-name:value`, `network-traffic:dst_ref.value`, and
+ *  the bare-string / `{value: ...}` / `{url: ...}` shapes Shuffle's
+ *  threat-feed parser sometimes emits. */
 const extractUrlFromStixValue = (value: unknown): string | undefined => {
   try {
-    const obj = typeof value === 'string' ? JSON.parse(value) : value;
-    const pattern = (obj as { pattern?: unknown })?.pattern;
-    if (typeof pattern !== 'string') return undefined;
-    const m = pattern.match(/url:value\s*=\s*'([^']+)'/i)
-      || pattern.match(/url:value\s*=\s*"([^"]+)"/i);
-    return m && looksLikeUrl(m[1]) ? m[1] : undefined;
+    const obj = typeof value === 'string'
+      ? (() => { try { return JSON.parse(value); } catch { return value; } })()
+      : value;
+    // 1. Plain string URL stored as the value.
+    if (typeof obj === 'string') {
+      const refanged = refangCandidate(obj.trim());
+      if (looksLikeUrl(refanged)) return refanged;
+      return undefined;
+    }
+    if (!obj || typeof obj !== 'object') return undefined;
+    const o = obj as Record<string, unknown>;
+    // 2. STIX 2.1 indicator pattern.
+    const pattern = o.pattern;
+    if (typeof pattern === 'string') {
+      const m = pattern.match(/(?:url|domain-name|network-traffic[^:]*|ipv[46]-addr):[\w.-]*value\s*=\s*['"]([^'"]+)['"]/i);
+      if (m) {
+        const refanged = refangCandidate(m[1]);
+        if (looksLikeUrl(refanged)) return refanged;
+      }
+    }
+    // 3. Common ad-hoc fields used by simpler ingest paths.
+    for (const k of ['url', 'value', 'indicator', 'observable', 'ioc']) {
+      const v = o[k];
+      if (typeof v === 'string') {
+        const refanged = refangCandidate(v.trim());
+        if (looksLikeUrl(refanged)) return refanged;
+      }
+    }
+    return undefined;
   } catch { return undefined; }
 };
 
-/** Same idea for IPv4/IPv6 addresses inside a STIX pattern. */
+/** Same idea for IPv4/IPv6 addresses inside a STIX pattern OR ad-hoc value. */
 const extractIpFromStixValue = (value: unknown): string | undefined => {
   try {
-    const obj = typeof value === 'string' ? JSON.parse(value) : value;
-    const pattern = (obj as { pattern?: unknown })?.pattern;
-    if (typeof pattern !== 'string') return undefined;
-    const m = pattern.match(/ipv[46]-addr:value\s*=\s*'([^']+)'/i)
-      || pattern.match(/ipv[46]-addr:value\s*=\s*"([^"]+)"/i);
-    return m && looksLikeIp(m[1]) ? m[1] : undefined;
+    const obj = typeof value === 'string'
+      ? (() => { try { return JSON.parse(value); } catch { return value; } })()
+      : value;
+    if (typeof obj === 'string') {
+      return looksLikeIp(obj.trim()) ? obj.trim() : undefined;
+    }
+    if (!obj || typeof obj !== 'object') return undefined;
+    const o = obj as Record<string, unknown>;
+    const pattern = o.pattern;
+    if (typeof pattern === 'string') {
+      const m = pattern.match(/ipv[46]-addr:value\s*=\s*['"]([^'"]+)['"]/i);
+      if (m && looksLikeIp(m[1])) return m[1];
+    }
+    for (const k of ['ip', 'value', 'indicator', 'observable', 'ioc']) {
+      const v = o[k];
+      if (typeof v === 'string' && looksLikeIp(v.trim())) return v.trim();
+    }
+    return undefined;
   } catch { return undefined; }
+};
+
+/** Per-item classification used by the IOC pick audit so support users can
+ *  see *why* a given `ioc_url` row was not usable as a demo lure URL. */
+type IocItemReason =
+  | 'accepted-key'
+  | 'accepted-value'
+  | 'rejected-binary-key'
+  | 'rejected-key-not-url'
+  | 'rejected-value-no-url'
+  | 'rejected-empty-value';
+
+const classifyUrlItem = (item: { key: string; value?: unknown }): { reason: IocItemReason; pick?: string } => {
+  if (looksLikeUrl(item.key)) return { reason: 'accepted-key', pick: item.key };
+  const refangedKey = refangCandidate(item.key);
+  if (looksLikeUrl(refangedKey)) return { reason: 'accepted-key', pick: refangedKey };
+  const value = (item as { value?: unknown }).value;
+  if (value === undefined || value === null || value === '') return { reason: 'rejected-empty-value' };
+  const fromValue = extractUrlFromStixValue(value);
+  if (fromValue) return { reason: 'accepted-value', pick: fromValue };
+  if (!isPrintableAscii(item.key)) return { reason: 'rejected-binary-key' };
+  if (!/^https?:\/\//i.test(item.key)) return { reason: 'rejected-key-not-url' };
+  return { reason: 'rejected-value-no-url' };
+};
+
+const classifyIpItem = (item: { key: string; value?: unknown }): { reason: IocItemReason; pick?: string } => {
+  if (looksLikeIp(item.key)) return { reason: 'accepted-key', pick: item.key };
+  const value = (item as { value?: unknown }).value;
+  if (value === undefined || value === null || value === '') return { reason: 'rejected-empty-value' };
+  const fromValue = extractIpFromStixValue(value);
+  if (fromValue) return { reason: 'accepted-value', pick: fromValue };
+  if (!isPrintableAscii(item.key)) return { reason: 'rejected-binary-key' };
+  return { reason: 'rejected-value-no-url' };
+};
+
+/** Audit entry written to localStorage when fallbacks are used so support
+ *  users can read it back from the IncidentDetailPage banner. */
+export interface DemoIocAudit {
+  timestamp: string;
+  ip: {
+    fetched: boolean;
+    httpError?: string;
+    total: number;
+    accepted: number;
+    rejected: number;
+    reasons: Partial<Record<IocItemReason, number>>;
+    samples: Array<{ key: string; reason: IocItemReason }>;
+    truncated?: boolean;
+    usedFallback: boolean;
+  };
+  url: {
+    fetched: boolean;
+    httpError?: string;
+    total: number;
+    accepted: number;
+    rejected: number;
+    reasons: Partial<Record<IocItemReason, number>>;
+    samples: Array<{ key: string; reason: IocItemReason }>;
+    truncated?: boolean;
+    usedFallback: boolean;
+  };
+}
+
+const writeAudit = (audit: DemoIocAudit) => {
+  try { localStorage.setItem(DEMO_IOC_AUDIT_KEY, JSON.stringify(audit)); } catch { /* ignore */ }
+  // Always log the structured audit so support users see it in the console
+  // even if they never open the banner.
+  console.info('[demo:ioc-audit]', audit);
 };
 
 const pickFallbackIocs = (): DemoIocOverrides => {
