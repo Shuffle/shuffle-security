@@ -13,9 +13,12 @@ import { Sparkles, X } from 'lucide-react';
 import { useDemo } from '@/context/DemoContext';
 
 export const DemoResumePill = () => {
-  const { active, wasStarted, resumeDismissed, resumeTour, dismissResumePrompt } = useDemo();
+  const { drawerOpen, wasStarted, resumeDismissed, resumeTour, dismissResumePrompt } = useDemo();
 
-  if (active || !wasStarted || resumeDismissed) return null;
+  // Show whenever a demo run was started but the drawer is not currently
+  // visible (e.g. after a page refresh — `shuffle_demo_active` survives but
+  // `drawerOpen` resets to false).
+  if (drawerOpen || !wasStarted || resumeDismissed) return null;
 
   return (
     <Box
