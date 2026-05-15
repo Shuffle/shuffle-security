@@ -362,6 +362,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
   // Used to gate the `incidents-list:open` sub-goal so the gate flips back
   // off if the user navigates away from the detail page.
   const isOnIncidentDetail = /^\/(?:incidents|cases|alerts|tickets|jobs)\/[^/]+/.test(location.pathname);
+  const queryClient = useQueryClient();
   const [active, setActive] = useState(() => isDemoActive());
   const [isSeeding, setIsSeeding] = useState(false);
   const [isCleaning, setIsCleaning] = useState(false);
