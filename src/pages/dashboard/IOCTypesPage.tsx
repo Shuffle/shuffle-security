@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, type SyntheticEvent } from 'react';
 import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
 import {
   Box,
@@ -700,7 +700,7 @@ const IOCTypesPage = () => {
                                       ? `Deleting… ${deletingProgress.toLocaleString()}`
                                       : showSpinner ? '…' : value.toLocaleString()
                                   }
-                                  onDelete={value > 0 && !isDeleting ? (e: any) => {
+                                  onDelete={value > 0 && !isDeleting ? (e: SyntheticEvent) => {
                                     e?.preventDefault?.();
                                     e?.stopPropagation?.();
                                     handleDeleteAllForType(type.name);
