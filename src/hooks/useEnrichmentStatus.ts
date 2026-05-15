@@ -7,6 +7,9 @@ import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 export interface EnrichmentStatusCheck {
   label: string;
   active: boolean;
+  /** Technical detail explaining exactly what was checked and the observed
+   *  result. Surfaced to support users in tooltips. */
+  detail: string;
 }
 
 export interface EnrichmentStatus {
