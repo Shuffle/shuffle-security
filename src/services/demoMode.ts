@@ -617,38 +617,63 @@ const seedFallbackUrlIndicator = async (url: string): Promise<void> => {
  */
 export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
   const out: DemoIocOverrides = {};
-  let usedFallback = false;
+  const audit: DemoIocAudit = {
+    timestamp: new Date().toISOString(),
+    ip:  { fetched: false, total: 0, accepted: 0, rejected: 0, reasons: {}, samples: [], usedFallback: false },
+    url: { fetched: false, total: 0, accepted: 0, rejected: 0, reasons: {}, samples: [], usedFallback: false },
+  };
+  const tally = (
+    bucket: DemoIocAudit['ip'] | DemoIocAudit['url'],
+    items: Array<{ key: string; value?: unknown }>,
+    classify: (it: { key: string; value?: unknown }) => { reason: IocItemReason; pick?: string },
+  ): string[] => {
+    const accepted: string[] = [];
+    bucket.total = items.length;
+    items.forEach((it) => {
+      const c = classify(it);
+      bucket.reasons[c.reason] = (bucket.reasons[c.reason] || 0) + 1;
+      if (c.pick) {
+        accepted.push(c.pick);
+        bucket.accepted += 1;
+      } else {
+        bucket.rejected += 1;
+        if (bucket.samples.length < 5) {
+          bucket.samples.push({
+            key: typeof it.key === 'string' ? it.key.slice(0, 64) : String(it.key),
+            reason: c.reason,
+          });
+        }
+      }
+    });
+    return accepted;
+  };
+
   try {
     const ipRes = await getDatastoreByCategory(IOC_IP_CATEGORY);
-    // Some threat-feed parsers store binary indicator IDs as keys, which
-    // decode into garbled UTF-8. Only accept items whose KEY is a real IP,
-    // or whose STIX value contains an extractable IPv4/IPv6.
-    const liveIps = ipRes.success && ipRes.data
-      ? ipRes.data
-          .map(i => looksLikeIp(i.key) ? i.key : extractIpFromStixValue((i as { value?: unknown }).value))
-          .filter((v): v is string => looksLikeIp(v))
-      : [];
-    if (liveIps.length === 0) usedFallback = true;
+    audit.ip.fetched = ipRes.success;
+    if (!ipRes.success) audit.ip.httpError = ipRes.error || 'unknown';
+    const items = (ipRes.success && ipRes.data) ? ipRes.data : [];
+    const liveIps = tally(audit.ip, items, classifyIpItem);
+    if (items.length === 100) audit.ip.truncated = true;
+    if (liveIps.length === 0) audit.ip.usedFallback = true;
     const ipKey = pickRandom(liveIps.length > 0 ? liveIps : FALLBACK_IOC_IPS);
     if (ipKey) out.attackerIp = ipKey;
   } catch (err) {
     console.warn('[demo] pick ioc_ip failed', err);
-    usedFallback = true;
+    audit.ip.httpError = err instanceof Error ? err.message : String(err);
+    audit.ip.usedFallback = true;
     const ipKey = pickRandom(FALLBACK_IOC_IPS);
     if (ipKey) out.attackerIp = ipKey;
   }
+
   try {
     const urlRes = await getDatastoreByCategory(IOC_URL_CATEGORY);
-    // Same defence as IPs: the key must be a printable URL, or we fall back
-    // to extracting the URL from the STIX 2.1 indicator pattern stored in
-    // the value. Anything else is rejected so we never render `4�}�7n�…`
-    // as a phishing lure.
-    const liveUrls = urlRes.success && urlRes.data
-      ? urlRes.data
-          .map(i => looksLikeUrl(i.key) ? i.key : extractUrlFromStixValue((i as { value?: unknown }).value))
-          .filter((v): v is string => looksLikeUrl(v))
-      : [];
-    if (liveUrls.length === 0) usedFallback = true;
+    audit.url.fetched = urlRes.success;
+    if (!urlRes.success) audit.url.httpError = urlRes.error || 'unknown';
+    const items = (urlRes.success && urlRes.data) ? urlRes.data : [];
+    const liveUrls = tally(audit.url, items, classifyUrlItem);
+    if (items.length === 100) audit.url.truncated = true;
+    if (liveUrls.length === 0) audit.url.usedFallback = true;
     const urlKey = pickRandom(liveUrls.length > 0 ? liveUrls : FALLBACK_IOC_URLS);
     if (urlKey) {
       out.lureUrl = urlKey;
@@ -657,7 +682,8 @@ export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
     }
   } catch (err) {
     console.warn('[demo] pick ioc_url failed', err);
-    usedFallback = true;
+    audit.url.httpError = err instanceof Error ? err.message : String(err);
+    audit.url.usedFallback = true;
     const urlKey = pickRandom(FALLBACK_IOC_URLS);
     if (urlKey) {
       out.lureUrl = urlKey;
@@ -665,14 +691,20 @@ export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
       if (host) out.lureDomain = host;
     }
   }
-  if (usedFallback) out.usedFallback = true;
+
+  if (audit.ip.usedFallback || audit.url.usedFallback) out.usedFallback = true;
+  // Always persist + console-log the audit so support users can read back
+  // *exactly* why the demo did or did not use a live IOC. We log on success
+  // too so a "this looks fine" run still has a paper trail.
+  writeAudit(audit);
   return out;
 };
 
 /**
  * Resolve IOC overrides for the demo, preferring values cached at step 1 so
- * the focus + Wazuh incidents share the exact same IP/domain. Falls back to
- * a fresh pick if nothing is cached.
+ * the focus + Wazuh incidents share the exact same IP/domain. When the cache
+ * is a fallback pick we always re-attempt a live pick, so a stale fallback
+ * never sticks across sessions once the threat-feed parser has caught up.
  */
 const resolveIocOverrides = async (): Promise<DemoIocOverrides> => {
   const rawCached = readIocOverrides();
@@ -685,14 +717,33 @@ const resolveIocOverrides = async (): Promise<DemoIocOverrides> => {
     lureDomain: rawCached.lureDomain && isPrintableAscii(rawCached.lureDomain) ? rawCached.lureDomain : undefined,
     usedFallback: rawCached.usedFallback === true ? true : undefined,
   } : null;
-  if (cached?.attackerIp && cached?.lureUrl && cached?.lureDomain) {
+
+  // If the cache is a complete LIVE pick, just reuse it — nothing to audit.
+  if (cached?.attackerIp && cached?.lureUrl && cached?.lureDomain && !cached.usedFallback) {
     if (JSON.stringify(cached) !== JSON.stringify(rawCached)) writeIocOverrides(cached);
-    // Re-seed the STIX indicator on every resolve when we are still on
-    // fallback values, so the `ioc_url` datastore reflects the URL the
-    // user is actually seeing in the incident.
-    if (cached.usedFallback && cached.lureUrl) void seedFallbackUrlIndicator(cached.lureUrl);
     return cached;
   }
+
+  // If the cache is a complete FALLBACK pick, attempt a live re-pick once
+  // before reusing it. This is the fix for "I know we have URLs in
+  // ioc_url but the demo keeps using fallbacks" — a stale fallback would
+  // otherwise persist indefinitely because the cache was complete.
+  if (cached?.attackerIp && cached?.lureUrl && cached?.lureDomain && cached.usedFallback) {
+    try {
+      const live = await pickRandomIocs();
+      if (!live.usedFallback && live.attackerIp && live.lureUrl && live.lureDomain) {
+        writeIocOverrides(live);
+        return live;
+      }
+    } catch (err) {
+      console.warn('[demo] live re-pick on cached fallback failed', err);
+    }
+    // Live re-pick still hit fallback — keep the cache and re-seed the
+    // STIX indicator so the URL the user sees stays in `ioc_url`.
+    if (cached.lureUrl) void seedFallbackUrlIndicator(cached.lureUrl);
+    return cached;
+  }
+
   // Never block incident creation on the async threat-feed parser. Step 4
   // must always materialize immediately; live IOCs are best-effort only.
   const fresh = pickFallbackIocs();
@@ -704,7 +755,11 @@ const resolveIocOverrides = async (): Promise<DemoIocOverrides> => {
   if (merged.usedFallback && merged.lureUrl) void seedFallbackUrlIndicator(merged.lureUrl);
   void awaitPendingIndicators().then(() => pickRandomIocs().then(live => {
     const existing = readIocOverrides();
-    if (!existing?.attackerIp || !existing?.lureUrl || !existing?.lureDomain) {
+    // If the live pick succeeded (no fallback), upgrade the cache —
+    // otherwise only patch in any missing field.
+    if (!live.usedFallback && live.attackerIp && live.lureUrl && live.lureDomain) {
+      writeIocOverrides(live);
+    } else if (!existing?.attackerIp || !existing?.lureUrl || !existing?.lureDomain) {
       writeIocOverrides({ ...merged, ...live });
     }
   }).catch(() => undefined));
