@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, type SyntheticEvent } from 'react';
 import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
 import {
   Box,
@@ -287,8 +287,7 @@ const IOCTypesPage = () => {
   const enabledNames = useMemo(() => iocTypes.filter(t => t.enabled).map(t => t.name), [iocTypes]);
   const { data: observableCounts, isLoading: countsLoading } = useObservableCounts(enabledNames);
   const queryClient = useQueryClient();
-  const [deletingType, setDeletingType] = useState<string | null>(null);
-  const [deletingProgress, setDeletingProgress] = useState<number>(0);
+  const [deletingProgressByType, setDeletingProgressByType] = useState<Record<string, number>>({});
 
   /**
    * Delete every observable in the `ioc_<typeName>` datastore category.
@@ -303,8 +302,7 @@ const IOCTypesPage = () => {
       `Delete all ${total.toLocaleString()} observable${total === 1 ? '' : 's'} of type "${typeName}"?\n\nThis removes every entry from datastore category "${category}" and cannot be undone.`,
     );
     if (!ok) return;
-    setDeletingType(typeName);
-    setDeletingProgress(0);
+    setDeletingProgressByType(prev => ({ ...prev, [typeName]: 0 }));
     try {
       const { getDatastoreByCategory, deleteDatastoreItems } = await import('@/Shuffle-MCPs/datastore');
       let totalDeleted = 0;
@@ -333,7 +331,7 @@ const IOCTypesPage = () => {
         const result = await deleteDatastoreItems(keys, category);
         totalDeleted += result.deleted;
         totalFailed += result.failed.length;
-        setDeletingProgress(totalDeleted);
+        setDeletingProgressByType(prev => ({ ...prev, [typeName]: totalDeleted }));
       }
       if (totalDeleted === 0 && totalFailed === 0) {
         toast.success(`No items to delete in "${category}".`);
@@ -347,8 +345,11 @@ const IOCTypesPage = () => {
       console.error('[IOCTypesPage] Failed to delete IOCs:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to delete observables');
     } finally {
-      setDeletingType(null);
-      setDeletingProgress(0);
+      setDeletingProgressByType(prev => {
+        const next = { ...prev };
+        delete next[typeName];
+        return next;
+      });
     }
   };
 
@@ -667,7 +668,8 @@ const IOCTypesPage = () => {
                             const count = observableCounts ? observableCounts[type.name] : undefined;
                             const showSpinner = countsLoading && count === undefined;
                             const value = count ?? 0;
-                            const isDeleting = deletingType === type.name;
+                            const deletingProgress = deletingProgressByType[type.name];
+                            const isDeleting = deletingProgress !== undefined;
                             const datastoreUrl = `https://shuffler.io/admin?tab=datastore&category=ioc_${encodeURIComponent(type.name)}`;
                             return (
                               <Tooltip
@@ -698,7 +700,7 @@ const IOCTypesPage = () => {
                                       ? `Deleting… ${deletingProgress.toLocaleString()}`
                                       : showSpinner ? '…' : value.toLocaleString()
                                   }
-                                  onDelete={value > 0 && !isDeleting ? (e: any) => {
+                                  onDelete={value > 0 && !isDeleting ? (e: SyntheticEvent) => {
                                     e?.preventDefault?.();
                                     e?.stopPropagation?.();
                                     handleDeleteAllForType(type.name);
