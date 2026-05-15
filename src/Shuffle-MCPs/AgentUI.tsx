@@ -122,7 +122,7 @@ import { toast } from '@/Shuffle-MCPs/toast';
 import { runAgent } from '@/Shuffle-MCPs/agentRun';
 import { parseScheduleHint } from '@/Shuffle-MCPs/scheduleHint';
 import AgentRunDiagnosisBanner from '@/Shuffle-MCPs/AgentRunDiagnosisBanner';
-import { diagnoseOutputWarning, type OutputDiagnosis } from '@/Shuffle-MCPs/agentDiagnosis';
+import { diagnoseOutputWarning } from '@/Shuffle-MCPs/agentDiagnosis';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
