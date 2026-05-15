@@ -5567,7 +5567,7 @@ const IncidentDetailPage = () => {
                   }}
                 >
                   {rerunCount > 0 && `· ${rerunCount} rerun${rerunCount === 1 ? '' : 's'}`}
-                  {lastActionTs > 0 && ` · last action ${formatRelativeShort(Date.now() - lastActionTs)}`}
+                  {lastActionTs > 0 && ` · ${formatRelativeShort(Date.now() - lastActionTs)} ago`}
                 </Box>
               )}
             </>
