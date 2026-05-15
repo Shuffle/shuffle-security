@@ -739,19 +739,10 @@ const IncidentsPage = () => {
       if (migratedCount > 0) {
         await new Promise(resolve => setTimeout(resolve, 1500));
       }
-      // Sweep orphan demo incidents BEFORE fetching so the list never
-      // briefly shows demo stragglers from a prior session. Outside demo
-      // mode this wipes every demo-flagged incident; inside demo mode it
-      // only removes items not tracked in the local seed index.
-      const sweptBefore = await sweepOrphanDemoIncidents();
+      // Demo incidents are now treated as real ones — they show up with a
+      // "Demo" badge instead of being silently swept away. Explicit cleanup
+      // still happens via "Clean up demo data" on the dashboard.
       await fetchItems();
-      // Run a second pass after the fetch so anything that landed via the
-      // ingest pipeline mid-flight (e.g. queued webhook deliveries) also
-      // gets reconciled — and refresh once more if we deleted anything.
-      const sweptAfter = await sweepOrphanDemoIncidents();
-      if (sweptBefore + sweptAfter > 0) {
-        await fetchItems();
-      }
     };
     init();
   }, [fetchItems]);
