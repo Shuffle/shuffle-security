@@ -499,6 +499,7 @@ const seedFallbackUrlIndicator = async (url: string): Promise<void> => {
  */
 export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
   const out: DemoIocOverrides = {};
+  let usedFallback = false;
   try {
     const ipRes = await getDatastoreByCategory(IOC_IP_CATEGORY);
     // Some threat-feed parsers store binary indicator IDs as keys, which
@@ -509,10 +510,12 @@ export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
           .map(i => looksLikeIp(i.key) ? i.key : extractIpFromStixValue((i as { value?: unknown }).value))
           .filter((v): v is string => looksLikeIp(v))
       : [];
+    if (liveIps.length === 0) usedFallback = true;
     const ipKey = pickRandom(liveIps.length > 0 ? liveIps : FALLBACK_IOC_IPS);
     if (ipKey) out.attackerIp = ipKey;
   } catch (err) {
     console.warn('[demo] pick ioc_ip failed', err);
+    usedFallback = true;
     const ipKey = pickRandom(FALLBACK_IOC_IPS);
     if (ipKey) out.attackerIp = ipKey;
   }
@@ -527,6 +530,7 @@ export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
           .map(i => looksLikeUrl(i.key) ? i.key : extractUrlFromStixValue((i as { value?: unknown }).value))
           .filter((v): v is string => looksLikeUrl(v))
       : [];
+    if (liveUrls.length === 0) usedFallback = true;
     const urlKey = pickRandom(liveUrls.length > 0 ? liveUrls : FALLBACK_IOC_URLS);
     if (urlKey) {
       out.lureUrl = urlKey;
@@ -535,6 +539,7 @@ export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
     }
   } catch (err) {
     console.warn('[demo] pick ioc_url failed', err);
+    usedFallback = true;
     const urlKey = pickRandom(FALLBACK_IOC_URLS);
     if (urlKey) {
       out.lureUrl = urlKey;
@@ -542,6 +547,7 @@ export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
       if (host) out.lureDomain = host;
     }
   }
+  if (usedFallback) out.usedFallback = true;
   return out;
 };
 
