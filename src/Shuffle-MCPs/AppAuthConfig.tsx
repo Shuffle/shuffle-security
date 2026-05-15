@@ -2254,7 +2254,9 @@ export const AppAuthConfig = ({
   // Find first non-validated app for auto-expand (prefer not configured, then not tested)
   const firstNotConfigured = sortedApps.find(app => !isAppConfigured(app));
   const firstNotValidated = sortedApps.find(app => !isAppValidated(app));
-  const defaultExpanded = firstNotConfigured?.objectID || firstNotValidated?.objectID || sortedApps[0]?.objectID || false;
+  // If every app is already validated, start with all cards collapsed — the
+  // user has nothing left to do here, so do not auto-open one for them.
+  const defaultExpanded = firstNotConfigured?.objectID || firstNotValidated?.objectID || false;
 
   const [expanded, setExpanded] = useState<string | false>(defaultExpanded);
 
