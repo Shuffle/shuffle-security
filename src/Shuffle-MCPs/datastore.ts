@@ -351,7 +351,8 @@ const tryExtractItemsFromBody = (rawBody: string): { items: DatastoreItem[]; cat
  */
 export const getDatastoreByCategory = async (
   category: string,
-  cursor?: string
+  cursor?: string,
+  limit?: number
 ): Promise<DatastoreResponse> => {
   const orgId = getOrgId();
   if (!orgId) {
@@ -369,10 +370,11 @@ export const getDatastoreByCategory = async (
     };
   }
 
-  // Cap page size at 50 — large `top` values can blow up payloads (especially
-  // for incidents). Pagination via cursor handles the rest.
-  const limit = 50;
-  let url = `/api/v1/orgs/${orgId}/list_cache?category=${encodeURIComponent(category)}&top=${limit}`;
+  // Default page size is 100. Incidents specifically cap at 50 because their
+  // payloads are far larger than other categories — pagination via cursor
+  // handles the rest.
+  const effectiveLimit = limit ?? (category === DATASTORE_CATEGORIES.INCIDENTS ? 50 : 100);
+  let url = `/api/v1/orgs/${orgId}/list_cache?category=${encodeURIComponent(category)}&top=${effectiveLimit}`;
   if (cursor) {
     url += `&cursor=${encodeURIComponent(cursor)}`;
   }
