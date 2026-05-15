@@ -999,28 +999,57 @@ export const cleanupDemoData = async (): Promise<CleanupResult> => {
   const safetyCategories = [DATASTORE_CATEGORIES.INCIDENTS, DATASTORE_CATEGORIES.ASSETS, DATASTORE_CATEGORIES.USERS, VULNS_CATEGORY, SENSORS_CATEGORY, AGENTS_CATEGORY];
   for (const category of safetyCategories) {
     try {
-      const res = await getDatastoreByCategory(category);
-      if (res.success && res.data) {
-        const orphans = res.data.filter(item => {
+      // Paginate the full category — list_cache caps at 50 items per page for
+      // INCIDENTS, so a single call would miss demo items past the first page
+      // even though `countDemoIncidents` would still find some.
+      const orphans: { key: string }[] = [];
+      let cursor: string | undefined = undefined;
+      let pageGuard = 0;
+      do {
+        const res: Awaited<ReturnType<typeof getDatastoreByCategory>> = await getDatastoreByCategory(category, cursor);
+        if (!res.success || !res.data) {
+          if (!res.success) {
+            console.warn('[demo] cleanup safety scan failed', { category, error: res.error });
+          }
+          break;
+        }
+        for (const item of res.data) {
           // Primary signal: every demo key we write is prefixed with `demo-`
           // (e.g. demo-inc-login-…, demo-asset-…, demo-user-…). This is
           // reliable even when list_cache returns items without their full
           // value payload, where the metadata-tag check below silently misses.
-          if (typeof item.key === 'string' && item.key.startsWith('demo-')) return true;
-          try {
-            const parsed = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
-            return parsed?.metadata?.extensions?.custom_attributes?.demo === true;
-          } catch { return false; }
-        });
-        const orphanResults = await Promise.allSettled(
-          orphans.map(o => deleteDatastoreItem(o.key, category))
-        );
-        for (const r of orphanResults) {
-          if (r.status === 'fulfilled' && r.value.success) deleted++;
-          else failed++;
+          let isDemoItem = typeof item.key === 'string' && item.key.startsWith('demo-');
+          if (!isDemoItem) {
+            try {
+              const parsed = typeof item.value === 'string' ? JSON.parse(item.value) : item.value;
+              isDemoItem = parsed?.metadata?.extensions?.custom_attributes?.demo === true;
+            } catch { /* skip */ }
+          }
+          if (isDemoItem) orphans.push({ key: item.key });
+        }
+        cursor = res.cursor && res.cursor !== cursor ? res.cursor : undefined;
+        pageGuard += 1;
+      } while (cursor && pageGuard < 50);
+
+      if (orphans.length === 0) continue;
+      console.info('[demo] cleanup found orphans', { category, count: orphans.length });
+      const orphanResults = await Promise.allSettled(
+        orphans.map(o => deleteDatastoreItem(o.key, category)),
+      );
+      for (const r of orphanResults) {
+        if (r.status === 'fulfilled' && r.value.success) deleted++;
+        else {
+          failed++;
+          if (r.status === 'rejected') {
+            console.warn('[demo] cleanup delete rejected', { category, error: r.reason });
+          } else if (!r.value.success) {
+            console.warn('[demo] cleanup delete failed', { category, error: r.value.error });
+          }
         }
       }
-    } catch { /* best-effort */ }
+    } catch (err) {
+      console.warn('[demo] cleanup safety scan threw', { category, err });
+    }
   }
 
   // Restore the user's original "Ingest Tickets" apps (snapshotted at demo
@@ -1035,8 +1064,10 @@ export const cleanupDemoData = async (): Promise<CleanupResult> => {
   localStorage.removeItem(DEMO_ACTIVE_KEY);
   localStorage.removeItem(DEMO_SEEDED_STEPS_KEY);
   localStorage.removeItem('shuffle_demo_injected_apps');
+  localStorage.removeItem('shuffle_demo_email_source');
   clearIocOverrides();
   try { sessionStorage.removeItem(DEMO_THREAT_FEEDS_RAN_KEY); } catch { /* ignore */ }
 
+  console.info('[demo] cleanup complete', { deleted, failed });
   return { success: failed === 0, deleted, failed };
 };
