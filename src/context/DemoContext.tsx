@@ -664,6 +664,10 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       setDrawerOpen(false);
       setStep(0);
       setCompletedSteps({});
+      setWasStarted(false);
+      setResumeDismissed(false);
+      try { localStorage.removeItem('shuffle_demo_started'); } catch { /* ignore */ }
+      try { localStorage.removeItem('shuffle_demo_resume_dismissed'); } catch { /* ignore */ }
       viewedStepsRef.current = new Set();
       completedStepsGARef.current = new Set();
       refreshStats();
