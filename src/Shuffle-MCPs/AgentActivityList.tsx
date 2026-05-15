@@ -197,7 +197,7 @@ interface RunRowProps {
 }
 
 const AgentRunRow = ({ run, onClick, sx }: RunRowProps) => {
-  const statusKey = (run.status || '').toUpperCase();
+  const statusKey = getEffectiveStatus(run);
   const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.WAITING;
   const iconColor = getRunIconColor(run);
   const duration = formatDuration(run);
