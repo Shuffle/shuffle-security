@@ -281,6 +281,8 @@ const IOCTypesPage = () => {
   };
 
   const enabledCount = useMemo(() => iocTypes.filter(t => t.enabled).length, [iocTypes]);
+  const enabledNames = useMemo(() => iocTypes.filter(t => t.enabled).map(t => t.name), [iocTypes]);
+  const { data: observableCounts, isLoading: countsLoading } = useObservableCounts(enabledNames);
 
   // Test regex pattern
   const testRegex = (pattern: string, value: string): boolean | null => {
