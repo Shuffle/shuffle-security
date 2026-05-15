@@ -38,6 +38,11 @@ const IOC_URL_CATEGORY = 'ioc_url';
 // Stash the IOC overrides chosen at step 1 so the Wazuh follow-up reuses
 // the exact same IP + URL (correlations rely on byte-identical values).
 const DEMO_IOC_OVERRIDES_KEY = 'shuffle_demo_ioc_overrides';
+// Latest IOC pick audit, written by `pickRandomIocs` whenever it had to
+// fall back. Surfaced to support users in the IncidentDetailPage banner so
+// they can see exactly WHY no live indicator was usable. Schema is opaque
+// to the rest of the app — only the audit banner reads it.
+export const DEMO_IOC_AUDIT_KEY = 'shuffle_demo_ioc_audit';
 
 
 interface SeededIndex {
