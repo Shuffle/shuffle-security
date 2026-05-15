@@ -8626,7 +8626,20 @@ const IncidentDetailPage = () => {
 
               {/* Correlation list */}
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {[...visibleCorrelations].reverse().map((corr, idx) => (
+                {[...visibleCorrelations]
+                  .map((corr, idx) => ({ corr, idx }))
+                  .sort((a, b) => {
+                    // Rank: known IOC / threat-feed first, then by match count.
+                    // Stable on ties via original index.
+                    const aIoc = hasIocMatch(a.corr) ? 1 : 0;
+                    const bIoc = hasIocMatch(b.corr) ? 1 : 0;
+                    if (aIoc !== bIoc) return bIoc - aIoc;
+                    const aCount = getEffectiveCorrelationCount(a.corr, correlationVisibilityOptions);
+                    const bCount = getEffectiveCorrelationCount(b.corr, correlationVisibilityOptions);
+                    if (aCount !== bCount) return bCount - aCount;
+                    return a.idx - b.idx;
+                  })
+                  .map(({ corr, idx }) => (
                   <CorrelationRow
                     key={corr.key || idx}
                     correlation={corr}
