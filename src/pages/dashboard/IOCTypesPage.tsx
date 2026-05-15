@@ -305,30 +305,32 @@ const IOCTypesPage = () => {
     setDeletingType(typeName);
     try {
       const { getDatastoreByCategory, deleteDatastoreItems } = await import('@/Shuffle-MCPs/datastore');
-      const keys: string[] = [];
-      let cursor: string | undefined;
-      // Page through every entry — backend caps page size, so loop until empty.
-      // Hard ceiling protects against pathological responses.
+      // Interleave: fetch a page, delete it, then fetch the next. Deletes
+      // shrink the dataset, so we always re-fetch from the start (no cursor)
+      // until a page comes back empty. Hard ceiling guards pathological cases.
+      let totalDeleted = 0;
+      let totalFailed = 0;
       for (let i = 0; i < 200; i++) {
-        const res = await getDatastoreByCategory(category, cursor, 100);
+        const res = await getDatastoreByCategory(category, undefined, 100);
         if (!res.success) throw new Error(res.error || 'Failed to list observables');
         const items = (res.data || []) as Array<{ key?: string; Key?: string }>;
+        const keys: string[] = [];
         for (const it of items) {
           const k = it?.key ?? it?.Key;
           if (typeof k === 'string' && k) keys.push(k);
         }
-        if (!res.cursor || items.length === 0) break;
-        cursor = res.cursor;
-      }
-      if (keys.length === 0) {
-        toast.success(`No items to delete in "${category}".`);
-      } else {
+        if (keys.length === 0) break;
         const result = await deleteDatastoreItems(keys, category);
-        if (result.success) {
-          toast.success(`Deleted ${result.deleted} observable${result.deleted === 1 ? '' : 's'} from "${category}".`);
-        } else {
-          toast.error(`Deleted ${result.deleted} of ${keys.length}; ${result.failed.length} failed.`);
-        }
+        totalDeleted += result.deleted;
+        totalFailed += result.failed.length;
+        if (result.deleted === 0) break; // avoid infinite loop if deletes silently fail
+      }
+      if (totalDeleted === 0 && totalFailed === 0) {
+        toast.success(`No items to delete in "${category}".`);
+      } else if (totalFailed === 0) {
+        toast.success(`Deleted ${totalDeleted} observable${totalDeleted === 1 ? '' : 's'} from "${category}".`);
+      } else {
+        toast.error(`Deleted ${totalDeleted}; ${totalFailed} failed.`);
       }
       // Refresh the count chips immediately.
       await queryClient.invalidateQueries({ queryKey: ['observable-counts'] });
