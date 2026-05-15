@@ -624,7 +624,7 @@ const IOCTypesPage = () => {
                 })}
                 {filteredAndSortedTypes.length === 0 && !isLoading && (
                   <TableRow>
-                    <TableCell colSpan={Object.keys(testResults).length > 0 ? 7 : 6} align="center" sx={{ py: 4 }}>
+                    <TableCell colSpan={Object.keys(testResults).length > 0 ? 8 : 7} align="center" sx={{ py: 4 }}>
                       <Typography color="text.secondary">
                         {filterMode === 'todo' 
                           ? 'No IOC types need patterns. All done!' 
