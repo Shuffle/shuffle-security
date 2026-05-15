@@ -18,7 +18,49 @@ import { useEffect, useRef, useState, CSSProperties } from 'react';
 
 const norm = (s: string) => s.toLowerCase().replace(/[\s_\-]+/g, '_');
 
-// Module-level memo so every grid item shares the same cache.
+// ---------------------------------------------------------------------------
+// Persistent app-icon URL cache (localStorage)
+// ---------------------------------------------------------------------------
+// We resolve image_url -> name once (via Algolia) and persist the mapping so
+// reloads do not have to round-trip the network just to render an app icon.
+// Cache is namespaced + versioned so we can invalidate it cleanly later.
+const STORAGE_KEY = 'shuffle:app-icon-cache:v1';
+const STORAGE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+interface PersistedEntry { url: string; ts: number; }
+type PersistedMap = Record<string, PersistedEntry>;
+
+const readPersisted = (): PersistedMap => {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return (parsed && typeof parsed === 'object') ? parsed : {};
+  } catch {
+    return {};
+  }
+};
+
+const writePersisted = (key: string, url: string) => {
+  if (typeof window === 'undefined' || !url) return;
+  try {
+    const map = readPersisted();
+    map[key] = { url, ts: Date.now() };
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
+  } catch {
+    /* quota / privacy mode — fail silently */
+  }
+};
+
+const readPersistedFresh = (key: string): string | null => {
+  const entry = readPersisted()[key];
+  if (!entry) return null;
+  if (Date.now() - entry.ts > STORAGE_TTL_MS) return null;
+  return entry.url || null;
+};
+
+// Module-level memo so every grid item shares the same in-flight cache.
 const lookupCache = new Map<string, Promise<string>>();
 
 const lookupImageByName = (name: string): Promise<string> => {
@@ -26,6 +68,14 @@ const lookupImageByName = (name: string): Promise<string> => {
   if (!key) return Promise.resolve('');
   const hit = lookupCache.get(key);
   if (hit) return hit;
+
+  // localStorage hit -> resolve synchronously without hitting Algolia.
+  const persisted = readPersistedFresh(key);
+  if (persisted) {
+    const p = Promise.resolve(persisted);
+    lookupCache.set(key, p);
+    return p;
+  }
 
   const promise = (async () => {
     try {
@@ -36,7 +86,9 @@ const lookupImageByName = (name: string): Promise<string> => {
       });
       const hits = ((res as any)?.results?.[0]?.hits || []) as any[];
       const match = hits.find((h) => h.name && norm(h.name) === key) || hits[0];
-      return (match?.image_url as string) || '';
+      const url = (match?.image_url as string) || '';
+      if (url) writePersisted(key, url);
+      return url;
     } catch {
       return '';
     }
@@ -44,6 +96,13 @@ const lookupImageByName = (name: string): Promise<string> => {
 
   lookupCache.set(key, promise);
   return promise;
+};
+
+/** Eagerly persist a known-good app image URL (e.g. when /api/v1/apps already
+ *  returned image_url). Lets later renders skip the Algolia round-trip. */
+export const rememberAppImage = (name: string, url: string) => {
+  if (!name || !url) return;
+  writePersisted(norm(name), url);
 };
 
 // Stable, accessible color from a string (HSL hue 0-360).
