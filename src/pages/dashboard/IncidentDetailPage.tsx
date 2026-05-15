@@ -7063,11 +7063,6 @@ const IncidentDetailPage = () => {
       </Box>
 
       {/* Main content with Activity sidebar */}
-      {/* LayoutGroup enables shared-element layout animation for the
-          Timeline panel — when the active tab changes, the timeline morphs
-          between its inline position (Details tab) and the right sidebar
-          position (other tabs) instead of unmount/remount jumping. */}
-      <LayoutGroup>
       <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 2, mt: 2 }}>
         {/* Left content area */}
         <Box sx={{ flex: 1, minWidth: 0, order: { xs: 1, lg: 0 } }}>
@@ -7507,23 +7502,20 @@ const IncidentDetailPage = () => {
           {/* Inline Timeline — the heart of the Details tab. Renders the same
               comment input + unified feed as the right sidebar, but styled
               with a vertical rail so the chronology reads at a glance. */}
-          <motion.div
-            layoutId="incident-timeline-panel"
-            layout="position"
-            transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+          <Box
             data-tour="incident-activity-feed"
-            style={{
+            sx={{
               display: 'flex',
               flexDirection: 'column',
-              backgroundColor: 'hsl(var(--card))',
-              borderRadius: 8,
+              bgcolor: 'hsl(var(--card))',
+              borderRadius: 2,
               border: '1px solid hsl(var(--border))',
               overflow: 'hidden',
-              ...(isPublicView ? { pointerEvents: 'none' as const } : {}),
+              ...(isPublicView ? { pointerEvents: 'none' } : {}),
             }}
           >
             {renderTimelinePanel('inline')}
-          </motion.div>
+          </Box>
           </Box>
 
           {/* ============ RIGHT: Metadata column ============ */}
@@ -9002,28 +8994,24 @@ const IncidentDetailPage = () => {
         {/* Right Timeline Sidebar — hidden on Details (inlined there) and on Original / Translation / OCSF tabs */}
         {activeTab !== 0 && activeTab !== 4 && activeTab !== 5 && activeTab !== 6 && (
         <Box sx={{ width: { xs: '100%', lg: 380 }, flexShrink: 0, order: { xs: 2, lg: 0 } }}>
-          <motion.div
-            layoutId="incident-timeline-panel"
-            layout
-            transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+          <Box
             data-tour="incident-activity-feed"
-            style={{
+            sx={{
               width: '100%',
               display: 'flex',
               flexDirection: 'column',
-              backgroundColor: 'hsl(var(--card))',
-              borderRadius: 8,
+              bgcolor: 'hsl(var(--card))',
+              borderRadius: 2,
               border: '1px solid hsl(var(--border))',
               overflow: 'hidden',
-              ...(isPublicView ? { pointerEvents: 'none' as const } : {}),
+              ...(isPublicView ? { pointerEvents: 'none' } : {}),
             }}
           >
             {renderTimelinePanel('sidebar')}
-          </motion.div>
+          </Box>
         </Box>
         )}
       </Box>
-      </LayoutGroup>
 
 
       {/* Revision Data Dialog */}
