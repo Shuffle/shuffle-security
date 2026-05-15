@@ -296,6 +296,7 @@ export const buildDemoWazuhImplantIncident = (overrides: DemoIocOverrides = {}):
       { type: 'cve', value: 'CVE-2024-5274' },
       { type: 'tool_name', value: 'Sliver' },
     ],
+    usedFallback: overrides.usedFallback,
   });
 };
 
