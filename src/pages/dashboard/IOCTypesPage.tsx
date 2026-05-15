@@ -26,7 +26,10 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Switch,
+  Link,
 } from '@mui/material';
+import { useQueryClient } from '@tanstack/react-query';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { motion } from 'framer-motion';
 import AddIcon from '@mui/icons-material/Add';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
@@ -283,6 +286,60 @@ const IOCTypesPage = () => {
   const enabledCount = useMemo(() => iocTypes.filter(t => t.enabled).length, [iocTypes]);
   const enabledNames = useMemo(() => iocTypes.filter(t => t.enabled).map(t => t.name), [iocTypes]);
   const { data: observableCounts, isLoading: countsLoading } = useObservableCounts(enabledNames);
+  const queryClient = useQueryClient();
+  const [deletingType, setDeletingType] = useState<string | null>(null);
+
+  /**
+   * Delete every observable in the `ioc_<typeName>` datastore category.
+   * Paginates the category to gather all keys, then bulk-deletes them.
+   * Used by the trash icon next to the IOC count on each row.
+   */
+  const handleDeleteAllForType = async (typeName: string) => {
+    const category = `ioc_${typeName}`;
+    const total = observableCounts?.[typeName] ?? 0;
+    if (total === 0) return;
+    const ok = window.confirm(
+      `Delete all ${total.toLocaleString()} observable${total === 1 ? '' : 's'} of type "${typeName}"?\n\nThis removes every entry from datastore category "${category}" and cannot be undone.`,
+    );
+    if (!ok) return;
+    setDeletingType(typeName);
+    try {
+      const { getDatastoreByCategory, deleteDatastoreItems } = await import('@/Shuffle-MCPs/datastore');
+      const keys: string[] = [];
+      let cursor: string | undefined;
+      // Page through every entry — backend caps page size, so loop until empty.
+      // Hard ceiling protects against pathological responses.
+      for (let i = 0; i < 200; i++) {
+        const res = await getDatastoreByCategory(category, cursor, 100);
+        if (!res.success) throw new Error(res.error || 'Failed to list observables');
+        const items = (res.data || []) as Array<{ key?: string; Key?: string }>;
+        for (const it of items) {
+          const k = it?.key ?? it?.Key;
+          if (typeof k === 'string' && k) keys.push(k);
+        }
+        if (!res.cursor || items.length === 0) break;
+        cursor = res.cursor;
+      }
+      if (keys.length === 0) {
+        toast.success(`No items to delete in "${category}".`);
+      } else {
+        const result = await deleteDatastoreItems(keys, category);
+        if (result.success) {
+          toast.success(`Deleted ${result.deleted} observable${result.deleted === 1 ? '' : 's'} from "${category}".`);
+        } else {
+          toast.error(`Deleted ${result.deleted} of ${keys.length}; ${result.failed.length} failed.`);
+        }
+      }
+      // Refresh the count chips immediately.
+      await queryClient.invalidateQueries({ queryKey: ['observable-counts'] });
+    } catch (err) {
+      console.error('[IOCTypesPage] Failed to delete IOCs:', err);
+      toast.error(err instanceof Error ? err.message : 'Failed to delete observables');
+    } finally {
+      setDeletingType(null);
+    }
+  };
+
 
   // Test regex pattern
   const testRegex = (pattern: string, value: string): boolean | null => {
@@ -493,14 +550,14 @@ const IOCTypesPage = () => {
             <Table>
               <TableHead>
                 <TableRow>
+                  <TableCell sx={{ width: 150 }}>
+                    <Tooltip title="Open the underlying ioc_<type> datastore on shuffler.io in a new tab. Trash icon deletes every observable of this type." arrow>
+                      <span>IOCs</span>
+                    </Tooltip>
+                  </TableCell>
                   <TableCell sx={{ width: 60 }}>Enabled</TableCell>
                   <TableCell>Name</TableCell>
                   <TableCell>Category</TableCell>
-                  <TableCell align="right" sx={{ width: 110 }}>
-                    <Tooltip title="Number of observables of this type currently stored in the ioc_<type> datastore" arrow>
-                      <span>Observed</span>
-                    </Tooltip>
-                  </TableCell>
                   <TableCell>Regex Pattern</TableCell>
                   <TableCell>Description</TableCell>
                   {Object.keys(testResults).length > 0 && <TableCell>Test</TableCell>}
@@ -528,6 +585,61 @@ const IOCTypesPage = () => {
                     // Types in category
                     ...typesInCategory.map((type) => (
                       <TableRow key={type.name} hover sx={{ opacity: type.enabled ? 1 : 0.5 }}>
+                        <TableCell sx={{ width: 150, py: 0.5 }}>
+                          {type.enabled ? (() => {
+                            const count = observableCounts ? observableCounts[type.name] : undefined;
+                            const showSpinner = countsLoading && count === undefined;
+                            const value = count ?? 0;
+                            const isDeleting = deletingType === type.name;
+                            const datastoreUrl = `https://shuffler.io/admin?tab=datastore&category=ioc_${encodeURIComponent(type.name)}`;
+                            return (
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                <Tooltip title={`Open datastore "ioc_${type.name}" on shuffler.io`} arrow>
+                                  <Link
+                                    href={datastoreUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    underline="none"
+                                    sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
+                                  >
+                                    <Chip
+                                      label={showSpinner ? '…' : value.toLocaleString()}
+                                      size="small"
+                                      variant="outlined"
+                                      icon={<OpenInNewIcon sx={{ fontSize: 12, ml: '6px !important' }} />}
+                                      clickable
+                                      sx={{
+                                        fontVariantNumeric: 'tabular-nums',
+                                        fontWeight: 600,
+                                        height: 22,
+                                        borderColor: value > 0 ? 'hsl(var(--primary) / 0.5)' : 'hsl(var(--border))',
+                                        color: value > 0 ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                                        '& .MuiChip-icon': { color: 'inherit' },
+                                      }}
+                                    />
+                                  </Link>
+                                </Tooltip>
+                                <Tooltip title={value > 0 ? `Delete all ${value.toLocaleString()} observable(s) of type "${type.name}"` : 'No observables to delete'} arrow>
+                                  <span>
+                                    <IconButton
+                                      size="small"
+                                      color="error"
+                                      disabled={value === 0 || isDeleting}
+                                      onClick={() => handleDeleteAllForType(type.name)}
+                                      sx={{ p: 0.25 }}
+                                    >
+                                      {isDeleting
+                                        ? <CircularProgress size={14} sx={{ color: 'error.main' }} />
+                                        : <DeleteIcon sx={{ fontSize: 16 }} />}
+                                    </IconButton>
+                                  </span>
+                                </Tooltip>
+                              </Box>
+                            );
+                          })() : (
+                            <Typography component="span" sx={{ color: 'text.disabled', fontSize: '0.75rem' }}>—</Typography>
+                          )}
+                        </TableCell>
                         <TableCell sx={{ py: 0.5 }}>
                           <Switch
                             size="small"
@@ -557,31 +669,6 @@ const IOCTypesPage = () => {
                               color: getCategoryInfo(type.category || 'other').color,
                             }} 
                           />
-                        </TableCell>
-                        <TableCell align="right" sx={{ width: 110 }}>
-                          {type.enabled ? (() => {
-                            const count = observableCounts ? observableCounts[type.name] : undefined;
-                            const showSpinner = countsLoading && count === undefined;
-                            const value = count ?? 0;
-                            return (
-                              <Tooltip title={`Items in datastore category "ioc_${type.name}"`} arrow>
-                                <Chip
-                                  label={showSpinner ? '…' : value.toLocaleString()}
-                                  size="small"
-                                  variant="outlined"
-                                  sx={{
-                                    fontVariantNumeric: 'tabular-nums',
-                                    fontWeight: 600,
-                                    height: 22,
-                                    borderColor: value > 0 ? 'hsl(var(--primary) / 0.5)' : 'hsl(var(--border))',
-                                    color: value > 0 ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
-                                  }}
-                                />
-                              </Tooltip>
-                            );
-                          })() : (
-                            <Typography component="span" sx={{ color: 'text.disabled', fontSize: '0.75rem' }}>—</Typography>
-                          )}
                         </TableCell>
                         <TableCell>
                           <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
