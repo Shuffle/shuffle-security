@@ -7509,7 +7509,7 @@ const IncidentDetailPage = () => {
               with a vertical rail so the chronology reads at a glance. */}
           <motion.div
             layoutId="incident-timeline-panel"
-            layout
+            layout="position"
             transition={{ type: 'spring', stiffness: 260, damping: 30 }}
             data-tour="incident-activity-feed"
             style={{
