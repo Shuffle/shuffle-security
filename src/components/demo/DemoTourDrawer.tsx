@@ -380,7 +380,7 @@ export const DemoTourDrawer = () => {
             touchAction: 'none',
           }}
         >
-          <Tooltip title={`${current.title} — click to expand`} arrow placement="left">
+          <Tooltip title={`${current.title} — click to expand`} arrow placement="left" slotProps={{ popper: { sx: { zIndex: 2147483647 } } }}>
             <Box
               onClick={restoreTour}
               role="button"
