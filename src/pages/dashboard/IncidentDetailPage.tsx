@@ -4772,7 +4772,7 @@ const IncidentDetailPage = () => {
             >
               {title}
             </Typography>
-            <AgentRunStatusBadge run={run} skip={skip} statusCfg={statusCfg} compact />
+            <AgentRunStatusBadge run={run} skip={skip} statusCfg={statusCfg} compact maxWidth={160} />
             {duration && (
               <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', flexShrink: 0 }}>
                 · {duration}

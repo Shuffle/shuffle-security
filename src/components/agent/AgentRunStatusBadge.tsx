@@ -44,6 +44,9 @@ export interface AgentRunStatusBadgeProps {
   statusCfg?: { label: string; color: string };
   /** Compact mode — slightly smaller font/padding for dense lists. */
   compact?: boolean;
+  /** Cap for the warning pill width — used in narrow contexts (e.g. the
+   *  Timeline sidebar) where the default 280px overflows the column. */
+  maxWidth?: number;
 }
 
 const stripHttp = (title: string) => title.replace(/\s*\(HTTP \d+\)/i, '');
@@ -111,7 +114,7 @@ const buildTooltip = (
   return 'The agent completed but the output suggests it may need a human to review or assist. Click for details.';
 };
 
-const AgentRunStatusBadge = ({ run, skip, statusCfg, compact = false }: AgentRunStatusBadgeProps) => {
+const AgentRunStatusBadge = ({ run, skip, statusCfg, compact = false, maxWidth = 280 }: AgentRunStatusBadgeProps) => {
   const status = run.status?.toUpperCase() || '';
   const isFailed = status === 'FAILED' || status === 'ABORTED';
   const isRunning = status === 'EXECUTING' || status === 'RUNNING';
@@ -176,7 +179,7 @@ const AgentRunStatusBadge = ({ run, skip, statusCfg, compact = false }: AgentRun
             borderRadius: 999,
             px,
             py: 0.1,
-            maxWidth: 280,
+            maxWidth,
           }}
         >
           <AlertTriangleIcon size={11} style={{ color: 'hsl(var(--severity-medium))', flexShrink: 0 }} />
