@@ -125,6 +125,7 @@ import { normalizeStatus } from '@/config/incidentConfig';
 import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/components/incidents/ResolveIncidentDialog';
 import { MergeIncidentDialog } from '@/components/incidents/MergeIncidentDialog';
 import { MergeCandidatesBanner } from '@/components/incidents/MergeCandidatesBanner';
+import { DemoFallbackAuditBanner } from '@/components/incidents/DemoFallbackAuditBanner';
 import { useMergeCandidates } from '@/hooks/useMergeCandidates';
 import { RoutingRulePreviewBanner } from '@/components/incidents/RoutingRulePreviewBanner';
 import { buildAgentContextBlock, stripAgentContextBlock } from '@/utils/agentContextBlock';
@@ -5911,6 +5912,18 @@ const IncidentDetailPage = () => {
           </Typography>
         </Box>
       )}
+
+      {/* Support-only audit explaining why a fallback IOC was used. */}
+      <DemoFallbackAuditBanner
+        visible={
+          !isPublicView
+          && (userInfo?.support === true || searchParams.get('support') === '1')
+          && (
+            searchParams.get('demo-fallback') === 'true'
+            || !!incident?.rawOCSF?.metadata?.extensions?.custom_attributes?.demoFallback
+          )
+        }
+      />
 
       {/* Possible duplicates / merge suggestions banner — surfaces past
           incidents that share observables, correlations, or known IOCs with
