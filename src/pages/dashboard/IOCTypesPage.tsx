@@ -595,48 +595,44 @@ const IOCTypesPage = () => {
                             const isDeleting = deletingType === type.name;
                             const datastoreUrl = `https://shuffler.io/admin?tab=datastore&category=ioc_${encodeURIComponent(type.name)}`;
                             return (
-                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                <Tooltip title={`Open datastore "ioc_${type.name}" on shuffler.io`} arrow>
-                                  <Link
-                                    href={datastoreUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    underline="none"
-                                    sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
-                                  >
-                                    <Chip
-                                      label={showSpinner ? '…' : value.toLocaleString()}
-                                      size="small"
-                                      variant="outlined"
-                                      icon={<OpenInNewIcon sx={{ fontSize: 12, ml: '6px !important' }} />}
-                                      clickable
-                                      sx={{
-                                        fontVariantNumeric: 'tabular-nums',
-                                        fontWeight: 600,
-                                        height: 22,
-                                        borderColor: value > 0 ? 'hsl(var(--primary) / 0.5)' : 'hsl(var(--border))',
-                                        color: value > 0 ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
-                                        '& .MuiChip-icon': { color: 'inherit' },
-                                      }}
-                                    />
-                                  </Link>
-                                </Tooltip>
-                                <Tooltip title={value > 0 ? `Delete all ${value.toLocaleString()} observable(s) of type "${type.name}"` : 'No observables to delete'} arrow>
-                                  <span>
-                                    <IconButton
-                                      size="small"
-                                      color="error"
-                                      disabled={value === 0 || isDeleting}
-                                      onClick={() => handleDeleteAllForType(type.name)}
-                                      sx={{ p: 0.25 }}
-                                    >
-                                      {isDeleting
-                                        ? <CircularProgress size={14} sx={{ color: 'error.main' }} />
-                                        : <DeleteIcon sx={{ fontSize: 16 }} />}
-                                    </IconButton>
-                                  </span>
-                                </Tooltip>
-                              </Box>
+                              <Tooltip
+                                title={
+                                  value > 0
+                                    ? `Open datastore "ioc_${type.name}" — click trash to delete all ${value.toLocaleString()}`
+                                    : `Open datastore "ioc_${type.name}" on shuffler.io`
+                                }
+                                arrow
+                              >
+                                <Chip
+                                  component="a"
+                                  href={datastoreUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  clickable
+                                  size="small"
+                                  variant="outlined"
+                                  icon={<OpenInNewIcon sx={{ fontSize: 12, ml: '6px !important' }} />}
+                                  label={showSpinner ? '…' : value.toLocaleString()}
+                                  onDelete={value > 0 && !isDeleting ? () => handleDeleteAllForType(type.name) : undefined}
+                                  deleteIcon={
+                                    isDeleting
+                                      ? <CircularProgress size={12} sx={{ color: 'hsl(var(--muted-foreground))' }} />
+                                      : <DeleteIcon sx={{ fontSize: 14 }} />
+                                  }
+                                  sx={{
+                                    fontVariantNumeric: 'tabular-nums',
+                                    fontWeight: 600,
+                                    height: 22,
+                                    borderColor: 'hsl(var(--border))',
+                                    color: 'hsl(var(--muted-foreground))',
+                                    '& .MuiChip-icon': { color: 'hsl(var(--muted-foreground))' },
+                                    '& .MuiChip-deleteIcon': {
+                                      color: 'hsl(var(--muted-foreground))',
+                                      '&:hover': { color: 'hsl(var(--destructive))' },
+                                    },
+                                  }}
+                                />
+                              </Tooltip>
                             );
                           })() : (
                             <Typography component="span" sx={{ color: 'text.disabled', fontSize: '0.75rem' }}>—</Typography>
