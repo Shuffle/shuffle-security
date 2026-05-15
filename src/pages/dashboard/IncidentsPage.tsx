@@ -3242,6 +3242,13 @@ const IncidentsPage = () => {
           const norm = app.name.toLowerCase().replace(/[^a-z0-9]/g, '');
           const isEmailApp = norm.includes('outlook') || norm.includes('office365') || norm.includes('gmail');
           if (isEmailApp) {
+            // Remember which email tool the user picked so the focus phishing
+            // incident is sourced from it (Gmail vs Outlook Office365) instead
+            // of always defaulting to Outlook.
+            try {
+              const product = norm.includes('gmail') ? 'gmail' : 'outlook_office365';
+              localStorage.setItem('shuffle_demo_email_source', product);
+            } catch { /* ignore */ }
             // Close the search drawer and run the fake auth experience.
             setAppSearchOpen(false);
             setFakeAuth({ name: app.name, image: app.icon || '' });
