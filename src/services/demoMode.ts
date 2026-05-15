@@ -686,8 +686,9 @@ export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
     const liveUrls = tally(audit.url, items, classifyUrlItem);
     if (items.length === 100) audit.url.truncated = true;
     if (liveUrls.length === 0) audit.url.usedFallback = true;
-    const urlKey = pickRandom(liveUrls.length > 0 ? liveUrls : FALLBACK_IOC_URLS);
-    if (urlKey) {
+    const rawUrl = pickRandom(liveUrls.length > 0 ? liveUrls : FALLBACK_IOC_URLS);
+    if (rawUrl) {
+      const urlKey = liveUrls.length > 0 ? rawUrl : tagFallbackUrl(rawUrl);
       out.lureUrl = urlKey;
       const host = extractHost(urlKey);
       if (host) out.lureDomain = host;
@@ -696,8 +697,9 @@ export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
     console.warn('[demo] pick ioc_url failed', err);
     audit.url.httpError = err instanceof Error ? err.message : String(err);
     audit.url.usedFallback = true;
-    const urlKey = pickRandom(FALLBACK_IOC_URLS);
-    if (urlKey) {
+    const rawUrl = pickRandom(FALLBACK_IOC_URLS);
+    if (rawUrl) {
+      const urlKey = tagFallbackUrl(rawUrl);
       out.lureUrl = urlKey;
       const host = extractHost(urlKey);
       if (host) out.lureDomain = host;
