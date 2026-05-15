@@ -25,7 +25,7 @@ import {
   PanelRight,
   PanelBottom,
 } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useDemo, TOUR_STEPS } from '@/context/DemoContext';
 import { useEntityPreference } from '@/hooks/useEntityLabel';
@@ -159,18 +159,33 @@ export const DemoTourDrawer = () => {
   // mode" on the dashboard makes the panel visibly react.
   const [flash, setFlash] = useState(false);
   const lastPulseRef = useRef(attentionPulse);
+  const wasOpenRef = useRef(false);
+  const triggerFlash = useCallback(() => {
+    setFlash(false);
+    const r = requestAnimationFrame(() => setFlash(true));
+    const t = window.setTimeout(() => setFlash(false), 900);
+    return () => { cancelAnimationFrame(r); window.clearTimeout(t); };
+  }, []);
   useEffect(() => {
     if (attentionPulse !== lastPulseRef.current) {
       lastPulseRef.current = attentionPulse;
       if (drawerOpen && !minimized) {
-        setFlash(false);
-        // next tick so the class re-applies even on rapid repeats
-        const r = requestAnimationFrame(() => setFlash(true));
-        const t = window.setTimeout(() => setFlash(false), 900);
-        return () => { cancelAnimationFrame(r); window.clearTimeout(t); };
+        return triggerFlash();
       }
     }
-  }, [attentionPulse, drawerOpen, minimized]);
+  }, [attentionPulse, drawerOpen, minimized, triggerFlash]);
+  // Always flash when the drawer transitions from closed to open so the
+  // user immediately sees where the demo panel is.
+  useEffect(() => {
+    const isVisible = drawerOpen && !minimized;
+    if (isVisible && !wasOpenRef.current) {
+      wasOpenRef.current = true;
+      return triggerFlash();
+    }
+    if (!isVisible) {
+      wasOpenRef.current = false;
+    }
+  }, [drawerOpen, minimized, triggerFlash]);
 
   const total = TOUR_STEPS.length;
   const rawCurrent = TOUR_STEPS[step];
