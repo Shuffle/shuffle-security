@@ -8630,8 +8630,12 @@ const IncidentDetailPage = () => {
                   />
                 ))}
               </Box>
-              {/* STIX context for any IOC matches at the incident level. */}
-              <IocDetailsCard correlations={visibleCorrelations} />
+              {/* The page-level "Known IOC details" card was removed — the
+                  Known-IOC URL and its source already render inside the
+                  matching CorrelationRow above, so repeating it here was
+                  pure duplication. The compact variant inside the per-
+                  observable popover (above) still surfaces STIX context
+                  on demand. */}
             </Box>
           )}
         </Box>
