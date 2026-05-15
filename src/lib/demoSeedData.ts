@@ -166,6 +166,22 @@ export interface DemoIocOverrides {
   lureUrl?: string;
 }
 
+/**
+ * Resolve the email source product for the focus phishing incident based on
+ * the email tool the user picked during demo step #2 ("Add Outlook Office365
+ * or Gmail"). Falls back to outlook_office365 so existing flows remain
+ * unchanged when nothing is set.
+ */
+const resolveEmailSourceProduct = (): string => {
+  try {
+    const raw = (typeof localStorage !== 'undefined' && localStorage.getItem('shuffle_demo_email_source')) || '';
+    const norm = raw.toLowerCase().replace(/[^a-z0-9]/g, '');
+    if (norm.includes('gmail')) return 'gmail';
+    if (norm.includes('outlook') || norm.includes('office365')) return 'outlook_office365';
+  } catch { /* ignore */ }
+  return 'outlook_office365';
+};
+
 /** Compose the credential-harvesting URL from a domain override (or default). */
 const composeLureUrl = (domain: string): string =>
   `https://${domain}/mfa-reset?u=schen`;
