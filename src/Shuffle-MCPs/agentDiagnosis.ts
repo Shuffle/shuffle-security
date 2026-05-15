@@ -58,7 +58,24 @@ export const parseRunResult = (
   run: DiagnosableRun
 ): { raw: string | null; parsed: any | null } => {
   const firstResult = run.results?.[0]?.result;
-  if (!firstResult) return { raw: null, parsed: null };
+  if (!firstResult) {
+    const directPayload = run as any;
+    if (
+      directPayload &&
+      typeof directPayload === 'object' &&
+      (Array.isArray(directPayload.decisions) || directPayload.decision_string !== undefined)
+    ) {
+      const deepParsed = deepParseJsonStrings(directPayload);
+      let raw: string | null = null;
+      try {
+        raw = JSON.stringify(deepParsed);
+      } catch {
+        raw = '[agent run data]';
+      }
+      return { raw, parsed: deepParsed };
+    }
+    return { raw: null, parsed: null };
+  }
 
   try {
     let parsed = JSON.parse(firstResult);
@@ -117,6 +134,17 @@ const getDiagnosableScope = (parsed: any): unknown => {
       d && typeof d === 'object' && d.run_details ? d.run_details : null
     );
     if (runDetails.some((rd: unknown) => rd !== null)) scope.run_details = runDetails;
+    const finalDecisions = parsed.decisions.map((d: any) => {
+      if (!d || typeof d !== 'object') return null;
+      const action = String(d.action || d.details?.action || '').toLowerCase();
+      const category = String(d.category || '').toLowerCase();
+      if (!['finish', 'finalise'].includes(action) && !['finish', 'finalise'].includes(category)) return null;
+      return {
+        reason: d.reason,
+        fields: Array.isArray(d.fields) ? d.fields.map((f: any) => f?.value).filter(Boolean) : undefined,
+      };
+    });
+    if (finalDecisions.some((d: unknown) => d !== null)) scope.decisions = finalDecisions;
   }
   if (parsed.decision_string !== undefined) scope.decision_string = parsed.decision_string;
   return Object.keys(scope).length > 0 ? scope : null;
@@ -127,7 +155,7 @@ const getDiagnosableScope = (parsed: any): unknown => {
  *  Returns null if the path does not start at a decision row. */
 export const extractDecisionIndex = (path: string | undefined | null): number | null => {
   if (!path) return null;
-  const m = /^run_details\[(\d+)\]/.exec(path);
+  const m = /^(?:run_details|decisions)\[(\d+)\]/.exec(path);
   if (!m) return null;
   const n = Number(m[1]);
   return Number.isFinite(n) ? n : null;
@@ -153,7 +181,7 @@ export type DiagnosisEvidence = {
 };
 
 export type OutputDiagnosis = {
-  kind: 'auth' | 'permission' | 'not_found' | 'rate_limit' | 'network' | 'validation' | 'generic';
+  kind: 'auth' | 'permission' | 'not_found' | 'rate_limit' | 'token_limit' | 'network' | 'validation' | 'generic';
   status?: number;
   title: string;
   explanation: string;
@@ -192,9 +220,25 @@ const trimEvidenceValue = (v: string, max = 180): string => {
   return cleaned.length <= max ? cleaned : `${cleaned.slice(0, max).trim()}…`;
 };
 
+const TOKEN_LIMIT_PATTERN = /\b(ai[_\s-]*token[_\s-]*limit|token[_\s-]*limit|limit[_\s-]*is[_\s-]*reached|limit[_\s-]*reached|context[_\s-]*limit|maximum[_\s-]*context|context[_\s-]*length|too[_\s-]*many[_\s-]*tokens|exceeds?[_\s-]*(the[_\s-]*)?(token|context))\b/;
+
 export const diagnoseOutputWarning = (run: DiagnosableRun): OutputDiagnosis | null => {
   const { parsed, raw } = parseRunResult(run);
-  if (!parsed || typeof parsed !== 'object') return null;
+  if (!parsed || typeof parsed !== 'object') {
+    if (raw && TOKEN_LIMIT_PATTERN.test(raw.toLowerCase())) {
+      return {
+        kind: 'token_limit',
+        title: 'AI token limit reached',
+        explanation:
+          'The agent stopped because the prompt, context, and generated output exceeded the configured AI token limit.',
+        remediation:
+          'Reduce the input size or connected context and re-run, or connect an API vendor/self-hosted model with a higher limit.',
+        snippet: trimEvidenceValue(raw),
+        evidence: [{ path: '(root)', value: trimEvidenceValue(raw) }],
+      };
+    }
+    return null;
+  }
 
   const scope = getDiagnosableScope(parsed);
   if (!scope) return null;
@@ -329,6 +373,25 @@ export const diagnoseOutputWarning = (run: DiagnosableRun): OutputDiagnosis | nu
       remediation:
         "Wait a minute and re-run, or reduce how often this action fires. Check the integration's rate-limit settings if the problem keeps happening.",
       snippet: findSnippet(['429', 'rate limit', 'too many', 'quota', 'throttled']),
+      evidence: withStatusEvidence(ev),
+    };
+  }
+
+  if (
+    TOKEN_LIMIT_PATTERN.test(lower)
+  ) {
+    const ev = findEvidenceByRegex(
+      TOKEN_LIMIT_PATTERN
+    );
+    return {
+      kind: 'token_limit',
+      status,
+      title: 'AI token limit reached',
+      explanation:
+        'The agent stopped because the prompt, context, and generated output exceeded the configured AI token limit.',
+      remediation:
+        'Reduce the input size or connected context and re-run, or connect an API vendor/self-hosted model with a higher limit.',
+      snippet: findSnippet(['ai token limit', 'token limit', 'limit reached', 'context limit', 'context length', 'too many tokens']),
       evidence: withStatusEvidence(ev),
     };
   }

@@ -122,6 +122,7 @@ import { toast } from '@/Shuffle-MCPs/toast';
 import { runAgent } from '@/Shuffle-MCPs/agentRun';
 import { parseScheduleHint } from '@/Shuffle-MCPs/scheduleHint';
 import AgentRunDiagnosisBanner from '@/Shuffle-MCPs/AgentRunDiagnosisBanner';
+import { diagnoseOutputWarning, type OutputDiagnosis } from '@/Shuffle-MCPs/agentDiagnosis';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -396,6 +397,31 @@ const StatusIcon: React.FC<{ status?: string }> = ({ status }) => {
     </Tooltip>
   );
 };
+
+const AgentLimitWarning: React.FC<{ diagnosis: OutputDiagnosis }> = ({ diagnosis }) => (
+  <Box sx={{
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: 1.25,
+    p: 2,
+    borderRadius: 1.5,
+    border: '1px solid hsl(var(--severity-medium) / 0.45)',
+    bgcolor: 'hsl(var(--severity-medium) / 0.1)',
+  }}>
+    <WarningIcon sx={{ color: 'hsl(var(--severity-medium))', fontSize: 22, mt: 0.1 }} />
+    <Box sx={{ minWidth: 0 }}>
+      <Typography sx={{ fontSize: '0.92rem', fontWeight: 700, color: 'hsl(var(--foreground))', mb: 0.5 }}>
+        {diagnosis.title}
+      </Typography>
+      <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))', lineHeight: 1.55, mb: 0.75 }}>
+        {diagnosis.explanation}
+      </Typography>
+      <Typography sx={{ fontSize: '0.78rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
+        {diagnosis.remediation}
+      </Typography>
+    </Box>
+  </Box>
+);
 
 
 interface TimelineRowProps {
@@ -2162,6 +2188,11 @@ const AgentUI: React.FC<AgentUIProps> = ({
     return { timeline: items, originalStartTime: startSafe, totalDuration: total, finishDecisionId: finishId, finishAnswer: finishAns };
   }, [agentData, execution?.status, execution?.started_at, execution?.completed_at]);
 
+  const limitDiagnosis = useMemo(() => {
+    const diagnosis = diagnoseOutputWarning(agentData as any);
+    return diagnosis?.kind === 'token_limit' ? diagnosis : null;
+  }, [agentData]);
+
 
   const toggleOpen = (i: number) =>
     setOpenIndexes((prev) => {
@@ -3355,8 +3386,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
             {/* Shared diagnosis banner — same component used by drawers and
                 incident pages, so the user sees identical reasoning here. */}
             <AgentRunDiagnosisBanner
-              run={execution}
+              run={execution?.results?.length ? execution : agentData}
               sx={{ px: 0, pb: 0, mb: 2 }}
+              executionId={execution?.execution_id}
               onJumpToEvidence={(decisionIndex) => {
                 // Locate the timeline row for the offending decision and
                 // expand + scroll to it on the detailed view, regardless of
@@ -3447,19 +3479,22 @@ const AgentUI: React.FC<AgentUIProps> = ({
                     }
                   }
                   const pendingAnswered = pendingQuestions.every((q) => questionAnswers[q.question]?.value);
+                  const isLimitReached = !!limitDiagnosis;
 
                   return (
                     <>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                         {isRunning ? (
                           <CircularProgress size={16} sx={{ color: 'hsl(var(--primary))' }} />
+                        ) : isLimitReached ? (
+                          <WarningIcon sx={{ fontSize: 18, color: 'hsl(var(--severity-medium))' }} />
                         ) : status === 'FINISHED' ? (
                           <CheckCircleIcon sx={{ fontSize: 18, color: 'hsl(142 70% 45%)' }} />
                         ) : (
                           <ErrorIcon sx={{ fontSize: 18, color: 'hsl(var(--destructive))' }} />
                         )}
                         <Typography sx={{ fontSize: '0.9rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-                          {isRunning ? 'Agent is working…' : status === 'FINISHED' ? 'Run finished' : `Run ${status.toLowerCase()}`}
+                          {isRunning ? 'Agent is working…' : isLimitReached ? 'Run stopped — limit reached' : status === 'FINISHED' ? 'Run finished' : `Run ${status.toLowerCase()}`}
                         </Typography>
                         <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
                           {decisionCount} step{decisionCount === 1 ? '' : 's'}
@@ -3520,7 +3555,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
                           </Box>
                         );
                       })}
-                      {finishAnswer ? (
+                      {limitDiagnosis ? (
+                        <AgentLimitWarning diagnosis={limitDiagnosis} />
+                      ) : finishAnswer ? (
                         <Box sx={{
                           p: 2, borderRadius: 1.5,
                           border: '1px solid hsl(var(--border))',
@@ -3678,6 +3715,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
               const detailedStatus = (execution?.status || agentData?.status || 'EXECUTING').toUpperCase();
               const detailedIsRunning = !['FINISHED', 'FAILURE', 'ABORTED', 'CANCELLED', 'CANCELED'].includes(detailedStatus);
               const detailedRunFinished = !detailedIsRunning;
+              const detailedLimitReached = !!limitDiagnosis;
               return (
             <Box sx={{
               borderRadius: 2,
@@ -3726,16 +3764,20 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       bgcolor: 'hsl(var(--muted) / 0.2)',
                     }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                        {detailedStatus === 'FINISHED' ? (
+                        {detailedLimitReached ? (
+                          <WarningIcon sx={{ fontSize: 18, color: 'hsl(var(--severity-medium))' }} />
+                        ) : detailedStatus === 'FINISHED' ? (
                           <CheckCircleIcon sx={{ fontSize: 18, color: 'hsl(142 70% 45%)' }} />
                         ) : (
                           <ErrorIcon sx={{ fontSize: 18, color: 'hsl(var(--destructive))' }} />
                         )}
                         <Typography sx={{ fontSize: '0.9rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-                          {detailedStatus === 'FINISHED' ? 'Run finished' : `Run ${detailedStatus.toLowerCase()}`}
+                          {detailedLimitReached ? 'Run stopped — limit reached' : detailedStatus === 'FINISHED' ? 'Run finished' : `Run ${detailedStatus.toLowerCase()}`}
                         </Typography>
                       </Box>
-                      {finishAnswer && (
+                      {limitDiagnosis ? (
+                        <AgentLimitWarning diagnosis={limitDiagnosis} />
+                      ) : finishAnswer && (
                         <Box sx={{
                           p: 2, borderRadius: 1.5,
                           border: '1px solid hsl(var(--border))',
