@@ -10,6 +10,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/lib/toast';
 import { seedForStep, cleanupDemoData, isDemoActive, getDemoStats, forceRecreateDemoIncidents, forceCreateSingleDemoIncident, countDemoIncidents, countDemoFocusIncidents, seedDemoWazuhImplantIncident, setPendingIndicatorReady } from '@/services/demoMode';
 import { enableLiveDemoEnvironment } from '@/services/demoLiveEnvironment';
@@ -361,6 +362,7 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
   // Used to gate the `incidents-list:open` sub-goal so the gate flips back
   // off if the user navigates away from the detail page.
   const isOnIncidentDetail = /^\/(?:incidents|cases|alerts|tickets|jobs)\/[^/]+/.test(location.pathname);
+  const queryClient = useQueryClient();
   const [active, setActive] = useState(() => isDemoActive());
   const [isSeeding, setIsSeeding] = useState(false);
   const [isCleaning, setIsCleaning] = useState(false);
@@ -673,6 +675,10 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       viewedStepsRef.current = new Set();
       completedStepsGARef.current = new Set();
       refreshStats();
+      // Bust the dashboard's leftover-demo-count cache so the "Clean up demo
+      // data (N)" button immediately reflects the new state instead of
+      // showing a stale count for up to 60s.
+      queryClient.invalidateQueries({ queryKey: ['demo-card', 'leftover-demo-count'] });
       if (res.success) {
         toast.success(`Removed ${res.deleted} demo item${res.deleted === 1 ? '' : 's'}.`);
       } else {
