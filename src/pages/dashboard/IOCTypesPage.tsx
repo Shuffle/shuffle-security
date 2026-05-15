@@ -45,6 +45,7 @@ import { DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import { toast } from '@/lib/toast';
 import ThreatIntelAutomationBanner from '@/components/incidents/ThreatIntelAutomationBanner';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { useObservableCounts } from '@/hooks/useObservableCounts';
 
 const CATEGORY = DATASTORE_CATEGORIES.IOCS;
 
@@ -280,6 +281,8 @@ const IOCTypesPage = () => {
   };
 
   const enabledCount = useMemo(() => iocTypes.filter(t => t.enabled).length, [iocTypes]);
+  const enabledNames = useMemo(() => iocTypes.filter(t => t.enabled).map(t => t.name), [iocTypes]);
+  const { data: observableCounts, isLoading: countsLoading } = useObservableCounts(enabledNames);
 
   // Test regex pattern
   const testRegex = (pattern: string, value: string): boolean | null => {
@@ -493,6 +496,11 @@ const IOCTypesPage = () => {
                   <TableCell sx={{ width: 60 }}>Enabled</TableCell>
                   <TableCell>Name</TableCell>
                   <TableCell>Category</TableCell>
+                  <TableCell align="right" sx={{ width: 110 }}>
+                    <Tooltip title="Number of observables of this type currently stored in the ioc_<type> datastore" arrow>
+                      <span>Observed</span>
+                    </Tooltip>
+                  </TableCell>
                   <TableCell>Regex Pattern</TableCell>
                   <TableCell>Description</TableCell>
                   {Object.keys(testResults).length > 0 && <TableCell>Test</TableCell>}
@@ -507,7 +515,7 @@ const IOCTypesPage = () => {
                   return [
                     // Category header row
                     <TableRow key={`header-${category.id}`} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }}>
-                      <TableCell colSpan={Object.keys(testResults).length > 0 ? 7 : 6} sx={{ py: 1 }}>
+                      <TableCell colSpan={Object.keys(testResults).length > 0 ? 8 : 7} sx={{ py: 1 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: category.color }} />
                           <Typography variant="subtitle2" sx={{ fontWeight: 600, color: category.color }}>
@@ -550,6 +558,31 @@ const IOCTypesPage = () => {
                             }} 
                           />
                         </TableCell>
+                        <TableCell align="right" sx={{ width: 110 }}>
+                          {type.enabled ? (() => {
+                            const count = observableCounts ? observableCounts[type.name] : undefined;
+                            const showSpinner = countsLoading && count === undefined;
+                            const value = count ?? 0;
+                            return (
+                              <Tooltip title={`Items in datastore category "ioc_${type.name}"`} arrow>
+                                <Chip
+                                  label={showSpinner ? '…' : value.toLocaleString()}
+                                  size="small"
+                                  variant="outlined"
+                                  sx={{
+                                    fontVariantNumeric: 'tabular-nums',
+                                    fontWeight: 600,
+                                    height: 22,
+                                    borderColor: value > 0 ? 'hsl(var(--primary) / 0.5)' : 'hsl(var(--border))',
+                                    color: value > 0 ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                                  }}
+                                />
+                              </Tooltip>
+                            );
+                          })() : (
+                            <Typography component="span" sx={{ color: 'text.disabled', fontSize: '0.75rem' }}>—</Typography>
+                          )}
+                        </TableCell>
                         <TableCell>
                           <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {type.regex || <Typography component="span" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>No pattern</Typography>}
@@ -591,7 +624,7 @@ const IOCTypesPage = () => {
                 })}
                 {filteredAndSortedTypes.length === 0 && !isLoading && (
                   <TableRow>
-                    <TableCell colSpan={Object.keys(testResults).length > 0 ? 7 : 6} align="center" sx={{ py: 4 }}>
+                    <TableCell colSpan={Object.keys(testResults).length > 0 ? 8 : 7} align="center" sx={{ py: 4 }}>
                       <Typography color="text.secondary">
                         {filterMode === 'todo' 
                           ? 'No IOC types need patterns. All done!' 
