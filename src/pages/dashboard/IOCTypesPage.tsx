@@ -496,6 +496,11 @@ const IOCTypesPage = () => {
                   <TableCell sx={{ width: 60 }}>Enabled</TableCell>
                   <TableCell>Name</TableCell>
                   <TableCell>Category</TableCell>
+                  <TableCell align="right" sx={{ width: 110 }}>
+                    <Tooltip title="Number of observables of this type currently stored in the ioc_<type> datastore" arrow>
+                      <span>Observed</span>
+                    </Tooltip>
+                  </TableCell>
                   <TableCell>Regex Pattern</TableCell>
                   <TableCell>Description</TableCell>
                   {Object.keys(testResults).length > 0 && <TableCell>Test</TableCell>}
