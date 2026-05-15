@@ -3523,9 +3523,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                           </Box>
                         );
                       })}
-                      {limitDiagnosis ? (
-                        <AgentLimitWarning diagnosis={limitDiagnosis} />
-                      ) : finishAnswer ? (
+                      {finishAnswer ? (
                         <Box sx={{
                           p: 2, borderRadius: 1.5,
                           border: '1px solid hsl(var(--border))',
