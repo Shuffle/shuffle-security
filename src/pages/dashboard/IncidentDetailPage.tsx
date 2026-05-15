@@ -150,6 +150,7 @@ import { getAgentSkipInfo } from '@/lib/agentParsers';
 import HighlightedFileEditor from '@/components/incidents/HighlightedFileEditor';
 import EmailThreadPanel, { isEmailContent } from '@/components/incidents/EmailThreadPanel';
 import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
+import { useIsSupport } from '@/hooks/useIsSupport';
 import { useAssignEscalateStatus } from '@/hooks/useAssignEscalateStatus';
 import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
 
