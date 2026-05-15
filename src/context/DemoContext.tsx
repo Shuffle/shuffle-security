@@ -336,6 +336,15 @@ export interface DemoContextValue {
    *  losing focus on the drawer. Cleared on mouse-leave. */
   hoveredGoalSelector: string | null;
   setHoveredGoalSelector: (selector: string | null) => void;
+  /** True when a demo run was previously started but never finished or
+   *  cleaned up. Drives the floating "Continue demo" pill. */
+  wasStarted: boolean;
+  /** True when the user explicitly dismissed the resume pill (X icon). */
+  resumeDismissed: boolean;
+  /** Re-open the tour from the last step the user was on. */
+  resumeTour: () => void;
+  /** Hide the resume pill until the next demo run is started. */
+  dismissResumePrompt: () => void;
 }
 
 // DemoContext + useDemo are defined in ./demoContextObject so HMR cannot
