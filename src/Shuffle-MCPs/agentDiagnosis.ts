@@ -58,7 +58,24 @@ export const parseRunResult = (
   run: DiagnosableRun
 ): { raw: string | null; parsed: any | null } => {
   const firstResult = run.results?.[0]?.result;
-  if (!firstResult) return { raw: null, parsed: null };
+  if (!firstResult) {
+    const directPayload = run as any;
+    if (
+      directPayload &&
+      typeof directPayload === 'object' &&
+      (Array.isArray(directPayload.decisions) || directPayload.decision_string !== undefined)
+    ) {
+      const deepParsed = deepParseJsonStrings(directPayload);
+      let raw: string | null = null;
+      try {
+        raw = JSON.stringify(deepParsed);
+      } catch {
+        raw = '[agent run data]';
+      }
+      return { raw, parsed: deepParsed };
+    }
+    return { raw: null, parsed: null };
+  }
 
   try {
     let parsed = JSON.parse(firstResult);
@@ -153,7 +170,7 @@ export type DiagnosisEvidence = {
 };
 
 export type OutputDiagnosis = {
-  kind: 'auth' | 'permission' | 'not_found' | 'rate_limit' | 'network' | 'validation' | 'generic';
+  kind: 'auth' | 'permission' | 'not_found' | 'rate_limit' | 'token_limit' | 'network' | 'validation' | 'generic';
   status?: number;
   title: string;
   explanation: string;
