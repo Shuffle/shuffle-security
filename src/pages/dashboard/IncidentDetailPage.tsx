@@ -155,26 +155,22 @@ import { useIsSupport } from '@/hooks/useIsSupport';
 import { useAssignEscalateStatus } from '@/hooks/useAssignEscalateStatus';
 import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
 
-// One-time per-browser default: the very first time an incident is opened
-// in this browser, expand BOTH the Email Thread and the Timeline so the
-// user immediately sees the most important context. After this runs once,
-// the user's own collapse/expand preference is honored as normal (the
-// sentinel below prevents us from overriding their choices on later
-// visits). Both panels keep their existing localStorage keys.
+// Per-open guarantee: at least ONE of Email Thread or Timeline must be
+// expanded, otherwise the page looks empty. We respect whichever the user
+// already has open; only when BOTH are collapsed do we force-expand the
+// Timeline (the preferred default).
 try {
   if (typeof window !== 'undefined') {
-    const FIRST_OPEN_DEFAULTS_KEY = 'shuffle-incident-first-open-defaults-applied';
-    if (!localStorage.getItem(FIRST_OPEN_DEFAULTS_KEY)) {
-      // Email Thread: '1' = open. Force open even if a previous default
-      // (collapsed) had been written, since the request is "ALWAYS expand
-      // on first open in this browser".
-      localStorage.setItem('shuffle-incident-email-thread-open', '1');
-      // Timeline: '1' = collapsed, so '0' = expanded.
+    // Email Thread: '1' = open.
+    const emailOpen = localStorage.getItem('shuffle-incident-email-thread-open') === '1';
+    // Timeline: '1' = collapsed, anything else (including null) = expanded.
+    const timelineCollapsed = localStorage.getItem('shuffle-incident-timeline-collapsed') === '1';
+    if (!emailOpen && timelineCollapsed) {
       localStorage.setItem('shuffle-incident-timeline-collapsed', '0');
-      localStorage.setItem(FIRST_OPEN_DEFAULTS_KEY, '1');
     }
   }
 } catch { /* ignore — non-fatal */ }
+
 
 // TaskTemplate interface is now imported from useCaseTemplates
 
