@@ -831,44 +831,98 @@ export const IncidentCardView = ({
       })}
 
       {incidents.length === 0 && (
-        <Box
-          sx={{
-            p: 4,
-            textAlign: 'center',
-            borderRadius: 2,
-            backgroundColor: 'hsl(var(--card))',
-            border: '1px solid hsl(var(--border))',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 1.5,
-          }}
-        >
-          <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-            No incidents found
-          </Typography>
-          {orgFilterNames && orgFilterNames.length > 0 && totalOrgCount && totalOrgCount > orgFilterNames.length && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                Showing {orgFilterNames.length} of {totalOrgCount} tenant{totalOrgCount > 1 ? 's' : ''}: {orgFilterNames.join(', ')}
-              </Typography>
-              {onResetOrgFilter && (
-                <Typography
-                  variant="caption"
-                  onClick={onResetOrgFilter}
-                  sx={{
-                    color: 'hsl(var(--primary))',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    '&:hover': { textDecoration: 'underline' },
-                  }}
-                >
-                  Reset filters
+        <>
+          <Box
+            sx={{
+              p: 4,
+              textAlign: 'center',
+              borderRadius: 2,
+              backgroundColor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 1.5,
+            }}
+          >
+            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+              No incidents match your filter
+            </Typography>
+            {orgFilterNames && orgFilterNames.length > 0 && totalOrgCount && totalOrgCount > orgFilterNames.length && (
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                  Showing {orgFilterNames.length} of {totalOrgCount} tenant{totalOrgCount > 1 ? 's' : ''}: {orgFilterNames.join(', ')}
                 </Typography>
-              )}
+                {onResetOrgFilter && (
+                  <Typography
+                    variant="caption"
+                    onClick={onResetOrgFilter}
+                    sx={{
+                      color: 'hsl(var(--primary))',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      '&:hover': { textDecoration: 'underline' },
+                    }}
+                  >
+                    Reset filters
+                  </Typography>
+                )}
+              </Box>
+            )}
+          </Box>
+
+          {/* Secondary CTA: even when filters hide the list, surface the
+              ingestion setup path so users can keep growing coverage. Mirrors
+              the controls used in the full empty state. */}
+          <Box
+            sx={{
+              mt: 2,
+              p: 3,
+              borderRadius: 2,
+              backgroundColor: 'hsl(var(--card))',
+              border: '1px dashed hsl(var(--border))',
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              alignItems: { xs: 'flex-start', sm: 'center' },
+              justifyContent: 'space-between',
+              gap: 2,
+            }}
+          >
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+              <Typography sx={{ fontWeight: 600, fontSize: '0.95rem', color: 'hsl(var(--foreground))' }}>
+                Want more incidents flowing in?
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
+                Connect another security tool or enable a webhook to expand automatic ingestion.
+              </Typography>
             </Box>
-          )}
-        </Box>
+            <Box
+              component={Link}
+              to="/onboarding/sources"
+              sx={{
+                flexShrink: 0,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 0.75,
+                height: 36,
+                px: 2,
+                borderRadius: 1.5,
+                textDecoration: 'none',
+                fontWeight: 600,
+                fontSize: '0.85rem',
+                color: 'hsl(var(--primary))',
+                border: '1px solid hsl(var(--primary) / 0.5)',
+                '&:hover': {
+                  borderColor: 'hsl(var(--primary))',
+                  backgroundColor: 'hsl(var(--primary) / 0.08)',
+                },
+              }}
+            >
+              Set up ingestion
+              <ChevronRight size={16} />
+            </Box>
+          </Box>
+        </>
       )}
     </Box>
   );
