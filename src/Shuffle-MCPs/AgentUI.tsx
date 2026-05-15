@@ -461,15 +461,34 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
 
   // Resolve app icon for the tool used. `details.tool` may be a name or an ID.
   // Skip finalise/question/finish actions — they use the agent's "core" tool.
+  // Also skip generic transport tools (api/http/webhook/shuffle_tools/singul/
+  // core) that don't represent a specific integration — otherwise we end up
+  // showing whichever app happened to be cached under that generic key
+  // (e.g. Gmail for tool="api"), which is misleading.
   let toolApp: AgentUIApp | undefined;
+  const GENERIC_TOOLS = new Set(['api', 'http', 'https', 'webhook', 'singul', 'core', 'shuffle_tools', 'shuffle-tools']);
   const skipToolIcon =
     item.category === 'finalise' || item.category === 'finish' || item.category === 'ask' ||
     details?.action === 'finalise' || details?.action === 'finish' || details?.action === 'ask';
-  if (!skipToolIcon && details?.tool && typeof details.tool === 'string' && details.tool !== 'singul' && details.tool !== 'core') {
+  if (!skipToolIcon && details?.tool && typeof details.tool === 'string') {
     const raw = details.tool;
     let tn = raw.toLowerCase().replace(/[\s-]+/g, '_');
     if (tn.startsWith('app:')) tn = tn.split(':')[2] || tn;
-    toolApp = appsById[raw] || appsById[tn];
+    if (!GENERIC_TOOLS.has(tn)) {
+      const candidate = appsById[raw] || appsById[tn];
+      // Only trust the lookup when the resolved app's id or normalized name
+      // actually matches the tool slug — `appsById` is a shared map keyed by
+      // multiple aliases, so a stale/aliased entry can otherwise return an
+      // unrelated app (the original symptom: tool="api" → Gmail icon).
+      if (candidate) {
+        const candidateSlugs = new Set<string>();
+        if (candidate.id) candidateSlugs.add(String(candidate.id).toLowerCase());
+        if (candidate.name) candidateSlugs.add(candidate.name.toLowerCase().replace(/[\s-]+/g, '_'));
+        if (candidateSlugs.has(tn) || candidateSlugs.has(raw.toLowerCase())) {
+          toolApp = candidate;
+        }
+      }
+    }
   }
 
   // Question fields. A field counts as "answered" when either the upstream
