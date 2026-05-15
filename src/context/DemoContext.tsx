@@ -164,11 +164,6 @@ export const TOUR_STEPS: TourStep[] = [
     },
     subGoals: [
       {
-        id: 'incident-detail:hover-title',
-        label: 'Notice the incident Title at the top',
-        targetSelector: '[data-tour="incident-title"]',
-      },
-      {
         id: 'incident-detail:open-email-thread',
         label: 'Click the Email Thread header to expand the full message',
         targetSelector: '[data-tour="incident-email-thread"]',
