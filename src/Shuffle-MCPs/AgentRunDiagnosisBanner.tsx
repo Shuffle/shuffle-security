@@ -196,57 +196,8 @@ const AgentRunDiagnosisBanner = ({ run, sx, onJumpToEvidence, executionId }: Pro
           </Tooltip>
         </Box>
         {showTokenCtas && (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, pl: 2.5, pt: 0.25 }}>
-            <Button
-              size="small"
-              variant="contained"
-              disableElevation
-              startIcon={<Settings2 size={14} />}
-              onClick={(e) => {
-                e.stopPropagation();
-                window.dispatchEvent(
-                  new CustomEvent('agent-drawer-open', { detail: { tab: 'localLLM' } }),
-                );
-              }}
-              sx={{
-                textTransform: 'none',
-                fontSize: '0.78rem',
-                fontWeight: 600,
-                height: 32,
-                px: 1.5,
-                bgcolor: `hsl(var(--severity-${tone}))`,
-                color: 'hsl(var(--background))',
-                '&:hover': {
-                  bgcolor: `hsla(var(--severity-${tone}) / 0.88)`,
-                },
-              }}
-            >
-              Change LLM
-            </Button>
-            <Button
-              size="small"
-              variant="outlined"
-              endIcon={<ExternalLink size={14} />}
-              onClick={(e) => {
-                e.stopPropagation();
-                window.open('https://shuffler.io/contact?category=Support', '_blank', 'noopener,noreferrer');
-              }}
-              sx={{
-                textTransform: 'none',
-                fontSize: '0.78rem',
-                fontWeight: 600,
-                height: 32,
-                px: 1.5,
-                borderColor: `hsla(var(--severity-${tone}) / 0.5)`,
-                color: 'hsl(var(--foreground))',
-                '&:hover': {
-                  borderColor: `hsl(var(--severity-${tone}))`,
-                  bgcolor: `hsla(var(--severity-${tone}) / 0.08)`,
-                },
-              }}
-            >
-              Get more tokens from Shuffle
-            </Button>
+          <Box sx={{ pl: 2.5, pt: 0.25 }}>
+            <AgentDiagnosisCtas diagnosis={diagnosis} tone={tone} />
           </Box>
         )}
       </Box>
