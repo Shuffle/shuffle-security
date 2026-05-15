@@ -47,7 +47,8 @@ import {
   type AgentRun,
   type AgentScheduleWorkflow,
 } from './agentActivity';
-import { Pencil, StopCircle } from 'lucide-react';
+import { diagnoseOutputWarning } from './agentDiagnosis';
+import { Pencil, StopCircle, AlertTriangle } from 'lucide-react';
 
 // ── Status / icon helpers ────────────────────────────────────────────────────
 
