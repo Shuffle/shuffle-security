@@ -351,6 +351,25 @@ export const diagnoseOutputWarning = (run: DiagnosableRun): OutputDiagnosis | nu
   }
 
   if (
+    /\b(ai[_\s-]*token[_\s-]*limit|token[_\s-]*limit|limit[_\s-]*is[_\s-]*reached|limit[_\s-]*reached|context[_\s-]*limit|maximum[_\s-]*context|context[_\s-]*length|too[_\s-]*many[_\s-]*tokens|exceeds?[_\s-]*(the[_\s-]*)?(token|context))\b/.test(lower)
+  ) {
+    const ev = findEvidenceByRegex(
+      /ai[_\s-]*token[_\s-]*limit|token[_\s-]*limit|limit[_\s-]*is[_\s-]*reached|limit[_\s-]*reached|context[_\s-]*limit|maximum[_\s-]*context|context[_\s-]*length|too[_\s-]*many[_\s-]*tokens|exceeds?[_\s-]*(the[_\s-]*)?(token|context)/
+    );
+    return {
+      kind: 'token_limit',
+      status,
+      title: 'AI token limit reached',
+      explanation:
+        'The agent stopped because the prompt, context, and generated output exceeded the configured AI token limit.',
+      remediation:
+        'Reduce the input size or connected context and re-run, or connect an API vendor/self-hosted model with a higher limit.',
+      snippet: findSnippet(['ai token limit', 'token limit', 'limit reached', 'context limit', 'context length', 'too many tokens']),
+      evidence: withStatusEvidence(ev),
+    };
+  }
+
+  if (
     status === 404 ||
     /\b(not[_\s-]*found|no such|does not exist|unknown[_\s-]*(id|resource))\b/.test(lower)
   ) {
