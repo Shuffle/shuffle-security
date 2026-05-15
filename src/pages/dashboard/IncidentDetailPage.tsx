@@ -34,7 +34,7 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import FingerprintIcon from '@mui/icons-material/Fingerprint';
-import { motion, LayoutGroup } from 'framer-motion';
+import { motion } from 'framer-motion';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import AddIcon from '@mui/icons-material/Add';
