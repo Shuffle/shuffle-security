@@ -534,7 +534,25 @@ export const IncidentCardView = ({
                       )}
                     </Typography>
                   )}
-                  <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+                  <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                    {typeof incident.id === 'string' && incident.id.startsWith('demo-') && (
+                      <Tooltip title="Seeded demo incident — remove via Clean up demo data on the dashboard" placement="top">
+                        <Chip
+                          label="Demo"
+                          size="small"
+                          sx={{
+                            height: 18,
+                            fontSize: '0.6rem',
+                            fontWeight: 700,
+                            letterSpacing: 0.4,
+                            textTransform: 'uppercase',
+                            backgroundColor: 'hsl(var(--primary) / 0.12)',
+                            color: 'hsl(var(--primary))',
+                            border: '1px solid hsl(var(--primary) / 0.35)',
+                          }}
+                        />
+                      </Tooltip>
+                    )}
                     <StatusIcon size={16} color={statusInfo.color} />
                   </Box>
                 </Box>
