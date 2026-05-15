@@ -480,6 +480,12 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
     try {
       // Mark active immediately so the dashboard CTA flips state, even before any data lands.
       localStorage.setItem('shuffle_demo_active', 'true');
+      // Persistent "started but not finished" flag — drives the floating
+      // resume pill if the user closes the drawer without finishing.
+      try { localStorage.setItem('shuffle_demo_started', 'true'); } catch { /* ignore */ }
+      try { localStorage.removeItem('shuffle_demo_resume_dismissed'); } catch { /* ignore */ }
+      setWasStarted(true);
+      setResumeDismissed(false);
       setActive(true);
       setStep(0);
       setDrawerOpen(true);
