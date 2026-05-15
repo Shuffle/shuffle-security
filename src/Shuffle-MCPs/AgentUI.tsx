@@ -2164,11 +2164,6 @@ const AgentUI: React.FC<AgentUIProps> = ({
     return { timeline: items, originalStartTime: startSafe, totalDuration: total, finishDecisionId: finishId, finishAnswer: finishAns };
   }, [agentData, execution?.status, execution?.started_at, execution?.completed_at]);
 
-  const limitDiagnosis = useMemo(() => {
-    const diagnosis = diagnoseOutputWarning(agentData as any);
-    return diagnosis?.kind === 'token_limit' ? diagnosis : null;
-  }, [agentData]);
-
 
   const toggleOpen = (i: number) =>
     setOpenIndexes((prev) => {
