@@ -221,7 +221,7 @@ const AgentRunDiagnosisBanner = ({ run, sx, onJumpToEvidence, executionId }: Pro
                 },
               }}
             >
-              Use your own LLM vendor
+              Change LLM
             </Button>
             <Button
               size="small"
