@@ -597,65 +597,6 @@ const IOCTypesPage = () => {
                     // Types in category
                     ...typesInCategory.map((type) => (
                       <TableRow key={type.name} hover sx={{ opacity: type.enabled ? 1 : 0.5 }}>
-                        <TableCell sx={{ width: 150, py: 0.5 }}>
-                          {type.enabled ? (() => {
-                            const count = observableCounts ? observableCounts[type.name] : undefined;
-                            const showSpinner = countsLoading && count === undefined;
-                            const value = count ?? 0;
-                            const isDeleting = deletingType === type.name;
-                            const datastoreUrl = `https://shuffler.io/admin?tab=datastore&category=ioc_${encodeURIComponent(type.name)}`;
-                            return (
-                              <Tooltip
-                                title={
-                                  value > 0
-                                    ? `Open datastore "ioc_${type.name}" — click trash to delete all ${value.toLocaleString()}`
-                                    : `Open datastore "ioc_${type.name}" on shuffler.io`
-                                }
-                                arrow
-                              >
-                                <Chip
-                                  component="a"
-                                  href={datastoreUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  clickable
-                                  size="small"
-                                  variant="outlined"
-                                  icon={<OpenInNewIcon sx={{ fontSize: 12, ml: '6px !important' }} />}
-                                  label={showSpinner ? '…' : value.toLocaleString()}
-                                  onDelete={value > 0 && !isDeleting ? (e: any) => {
-                                    e?.preventDefault?.();
-                                    e?.stopPropagation?.();
-                                    handleDeleteAllForType(type.name);
-                                  } : undefined}
-                                  deleteIcon={
-                                    isDeleting
-                                      ? <CircularProgress size={12} sx={{ color: 'hsl(var(--muted-foreground))' }} />
-                                      : <DeleteIcon
-                                          sx={{ fontSize: 14 }}
-                                          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                                        />
-                                  }
-                                  sx={{
-                                    fontVariantNumeric: 'tabular-nums',
-                                    fontWeight: 600,
-                                    height: 22,
-                                    borderColor: 'hsl(var(--border))',
-                                    color: 'hsl(var(--muted-foreground))',
-                                    '& .MuiChip-icon': { color: 'hsl(var(--muted-foreground))' },
-                                    '& .MuiChip-deleteIcon': {
-                                      color: 'hsl(var(--muted-foreground))',
-                                      '&:hover': { color: 'hsl(var(--destructive))' },
-                                    },
-                                  }}
-                                />
-                              </Tooltip>
-                            );
-                          })() : (
-                            <Typography component="span" sx={{ color: 'text.disabled', fontSize: '0.75rem' }}>—</Typography>
-                          )}
-                        </TableCell>
                         <TableCell sx={{ py: 0.5 }}>
                           <Switch
                             size="small"
@@ -720,6 +661,75 @@ const IOCTypesPage = () => {
                           <IconButton size="small" onClick={() => handleDelete(type.name)} color="error">
                             <DeleteIcon fontSize="small" />
                           </IconButton>
+                        </TableCell>
+                        <TableCell align="right" sx={{ width: 150, py: 0.5 }}>
+                          {type.enabled ? (() => {
+                            const count = observableCounts ? observableCounts[type.name] : undefined;
+                            const showSpinner = countsLoading && count === undefined;
+                            const value = count ?? 0;
+                            const isDeleting = deletingType === type.name;
+                            const datastoreUrl = `https://shuffler.io/admin?tab=datastore&category=ioc_${encodeURIComponent(type.name)}`;
+                            return (
+                              <Tooltip
+                                title={
+                                  isDeleting
+                                    ? `Deleting… ${deletingProgress.toLocaleString()} removed so far`
+                                    : value > 0
+                                      ? `Open datastore "ioc_${type.name}" — click trash to delete all ${value.toLocaleString()}`
+                                      : `Open datastore "ioc_${type.name}" on shuffler.io`
+                                }
+                                arrow
+                              >
+                                <Chip
+                                  component="a"
+                                  href={datastoreUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  clickable
+                                  size="small"
+                                  variant="outlined"
+                                  icon={
+                                    isDeleting
+                                      ? <CircularProgress size={12} sx={{ color: 'hsl(var(--muted-foreground)) !important', ml: '6px !important' }} />
+                                      : <OpenInNewIcon sx={{ fontSize: 12, ml: '6px !important' }} />
+                                  }
+                                  label={
+                                    isDeleting
+                                      ? `Deleting… ${deletingProgress.toLocaleString()}`
+                                      : showSpinner ? '…' : value.toLocaleString()
+                                  }
+                                  onDelete={value > 0 && !isDeleting ? (e: any) => {
+                                    e?.preventDefault?.();
+                                    e?.stopPropagation?.();
+                                    handleDeleteAllForType(type.name);
+                                  } : undefined}
+                                  deleteIcon={
+                                    isDeleting
+                                      ? <CircularProgress size={12} sx={{ color: 'hsl(var(--muted-foreground))' }} />
+                                      : <DeleteIcon
+                                          sx={{ fontSize: 14 }}
+                                          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                                        />
+                                  }
+                                  sx={{
+                                    fontVariantNumeric: 'tabular-nums',
+                                    fontWeight: 600,
+                                    height: 22,
+                                    borderColor: 'hsl(var(--border))',
+                                    color: 'hsl(var(--muted-foreground))',
+                                    '& .MuiChip-icon': { color: 'hsl(var(--muted-foreground))' },
+                                    '& .MuiChip-deleteIcon': {
+                                      color: 'hsl(var(--muted-foreground))',
+                                      '&:hover': { color: 'hsl(var(--destructive))' },
+                                    },
+                                  }}
+                                />
+                              </Tooltip>
+                            );
+                          })() : (
+                            <Typography component="span" sx={{ color: 'text.disabled', fontSize: '0.75rem' }}>—</Typography>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))
