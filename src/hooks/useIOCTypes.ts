@@ -9,7 +9,7 @@ import { getDatastoreByCategory, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/dat
 
 // OCSF-based observable type categories
 export const IOC_CATEGORIES = [
-  { id: 'common', label: 'Most Commonly Used', color: '#f59e0b' },
+  { id: 'common', label: 'Common', color: '#f59e0b' },
   { id: 'hash', label: 'Hash Values', color: '#8b5cf6' },
   { id: 'network', label: 'Network Artifacts', color: '#3b82f6' },
   { id: 'file', label: 'File Artifacts', color: '#10b981' },
