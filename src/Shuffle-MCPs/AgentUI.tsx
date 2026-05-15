@@ -3730,20 +3730,16 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       bgcolor: 'hsl(var(--muted) / 0.2)',
                     }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                        {detailedLimitReached ? (
-                          <WarningIcon sx={{ fontSize: 18, color: 'hsl(var(--severity-medium))' }} />
-                        ) : detailedStatus === 'FINISHED' ? (
+                        {detailedStatus === 'FINISHED' ? (
                           <CheckCircleIcon sx={{ fontSize: 18, color: 'hsl(142 70% 45%)' }} />
                         ) : (
                           <ErrorIcon sx={{ fontSize: 18, color: 'hsl(var(--destructive))' }} />
                         )}
                         <Typography sx={{ fontSize: '0.9rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-                          {detailedLimitReached ? 'Run stopped — limit reached' : detailedStatus === 'FINISHED' ? 'Run finished' : `Run ${detailedStatus.toLowerCase()}`}
+                          {detailedStatus === 'FINISHED' ? 'Run finished' : `Run ${detailedStatus.toLowerCase()}`}
                         </Typography>
                       </Box>
-                      {limitDiagnosis ? (
-                        <AgentLimitWarning diagnosis={limitDiagnosis} />
-                      ) : finishAnswer && (
+                      {finishAnswer && (
                         <Box sx={{
                           p: 2, borderRadius: 1.5,
                           border: '1px solid hsl(var(--border))',
