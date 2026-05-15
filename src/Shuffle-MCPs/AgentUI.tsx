@@ -401,25 +401,19 @@ const StatusIcon: React.FC<{ status?: string }> = ({ status }) => {
 const AgentLimitWarning: React.FC<{ diagnosis: OutputDiagnosis }> = ({ diagnosis }) => (
   <Box sx={{
     display: 'flex',
-    alignItems: 'flex-start',
-    gap: 1.25,
-    p: 2,
-    borderRadius: 1.5,
-    border: '1px solid hsl(var(--severity-medium) / 0.45)',
-    bgcolor: 'hsl(var(--severity-medium) / 0.1)',
+    alignItems: 'center',
+    gap: 1,
+    px: 1.25,
+    py: 0.75,
+    borderRadius: 1,
+    border: '1px solid hsl(var(--severity-medium) / 0.35)',
+    bgcolor: 'hsl(var(--severity-medium) / 0.08)',
   }}>
-    <WarningIcon sx={{ color: 'hsl(var(--severity-medium))', fontSize: 22, mt: 0.1 }} />
-    <Box sx={{ minWidth: 0 }}>
-      <Typography sx={{ fontSize: '0.92rem', fontWeight: 700, color: 'hsl(var(--foreground))', mb: 0.5 }}>
-        {diagnosis.title}
-      </Typography>
-      <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))', lineHeight: 1.55, mb: 0.75 }}>
-        {diagnosis.explanation}
-      </Typography>
-      <Typography sx={{ fontSize: '0.78rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
-        {diagnosis.remediation}
-      </Typography>
-    </Box>
+    <WarningIcon sx={{ color: 'hsl(var(--severity-medium))', fontSize: 16, flexShrink: 0 }} />
+    <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--foreground))', lineHeight: 1.4 }}>
+      <Box component="span" sx={{ fontWeight: 600 }}>{diagnosis.title}.</Box>{' '}
+      <Box component="span" sx={{ color: 'hsl(var(--muted-foreground))' }}>{diagnosis.remediation}</Box>
+    </Typography>
   </Box>
 );
 

@@ -47,7 +47,8 @@ import {
   type AgentRun,
   type AgentScheduleWorkflow,
 } from './agentActivity';
-import { Pencil, StopCircle } from 'lucide-react';
+import { diagnoseOutputWarning } from './agentDiagnosis';
+import { Pencil, StopCircle, AlertTriangle } from 'lucide-react';
 
 // ── Status / icon helpers ────────────────────────────────────────────────────
 
@@ -62,6 +63,22 @@ const STATUS_CONFIG: Record<
   EXECUTING: { icon: <Loader2 size={16} />, color: 'hsl(var(--severity-medium, 38 92% 50%))', label: 'Running' },
   RUNNING: { icon: <Loader2 size={16} />, color: 'hsl(var(--severity-medium, 38 92% 50%))', label: 'Running' },
   WAITING: { icon: <Clock size={16} />, color: 'hsl(var(--severity-info, 217 91% 60%))', label: 'Waiting' },
+  LIMIT_REACHED: { icon: <AlertTriangle size={16} />, color: 'hsl(var(--severity-medium, 38 92% 50%))', label: 'Limit reached' },
+};
+
+/** Returns a synthetic "LIMIT_REACHED" status when the run finished but its
+ *  output indicates an AI token-limit hit. Otherwise returns the raw status. */
+const getEffectiveStatus = (run: AgentRun): string => {
+  const raw = (run.status || '').toUpperCase();
+  if (raw === 'FINISHED' || raw === 'SUCCESS' || raw === 'FAILED' || raw === 'ABORTED') {
+    try {
+      const d = diagnoseOutputWarning(run as any);
+      if (d?.kind === 'token_limit') return 'LIMIT_REACHED';
+    } catch {
+      // ignore
+    }
+  }
+  return raw;
 };
 
 const getRunIcon = (run: AgentRun): React.ReactNode => {
@@ -76,9 +93,10 @@ const getRunIcon = (run: AgentRun): React.ReactNode => {
 };
 
 const getRunIconColor = (run: AgentRun): string => {
-  const status = (run.status || '').toUpperCase();
+  const status = getEffectiveStatus(run);
   if (status === 'FINISHED' || status === 'SUCCESS') return 'hsl(var(--severity-low, 142 71% 45%))';
   if (status === 'FAILED' || status === 'ABORTED') return 'hsl(var(--severity-critical, 0 72% 55%))';
+  if (status === 'LIMIT_REACHED') return 'hsl(var(--severity-medium, 38 92% 50%))';
   if (status === 'EXECUTING' || status === 'RUNNING') return 'hsl(var(--severity-medium, 38 92% 50%))';
   return 'hsl(var(--primary, 24 100% 50%))';
 };
@@ -179,7 +197,7 @@ interface RunRowProps {
 }
 
 const AgentRunRow = ({ run, onClick, sx }: RunRowProps) => {
-  const statusKey = (run.status || '').toUpperCase();
+  const statusKey = getEffectiveStatus(run);
   const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.WAITING;
   const iconColor = getRunIconColor(run);
   const duration = formatDuration(run);
