@@ -390,24 +390,7 @@ export const diagnoseOutputWarning = (run: DiagnosableRun): OutputDiagnosis | nu
     };
   }
 
-  if (
-    TOKEN_LIMIT_PATTERN.test(lower)
-  ) {
-    const ev = findEvidenceByRegex(
-      TOKEN_LIMIT_PATTERN
-    );
-    return {
-      kind: 'token_limit',
-      status,
-      title: 'AI token limit reached',
-      explanation:
-        'The agent stopped because the prompt, context, and generated output exceeded the configured AI token limit.',
-      remediation:
-        'Reduce the input size or connected context and re-run, or connect an API vendor/self-hosted model with a higher limit.',
-      snippet: findSnippet(['ai token limit', 'token limit', 'limit reached', 'context limit', 'context length', 'too many tokens']),
-      evidence: withStatusEvidence(ev),
-    };
-  }
+  // Token-limit is detected at the top of this function (full-payload scan).
 
   if (
     status === 404 ||
