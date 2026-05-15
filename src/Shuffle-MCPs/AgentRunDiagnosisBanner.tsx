@@ -10,8 +10,8 @@
  * has already dismissed the banner for this execution id.
  */
 
-import { Box, IconButton, Tooltip, Typography } from '@mui/material';
-import { AlertTriangle, ArrowUpRight, HelpCircle, X } from 'lucide-react';
+import { Box, Button, IconButton, Tooltip, Typography } from '@mui/material';
+import { AlertTriangle, ArrowUpRight, ExternalLink, HelpCircle, Settings2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
   diagnoseOutputWarning,
@@ -160,6 +160,68 @@ const AgentRunDiagnosisBanner = ({ run, sx, onJumpToEvidence, executionId }: Pro
         >
           {message}
         </Typography>
+        {diagnosis?.kind === 'token_limit' && (
+          <>
+            <Tooltip title="Configure your own LLM vendor (OpenAI-compatible endpoint)" placement="top" arrow>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<Settings2 size={12} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.dispatchEvent(
+                    new CustomEvent('agent-drawer-open', { detail: { tab: 'localLLM' } }),
+                  );
+                }}
+                sx={{
+                  flexShrink: 0,
+                  textTransform: 'none',
+                  fontSize: '0.7rem',
+                  py: 0.1,
+                  px: 0.75,
+                  minHeight: 22,
+                  lineHeight: 1.2,
+                  borderColor: `hsla(var(--severity-${tone}) / 0.4)`,
+                  color: 'hsl(var(--foreground))',
+                  '&:hover': {
+                    borderColor: `hsl(var(--severity-${tone}))`,
+                    bgcolor: `hsla(var(--severity-${tone}) / 0.08)`,
+                  },
+                }}
+              >
+                Use your own LLM
+              </Button>
+            </Tooltip>
+            <Tooltip title="Contact Shuffle Support to get more tokens" placement="top" arrow>
+              <Button
+                size="small"
+                variant="outlined"
+                endIcon={<ExternalLink size={12} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open('https://shuffler.io/contact?category=Support', '_blank', 'noopener,noreferrer');
+                }}
+                sx={{
+                  flexShrink: 0,
+                  textTransform: 'none',
+                  fontSize: '0.7rem',
+                  py: 0.1,
+                  px: 0.75,
+                  minHeight: 22,
+                  lineHeight: 1.2,
+                  borderColor: `hsla(var(--severity-${tone}) / 0.4)`,
+                  color: 'hsl(var(--foreground))',
+                  '&:hover': {
+                    borderColor: `hsl(var(--severity-${tone}))`,
+                    bgcolor: `hsla(var(--severity-${tone}) / 0.08)`,
+                  },
+                }}
+              >
+                Get more tokens
+              </Button>
+            </Tooltip>
+          </>
+        )}
         {canJump && (
           <Tooltip title={`Open Decision #${(jumpDecisionIndex ?? 0) + 1} in detailed timeline`} placement="top" arrow>
             <ArrowUpRight
