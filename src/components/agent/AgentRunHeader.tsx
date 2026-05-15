@@ -84,7 +84,15 @@ export const getTimeAgo = (dateStr: string): string => {
   try {
     const date = isNaN(Number(dateStr)) ? new Date(dateStr) : new Date(Number(dateStr) * 1000);
     if (isNaN(date.getTime())) return dateStr;
-    return formatDistanceToNow(date, { addSuffix: true });
+    // Compact form ("5m ago", "2h ago") to match the rest of the timeline.
+    // The verbose date-fns output ("about 16 minutes ago") overflows the
+    // narrow Timeline sidebar and reads inconsistently next to other rows.
+    const ms = Date.now() - date.getTime();
+    if (ms < 0) return 'just now';
+    if (ms < 60_000) return `${Math.max(1, Math.floor(ms / 1000))}s ago`;
+    if (ms < 3_600_000) return `${Math.floor(ms / 60_000)}m ago`;
+    if (ms < 86_400_000) return `${Math.floor(ms / 3_600_000)}h ago`;
+    return `${Math.floor(ms / 86_400_000)}d ago`;
   } catch {
     return dateStr;
   }
