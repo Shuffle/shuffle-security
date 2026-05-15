@@ -394,6 +394,17 @@ const refangUrl = (defanged: string): string =>
 
 const FALLBACK_IOC_URLS = FALLBACK_IOC_URLS_DEFANGED.map(refangUrl);
 
+/** Marker query param appended to every fallback URL so support users can
+ *  spot a non-live IOC at a glance — same `demo-fallback=true` convention
+ *  used in the incident URL. Applied here once so the email body, observable
+ *  list, and the STIX indicator we mirror into `ioc_url` all stay in sync. */
+export const DEMO_FALLBACK_URL_PARAM = 'demo-fallback=true';
+const tagFallbackUrl = (url: string): string => {
+  if (!url) return url;
+  if (url.includes('demo-fallback=')) return url;
+  return url.includes('?') ? `${url}&${DEMO_FALLBACK_URL_PARAM}` : `${url}?${DEMO_FALLBACK_URL_PARAM}`;
+};
+
 /** Extract the host portion of a URL (best-effort). Returns undefined when
  *  the input is not a parseable absolute URL. */
 const extractHost = (url: string): string | undefined => {
