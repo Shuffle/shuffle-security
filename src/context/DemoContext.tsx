@@ -513,7 +513,9 @@ export const DemoProvider = ({ children }: { children: ReactNode }) => {
       viewedStepsRef.current = new Set();
       completedStepsGARef.current = new Set();
       trackPredefinedEvent(GA_EVENTS.DEMO_START);
-      navigateForStep(0);
+      // Step 1/9 (intro) is page-agnostic — leave the user on whatever page
+      // they opened the demo from. Subsequent steps still navigate via
+      // `navigateForStep` when the user advances.
       // Make the environment "live": generate ingest + threat-intel
       // workflows and seed Threat Feeds + IOC Types defaults. The
       // indicator pipeline (1 → 2 → 3 → 4) runs sequentially inside
