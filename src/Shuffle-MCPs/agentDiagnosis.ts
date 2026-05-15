@@ -144,7 +144,7 @@ const getDiagnosableScope = (parsed: any): unknown => {
  *  Returns null if the path does not start at a decision row. */
 export const extractDecisionIndex = (path: string | undefined | null): number | null => {
   if (!path) return null;
-  const m = /^run_details\[(\d+)\]/.exec(path);
+  const m = /^(?:run_details|decisions)\[(\d+)\]/.exec(path);
   if (!m) return null;
   const n = Number(m[1]);
   return Number.isFinite(n) ? n : null;
