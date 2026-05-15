@@ -668,7 +668,8 @@ const IOCTypesPage = () => {
                             const count = observableCounts ? observableCounts[type.name] : undefined;
                             const showSpinner = countsLoading && count === undefined;
                             const value = count ?? 0;
-                            const isDeleting = deletingType === type.name;
+                            const deletingProgress = deletingProgressByType[type.name];
+                            const isDeleting = deletingProgress !== undefined;
                             const datastoreUrl = `https://shuffler.io/admin?tab=datastore&category=ioc_${encodeURIComponent(type.name)}`;
                             return (
                               <Tooltip
