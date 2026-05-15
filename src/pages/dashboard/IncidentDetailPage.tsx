@@ -8235,28 +8235,6 @@ const IncidentDetailPage = () => {
                             {formatObsTime(firstSeen)}
                           </Typography>
                         )}
-                        <Tooltip
-                          title={`"${actionName}" is not enabled for your organization yet — we will be turning this on in a future update.`}
-                          arrow
-                        >
-                          {/* Span wrapper lets the tooltip still fire on a disabled IconButton. */}
-                          <span>
-                            <IconButton
-                              size="small"
-                              disabled
-                              onClick={(e) => e.stopPropagation()}
-                              sx={{
-                                p: 0.5,
-                                color: 'hsl(var(--muted-foreground))',
-                                '&.Mui-disabled': {
-                                  color: 'hsl(var(--muted-foreground) / 0.5)',
-                                },
-                              }}
-                            >
-                              <SearchIcon sx={{ fontSize: 16 }} />
-                            </IconButton>
-                          </span>
-                        </Tooltip>
                         {/* Ignore / unignore — per-org list of uninteresting
                             observables, persisted in the `ignored-observables`
                             datastore category. Hidden by default in the list. */}
@@ -8297,6 +8275,10 @@ const IncidentDetailPage = () => {
                             <DeleteIcon fontSize="small" />
                           </IconButton>
                         )}
+                        {/* Lookup dropdown — pinned to the far right so it
+                            always sits at the trailing edge of the row,
+                            regardless of which other actions are available. */}
+                        <ObservableLookupMenu type={obs.type} value={obs.value} />
                       </Box>
                       {/* Expanded detail panel */}
 
