@@ -2630,7 +2630,8 @@ const IncidentDetailPage = () => {
   // the user can poke at it without leaving the row.
   const refetchObsCorrelation = useCallback(async (obs: { type: string; value: string }) => {
     if (!obs?.value) return;
-    const obsKey = `${obs.type}::${obs.value}`;
+    const lowerValue = String(obs.value || '').toLowerCase();
+    const obsKey = `${String(obs.type || '').toLowerCase()}::${lowerValue}`;
     const noiseKeys = new Set([
       'new', 'in_progress', 'resolved', 'escalated', 'closed', 'open', 'pending',
       'critical', 'high', 'medium', 'low', 'informational', 'info', 'warning', 'error',
@@ -2643,7 +2644,7 @@ const IncidentDetailPage = () => {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...getAuthHeader(), ...crossOrgHeaders },
-        body: JSON.stringify({ type: 'value', key: obs.value }),
+        body: JSON.stringify({ type: 'value', key: lowerValue }),
       });
       if (resp.ok) {
         const data = await resp.json();
