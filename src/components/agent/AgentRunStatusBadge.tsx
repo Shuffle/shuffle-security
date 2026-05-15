@@ -179,7 +179,7 @@ const AgentRunStatusBadge = ({ run, skip, statusCfg, compact = false, maxWidth =
             borderRadius: 999,
             px,
             py: 0.1,
-            maxWidth: 280,
+            maxWidth,
           }}
         >
           <AlertTriangleIcon size={11} style={{ color: 'hsl(var(--severity-medium))', flexShrink: 0 }} />
