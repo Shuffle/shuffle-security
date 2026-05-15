@@ -7409,19 +7409,19 @@ const IncidentDetailPage = () => {
           {/* Inline Timeline — the heart of the Details tab. Renders the same
               comment input + unified feed as the right sidebar, but styled
               with a vertical rail so the chronology reads at a glance. */}
-          <Box
-            data-tour="incident-activity-feed"
-            sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              bgcolor: 'hsl(var(--card))',
-              borderRadius: 2,
-              border: '1px solid hsl(var(--border))',
-              overflow: 'hidden',
-              ...(isPublicView ? { pointerEvents: 'none' } : {}),
-            }}
-          >
-            {renderTimelinePanel('inline')}
+          <Box sx={isPublicView ? { pointerEvents: 'none' } : undefined}>
+            <IncidentSection
+              title="Timeline"
+              icon={HistoryIcon}
+              open={!timelineCollapsed}
+              onOpenChange={(o) => setTimelineCollapsed(!o)}
+              badge={renderTimelineBadge()}
+              actions={renderTimelineActionsChip()}
+              bodyPadded={false}
+              dataTour="incident-activity-feed"
+            >
+              {renderTimelinePanel('inline')}
+            </IncidentSection>
           </Box>
           </Box>
 
