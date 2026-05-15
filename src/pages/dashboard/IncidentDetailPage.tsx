@@ -529,7 +529,7 @@ const IncidentDetailPage = () => {
   });
   const { id: rawId } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { plural: entityPlural, singular: entitySingular, basePath: entityBasePath } = useEntityLabel();
   const t = useEntityText();
   const taskStatuses = useTaskStatuses();
@@ -569,6 +569,24 @@ const IncidentDetailPage = () => {
 
   const [incident, setIncident] = useState<DisplayIncident | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // When a demo incident was seeded with static fallback IOCs (because the
+  // live `ioc_*` datastore categories were empty at seed time), the seeder
+  // sets `metadata.extensions.custom_attributes.demoFallback = true` on the
+  // incident. Surface that fact in the URL as `?demo-fallback=true` so it is
+  // obvious from the address bar that the visible IOCs are static fallbacks
+  // rather than live indicators.
+  useEffect(() => {
+    if (!incident) return;
+    const usedFallback = !!incident.rawOCSF?.metadata?.extensions?.custom_attributes?.demoFallback;
+    const alreadyTagged = searchParams.get('demo-fallback') === 'true';
+    if (usedFallback && !alreadyTagged) {
+      const next = new URLSearchParams(searchParams);
+      next.set('demo-fallback', 'true');
+      setSearchParams(next, { replace: true });
+    }
+  }, [incident, searchParams, setSearchParams]);
+
   // Support-only debug capture for failed loads. Populated whenever loadIncident
   // ends without producing an incident, so support users can see why.
   const [loadDebug, setLoadDebug] = useState<{

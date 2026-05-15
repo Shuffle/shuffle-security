@@ -445,7 +445,7 @@ const extractIpFromStixValue = (value: unknown): string | undefined => {
 };
 
 const pickFallbackIocs = (): DemoIocOverrides => {
-  const out: DemoIocOverrides = {};
+  const out: DemoIocOverrides = { usedFallback: true };
   const ipKey = pickRandom(FALLBACK_IOC_IPS);
   if (ipKey) out.attackerIp = ipKey;
   const urlKey = pickRandom(FALLBACK_IOC_URLS);
@@ -458,6 +458,40 @@ const pickFallbackIocs = (): DemoIocOverrides => {
 };
 
 /**
+ * Build a minimal STIX 2.1 indicator object for a fallback URL and write it
+ * to the `ioc_url` datastore so the demo's Known-IOC machinery surfaces the
+ * URL exactly the same way as a live threat-feed entry. Best-effort —
+ * failures are logged and swallowed so they never block incident seeding.
+ */
+const seedFallbackUrlIndicator = async (url: string): Promise<void> => {
+  try {
+    const nowIso = new Date().toISOString();
+    const indicator = {
+      type: 'indicator',
+      spec_version: '2.1',
+      id: `indicator--demo-fallback-${Math.random().toString(36).slice(2, 10)}`,
+      created: nowIso,
+      modified: nowIso,
+      indicator_types: ['malicious-activity'],
+      pattern: `[url:value = '${url.replace(/'/g, "\\'")}']`,
+      pattern_type: 'stix',
+      valid_from: nowIso,
+      labels: ['demo-fallback'],
+      external_references: [
+        {
+          source_name: 'Shuffle Security Demo',
+          description: 'Static fallback IOC injected by demo mode (no live threat-feed indicator was available).',
+        },
+      ],
+    };
+    await setDatastoreItem(url, JSON.stringify(indicator), IOC_URL_CATEGORY);
+    broadcastRefresh(IOC_URL_CATEGORY);
+  } catch (err) {
+    console.warn('[demo] seedFallbackUrlIndicator failed', err);
+  }
+};
+
+/**
  * Pick a random IP from `ioc_ip` and a random URL from `ioc_url`.
  * If a category is empty (parser hasn't caught up yet), fall back to the
  * static pools above so the demo always gets some IOC variety. The lure
@@ -465,6 +499,7 @@ const pickFallbackIocs = (): DemoIocOverrides => {
  */
 export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
   const out: DemoIocOverrides = {};
+  let usedFallback = false;
   try {
     const ipRes = await getDatastoreByCategory(IOC_IP_CATEGORY);
     // Some threat-feed parsers store binary indicator IDs as keys, which
@@ -475,10 +510,12 @@ export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
           .map(i => looksLikeIp(i.key) ? i.key : extractIpFromStixValue((i as { value?: unknown }).value))
           .filter((v): v is string => looksLikeIp(v))
       : [];
+    if (liveIps.length === 0) usedFallback = true;
     const ipKey = pickRandom(liveIps.length > 0 ? liveIps : FALLBACK_IOC_IPS);
     if (ipKey) out.attackerIp = ipKey;
   } catch (err) {
     console.warn('[demo] pick ioc_ip failed', err);
+    usedFallback = true;
     const ipKey = pickRandom(FALLBACK_IOC_IPS);
     if (ipKey) out.attackerIp = ipKey;
   }
@@ -493,6 +530,7 @@ export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
           .map(i => looksLikeUrl(i.key) ? i.key : extractUrlFromStixValue((i as { value?: unknown }).value))
           .filter((v): v is string => looksLikeUrl(v))
       : [];
+    if (liveUrls.length === 0) usedFallback = true;
     const urlKey = pickRandom(liveUrls.length > 0 ? liveUrls : FALLBACK_IOC_URLS);
     if (urlKey) {
       out.lureUrl = urlKey;
@@ -501,6 +539,7 @@ export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
     }
   } catch (err) {
     console.warn('[demo] pick ioc_url failed', err);
+    usedFallback = true;
     const urlKey = pickRandom(FALLBACK_IOC_URLS);
     if (urlKey) {
       out.lureUrl = urlKey;
@@ -508,6 +547,7 @@ export const pickRandomIocs = async (): Promise<DemoIocOverrides> => {
       if (host) out.lureDomain = host;
     }
   }
+  if (usedFallback) out.usedFallback = true;
   return out;
 };
 
@@ -525,9 +565,14 @@ const resolveIocOverrides = async (): Promise<DemoIocOverrides> => {
     attackerIp: looksLikeIp(rawCached.attackerIp) ? rawCached.attackerIp : undefined,
     lureUrl: looksLikeUrl(rawCached.lureUrl) ? rawCached.lureUrl : undefined,
     lureDomain: rawCached.lureDomain && isPrintableAscii(rawCached.lureDomain) ? rawCached.lureDomain : undefined,
+    usedFallback: rawCached.usedFallback === true ? true : undefined,
   } : null;
   if (cached?.attackerIp && cached?.lureUrl && cached?.lureDomain) {
     if (JSON.stringify(cached) !== JSON.stringify(rawCached)) writeIocOverrides(cached);
+    // Re-seed the STIX indicator on every resolve when we are still on
+    // fallback values, so the `ioc_url` datastore reflects the URL the
+    // user is actually seeing in the incident.
+    if (cached.usedFallback && cached.lureUrl) void seedFallbackUrlIndicator(cached.lureUrl);
     return cached;
   }
   // Never block incident creation on the async threat-feed parser. Step 4
@@ -536,6 +581,9 @@ const resolveIocOverrides = async (): Promise<DemoIocOverrides> => {
   // Merge with whatever was cached (in case only one half resolved earlier).
   const merged: DemoIocOverrides = { ...cached, ...fresh };
   if (merged.attackerIp || merged.lureDomain) writeIocOverrides(merged);
+  // Mirror the static fallback URL into the `ioc_url` datastore as a STIX
+  // 2.1 indicator so Known-IOC chips light up exactly like a live feed.
+  if (merged.usedFallback && merged.lureUrl) void seedFallbackUrlIndicator(merged.lureUrl);
   void awaitPendingIndicators().then(() => pickRandomIocs().then(live => {
     const existing = readIocOverrides();
     if (!existing?.attackerIp || !existing?.lureUrl || !existing?.lureDomain) {

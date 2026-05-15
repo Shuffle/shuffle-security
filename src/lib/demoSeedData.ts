@@ -54,6 +54,8 @@ type RawInc = {
   types: string[];
   /** Shared values surface in the Correlations panel — keep these consistent across linked incidents. */
   observables?: { type: string; value: string }[];
+  /** When true, the seeder used static fallback IOCs instead of live ones from the threat feeds. Surfaces as `metadata.extensions.custom_attributes.demoFallback` on the incident so the UI can flag it (e.g. via `?demo-fallback=true` in the URL). */
+  usedFallback?: boolean;
 };
 
 const toIncident = (item: RawInc): { key: string; value: OCSFIncidentFinding } => {
@@ -98,6 +100,7 @@ const toIncident = (item: RawInc): { key: string; value: OCSFIncidentFinding } =
         extensions: {
           custom_attributes: {
             ...(demoMeta(findingUid).extensions.custom_attributes),
+            ...(item.usedFallback ? { demoFallback: true } : {}),
           },
         },
       },
@@ -164,6 +167,8 @@ export interface DemoIocOverrides {
   lureDomain?: string;
   /** Full lure URL — ideally a key pulled from the `ioc_url` datastore category. */
   lureUrl?: string;
+  /** True when one or more of the IOCs above came from the static fallback pool instead of the live `ioc_*` datastore categories. Surfaces on the incident via `metadata.extensions.custom_attributes.demoFallback` and ultimately as `?demo-fallback=true` in the URL. */
+  usedFallback?: boolean;
 }
 
 /**
@@ -254,6 +259,7 @@ IT Support Team`,
       { type: 'domain', value: lureDomain },
       { type: 'ip', value: attackerIp },
     ],
+    usedFallback: overrides.usedFallback,
   });
 };
 
@@ -290,6 +296,7 @@ export const buildDemoWazuhImplantIncident = (overrides: DemoIocOverrides = {}):
       { type: 'cve', value: 'CVE-2024-5274' },
       { type: 'tool_name', value: 'Sliver' },
     ],
+    usedFallback: overrides.usedFallback,
   });
 };
 
