@@ -54,6 +54,8 @@ type RawInc = {
   types: string[];
   /** Shared values surface in the Correlations panel — keep these consistent across linked incidents. */
   observables?: { type: string; value: string }[];
+  /** When true, the seeder used static fallback IOCs instead of live ones from the threat feeds. Surfaces as `metadata.extensions.custom_attributes.demoFallback` on the incident so the UI can flag it (e.g. via `?demo-fallback=true` in the URL). */
+  usedFallback?: boolean;
 };
 
 const toIncident = (item: RawInc): { key: string; value: OCSFIncidentFinding } => {
