@@ -1308,15 +1308,13 @@ const IncidentsPage = () => {
   }, [hasFetched, incidents, resyncingId, fetchItems]);
 
   // Active incident list based on irrelevant toggle.
-  // While Demo Mode is active we hide all non-demo incidents so the user can
-  // focus on the seeded scenario without their real data muddying the view.
-  // Demo incidents are stable: their datastore key (and `id`) starts with
-  // `demo-` (see services/demoMode.ts).
+  // Demo incidents are surfaced as if they were real ones — no demo-only
+  // filtering — so the page state stays consistent whether or not Demo Mode
+  // is active. The user can still distinguish them by the `demo-` id prefix
+  // and remove them via "Clean up demo data" on the dashboard.
   const activeIncidents = useMemo(() => {
-    const base = showIrrelevant ? incidents : relevantIncidents;
-    if (!demoActive) return base;
-    return base.filter(i => typeof i.id === 'string' && i.id.startsWith('demo-'));
-  }, [showIrrelevant, incidents, relevantIncidents, demoActive]);
+    return showIrrelevant ? incidents : relevantIncidents;
+  }, [showIrrelevant, incidents, relevantIncidents]);
 
   // Filter incidents
   const filteredByAssignee = useMemo(() => {
