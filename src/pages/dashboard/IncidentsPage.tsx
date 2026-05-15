@@ -1777,6 +1777,33 @@ const IncidentsPage = () => {
   const primaryFetchFailed = !!error;
   const subOrgDataAvailable = subOrgItems.size > 0 && Array.from(subOrgItems.values()).some(v => v.items.length > 0);
 
+  // Show a stable loader on initial fetch so we don't flicker between
+  // the list view (with stale/demo items) and the "No incidents yet" empty state.
+  if (!hasFetched && !demoActive && !error) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', py: 16, gap: 2 }}>
+        <Box
+          aria-label="Loading incidents"
+          sx={{
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            border: '3px solid hsl(var(--primary) / 0.22)',
+            borderTopColor: 'hsl(var(--primary))',
+            animation: 'incidentsInitialSpin 0.8s linear infinite',
+            '@keyframes incidentsInitialSpin': {
+              '0%': { transform: 'rotate(0deg)' },
+              '100%': { transform: 'rotate(360deg)' },
+            },
+          }}
+        />
+        <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+          Loading {entityPlural.toLowerCase()}…
+        </Typography>
+      </Box>
+    );
+  }
+
   // During the demo tour, always render the full incidents UI (with seeded
   // demo data) instead of the empty state, so users see the real layout.
   if (hasFetched && !isLoading && !isRefreshing && !hasAnyIncidents && !(primaryFetchFailed && subOrgDataAvailable) && !demoActive) {
