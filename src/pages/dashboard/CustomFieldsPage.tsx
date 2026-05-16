@@ -142,7 +142,7 @@ const CustomFieldsPage = () => {
         <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>
       )}
 
-      <Card>
+      <Card elevation={0} sx={{ bgcolor: 'transparent', backgroundImage: 'none', border: '1px solid hsl(var(--border))' }}>
         <CardContent sx={{ p: 0 }}>
           <TableContainer>
             <Table>
