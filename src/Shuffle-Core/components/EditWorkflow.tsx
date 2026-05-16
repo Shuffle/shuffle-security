@@ -785,7 +785,7 @@ const EditWorkflow = (props) => {
 							}}
 							InputProps={{
 								style: {
-									color: theme.palette.textFieldStyle.color,
+									color: "hsl(var(--foreground))",
 								},
 							}}
 							color="primary"
@@ -868,7 +868,7 @@ const EditWorkflow = (props) => {
 																setUpdate(Math.random());
 																setSelectedUsecases(selectedUsecases)
 															}}>
-																<Checkbox style={{ color: selectedUsecases.includes(subcase.name) ? usecase.color : theme.palette.inputColor }} checked={selectedUsecases.includes(subcase.name)} />
+																<Checkbox style={{ color: selectedUsecases.includes(subcase.name) ? usecase.color : "hsl(var(--input))" }} checked={selectedUsecases.includes(subcase.name)} />
 																<ListItemText primary={subcase.name} />
 															</MenuItem>
 														)
@@ -883,7 +883,7 @@ const EditWorkflow = (props) => {
 								style={{ flex: 1, maxHeight: 120, overflow: "auto", }}
 								InputProps={{
 									style: {
-										color: theme.palette.textFieldStyle.color,
+										color: "hsl(var(--foreground))",
 									},
 								}}
 								placeholder="Tags"
@@ -926,15 +926,15 @@ const EditWorkflow = (props) => {
 								{!uploadedImage ? (
 									<div
 										style={{
-											border: `1px solid ${theme.palette.primary.main}`,
+											border: `1px solid ${"hsl(var(--primary))"}`,
 											borderRadius: 8,
 											padding: 20,
 											textAlign: 'center',
 											cursor: 'pointer',
 											transition: 'all 0.2s ease',
-											backgroundColor: theme.palette.surfaceColor,
+											backgroundColor: "hsl(var(--card))",
 											'&:hover': {
-												backgroundColor: theme.palette.primary.main + '10'
+												backgroundColor: "hsl(var(--primary) / 0.1)"
 											}
 										}}
 										onClick={() => {
@@ -958,7 +958,7 @@ const EditWorkflow = (props) => {
 											</div>
 										) : (
 											<div>
-												<CloudUploadIcon size={48} style={{color: theme.palette.secondary || '#666',
+												<CloudUploadIcon size={48} style={{color: "hsl(var(--primary))",
 														marginBottom: 10}} 
 												/>
 												<Typography variant="h6" style={{ marginBottom: 5 }}>
@@ -976,17 +976,17 @@ const EditWorkflow = (props) => {
 								) : (
 									<div
 										style={{
-											border: `1px solid ${theme.palette.primary.main}`,
+											border: `1px solid ${"hsl(var(--primary))"}`,
 											borderRadius: 8,
 											padding: 15,
-											backgroundColor: theme.palette.primary.main + '10',
+											backgroundColor: "hsl(var(--primary) / 0.1)",
 											display: 'flex',
 											alignItems: 'center',
 											gap: 15
 										}}
 									>
 										<div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10 }}>
-											<CheckCircleIcon style={{ color: theme.palette.success.main }} />
+											<CheckCircleIcon style={{ color: "hsl(var(--severity-low))" }} />
 											<div>
 												<Typography variant="body2" style={{ fontWeight: 'bold' }}>
 													{uploadedImage.name}
@@ -998,7 +998,7 @@ const EditWorkflow = (props) => {
 										</div>
 										<IconButton 
 											onClick={removeUploadedImage}
-											style={{ color: theme.palette.text.secondary }}
+											style={{ color: "hsl(var(--muted-foreground))" }}
 											size="small"
 										>
 											<CloseIcon />
@@ -1094,11 +1094,11 @@ const EditWorkflow = (props) => {
 
 									userdata.orgs.filter(org => org.creator_org === userdata.active_org.id).length === 0 ?
 										userdata.active_org.creator_org === undefined || userdata.active_org.creator_org === null || userdata.active_org.creator_org === "" ?
-											<Typography variant="body2" style={{ marginTop: 10, color: "rgba(255,255,255,0.7)" }}>
+											<Typography variant="body2" style={{ marginTop: 10, color: "hsl(var(--muted-foreground))" }}>
 												Your organization does not have any suborgs yet OR your user may not have access to available suborgs. Please <a href="/admin?tab=tenants" style={{ textDecoration: "none", color: "#f86a3e" }} target="_blank">make one</a> or get access to suborgs by another admin, then try again.
 											</Typography>
 											:
-											<Typography variant="body2" style={{ marginTop: 10, color: "rgba(255,255,255,0.7)" }}>
+											<Typography variant="body2" style={{ marginTop: 10, color: "hsl(var(--muted-foreground))" }}>
 												{innerWorkflow.parentorg_workflow !== undefined && innerWorkflow.parentorg_workflow !== null && innerWorkflow.parentorg_workflow.length > 0 ? <span>This workflow is distributed from <a href={`/workflows/${innerWorkflow.parentorg_workflow}`} style={{ textDecoration: "none", color: "#f86a3e" }} target="_blank">your parent workflow</a> (you may not have access).</span> : null}
 												<br />
 												<br />
