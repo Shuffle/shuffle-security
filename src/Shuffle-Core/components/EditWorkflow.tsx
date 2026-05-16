@@ -89,6 +89,21 @@ const EditWorkflow = (props) => {
 	const [_, setUpdate] = React.useState(""); // Used for rendering, don't remove
 	const {themeMode, brandColor} = useContext(Context)
 	const theme = getTheme(themeMode, brandColor)
+	function cloneArray(value) {
+		return Array.isArray(value) ? JSON.parse(JSON.stringify(value)) : []
+	}
+	function normalizeSelectValues(value) {
+		return Array.isArray(value) ? value.filter(Boolean) : String(value || "").split(",").filter(Boolean)
+	}
+	function normalizeActionIds(value) {
+		return normalizeSelectValues(value).filter((item) => item !== "none")
+	}
+	function getWorkflowActions() {
+		return Array.isArray(innerWorkflow?.actions) ? innerWorkflow.actions : Array.isArray(workflow?.actions) ? workflow.actions : []
+	}
+	function getWorkflowFormWidthValue(targetWorkflow, fallbackWidth = 500) {
+		return targetWorkflow?.form_control?.form_width !== undefined && targetWorkflow?.form_control?.form_width !== null ? targetWorkflow.form_control.form_width : (fallbackWidth === undefined || fallbackWidth === null ? 500 : fallbackWidth)
+	}
 	const [submitLoading, setSubmitLoading] = React.useState(false);
 	const [aiGenerateLoading, setAiGenerateLoading] = React.useState(false);
 	const [showMoreClicked, setShowMoreClicked] = React.useState(isEditing !== false ? true : false);
@@ -107,10 +122,49 @@ const EditWorkflow = (props) => {
 	const [inputQuestions, setInputQuestions] = React.useState(workflow.input_questions !== undefined && workflow.input_questions !== null ? JSON.parse(JSON.stringify(workflow.input_questions)) : [])
 	const [inputMarkdown, setInputMarkdown] = React.useState(workflow?.form_control?.input_markdown !== undefined && workflow?.form_control?.input_markdown !== null ? workflow?.form_control?.input_markdown : "")
 	const [scrollDone, setScrollDone] = React.useState(false)
-	const [selectedYieldActions, setSelectedYieldActions] = React.useState(workflow?.form_control?.output_yields !== undefined && workflow?.form_control?.output_yields !== null ? JSON.parse(JSON.stringify(workflow?.form_control?.output_yields)) : [])
-	const [selectedCleanupActions, setSelectedCleanupActions] = React.useState(workflow?.form_control?.cleanup_actions !== undefined && workflow?.form_control?.cleanup_actions !== null ? JSON.parse(JSON.stringify(workflow?.form_control?.cleanup_actions)) : [])
+	const [selectedYieldActions, setSelectedYieldActions] = React.useState(normalizeActionIds(workflow?.form_control?.output_yields))
+	const [selectedCleanupActions, setSelectedCleanupActions] = React.useState(normalizeActionIds(workflow?.form_control?.cleanup_actions))
 
-	const [formWidth, setFormWidth] = React.useState(boxWidth === undefined || boxWidth === null ? 500 : boxWidth)
+	const [formWidth, setFormWidth] = React.useState(getWorkflowFormWidthValue(workflow, boxWidth))
+	const updateInnerWorkflow = (updater) => {
+		setInnerWorkflow((current) => {
+			const next = { ...(current || {}) }
+			updater(next)
+			return next
+		})
+		setUpdate(Math.random())
+	}
+	const getValidInputQuestions = () => cloneArray(inputQuestions).filter((question) => question?.deleted !== true && question?.value !== undefined && question?.value !== null && question.value.length > 0)
+	const buildWorkflowForSave = () => {
+		const nextWorkflow = {
+			...(innerWorkflow || {}),
+			form_control: { ...(innerWorkflow?.form_control || {}) },
+			backup_config: { ...(innerWorkflow?.backup_config || {}) },
+		}
+
+		nextWorkflow.input_questions = getValidInputQuestions()
+		nextWorkflow.form_control.input_markdown = inputMarkdown
+		nextWorkflow.form_control.output_yields = normalizeActionIds(selectedYieldActions)
+		nextWorkflow.form_control.form_width = formWidth
+		nextWorkflow.form_control.cleanup_actions = normalizeActionIds(selectedCleanupActions)
+		nextWorkflow.name = name
+		nextWorkflow.description = description
+		nextWorkflow.tags = cloneArray(newWorkflowTags)
+		nextWorkflow.usecase_ids = cloneArray(selectedUsecases)
+
+		if (dueDate !== undefined && dueDate !== null) {
+			if (typeof dueDate.unix === "function") {
+				nextWorkflow.due_date = dueDate.unix()
+			} else if (dueDate > 0) {
+				nextWorkflow.due_date = new Date(`${dueDate["$y"]}-${dueDate["$M"] + 1}-${dueDate["$D"]}`).getTime() / 1000
+			}
+		}
+
+		if (setWorkflow !== undefined) {
+			setWorkflow(nextWorkflow)
+		}
+		return nextWorkflow
+	}
 	
 	// Flowchart upload states
 	const [uploadedImage, setUploadedImage] = React.useState(null)
@@ -124,6 +178,25 @@ const EditWorkflow = (props) => {
 			setBoxWidth(formWidth)
 		}
 	}, [formWidth])
+
+	useEffect(() => {
+		if (modalOpen !== true) {
+			return
+		}
+
+		const nextWorkflow = workflow || {}
+		setInnerWorkflow(nextWorkflow)
+		setNewWorkflowTags(cloneArray(nextWorkflow.tags))
+		setDescription(nextWorkflow.description !== undefined ? nextWorkflow.description : "")
+		setSelectedUsecases(cloneArray(nextWorkflow.usecase_ids))
+		setName(nextWorkflow.name !== undefined ? nextWorkflow.name : "")
+		setDueDate(nextWorkflow.due_date !== undefined && nextWorkflow.due_date !== null && nextWorkflow.due_date !== 0 ? dayjs(nextWorkflow.due_date * 1000) : dayjs().subtract(1, 'day'))
+		setInputQuestions(cloneArray(nextWorkflow.input_questions))
+		setInputMarkdown(nextWorkflow?.form_control?.input_markdown !== undefined && nextWorkflow?.form_control?.input_markdown !== null ? nextWorkflow.form_control.input_markdown : "")
+		setSelectedYieldActions(normalizeActionIds(nextWorkflow?.form_control?.output_yields))
+		setSelectedCleanupActions(normalizeActionIds(nextWorkflow?.form_control?.cleanup_actions))
+		setFormWidth(getWorkflowFormWidthValue(nextWorkflow, boxWidth))
+	}, [modalOpen, workflow?.id])
 
 	// Handle file upload and base64 conversion
 	const handleImageUpload = (file) => {
@@ -214,36 +287,37 @@ const EditWorkflow = (props) => {
 			.then((responseJson) => {
 				if (responseJson.id === workflow_id) {
 					console.log("GOT WORKFLOW: ", responseJson)
+					const nextWorkflow = {
+						...(innerWorkflow || {}),
+						id: responseJson.id,
+						blogpost: responseJson.blogpost,
+						actions: responseJson.actions,
+						triggers: responseJson.triggers,
+						branches: responseJson.branches,
+						comments: responseJson.comments,
+						workflow_variables: responseJson.workflow_variables,
+						execution_variables: responseJson.execution_variables,
+					}
 					if (name === "") {
-						innerWorkflow.name = responseJson.name
+						nextWorkflow.name = responseJson.name
 						setName(responseJson.name)
 					}
 
 					if (description === "") {
-						innerWorkflow.description = responseJson.description
-						setDescription(description)
+						nextWorkflow.description = responseJson.description
+						setDescription(responseJson.description)
 					}
 
 					if (Array.isArray(newWorkflowTags) && newWorkflowTags.length === 0) {
-						innerWorkflow.tags = responseJson.tags
-						setNewWorkflowTags(responseJson.tags)
+						nextWorkflow.tags = responseJson.tags
+						setNewWorkflowTags(cloneArray(responseJson.tags))
 					}
 
 					if (Array.isArray(selectedUsecases) && selectedUsecases.length === 0) {
 						setSelectedUsecases(responseJson.usecase_ids)
 					}
 
-					innerWorkflow.id = responseJson.id
-					innerWorkflow.blogpost = responseJson.blogpost
-					innerWorkflow.actions = responseJson.actions
-					innerWorkflow.triggers = responseJson.triggers
-					innerWorkflow.branches = responseJson.branches
-					innerWorkflow.comments = responseJson.comments
-					innerWorkflow.workflow_variables = responseJson.workflow_variables
-					innerWorkflow.execution_variables = responseJson.execution_variables
-
-
-					setInnerWorkflow(innerWorkflow)
+					setInnerWorkflow(nextWorkflow)
 					setUpdate(Math.random())
 				}
 			})
@@ -310,8 +384,7 @@ const EditWorkflow = (props) => {
 			alignItems: "center",
 		},
 	}
-	const normalizeSelectValues = (value: any) => Array.isArray(value) ? value : String(value || "").split(",").filter(Boolean)
-	const getActionLabel = (actionId: string) => workflow?.actions?.find((action) => action.id === actionId)?.label || actionId
+	const getActionLabel = (actionId: string) => getWorkflowActions().find((action) => action.id === actionId)?.label || actionId
 	const stripNoneValue = (value: any) => {
 		const rawValue = normalizeSelectValues(value)
 		return rawValue[rawValue.length - 1] === "none" ? [] : rawValue.filter((item) => item !== "none")
@@ -321,10 +394,14 @@ const EditWorkflow = (props) => {
 		return selectedIds.length === 0 ? <span style={{ color: "hsl(var(--muted-foreground))" }}>{emptyLabel}</span> : selectedIds.map(getActionLabel).join(", ")
 	}
 	const handleActionMultiSelectChange = (event: any, setter: any) => {
-		setter(stripNoneValue(event?.target?.value))
+		setter([...stripNoneValue(event?.target?.value)])
 	}
 	const getActionSelectValue = (selectedActions: any) => {
-		const selectedIds = normalizeSelectValues(selectedActions).filter((value) => value !== "none")
+		const selectedIds = normalizeActionIds(selectedActions)
+		return selectedIds.length === 0 ? ["none"] : selectedIds
+	}
+	const getNoneSelectValue = (selectedValues: any) => {
+		const selectedIds = normalizeSelectValues(selectedValues).filter((value) => value !== "none")
 		return selectedIds.length === 0 ? ["none"] : selectedIds
 	}
 
@@ -442,55 +519,8 @@ const EditWorkflow = (props) => {
 								disabled={name.length === 0 || submitLoading === true || aiGenerateLoading === true || uploadedImage !== null}
 								onClick={() => {
 									setSubmitLoading(true)
-
-									// Loop inputfields
-									var validfields = []
-									for (var i = 0; i < inputQuestions.length; i++) {
-										if (inputQuestions[i].deleted === true) {
-											continue
-										}
-
-										if (inputQuestions[i].value.length === 0) {
-											continue
-										}
-
-										validfields.push(inputQuestions[i])
-									}
-
-									innerWorkflow.input_questions = validfields
-
-									if (innerWorkflow.form_control === undefined || innerWorkflow.form_control === null) {
-										innerWorkflow.form_control = {}
-									}
-
-									innerWorkflow.form_control.input_markdown = inputMarkdown
-									innerWorkflow.form_control.output_yields = selectedYieldActions
-									innerWorkflow.form_control.form_width = formWidth
-									innerWorkflow.form_control.cleanup_actions = selectedCleanupActions
-
-									innerWorkflow.name = name
-									innerWorkflow.description = description
-
-									if (newWorkflowTags.length > 0) {
-										innerWorkflow.tags = newWorkflowTags
-									} else {
-										innerWorkflow.tags = []
-									}
-
-									if (selectedUsecases.length > 0) {
-										innerWorkflow.usecase_ids = selectedUsecases
-									} else {
-										innerWorkflow.usecase_ids = []
-									}
-
-									if (dueDate > 0) {
-										innerWorkflow.due_date = new Date(`${dueDate["$y"]}-${dueDate["$M"] + 1}-${dueDate["$D"]}`).getTime() / 1000
-									}
-
-									// Clone so parent's useEffect([workflow]) actually fires —
-									// otherwise the reference is identical and downstream state
-									// (e.g. inputQuestions in FormInput) stays stale.
-									const nextWorkflow = { ...innerWorkflow }
+									const nextWorkflow = buildWorkflowForSave()
+									setInnerWorkflow(nextWorkflow)
 									if (saveWorkflow !== undefined) {
 										saveWorkflow(nextWorkflow)
 
@@ -719,53 +749,8 @@ const EditWorkflow = (props) => {
 							disabled={name.length === 0 || submitLoading === true}
 							onClick={() => {
 								setSubmitLoading(true)
-
-								// Loop inputfields
-								var validfields = []
-								for (var i = 0; i < inputQuestions.length; i++) {
-									if (inputQuestions[i].deleted === true) {
-										continue
-									}
-
-									if (inputQuestions[i].value.length === 0) {
-										continue
-									}
-
-									validfields.push(inputQuestions[i])
-								}
-
-								innerWorkflow.input_questions = validfields
-
-								if (innerWorkflow.form_control === undefined || innerWorkflow.form_control === null) {
-									innerWorkflow.form_control = {}
-								}
-
-								innerWorkflow.form_control.input_markdown = inputMarkdown
-								innerWorkflow.form_control.output_yields = selectedYieldActions
-								innerWorkflow.form_control.form_width = formWidth
-								innerWorkflow.form_control.cleanup_actions = selectedCleanupActions
-
-								innerWorkflow.name = name
-								innerWorkflow.description = description
-
-								if (newWorkflowTags.length > 0) {
-									innerWorkflow.tags = newWorkflowTags
-								} else {
-									innerWorkflow.tags = []
-								}
-
-								if (selectedUsecases.length > 0) {
-									innerWorkflow.usecase_ids = selectedUsecases
-								} else {
-									innerWorkflow.usecase_ids = []
-								}
-
-								if (dueDate > 0) {
-									innerWorkflow.due_date = new Date(`${dueDate["$y"]}-${dueDate["$M"] + 1}-${dueDate["$D"]}`).getTime() / 1000
-								}
-
-								// Clone so parent's useEffect([workflow]) actually fires.
-								const nextWorkflow2 = { ...innerWorkflow }
+								const nextWorkflow2 = buildWorkflowForSave()
+								setInnerWorkflow(nextWorkflow2)
 								if (saveWorkflow !== undefined) {
 									saveWorkflow(nextWorkflow2)
 
@@ -830,9 +815,9 @@ const EditWorkflow = (props) => {
 							<TextField
 								id="Workflow-Description"
 								onBlur={(event) => {
-									innerWorkflow.default_return_value = event.target.value
-									setInnerWorkflow(innerWorkflow)
-									setUpdate(Math.random())
+									updateInnerWorkflow((next) => {
+										next.default_return_value = event.target.value
+									})
 								}}
 								InputProps={{
 									style: {
@@ -908,9 +893,9 @@ const EditWorkflow = (props) => {
 								color="primary"
 								fullWidth
 								value={newWorkflowTags}
-								onChange={(chip) => {
-									setNewWorkflowTags(chip);
-								}}
+									onChange={(chip) => {
+										setNewWorkflowTags([...chip]);
+									}}
 								onBlur={(event) => {
 									if (event.target.value.length === 0) {
 										return
@@ -920,20 +905,14 @@ const EditWorkflow = (props) => {
 										return
 									}
 
-									newWorkflowTags.push(event.target.value)
-									setNewWorkflowTags(newWorkflowTags)
-
-									setUpdate(Math.random())
+									setNewWorkflowTags([...newWorkflowTags, event.target.value])
 								}}
 								onAdd={(chip) => {
-									newWorkflowTags.push(chip)
-									setNewWorkflowTags(newWorkflowTags)
+									setNewWorkflowTags([...newWorkflowTags, chip])
 								}}
 								onDelete={(chip, index) => {
 									console.log("Deleting: ", chip, index)
-									newWorkflowTags.splice(index, 1)
-									setNewWorkflowTags(newWorkflowTags)
-									setUpdate(Math.random())
+									setNewWorkflowTags(newWorkflowTags.filter((_, chipIndex) => chipIndex !== index))
 								}}
 							/>
 						</div>
@@ -1054,9 +1033,9 @@ const EditWorkflow = (props) => {
 											layoutId="edit-workflow-status"
 											value={innerWorkflow.status || "test"}
 											onChange={(val) => {
-												innerWorkflow.status = val
-												setInnerWorkflow(innerWorkflow)
-												setUpdate(Math.random())
+										updateInnerWorkflow((next) => {
+											next.status = val
+										})
 											}}
 											options={[
 												{ value: "test", label: "Test" },
@@ -1073,8 +1052,9 @@ const EditWorkflow = (props) => {
 
 								<TextField
 									onBlur={(event) => {
-										innerWorkflow.default_return_value = event.target.value
-										setInnerWorkflow(innerWorkflow)
+									updateInnerWorkflow((next) => {
+										next.default_return_value = event.target.value
+									})
 									}}
 									InputProps={{
 										style: {
@@ -1126,29 +1106,27 @@ const EditWorkflow = (props) => {
 										<Select
 											multiple
 											sx={{ ...selectSx, marginTop: "10px" }}
-											value={innerWorkflow.suborg_distribution === undefined || innerWorkflow.suborg_distribution === null ? ["none"] : innerWorkflow.suborg_distribution}
+										value={getNoneSelectValue(innerWorkflow.suborg_distribution)}
 											disabled={workflow?.parentorg_workflow !== undefined && workflow?.parentorg_workflow !== null && workflow?.parentorg_workflow.length > 0}
 											onChange={(e) => {
-												var newvalue = e.target.value
-												if (newvalue.length > 1 && newvalue[0] === "none") {
+													var newvalue = normalizeSelectValues(e.target.value)
+												if (newvalue[newvalue.length - 1] === "none") {
+													newvalue = []
+												} else if (newvalue.includes("all")) {
+													newvalue = userdata.orgs.filter(org => org.creator_org === userdata.active_org.id).map(org => org.id)
+												} else {
 													newvalue = newvalue.filter(value => value !== "none")
 												}
 
-												if (newvalue.includes("none")) {
-													newvalue = ["none"]
-												} else if (newvalue.includes("all")) {
-													newvalue = userdata.orgs.filter(org => org.creator_org === userdata.active_org.id).map(org => org.id)
-												}
-
-												innerWorkflow.suborg_distribution = newvalue
-												setInnerWorkflow(innerWorkflow)
-												setUpdate(Math.random())
+													updateInnerWorkflow((next) => {
+														next.suborg_distribution = [...newvalue]
+													})
 											}}
 											label="Suborg Distribution"
 											fullWidth
 											renderValue={(selected) => {
-												const selectedIds = normalizeSelectValues(selected)
-												if (selectedIds.includes("none")) return "None"
+												const selectedIds = normalizeSelectValues(selected).filter((value) => value !== "none")
+												if (selectedIds.length === 0) return "None"
 												return userdata.orgs.filter((org) => selectedIds.includes(org.id)).map((org) => org.name).join(", ")
 											}}
 											MenuProps={selectMenuProps}
@@ -1253,9 +1231,9 @@ const EditWorkflow = (props) => {
 												placeholder="github/com/shuffle/workflowbackup "
 												defaultValue={innerWorkflow.backup_config === undefined || innerWorkflow.backup_config.upload_repo === undefined || innerWorkflow.backup_config.upload_repo === null || innerWorkflow.backup_config.upload_repo === "" ? "" : innerWorkflow.backup_config.upload_repo}
 												onChange={(e) => {
-													//setUploadRepo(e.target.value);
-													innerWorkflow.backup_config.upload_repo = e.target.value
-													setInnerWorkflow(innerWorkflow)
+													updateInnerWorkflow((next) => {
+														next.backup_config = { ...(next.backup_config || {}), upload_repo: e.target.value }
+													})
 												}}
 												InputProps={{
 													classes: {
@@ -1287,8 +1265,9 @@ const EditWorkflow = (props) => {
 												placeholder="The branch to use (default: master)"
 												defaultValue={innerWorkflow.backup_config === undefined || innerWorkflow.backup_config.upload_branch === undefined || innerWorkflow.backup_config.upload_branch === null || innerWorkflow.backup_config.upload_branch === "" ? "" : innerWorkflow.backup_config.upload_branch}
 												onChange={(e) => {
-													innerWorkflow.backup_config.upload_branch = e.target.value
-													setInnerWorkflow(innerWorkflow)
+													updateInnerWorkflow((next) => {
+														next.backup_config = { ...(next.backup_config || {}), upload_branch: e.target.value }
+													})
 												}}
 												InputProps={{
 													classes: {
@@ -1322,8 +1301,9 @@ const EditWorkflow = (props) => {
 												placeholder="Username to use"
 												defaultValue={innerWorkflow.backup_config === undefined || innerWorkflow.backup_config.upload_username === undefined || innerWorkflow.backup_config.upload_username === null || innerWorkflow.backup_config.upload_username === "" ? "" : innerWorkflow.backup_config.upload_username}
 												onChange={(e) => {
-													innerWorkflow.backup_config.upload_username = e.target.value
-													setInnerWorkflow(innerWorkflow)
+													updateInnerWorkflow((next) => {
+														next.backup_config = { ...(next.backup_config || {}), upload_username: e.target.value }
+													})
 												}}
 												InputProps={{
 													classes: {
@@ -1355,8 +1335,9 @@ const EditWorkflow = (props) => {
 												placeholder="Your API token. Required."
 												defaultValue={innerWorkflow.backup_config === undefined || innerWorkflow.backup_config.upload_token === undefined || innerWorkflow.backup_config.upload_token === null || innerWorkflow.backup_config.upload_token === "" ? "" : innerWorkflow.backup_config.upload_token}
 												onChange={(e) => {
-													innerWorkflow.backup_config.upload_token = e.target.value
-													setInnerWorkflow(innerWorkflow)
+													updateInnerWorkflow((next) => {
+														next.backup_config = { ...(next.backup_config || {}), upload_token: e.target.value }
+													})
 												}}
 												InputProps={{
 													classes: {
@@ -1400,7 +1381,7 @@ const EditWorkflow = (props) => {
 												<Checkbox checked={selectedCleanupActions.length === 0} />
 												<em>None</em>
 											</MenuItem>
-											{workflow?.actions?.map((action, actionIndex) => {
+										{getWorkflowActions().map((action, actionIndex) => {
 												return (
 													<MenuItem
 														key={actionIndex}
@@ -1482,9 +1463,9 @@ const EditWorkflow = (props) => {
 												variant="outlined"
 												defaultValue={data.name}
 												onChange={(e) => {
-													inputQuestions[index].name = e.target.value
-													setInputQuestions(inputQuestions)
-													pushRealtimeInputQuestions(inputQuestions)
+												const nextQuestions = inputQuestions.map((question, questionIndex) => questionIndex === index ? { ...question, name: e.target.value } : question)
+												setInputQuestions(nextQuestions)
+												pushRealtimeInputQuestions(nextQuestions)
 													setUpdate(Math.random());
 												}}
 												InputProps={{
@@ -1510,11 +1491,11 @@ const EditWorkflow = (props) => {
 												defaultValue={data.value}
 												onChange={(e) => {
 													// Replace multiple semicolon with one
-													e.target.value = e.target.value.replace(";;", ";")
-
-													inputQuestions[index].value = e.target.value
-													setInputQuestions(inputQuestions)
-													pushRealtimeInputQuestions(inputQuestions)
+												const nextValue = e.target.value.replace(";;", ";")
+												e.target.value = nextValue
+												const nextQuestions = inputQuestions.map((question, questionIndex) => questionIndex === index ? { ...question, value: nextValue } : question)
+												setInputQuestions(nextQuestions)
+												pushRealtimeInputQuestions(nextQuestions)
 													setUpdate(Math.random());
 												}}
 												InputProps={{
@@ -1529,10 +1510,9 @@ const EditWorkflow = (props) => {
 												disabled={data.deleted === true}
 												variant="outlined"
 												onClick={() => {
-													// Remove current index
-													console.log("Removing index: ", index)
-													inputQuestions[index].deleted = true
-													pushRealtimeInputQuestions(inputQuestions)
+										const nextQuestions = inputQuestions.map((question, questionIndex) => questionIndex === index ? { ...question, deleted: true } : question)
+										setInputQuestions(nextQuestions)
+										pushRealtimeInputQuestions(nextQuestions)
 													setUpdate(Math.random());
 												}}
 											>
@@ -1549,14 +1529,14 @@ const EditWorkflow = (props) => {
 
 									disabled={inputQuestions !== undefined && inputQuestions !== null && inputQuestions.length > 5}
 									onClick={() => {
-										inputQuestions.push({
+										const nextQuestions = [...inputQuestions, {
 											"name": "",
 											"value": "",
 											"deleted": false,
 											"required": false
-										})
-										setInputQuestions(inputQuestions)
-										pushRealtimeInputQuestions(inputQuestions)
+										}]
+										setInputQuestions(nextQuestions)
+										pushRealtimeInputQuestions(nextQuestions)
 										setUpdate(Math.random());
 									}}
 								>
@@ -1589,8 +1569,9 @@ const EditWorkflow = (props) => {
 											}
 
 											setInputMarkdown(e.target.value)
-											workflow.form_control.input_markdown = e.target.value
-											setWorkflow(workflow)
+										updateInnerWorkflow((next) => {
+											next.form_control = { ...(next.form_control || {}), input_markdown: e.target.value }
+										})
 											setUpdate(Math.random())
 										}}
 									/>
@@ -1645,7 +1626,7 @@ const EditWorkflow = (props) => {
 												<Checkbox checked={selectedYieldActions.length === 0} />
 												<em>None</em>
 											</MenuItem>
-											{workflow?.actions?.map((action, actionIndex) => {
+										{getWorkflowActions().map((action, actionIndex) => {
 												return (
 													<MenuItem
 														key={actionIndex}
@@ -1704,9 +1685,9 @@ const EditWorkflow = (props) => {
 									layoutId="edit-workflow-type"
 									value={innerWorkflow.workflow_type || "standalone"}
 									onChange={(val) => {
-										innerWorkflow.workflow_type = val
-										setInnerWorkflow(innerWorkflow)
-										setUpdate(Math.random())
+										updateInnerWorkflow((next) => {
+											next.workflow_type = val
+										})
 									}}
 									options={[
 										{ value: "agentic", label: "Agentic", title: "Agentic workflows takes an input based on input questions (forms) and performs actions based on it by itself, using Large Action Models & Singul" },
@@ -1720,8 +1701,9 @@ const EditWorkflow = (props) => {
 
 							<TextField
 								onBlur={(event) => {
-									innerWorkflow.blogpost = event.target.value
-									setInnerWorkflow(innerWorkflow)
+									updateInnerWorkflow((next) => {
+										next.blogpost = event.target.value
+									})
 								}}
 								InputProps={{
 									style: {
@@ -1738,8 +1720,9 @@ const EditWorkflow = (props) => {
 							/>
 							<TextField
 								onBlur={(event) => {
-									innerWorkflow.video = event.target.value
-									setInnerWorkflow(innerWorkflow)
+									updateInnerWorkflow((next) => {
+										next.video = event.target.value
+									})
 								}}
 								InputProps={{
 									style: {
