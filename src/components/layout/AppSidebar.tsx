@@ -387,6 +387,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               if (!e.ctrlKey && !e.metaKey) {
                 e.preventDefault();
                 setToolMenuAnchor(null);
+                navigate('/');
               }
             }}
           >
