@@ -81,6 +81,9 @@ const EditWorkflow = (props) => {
 	const [_, setUpdate] = React.useState(""); // Used for rendering, don't remove
 	const {themeMode, brandColor} = useContext(Context)
 	const theme = getTheme(themeMode, brandColor)
+	const standardTextFieldInputProps = {
+		style: { color: "hsl(var(--foreground))" },
+	}
 	const [submitLoading, setSubmitLoading] = React.useState(false);
 	const [aiGenerateLoading, setAiGenerateLoading] = React.useState(false);
 	const [showMoreClicked, setShowMoreClicked] = React.useState(isEditing !== false ? true : false);
@@ -306,21 +309,21 @@ const EditWorkflow = (props) => {
 			}}
 			PaperProps={{
 				sx: {
-					color: theme.palette.DialogStyle.color,
+					color: "hsl(var(--sidebar-foreground))",
 					minWidth: isMobile ? "90%" : "650px",
 					maxWidth: isMobile ? "90%" : "650px",
 					minHeight: "400px",
 					//minWidth: isMobile ? "90%" : newWorkflow === true ? 1000 : 550,
 					//maxWidth: isMobile ? "90%" : newWorkflow === true ? 1000 : 550,
-		    		borderRadius: `${theme.palette.DialogStyle.borderRadius}px 0 0 ${theme.palette.DialogStyle.borderRadius}px`,
-		    		backgroundColor: "hsl(var(--background))",
-		    		borderLeft: "1px solid hsl(var(--border))",
+		    		borderRadius: "8px 0 0 8px",
+		    		backgroundColor: "hsl(var(--sidebar-background))",
+		    		borderLeft: "1px solid hsl(var(--sidebar-border))",
 				},
 			}}
 		>
 			<DialogTitle style={{ padding: 30, paddingBottom: 0, zIndex: 1000, paddingTop: "25px", paddingLeft: "50px"}}>
 				<div style={{ display: "flex" }}>
-					<div style={{ flex: 1, color: theme.palette.textColor }}>
+					<div style={{ flex: 1, color: "hsl(var(--sidebar-foreground))" }}>
 						<div style={{ display: "flex" }}>
 							<Typography variant="h4" style={{ flex: 9, marginTop: newWorkflow ? 50 : 25, }}>
 								{newWorkflow ? "New" : "Editing"} Workflow
@@ -398,8 +401,8 @@ const EditWorkflow = (props) => {
 					height: 75, 
 					paddingTop: 20, 
 					paddingLeft: 30, 
-					backgroundColor: "hsl(var(--card))",
-					borderTop: "1px solid hsl(var(--border))",
+					backgroundColor: "hsl(var(--sidebar-background))",
+					borderTop: "1px solid hsl(var(--sidebar-border))",
 				}}>
 					{newWorkflow === true ? (
 						<div style={{ display: "flex", gap: 10 }}>
