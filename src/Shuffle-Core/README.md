@@ -1,7 +1,7 @@
 # Shuffle-Core
 
-Standalone React surfaces extracted from the Shuffle Security app. Companion to
-[`@shuffleio/shuffle-mcps`](../Shuffle-MCPs/README.md).
+React surfaces extracted from the Shuffle Security app — the Usecases
+explorer, workflow editor entry points, and shared form controls.
 
 This package starts with the **Usecases** explorer (the entire `/usecases` and
 `/usecases/:flowId` experience) and will grow to cover form control next.
