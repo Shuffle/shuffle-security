@@ -1376,7 +1376,7 @@ const EditWorkflow = (props) => {
 												<Checkbox checked={selectedCleanupActions.length === 0} />
 												<em>None</em>
 											</MenuItem>
-											{workflow?.actions?.map((action, actionIndex) => {
+										{getWorkflowActions().map((action, actionIndex) => {
 												return (
 													<MenuItem
 														key={actionIndex}
@@ -1620,7 +1620,7 @@ const EditWorkflow = (props) => {
 												<Checkbox checked={selectedYieldActions.length === 0} />
 												<em>None</em>
 											</MenuItem>
-											{workflow?.actions?.map((action, actionIndex) => {
+										{getWorkflowActions().map((action, actionIndex) => {
 												return (
 													<MenuItem
 														key={actionIndex}
