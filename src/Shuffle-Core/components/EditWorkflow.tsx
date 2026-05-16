@@ -1383,7 +1383,7 @@ const EditWorkflow = (props) => {
 											multiple
 											fullWidth
 											sx={selectSx}
-											value={Array.isArray(selectedCleanupActions) && selectedCleanupActions.length === 0 ? ["none"] : selectedCleanupActions}
+											value={getActionSelectValue(selectedCleanupActions)}
 											renderValue={(selected) => renderActionSelectValue(selected, "No cleanup yet")}
 											MenuProps={selectMenuProps}
 											onChange={(event) => handleActionMultiSelectChange(event, setSelectedCleanupActions)}
@@ -1624,7 +1624,7 @@ const EditWorkflow = (props) => {
 											multiple
 											fullWidth
 											sx={selectSx}
-											value={Array.isArray(selectedYieldActions) && selectedYieldActions.length === 0 ? ["none"] : selectedYieldActions}
+											value={getActionSelectValue(selectedYieldActions)}
 											renderValue={(selected) => renderActionSelectValue(selected, "No Returns")}
 											MenuProps={selectMenuProps}
 											onChange={(event) => handleActionMultiSelectChange(event, setSelectedYieldActions)}
