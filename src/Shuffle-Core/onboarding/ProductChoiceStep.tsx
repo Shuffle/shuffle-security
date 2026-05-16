@@ -13,7 +13,7 @@ export const ProductChoiceStep = ({ onSelectCore, onSelectSecurity }: ProductCho
       <div className="w-full max-w-4xl">
         <div className="mb-12 text-center">
           <p className="mb-3 text-sm font-medium uppercase tracking-widest text-primary">
-            Welcome to Shuffle
+            Choose how you want to use Shuffle
           </p>
           <h1 className="mb-4 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
             What are you here to do?
