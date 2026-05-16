@@ -268,14 +268,18 @@ const TemplatesPage = () => {
                 transition={{ duration: 0.4, delay: index * 0.05 }}
               >
                 <Card
+                  elevation={0}
                   sx={{
                     height: '100%',
                     cursor: 'pointer',
+                    bgcolor: 'transparent',
+                    backgroundImage: 'none',
+                    border: '1px solid hsl(var(--border))',
                     transition: 'all 0.2s',
                     '&:hover': {
                       transform: 'translateY(-4px)',
+                      borderColor: 'hsl(var(--primary) / 0.5)',
                       boxShadow: (theme) => theme.shadows[6],
-                      borderColor: 'primary.main',
                     },
                   }}
                   onClick={() => handleOpenEdit(template)}
