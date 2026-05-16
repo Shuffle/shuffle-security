@@ -19,6 +19,7 @@ import { trackOnboardingStep, trackPredefinedEvent, GA_EVENTS } from '@/lib/anal
 import { IntegrationStatus, refreshAllIntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { ProductChoiceStep } from './ProductChoiceStep';
+import { SegmentedControl, type SegmentedItem } from '@/components/ui/segmented-control';
 
 export type OnboardingProduct = 'core' | 'security';
 
@@ -921,90 +922,25 @@ const OnboardingFlow = ({
         }}
       >
         <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
-          {/* Step Indicator */}
-          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', overflow: 'hidden' }}>
-            <Stack 
-              direction="row" 
-              spacing={{ xs: 1, sm: 2 }}
-              sx={{ 
-                flexWrap: 'nowrap',
-                justifyContent: 'center',
-                maxWidth: '100%',
-              }}
-            >
-              {steps.map((step, index) => (
-                <Box
-                  key={step.label}
-                  onClick={() => setActiveStepKey(step.key)}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: { xs: 0.5, sm: 1.5 },
-                    cursor: 'pointer',
-                    flexShrink: 0,
-                    '&:hover': {
-                      '& .step-label': {
-                        color: index === activeStep ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
-                      },
-                    },
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: { xs: 32, sm: 40 },
-                      height: { xs: 32, sm: 40 },
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      background:
-                        index < activeStep
-                          ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)'
-                          : index === activeStep
-                          ? 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 100%)'
-                          : 'hsl(var(--muted))',
-                      border: '2px solid',
-                      borderColor:
-                        index <= activeStep ? 'transparent' : 'hsl(var(--border))',
-                      transition: 'all 0.3s ease',
-                      color: index <= activeStep ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))',
-                      boxShadow: index === activeStep ? '0 0 20px hsl(var(--primary) / 0.4)' : 'none',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {index < activeStep ? <CheckCircleOutlineIcon size={18} /> : step.icon}
-                  </Box>
-                  <Typography
-                    className="step-label"
-                    variant="body2"
-                    sx={{
-                      color: index === activeStep ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
-                      fontWeight: index === activeStep ? 600 : 400,
-                      display: { xs: 'none', md: 'block' },
-                      transition: 'color 0.2s ease',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {step.label}
-                  </Typography>
-                  {index < steps.length - 1 && (
-                    <Box
-                      sx={{
-                        width: { xs: 16, sm: 40 },
-                        height: 2,
-                        background:
-                          index < activeStep
-                            ? 'linear-gradient(90deg, #22c55e, #16a34a)'
-                            : 'hsl(var(--border))',
-                        borderRadius: 1,
-                        display: { xs: 'block', md: 'block' },
-                        flexShrink: 0,
-                      }}
-                    />
-                  )}
-                </Box>
-              ))}
-            </Stack>
+          {/* Step Indicator — pill */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+            <SegmentedControl
+              size="md"
+              variant="filled"
+              ariaLabel="Onboarding steps"
+              layoutId="onboarding-steps"
+              value={steps[activeStep]?.key ?? steps[0].key}
+              onChange={(key) => setActiveStepKey(key)}
+              options={steps.map((step, index): SegmentedItem => ({
+                value: step.key,
+                label: (
+                  <span className="inline-flex items-center gap-1.5">
+                    {index < activeStep ? <CheckCircleOutlineIcon size={14} /> : step.icon}
+                    <span className="hidden md:inline">{step.label}</span>
+                  </span>
+                ),
+              }))}
+            />
           </Box>
         </Container>
       </Box>
