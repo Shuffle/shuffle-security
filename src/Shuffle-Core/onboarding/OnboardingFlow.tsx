@@ -124,7 +124,7 @@ const OnboardingFlow = ({
   apiBaseUrl,
   showProductChoice = true,
   onStartDemo,
-  demoRedirectUrl = 'https://security.shuffler.io/dashboard?demo=true',
+  demoRedirectUrl = 'https://security.shuffler.io/onboarding/product?demo=true',
 }: OnboardingFlowProps = {}) => {
 
   // Apply API base URL override before any requests fire
