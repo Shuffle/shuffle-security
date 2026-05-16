@@ -1047,6 +1047,8 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           anchorEl={userMenuAnchor}
           open={Boolean(userMenuAnchor)}
           onClose={() => setUserMenuAnchor(null)}
+          autoFocus={false}
+          disableAutoFocusItem
           anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
           transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
           slotProps={{
