@@ -1360,6 +1360,7 @@ const EditWorkflow = (props) => {
 											style={{ width: 500, }}
 											value={Array.isArray(selectedCleanupActions) && selectedCleanupActions.length === 0 ? ["none"] : selectedCleanupActions}
 											renderValue={(selected) => selected.join(', ')}
+											MenuProps={selectMenuProps}
 											onChange={(event) => {
 												if (event.target.value.length > 0) {
 													if (event.target.value.includes("none")) {
