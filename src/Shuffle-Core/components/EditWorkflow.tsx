@@ -269,6 +269,7 @@ const EditWorkflow = (props) => {
 		keepMounted: true,
 		MenuListProps: { dense: true },
 		ModalProps: { keepMounted: true },
+		sx: { zIndex: 9999 },
 		PaperProps: {
 			sx: {
 				zIndex: 9999,
@@ -1364,7 +1365,7 @@ const EditWorkflow = (props) => {
 									<FormControl style={{ marginTop: 15, width: 500, maxWidth: "100%" }}>
 										<InputLabel id="result-cleanup-control-label">Cleaned Up nodes</InputLabel>
 										<Select
-											defaultValue=""
+											defaultValue={[]}
 											id="result-cleanup-control"
 											labelId="result-cleanup-control-label"
 											label="Cleaned Up nodes"
@@ -1618,7 +1619,7 @@ const EditWorkflow = (props) => {
 									<FormControl style={{ marginTop: 15, width: 500, maxWidth: "100%" }}>
 										<InputLabel id="output-yield-control-label">Yielding nodes</InputLabel>
 										<Select
-											defaultValue=""
+											defaultValue={[]}
 											id="output-yield-control"
 											labelId="output-yield-control-label"
 											label="Yielding nodes"
