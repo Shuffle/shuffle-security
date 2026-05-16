@@ -47,25 +47,28 @@ const getOrgId = (): string | null => {
   }
 };
 
-const fetchIncidentsCategoryConfig = async (): Promise<CategoryConfig | null> => {
+// Sentinel returned when /list_cache responded successfully but didn't
+// include a category_config (org likely has no incidents yet). We treat
+// this as UNKNOWN rather than "disabled" — see Option A below.
+const CATEGORY_CONFIG_MISSING = Symbol('category_config_missing');
+type FetchedCategoryConfig = CategoryConfig | typeof CATEGORY_CONFIG_MISSING | null;
+
+const fetchIncidentsCategoryConfig = async (): Promise<FetchedCategoryConfig> => {
   const orgId = getOrgId();
   if (!orgId) return null;
-  try {
-    const url = getApiUrl(
-      `/api/v1/orgs/${orgId}/list_cache?category=${encodeURIComponent(
-        DATASTORE_CATEGORIES.INCIDENTS,
-      )}&top=1`,
-    );
-    const res = await fetch(url, {
-      credentials: 'include',
-      headers: { ...getAuthHeader() },
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.category_config || null;
-  } catch {
-    return null;
-  }
+  const url = getApiUrl(
+    `/api/v1/orgs/${orgId}/list_cache?category=${encodeURIComponent(
+      DATASTORE_CATEGORIES.INCIDENTS,
+    )}&top=1`,
+  );
+  const res = await fetch(url, {
+    credentials: 'include',
+    headers: { ...getAuthHeader() },
+  });
+  if (!res.ok) throw new Error(`list_cache responded with ${res.status}`);
+  const data = await res.json();
+  const cfg = (data?.category_config as CategoryConfig | undefined) || null;
+  return cfg ?? CATEGORY_CONFIG_MISSING;
 };
 
 export const useAgentReadiness = (): AgentReadinessStatus => {
@@ -76,12 +79,18 @@ export const useAgentReadiness = (): AgentReadinessStatus => {
 
   const labels = useMemo(() => getAutomationLabels('assign_escalate'), []);
 
-  const { data: categoryConfig, isLoading: cfgLoading } = useQuery<CategoryConfig | null>({
+  const { data: fetched, isLoading: cfgLoading } = useQuery<FetchedCategoryConfig>({
     queryKey: ['agent-readiness-category-config'],
     queryFn: fetchIncidentsCategoryConfig,
     staleTime: 60 * 1000,
     refetchOnWindowFocus: false,
+    retry: 2,
   });
+
+  const categoryConfigMissing = fetched === CATEGORY_CONFIG_MISSING;
+  const categoryConfig: CategoryConfig | null = categoryConfigMissing
+    ? null
+    : ((fetched as CategoryConfig | null | undefined) ?? null);
 
   const matchingWorkflow = useMemo(() => {
     if (!workflows || labels.length === 0) return null;
@@ -113,8 +122,14 @@ export const useAgentReadiness = (): AgentReadinessStatus => {
     return matchingWorkflow ? ids.includes(matchingWorkflow.id) : false;
   }, [categoryConfig, hasWorkflow, matchingWorkflow]);
 
-  // Either path satisfies "agent is wired up".
-  const serverActive = hasAiAgentAutomation || (hasWorkflow && hasCategoryAutomation);
+  // Option A: when category_config is entirely absent from the /list_cache
+  // response (org just hasn't ingested anything yet), treat the agent as
+  // UNKNOWN — assume Active rather than flashing "not enabled". We only
+  // mark inactive when category_config exists but neither path A nor B is
+  // satisfied.
+  const serverActive = categoryConfigMissing
+    ? true
+    : hasAiAgentAutomation || (hasWorkflow && hasCategoryAutomation);
   const active = optimistic !== null ? optimistic : serverActive;
 
   const refetchAll = useCallback(async () => {
@@ -165,7 +180,11 @@ export const useAgentReadiness = (): AgentReadinessStatus => {
 
       // Step 2: wire up the "Run workflow" automation on the incidents category.
       // Re-fetch latest config so we don't clobber other automations.
-      const latestConfig = await fetchIncidentsCategoryConfig();
+      const latestFetched = await fetchIncidentsCategoryConfig();
+      const latestConfig: CategoryConfig | null =
+        latestFetched === CATEGORY_CONFIG_MISSING
+          ? null
+          : ((latestFetched as CategoryConfig | null | undefined) ?? null);
       const existing = latestConfig?.automations || [];
       const existingByName = new Map(existing.map((a) => [a.name, a]));
 
