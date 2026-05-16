@@ -61,6 +61,12 @@ interface UsecaseAlluvialDiagramProps {
    * and apps matching this category get a visual highlight.
    */
   highlightCategory?: string;
+  /**
+   * Whether the host considers the current user authenticated. Used to gate
+   * authenticated-only API calls. Defaults to `false` so the library is safe
+   * to render in unauthenticated contexts.
+   */
+  isLoggedIn?: boolean;
 }
 
 // ── Pattern matchers ───────────────────────────────────────────────────────────
