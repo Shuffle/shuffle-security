@@ -599,7 +599,7 @@ export const AutomationConfig = ({
     });
     
     return options;
-  }, [authenticatedApps]);
+  }, [authenticatedApps, activatedApps, selectedApps, workflowAppNames, forwardWorkflowAppNames]);
 
   const toggleOption = (id: string) => {
     const current = enrichmentState[id] || { enabled: false, config: {} };
