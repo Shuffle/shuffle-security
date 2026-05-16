@@ -249,7 +249,7 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
               <Tooltip 
                 key={integration.id} 
                 title={onDisable && isHovered ? '' : (
-                  <Box sx={{ textAlign: 'left', minWidth: 160, p: 0.5 }}>
+                  <Box sx={{ textAlign: 'left', minWidth: 160, maxWidth: 320, p: 0.5 }}>
                     <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: 'hsl(var(--foreground))' }}>
                       {integration.name}
                       {isDisabled && <Typography component="span" sx={{ ml: 1, fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>(disabled)</Typography>}
@@ -259,7 +259,7 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
                     </Typography>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                       {integration.authInstances.map((instance, idx) => (
-                        <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                        <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0 }}>
                           <Box 
                             sx={{ 
                               width: 7, 
@@ -271,10 +271,10 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
                               flexShrink: 0,
                             }} 
                           />
-                          <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--foreground))', opacity: 0.9 }}>
+                          <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--foreground))', opacity: 0.9, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {instance.label}
                           </Typography>
-                          <Typography sx={{ fontSize: '0.65rem', color: instance.isValidated ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))', ml: 'auto' }}>
+                          <Typography sx={{ fontSize: '0.65rem', color: instance.isValidated ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))', flexShrink: 0 }}>
                             {instance.isValidated ? 'Valid' : 'Pending'}
                           </Typography>
                         </Box>

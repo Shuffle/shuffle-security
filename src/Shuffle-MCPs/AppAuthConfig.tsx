@@ -1190,6 +1190,8 @@ export const AppAuthCard = ({
                           backgroundColor: 'background.paper',
                           border: '1px solid',
                           borderColor: 'divider',
+                          maxWidth: 480,
+                          '& .MuiMenuItem-root': { maxWidth: '100%' },
                         },
                         },
                       },
