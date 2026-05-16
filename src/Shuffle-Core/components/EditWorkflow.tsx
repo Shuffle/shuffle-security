@@ -800,9 +800,9 @@ const EditWorkflow = (props) => {
 							<TextField
 								id="Workflow-Description"
 								onBlur={(event) => {
-									innerWorkflow.default_return_value = event.target.value
-									setInnerWorkflow(innerWorkflow)
-									setUpdate(Math.random())
+									updateInnerWorkflow((next) => {
+										next.default_return_value = event.target.value
+									})
 								}}
 								InputProps={{
 									style: {
@@ -878,9 +878,9 @@ const EditWorkflow = (props) => {
 								color="primary"
 								fullWidth
 								value={newWorkflowTags}
-								onChange={(chip) => {
-									setNewWorkflowTags(chip);
-								}}
+									onChange={(chip) => {
+										setNewWorkflowTags([...chip]);
+									}}
 								onBlur={(event) => {
 									if (event.target.value.length === 0) {
 										return
@@ -890,20 +890,14 @@ const EditWorkflow = (props) => {
 										return
 									}
 
-									newWorkflowTags.push(event.target.value)
-									setNewWorkflowTags(newWorkflowTags)
-
-									setUpdate(Math.random())
+									setNewWorkflowTags([...newWorkflowTags, event.target.value])
 								}}
 								onAdd={(chip) => {
-									newWorkflowTags.push(chip)
-									setNewWorkflowTags(newWorkflowTags)
+									setNewWorkflowTags([...newWorkflowTags, chip])
 								}}
 								onDelete={(chip, index) => {
 									console.log("Deleting: ", chip, index)
-									newWorkflowTags.splice(index, 1)
-									setNewWorkflowTags(newWorkflowTags)
-									setUpdate(Math.random())
+									setNewWorkflowTags(newWorkflowTags.filter((_, chipIndex) => chipIndex !== index))
 								}}
 							/>
 						</div>
