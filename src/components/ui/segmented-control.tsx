@@ -47,6 +47,12 @@ export interface SegmentedControlProps<V extends string = string> {
   value: V;
   onChange: (value: V) => void;
   size?: "sm" | "md";
+  /**
+   * Visual style:
+   * - "outline" (default): transparent track + hairline border, filled active pill.
+   * - "filled": subtly filled track + no border, filled active pill (iOS-style).
+   */
+  variant?: "outline" | "filled";
   className?: string;
   ariaLabel?: string;
   /** Unique id so multiple segmented controls on a page do not share their pill. */
@@ -83,6 +89,7 @@ export function SegmentedControl<V extends string = string>({
   value,
   onChange,
   size = "md",
+  variant = "outline",
   className,
   ariaLabel,
   layoutId,
@@ -97,7 +104,10 @@ export function SegmentedControl<V extends string = string>({
         role="tablist"
         aria-label={ariaLabel}
         className={cn(
-          "inline-flex items-center gap-0.5 rounded-full border border-border bg-transparent",
+          "inline-flex items-center gap-0.5 rounded-full",
+          variant === "outline"
+            ? "border border-border bg-transparent"
+            : "border border-transparent bg-muted/40",
           s.container,
           className,
         )}
