@@ -222,6 +222,7 @@ const OnboardingPage = () => {
     if (!selectedToolsLoaded) return;
 
     setDatastoreItem(SELECTED_TOOLS_KEY, selectedApps, ONBOARDING_CONFIG_CATEGORY)
+      .then(() => refreshAllIntegrationStatus())
       .catch(error => console.error('Failed to persist selected tools:', error));
   }, [selectedToolsLoaded, selectedApps]);
 
