@@ -256,7 +256,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
         // Registration successful, redirect to login (preserve returnUrl so post-login lands the user back)
         trackPredefinedEvent(GA_EVENTS.REGISTER_SUCCESS);
         const loginPath = returnUrl
-          ? `/login?returnUrl=${encodeURIComponent(returnUrl)}`
+          ? `/login?view=${encodeURIComponent(returnUrl)}`
           : '/login';
         navigate(loginPath, { state: { message: 'Registration successful. Please log in.' } });
       } else {
