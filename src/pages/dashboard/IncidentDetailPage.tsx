@@ -8758,7 +8758,8 @@ const IncidentDetailPage = () => {
           </Box>
         </Box>
         )}
-      </Box>
+            </Box>
+          </Box>
 
 
       {/* Revision Data Dialog */}
