@@ -60,6 +60,7 @@ import AgentsPage from '@/pages/dashboard/AgentsPage';
 import InfrastructurePage from '@/pages/dashboard/InfrastructurePage';
 import DataFlowDetailPage from '@/pages/dashboard/DataFlowDetailPage';
 import UsecasesPageRaw from '@/pages/dashboard/UsecasesPage';
+import FormsPage from '@/pages/dashboard/FormsPage';
 import { useAuth as useAppAuth } from '@/context/AuthContext';
 
 // Bridge AuthContext -> UsecasesPage so the in-page "Get started free" CTA
@@ -245,6 +246,8 @@ const ThemedApp = () => {
               <Route path="/usecases" element={<UsecasesPage />} />
               <Route path="/usecases/:flowId" element={<UsecasesPage />} />
               <Route path="/usecases/:flowId/details" element={<UsecasesPage />} />
+              <Route path="/forms" element={<FormsPage />} />
+              <Route path="/forms/:id" element={<FormsPage />} />
               <Route path="/apps/:appname" element={<AppDetailPage />} />
               <Route path="/vulnerabilities" element={<VulnerabilitiesPage />} />
               <Route path="/vulnerabilities/*" element={<VulnerabilityDetailPage />} />
