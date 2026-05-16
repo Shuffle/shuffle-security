@@ -228,7 +228,7 @@ const FormInput = (defaultprops: any) => {
 				//toast.error("Failed getting workflows. Please try again.")
 			} else {
 				if (responseJson?.length > 0) {
-					setWorkflows(responseJson)
+					setWorkflows(responseJson.filter((wf) => wf?.background_processing !== true))
 				}
 			}
 		})
