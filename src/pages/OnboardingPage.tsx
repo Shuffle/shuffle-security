@@ -1042,36 +1042,46 @@ const OnboardingPage = () => {
                             return acc;
                           }, []);
                     return (
-                      <AppAuthConfig
-                        apps={appsForAuth}
-                        authStates={authStates}
-                        authenticatedApps={authenticatedApps}
-                        onAuthChange={handleAuthChange}
-                        onTestConnection={handleTestConnection}
-                        onSaveAuth={handleSaveAuth}
-                        onRefreshAuth={fetchAuthenticatedApps}
-                      />
+                      <>
+                        <Box sx={{ mb: 3, ml: -2 }}>
+                          <IntegrationStatus collapsed={false} iconSize={30} showAll hideAddButton />
+                        </Box>
+                        <AppAuthConfig
+                          apps={appsForAuth}
+                          authStates={authStates}
+                          authenticatedApps={authenticatedApps}
+                          onAuthChange={handleAuthChange}
+                          onTestConnection={handleTestConnection}
+                          onSaveAuth={handleSaveAuth}
+                          onRefreshAuth={fetchAuthenticatedApps}
+                        />
+                      </>
                     );
                   })()}
 
                   {steps[activeStep]?.key === 'automate' && (
-                    <AutomationConfig
-                      enrichmentState={enrichmentState}
-                      onEnrichmentChange={setEnrichmentState}
-                      onSave={(state) => {
-                        setDatastoreItem(AUTOMATION_CONFIG_KEY, state, ONBOARDING_CONFIG_CATEGORY)
-                          .catch(error => console.error('Failed to save automation config:', error));
-                      }}
-                      authenticatedApps={authenticatedApps}
-                      selectedApps={selectedApps}
-                      workflowAppNames={workflowAppNames}
-                      forwardWorkflowAppNames={forwardWorkflowAppNames}
-                      authStates={authStates}
-                      apiAuthEntries={authenticatedApps}
-                      onAuthChange={handleAuthChange}
-                      onTestConnection={handleTestConnection}
-                      onSaveAuth={handleSaveAuth}
-                    />
+                    <>
+                      <Box sx={{ mb: 3, ml: -2 }}>
+                        <IntegrationStatus collapsed={false} iconSize={30} showAll hideAddButton />
+                      </Box>
+                      <AutomationConfig
+                        enrichmentState={enrichmentState}
+                        onEnrichmentChange={setEnrichmentState}
+                        onSave={(state) => {
+                          setDatastoreItem(AUTOMATION_CONFIG_KEY, state, ONBOARDING_CONFIG_CATEGORY)
+                            .catch(error => console.error('Failed to save automation config:', error));
+                        }}
+                        authenticatedApps={authenticatedApps}
+                        selectedApps={selectedApps}
+                        workflowAppNames={workflowAppNames}
+                        forwardWorkflowAppNames={forwardWorkflowAppNames}
+                        authStates={authStates}
+                        apiAuthEntries={authenticatedApps}
+                        onAuthChange={handleAuthChange}
+                        onTestConnection={handleTestConnection}
+                        onSaveAuth={handleSaveAuth}
+                      />
+                    </>
                   )}
                 </motion.div>
               </AnimatePresence>
