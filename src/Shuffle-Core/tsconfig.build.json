@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "declarationMap": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "lib": ["DOM", "DOM.Iterable", "ES2020"],
+    "baseUrl": "..",
+    "paths": {
+      "@/Shuffle-Core": ["Shuffle-Core/index.ts"],
+      "@/Shuffle-Core/*": ["Shuffle-Core/*"],
+      "@/assets/*": ["assets/*"]
+    }
+  },
+  "include": ["index.ts", "Usecases.tsx", "UsecaseAlluvialDiagram.tsx", "usePageMeta.ts", "toast.ts", "assets.d.ts", "**/*.tsx", "**/*.ts"],
+  "exclude": ["dist", "node_modules"]
+}
