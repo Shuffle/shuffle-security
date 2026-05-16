@@ -1,5 +1,11 @@
 import { useState, useRef, useMemo } from 'react';
 import {
+  CheckCircle as CheckCircleOutlineIcon,
+  AlertCircle as ErrorOutlineIcon,
+  Play as PlayArrowRoundedIcon,
+  RotateCcw as RestartAltIcon
+} from 'lucide-react';
+import {
   Box,
   Typography,
   Avatar,
@@ -8,10 +14,6 @@ import {
   InputBase,
 } from '@mui/material';
 import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
-import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -436,7 +438,7 @@ const AppMcpChat = ({ appName, appIcon, appId, categories }: AppMcpChatProps) =>
                     } : {},
                   }}
                 >
-                  <PlayArrowRoundedIcon sx={{ fontSize: 18 }} />
+                  <PlayArrowRoundedIcon size={18} />
                 </Box>
               </Box>
 
@@ -520,16 +522,16 @@ const AppMcpChat = ({ appName, appIcon, appId, categories }: AppMcpChatProps) =>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   {isError ? (
-                    <ErrorOutlineIcon sx={{ fontSize: 18, color: 'hsl(0 70% 55%)' }} />
+                    <ErrorOutlineIcon size={18} color={'hsl(0 70% 55%)'} />
                   ) : (
-                    <CheckCircleOutlineIcon sx={{ fontSize: 18, color: 'hsl(145 60% 45%)' }} />
+                    <CheckCircleOutlineIcon size={18} color={'hsl(145 60% 45%)'} />
                   )}
                   <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
                     {isError ? 'Failed' : 'Completed'}
                   </Typography>
                 </Box>
                 <Chip
-                  icon={<RestartAltIcon sx={{ fontSize: 14 }} />}
+                  icon={<RestartAltIcon size={14} />}
                   label="Run again"
                   size="small"
                   onClick={reset}

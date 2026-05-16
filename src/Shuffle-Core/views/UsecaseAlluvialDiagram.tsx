@@ -10,13 +10,16 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { algoliasearch } from 'algoliasearch';
 import { Box, Typography, Avatar, Tooltip, IconButton, Chip, Popover, Button, Dialog, InputBase } from '@mui/material';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import BlockIcon from '@mui/icons-material/Block';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CheckIcon from '@mui/icons-material/Check';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Plus, Webhook } from 'lucide-react';
+import {
+  Plus,
+  Webhook,
+  Ban as BlockIcon,
+  CheckCircle as CheckCircleOutlineIcon,
+  Check as CheckIcon,
+  Copy as ContentCopyIcon,
+  ExternalLink as OpenInNewIcon
+} from 'lucide-react';
 import { AppSearchDrawer } from '@shuffleio/shuffle-mcps';
 import { useAppDetail } from '@shuffleio/shuffle-mcps';
 import { getApiUrl, getAuthHeader } from '@shuffleio/shuffle-mcps';
@@ -399,14 +402,14 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
                     setTimeout(() => setCopied(false), 2000);
                   } catch { import('sonner').then(({ toast }) => toast.error('Failed to copy')); }
                 }} sx={{ p: 0.5, color: 'hsl(var(--muted-foreground))' }}>
-                  {copied ? <CheckIcon sx={{ fontSize: 14, color: '#4ade80' }} /> : <ContentCopyIcon sx={{ fontSize: 14 }} />}
+                  {copied ? <CheckIcon size={14} color={'#4ade80'} /> : <ContentCopyIcon size={14} />}
                 </IconButton>
               </Box>
             )}
 
             <Button
               size="small"
-              startIcon={webhookEnabled ? <BlockIcon sx={{ fontSize: 14 }} /> : <CheckCircleOutlineIcon sx={{ fontSize: 14 }} />}
+              startIcon={webhookEnabled ? <BlockIcon size={14} /> : <CheckCircleOutlineIcon size={14} />}
               onClick={async () => {
                 const willBeEnabled = !webhookEnabled;
                 setWebhookOptimistic(willBeEnabled);
@@ -452,7 +455,7 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
               <Button
                 size="small"
-                startIcon={<OpenInNewIcon sx={{ fontSize: 14 }} />}
+                startIcon={<OpenInNewIcon size={14} />}
                 onClick={() => {
                   setAnchorEl(null);
                   onVisitApp?.(app.name);
@@ -468,7 +471,7 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
               {onToggleSync && (
                 <Button
                   size="small"
-                  startIcon={isEnabled ? <BlockIcon sx={{ fontSize: 14 }} /> : <CheckCircleOutlineIcon sx={{ fontSize: 14 }} />}
+                  startIcon={isEnabled ? <BlockIcon size={14} /> : <CheckCircleOutlineIcon size={14} />}
                   onClick={handleToggle}
                   sx={{
                     justifyContent: 'flex-start', textTransform: 'none', fontSize: '0.75rem',
@@ -1386,7 +1389,7 @@ export default function UsecaseAlluvialDiagram({
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, py: 0.5 }}>
                   {['OCSF translation', 'Enrichment', 'Task creation', 'Agentic response'].map((step) => (
                     <Box key={step} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                      <CheckIcon sx={{ fontSize: 13, color: '#4ade80' }} />
+                      <CheckIcon size={13} color={'#4ade80'} />
                       <Typography sx={{ fontSize: '0.75rem', color: 'inherit', lineHeight: 1.3 }}>
                         {step}
                       </Typography>

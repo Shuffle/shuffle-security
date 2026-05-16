@@ -19,6 +19,27 @@
  */
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Plus as AddIcon,
+  Paperclip as AttachFileIcon,
+  CheckCircle2 as CheckCircleIcon,
+  Check as CheckIcon,
+  X as CloseIcon,
+  AlertCircle as ErrorIcon,
+  TimerOff as HourglassDisabledIcon,
+  Lock as LockIcon,
+  ExternalLink as OpenInNewIcon,
+  Pause as PauseIcon,
+  Play as PlayArrowRoundedIcon,
+  RefreshCw as RefreshIcon,
+  RotateCcw as RestartAltIcon,
+  Clock as ScheduleIcon,
+  Send as SendIcon,
+  CircleStop as StopCircleIcon,
+  ThumbsDown as ThumbDownIcon,
+  ThumbsUp as ThumbUpIcon,
+  AlertTriangle as WarningIcon
+} from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Avatar,
@@ -38,24 +59,6 @@ import {
   Typography,
 } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
-import AddIcon from '@mui/icons-material/Add';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CheckIcon from '@mui/icons-material/Check';
-import ErrorIcon from '@mui/icons-material/Error';
-import HourglassDisabledIcon from '@mui/icons-material/HourglassDisabled';
-import PauseIcon from '@mui/icons-material/Pause';
-import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import ScheduleIcon from '@mui/icons-material/Schedule';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import StopCircleIcon from '@mui/icons-material/StopCircle';
-import ThumbUpIcon from '@mui/icons-material/ThumbUp';
-import ThumbDownIcon from '@mui/icons-material/ThumbDown';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import SendIcon from '@mui/icons-material/Send';
-import WarningIcon from '@mui/icons-material/Warning';
-import CloseIcon from '@mui/icons-material/Close';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
@@ -114,7 +117,6 @@ const deepParseJsonStrings = (obj: any, depth = 0): any => {
 import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
 import AppDetailDrawer from '@/Shuffle-MCPs/AppDetailDrawer';
-import LockIcon from '@mui/icons-material/Lock';
 import { getApiUrl, getAuthHeader, API_CONFIG } from '@/Shuffle-MCPs/api';
 import { fetchApps } from '@/Shuffle-MCPs/appsCache';
 import { resolveApps } from '@/Shuffle-MCPs/resolveApp';
@@ -374,19 +376,19 @@ const StatusIcon: React.FC<{ status?: string }> = ({ status }) => {
     node = <CircularProgress size={18} sx={{ color: STATUS_COLORS.running }} />;
     label = 'Running';
   } else if (s === 'WAITING') {
-    node = <PauseIcon sx={{ color: STATUS_COLORS.running, fontSize: 20 }} />;
+    node = <PauseIcon size={20} />;
     label = 'Waiting for input';
   } else if (s === 'FINISHED' || s === 'SUCCESS') {
-    node = <CheckCircleIcon sx={{ color: STATUS_COLORS.finished, fontSize: 20 }} />;
+    node = <CheckCircleIcon size={20} />;
     label = 'Finished successfully';
   } else if (s === 'ABORTED' || s === 'FAILURE') {
-    node = <ErrorIcon sx={{ color: STATUS_COLORS.error, fontSize: 20 }} />;
+    node = <ErrorIcon size={20} />;
     label = s === 'ABORTED' ? 'Aborted' : 'Failed';
   } else if (s === 'IGNORED' || s === 'IGNORE') {
-    node = <WarningIcon sx={{ color: STATUS_COLORS.warning, fontSize: 20 }} />;
+    node = <WarningIcon size={20} />;
     label = 'Ignored — skipped after run finished';
   } else {
-    node = <HourglassDisabledIcon sx={{ color: 'hsl(var(--muted-foreground))', fontSize: 20 }} />;
+    node = <HourglassDisabledIcon size={20} color={'hsl(var(--muted-foreground))'} />;
     label = 'Pending';
   }
   return (
@@ -567,7 +569,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
             </Tooltip>
           ) : item.category === 'finalise' || details?.action === 'finish' ? (
             <Tooltip title="Final answer" arrow>
-              <CheckIcon sx={{ color: STATUS_COLORS.finished, fontSize: 18 }} />
+              <CheckIcon size={18} />
             </Tooltip>
           ) : (
             <Box sx={{ width: 22 }} />
@@ -647,7 +649,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
                     }}
                     sx={{ color: STATUS_COLORS.finished }}
                   >
-                    <ThumbUpIcon sx={{ fontSize: 16 }} />
+                    <ThumbUpIcon size={16} />
                   </IconButton>
                 </span>
               </Tooltip>
@@ -661,7 +663,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
                     }}
                     sx={{ color: STATUS_COLORS.error }}
                   >
-                    <ThumbDownIcon sx={{ fontSize: 16 }} />
+                    <ThumbDownIcon size={16} />
                   </IconButton>
                 </span>
               </Tooltip>
@@ -686,7 +688,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
                     onClick={() => details && onRerunDecision(details)}
                     sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
                   >
-                    <RestartAltIcon sx={{ fontSize: 16 }} />
+                    <RestartAltIcon size={16} />
                   </IconButton>
                 </span>
               </Tooltip>
@@ -700,7 +702,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
                   onClick={() => window.open((details!.run_details as any).debug_url, '_blank', 'noopener,noreferrer')}
                   sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
                 >
-                  <OpenInNewIcon sx={{ fontSize: 16 }} />
+                  <OpenInNewIcon size={16} />
                 </IconButton>
               </span>
             </Tooltip>
@@ -785,7 +787,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
                   }}
                   sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
                 >
-                  <OpenInNewIcon sx={{ fontSize: 18 }} />
+                  <OpenInNewIcon size={18} />
                 </IconButton>
               </Tooltip>
                   )}
@@ -840,7 +842,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
               border: '1px solid hsla(var(--severity-medium) / 0.3)',
               bgcolor: 'hsla(var(--severity-medium) / 0.08)',
             }}>
-              <LockIcon sx={{ color: 'hsl(var(--severity-medium))', fontSize: 22 }} />
+              <LockIcon size={22} color={'hsl(var(--severity-medium))'} />
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
                   {pretty} requires authentication
@@ -2457,7 +2459,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
               '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted))' },
             }}
           >
-            <RefreshIcon sx={{ fontSize: 16 }} />
+            <RefreshIcon size={16} />
           </IconButton>
         </span>
       </Tooltip>
@@ -2475,7 +2477,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
               '&.Mui-disabled': { opacity: 0.4, color: 'hsl(var(--muted-foreground))' },
             }}
           >
-            <ScheduleIcon sx={{ fontSize: 16 }} />
+            <ScheduleIcon size={16} />
           </IconButton>
         </span>
       </Tooltip>
@@ -2526,7 +2528,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
               gap: 1,
             }}
           >
-            <ScheduleIcon sx={{ fontSize: 16, color: 'hsl(var(--primary))' }} />
+            <ScheduleIcon size={16} color={'hsl(var(--primary))'} />
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Box sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', mb: 0.25 }}>
                 Detected from your prompt
@@ -2955,7 +2957,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                         {img.name}
                       </Typography>
                       <IconButton size="small" onClick={() => setAttachedImages((prev) => prev.filter((_, i) => i !== idx))} sx={{ p: 0.25, color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--destructive))' } }} aria-label="Remove attached image">
-                        <CloseIcon sx={{ fontSize: 12 }} />
+                        <CloseIcon size={12} />
                       </IconButton>
                     </Box>
                   ))}
@@ -3044,7 +3046,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                           transition: 'all 160ms ease',
                         }}
                       >
-                        <ScheduleIcon sx={{ fontSize: 18 }} />
+                        <ScheduleIcon size={18} />
                         {hintActive && (
                           <Box
                             component="span"
@@ -3079,7 +3081,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted))' },
                 }}
               >
-                <AttachFileIcon sx={{ fontSize: 18 }} />
+                <AttachFileIcon size={18} />
               </IconButton>
               )}
               <Tooltip title={submitTooltip} placement="top" arrow>
@@ -3173,7 +3175,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       '&:hover': agentRequestLoading ? {} : { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted) / 0.5)' },
                     }}
                   >
-                    <AddIcon sx={{ fontSize: 14 }} />
+                    <AddIcon size={14} />
                     {appPickerLabel}
                   </Box>
                 </Tooltip>
@@ -3212,7 +3214,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       {app.name.replace(/_/g, ' ')}
                     </Typography>
                     {needsAuth && (
-                      <WarningIcon sx={{ fontSize: 14, color: 'hsl(var(--severity-medium))', mr: 0.25 }} />
+                      <WarningIcon size={14} color={'hsl(var(--severity-medium))'} style={{mr: 0.25}} />
                     )}
                     <IconButton
                       size="small"
@@ -3220,7 +3222,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       disabled={agentRequestLoading}
                       sx={{ p: 0.125, color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--destructive))' }, '&.Mui-disabled': { opacity: 0.4 } }}
                     >
-                      <CloseIcon sx={{ fontSize: 12 }} />
+                      <CloseIcon size={12} />
                     </IconButton>
                   </Box>
                   </Tooltip>
@@ -3253,7 +3255,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                     color: 'hsl(var(--foreground))',
                     maxWidth: '100%',
                   }}>
-                    <WarningIcon sx={{ fontSize: 14, color: 'hsl(var(--severity-medium))' }} />
+                    <WarningIcon size={14} color={'hsl(var(--severity-medium))'} />
                     <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
                       {unauthed.length === 1
                         ? `${unauthed[0].name.replace(/_/g, ' ')} is not authenticated.`
@@ -3340,7 +3342,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                           '&:hover': { color: 'hsl(var(--destructive))', bgcolor: 'hsl(var(--muted))' },
                         }}
                       >
-                        <StopCircleIcon sx={{ fontSize: 18 }} />
+                        <StopCircleIcon size={18} />
                       </IconButton>
                     </span>
                   </Tooltip>
@@ -3357,7 +3359,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       '&:hover': { color: 'hsl(var(--primary))', bgcolor: 'hsl(var(--muted))' },
                     }}
                   >
-                    <RestartAltIcon sx={{ fontSize: 18 }} />
+                    <RestartAltIcon size={18} />
                   </IconButton>
                 </span>
               </Tooltip>
@@ -3476,9 +3478,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
                         {isRunning ? (
                           <CircularProgress size={16} sx={{ color: 'hsl(var(--primary))' }} />
                         ) : status === 'FINISHED' ? (
-                          <CheckCircleIcon sx={{ fontSize: 18, color: 'hsl(142 70% 45%)' }} />
+                          <CheckCircleIcon size={18} color={'hsl(142 70% 45%)'} />
                         ) : (
-                          <ErrorIcon sx={{ fontSize: 18, color: 'hsl(var(--destructive))' }} />
+                          <ErrorIcon size={18} color={'hsl(var(--destructive))'} />
                         )}
                         <Typography sx={{ fontSize: '0.9rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
                           {isRunning ? 'Agent is working…' : status === 'FINISHED' ? 'Run finished' : `Run ${status.toLowerCase()}`}
@@ -3504,7 +3506,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                               bgcolor: 'hsla(var(--severity-medium) / 0.08)',
                             }}
                           >
-                            <LockIcon sx={{ color: 'hsl(var(--severity-medium))', fontSize: 22 }} />
+                            <LockIcon size={22} color={'hsl(var(--severity-medium))'} />
                             <Box sx={{ flex: 1, minWidth: 0 }}>
                               <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
                                 {pretty} requires authentication
@@ -3659,7 +3661,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                                       }}
                                       sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
                                     >
-                                      <OpenInNewIcon sx={{ fontSize: 18 }} />
+                                      <OpenInNewIcon size={18} />
                                     </IconButton>
                                   </Tooltip>
                                 )}
@@ -3750,9 +3752,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
                     }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                         {detailedStatus === 'FINISHED' ? (
-                          <CheckCircleIcon sx={{ fontSize: 18, color: 'hsl(142 70% 45%)' }} />
+                          <CheckCircleIcon size={18} color={'hsl(142 70% 45%)'} />
                         ) : (
-                          <ErrorIcon sx={{ fontSize: 18, color: 'hsl(var(--destructive))' }} />
+                          <ErrorIcon size={18} color={'hsl(var(--destructive))'} />
                         )}
                         <Typography sx={{ fontSize: '0.9rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
                           {detailedStatus === 'FINISHED' ? 'Run finished' : `Run ${detailedStatus.toLowerCase()}`}
@@ -3849,7 +3851,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       '&:hover': continuationText.trim() && !agentRequestLoading ? { filter: 'brightness(1.1)', bgcolor: 'hsl(var(--primary))' } : {},
                     }}
                   >
-                    {agentRequestLoading ? <CircularProgress size={16} sx={{ color: 'inherit' }} /> : <SendIcon sx={{ fontSize: 18 }} />}
+                    {agentRequestLoading ? <CircularProgress size={16} sx={{ color: 'inherit' }} /> : <SendIcon size={18} />}
                   </IconButton>
                 </Box>
                 </Box>

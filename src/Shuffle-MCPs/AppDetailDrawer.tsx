@@ -7,7 +7,15 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { toast } from '@/Shuffle-MCPs/toast';
-import { Download, Forward } from 'lucide-react';
+import {
+  Download,
+  Forward,
+  CheckCircle2 as CheckCircleIcon,
+  X as CloseIcon,
+  AlertCircle as ErrorOutlineIcon,
+  ExternalLink as OpenInNewIcon,
+  Play as PlayArrowIcon
+} from 'lucide-react';
 import { getDatastoreByCategory, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import {
   Box,
@@ -24,11 +32,6 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { motion } from 'framer-motion';
@@ -447,7 +450,7 @@ export default function AppDetailDrawer({
           onClick={handleClose}
           sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--foreground))' } }}
         >
-          <CloseIcon fontSize="small" />
+          <CloseIcon size={16} />
         </IconButton>
       </Box>
 
