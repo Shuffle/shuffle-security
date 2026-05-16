@@ -1621,9 +1621,11 @@ const EditWorkflow = (props) => {
 									</Typography>
 
 									<FormControl style={{ marginTop: 15, width: 500, maxWidth: "100%" }}>
+										<InputLabel id="output-yield-control-label">Yielding nodes</InputLabel>
 										<Select
 											defaultValue=""
 											id="output-yield-control"
+											labelId="output-yield-control-label"
 											label="Yielding nodes"
 											multiple
 											fullWidth
@@ -1648,6 +1650,7 @@ const EditWorkflow = (props) => {
 											}}
 										>
 											<MenuItem value="none">
+												<Checkbox checked={selectedYieldActions.length === 0} />
 												<em>None</em>
 											</MenuItem>
 											{workflow?.actions?.map((action, actionIndex) => {
@@ -1656,6 +1659,7 @@ const EditWorkflow = (props) => {
 														key={actionIndex}
 														value={action.id}
 													>
+														<Checkbox checked={selectedYieldActions.includes(action.id)} />
 														<Tooltip title={action.app_name} key={actionIndex}>
 															<img src={action.large_image !== undefined && action.large_image !== null && action.large_image.length > 0 ? action.large_image : theme.palette.defaultImage} style={{ width: 20, height: 20, marginRight: 10, }} />
 														</Tooltip>
