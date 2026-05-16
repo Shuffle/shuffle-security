@@ -114,7 +114,7 @@ const deepParseJsonStrings = (obj: any, depth = 0): any => {
   return obj;
 };
 
-import { motion, LayoutGroup } from 'framer-motion';
+
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
