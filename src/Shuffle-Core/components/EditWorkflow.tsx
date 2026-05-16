@@ -1484,6 +1484,7 @@ const EditWorkflow = (props) => {
 												onChange={(e) => {
 													inputQuestions[index].name = e.target.value
 													setInputQuestions(inputQuestions)
+													pushRealtimeInputQuestions(inputQuestions)
 													setUpdate(Math.random());
 												}}
 												InputProps={{
@@ -1513,6 +1514,7 @@ const EditWorkflow = (props) => {
 
 													inputQuestions[index].value = e.target.value
 													setInputQuestions(inputQuestions)
+													pushRealtimeInputQuestions(inputQuestions)
 													setUpdate(Math.random());
 												}}
 												InputProps={{
@@ -1530,6 +1532,7 @@ const EditWorkflow = (props) => {
 													// Remove current index
 													console.log("Removing index: ", index)
 													inputQuestions[index].deleted = true
+													pushRealtimeInputQuestions(inputQuestions)
 													setUpdate(Math.random());
 												}}
 											>
