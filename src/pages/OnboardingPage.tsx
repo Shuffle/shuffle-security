@@ -987,7 +987,7 @@ const OnboardingPage = () => {
 
                   {steps[activeStep]?.key === 'sources' && (
                     <>
-                      <Box sx={{ mb: 3, mx: -1, '& > div': { px: '0 !important' } }}>
+                      <Box sx={{ mb: 3, ml: -2 }}>
                         <IntegrationStatus collapsed={false} iconSize={30} showAll hideAddButton />
                       </Box>
                       <UnifiedSourceSetup
