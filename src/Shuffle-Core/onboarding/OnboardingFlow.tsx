@@ -954,7 +954,7 @@ const OnboardingFlow = ({
       </Box>
 
       {/* Scrollable Content Area */}
-      <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', zIndex: 1, pt: { xs: 12, sm: 14 }, pb: 10, width: '100%' }}>
+      <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', zIndex: 1, pt: { xs: 8, sm: 9 }, pb: 10, width: '100%' }}>
         <Container maxWidth="lg" sx={{ py: { xs: 1, sm: 2 }, px: { xs: 2, sm: 3 }, width: '100%', maxWidth: '100%' }}>
           {/* Content Card */}
           <motion.div
