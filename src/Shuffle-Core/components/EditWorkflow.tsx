@@ -414,21 +414,19 @@ const EditWorkflow = (props) => {
 			}}
 			PaperProps={{
 				sx: {
-					color: "hsl(var(--sidebar-foreground))",
+				color: "hsl(var(--foreground))",
 					minWidth: isMobile ? "90%" : "650px",
 					maxWidth: isMobile ? "90%" : "650px",
 					minHeight: "400px",
-					//minWidth: isMobile ? "90%" : newWorkflow === true ? 1000 : 550,
-					//maxWidth: isMobile ? "90%" : newWorkflow === true ? 1000 : 550,
 		    		borderRadius: "8px 0 0 8px",
-		    		backgroundColor: "hsl(var(--sidebar-background))",
-		    		borderLeft: "1px solid hsl(var(--sidebar-border))",
+		    		backgroundColor: "hsl(var(--background))",
+		    		borderLeft: "1px solid hsl(var(--border))",
 				},
 			}}
 		>
 			<DialogTitle style={{ padding: 30, paddingBottom: 0, zIndex: 1000, paddingTop: "25px", paddingLeft: "50px"}}>
 				<div style={{ display: "flex" }}>
-					<div style={{ flex: 1, color: "hsl(var(--sidebar-foreground))" }}>
+					<div style={{ flex: 1, color: "hsl(var(--foreground))" }}>
 						<div style={{ display: "flex" }}>
 							<Typography variant="h4" style={{ flex: 9, marginTop: newWorkflow ? 50 : 25, }}>
 								{newWorkflow ? "New" : "Editing"} Workflow
@@ -505,8 +503,8 @@ const EditWorkflow = (props) => {
 					height: 75, 
 					paddingTop: 20, 
 					paddingLeft: 30, 
-					backgroundColor: "hsl(var(--sidebar-background))",
-					borderTop: "1px solid hsl(var(--sidebar-border))",
+					backgroundColor: "hsl(var(--background))",
+					borderTop: "1px solid hsl(var(--border))",
 				}}>
 					{newWorkflow === true ? (
 						<div style={{ display: "flex", gap: 10 }}>
