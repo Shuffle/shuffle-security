@@ -943,7 +943,7 @@ const OnboardingFlow = ({
         <Box sx={{ pointerEvents: 'auto' }}>
           <SegmentedControl
             size="md"
-            variant="filled"
+            variant="outline"
             ariaLabel="Onboarding steps"
             layoutId="onboarding-steps"
             value={steps[activeStep]?.key ?? steps[0].key}
