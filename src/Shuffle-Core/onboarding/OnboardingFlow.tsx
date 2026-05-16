@@ -3,12 +3,12 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Box, Container, Typography, Button, Stack } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { TicketingSystemSearch } from '@/components/onboarding/TicketingSystemSearch';
-import { WelcomeStep } from '@/components/onboarding/WelcomeStep';
-import { UnifiedSourceSetup } from '@/components/onboarding/UnifiedSourceSetup';
+import { TicketingSystemSearch } from './TicketingSystemSearch';
+import { WelcomeStep } from './WelcomeStep';
+import { UnifiedSourceSetup } from './UnifiedSourceSetup';
 import type { AlgoliaSearchApp } from '@/Shuffle-MCPs';
 import { AppAuthConfig, AppAuthState, AuthStatus } from '@/Shuffle-MCPs/AppAuthConfig';
-import { AutomationConfig, EnrichmentState } from '@/components/onboarding/AutomationConfig';
+import { AutomationConfig, EnrichmentState } from './AutomationConfig';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { setDatastoreItem, getDatastoreItem } from '@/Shuffle-MCPs/datastore';
 import {
