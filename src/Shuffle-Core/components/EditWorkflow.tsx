@@ -1564,8 +1564,9 @@ const EditWorkflow = (props) => {
 											}
 
 											setInputMarkdown(e.target.value)
-											workflow.form_control.input_markdown = e.target.value
-											setWorkflow(workflow)
+										updateInnerWorkflow((next) => {
+											next.form_control = { ...(next.form_control || {}), input_markdown: e.target.value }
+										})
 											setUpdate(Math.random())
 										}}
 									/>
@@ -1679,9 +1680,9 @@ const EditWorkflow = (props) => {
 									layoutId="edit-workflow-type"
 									value={innerWorkflow.workflow_type || "standalone"}
 									onChange={(val) => {
-										innerWorkflow.workflow_type = val
-										setInnerWorkflow(innerWorkflow)
-										setUpdate(Math.random())
+										updateInnerWorkflow((next) => {
+											next.workflow_type = val
+										})
 									}}
 									options={[
 										{ value: "agentic", label: "Agentic", title: "Agentic workflows takes an input based on input questions (forms) and performs actions based on it by itself, using Large Action Models & Singul" },
@@ -1695,8 +1696,9 @@ const EditWorkflow = (props) => {
 
 							<TextField
 								onBlur={(event) => {
-									innerWorkflow.blogpost = event.target.value
-									setInnerWorkflow(innerWorkflow)
+									updateInnerWorkflow((next) => {
+										next.blogpost = event.target.value
+									})
 								}}
 								InputProps={{
 									style: {
@@ -1713,8 +1715,9 @@ const EditWorkflow = (props) => {
 							/>
 							<TextField
 								onBlur={(event) => {
-									innerWorkflow.video = event.target.value
-									setInnerWorkflow(innerWorkflow)
+									updateInnerWorkflow((next) => {
+										next.video = event.target.value
+									})
 								}}
 								InputProps={{
 									style: {
