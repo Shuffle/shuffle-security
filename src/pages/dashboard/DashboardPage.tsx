@@ -506,7 +506,24 @@ const DashboardPage = () => {
     url: '/dashboard',
   });
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { userInfo } = useAuth();
+  const { active: demoActive, startDemo } = useDemo();
+  // Autostart demo mode when arriving via ?demo=true (e.g. from the
+  // onboarding "Try Demo Mode" button, or a deep link from Shuffle Core).
+  const demoAutostartRef = useRef(false);
+  useEffect(() => {
+    if (searchParams.get('demo') !== 'true') return;
+    if (demoAutostartRef.current) return;
+    demoAutostartRef.current = true;
+    if (!demoActive) {
+      startDemo().catch(() => { /* surfaced via toast */ });
+    }
+    // Strip the param so refreshes don't re-trigger it.
+    const next = new URLSearchParams(searchParams);
+    next.delete('demo');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, demoActive, startDemo, setSearchParams]);
   const isSupport = userInfo?.support === true;
   const { notifications, isLoading, refresh: refreshNotifications } = useAgentNotifications();
   const { singular: entitySingular, basePath: entityBasePath } = useEntityPreference();
