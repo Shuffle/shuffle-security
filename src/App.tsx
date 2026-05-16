@@ -180,6 +180,8 @@ const ThemedApp = () => {
               }
             >
               <Route path="/onboarding" element={<OnboardingPage />} />
+              <Route path="/onboarding/product" element={<OnboardingPage />} />
+              <Route path="/onboarding/welcome" element={<OnboardingPage />} />
               <Route path="/onboarding/sources" element={<OnboardingPage />} />
               <Route path="/onboarding/authenticate" element={<OnboardingPage />} />
               <Route path="/onboarding/automate" element={<OnboardingPage />} />

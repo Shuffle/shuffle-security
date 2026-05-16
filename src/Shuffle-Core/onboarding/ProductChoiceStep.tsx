@@ -32,56 +32,14 @@ export const ProductChoiceStep = ({ onSelectCore, onSelectSecurity }: ProductCho
   ];
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        position: 'relative',
-        backgroundColor: 'hsl(var(--background))',
-        overflowX: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-        pt: { xs: 6, sm: 10 },
-        pb: { xs: 6, sm: 10 },
-      }}
-    >
-      {/* Background effects */}
-      <Box
-        sx={{
-          position: 'fixed',
-          top: '10%',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          width: '150%',
-          height: '80%',
-          background:
-            'radial-gradient(ellipse at center, hsl(var(--primary) / 0.06) 0%, transparent 60%)',
-          pointerEvents: 'none',
-          zIndex: 0,
-        }}
-      />
-      <Box
-        sx={{
-          position: 'fixed',
-          inset: 0,
-          backgroundImage: `
-            linear-gradient(hsl(var(--primary) / 0.02) 1px, transparent 1px),
-            linear-gradient(90deg, hsl(var(--primary) / 0.02) 1px, transparent 1px)
-          `,
-          backgroundSize: '60px 60px',
-          pointerEvents: 'none',
-          zIndex: 0,
-        }}
-      />
-
-      <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
+    <Box sx={{ width: '100%' }}>
+      <Container maxWidth="md" disableGutters sx={{ position: 'relative', zIndex: 1 }}>
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
+          transition={{ duration: 0.3 }}
         >
-          <Stack spacing={1.5} sx={{ textAlign: 'center', mb: { xs: 5, sm: 7 } }}>
+          <Stack spacing={1} sx={{ textAlign: 'center', mb: { xs: 3, sm: 4 } }}>
             <Typography
               variant="h3"
               sx={{

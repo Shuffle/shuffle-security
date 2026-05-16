@@ -1,4 +1,4 @@
-import { ArrowRight as ArrowForwardIcon, ArrowLeft as ArrowBackIcon, CheckCircle as CheckCircleOutlineIcon, Hand as WavingHandIcon, Link as LinkIcon, Key as VpnKeyIcon, Rocket as RocketLaunchIcon } from 'lucide-react';
+import { ArrowRight as ArrowForwardIcon, ArrowLeft as ArrowBackIcon, CheckCircle as CheckCircleOutlineIcon, Hand as WavingHandIcon, Link as LinkIcon, Key as VpnKeyIcon, Rocket as RocketLaunchIcon, Sparkles as SparklesIcon } from 'lucide-react';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Box, Container, Typography, Button, Stack } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -85,9 +85,10 @@ const processAuthData = (authData: ApiAuthEntry[]): ApiAuthEntry[] => {
   });
 };
 
-// All possible steps (Welcome is conditional)
+// All possible steps. 'product' is conditional on showProductChoice; 'welcome' is hidden when already configured.
 const ALL_STEPS = [
-  { key: 'welcome', label: 'Welcome', icon: <WavingHandIcon />, path: '/onboarding' },
+  { key: 'product', label: 'Product', icon: <SparklesIcon />, path: '/onboarding/product' },
+  { key: 'welcome', label: 'Welcome', icon: <WavingHandIcon />, path: '/onboarding/welcome' },
   { key: 'sources', label: 'Sources', icon: <LinkIcon />, path: '/onboarding/sources' },
   { key: 'authenticate', label: 'Authenticate', icon: <VpnKeyIcon />, path: '/onboarding/authenticate' },
   { key: 'automate', label: 'Automate', icon: <RocketLaunchIcon />, path: '/onboarding/automate' },
@@ -189,11 +190,12 @@ const OnboardingFlow = ({
 
   // Compute dynamic steps
   const steps = useMemo(() => {
-    if (hideWelcome) {
-      return ALL_STEPS.filter(s => s.key !== 'welcome');
-    }
-    return ALL_STEPS;
-  }, [hideWelcome]);
+    return ALL_STEPS.filter(s => {
+      if (s.key === 'product' && !showProductChoice) return false;
+      if (s.key === 'welcome' && hideWelcome) return false;
+      return true;
+    });
+  }, [hideWelcome, showProductChoice]);
 
   // Build path-to-key and key-to-path mappings
   const pathToKey = useMemo(() => {
@@ -207,7 +209,14 @@ const OnboardingFlow = ({
   // Derive active step KEY from URL (stable, not index-based)
   const getKeyFromPath = (pathname: string) => pathToKey[pathname] || steps[0]?.key || 'sources';
 
-  const [activeStepKey, setActiveStepKey] = useState(() => getKeyFromPath(location.pathname));
+  const [activeStepKey, setActiveStepKey] = useState(() => {
+    // If we are on the bare /onboarding root and product hasn't been chosen yet,
+    // land on the product picker (step 1) rather than welcome/sources.
+    if (location.pathname === '/onboarding' && showProductChoice && !productChosen) {
+      return 'product';
+    }
+    return getKeyFromPath(location.pathname);
+  });
 
   // Derived index for rendering (computed, never set directly)
   const activeStep = useMemo(() => {
@@ -853,14 +862,7 @@ const OnboardingFlow = ({
     (app) => authStates[app.objectID]?.status === 'connected'
   ).length;
 
-  if (!productChosen) {
-    return (
-      <ProductChoiceStep
-        onSelectCore={handlePickCore}
-        onSelectSecurity={handlePickSecurity}
-      />
-    );
-  }
+
 
   return (
     <Box
@@ -919,56 +921,6 @@ const OnboardingFlow = ({
         }}
       >
         <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
-          {/* Product switcher — lets the user go back to the Core/Security picker */}
-          {showProductChoice && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.5 }}>
-              <Box
-                role="button"
-                tabIndex={0}
-                onClick={() => {
-                  try { localStorage.removeItem(PRODUCT_CHOICE_STORAGE_KEY); } catch { /* ignore */ }
-                  setProductChosen(false);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    try { localStorage.removeItem(PRODUCT_CHOICE_STORAGE_KEY); } catch { /* ignore */ }
-                    setProductChosen(false);
-                  }
-                }}
-                sx={{
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 0.75,
-                  px: 1.25,
-                  py: 0.5,
-                  borderRadius: 999,
-                  border: '1px solid hsl(var(--border))',
-                  backgroundColor: 'hsl(var(--card))',
-                  color: 'hsl(var(--muted-foreground))',
-                  fontSize: '0.75rem',
-                  fontWeight: 500,
-                  transition: 'all 0.15s ease',
-                  '&:hover': {
-                    color: 'hsl(var(--foreground))',
-                    borderColor: 'hsl(var(--primary) / 0.6)',
-                  },
-                  '&:focus-visible': {
-                    outline: '2px solid hsl(var(--primary))',
-                    outlineOffset: 2,
-                  },
-                }}
-              >
-                <ArrowBackIcon size={12} />
-                <span>
-                  {product === 'security' ? 'Shuffle Security' : 'Shuffle Core'}
-                  <span style={{ opacity: 0.5, margin: '0 6px' }}>·</span>
-                  Switch product
-                </span>
-              </Box>
-            </Box>
-          )}
           {/* Step Indicator */}
           <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', overflow: 'hidden' }}>
             <Stack 
@@ -1088,6 +1040,23 @@ const OnboardingFlow = ({
                   transition={{ duration: 0.15 }}
                   style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}
                 >
+                  {steps[activeStep]?.key === 'product' && (
+                    <ProductChoiceStep
+                      onSelectCore={handlePickCore}
+                      onSelectSecurity={() => {
+                        handlePickSecurity();
+                        // Auto-advance to the next step after picking Security
+                        setTimeout(() => {
+                          const nextIdx = activeStep + 1;
+                          if (nextIdx < steps.length) {
+                            trackOnboardingStep(nextIdx, steps[nextIdx].label);
+                            setActiveStepKey(steps[nextIdx].key);
+                          }
+                        }, 250);
+                      }}
+                    />
+                  )}
+
                   {steps[activeStep]?.key === 'welcome' && (
                     <WelcomeStep
                       selectedChallenge={selectedChallenge}
