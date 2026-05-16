@@ -275,8 +275,14 @@ const OnboardingFlow = ({
     return idx >= 0 ? idx : 0;
   }, [activeStepKey, steps]);
 
+  // When embedded outside the /onboarding route tree (e.g. the standalone
+  // /shuffle-core-demo showcase page), do NOT hijack the URL. The flow
+  // should render in-place without redirecting the host route.
+  const isOnboardingRoute = location.pathname === '/onboarding' || location.pathname.startsWith('/onboarding/');
+
   // Single useEffect: sync URL ↔ step key without circular fighting
   useEffect(() => {
+    if (!isOnboardingRoute) return;
     const currentStep = steps.find(s => s.key === activeStepKey);
     if (currentStep && location.pathname !== currentStep.path) {
       // Step key changed → update URL
@@ -288,14 +294,15 @@ const OnboardingFlow = ({
         setActiveStepKey(keyFromPath);
       }
     }
-  }, [activeStepKey, location.pathname]);
+  }, [activeStepKey, location.pathname, isOnboardingRoute]);
 
   // Redirect /onboarding to first real step when Welcome is hidden
   useEffect(() => {
+    if (!isOnboardingRoute) return;
     if (authLoaded && hideWelcome && location.pathname === '/onboarding') {
       navigate(steps[0].path, { replace: true });
     }
-  }, [authLoaded, hideWelcome]);
+  }, [authLoaded, hideWelcome, isOnboardingRoute]);
 
   // Mark welcome done when auth loads and apps are configured
   useEffect(() => {
