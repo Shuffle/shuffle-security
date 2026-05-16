@@ -946,10 +946,9 @@ const OnboardingPage = () => {
           >
             <Box
               sx={{
-                backgroundColor: 'background.paper',
-                backdropFilter: 'blur(20px)',
+                backgroundColor: 'transparent',
                 border: '1px solid',
-                borderColor: 'divider',
+                borderColor: 'hsl(var(--border))',
                 borderRadius: 4,
                 p: { xs: 2, sm: 3, md: 4 },
                 minHeight: 400,
