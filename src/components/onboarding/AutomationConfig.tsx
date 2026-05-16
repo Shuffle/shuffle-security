@@ -2,6 +2,7 @@ import { ChevronDown as ExpandMoreIcon, Shield as SecurityIcon, Mail as EmailIco
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { IntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
+import { fetchAppsViaApiConfig } from '@/Shuffle-MCPs/appsCache';
 import { AppAuthCard, type AppAuthState, type ApiAuthEntry as AppAuthApiEntry } from '@/Shuffle-MCPs/AppAuthConfig';
 import type { AlgoliaSearchApp } from '@/Shuffle-MCPs';
 import {
@@ -284,6 +285,39 @@ export const AutomationConfig = ({
   const [newFeedUrl, setNewFeedUrl] = useState('');
   const [newFeedName, setNewFeedName] = useState('');
 
+  // Activated apps from /api/v1/apps — mirrors the source set used by the
+  // Integrations bar so the per-section app lists below stay in sync with
+  // what the user actually sees there.
+  const [activatedApps, setActivatedApps] = useState<Array<{ id: string; name: string; image: string; categories: string[] }>>([]);
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const apps = await fetchAppsViaApiConfig();
+        if (cancelled || !Array.isArray(apps)) return;
+        setActivatedApps(
+          apps
+            .filter((a: any) => a?.activated && a?.name)
+            .map((a: any) => ({
+              id: a.id || a.name,
+              name: a.name,
+              image: a.large_image || a.image_url || '',
+              categories: Array.isArray(a.categories) ? a.categories : [],
+            })),
+        );
+      } catch {
+        // non-critical
+      }
+    };
+    load();
+    const handler = () => load();
+    window.addEventListener('integrations-changed', handler);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('integrations-changed', handler);
+    };
+  }, []);
+
   // Create a set of selected app names (normalized) for quick lookup
   const selectedAppNames = useMemo(() => {
     const names = new Set<string>();
@@ -330,21 +364,41 @@ export const AutomationConfig = ({
       });
     }
 
-    // Also include selected (pending) apps not yet authenticated
+    // Also include selected (pending) apps not yet authenticated.
+    // Apps without a known ingestion category fall into "Other" so the
+    // section matches what is shown in the Integrations bar above.
     const validatedNames = new Set(validatedApps.map(a => normalizeAppName(a.name)));
+    const seenIngestion = new Set<string>(validatedApps.map(a => normalizeAppName(a.name)));
     selectedApps.forEach(app => {
-      if (validatedNames.has(normalizeAppName(app.name))) return;
-      const category = getIngestionCategory(app.name, app.categories);
-      if (category) {
-        ingestionByCategory[category].push({
-          id: app.objectID,
-          name: app.name,
-          image: app.image_url,
-          isValidated: false,
-          isSelected: true,
-          hasAuthConfig: false,
-        });
-      }
+      const norm = normalizeAppName(app.name);
+      if (validatedNames.has(norm)) return;
+      const category = getIngestionCategory(app.name, app.categories) || 'other';
+      ingestionByCategory[category].push({
+        id: app.objectID,
+        name: app.name,
+        image: app.image_url,
+        isValidated: false,
+        isSelected: true,
+        hasAuthConfig: false,
+      });
+      seenIngestion.add(norm);
+    });
+
+    // Merge in activated apps from /api/v1/apps so the per-section app list
+    // matches the Integrations bar (which also pulls from this source).
+    activatedApps.forEach(app => {
+      const norm = normalizeAppName(app.name);
+      if (seenIngestion.has(norm)) return;
+      const category = getIngestionCategory(app.name, app.categories) || 'other';
+      ingestionByCategory[category].push({
+        id: app.id,
+        name: app.name,
+        image: app.image,
+        isValidated: false,
+        isSelected: false,
+        hasAuthConfig: false,
+      });
+      seenIngestion.add(norm);
     });
 
     // Build a separate category map for Forward Tickets using forwardWorkflowAppNames
@@ -366,19 +420,34 @@ export const AutomationConfig = ({
       });
     }
     const fwdValidatedNames = new Set(forwardValidatedApps.map(a => normalizeAppName(a.name)));
+    const seenForward = new Set<string>(forwardValidatedApps.map(a => normalizeAppName(a.name)));
     selectedApps.forEach(app => {
-      if (fwdValidatedNames.has(normalizeAppName(app.name))) return;
-      const category = getIngestionCategory(app.name, app.categories);
-      if (category) {
-        forwardByCategory[category].push({
-          id: app.objectID,
-          name: app.name,
-          image: app.image_url,
-          isValidated: false,
-          isSelected: true,
-          hasAuthConfig: false,
-        });
-      }
+      const norm = normalizeAppName(app.name);
+      if (fwdValidatedNames.has(norm)) return;
+      const category = getIngestionCategory(app.name, app.categories) || 'other';
+      forwardByCategory[category].push({
+        id: app.objectID,
+        name: app.name,
+        image: app.image_url,
+        isValidated: false,
+        isSelected: true,
+        hasAuthConfig: false,
+      });
+      seenForward.add(norm);
+    });
+    activatedApps.forEach(app => {
+      const norm = normalizeAppName(app.name);
+      if (seenForward.has(norm)) return;
+      const category = getIngestionCategory(app.name, app.categories) || 'other';
+      forwardByCategory[category].push({
+        id: app.id,
+        name: app.name,
+        image: app.image,
+        isValidated: false,
+        isSelected: false,
+        hasAuthConfig: false,
+      });
+      seenForward.add(norm);
     });
 
     const sortApps = (apps: ConnectedApp[]): ConnectedApp[] => {
@@ -530,7 +599,7 @@ export const AutomationConfig = ({
     });
     
     return options;
-  }, [authenticatedApps]);
+  }, [authenticatedApps, activatedApps, selectedApps, workflowAppNames, forwardWorkflowAppNames]);
 
   const toggleOption = (id: string) => {
     const current = enrichmentState[id] || { enabled: false, config: {} };
