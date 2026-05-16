@@ -3451,42 +3451,92 @@ const IncidentDetailPage = () => {
 
   const renderCustomField = (field: CustomField) => {
     const value = editedCustomFields[field.key];
-    
+
+    const FieldLabel = (
+      <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.75, mb: 0.75 }}>
+        <Typography
+          variant="caption"
+          sx={{
+            color: 'hsl(var(--foreground))',
+            fontWeight: 600,
+            fontSize: '0.75rem',
+            letterSpacing: 0.2,
+          }}
+        >
+          {field.name}
+        </Typography>
+        {field.required && (
+          <Typography variant="caption" sx={{ color: 'hsl(var(--destructive))', fontSize: '0.75rem' }}>
+            *
+          </Typography>
+        )}
+        <Typography
+          variant="caption"
+          sx={{ color: 'text.disabled', fontSize: '0.7rem', ml: 'auto' }}
+        >
+          {field.type}
+        </Typography>
+      </Box>
+    );
+
+    const placeholder = field.description || `Enter ${field.name.toLowerCase()}`;
+
+    const wrap = (input: React.ReactNode) => (
+      <Box key={field.key}>
+        {FieldLabel}
+        {input}
+        {field.description && (
+          <Typography
+            variant="caption"
+            sx={{ display: 'block', mt: 0.5, color: 'text.secondary', fontSize: '0.7rem' }}
+          >
+            {field.description}
+          </Typography>
+        )}
+      </Box>
+    );
+
     switch (field.type) {
       case 'text':
-        return (
+        return wrap(
           <TextField
-            key={field.key}
-            label={field.name}
             value={value || ''}
             onChange={(e) => handleCustomFieldChange(field, e.target.value)}
+            placeholder={placeholder}
             fullWidth
             size="small"
             sx={inputSx}
           />
         );
       case 'number':
-        return (
+        return wrap(
           <TextField
-            key={field.key}
-            label={field.name}
             type="number"
-            value={value || ''}
+            value={value ?? ''}
             onChange={(e) => handleCustomFieldChange(field, Number(e.target.value))}
+            placeholder={placeholder}
             fullWidth
             size="small"
             sx={inputSx}
           />
         );
       case 'select':
-        return (
-          <FormControl key={field.key} fullWidth size="small">
-            <InputLabel>{field.name}</InputLabel>
+        return wrap(
+          <FormControl fullWidth size="small">
             <Select
               value={value || ''}
-              label={field.name}
+              displayEmpty
               onChange={(e) => handleCustomFieldChange(field, e.target.value)}
               sx={inputSx['& .MuiOutlinedInput-root']}
+              renderValue={(selected) =>
+                selected ? (
+                  String(selected)
+                ) : (
+                  <Typography variant="body2" sx={{ color: 'text.disabled' }}>
+                    Select {field.name.toLowerCase()}
+                  </Typography>
+                )
+              }
             >
               <MenuItem value=""><em>None</em></MenuItem>
               {field.options?.map((opt) => (
@@ -3496,10 +3546,8 @@ const IncidentDetailPage = () => {
           </FormControl>
         );
       case 'date':
-        return (
+        return wrap(
           <TextField
-            key={field.key}
-            label={field.name}
             type="date"
             value={value || ''}
             onChange={(e) => handleCustomFieldChange(field, e.target.value)}
@@ -3511,17 +3559,23 @@ const IncidentDetailPage = () => {
         );
       case 'boolean':
         return (
-          <FormControlLabel
-            key={field.key}
-            control={
-              <Switch
-                checked={Boolean(value)}
-                onChange={(e) => handleCustomFieldChange(field, e.target.checked)}
-              />
-            }
-            label={field.name}
-            sx={{ color: 'hsl(var(--foreground))' }}
-          />
+          <Box key={field.key}>
+            {FieldLabel}
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={Boolean(value)}
+                  onChange={(e) => handleCustomFieldChange(field, e.target.checked)}
+                />
+              }
+              label={
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  {value ? 'Enabled' : 'Disabled'}
+                </Typography>
+              }
+              sx={{ color: 'hsl(var(--foreground))', ml: 0 }}
+            />
+          </Box>
         );
       default:
         return null;
@@ -7541,7 +7595,7 @@ const IncidentDetailPage = () => {
 
             return allFields.length > 0 || Object.keys(editedCustomFields).length > 0 ? (
               <Section title="Custom Fields" icon={SettingsIcon} defaultOpen={Object.keys(editedCustomFields).length > 0}>
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, columnGap: 2.5, rowGap: 2.5, pt: 1, pb: 0.5 }}>
                   {allFields.map((field) => renderCustomField(field))}
                 </Box>
               </Section>
