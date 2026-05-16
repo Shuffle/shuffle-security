@@ -1,8 +1,8 @@
 import { useMemo, useState, useCallback, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useWorkflows } from './useWorkflows';
-import { CategoryAutomation, CategoryConfig, DATASTORE_CATEGORIES } from '@shuffleio/shuffle-mcps';
-import { getApiUrl, getAuthHeader } from '@shuffleio/shuffle-mcps';
+import { CategoryAutomation, CategoryConfig, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
+import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 
 export interface EnrichmentStatusCheck {
   label: string;
@@ -282,8 +282,24 @@ export const useEnrichmentStatus = (
         ? `Workflow "${IOC_EXTRACTION_WORKFLOW}" found with background_processing=true${wfId(iocMatch as { id?: string })}.`
         : `Workflow "${IOC_EXTRACTION_WORKFLOW}" found but background_processing=${String((iocMatch as { background_processing?: boolean }).background_processing)}${wfId(iocMatch as { id?: string })}. Re-generate via /api/v2/workflows/generate to flip it on.`;
 
-    const enrichDetail = !categoryConfig
-      ? `category_config not returned by /list_cache?category=${DATASTORE_CATEGORIES.INCIDENTS} (org may not have any incidents yet, or the request failed).`
+    const hasThreatFeeds = !!tfMatch && tfMatch.background_processing === true;
+    const hasIOCExtraction = !!iocMatch && iocMatch.background_processing === true;
+
+    // Option A: when category_config is entirely absent from the response,
+    // treat enrich as UNKNOWN (not disabled). If both background workflows
+    // are present, assume enrich is Active — the org likely just has not
+    // ingested anything yet, so /list_cache returned no category_config.
+    const categoryConfigMissing = !categoryConfig;
+    const assumeEnrichFromWorkflows =
+      categoryConfigMissing && hasThreatFeeds && hasIOCExtraction;
+    const hasEnrichEnabled = assumeEnrichFromWorkflows
+      ? true
+      : !!enrichAutomation?.enabled;
+
+    const enrichDetail = categoryConfigMissing
+      ? assumeEnrichFromWorkflows
+        ? `category_config not returned by /list_cache?category=${DATASTORE_CATEGORIES.INCIDENTS} (org has no incidents yet). Both background workflows are present, so Enrich automation is assumed Active.`
+        : `category_config not returned by /list_cache?category=${DATASTORE_CATEGORIES.INCIDENTS} (org may not have any incidents yet, or the request failed).`
       : !enrichAutomation
         ? `category_config.automations on "${DATASTORE_CATEGORIES.INCIDENTS}" has no entry with type="enrich" or name="Enrich".`
         : enrichAutomation.enabled
@@ -291,9 +307,9 @@ export const useEnrichmentStatus = (
           : `Automation "${enrichAutomation.name || enrichAutomation.type}" on "${DATASTORE_CATEGORIES.INCIDENTS}" exists but enabled=false.`;
 
     return {
-      hasThreatFeeds: !!tfMatch && tfMatch.background_processing === true,
-      hasIOCExtraction: !!iocMatch && iocMatch.background_processing === true,
-      hasEnrichEnabled: !!enrichAutomation?.enabled,
+      hasThreatFeeds,
+      hasIOCExtraction,
+      hasEnrichEnabled,
       tfDetail,
       iocDetail,
       enrichDetail,
@@ -367,12 +383,24 @@ export const checkEnrichmentStatus = (
   const enrichAutomation = automations.find(
     (a) => a.type === 'enrich' || a.name === 'Enrich',
   );
-  const hasEnrichEnabled = !!enrichAutomation?.enabled;
+  // Option A: missing category_config + both workflows present => assume Active.
+  const categoryConfigMissing = !categoryConfig;
+  const assumeEnrichFromWorkflows =
+    categoryConfigMissing && hasThreatFeeds && hasIOCExtraction;
+  const hasEnrichEnabled = assumeEnrichFromWorkflows
+    ? true
+    : !!enrichAutomation?.enabled;
+
+  const enrichDetail = assumeEnrichFromWorkflows
+    ? `category_config not returned (no incidents yet). Both background workflows present — Enrich automation assumed Active.`
+    : hasEnrichEnabled
+      ? `Enrich automation enabled on "${DATASTORE_CATEGORIES.INCIDENTS}".`
+      : `Enrich automation missing or disabled on "${DATASTORE_CATEGORIES.INCIDENTS}".`;
 
   const checks: EnrichmentStatusCheck[] = [
     { label: 'Threat feeds', active: hasThreatFeeds, detail: hasThreatFeeds ? `Workflow "${THREAT_FEEDS_WORKFLOW}" found with background_processing=true.` : `Workflow "${THREAT_FEEDS_WORKFLOW}" missing or background_processing!=true.` },
     { label: 'IOC extraction', active: hasIOCExtraction, detail: hasIOCExtraction ? `Workflow "${IOC_EXTRACTION_WORKFLOW}" found with background_processing=true.` : `Workflow "${IOC_EXTRACTION_WORKFLOW}" missing or background_processing!=true.` },
-    { label: 'Enrich automation', active: hasEnrichEnabled, detail: hasEnrichEnabled ? `Enrich automation enabled on "${DATASTORE_CATEGORIES.INCIDENTS}".` : `Enrich automation missing or disabled on "${DATASTORE_CATEGORIES.INCIDENTS}".` },
+    { label: 'Enrich automation', active: hasEnrichEnabled, detail: enrichDetail },
   ];
 
   return {
