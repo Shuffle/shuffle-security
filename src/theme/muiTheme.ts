@@ -20,7 +20,7 @@ const getComponents = (mode: 'light' | 'dark') => {
   const cardBg = isDark
     ? 'linear-gradient(145deg, #262626 0%, #1f1f1f 100%)'
     : 'linear-gradient(145deg, #ffffff 0%, #f8f8f8 100%)';
-  const drawerBg = isDark ? 'hsl(var(--sidebar-background))' : 'hsl(var(--sidebar-background))';
+  const drawerBg = 'hsl(var(--sidebar-background))';
   const tooltipBg = isDark ? '#111111' : '#ffffff';
   const tooltipColor = isDark ? '#ffffff' : '#1a1a1a';
   const tableHeadBg = isDark ? 'rgba(33, 33, 33, 0.5)' : 'rgba(245, 245, 245, 0.8)';
