@@ -152,8 +152,12 @@ const EditWorkflow = (props) => {
 		nextWorkflow.tags = cloneArray(newWorkflowTags)
 		nextWorkflow.usecase_ids = cloneArray(selectedUsecases)
 
-		if (dueDate > 0) {
-			nextWorkflow.due_date = new Date(`${dueDate["$y"]}-${dueDate["$M"] + 1}-${dueDate["$D"]}`).getTime() / 1000
+		if (dueDate !== undefined && dueDate !== null) {
+			if (typeof dueDate.unix === "function") {
+				nextWorkflow.due_date = dueDate.unix()
+			} else if (dueDate > 0) {
+				nextWorkflow.due_date = new Date(`${dueDate["$y"]}-${dueDate["$M"] + 1}-${dueDate["$D"]}`).getTime() / 1000
+			}
 		}
 
 		if (setWorkflow !== undefined) {
