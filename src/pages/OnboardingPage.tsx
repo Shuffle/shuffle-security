@@ -16,7 +16,7 @@ import {
 } from '@/Shuffle-MCPs/ingestionDetection';
 import { findIngestTicketsWorkflow, findForwardTicketsWorkflow, extractWorkflowAppNames } from '@/Shuffle-MCPs/ingestionDetection';
 import { trackOnboardingStep, trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
-import { refreshAllIntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
+import { IntegrationStatus, refreshAllIntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
 import { usePageMeta } from '@/hooks/usePageMeta';
 
 // Datastore category for onboarding config (using shuffle-security_ prefix for consistency)
@@ -986,10 +986,35 @@ const OnboardingPage = () => {
                   )}
 
                   {steps[activeStep]?.key === 'sources' && (
-                    <UnifiedSourceSetup
-                      selectedApps={selectedApps}
-                      onAppsChange={setSelectedApps}
-                    />
+                    <>
+                      <Box
+                        sx={{
+                          mb: 3,
+                          p: 2,
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: 1,
+                          backgroundColor: 'hsl(var(--card))',
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            color: 'hsl(var(--muted-foreground))',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            mb: 1.5,
+                          }}
+                        >
+                          Your active integrations
+                        </Typography>
+                        <IntegrationStatus collapsed={false} iconSize={30} showAll hideAddButton />
+                      </Box>
+                      <UnifiedSourceSetup
+                        selectedApps={selectedApps}
+                        onAppsChange={setSelectedApps}
+                      />
+                    </>
                   )}
 
                   {steps[activeStep]?.key === 'tools' && (

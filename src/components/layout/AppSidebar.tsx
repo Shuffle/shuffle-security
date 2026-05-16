@@ -20,11 +20,11 @@ import {
   MenuItem,
   CircularProgress,
 } from '@mui/material';
-import { Activity, Sun, Moon, Monitor, Shield, Radar, Users, AlertTriangle as WarningAmberIcon, Users as PeopleIcon, Building2 as BusinessIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, ChevronUp as ExpandLess, ChevronDown as ExpandMore, Search as SearchIcon, Settings as SettingsIcon, FileText as DescriptionIcon, Fingerprint as FingerprintIcon, SlidersHorizontal as TuneIcon, Rss as RssFeedIcon, Radar as RadarIcon, LogOut as LogoutIcon, ShieldCheck as AdminPanelSettingsIcon } from 'lucide-react';
+import { Activity, Sun, Moon, Monitor, Shield, Radar, Users, AlertTriangle as WarningAmberIcon, Users as PeopleIcon, Building2 as BusinessIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, ChevronUp as ExpandLess, ChevronDown as ExpandMore, Search as SearchIcon, Settings as SettingsIcon, FileText as DescriptionIcon, Fingerprint as FingerprintIcon, SlidersHorizontal as TuneIcon, Rss as RssFeedIcon, Radar as RadarIcon, LogOut as LogoutIcon, ShieldCheck as AdminPanelSettingsIcon, Rocket as RocketLaunchIcon } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { SHUFFLE_AUTOMATION_URL } from '@/Shuffle-MCPs/api';
-import { IntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
+// IntegrationStatus removed from sidebar; it now lives only on relevant pages (e.g. /onboarding/sources, infrastructure).
 import { SidebarSearchDialog } from './SidebarSearchDialog';
 
 import { useEntityPreference, useSidebarTabs } from '@/hooks/useEntityLabel';
@@ -720,11 +720,6 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           </Box>
         ))}
       </List>
-        {/* Integrations Section — inside scrollable area so all rows are reachable */}
-        <Box sx={{ mt: 2 }}>
-          <Divider sx={{ borderColor: 'hsl(var(--border))', mx: visuallyCollapsed ? 1 : 2, mb: 1 }} />
-          <IntegrationStatus collapsed={visuallyCollapsed} />
-        </Box>
       </Box>
 
       {/* Bottom Section */}
@@ -1082,6 +1077,22 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           >
             <Activity size={18} style={{ color: 'hsl(var(--muted-foreground))' }} />
             Usecases
+          </MenuItem>
+          <MenuItem
+            component={Link}
+            to="/onboarding"
+            onClick={() => setUserMenuAnchor(null)}
+            sx={{
+              py: 1.25,
+              px: 2,
+              gap: 1.5,
+              fontSize: '0.875rem',
+              color: 'hsl(var(--foreground))',
+              '&:hover': { backgroundColor: 'hsl(var(--muted))' },
+            }}
+          >
+            <RocketLaunchIcon size={18} style={{ color: 'hsl(var(--muted-foreground))' }} />
+            Onboarding
           </MenuItem>
           <Divider sx={{ borderColor: 'hsl(var(--border))', my: 0.5 }} />
           <MenuItem
