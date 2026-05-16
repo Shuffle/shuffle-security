@@ -34,6 +34,9 @@ export default defineConfig({
     'dayjs',
     /^dayjs\//,
     /^@shuffleio\//,
+    /^@tanstack\//,
+    'tailwind-merge',
+    'clsx',
   ],
   loader: {
     '.css': 'copy',
