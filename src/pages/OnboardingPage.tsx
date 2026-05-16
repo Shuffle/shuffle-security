@@ -1042,15 +1042,20 @@ const OnboardingPage = () => {
                             return acc;
                           }, []);
                     return (
-                      <AppAuthConfig
-                        apps={appsForAuth}
-                        authStates={authStates}
-                        authenticatedApps={authenticatedApps}
-                        onAuthChange={handleAuthChange}
-                        onTestConnection={handleTestConnection}
-                        onSaveAuth={handleSaveAuth}
-                        onRefreshAuth={fetchAuthenticatedApps}
-                      />
+                      <>
+                        <Box sx={{ mb: 3, ml: -2 }}>
+                          <IntegrationStatus collapsed={false} iconSize={30} showAll hideAddButton />
+                        </Box>
+                        <AppAuthConfig
+                          apps={appsForAuth}
+                          authStates={authStates}
+                          authenticatedApps={authenticatedApps}
+                          onAuthChange={handleAuthChange}
+                          onTestConnection={handleTestConnection}
+                          onSaveAuth={handleSaveAuth}
+                          onRefreshAuth={fetchAuthenticatedApps}
+                        />
+                      </>
                     );
                   })()}
 
