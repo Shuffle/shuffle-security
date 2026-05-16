@@ -7595,7 +7595,7 @@ const IncidentDetailPage = () => {
 
             return allFields.length > 0 || Object.keys(editedCustomFields).length > 0 ? (
               <Section title="Custom Fields" icon={SettingsIcon} defaultOpen={Object.keys(editedCustomFields).length > 0}>
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, columnGap: 2.5, rowGap: 2.5, pt: 1, pb: 0.5 }}>
                   {allFields.map((field) => renderCustomField(field))}
                 </Box>
               </Section>
