@@ -47,6 +47,12 @@ export interface SegmentedControlProps<V extends string = string> {
   value: V;
   onChange: (value: V) => void;
   size?: "sm" | "md";
+  /**
+   * Visual style:
+   * - "outline" (default): transparent track + hairline border, filled active pill.
+   * - "filled": subtly filled track + no border, filled active pill (iOS-style).
+   */
+  variant?: "outline" | "filled";
   className?: string;
   ariaLabel?: string;
   /** Unique id so multiple segmented controls on a page do not share their pill. */
