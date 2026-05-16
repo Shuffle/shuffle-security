@@ -1,13 +1,14 @@
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, PlayCircle } from 'lucide-react';
 import { AgentIcon } from '@shuffleio/shuffle-mcps';
 import shuffleInfraLogo from '@/assets/shuffle-infrastructure-logo.png';
 
 interface ProductChoiceStepProps {
   onSelectCore: () => void;
   onSelectSecurity: () => void;
+  onStartDemo?: () => void;
 }
 
-export const ProductChoiceStep = ({ onSelectCore, onSelectSecurity }: ProductChoiceStepProps) => {
+export const ProductChoiceStep = ({ onSelectCore, onSelectSecurity, onStartDemo }: ProductChoiceStepProps) => {
   return (
     <div className="w-full flex justify-center px-6 py-8">
       <div className="w-full max-w-4xl">
