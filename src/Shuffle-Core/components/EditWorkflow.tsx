@@ -397,7 +397,8 @@ const EditWorkflow = (props) => {
 					height: 75, 
 					paddingTop: 20, 
 					paddingLeft: 30, 
-					backgroundColor: themeMode === "dark" ? "#262626" :  theme.palette.DialogStyle.backgroundColor,
+					backgroundColor: "hsl(var(--card))",
+					borderTop: "1px solid hsl(var(--border))",
 				}}>
 					{newWorkflow === true ? (
 						<div style={{ display: "flex", gap: 10 }}>
