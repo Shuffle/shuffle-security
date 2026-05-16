@@ -171,13 +171,7 @@ export const DocsSidebar = ({ onNavigate }: DocsSidebarProps) => {
               />
               <OpenInNewIcon
                 className="ext-indicator"
-                sx={{
-                  fontSize: 14,
-                  color: 'text.disabled',
-                  ml: 1,
-                  flexShrink: 0,
-                  transition: 'color 120ms ease',
-                }}
+                size={14} style={{ color: 'text.disabled', marginLeft: '8px', flexShrink: 0, transition: 'color 120ms ease' }}
               />
             </ListItemButton>
           </ListItem>

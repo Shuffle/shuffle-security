@@ -305,7 +305,7 @@ export const SourceTrendChart = ({ incidents, dateFrom, dateTo, onDateRangeSelec
                 ))}
               </Box>
               <IconButton onClick={() => setModalOpen(false)} size="small">
-                <CloseIcon sx={{ fontSize: 18, color: 'hsl(var(--muted-foreground))' }} />
+                <CloseIcon size={18} style={{ color: 'hsl(var(--muted-foreground))' }} />
               </IconButton>
             </Box>
           </Box>

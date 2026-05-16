@@ -29,9 +29,9 @@ const Row = ({ label, active, loading, busy, tooltip, onEnable, onDisable }: Row
   const icon = loading ? (
     <CircularProgress size={12} sx={{ color: 'hsl(var(--muted-foreground))' }} />
   ) : active ? (
-    <CheckCircleIcon sx={{ fontSize: 14, color: 'hsl(var(--severity-low))' }} />
+    <CheckCircleIcon size={14} style={{ color: 'hsl(var(--severity-low))' }} />
   ) : (
-    <RadioButtonUncheckedIcon sx={{ fontSize: 14, color: 'hsl(var(--muted-foreground))' }} />
+    <RadioButtonUncheckedIcon size={14} style={{ color: 'hsl(var(--muted-foreground))' }} />
   );
   return (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 0.5 }}>
@@ -62,7 +62,7 @@ const Row = ({ label, active, loading, busy, tooltip, onEnable, onDisable }: Row
                 '&:hover': { bgcolor: 'hsl(var(--destructive) / 0.1)', color: 'hsl(var(--destructive))' },
               }}
             >
-              {busy ? <CircularProgress size={12} /> : <PowerSettingsNewIcon sx={{ fontSize: 14 }} />}
+              {busy ? <CircularProgress size={12} /> : <PowerSettingsNewIcon size={14} />}
             </IconButton>
           </span>
         </Tooltip>
@@ -81,7 +81,7 @@ const Row = ({ label, active, loading, busy, tooltip, onEnable, onDisable }: Row
                 '&:hover': { bgcolor: 'hsl(var(--primary) / 0.1)' },
               }}
             >
-              {busy ? <CircularProgress size={12} /> : <BoltIcon sx={{ fontSize: 14 }} />}
+              {busy ? <CircularProgress size={12} /> : <BoltIcon size={14} />}
             </IconButton>
           </span>
         </Tooltip>
@@ -226,7 +226,7 @@ export const AutomationReadinessBanner = () => {
           fullWidth
           size="small"
           variant="outlined"
-          startIcon={enablingAll ? <CircularProgress size={12} color="inherit" /> : <RocketLaunchIcon sx={{ fontSize: 14 }} />}
+          startIcon={enablingAll ? <CircularProgress size={12} color="inherit" /> : <RocketLaunchIcon size={14} />}
           disabled={enablingAll || isLoading}
           onClick={handleEnableAll}
           sx={{

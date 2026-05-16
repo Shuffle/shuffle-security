@@ -455,7 +455,7 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
                 '&:hover': { color: 'hsl(var(--primary))', backgroundColor: 'hsl(var(--primary) / 0.08)' },
               }}
             >
-              <OpenInNewIcon sx={{ fontSize: 18 }} />
+              <OpenInNewIcon size={18} />
             </IconButton>
           </Tooltip>
         )}
@@ -483,7 +483,7 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
                   '&:hover': { color: 'hsl(var(--primary))', backgroundColor: 'hsl(var(--primary) / 0.08)' },
                 }}
               >
-                <OpenInNewIcon sx={{ fontSize: 18 }} />
+                <OpenInNewIcon size={18} />
               </IconButton>
             </Tooltip>
           );
@@ -1016,7 +1016,7 @@ const DashboardPage = () => {
               sx={{ color: 'hsl(var(--muted-foreground))' }}
             >
               <RefreshIcon
-                fontSize="small"
+                size={20}
                 sx={{
                   transition: 'transform 0.6s ease',
                   ...(isRefreshing && { animation: 'spin 0.6s linear' }),

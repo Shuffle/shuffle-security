@@ -194,10 +194,10 @@ const CustomFieldsPage = () => {
                     </TableCell>
                     <TableCell align="right">
                       <IconButton size="small" onClick={() => handleOpenDialog(field)}>
-                        <EditIcon fontSize="small" />
+                        <EditIcon size={20} />
                       </IconButton>
                       <IconButton size="small" onClick={() => handleDelete(field.key)} color="error">
-                        <DeleteIcon fontSize="small" />
+                        <DeleteIcon size={20} />
                       </IconButton>
                     </TableCell>
                   </TableRow>

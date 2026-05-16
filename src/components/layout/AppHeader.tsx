@@ -60,7 +60,7 @@ export const AppHeader = ({ title = 'Dashboard' }: AppHeaderProps) => {
               mr: 2,
             }}
           >
-            <SearchIcon sx={{ color: 'text.secondary', mr: 1 }} />
+            <SearchIcon style={{ color: 'text.secondary', marginRight: '8px' }} />
             <InputBase
               placeholder={t('Search incidents...')}
               sx={{
@@ -123,20 +123,20 @@ export const AppHeader = ({ title = 'Dashboard' }: AppHeaderProps) => {
             <Divider sx={{ borderColor: 'hsl(var(--border))' }} />
             <MenuItem component={Link} to="/settings">
               <ListItemIcon>
-                <PersonIcon fontSize="small" />
+                <PersonIcon size={20} />
               </ListItemIcon>
               Profile
             </MenuItem>
             <MenuItem component={Link} to="/settings">
               <ListItemIcon>
-                <SettingsIcon fontSize="small" />
+                <SettingsIcon size={20} />
               </ListItemIcon>
               Settings
             </MenuItem>
             <Divider sx={{ borderColor: 'hsl(var(--border))' }} />
             <MenuItem component={Link} to="/">
               <ListItemIcon>
-                <LogoutIcon fontSize="small" />
+                <LogoutIcon size={20} />
               </ListItemIcon>
               Sign Out
             </MenuItem>

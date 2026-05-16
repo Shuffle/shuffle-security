@@ -151,7 +151,7 @@ export const TaskStatusesEditor = () => {
               '&:active': { cursor: 'grabbing' },
             }}
           >
-            <DragIndicatorIcon sx={{ color: 'hsl(var(--muted-foreground))', fontSize: 18 }} />
+            <DragIndicatorIcon size={18} style={{ color: 'hsl(var(--muted-foreground))' }} />
 
             {/* Color swatch with native picker */}
             <Tooltip title="Change color">
@@ -201,7 +201,7 @@ export const TaskStatusesEditor = () => {
             ) : (
               <Tooltip title="Remove status">
                 <IconButton size="small" onClick={() => handleRemove(idx)}>
-                  <DeleteOutlineIcon fontSize="small" />
+                  <DeleteOutlineIcon size={20} />
                 </IconButton>
               </Tooltip>
             )}

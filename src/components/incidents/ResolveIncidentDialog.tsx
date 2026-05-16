@@ -168,7 +168,7 @@ export const ResolveIncidentDialog = React.forwardRef<HTMLDivElement, ResolveInc
       {resolved ? (
         <Fade in timeout={400}>
           <Box sx={{ textAlign: 'center', py: 5, px: 3 }}>
-            <CheckCircleIcon sx={{ fontSize: 56, color: 'hsl(var(--severity-low))', mb: 2 }} />
+            <CheckCircleIcon size={56} style={{ color: 'hsl(var(--severity-low))', marginBottom: '16px' }} />
             <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
               Incident Resolved
             </Typography>
@@ -189,7 +189,7 @@ export const ResolveIncidentDialog = React.forwardRef<HTMLDivElement, ResolveInc
               bgcolor: 'hsl(var(--muted))',
               border: '1px solid hsl(var(--border))',
             }}>
-              <FilterListIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+              <FilterListIcon size={18} style={{ color: 'text.secondary' }} />
               <Typography variant="caption" color="text.secondary">
                 You can find this incident under the <strong>Resolved</strong> status filter
               </Typography>
@@ -207,7 +207,7 @@ export const ResolveIncidentDialog = React.forwardRef<HTMLDivElement, ResolveInc
         <>
           <DialogTitle sx={{ pb: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <CheckCircleIcon sx={{ color: 'hsl(var(--severity-low))' }} />
+              <CheckCircleIcon style={{ color: 'hsl(var(--severity-low))' }} />
               <Typography variant="h6">{t('Resolve Incident')}</Typography>
             </Box>
           </DialogTitle>

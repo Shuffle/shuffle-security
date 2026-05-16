@@ -234,7 +234,7 @@ export const ScheduleHealthBanner = ({
             {!hideManageCta && (
               <Button
                 size="small"
-                endIcon={<OpenInNewIcon sx={{ fontSize: 14 }} />}
+                endIcon={<OpenInNewIcon size={14} />}
                 onClick={() => navigate(manageHref)}
                 sx={{
                   color: 'hsl(var(--foreground))',
@@ -254,7 +254,7 @@ export const ScheduleHealthBanner = ({
                 transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
               }}
             >
-              <ExpandMoreIcon fontSize="small" />
+              <ExpandMoreIcon size={20} />
             </IconButton>
             {dismissKey && (
               <IconButton
@@ -263,7 +263,7 @@ export const ScheduleHealthBanner = ({
                 onClick={handleDismiss}
                 sx={{ color: 'hsl(var(--muted-foreground))' }}
               >
-                <CloseIcon fontSize="small" />
+                <CloseIcon size={20} />
               </IconButton>
             )}
           </Stack>

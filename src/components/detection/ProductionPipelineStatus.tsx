@@ -143,7 +143,7 @@ const ProductionPipelineStatus = ({ environment, sensorRunning, pipelineReady }:
     const logsStage: StageInfo = {
       label: 'Logs / Events',
       sublabel: environment?.Name,
-      icon: <StorageIcon sx={{ fontSize: 20 }} />,
+      icon: <StorageIcon size={20} />,
       status: !environment ? 'inactive' : sensorRunning ? 'active' : 'inactive',
       tooltip: sensorRunning
         ? `Log ingestion "${environment?.Name}" is running and receiving logs`
@@ -154,7 +154,7 @@ const ProductionPipelineStatus = ({ environment, sensorRunning, pipelineReady }:
     const pipelineStage: StageInfo = {
       label: 'Detection Pipeline',
       sublabel: pipelineReady ? 'Enabled' : 'Not configured',
-      icon: <SensorsIcon sx={{ fontSize: 20 }} />,
+      icon: <SensorsIcon size={20} />,
       status: !sensorRunning ? 'inactive' : pipelineReady ? 'active' : 'warning',
       tooltip: pipelineReady
         ? 'Detection pipeline is processing events with Sigma rules'
@@ -169,7 +169,7 @@ const ProductionPipelineStatus = ({ environment, sensorRunning, pipelineReady }:
         : webhookEnabled
           ? (webhookExecStatus === 'active' ? `Last: ${lastExecTime}` : (lastExecTime ? `Last: ${lastExecTime}` : 'No executions'))
           : 'Disabled',
-      icon: <WebhookIcon sx={{ fontSize: 20 }} />,
+      icon: <WebhookIcon size={20} />,
       status: loading ? 'loading'
         : !webhookWorkflow ? 'inactive'
         : !webhookEnabled ? 'inactive'
@@ -188,7 +188,7 @@ const ProductionPipelineStatus = ({ environment, sensorRunning, pipelineReady }:
     const incidentStage: StageInfo = {
       label: 'Incidents',
       sublabel: incidentLoading ? 'Checking...' : incidentCount !== null ? `${incidentCount} total` : 'Unknown',
-      icon: <ReportProblemIcon sx={{ fontSize: 20 }} />,
+      icon: <ReportProblemIcon size={20} />,
       status: incidentLoading ? 'loading'
         : incidentCount !== null && incidentCount > 0 ? 'active'
         : 'warning',
@@ -201,7 +201,7 @@ const ProductionPipelineStatus = ({ environment, sensorRunning, pipelineReady }:
     const forwardStage: StageInfo = {
       label: 'Forward',
       sublabel: loading ? 'Checking...' : forwardEnabled ? 'Configured' : 'Not configured',
-      icon: <ForwardToInboxIcon sx={{ fontSize: 20 }} />,
+      icon: <ForwardToInboxIcon size={20} />,
       status: loading ? 'loading' : forwardEnabled ? 'active' : 'inactive',
       tooltip: forwardEnabled
         ? 'Forward Tickets workflow is active — incidents are forwarded to external systems'
@@ -261,12 +261,7 @@ const ProductionPipelineStatus = ({ environment, sensorRunning, pipelineReady }:
                     opacity: isAfterBreak ? 0.4 : 0.6,
                     transition: 'all 0.3s',
                   }} />
-                  <ArrowForwardIcon sx={{
-                    fontSize: 16,
-                    color: isAfterBreak ? 'hsl(var(--border))' : color,
-                    opacity: isAfterBreak ? 0.4 : 0.6,
-                    ml: -0.5,
-                  }} />
+                  <ArrowForwardIcon size={16} style={{ color: isAfterBreak ? 'hsl(var(--border))' : color, opacity: isAfterBreak ? 0.4 : 0.6, marginLeft: '-4px' }} />
                 </Box>
               )}
 
@@ -345,7 +340,7 @@ const ProductionPipelineStatus = ({ environment, sensorRunning, pipelineReady }:
           alignItems: 'center',
           gap: 1,
         }}>
-          <ErrorOutlineIcon sx={{ fontSize: 16, color: 'hsl(var(--severity-medium))' }} />
+          <ErrorOutlineIcon size={16} style={{ color: 'hsl(var(--severity-medium))' }} />
           <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--foreground))' }}>
             Data flow breaks at <strong>{stages[firstBrokenIndex].label}</strong>
             {stages[firstBrokenIndex].status === 'warning'
@@ -367,7 +362,7 @@ const ProductionPipelineStatus = ({ environment, sensorRunning, pipelineReady }:
           alignItems: 'center',
           gap: 1,
         }}>
-          <CheckCircleIcon sx={{ fontSize: 16, color: 'hsl(var(--severity-low))' }} />
+          <CheckCircleIcon size={16} style={{ color: 'hsl(var(--severity-low))' }} />
           <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--foreground))' }}>
             All pipeline stages are active — detection data is flowing end-to-end
           </Typography>

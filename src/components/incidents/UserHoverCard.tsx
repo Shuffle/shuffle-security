@@ -142,7 +142,7 @@ export const UserHoverCard = ({ username, isAgent, className }: UserHoverCardPro
               color: verifiedAgent ? 'hsl(var(--primary))' : 'text.secondary',
             }}
           >
-            {verifiedAgent ? <AgentIcon size={18} /> : <PersonIcon sx={{ fontSize: 18 }} />}
+            {verifiedAgent ? <AgentIcon size={18} /> : <PersonIcon size={18} />}
           </Avatar>
           <Box sx={{ minWidth: 0, flex: 1 }}>
             <Typography
@@ -256,7 +256,7 @@ export const UserHoverCard = ({ username, isAgent, className }: UserHoverCardPro
                       '&:hover': { textDecoration: 'underline' },
                     }}
                   >
-                    <GitHubIcon sx={{ fontSize: 11 }} />
+                    <GitHubIcon size={11} />
                     {githubUrl.replace(/^https?:\/\/(www\.)?github\.com\//, '')}
                   </MuiLink>
                 </Box>

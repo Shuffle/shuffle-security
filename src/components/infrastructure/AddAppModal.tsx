@@ -179,7 +179,7 @@ export const AddAppModal = ({ open, onClose, initialQuery, categoryLabel }: AddA
               onClick={handleBack}
               sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--foreground))' } }}
             >
-              <ArrowBackIcon fontSize="small" />
+              <ArrowBackIcon size={20} />
             </IconButton>
           )}
 
@@ -201,7 +201,7 @@ export const AddAppModal = ({ open, onClose, initialQuery, categoryLabel }: AddA
             onClick={onClose}
             sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--foreground))' } }}
           >
-            <CloseIcon fontSize="small" />
+            <CloseIcon size={20} />
           </IconButton>
         </Box>
 

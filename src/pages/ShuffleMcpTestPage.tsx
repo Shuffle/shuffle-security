@@ -235,7 +235,7 @@ function CodeBlock({ code }: { code: string }) {
             '&:hover': { color: 'hsl(var(--foreground))' },
           }}
         >
-          {copied ? <CheckIcon fontSize="small" /> : <ContentCopyIcon fontSize="small" />}
+          {copied ? <CheckIcon size={20} /> : <ContentCopyIcon size={20} />}
         </IconButton>
       </Tooltip>
       <Box
@@ -395,10 +395,7 @@ function DemoSection({
           onClick={() => setShowCode(v => !v)}
           endIcon={
             <ExpandMoreIcon
-              sx={{
-                transition: 'transform 0.2s',
-                transform: showCode ? 'rotate(180deg)' : 'rotate(0deg)',
-              }}
+              style={{ transition: 'transform 0.2s', transform: showCode ? 'rotate(180deg)' : 'rotate(0deg)' }}
             />
           }
           sx={{ textTransform: 'none', color: 'hsl(var(--muted-foreground))' }}
@@ -764,7 +761,7 @@ const ShuffleMcpTestPage = () => {
               },
             }}
           >
-            <GitHubIcon sx={{ fontSize: 16 }} />
+            <GitHubIcon size={16} />
             Shuffle Core
           </Box>
           <Box
@@ -792,7 +789,7 @@ const ShuffleMcpTestPage = () => {
               },
             }}
           >
-            <GitHubIcon sx={{ fontSize: 16 }} />
+            <GitHubIcon size={16} />
             Shuffle Security
           </Box>
         </Stack>

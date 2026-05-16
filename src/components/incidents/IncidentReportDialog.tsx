@@ -175,7 +175,7 @@ const IncidentReportDialog = ({
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <AutoFixHighIcon sx={{ fontSize: 18, color: 'hsl(var(--primary))' }} />
+          <AutoFixHighIcon size={18} style={{ color: 'hsl(var(--primary))' }} />
           <Typography sx={{ fontWeight: 600 }}>Incident Report</Typography>
           {report && (
             <Chip
@@ -191,7 +191,7 @@ const IncidentReportDialog = ({
               <Button
                 size="small"
                 variant="outlined"
-                startIcon={<RefreshIcon sx={{ fontSize: 16 }} />}
+                startIcon={<RefreshIcon size={16} />}
                 onClick={() => ensureReport(true)}
                 disabled={loading || generating}
                 sx={{ height: 36, textTransform: 'none' }}
@@ -205,7 +205,7 @@ const IncidentReportDialog = ({
               <Button
                 size="small"
                 variant="contained"
-                startIcon={<PrintIcon sx={{ fontSize: 16 }} />}
+                startIcon={<PrintIcon size={16} />}
                 onClick={handlePrint}
                 disabled={!report || loading || generating}
                 sx={{ height: 36, textTransform: 'none' }}
@@ -215,7 +215,7 @@ const IncidentReportDialog = ({
             </span>
           </Tooltip>
           <IconButton size="small" onClick={onClose}>
-            <CloseIcon fontSize="small" />
+            <CloseIcon size={20} />
           </IconButton>
         </Box>
       </DialogTitle>

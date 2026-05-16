@@ -148,7 +148,7 @@ const AgentPermissionsPage = () => {
               <Button
                 variant="outlined"
                 size="small"
-                startIcon={<RestoreIcon sx={{ fontSize: 16 }} />}
+                startIcon={<RestoreIcon size={16} />}
                 onClick={resetToDefaults}
                 sx={{
                   borderColor: 'hsl(var(--border))',
@@ -384,7 +384,7 @@ const AgentPermissionsPage = () => {
                         />
                       </Tooltip>
                       <IconButton size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                        {isExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                        {isExpanded ? <ExpandLessIcon size={20} /> : <ExpandMoreIcon size={20} />}
                       </IconButton>
                     </Box>
 

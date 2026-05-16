@@ -204,7 +204,7 @@ export const DeploymentInstructions = ({
           Deploy Detection Sensor
         </Typography>
         <IconButton onClick={onClose} size="small">
-          <CloseIcon sx={{ color: 'hsl(var(--muted-foreground))' }} />
+          <CloseIcon style={{ color: 'hsl(var(--muted-foreground))' }} />
         </IconButton>
       </DialogTitle>
 
@@ -292,9 +292,9 @@ export const DeploymentInstructions = ({
                   }}
                 >
                   {copied ? (
-                    <CheckIcon sx={{ fontSize: 16, color: 'hsl(var(--severity-low))' }} />
+                    <CheckIcon size={16} style={{ color: 'hsl(var(--severity-low))' }} />
                   ) : (
-                    <ContentCopyIcon sx={{ fontSize: 16, color: 'hsl(var(--muted-foreground))' }} />
+                    <ContentCopyIcon size={16} style={{ color: 'hsl(var(--muted-foreground))' }} />
                   )}
                 </IconButton>
               </Tooltip>
@@ -378,9 +378,9 @@ export const DeploymentInstructions = ({
                     }}
                   >
                     {copied ? (
-                      <CheckIcon sx={{ fontSize: 16, color: 'hsl(var(--severity-low))' }} />
+                      <CheckIcon size={16} style={{ color: 'hsl(var(--severity-low))' }} />
                     ) : (
-                      <ContentCopyIcon sx={{ fontSize: 16, color: 'hsl(var(--muted-foreground))' }} />
+                      <ContentCopyIcon size={16} style={{ color: 'hsl(var(--muted-foreground))' }} />
                     )}
                   </IconButton>
                 </Tooltip>

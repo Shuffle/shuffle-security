@@ -14,7 +14,7 @@ export const WebhookActiveChip = () => {
 
   return (
     <Chip
-      icon={<WebhookIcon sx={{ fontSize: '14px !important', color: '#22c55e !important' }} />}
+      icon={<WebhookIcon style={{ fontSize: '14px !important', color: '#22c55e !important' }} />}
       label="Webhook Active"
       size="small"
       sx={{
@@ -63,7 +63,7 @@ const WebhookStatusBanner = () => {
       border: '1px solid rgba(255, 152, 0, 0.25)',
       bgcolor: 'rgba(255, 152, 0, 0.06)',
     }}>
-      <WebhookIcon sx={{ fontSize: 16, color: 'hsl(var(--severity-medium))' }} />
+      <WebhookIcon size={16} style={{ color: 'hsl(var(--severity-medium))' }} />
       <Typography sx={{ fontSize: '0.78rem', color: 'hsl(var(--muted-foreground))', fontWeight: 500, flex: 1 }}>
         Ingestion Webhook is not active — detections won't forward to incidents.
       </Typography>
@@ -72,7 +72,7 @@ const WebhookStatusBanner = () => {
         variant="outlined"
         disabled={isEnabling}
         onClick={handleEnable}
-        startIcon={isEnabling ? <CircularProgress size={12} /> : <WebhookIcon sx={{ fontSize: 14 }} />}
+        startIcon={isEnabling ? <CircularProgress size={12} /> : <WebhookIcon size={14} />}
         sx={{
           textTransform: 'none',
           fontSize: '0.75rem',

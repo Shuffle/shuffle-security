@@ -897,7 +897,7 @@ const OnboardingPage = () => {
                       flexShrink: 0,
                     }}
                   >
-                    {index < activeStep ? <CheckCircleOutlineIcon sx={{ fontSize: { xs: 14, sm: 18 } }} /> : step.icon}
+                    {index < activeStep ? <CheckCircleOutlineIcon style={{ fontSize: { xs: 14, sm: 18 } }} /> : step.icon}
                   </Box>
                   <Typography
                     className="step-label"

@@ -275,7 +275,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           },
         }}
       >
-        {collapsed ? <ChevronRightIcon sx={{ fontSize: 16 }} /> : <ChevronLeftIcon sx={{ fontSize: 16 }} />}
+        {collapsed ? <ChevronRightIcon size={16} /> : <ChevronLeftIcon size={16} />}
       </IconButton>
 
       <Box
@@ -343,7 +343,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                   Security
                 </Typography>
               </Box>
-              <ExpandMore sx={{ fontSize: 16, color: 'hsl(var(--muted-foreground))', ml: 0.5 }} />
+              <ExpandMore size={16} style={{ color: 'hsl(var(--muted-foreground))', marginLeft: '4px' }} />
             </Box>
           )}
         </Box>
@@ -448,7 +448,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               border: '1px solid transparent',
             }}
           >
-            <SearchIcon sx={{ color: 'hsl(var(--muted-foreground))', fontSize: 20 }} />
+            <SearchIcon size={20} style={{ color: 'hsl(var(--muted-foreground))' }} />
             <Typography 
               sx={{ 
                 color: 'hsl(var(--muted-foreground))', 
@@ -473,7 +473,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
         <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
           <Tooltip title="Search (Ctrl+K)" placement="right">
             <IconButton size="small" onClick={() => setSearchOpen(true)} sx={{ color: 'hsl(var(--muted-foreground))' }}>
-              <SearchIcon fontSize="small" />
+              <SearchIcon size={20} />
             </IconButton>
           </Tooltip>
         </Box>
@@ -571,9 +571,9 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                             }}
                           >
                             {expandedItems.includes(item.label) ? (
-                              <ExpandLess sx={{ fontSize: 18 }} />
+                              <ExpandLess size={18} />
                             ) : (
-                              <ExpandMore sx={{ fontSize: 18 }} />
+                              <ExpandMore size={18} />
                             )}
                           </IconButton>
                         </>
@@ -874,7 +874,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
             <Tooltip title={selectedOrg?.name || 'No tenant'} placement="right">
               <IconButton size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                <BusinessIcon fontSize="small" />
+                <BusinessIcon size={20} />
               </IconButton>
             </Tooltip>
           </Box>
@@ -904,7 +904,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                     justifyContent: 'center',
                     cursor: 'default',
                   }}>
-                    <WarningAmberIcon sx={{ fontSize: 16, color: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))', mt: '-1px' }} />
+                    <WarningAmberIcon size={16} style={{ color: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))' }} />
                   </Box>
                 </Tooltip>
               </Box>
@@ -922,7 +922,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               }}>
                 <Box sx={{ p: 1.5, pb: 1.25 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.5 }}>
-                    <WarningAmberIcon sx={{ fontSize: 14, color: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))' }} />
+                    <WarningAmberIcon size={14} style={{ color: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))' }} />
                     <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: isOver ? 'hsl(var(--destructive))' : 'hsl(var(--severity-medium))' }}>
                       {isOver ? 'App run limit reached' : 'App run limit warning'}
                     </Typography>
@@ -1040,10 +1040,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                   </Typography>
                 </Box>
                 <SettingsIcon 
-                  sx={{ 
-                    color: 'hsl(var(--muted-foreground))',
-                    fontSize: 18,
-                  }} 
+                  size={18} style={{ color: 'hsl(var(--muted-foreground))' }} 
                 />
               </>
             )}
@@ -1098,7 +1095,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               '&:hover': { backgroundColor: 'hsl(var(--muted))' },
             }}
           >
-            <AdminPanelSettingsIcon sx={{ fontSize: 18, color: 'hsl(var(--muted-foreground))' }} />
+            <AdminPanelSettingsIcon size={18} style={{ color: 'hsl(var(--muted-foreground))' }} />
             Tenant Admin
           </MenuItem>
           <MenuItem
@@ -1114,7 +1111,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               '&:hover': { backgroundColor: 'hsl(var(--muted))' },
             }}
           >
-            <TuneIcon sx={{ fontSize: 18, color: 'hsl(var(--muted-foreground))' }} />
+            <TuneIcon size={18} style={{ color: 'hsl(var(--muted-foreground))' }} />
             Tenant Preferences
           </MenuItem>
           <MenuItem
@@ -1130,7 +1127,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               '&:hover': { backgroundColor: 'hsl(var(--muted))' },
             }}
           >
-            <SettingsIcon sx={{ fontSize: 18, color: 'hsl(var(--muted-foreground))' }} />
+            <SettingsIcon size={18} style={{ color: 'hsl(var(--muted-foreground))' }} />
             User Account
           </MenuItem>
           <Divider sx={{ borderColor: 'hsl(var(--border))', my: 0.5 }} />
@@ -1177,7 +1174,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               '&:hover': { backgroundColor: 'hsl(var(--destructive, 0 84% 60%) / 0.1)' },
             }}
           >
-            <LogoutIcon sx={{ fontSize: 18 }} />
+            <LogoutIcon size={18} />
             Logout
           </MenuItem>
         </Menu>

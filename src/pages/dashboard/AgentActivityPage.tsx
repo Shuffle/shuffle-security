@@ -151,7 +151,7 @@ const AgentActivityPage = () => {
                   '&:hover': { bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--foreground))' },
                 }}
               >
-                <RefreshIcon sx={{ fontSize: 18 }} />
+                <RefreshIcon size={18} />
               </IconButton>
             </Tooltip>
             <Button

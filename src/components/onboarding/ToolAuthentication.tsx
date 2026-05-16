@@ -121,9 +121,9 @@ export const ToolAuthentication = ({
   const getStatusConfig = (status: AuthStatus) => {
     switch (status) {
       case 'connected':
-        return { color: 'hsl(var(--severity-low))', label: 'Connected', icon: <CheckCircleIcon fontSize="small" /> };
+        return { color: 'hsl(var(--severity-low))', label: 'Connected', icon: <CheckCircleIcon size={20} /> };
       case 'error':
-        return { color: 'hsl(var(--destructive))', label: 'Error', icon: <ErrorIcon fontSize="small" /> };
+        return { color: 'hsl(var(--destructive))', label: 'Error', icon: <ErrorIcon size={20} /> };
       case 'testing':
         return { color: 'hsl(var(--primary))', label: 'Testing...', icon: <CircularProgress size={16} sx={{ color: 'hsl(var(--primary))' }} /> };
       default:

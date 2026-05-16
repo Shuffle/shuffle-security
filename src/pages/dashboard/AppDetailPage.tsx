@@ -112,7 +112,7 @@ const GuestLockedSection = ({ title, description, appname }: { title: string; de
       textAlign: 'center',
     }}
   >
-    <LockOutlinedIcon sx={{ fontSize: 36, color: 'hsl(var(--muted-foreground))', mb: 2, opacity: 0.5 }} />
+    <LockOutlinedIcon size={36} style={{ color: 'hsl(var(--muted-foreground))', marginBottom: '16px', opacity: 0.5 }} />
     <Typography variant="h6" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, mb: 1 }}>
       {title}
     </Typography>
@@ -437,7 +437,7 @@ const AppDetailPage = () => {
       <Box>
         {!isAuthenticated && <LandingNavbar />}
         <Box sx={{ p: 4, maxWidth: 800, mx: 'auto', pt: !isAuthenticated ? 14 : 4, textAlign: 'center' }}>
-          <ErrorOutlineIcon sx={{ fontSize: 56, color: 'hsl(var(--muted-foreground))', mb: 2, opacity: 0.5 }} />
+          <ErrorOutlineIcon size={56} style={{ color: 'hsl(var(--muted-foreground))', marginBottom: '16px', opacity: 0.5 }} />
           <Typography variant="h5" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, mb: 1.5 }}>
             App not found
           </Typography>

@@ -268,7 +268,7 @@ export const SlaEditor = () => {
         <Tooltip title="Reset all rows to recommended defaults">
           <Button
             size="small"
-            startIcon={<RestartAltIcon fontSize="small" />}
+            startIcon={<RestartAltIcon size={20} />}
             onClick={handleReset}
             sx={{
               color: 'hsl(var(--muted-foreground))',

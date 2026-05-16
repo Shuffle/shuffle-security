@@ -190,7 +190,7 @@ export const MentionInput = ({ value, onChange, onSubmit, ...props }: MentionInp
                   color: user.isAI ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
                 }}
               >
-                {user.isAI ? <AgentIcon size={12} /> : <PersonIcon sx={{ fontSize: 12 }} />}
+                {user.isAI ? <AgentIcon size={12} /> : <PersonIcon size={12} />}
               </Avatar>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography 

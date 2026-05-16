@@ -721,7 +721,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                             '&:hover': { color: 'hsl(var(--primary))' },
                           }}
                         >
-                          <RestoreIcon sx={{ fontSize: 18 }} />
+                          <RestoreIcon size={18} />
                         </IconButton>
                       </Tooltip>
                     )}
@@ -744,7 +744,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                           transform: expandedTypes[automation.type!] ? 'rotate(180deg)' : 'rotate(0deg)',
                         }}
                       >
-                        <ExpandMoreIcon sx={{ fontSize: 20 }} />
+                        <ExpandMoreIcon size={20} />
                       </IconButton>
                     )}
                   </Box>
@@ -851,7 +851,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                                   }}
                                   sx={{ color: 'text.secondary', '&:hover': { color: 'hsl(var(--destructive))' } }}
                                 >
-                                  <CloseIcon sx={{ fontSize: 16 }} />
+                                  <CloseIcon size={16} />
                                 </IconButton>
                               )}
                             </Box>
@@ -932,7 +932,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                                       },
                                     }}
                                   >
-                                    <AddIcon sx={{ fontSize: 14 }} />
+                                    <AddIcon size={14} />
                                   </IconButton>
                                 </Tooltip>
                               </Box>

@@ -609,7 +609,7 @@ const PermissionsPanel = ({ compact = false }: PermissionsPanelProps) => {
                       onClick={(e) => { e.stopPropagation(); toggleExpand(cat.id); }}
                       sx={{ color: 'hsl(var(--muted-foreground))', width: 24, height: 24 }}
                     >
-                      {isExpanded ? <ExpandLessIcon sx={{ fontSize: 16 }} /> : <ExpandMoreIcon sx={{ fontSize: 16 }} />}
+                      {isExpanded ? <ExpandLessIcon size={16} /> : <ExpandMoreIcon size={16} />}
                     </IconButton>
                   </Box>
                 </Box>
@@ -795,7 +795,7 @@ const PermissionsPanel = ({ compact = false }: PermissionsPanelProps) => {
           <Button
             variant="outlined"
             size="small"
-            startIcon={<RestoreIcon sx={{ fontSize: 16 }} />}
+            startIcon={<RestoreIcon size={16} />}
             onClick={resetToDefaults}
             sx={{
               borderColor: 'hsl(var(--border))',
@@ -901,7 +901,7 @@ const PermissionsPanel = ({ compact = false }: PermissionsPanelProps) => {
                       </span>
                     </Tooltip>
                     <IconButton size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                      {isExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                      {isExpanded ? <ExpandLessIcon size={20} /> : <ExpandMoreIcon size={20} />}
                     </IconButton>
                   </Box>
 

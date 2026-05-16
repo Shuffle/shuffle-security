@@ -1014,11 +1014,11 @@ export const AutomationConfig = ({
                                   sx={{ height: 20, fontSize: '0.6rem' }}
                                 />
                               )}
-                              <CheckCircleIcon sx={{ fontSize: 14, color: 'hsl(var(--severity-low))', ml: 0.5 }} />
+                              <CheckCircleIcon size={14} style={{ color: 'hsl(var(--severity-low))', marginLeft: '4px' }} />
                             </Box>
                           )}
                           {hasIngestionSources && (
-                            <CheckCircleIcon sx={{ fontSize: 14, color: 'hsl(var(--severity-low))' }} />
+                            <CheckCircleIcon size={14} style={{ color: 'hsl(var(--severity-low))' }} />
                           )}
                         </Box>
                         <Typography
@@ -1064,12 +1064,7 @@ export const AutomationConfig = ({
                             }}
                           >
                             <ExpandMoreIcon
-                              sx={{
-                                color: 'hsl(var(--muted-foreground))',
-                                transform: isExpanded ? 'rotate(180deg)' : 'none',
-                                transition: 'transform 0.3s ease',
-                                fontSize: 20,
-                              }}
+                              size={20} style={{ color: 'hsl(var(--muted-foreground))', transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s ease' }}
                             />
                           </Box>
                         )}
@@ -1181,12 +1176,7 @@ export const AutomationConfig = ({
                                           )}
                                         </Box>
                                         <ExpandMoreIcon
-                                          sx={{
-                                            color: 'hsl(var(--muted-foreground))',
-                                            transform: otherExpanded[option.id] ? 'rotate(180deg)' : 'none',
-                                            transition: 'transform 0.2s ease',
-                                            fontSize: 16,
-                                          }}
+                                          size={16} style={{ color: 'hsl(var(--muted-foreground))', transform: otherExpanded[option.id] ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }}
                                         />
                                       </Box>
                                       <Collapse in={otherExpanded[option.id] || false}>
@@ -1309,7 +1299,7 @@ export const AutomationConfig = ({
                                 gap: 0.5,
                               }}
                             >
-                              <LinkIcon sx={{ fontSize: 14 }} />
+                              <LinkIcon size={14} />
                               Threat Feed URLs
                             </Typography>
                             <Tooltip title="Reset to default feeds" arrow>
@@ -1321,7 +1311,7 @@ export const AutomationConfig = ({
                                   '&:hover': { color: '#ff6600' },
                                 }}
                               >
-                                <RestoreIcon sx={{ fontSize: 16 }} />
+                                <RestoreIcon size={16} />
                               </IconButton>
                             </Tooltip>
                           </Box>
@@ -1426,7 +1416,7 @@ export const AutomationConfig = ({
                                           onClick={() => setEditingFeed(feed)}
                                           sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--foreground))' } }}
                                         >
-                                          <EditIcon sx={{ fontSize: 16 }} />
+                                          <EditIcon size={16} />
                                         </IconButton>
                                       </Tooltip>
                                       <Tooltip title="Delete feed" arrow>
@@ -1435,7 +1425,7 @@ export const AutomationConfig = ({
                                           onClick={() => deleteFeed(feed.id)}
                                           sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: '#ef4444' } }}
                                         >
-                                          <DeleteIcon sx={{ fontSize: 16 }} />
+                                          <DeleteIcon size={16} />
                                         </IconButton>
                                       </Tooltip>
                                       <Switch
@@ -1502,7 +1492,7 @@ export const AutomationConfig = ({
                               <Button
                                 size="small"
                                 variant="outlined"
-                                startIcon={<AddIcon sx={{ fontSize: 16 }} />}
+                                startIcon={<AddIcon size={16} />}
                                 disabled={!newFeedUrl.trim() || !newFeedName.trim()}
                                 onClick={async () => {
                                   if (newFeedUrl.trim() && newFeedName.trim()) {

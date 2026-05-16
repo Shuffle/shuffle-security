@@ -363,7 +363,7 @@ const AgentQuickViewDrawer = ({ open, onClose, item, entityBasePath, onApprove, 
           </Typography>
         </Box>
         <IconButton onClick={handleClose} size="small" sx={{ color: 'hsl(var(--muted-foreground))', mt: -0.5 }}>
-          <CloseIcon fontSize="small" />
+          <CloseIcon size={20} />
         </IconButton>
       </Box>
 

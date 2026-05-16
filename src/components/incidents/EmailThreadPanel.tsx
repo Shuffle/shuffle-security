@@ -231,7 +231,7 @@ const RecipientRow = ({
         onClick={onRemove}
         sx={{ p: 0.25, color: 'text.secondary', '&:hover': { color: '#ff6600' } }}
       >
-        <ExpandLessIcon sx={{ fontSize: 14, transform: 'rotate(45deg)' }} />
+        <ExpandLessIcon size={14} style={{ transform: 'rotate(45deg)' }} />
       </IconButton>
     )}
   </Box>
@@ -445,7 +445,7 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
             color: showReplyBox ? '#ff6600' : 'text.secondary',
             '&:hover': { color: '#ff6600' },
           }}>
-            <ReplyIcon sx={{ fontSize: 18 }} />
+            <ReplyIcon size={18} />
           </IconButton>
         </Tooltip>
       )}
@@ -455,7 +455,7 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
             color: 'text.secondary',
             '&:hover': { color: '#ff6600' },
           }}>
-            <ForwardIcon sx={{ fontSize: 18 }} />
+            <ForwardIcon size={18} />
           </IconButton>
         </Tooltip>
       )}
@@ -471,7 +471,7 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
             '&:hover': { color: '#ff6600' },
           }}
         >
-          {poppedOut ? <CloseIcon sx={{ fontSize: 18 }} /> : <OpenInNewIcon sx={{ fontSize: 16 }} />}
+          {poppedOut ? <CloseIcon size={18} /> : <OpenInNewIcon size={16} />}
         </IconButton>
       </Tooltip>
     </>
@@ -581,7 +581,7 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
                     </Typography>
                   )}
                   <IconButton size="small" sx={{ color: 'text.secondary' }}>
-                    {isExpanded ? <ExpandLessIcon sx={{ fontSize: 16 }} /> : <ExpandMoreIcon sx={{ fontSize: 16 }} />}
+                    {isExpanded ? <ExpandLessIcon size={16} /> : <ExpandMoreIcon size={16} />}
                   </IconButton>
                 </Box>
               </Box>
@@ -663,7 +663,7 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <ReplyIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+              <ReplyIcon size={16} style={{ color: 'text.secondary' }} />
               <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
                 Reply to {messages[0]?.from || 'sender'}
               </Typography>
@@ -775,7 +775,7 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
             <Button
               size="small"
               variant="contained"
-              startIcon={<SendIcon sx={{ fontSize: 14 }} />}
+              startIcon={<SendIcon size={14} />}
               onClick={handleReply}
               disabled={!replyText.trim() || !replyTo.trim()}
               sx={{
@@ -844,7 +844,7 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
           '&:hover': { bgcolor: 'hsl(var(--muted))' },
         }}
       >
-        <EmailIcon sx={{ fontSize: 20, color: '#ff6600' }} />
+        <EmailIcon size={20} style={{ color: '#ff6600' }} />
         <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
           Email Thread
         </Typography>
@@ -854,8 +854,8 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
           {headerActions}
         </Box>
         {threadCollapsed
-          ? <ExpandMoreIcon sx={{ color: 'text.secondary' }} />
-          : <ExpandLessIcon sx={{ color: 'text.secondary' }} />}
+          ? <ExpandMoreIcon style={{ color: 'text.secondary' }} />
+          : <ExpandLessIcon style={{ color: 'text.secondary' }} />}
       </Box>
       <Collapse in={!threadCollapsed}>
         {panelBody}
@@ -885,7 +885,7 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary' }}>
-          <EmailIcon sx={{ fontSize: 16, color: '#ff6600' }} />
+          <EmailIcon size={16} style={{ color: '#ff6600' }} />
           <Typography variant="caption" sx={{ fontSize: '0.75rem' }}>
             Email thread opened in popout window
           </Typography>
@@ -936,13 +936,13 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
               bgcolor: (t) => t.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)',
             }}
           >
-            <DragIndicatorIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+            <DragIndicatorIcon size={16} style={{ color: 'text.secondary' }} />
             <Typography variant="caption" sx={{ fontSize: '0.7rem', color: 'text.secondary', flex: 1 }}>
               {threadSubject || 'Email thread'} — drag to move
             </Typography>
             <Tooltip title="Dock back inline">
               <IconButton size="small" onClick={() => setPoppedOut(false)} sx={{ color: 'text.secondary', '&:hover': { color: '#ff6600' } }}>
-                <CloseIcon sx={{ fontSize: 16 }} />
+                <CloseIcon size={16} />
               </IconButton>
             </Tooltip>
           </Box>

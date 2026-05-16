@@ -156,7 +156,7 @@ export const WebhookIngestionButton = ({ webhook, onToggled }: WebhookIngestionB
             },
           }}
         >
-          <WebhookIcon sx={{ fontSize: 16, color: isEnabled ? '#22c55e' : 'text.disabled' }} />
+          <WebhookIcon size={16} style={{ color: isEnabled ? '#22c55e' : 'text.disabled' }} />
         </IconButton>
       </Tooltip>
       <Popover
@@ -218,7 +218,7 @@ export const WebhookIngestionButton = ({ webhook, onToggled }: WebhookIngestionB
               }}
             />
             <IconButton size="small" onClick={handleCopy} sx={{ p: 0.5, color: 'hsl(var(--muted-foreground))' }}>
-              {copied ? <CheckIcon sx={{ fontSize: 14, color: 'success.main' }} /> : <ContentCopyIcon sx={{ fontSize: 14 }} />}
+              {copied ? <CheckIcon size={14} style={{ color: 'success.main' }} /> : <ContentCopyIcon size={14} />}
             </IconButton>
           </Box>
         )}
@@ -226,7 +226,7 @@ export const WebhookIngestionButton = ({ webhook, onToggled }: WebhookIngestionB
         {/* Enable / Disable button */}
         <Button
           size="small"
-          startIcon={isEnabled ? <BlockIcon sx={{ fontSize: 14 }} /> : <CheckCircleOutlineIcon sx={{ fontSize: 14 }} />}
+          startIcon={isEnabled ? <BlockIcon size={14} /> : <CheckCircleOutlineIcon size={14} />}
           onClick={handleToggle}
           sx={{
             justifyContent: 'flex-start',

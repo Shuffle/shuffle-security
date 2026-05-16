@@ -45,12 +45,12 @@ const isImageFile = (filename: string): boolean => {
 const getFileIcon = (filename: string) => {
   const ext = filename.split('.').pop()?.toLowerCase();
   if (IMAGE_EXTENSIONS.includes(ext || '')) {
-    return <ImageIcon sx={{ fontSize: 16 }} />;
+    return <ImageIcon size={16} />;
   }
   if (ext === 'pdf') {
-    return <PictureAsPdfIcon sx={{ fontSize: 16 }} />;
+    return <PictureAsPdfIcon size={16} />;
   }
-  return <InsertDriveFileIcon sx={{ fontSize: 16 }} />;
+  return <InsertDriveFileIcon size={16} />;
 };
 
 // Hook to load image blob URL with auth
@@ -152,14 +152,14 @@ const ImageThumbnail = ({
             onClick={(e) => { e.stopPropagation(); onDownload(); }}
             sx={{ color: 'white', p: 0.5 }}
           >
-            <DownloadIcon sx={{ fontSize: 14 }} />
+            <DownloadIcon size={14} />
           </IconButton>
           <IconButton 
             size="small" 
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
             sx={{ color: 'error.main', p: 0.5 }}
           >
-            <DeleteIcon sx={{ fontSize: 14 }} />
+            <DeleteIcon size={14} />
           </IconButton>
         </Box>
       </Box>
@@ -343,7 +343,7 @@ export const FileAttachments = ({
               {uploading ? (
                 <CircularProgress size={16} sx={{ color: 'text.secondary' }} />
               ) : (
-                <AttachFileIcon sx={{ fontSize: 16 }} />
+                <AttachFileIcon size={16} />
               )}
             </IconButton>
           </Tooltip>
@@ -428,7 +428,7 @@ export const FileAttachments = ({
                       onClick={(e) => { e.stopPropagation(); handleDownload(attachment); }}
                       sx={{ color: 'text.secondary' }}
                     >
-                      <DownloadIcon sx={{ fontSize: 16 }} />
+                      <DownloadIcon size={16} />
                     </IconButton>
                   </Tooltip>
                   
@@ -441,7 +441,7 @@ export const FileAttachments = ({
                         '&:hover': { color: 'hsl(var(--destructive))' },
                       }}
                     >
-                      <DeleteIcon sx={{ fontSize: 16 }} />
+                      <DeleteIcon size={16} />
                     </IconButton>
                   </Tooltip>
                 </Box>
@@ -473,7 +473,7 @@ export const FileAttachments = ({
           <CircularProgress size={20} sx={{ color: 'text.secondary' }} />
         ) : (
           <>
-            <AttachFileIcon sx={{ fontSize: 20, color: 'text.secondary' }} />
+            <AttachFileIcon size={20} style={{ color: 'text.secondary' }} />
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
               Click to attach files
             </Typography>

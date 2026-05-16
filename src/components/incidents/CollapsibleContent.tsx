@@ -76,7 +76,7 @@ const CollapsibleContent: React.FC<CollapsibleContentProps> = ({
           <Button
             size="small"
             onClick={toggle}
-            startIcon={expanded ? <ExpandLessIcon sx={{ fontSize: 14 }} /> : <ExpandMoreIcon sx={{ fontSize: 14 }} />}
+            startIcon={expanded ? <ExpandLessIcon size={14} /> : <ExpandMoreIcon size={14} />}
             sx={{
               fontSize: '0.7rem',
               textTransform: 'none',

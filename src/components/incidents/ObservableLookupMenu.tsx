@@ -87,7 +87,7 @@ export const ObservableLookupMenu = ({ type, value }: ObservableLookupMenuProps)
             '&:hover': { color: 'hsl(var(--primary))', bgcolor: 'hsl(var(--primary) / 0.08)' },
           }}
         >
-          <SearchIcon sx={{ fontSize: 16 }} />
+          <SearchIcon size={16} />
         </IconButton>
       </Tooltip>
       <Menu
@@ -125,7 +125,7 @@ export const ObservableLookupMenu = ({ type, value }: ObservableLookupMenuProps)
           <ListItemIcon sx={{ minWidth: 28 }}>
             {shuffleLoading
               ? <CircularProgress size={14} sx={{ color: 'hsl(var(--primary))' }} />
-              : <CheckCircleIcon sx={{ fontSize: 16, color: 'hsl(var(--primary))' }} />}
+              : <CheckCircleIcon size={16} style={{ color: 'hsl(var(--primary))' }} />}
           </ListItemIcon>
           <ListItemText
             primary="Lookup in Shuffle"
@@ -145,7 +145,7 @@ export const ObservableLookupMenu = ({ type, value }: ObservableLookupMenuProps)
             sx={{ fontSize: '0.8rem' }}
           >
             <ListItemIcon sx={{ minWidth: 28 }}>
-              <OpenInNewIcon sx={{ fontSize: 16, color: 'hsl(var(--muted-foreground))' }} />
+              <OpenInNewIcon size={16} style={{ color: 'hsl(var(--muted-foreground))' }} />
             </ListItemIcon>
             <ListItemText
               primary="Lookup on VirusTotal"
@@ -157,7 +157,7 @@ export const ObservableLookupMenu = ({ type, value }: ObservableLookupMenuProps)
         ) : (
           <MenuItem disabled sx={{ fontSize: '0.8rem' }}>
             <ListItemIcon sx={{ minWidth: 28 }}>
-              <HelpOutlineIcon sx={{ fontSize: 16 }} />
+              <HelpOutlineIcon size={16} />
             </ListItemIcon>
             <ListItemText
               primary="VirusTotal not supported"

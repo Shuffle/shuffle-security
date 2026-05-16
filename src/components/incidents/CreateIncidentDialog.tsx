@@ -431,11 +431,7 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
               '&:hover': { color: 'hsl(var(--foreground))' },
             }}
           >
-            <ExpandMoreIcon sx={{
-              fontSize: 20,
-              transform: showAdvanced ? 'rotate(180deg)' : 'rotate(0deg)',
-              transition: 'transform 0.2s',
-            }} />
+            <ExpandMoreIcon size={20} style={{ transform: showAdvanced ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
             <Typography variant="body2" sx={{ fontWeight: 500 }}>
               Advanced options
             </Typography>
@@ -452,7 +448,7 @@ export const CreateIncidentDialog = ({ open, onClose, onSubmit }: CreateIncident
                   border: '1px solid rgba(255, 102, 0, 0.2)',
                 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                    <PlaylistAddCheckIcon sx={{ fontSize: 18, color: '#ff6600' }} />
+                    <PlaylistAddCheckIcon size={18} style={{ color: '#ff6600' }} />
                     <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
                       Apply Template
                     </Typography>

@@ -77,7 +77,7 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
             mb: 4,
           }}
         >
-          <InboxIcon sx={{ fontSize: 36, color: 'hsl(var(--primary))', opacity: 0.8 }} />
+          <InboxIcon size={36} style={{ color: 'hsl(var(--primary))', opacity: 0.8 }} />
         </Box>
 
         {/* Title */}
@@ -146,7 +146,7 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
                   },
                 }}
               >
-                <AddIcon sx={{ fontSize: 16 }} />
+                <AddIcon size={16} />
               </IconButton>
             </Tooltip>
             {onSyncNow && (
@@ -176,7 +176,7 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
                     },
                   }}
                 >
-                  {(isSyncing || isUpdatingApps) ? <CircularProgress size={14} color="inherit" /> : <PlayArrowIcon sx={{ fontSize: 16 }} />}
+                  {(isSyncing || isUpdatingApps) ? <CircularProgress size={14} color="inherit" /> : <PlayArrowIcon size={16} />}
                 </IconButton>
                 </span>
               </Tooltip>

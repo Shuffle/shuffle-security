@@ -73,7 +73,7 @@ export const RoutingSuggestionBanner = ({
         border: '1px solid hsl(var(--primary) / 0.4)',
       }}
     >
-      <CallSplitIcon sx={{ fontSize: 18, color: 'hsl(var(--primary))', flexShrink: 0 }} />
+      <CallSplitIcon size={18} style={{ color: 'hsl(var(--primary))', flexShrink: 0 }} />
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>
           Routing rule suggests moving this incident to{' '}
@@ -109,7 +109,7 @@ export const RoutingSuggestionBanner = ({
           disabled={isWorking}
           sx={{ width: 36, height: 36, color: 'hsl(var(--muted-foreground))' }}
         >
-          <CloseIcon sx={{ fontSize: 18 }} />
+          <CloseIcon size={18} />
         </IconButton>
       </Tooltip>
     </Box>

@@ -253,11 +253,7 @@ const TenantManagement = () => {
           <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
             Sub Tenants{subOrgs.length > 0 ? ` (${subOrgs.length})` : ''}
           </Typography>
-          <ExpandMoreIcon sx={{
-            color: 'hsl(var(--muted-foreground))',
-            transform: showSubOrgs ? 'rotate(180deg)' : 'rotate(0deg)',
-            transition: 'transform 0.2s',
-          }} />
+          <ExpandMoreIcon style={{ color: 'hsl(var(--muted-foreground))', transform: showSubOrgs ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
         </Box>
         <Collapse in={showSubOrgs}>
           {subOrgsLoading ? (
@@ -309,11 +305,7 @@ const TenantManagement = () => {
           <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
             All Tenants{allOrgs.length > 0 ? ` (${allOrgs.length})` : ''}
           </Typography>
-          <ExpandMoreIcon sx={{
-            color: 'hsl(var(--muted-foreground))',
-            transform: showAllOrgs ? 'rotate(180deg)' : 'rotate(0deg)',
-            transition: 'transform 0.2s',
-          }} />
+          <ExpandMoreIcon style={{ color: 'hsl(var(--muted-foreground))', transform: showAllOrgs ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
         </Box>
         <Collapse in={showAllOrgs}>
           {allOrgs.length === 0 ? (

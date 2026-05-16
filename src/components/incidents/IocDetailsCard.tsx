@@ -147,7 +147,7 @@ export const IocDetailsCard = ({ correlations, compact = false }: IocDetailsCard
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1 }}>
-        <WarningAmberIcon sx={{ fontSize: compact ? 14 : 16, color: 'hsl(var(--destructive))' }} />
+        <WarningAmberIcon style={{ fontSize: compact ? 14 : 16, color: 'hsl(var(--destructive))' }} />
         <Typography
           sx={{
             fontWeight: 700,
@@ -257,7 +257,7 @@ export const IocDetailsCard = ({ correlations, compact = false }: IocDetailsCard
                               '&:hover': { textDecoration: 'underline' },
                             }}
                           >
-                            <OpenInNewIcon sx={{ fontSize: 11 }} />
+                            <OpenInNewIcon size={11} />
                             {label}
                           </MuiLink>
                         </Tooltip>

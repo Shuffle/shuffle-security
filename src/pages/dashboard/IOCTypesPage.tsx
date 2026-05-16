@@ -475,7 +475,7 @@ const IOCTypesPage = () => {
               },
             }}
           >
-            <BuildIcon sx={{ fontSize: 16 }} />
+            <BuildIcon size={16} />
             TODO ({todoCount})
           </ToggleButton>
         </ToggleButtonGroup>
@@ -488,7 +488,7 @@ const IOCTypesPage = () => {
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                <SearchIcon size={18} style={{ color: 'text.secondary' }} />
               </InputAdornment>
             ),
             sx: { height: 36 },
@@ -532,7 +532,7 @@ const IOCTypesPage = () => {
           {Object.keys(testResults).length > 0 && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Chip
-                icon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
+                icon={<CheckCircleIcon size={16} />}
                 label={`${Object.values(testResults).filter(v => v === true).length} match`}
                 size="small"
                 sx={{ bgcolor: 'rgba(34, 197, 94, 0.15)', color: '#22c55e' }}
@@ -600,7 +600,7 @@ const IOCTypesPage = () => {
                             <Chip label={type.name} size="small" sx={{ fontWeight: 500 }} />
                             {type.needsPattern && (
                               <Tooltip title="Needs custom regex pattern (TODO)" arrow>
-                                <BuildIcon sx={{ fontSize: 14, color: 'warning.main' }} />
+                                <BuildIcon size={14} style={{ color: 'warning.main' }} />
                               </Tooltip>
                             )}
                           </Box>
@@ -631,12 +631,12 @@ const IOCTypesPage = () => {
                           <TableCell>
                             {testResults[type.name] === true && (
                               <Tooltip title="Pattern matches test value" arrow>
-                                <CheckCircleIcon sx={{ fontSize: 20, color: '#22c55e' }} />
+                                <CheckCircleIcon size={20} style={{ color: '#22c55e' }} />
                               </Tooltip>
                             )}
                             {testResults[type.name] === false && (
                               <Tooltip title="Pattern does not match" arrow>
-                                <CancelIcon sx={{ fontSize: 20, color: '#ef4444' }} />
+                                <CancelIcon size={20} style={{ color: '#ef4444' }} />
                               </Tooltip>
                             )}
                             {testResults[type.name] === undefined && type.regex && (
@@ -646,10 +646,10 @@ const IOCTypesPage = () => {
                         )}
                         <TableCell align="right">
                           <IconButton size="small" onClick={() => handleOpenDialog(type)}>
-                            <EditIcon fontSize="small" />
+                            <EditIcon size={20} />
                           </IconButton>
                           <IconButton size="small" onClick={() => handleDelete(type.name)} color="error">
-                            <DeleteIcon fontSize="small" />
+                            <DeleteIcon size={20} />
                           </IconButton>
                         </TableCell>
                         <TableCell align="right" sx={{ width: 150, py: 0.5 }}>
@@ -682,7 +682,7 @@ const IOCTypesPage = () => {
                                   icon={
                                     isDeleting
                                       ? <CircularProgress size={12} sx={{ color: 'hsl(var(--muted-foreground)) !important', ml: '6px !important' }} />
-                                      : <OpenInNewIcon sx={{ fontSize: 12, ml: '6px !important' }} />
+                                      : <OpenInNewIcon size={12} />
                                   }
                                   label={
                                     isDeleting
@@ -698,7 +698,7 @@ const IOCTypesPage = () => {
                                     isDeleting
                                       ? <CircularProgress size={12} sx={{ color: 'hsl(var(--muted-foreground))' }} />
                                       : <DeleteIcon
-                                          sx={{ fontSize: 14 }}
+                                          size={14}
                                           onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
                                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
                                         />
@@ -812,7 +812,7 @@ const IOCTypesPage = () => {
                   />
                   {dialogTestResult === true && (
                     <Chip 
-                      icon={<CheckCircleIcon sx={{ fontSize: 16 }} />} 
+                      icon={<CheckCircleIcon size={16} />} 
                       label="Match" 
                       size="small"
                       sx={{ bgcolor: 'rgba(34, 197, 94, 0.15)', color: '#22c55e' }}
@@ -820,7 +820,7 @@ const IOCTypesPage = () => {
                   )}
                   {dialogTestResult === false && (
                     <Chip 
-                      icon={<CancelIcon sx={{ fontSize: 16 }} />} 
+                      icon={<CancelIcon size={16} />} 
                       label="No match" 
                       size="small"
                       sx={{ bgcolor: 'rgba(239, 68, 68, 0.15)', color: '#ef4444' }}
@@ -855,7 +855,7 @@ const IOCTypesPage = () => {
                   opacity: formData.regex?.trim() ? 0.5 : 1,
                 }}
               >
-                <BuildIcon sx={{ fontSize: 16, color: 'warning.main' }} />
+                <BuildIcon size={16} style={{ color: 'warning.main' }} />
                 <Typography variant="body2">Mark as TODO (needs custom pattern in future)</Typography>
               </label>
             </Box>

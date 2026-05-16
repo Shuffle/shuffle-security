@@ -522,7 +522,7 @@ export const IncidentCardView = ({
                       {incident.title && incident.title.trim() !== 'Untitled Incident' && incident.title.trim() !== 'Requires sync' && incident.title.trim() !== incident.id && incident.title.trim() ? incident.title.trim() : (
                         incident.source ? (
                           <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, color: 'hsl(var(--severity-medium))', fontStyle: 'italic', fontWeight: 500 }}>
-                            <RefreshIcon sx={{ fontSize: 14 }} />
+                            <RefreshIcon size={14} />
                             Requires sync
                           </Box>
                         ) : (

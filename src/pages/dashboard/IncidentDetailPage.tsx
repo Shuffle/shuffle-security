@@ -1207,7 +1207,7 @@ const IncidentDetailPage = () => {
             {enrichmentStatus.checks.map((c) => (
               <Box key={c.label} sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                  <CheckCircleIcon sx={{ fontSize: 13, color: c.active ? 'hsl(var(--severity-low))' : 'hsl(var(--destructive))' }} />
+                  <CheckCircleIcon size={13} style={{ color: c.active ? 'hsl(var(--severity-low))' : 'hsl(var(--destructive))' }} />
                   <Typography variant="caption" sx={{ fontSize: '0.7rem', fontWeight: 600 }}>{c.label}</Typography>
                 </Box>
                 {isSupportUser && (
@@ -3519,13 +3519,13 @@ const IncidentDetailPage = () => {
 
   const getActivityIcon = (type: string) => {
     switch (type) {
-      case 'comment': return <PersonIcon fontSize="small" />;
-      case 'change': return <EditIcon fontSize="small" />;
-      case 'status': return <CheckCircleIcon fontSize="small" />;
-      case 'assignment': return <PersonIcon fontSize="small" />;
-      case 'created': return <AddIcon fontSize="small" />;
-      case 'agent': return <AutoFixHighIcon fontSize="small" />;
-      default: return <HistoryIcon fontSize="small" />;
+      case 'comment': return <PersonIcon size={20} />;
+      case 'change': return <EditIcon size={20} />;
+      case 'status': return <CheckCircleIcon size={20} />;
+      case 'assignment': return <PersonIcon size={20} />;
+      case 'created': return <AddIcon size={20} />;
+      case 'agent': return <AutoFixHighIcon size={20} />;
+      default: return <HistoryIcon size={20} />;
     }
   };
 
@@ -3661,7 +3661,7 @@ const IncidentDetailPage = () => {
     return (
       <Tooltip title="Filter timeline" arrow>
         <Chip
-          icon={<FilterListIcon sx={{ fontSize: 14, ml: '6px !important', color: 'inherit !important' }} />}
+          icon={<FilterListIcon size={14} style={{ color: 'inherit !important' }} />}
           label={
             <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
               <span>Filters</span>
@@ -3792,7 +3792,7 @@ const IncidentDetailPage = () => {
           alignItems: 'flex-start',
           gap: 1,
         }}>
-          <HistoryIcon sx={{ fontSize: 18, color: 'hsl(38 92% 50%)', mt: 0.1 }} />
+          <HistoryIcon size={18} style={{ color: 'hsl(38 92% 50%)', marginTop: '0px' }} />
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="body2" sx={{ color: 'hsl(38 92% 50%)', fontWeight: 600, fontSize: '0.78rem' }}>
               Incident data looks broken — consider rolling back
@@ -3831,7 +3831,7 @@ const IncidentDetailPage = () => {
       <Box sx={{ p: 2, borderBottom: '1px solid hsl(var(--border-subtle))' }}>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Avatar sx={{ width: 28, height: 28, bgcolor: 'rgba(255, 102, 0, 0.2)' }}>
-            <PersonIcon sx={{ fontSize: 16, color: '#ff6600' }} />
+            <PersonIcon size={16} style={{ color: '#ff6600' }} />
           </Avatar>
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }} ref={commentInputRef}>
             {replyingTo && (
@@ -3847,7 +3847,7 @@ const IncidentDetailPage = () => {
                   border: '1px solid rgba(255, 102, 0, 0.25)',
                 }}
               >
-                <ReplyIcon sx={{ fontSize: 14, color: '#ff6600' }} />
+                <ReplyIcon size={14} style={{ color: '#ff6600' }} />
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: '#ff6600', lineHeight: 1.2 }}>
                     Replying to {replyingTo.label}
@@ -3870,7 +3870,7 @@ const IncidentDetailPage = () => {
                   onClick={() => setReplyingTo(null)}
                   sx={{ width: 20, height: 20, color: 'text.secondary', '&:hover': { color: '#ff6600' } }}
                 >
-                  <DeleteIcon sx={{ fontSize: 12 }} />
+                  <DeleteIcon size={12} />
                 </IconButton>
               </Box>
             )}
@@ -3964,7 +3964,7 @@ const IncidentDetailPage = () => {
                   {commentUploading ? (
                     <CircularProgress size={14} sx={{ color: 'text.secondary' }} />
                   ) : (
-                    <AttachFileIcon sx={{ fontSize: 16 }} />
+                    <AttachFileIcon size={16} />
                   )}
                 </IconButton>
               </Tooltip>
@@ -3981,7 +3981,7 @@ const IncidentDetailPage = () => {
                   '&:hover': { bgcolor: 'rgba(255, 102, 0, 0.25)' },
                 }}
               >
-                <SendIcon sx={{ fontSize: 16 }} />
+                <SendIcon size={16} />
               </IconButton>
             </Box>
             {commentAttachments.length > 0 && (
@@ -4359,7 +4359,7 @@ const IncidentDetailPage = () => {
           gap: 1,
           color: 'text.secondary',
         }}>
-          <HistoryIcon sx={{ fontSize: 32, opacity: 0.5 }} />
+          <HistoryIcon size={32} style={{ opacity: 0.5 }} />
           <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
             {allHidden ? 'All timeline filters are turned off' : 'No activity yet'}
           </Typography>
@@ -4490,7 +4490,7 @@ const IncidentDetailPage = () => {
               '&:hover': { color: '#ff6600', bgcolor: 'rgba(255, 102, 0, 0.08)' },
             }}
           >
-            <ReplyIcon sx={{ fontSize: 14 }} />
+            <ReplyIcon size={14} />
           </IconButton>
         </Tooltip>
       );
@@ -4556,7 +4556,7 @@ const IncidentDetailPage = () => {
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
               <Avatar sx={{ width: 24, height: 24, bgcolor: 'rgba(100, 149, 237, 0.15)' }}>
-                <HistoryIcon sx={{ fontSize: 14, color: '#6495ed' }} />
+                <HistoryIcon size={14} style={{ color: '#6495ed' }} />
               </Avatar>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
@@ -4605,7 +4605,7 @@ const IncidentDetailPage = () => {
                     }}
                     sx={{ color: 'text.secondary', width: 24, height: 24, '&:hover': { color: '#ff6600' } }}
                   >
-                    <VisibilityIcon sx={{ fontSize: 14 }} />
+                    <VisibilityIcon size={14} />
                   </IconButton>
                 </Tooltip>
               )}
@@ -4780,12 +4780,12 @@ const IncidentDetailPage = () => {
         // observable added / correlation found) injected on the frontend so
         // the user can see *when* every artefact appeared on the timeline.
         const stepStyle: Record<StepKind, { color: string; icon: React.ReactNode }> = {
-          'task-created':         { color: '#a855f7', icon: <TaskAltIcon sx={{ fontSize: 12 }} /> },
-          'task-completed':       { color: '#22c55e', icon: <CheckCircleIcon sx={{ fontSize: 12 }} /> },
-          'task-status-changed':  { color: '#3b82f6', icon: <ForwardIcon sx={{ fontSize: 12 }} /> },
-          'observable-added':     { color: '#06b6d4', icon: <VisibilityIcon sx={{ fontSize: 12 }} /> },
-          'correlation-found':    { color: '#f59e0b', icon: <LinkIcon sx={{ fontSize: 12 }} /> },
-          'incident-created':     { color: '#6495ed', icon: <HistoryIcon sx={{ fontSize: 12 }} /> },
+          'task-created':         { color: '#a855f7', icon: <TaskAltIcon size={12} /> },
+          'task-completed':       { color: '#22c55e', icon: <CheckCircleIcon size={12} /> },
+          'task-status-changed':  { color: '#3b82f6', icon: <ForwardIcon size={12} /> },
+          'observable-added':     { color: '#06b6d4', icon: <VisibilityIcon size={12} /> },
+          'correlation-found':    { color: '#f59e0b', icon: <LinkIcon size={12} /> },
+          'incident-created':     { color: '#6495ed', icon: <HistoryIcon size={12} /> },
         };
         const cfg = stepStyle[item.kind];
         // Highlight observable-added pills when the underlying observable
@@ -4948,7 +4948,7 @@ const IncidentDetailPage = () => {
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', color: pillColor, flexShrink: 0 }}>
-              {isIocPill ? <WarningAmberIcon sx={{ fontSize: 12 }} /> : cfg.icon}
+              {isIocPill ? <WarningAmberIcon size={12} /> : cfg.icon}
             </Box>
             {/* The "Observable" word is redundant — the type chip (URL/IP/…)
                 and the IOC badge already convey what this row is. Only render
@@ -5093,7 +5093,7 @@ const IncidentDetailPage = () => {
                     '&:hover': { bgcolor: 'hsl(38 92% 50% / 0.22)' },
                   }}
                 >
-                  <LinkIcon sx={{ fontSize: 10 }} />
+                  <LinkIcon size={10} />
                   {item.corrCount}
                 </Typography>
               </Tooltip>
@@ -5156,7 +5156,7 @@ const IncidentDetailPage = () => {
             }}
           >
             <Avatar sx={{ width: 22, height: 22, bgcolor: 'hsl(var(--status-resolved) / 0.18)', color: resolvedColor }}>
-              <CheckCircleIcon sx={{ fontSize: 14 }} />
+              <CheckCircleIcon size={14} />
             </Avatar>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
@@ -5242,7 +5242,7 @@ const IncidentDetailPage = () => {
               </Typography>
               {isReply && actItem.replyToLabel && (
                 <Chip
-                  icon={<ReplyIcon sx={{ fontSize: 11 }} />}
+                  icon={<ReplyIcon size={11} />}
                   label={actItem.replyToLabel}
                   size="small"
                   variant="outlined"
@@ -5348,7 +5348,7 @@ const IncidentDetailPage = () => {
                   '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.2)' },
                 }}
               >
-                <DeleteIcon sx={{ fontSize: 12 }} />
+                <DeleteIcon size={12} />
               </IconButton>
             </Tooltip>
           )}
@@ -5671,7 +5671,7 @@ const IncidentDetailPage = () => {
             }}
             aria-label="Rerun AI Agent"
           >
-            <RefreshIcon sx={{ fontSize: 11 }} />
+            <RefreshIcon size={11} />
             Rerun
           </Box>
         )}
@@ -5713,7 +5713,7 @@ const IncidentDetailPage = () => {
             position: 'relative',
           }}
         >
-          <FingerprintIcon sx={{ fontSize: 11, color: 'hsl(var(--muted-foreground))' }} />
+          <FingerprintIcon size={11} style={{ color: 'hsl(var(--muted-foreground))' }} />
         </Box>
         <CircularProgress size={10} thickness={6} sx={{ color: '#ff6600', flexShrink: 0 }} />
         <Typography
@@ -5846,7 +5846,7 @@ const IncidentDetailPage = () => {
           alignItems: 'flex-start',
           gap: 1.25,
         }}>
-          <HistoryIcon sx={{ fontSize: 20, color: 'hsl(38 92% 50%)', mt: 0.1 }} />
+          <HistoryIcon size={20} style={{ color: 'hsl(38 92% 50%)', marginTop: '0px' }} />
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="body2" sx={{ color: 'hsl(38 92% 50%)', fontWeight: 600, fontSize: '0.8rem' }}>
               Recovered from a previous OCSF revision
@@ -5874,7 +5874,7 @@ const IncidentDetailPage = () => {
           alignItems: 'center',
           gap: 1,
         }}>
-          <VisibilityIcon sx={{ fontSize: 18, color: '#3b82f6' }} />
+          <VisibilityIcon size={18} style={{ color: '#3b82f6' }} />
           <Typography variant="body2" sx={{ color: '#3b82f6', fontWeight: 500 }}>
             Shared view — This incident is read-only.
           </Typography>
@@ -5970,7 +5970,7 @@ const IncidentDetailPage = () => {
         let bannerTitle = 'Action Required';
         let bannerDescription = 'The AI agent needs your input on this incident.';
         let bannerColor = '--severity-high';
-        let bannerIcon = <AutoFixHighIcon sx={{ fontSize: 20 }} />;
+        let bannerIcon = <AutoFixHighIcon size={20} />;
         let actionSteps: string[] = [];
 
         if (isWaiting) {
@@ -6082,7 +6082,7 @@ const IncidentDetailPage = () => {
             '&:hover': { textDecoration: 'underline' },
           }}
         >
-          <ArrowBackIcon sx={{ fontSize: 18 }} />
+          <ArrowBackIcon size={18} />
           <Typography variant="body2">Back to {entityPlural}</Typography>
         </Box>
 
@@ -6100,7 +6100,7 @@ const IncidentDetailPage = () => {
             gap: 1.5,
             flexWrap: 'wrap',
           }}>
-            <LanguageIcon sx={{ fontSize: 16, color: '#a78bfa', flexShrink: 0 }} />
+            <LanguageIcon size={16} style={{ color: '#a78bfa', flexShrink: 0 }} />
             {sharedOrgs.length > 0 ? (
               <>
                 <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))' }}>
@@ -6177,7 +6177,7 @@ const IncidentDetailPage = () => {
             {sourceAppImage ? (
               <img src={sourceAppImage} alt={incident?.source || ''} style={{ width: 44, height: 44, objectFit: 'contain', borderRadius: 8 }} />
             ) : (
-              <TaskAltIcon sx={{ fontSize: 28, color: severityColors[editedSeverity] }} />
+              <TaskAltIcon size={28} style={{ color: severityColors[editedSeverity] }} />
             )}
           </Box>
 
@@ -6350,7 +6350,7 @@ const IncidentDetailPage = () => {
               
               {/* Last edited */}
               <Typography variant="caption" sx={{ color: 'text.disabled', display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <AccessTimeIcon sx={{ fontSize: 12 }} />
+                <AccessTimeIcon size={12} />
                 {incident.editedTs ? formatTimestamp(incident.editedTs) : formatTimestamp(incident.createdTs)}
               </Typography>
 
@@ -6584,7 +6584,7 @@ const IncidentDetailPage = () => {
                             setAskAgentSending(false);
                           }
                         }}
-                        startIcon={askAgentSending ? <CircularProgress size={12} sx={{ color: 'inherit' }} /> : <SendIcon sx={{ fontSize: 14 }} />}
+                        startIcon={askAgentSending ? <CircularProgress size={12} sx={{ color: 'inherit' }} /> : <SendIcon size={14} />}
                         sx={{
                           height: 32,
                           textTransform: 'none',
@@ -6630,7 +6630,7 @@ const IncidentDetailPage = () => {
                   height: 32,
                 }}
               >
-                <RefreshIcon fontSize="small" sx={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none', '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } }} />
+                <RefreshIcon size={20} sx={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none', '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } }} />
               </IconButton>
             </Tooltip>
 
@@ -6718,7 +6718,7 @@ const IncidentDetailPage = () => {
                   height: 32,
                 }}
               >
-                <MoreVertIcon fontSize="small" />
+                <MoreVertIcon size={20} />
               </IconButton>
             </Tooltip>
             )}
@@ -6737,7 +6737,7 @@ const IncidentDetailPage = () => {
                   setShowShareDialog(true);
                 }}
               >
-                <LinkIcon sx={{ fontSize: 16, mr: 1 }} />
+                <LinkIcon size={16} style={{ marginRight: '8px' }} />
                 Share
               </MenuItem>
               {/* Generate Report */}
@@ -6747,7 +6747,7 @@ const IncidentDetailPage = () => {
                   setShowReportDialog(true);
                 }}
               >
-                <DescriptionIcon sx={{ fontSize: 16, mr: 1 }} />
+                <DescriptionIcon size={16} style={{ marginRight: '8px' }} />
                 Generate Report
               </MenuItem>
               {/* Visit Source */}
@@ -6757,7 +6757,7 @@ const IncidentDetailPage = () => {
               >
                 <span>
                   <MenuItem disabled sx={{ width: '100%' }}>
-                    <LinkIcon sx={{ fontSize: 16, mr: 1 }} />
+                    <LinkIcon size={16} style={{ marginRight: '8px' }} />
                     Visit Source
                   </MenuItem>
                 </span>
@@ -6840,7 +6840,7 @@ const IncidentDetailPage = () => {
                       }
                     }}
                   >
-                    <RefreshIcon sx={{ fontSize: 16, mr: 1 }} />
+                    <RefreshIcon size={16} style={{ marginRight: '8px' }} />
                     Resync
                   </MenuItem>
                 );
@@ -6899,7 +6899,7 @@ const IncidentDetailPage = () => {
                         .finally(() => setForwardingAppsLoading(false));
                     }}
                   >
-                    <ForwardIcon sx={{ fontSize: 16, mr: 1 }} />
+                    <ForwardIcon size={16} style={{ marginRight: '8px' }} />
                     Forward
                   </MenuItem>
                 </span>
@@ -6916,7 +6916,7 @@ const IncidentDetailPage = () => {
                       setShowMergeDialog(true);
                     }}
                   >
-                    <CallMergeIcon sx={{ fontSize: 16, mr: 1 }} />
+                    <CallMergeIcon size={16} style={{ marginRight: '8px' }} />
                     Merge Into…
                   </MenuItem>
                 </span>
@@ -6933,7 +6933,7 @@ const IncidentDetailPage = () => {
                         setShowResolveDialog(true);
                       }}
                     >
-                      <CheckCircleIcon sx={{ fontSize: 16, mr: 1, color: '#22c55e' }} />
+                      <CheckCircleIcon size={16} style={{ marginRight: '8px', color: '#22c55e' }} />
                       <Box component="span" sx={{ color: '#22c55e' }}>Resolve</Box>
                     </MenuItem>
                   </span>
@@ -7092,7 +7092,7 @@ const IncidentDetailPage = () => {
                   </Tooltip>
 
                   {/* Arrow: Original → Translation */}
-                  <ChevronRightIcon sx={{ fontSize: 16, color: 'text.disabled', mx: -0.25 }} />
+                  <ChevronRightIcon size={16} style={{ color: 'text.disabled' }} />
                 </>
               )}
 
@@ -7125,7 +7125,7 @@ const IncidentDetailPage = () => {
                   </Tooltip>
 
                   {/* Arrow: Translation → OCSF */}
-                  <ChevronRightIcon sx={{ fontSize: 16, color: 'text.disabled', mx: -0.25 }} />
+                  <ChevronRightIcon size={16} style={{ color: 'text.disabled' }} />
                 </>
               )}
 
@@ -7249,7 +7249,7 @@ const IncidentDetailPage = () => {
                   '&:hover': { color: '#FF6600' },
                 }}
               >
-                {isEditingDescription ? <CheckCircleIcon sx={{ fontSize: 16 }} /> : <EditIcon sx={{ fontSize: 16 }} />}
+                {isEditingDescription ? <CheckCircleIcon size={16} /> : <EditIcon size={16} />}
               </IconButton>
             </Box>
             {isEditingDescription ? (
@@ -7636,7 +7636,7 @@ const IncidentDetailPage = () => {
                       key={idx}
                       label={ref.length > 50 ? ref.substring(0, 50) + '...' : ref}
                       size="small"
-                      icon={<LinkIcon sx={{ fontSize: 14 }} />}
+                      icon={<LinkIcon size={14} />}
                       onDelete={() => handleRemoveReference(idx)}
                       onClick={() => window.open(ref, '_blank')}
                       sx={{ cursor: 'pointer' }}
@@ -7686,7 +7686,7 @@ const IncidentDetailPage = () => {
               <Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <AccessTimeIcon sx={{ fontSize: 16, color: metrics?.mttdColor || 'text.secondary' }} />
+                    <AccessTimeIcon size={16} style={{ color: metrics?.mttdColor || 'text.secondary' }} />
                     <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
                       MTTD (Time to Detect)
                     </Typography>
@@ -7717,7 +7717,7 @@ const IncidentDetailPage = () => {
               <Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CheckCircleIcon sx={{ fontSize: 16, color: metrics?.isResolved ? '#22c55e' : (metrics?.mttrColor || 'text.secondary') }} />
+                    <CheckCircleIcon size={16} style={{ color: metrics?.isResolved ? '#22c55e' : (metrics?.mttrColor || 'text.secondary') }} />
                     <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
                       MTTR (Time to Resolve)
                     </Typography>
@@ -7778,7 +7778,7 @@ const IncidentDetailPage = () => {
                     {enrichmentStatus.checks.map((c) => (
                       <Box key={c.label} sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                          <CheckCircleIcon sx={{ fontSize: 13, color: c.active ? 'hsl(var(--severity-low))' : 'hsl(var(--destructive))' }} />
+                          <CheckCircleIcon size={13} style={{ color: c.active ? 'hsl(var(--severity-low))' : 'hsl(var(--destructive))' }} />
                           <Typography variant="caption" sx={{ fontSize: '0.7rem', fontWeight: 600 }}>{c.label}</Typography>
                         </Box>
                         {isSupportUser && (
@@ -7866,7 +7866,7 @@ const IncidentDetailPage = () => {
               placeholder="Search observables..."
               sx={{ ...inputSx, minWidth: 160, flex: 1, maxWidth: 280, '& .MuiOutlinedInput-root': { ...(inputSx as any)['& .MuiOutlinedInput-root'], height: 36 } }}
               InputProps={{
-                startAdornment: <SearchIcon sx={{ fontSize: 16, color: 'text.disabled', mr: 0.5 }} />,
+                startAdornment: <SearchIcon size={16} style={{ color: 'text.disabled', marginRight: '4px' }} />,
               }}
             />
             {/* Type multiselect dropdown */}
@@ -7927,7 +7927,7 @@ const IncidentDetailPage = () => {
               onClick={() => setObsSortDir(d => d === 'asc' ? 'desc' : 'asc')}
               sx={{ p: 0.5, color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
             >
-              {obsSortDir === 'desc' ? <ArrowDownwardIcon sx={{ fontSize: 16 }} /> : <ArrowUpwardIcon sx={{ fontSize: 16 }} />}
+              {obsSortDir === 'desc' ? <ArrowDownwardIcon size={16} /> : <ArrowUpwardIcon size={16} />}
             </IconButton>
             {/* Clear filters */}
             {(obsFilterTypes.length > 0 || obsFilterText || obsSortField !== 'first_seen' || obsSortDir !== 'desc') && (
@@ -7949,8 +7949,8 @@ const IncidentDetailPage = () => {
               >
                 <Chip
                   icon={showIgnoredObs
-                    ? <VisibilityIcon sx={{ fontSize: 12 }} />
-                    : <VisibilityOffIcon sx={{ fontSize: 12 }} />}
+                    ? <VisibilityIcon size={12} />
+                    : <VisibilityOffIcon size={12} />}
                   label={showIgnoredObs
                     ? `Hide ignored (${ignoredObs.ignoredKeys.size})`
                     : `Show ignored (${ignoredObs.ignoredKeys.size})`}
@@ -8196,7 +8196,7 @@ const IncidentDetailPage = () => {
                               arrow
                             >
                               <Chip
-                                icon={iocHit ? <WarningAmberIcon sx={{ fontSize: 12, color: 'hsl(var(--destructive)) !important' }} /> : undefined}
+                                icon={iocHit ? <WarningAmberIcon size={12} style={{ color: 'hsl(var(--destructive)) !important' }} /> : undefined}
                                 label={iocHit ? `${totalRefs} IOC` : `${totalRefs} corr`}
                                 size="small"
                                 variant="outlined"
@@ -8244,8 +8244,8 @@ const IncidentDetailPage = () => {
                                 }}
                               >
                                 {isIgn
-                                  ? <VisibilityIcon sx={{ fontSize: 16 }} />
-                                  : <VisibilityOffIcon sx={{ fontSize: 16 }} />}
+                                  ? <VisibilityIcon size={16} />
+                                  : <VisibilityOffIcon size={16} />}
                               </IconButton>
                             </Tooltip>
                           );
@@ -8260,7 +8260,7 @@ const IncidentDetailPage = () => {
                               '&:hover': { color: '#ef4444' },
                             }}
                           >
-                            <DeleteIcon fontSize="small" />
+                            <DeleteIcon size={20} />
                           </IconButton>
                         )}
                         {/* Lookup dropdown — pinned to the far right so it
@@ -8361,7 +8361,7 @@ const IncidentDetailPage = () => {
                                         onClick={(e) => { e.stopPropagation(); refetchObsCorrelation(obs); }}
                                         sx={{ p: 0.25, color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--foreground))' } }}
                                       >
-                                        <RefreshIcon sx={{ fontSize: 12 }} />
+                                        <RefreshIcon size={12} />
                                       </IconButton>
                                     </Tooltip>
                                   </Box>
@@ -8381,7 +8381,7 @@ const IncidentDetailPage = () => {
                                       onClick={(e) => { e.stopPropagation(); refetchObsCorrelation(obs); }}
                                       sx={{ p: 0.25, color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--foreground))' } }}
                                     >
-                                      <RefreshIcon sx={{ fontSize: 12 }} />
+                                      <RefreshIcon size={12} />
                                     </IconButton>
                                   </Tooltip>
                                 </Box>
@@ -8399,7 +8399,7 @@ const IncidentDetailPage = () => {
                                       onClick={(e) => { e.stopPropagation(); refetchObsCorrelation(obs); }}
                                       sx={{ p: 0.25, color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--foreground))' } }}
                                     >
-                                      <RefreshIcon sx={{ fontSize: 12 }} />
+                                      <RefreshIcon size={12} />
                                     </IconButton>
                                   </Tooltip>
                                 </Box>
@@ -8543,7 +8543,7 @@ const IncidentDetailPage = () => {
                       '&:hover': { color: 'hsl(var(--primary))', bgcolor: 'hsl(var(--muted))' },
                     }}
                   >
-                    <RefreshIcon sx={{ fontSize: 16 }} />
+                    <RefreshIcon size={16} />
                   </IconButton>
                 </span>
               </Tooltip>
@@ -8558,7 +8558,7 @@ const IncidentDetailPage = () => {
                 pb: 1.5,
                 borderBottom: '1px solid hsl(var(--border))',
               }}>
-                <LinkIcon sx={{ fontSize: 18, color: 'hsl(var(--muted-foreground))' }} />
+                <LinkIcon size={18} style={{ color: 'hsl(var(--muted-foreground))' }} />
                 <Typography variant="body2" sx={{ fontWeight: 600 }}>
                   {visibleCorrelations.length} shared attribute{visibleCorrelations.length !== 1 ? 's' : ''}
                 </Typography>
@@ -8580,7 +8580,7 @@ const IncidentDetailPage = () => {
                     >
                       {correlationsLoading
                         ? <CircularProgress size={14} />
-                        : <RefreshIcon sx={{ fontSize: 16 }} />}
+                        : <RefreshIcon size={16} />}
                     </IconButton>
                   </span>
                 </Tooltip>
@@ -8637,7 +8637,7 @@ const IncidentDetailPage = () => {
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10, bgcolor: 'hsl(var(--card))', mx: -2, px: 2, py: 1.5, borderBottom: '1px solid hsl(var(--border-subtle))' }}>
             <Box>
               <Typography variant="subtitle2" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <DescriptionIcon sx={{ fontSize: 18, color: '#ff6600' }} />
+                <DescriptionIcon size={18} style={{ color: '#ff6600' }} />
                 Raw OCSF
               </Typography>
               <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace', fontSize: '0.7rem' }}>
@@ -8763,7 +8763,7 @@ const IncidentDetailPage = () => {
         }}>
           <Box sx={{ position: 'sticky', top: 0, zIndex: 10, bgcolor: 'hsl(var(--card))', mx: -2, px: 2, py: 1.5, borderBottom: '1px solid hsl(var(--border))' }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
-              <DescriptionIcon sx={{ fontSize: 18, color: 'primary.main' }} />
+              <DescriptionIcon size={18} style={{ color: 'primary.main' }} />
               Original Data
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
@@ -8794,7 +8794,7 @@ const IncidentDetailPage = () => {
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10, bgcolor: 'hsl(var(--card))', mx: -2, px: 2, py: 1.5, borderBottom: '1px solid hsl(var(--border))' }}>
             <Box>
               <Typography variant="subtitle2" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
-                <DescriptionIcon sx={{ fontSize: 18, color: 'primary.main' }} />
+                <DescriptionIcon size={18} style={{ color: 'primary.main' }} />
                 Translation File
               </Typography>
               <Typography variant="caption" sx={{ color: 'text.secondary', fontFamily: 'monospace', fontSize: '0.7rem' }}>
@@ -8989,7 +8989,7 @@ const IncidentDetailPage = () => {
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
           <Typography variant="h6" sx={{ fontSize: '1rem' }}>{t('Forward Incident')}</Typography>
           <IconButton size="small" onClick={() => setShowForwardDialog(false)}>
-            <CloseIcon fontSize="small" />
+            <CloseIcon size={20} />
           </IconButton>
         </DialogTitle>
         <DialogContent sx={{ pt: 1 }}>

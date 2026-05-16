@@ -188,11 +188,7 @@ export const CreateAssetDialog = ({ open, onClose, onSubmit, kind = 'device' }: 
               '&:hover': { color: 'hsl(var(--foreground))' },
             }}
           >
-            <ExpandMoreIcon sx={{
-              fontSize: 20,
-              transform: showAdvanced ? 'rotate(180deg)' : 'rotate(0deg)',
-              transition: 'transform 0.2s',
-            }} />
+            <ExpandMoreIcon size={20} style={{ transform: showAdvanced ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
             <Typography variant="body2" sx={{ fontWeight: 500 }}>
               Advanced options
             </Typography>

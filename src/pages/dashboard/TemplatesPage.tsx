@@ -209,7 +209,7 @@ const TemplatesPage = () => {
                   borderRadius: 1,
                 }}
               >
-                <RefreshIcon fontSize="small" />
+                <RefreshIcon size={20} />
               </IconButton>
             </Tooltip>
           )}
@@ -234,7 +234,7 @@ const TemplatesPage = () => {
           border: '1px dashed',
           borderColor: 'divider',
         }}>
-          <AssignmentIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
+          <AssignmentIcon size={48} style={{ color: 'text.disabled', marginBottom: '16px' }} />
           <Typography variant="h6" sx={{ color: 'text.secondary', mb: 1 }}>
             No templates yet
           </Typography>
@@ -301,7 +301,7 @@ const TemplatesPage = () => {
                               handleOpenEdit(template);
                             }}
                           >
-                            <EditIcon fontSize="small" />
+                            <EditIcon size={20} />
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="Delete">
@@ -313,7 +313,7 @@ const TemplatesPage = () => {
                             }}
                             sx={{ '&:hover': { color: 'error.main' } }}
                           >
-                            <DeleteIcon fontSize="small" />
+                            <DeleteIcon size={20} />
                           </IconButton>
                         </Tooltip>
                       </Box>

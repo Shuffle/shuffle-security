@@ -1328,10 +1328,10 @@ const DetectionOnboardingPage = () => {
       return <CircularProgress size={24} sx={{ color: 'hsl(var(--primary))' }} />;
     }
     if (status.checked && status.success) {
-      return <CheckCircleIcon sx={{ color: 'hsl(var(--severity-low))', fontSize: 28 }} />;
+      return <CheckCircleIcon size={28} style={{ color: 'hsl(var(--severity-low))' }} />;
     }
     if (status.checked && !status.success) {
-      return <RadioButtonUncheckedIcon sx={{ color: 'hsl(var(--severity-medium))', fontSize: 28 }} />;
+      return <RadioButtonUncheckedIcon size={28} style={{ color: 'hsl(var(--severity-medium))' }} />;
     }
     return (
       <Box
@@ -1418,7 +1418,7 @@ const DetectionOnboardingPage = () => {
           {getStepIcon(1, sensorStatus)}
           <Box sx={{ flex: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <SensorsIcon sx={{ color: 'hsl(var(--primary))', fontSize: 20 }} />
+              <SensorsIcon size={20} style={{ color: 'hsl(var(--primary))' }} />
               <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
                 Set up Log Ingestion
               </Typography>
@@ -1490,9 +1490,9 @@ const DetectionOnboardingPage = () => {
             </Typography>
           </Box>
           {expandedStep === 1 ? (
-            <ExpandLessIcon sx={{ color: 'hsl(var(--muted-foreground))' }} />
+            <ExpandLessIcon style={{ color: 'hsl(var(--muted-foreground))' }} />
           ) : (
-            <ExpandMoreIcon sx={{ color: 'hsl(var(--muted-foreground))' }} />
+            <ExpandMoreIcon style={{ color: 'hsl(var(--muted-foreground))' }} />
           )}
         </Box>
 
@@ -1740,7 +1740,7 @@ const DetectionOnboardingPage = () => {
                     }}
                   >
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-                      <StorageIcon sx={{ color: 'hsl(var(--primary))' }} />
+                      <StorageIcon style={{ color: 'hsl(var(--primary))' }} />
                       <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
                         Self-Hosted
                       </Typography>
@@ -1896,7 +1896,7 @@ const DetectionOnboardingPage = () => {
           {getStepIcon(2, rulesStatus)}
           <Box sx={{ flex: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <RuleIcon sx={{ color: 'hsl(var(--primary))', fontSize: 20 }} />
+              <RuleIcon size={20} style={{ color: 'hsl(var(--primary))' }} />
               <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
                 Enable Detection Rules
               </Typography>
@@ -1922,9 +1922,9 @@ const DetectionOnboardingPage = () => {
             </Typography>
           </Box>
           {expandedStep === 2 ? (
-            <ExpandLessIcon sx={{ color: 'hsl(var(--muted-foreground))' }} />
+            <ExpandLessIcon style={{ color: 'hsl(var(--muted-foreground))' }} />
           ) : (
-            <ExpandMoreIcon sx={{ color: 'hsl(var(--muted-foreground))' }} />
+            <ExpandMoreIcon style={{ color: 'hsl(var(--muted-foreground))' }} />
           )}
         </Box>
 
@@ -2011,7 +2011,7 @@ const DetectionOnboardingPage = () => {
           {getStepIcon(3, testStatus)}
           <Box sx={{ flex: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <PlayArrowIcon sx={{ color: 'hsl(var(--primary))', fontSize: 20 }} />
+              <PlayArrowIcon size={20} style={{ color: 'hsl(var(--primary))' }} />
               <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
                 Test Your Rules
               </Typography>
@@ -2037,9 +2037,9 @@ const DetectionOnboardingPage = () => {
             </Typography>
           </Box>
           {expandedStep === 3 ? (
-            <ExpandLessIcon sx={{ color: 'hsl(var(--muted-foreground))' }} />
+            <ExpandLessIcon style={{ color: 'hsl(var(--muted-foreground))' }} />
           ) : (
-            <ExpandMoreIcon sx={{ color: 'hsl(var(--muted-foreground))' }} />
+            <ExpandMoreIcon style={{ color: 'hsl(var(--muted-foreground))' }} />
           )}
         </Box>
 
@@ -2633,7 +2633,7 @@ const DetectionOnboardingPage = () => {
             const ready = env ? isPipelineReady(env) : false;
             const allGood = running && ready && webhookStatus.ready;
             return allGood
-              ? <CheckCircleIcon sx={{ color: 'hsl(var(--severity-low))', fontSize: 28 }} />
+              ? <CheckCircleIcon size={28} style={{ color: 'hsl(var(--severity-low))' }} />
               : <Box sx={{
                   width: 28, height: 28, borderRadius: '50%',
                   border: '2px solid hsl(var(--border))',
@@ -2643,7 +2643,7 @@ const DetectionOnboardingPage = () => {
           })()}
           <Box sx={{ flex: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <RocketLaunchIcon sx={{ color: 'hsl(var(--primary))', fontSize: 20 }} />
+              <RocketLaunchIcon size={20} style={{ color: 'hsl(var(--primary))' }} />
               <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
                 Production
               </Typography>
@@ -2653,9 +2653,9 @@ const DetectionOnboardingPage = () => {
             </Typography>
           </Box>
           {expandedStep === 4 ? (
-            <ExpandLessIcon sx={{ color: 'hsl(var(--muted-foreground))' }} />
+            <ExpandLessIcon style={{ color: 'hsl(var(--muted-foreground))' }} />
           ) : (
-            <ExpandMoreIcon sx={{ color: 'hsl(var(--muted-foreground))' }} />
+            <ExpandMoreIcon style={{ color: 'hsl(var(--muted-foreground))' }} />
           )}
         </Box>
 

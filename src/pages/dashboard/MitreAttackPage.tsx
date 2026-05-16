@@ -181,7 +181,7 @@ const MitreAttackPage = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-            <AccountTreeIcon sx={{ color: 'hsl(var(--primary))', fontSize: 28 }} />
+            <AccountTreeIcon size={28} style={{ color: 'hsl(var(--primary))' }} />
             <Typography variant="h4" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
               MITRE ATT&CK
             </Typography>
@@ -284,7 +284,7 @@ const MitreAttackPage = () => {
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon sx={{ color: 'hsl(var(--muted-foreground))', fontSize: 20 }} />
+                <SearchIcon size={20} style={{ color: 'hsl(var(--muted-foreground))' }} />
               </InputAdornment>
             ),
           }}

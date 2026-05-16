@@ -29,7 +29,7 @@ const ThreatIntelAutomationBanner = ({ sx }: { sx?: object }) => {
       {enrichmentStatus.checks.map((c) => (
         <Box key={c.label} sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-            <CheckCircleIcon sx={{ fontSize: 13, color: c.active ? 'hsl(var(--severity-low))' : 'hsl(var(--destructive))' }} />
+            <CheckCircleIcon size={13} style={{ color: c.active ? 'hsl(var(--severity-low))' : 'hsl(var(--destructive))' }} />
             <Typography variant="caption" sx={{ fontSize: '0.7rem', fontWeight: 600 }}>{c.label}</Typography>
           </Box>
           {isSupportUser && (

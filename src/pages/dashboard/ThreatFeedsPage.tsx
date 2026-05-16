@@ -171,7 +171,7 @@ const ThreatFeedsPage = () => {
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <RssFeedIcon sx={{ fontSize: 28, color: 'hsl(var(--primary))' }} />
+          <RssFeedIcon size={28} style={{ color: 'hsl(var(--primary))' }} />
           <Typography variant="h5" sx={{ fontWeight: 600 }}>Threat Feeds</Typography>
           {isLoading && <CircularProgress size={20} />}
           {!isLoading && (
@@ -198,7 +198,7 @@ const ThreatFeedsPage = () => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                  <SearchIcon size={18} style={{ color: 'text.secondary' }} />
                 </InputAdornment>
               ),
               sx: { height: 36 },
@@ -207,7 +207,7 @@ const ThreatFeedsPage = () => {
           />
           <Tooltip title="Refresh feeds">
             <IconButton onClick={() => refetch()} sx={{ height: 36, width: 36 }}>
-              <RefreshIcon fontSize="small" />
+              <RefreshIcon size={20} />
             </IconButton>
           </Tooltip>
           {feeds.length > 0 && (
@@ -284,7 +284,7 @@ const ThreatFeedsPage = () => {
                     </TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <RssFeedIcon sx={{ fontSize: 16, color: feed.enabled ? 'hsl(var(--primary))' : 'text.disabled' }} />
+                        <RssFeedIcon size={16} style={{ color: feed.enabled ? 'hsl(var(--primary))' : 'text.disabled' }} />
                         <Typography variant="body2" sx={{ fontWeight: 500 }}>
                           {feed.name}
                         </Typography>
@@ -333,7 +333,7 @@ const ThreatFeedsPage = () => {
                             onClick={() => window.open(feed.url, '_blank')}
                             sx={{ opacity: 0.6, '&:hover': { opacity: 1 } }}
                           >
-                            <OpenInNewIcon sx={{ fontSize: 14 }} />
+                            <OpenInNewIcon size={14} />
                           </IconButton>
                         </Tooltip>
                       </Box>
@@ -345,10 +345,10 @@ const ThreatFeedsPage = () => {
                     </TableCell>
                     <TableCell align="right">
                       <IconButton size="small" onClick={() => handleOpenDialog(feed)}>
-                        <EditIcon fontSize="small" />
+                        <EditIcon size={20} />
                       </IconButton>
                       <IconButton size="small" onClick={() => handleDelete(feed.id)} color="error">
-                        <DeleteIcon fontSize="small" />
+                        <DeleteIcon size={20} />
                       </IconButton>
                     </TableCell>
                   </TableRow>
@@ -362,7 +362,7 @@ const ThreatFeedsPage = () => {
                         </Typography>
                       ) : (
                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                          <RssFeedIcon sx={{ fontSize: 40, color: 'hsl(var(--primary) / 0.5)' }} />
+                          <RssFeedIcon size={40} style={{ color: 'hsl(var(--primary) / 0.5)' }} />
                           <Box sx={{ textAlign: 'center' }}>
                             <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>
                               No threat feeds configured

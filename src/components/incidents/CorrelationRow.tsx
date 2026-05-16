@@ -200,7 +200,7 @@ export const CorrelationRow = ({ correlation, currentIncidentId, ignoredObservab
             arrow
           >
             <Chip
-              icon={<WarningAmberIcon sx={{ fontSize: 12, color: 'hsl(var(--destructive)) !important' }} />}
+              icon={<WarningAmberIcon size={12} style={{ color: 'hsl(var(--destructive)) !important' }} />}
               label="Known IOC"
               size="small"
               sx={{
@@ -243,8 +243,8 @@ export const CorrelationRow = ({ correlation, currentIncidentId, ignoredObservab
             }}
           >
             {isHidden
-              ? <VisibilityIcon sx={{ fontSize: compact ? 14 : 16 }} />
-              : <VisibilityOffIcon sx={{ fontSize: compact ? 14 : 16 }} />}
+              ? <VisibilityIcon style={{ fontSize: compact ? 14 : 16 }} />
+              : <VisibilityOffIcon style={{ fontSize: compact ? 14 : 16 }} />}
           </IconButton>
         </Tooltip>
       </Box>

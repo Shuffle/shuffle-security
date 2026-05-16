@@ -376,13 +376,7 @@ export const TaskKanbanBoard = ({
                         >
                           <DragIndicatorIcon
                             className="task-drag-handle"
-                            sx={{
-                              fontSize: 16,
-                              color: 'hsl(var(--muted-foreground))',
-                              mt: 0.25,
-                              cursor: 'grab',
-                              transition: 'opacity 120ms',
-                            }}
+                            size={16} style={{ color: 'hsl(var(--muted-foreground))', marginTop: '2px', cursor: 'grab', transition: 'opacity 120ms' }}
                           />
                           <Typography
                             variant="body2"
@@ -405,7 +399,7 @@ export const TaskKanbanBoard = ({
                             }}
                             sx={{ p: 0.25 }}
                           >
-                            <DeleteOutlineIcon sx={{ fontSize: 14 }} />
+                            <DeleteOutlineIcon size={14} />
                           </IconButton>
                         </Box>
                         <Box

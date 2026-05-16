@@ -72,7 +72,7 @@ export const IngestionSourceButton = ({ app, onToggle, incidentCount = 0, varian
               sx={{ width: 18, height: 18, borderRadius: '50%', objectFit: 'contain' }}
             />
           ) : (
-            <DownloadIcon sx={{ fontSize: 16, color: isEnabled ? (app.validated ? 'hsl(var(--severity-low))' : 'hsl(var(--severity-medium))') : 'rgba(255,255,255,0.4)' }} />
+            <DownloadIcon size={16} style={{ color: isEnabled ? (app.validated ? 'hsl(var(--severity-low))' : 'hsl(var(--severity-medium))') : 'rgba(255,255,255,0.4)' }} />
           )}
         </IconButton>
       </Tooltip>
@@ -110,7 +110,7 @@ export const IngestionSourceButton = ({ app, onToggle, incidentCount = 0, varian
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
           <Button
             size="small"
-            startIcon={<OpenInNewIcon sx={{ fontSize: 14 }} />}
+            startIcon={<OpenInNewIcon size={14} />}
             onClick={() => {
               setAnchorEl(null);
               openApp(app.name);
@@ -130,7 +130,7 @@ export const IngestionSourceButton = ({ app, onToggle, incidentCount = 0, varian
           </Button>
           <Button
             size="small"
-            startIcon={isEnabled ? <BlockIcon sx={{ fontSize: 14 }} /> : <CheckCircleOutlineIcon sx={{ fontSize: 14 }} />}
+            startIcon={isEnabled ? <BlockIcon size={14} /> : <CheckCircleOutlineIcon size={14} />}
             onClick={handleToggle}
             sx={{
               justifyContent: 'flex-start',

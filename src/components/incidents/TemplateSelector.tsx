@@ -121,7 +121,7 @@ export const TemplateSelector = ({ onApplyTemplate, currentUsername = '' }: Temp
                   borderRadius: 1, 
                   bgcolor: `${severityColors[template.severity || 'medium']}15`,
                 }}>
-                  <AssignmentIcon sx={{ fontSize: 16, color: severityColors[template.severity || 'medium'] }} />
+                  <AssignmentIcon size={16} style={{ color: severityColors[template.severity || 'medium'] }} />
                 </Box>
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="body2" sx={{ fontWeight: 500 }}>

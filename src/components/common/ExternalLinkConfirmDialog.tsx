@@ -66,7 +66,7 @@ const ExternalLinkConfirmDialog = () => {
             flexShrink: 0,
           }}
         >
-          <WarningAmberRoundedIcon fontSize="small" />
+          <WarningAmberRoundedIcon size={20} />
         </Box>
         <Box sx={{ minWidth: 0 }}>
           <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
@@ -82,7 +82,7 @@ const ExternalLinkConfirmDialog = () => {
           size="small"
           sx={{ position: 'absolute', right: 12, top: 12 }}
         >
-          <CloseIcon fontSize="small" />
+          <CloseIcon size={20} />
         </IconButton>
       </DialogTitle>
 
@@ -129,7 +129,7 @@ const ExternalLinkConfirmDialog = () => {
                   gap: 0.5,
                 }}
               >
-                <LinkIcon sx={{ fontSize: 14 }} /> Full URL
+                <LinkIcon size={14} /> Full URL
               </Typography>
               <Box
                 sx={{

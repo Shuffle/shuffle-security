@@ -247,14 +247,14 @@ export const RoutingRulePreviewBanner = ({
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <CallSplitIcon sx={{ fontSize: 18, color: 'hsl(var(--primary))', flexShrink: 0 }} />
+        <CallSplitIcon size={18} style={{ color: 'hsl(var(--primary))', flexShrink: 0 }} />
         <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, flex: 1 }}>
           {visible.length} routing rule{visible.length === 1 ? '' : 's'} matched this incident
         </Typography>
         <Tooltip title={expanded ? 'Collapse' : 'Expand'}>
           <IconButton size="small" onClick={() => setExpanded((v) => !v)}
             sx={{ width: 28, height: 28, color: 'hsl(var(--muted-foreground))' }}>
-            {expanded ? <ExpandLessIcon sx={{ fontSize: 18 }} /> : <ExpandMoreIcon sx={{ fontSize: 18 }} />}
+            {expanded ? <ExpandLessIcon size={18} /> : <ExpandMoreIcon size={18} />}
           </IconButton>
         </Tooltip>
       </Box>
@@ -289,7 +289,7 @@ export const RoutingRulePreviewBanner = ({
               <Tooltip title="Dismiss for this incident">
                 <IconButton size="small" onClick={() => dismissRule(m.rule.id)}
                   sx={{ width: 28, height: 28, color: 'hsl(var(--muted-foreground))' }}>
-                  <CloseIcon sx={{ fontSize: 16 }} />
+                  <CloseIcon size={16} />
                 </IconButton>
               </Tooltip>
             </Box>

@@ -7,10 +7,10 @@ const MobileBottomNavInner = () => {
   const { plural: entityPlural, basePath: entityBasePath } = useEntityPreference();
 
   const navItems = [
-    { label: entityPlural, icon: <WarningAmberIcon sx={{ fontSize: 22 }} />, path: entityBasePath },
+    { label: entityPlural, icon: <WarningAmberIcon size={22} />, path: entityBasePath },
     { label: 'Automation', icon: <Activity size={20} />, path: '/usecases' },
-    { label: 'Detection', icon: <RadarIcon sx={{ fontSize: 22 }} />, path: '/detection' },
-    { label: 'Settings', icon: <SettingsIcon sx={{ fontSize: 22 }} />, path: '/settings' },
+    { label: 'Detection', icon: <RadarIcon size={22} />, path: '/detection' },
+    { label: 'Settings', icon: <SettingsIcon size={22} />, path: '/settings' },
   ];
 
   const location = useLocation();

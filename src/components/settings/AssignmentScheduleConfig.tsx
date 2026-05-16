@@ -359,10 +359,10 @@ export const AssignmentScheduleConfig = () => {
                       </Button>
                     </Tooltip>
                     <IconButton size="small" onClick={() => handleEditUser(userSchedule)}>
-                      <EditIcon fontSize="small" />
+                      <EditIcon size={20} />
                     </IconButton>
                     <IconButton size="small" onClick={() => handleDeleteUser(userSchedule.userId)} color="error">
-                      <DeleteIcon fontSize="small" />
+                      <DeleteIcon size={20} />
                     </IconButton>
                   </Box>
                 </Box>
@@ -407,10 +407,10 @@ export const AssignmentScheduleConfig = () => {
                               </TableCell>
                               <TableCell>
                                 <IconButton size="small" onClick={() => handleEditScheduleEntry(scheduleIndex, entry)}>
-                                  <EditIcon fontSize="small" />
+                                  <EditIcon size={20} />
                                 </IconButton>
                                 <IconButton size="small" color="error" onClick={() => handleDeleteScheduleEntry(scheduleIndex, entry.id)}>
-                                  <DeleteIcon fontSize="small" />
+                                  <DeleteIcon size={20} />
                                 </IconButton>
                               </TableCell>
                             </TableRow>

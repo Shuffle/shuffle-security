@@ -181,7 +181,7 @@ const AgentActionSummaryDialog = ({ open, onClose, run, entityBasePath }: Props)
             </Typography>
           </Box>
           <IconButton onClick={onClose} size="small" sx={{ color: 'hsl(var(--muted-foreground))', mt: -0.5 }}>
-            <CloseIcon fontSize="small" />
+            <CloseIcon size={20} />
           </IconButton>
         </Box>
 

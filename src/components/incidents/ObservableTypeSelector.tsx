@@ -144,7 +144,7 @@ export const ObservableTypeSelector = ({
             {value || 'Select type...'}
           </Typography>
           {selectedType?.needsPattern && (
-            <BuildIcon sx={{ fontSize: 14, color: 'warning.main' }} />
+            <BuildIcon size={14} style={{ color: 'warning.main' }} />
           )}
         </Box>
 
@@ -181,7 +181,7 @@ export const ObservableTypeSelector = ({
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <SearchIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                      <SearchIcon size={18} style={{ color: 'text.secondary' }} />
                     </InputAdornment>
                   ),
                 }}
@@ -272,7 +272,7 @@ export const ObservableTypeSelector = ({
                           {type.name}
                         </Typography>
                         {type.needsPattern && (
-                          <BuildIcon sx={{ fontSize: 12, color: 'warning.main' }} />
+                          <BuildIcon size={12} style={{ color: 'warning.main' }} />
                         )}
                         {type.description && (
                           <Typography

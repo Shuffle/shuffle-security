@@ -122,7 +122,7 @@ export const DemoFallbackAuditBanner = ({ visible }: { visible: boolean }) => {
         }}
         onClick={() => setOpen(o => !o)}
       >
-        <ScienceIcon sx={{ fontSize: 16, color: 'hsl(var(--destructive))' }} />
+        <ScienceIcon size={16} style={{ color: 'hsl(var(--destructive))' }} />
         <Typography variant="body2" sx={{ fontWeight: 600, color: 'hsl(var(--destructive))', flex: 1 }}>
           Demo fallback IOC in use — support audit
         </Typography>
@@ -130,7 +130,7 @@ export const DemoFallbackAuditBanner = ({ visible }: { visible: boolean }) => {
           {audit ? `audit @ ${new Date(audit.timestamp).toLocaleTimeString()}` : 'no audit recorded'}
         </Typography>
         <IconButton size="small" sx={{ color: 'hsl(var(--destructive))' }}>
-          {open ? <ExpandLessIcon sx={{ fontSize: 18 }} /> : <ExpandMoreIcon sx={{ fontSize: 18 }} />}
+          {open ? <ExpandLessIcon size={18} /> : <ExpandMoreIcon size={18} />}
         </IconButton>
       </Box>
       <Collapse in={open}>

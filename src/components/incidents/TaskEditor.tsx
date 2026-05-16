@@ -301,7 +301,7 @@ export const TaskEditor = ({
                       '&:hover': { color: '#ef4444' },
                     }}
                   >
-                    <DeleteIcon fontSize="small" />
+                    <DeleteIcon size={20} />
                   </IconButton>
                 </Box>
                 

@@ -1826,7 +1826,7 @@ const IncidentsPage = () => {
                     },
                   }}
                 >
-                  <RocketLaunchIcon fontSize="small" />
+                  <RocketLaunchIcon size={20} />
                 </IconButton>
               </Tooltip>
             )}
@@ -1840,7 +1840,7 @@ const IncidentsPage = () => {
                   '&:hover': { borderColor: 'text.secondary' },
                 }}
               >
-                <RefreshIcon fontSize="small" sx={isRefreshing ? { animation: 'spin 1s linear infinite', '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } } : undefined} />
+                <RefreshIcon size={20} sx={isRefreshing ? { animation: 'spin 1s linear infinite', '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } } : undefined} />
               </IconButton>
             </Tooltip>
             <Tooltip title={`Create ${entitySingular}`}>
@@ -1852,7 +1852,7 @@ const IncidentsPage = () => {
                   '&:hover': { borderColor: 'text.secondary' },
                 }}
               >
-                <AddIcon fontSize="small" />
+                <AddIcon size={20} />
               </IconButton>
             </Tooltip>
           </Box>
@@ -1885,7 +1885,7 @@ const IncidentsPage = () => {
                 mb: 4,
               }}
             >
-              <RefreshIcon sx={{ fontSize: 36, color: '#ef4444', opacity: 0.8 }} />
+              <RefreshIcon size={36} style={{ color: '#ef4444', opacity: 0.8 }} />
             </Box>
             <Typography variant="h5" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', mb: 1.5 }}>
               Failed to load incidents
@@ -2214,7 +2214,7 @@ const IncidentsPage = () => {
                     },
                   }}
                 >
-                  <AddIcon sx={{ fontSize: 16 }} />
+                  <AddIcon size={16} />
                 </IconButton>
               </Tooltip>
               {ingestWorkflowId && (
@@ -2236,7 +2236,7 @@ const IncidentsPage = () => {
                       },
                     }}
                   >
-                    {(isSyncing || isUpdatingApps) ? <CircularProgress size={14} color="inherit" /> : <PlayArrowIcon sx={{ fontSize: 16 }} />}
+                    {(isSyncing || isUpdatingApps) ? <CircularProgress size={14} color="inherit" /> : <PlayArrowIcon size={16} />}
                   </IconButton>
                   </span>
                 </Tooltip>
@@ -2251,7 +2251,7 @@ const IncidentsPage = () => {
               makes sense once at least one app is ingesting). */}
           {!ingestionLoading && !isDemoTourActive && !demoActive && ingestionApps.length > 0 && (
           <Box className="automation-arrow" sx={{ display: 'flex', alignItems: 'center', color: 'hsl(var(--muted-foreground))', mx: -0.25, maxWidth: 30, opacity: 1 }}>
-            <ChevronRightIcon sx={{ fontSize: 18 }} />
+            <ChevronRightIcon size={18} />
           </Box>
           )}
           </>}
@@ -2364,7 +2364,7 @@ const IncidentsPage = () => {
                     },
                   }}
                 >
-                  <AddIcon sx={{ fontSize: 16 }} />
+                  <AddIcon size={16} />
                 </IconButton>
               </Tooltip>
               {forwardWorkflowId && (
@@ -2385,7 +2385,7 @@ const IncidentsPage = () => {
                         },
                       }}
                     >
-                      {isUpdatingForwardApps ? <CircularProgress size={14} color="inherit" /> : <PlayArrowIcon sx={{ fontSize: 16 }} />}
+                      {isUpdatingForwardApps ? <CircularProgress size={14} color="inherit" /> : <PlayArrowIcon size={16} />}
                     </IconButton>
                   </span>
                 </Tooltip>
@@ -2429,7 +2429,7 @@ const IncidentsPage = () => {
                 },
               }}
             >
-              <RocketLaunchIcon fontSize="small" />
+              <RocketLaunchIcon size={20} />
             </IconButton>
           </Tooltip>
           )}
@@ -2449,7 +2449,7 @@ const IncidentsPage = () => {
                 },
               }}
             >
-              <RefreshIcon fontSize="small" sx={isRefreshing ? { animation: 'spin 1s linear infinite', '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } } : undefined} />
+              <RefreshIcon size={20} sx={isRefreshing ? { animation: 'spin 1s linear infinite', '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } } : undefined} />
             </IconButton>
           </Tooltip>
           <Tooltip title={`Create ${entitySingular}`}>
@@ -2467,7 +2467,7 @@ const IncidentsPage = () => {
                 },
               }}
             >
-              <AddIcon fontSize="small" />
+              <AddIcon size={20} />
             </IconButton>
           </Tooltip>
         </Box>
@@ -2560,7 +2560,7 @@ const IncidentsPage = () => {
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
-                    <SearchIcon sx={{ color: 'text.secondary', fontSize: '1rem' }} />
+                    <SearchIcon style={{ color: 'text.secondary', fontSize: '1rem' }} />
                   </InputAdornment>
                 ),
                 sx: { height: 36 },
@@ -2856,7 +2856,7 @@ const IncidentsPage = () => {
                           <Typography sx={{ fontSize: '0.82rem' }}>{option.name}</Typography>
                           {isOrgFailed && (
                             <Tooltip title="Failed to load incidents from this tenant" placement="right">
-                              <WarningAmberIcon sx={{ fontSize: 14, color: 'hsl(var(--severity-medium))' }} />
+                              <WarningAmberIcon size={14} style={{ color: 'hsl(var(--severity-medium))' }} />
                             </Tooltip>
                           )}
                         </Box>
@@ -3010,7 +3010,7 @@ const IncidentsPage = () => {
             transition: 'border-color 0.2s ease',
           }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
-              <CalendarTodayIcon sx={{ fontSize: 13, color: 'hsl(var(--muted-foreground))' }} />
+              <CalendarTodayIcon size={13} style={{ color: 'hsl(var(--muted-foreground))' }} />
               <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontWeight: 600, fontSize: '0.7rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                 Date Range
               </Typography>
@@ -3160,7 +3160,7 @@ const IncidentsPage = () => {
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <VisibilityOffIcon sx={{ fontSize: 14, color: '#6b7280' }} />
+                <VisibilityOffIcon size={14} style={{ color: '#6b7280' }} />
                 <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.8rem' }}>
                   {irrelevantCount} irrelevant
                 </Typography>
@@ -3337,7 +3337,7 @@ const IncidentsPage = () => {
               '&.Mui-disabled': { opacity: 0.3 },
             }}
           >
-            <ChevronLeftIcon fontSize="small" />
+            <ChevronLeftIcon size={20} />
           </IconButton>
 
           {Array.from({ length: Math.ceil(sortedIncidents.length / ITEMS_PER_PAGE) }, (_, i) => i + 1)
@@ -3408,7 +3408,7 @@ const IncidentsPage = () => {
                   '&.Mui-disabled': { opacity: 0.3 },
                 }}
               >
-                {isLoading && atEnd ? <CircularProgress size={14} /> : <ChevronRightIcon fontSize="small" />}
+                {isLoading && atEnd ? <CircularProgress size={14} /> : <ChevronRightIcon size={20} />}
               </IconButton>
             );
           })()}

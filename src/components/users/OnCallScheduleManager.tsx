@@ -760,7 +760,7 @@ export const OnCallScheduleManager = ({ users, loading = false, compact = false 
                 p: 6, textAlign: 'center', bgcolor: 'hsl(var(--card))',
                 border: '1px solid hsl(var(--border))', borderRadius: 2,
               }}>
-                <PersonIcon sx={{ fontSize: 48, color: 'hsl(var(--muted-foreground))', mb: 2 }} />
+                <PersonIcon size={48} style={{ color: 'hsl(var(--muted-foreground))', marginBottom: '16px' }} />
                 <Typography sx={{ color: 'hsl(var(--muted-foreground))' }}>No users found</Typography>
               </Paper>
             ) : (
@@ -898,7 +898,7 @@ export const OnCallScheduleManager = ({ users, loading = false, compact = false 
                             alignItems: 'center', mb: 2.5,
                           }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                              <AccessTimeIcon sx={{ fontSize: 18, color: 'hsl(var(--muted-foreground))' }} />
+                              <AccessTimeIcon size={18} style={{ color: 'hsl(var(--muted-foreground))' }} />
                               <Typography variant="subtitle2" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>
                                 Availability Windows
                               </Typography>
@@ -921,7 +921,7 @@ export const OnCallScheduleManager = ({ users, loading = false, compact = false 
                               p: 3, textAlign: 'center', bgcolor: 'hsl(var(--card))',
                               border: '1px dashed hsl(var(--border))', borderRadius: 2,
                             }}>
-                              <ScheduleIcon sx={{ fontSize: 32, color: 'hsl(var(--muted-foreground))', mb: 1 }} />
+                              <ScheduleIcon size={32} style={{ color: 'hsl(var(--muted-foreground))', marginBottom: '8px' }} />
                               <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
                                 No availability windows configured
                               </Typography>
@@ -980,7 +980,7 @@ export const OnCallScheduleManager = ({ users, loading = false, compact = false 
                                       onClick={() => handleEditScheduleEntry(user.id, entry)}
                                       sx={{ color: 'hsl(var(--muted-foreground))' }}
                                     >
-                                      <EditIcon fontSize="small" />
+                                      <EditIcon size={20} />
                                     </IconButton>
                                     <IconButton
                                       size="small"
@@ -990,7 +990,7 @@ export const OnCallScheduleManager = ({ users, loading = false, compact = false 
                                         '&:hover': { color: '#ef4444' },
                                       }}
                                     >
-                                      <DeleteIcon fontSize="small" />
+                                      <DeleteIcon size={20} />
                                     </IconButton>
                                   </Box>
                                 </Paper>

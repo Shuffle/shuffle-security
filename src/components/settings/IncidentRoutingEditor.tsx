@@ -508,7 +508,7 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
         <Button
           variant="outlined"
           size="small"
-          startIcon={<AddIcon sx={{ fontSize: 16 }} />}
+          startIcon={<AddIcon size={16} />}
           onClick={handleAdd}
           sx={{
             height: 36,
@@ -613,7 +613,7 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
               </Tooltip>
               <Tooltip title="Edit">
                 <IconButton size="small" onClick={() => toggleExpanded(rule.id)} sx={{ width: 36, height: 36 }}>
-                  <ExpandMoreIcon sx={{ fontSize: 18 }} />
+                  <ExpandMoreIcon size={18} />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Delete">
@@ -627,7 +627,7 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
                     '&:hover': { color: 'hsl(var(--destructive))' },
                   }}
                 >
-                  <DeleteOutlineIcon sx={{ fontSize: 18 }} />
+                  <DeleteOutlineIcon size={18} />
                 </IconButton>
               </Tooltip>
             </Box>
@@ -663,12 +663,12 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
             </Tooltip>
             <Tooltip title="Duplicate">
               <IconButton size="small" onClick={() => handleDuplicate(rule)} sx={{ width: 36, height: 36 }}>
-                <ContentCopyIcon sx={{ fontSize: 16 }} />
+                <ContentCopyIcon size={16} />
               </IconButton>
             </Tooltip>
             <Tooltip title="Collapse">
               <IconButton size="small" onClick={() => toggleExpanded(rule.id)} sx={{ width: 36, height: 36 }}>
-                <ExpandLessIcon sx={{ fontSize: 18 }} />
+                <ExpandLessIcon size={18} />
               </IconButton>
             </Tooltip>
             <Tooltip title="Delete">
@@ -682,7 +682,7 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
                   '&:hover': { color: 'hsl(var(--destructive))' },
                 }}
               >
-                <DeleteOutlineIcon sx={{ fontSize: 18 }} />
+                <DeleteOutlineIcon size={18} />
               </IconButton>
             </Tooltip>
           </Box>
@@ -757,14 +757,14 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
                   disabled={rule.conditions.length <= 1}
                   sx={{ width: 36, height: 36 }}
                 >
-                  <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                  <DeleteOutlineIcon size={16} />
                 </IconButton>
               </Box>
             ))}
             <Button
               size="small"
               onClick={() => addCondition(rule.id)}
-              startIcon={<AddIcon sx={{ fontSize: 14 }} />}
+              startIcon={<AddIcon size={14} />}
               sx={{
                 alignSelf: 'flex-start',
                 height: 28,
@@ -883,7 +883,7 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
                       disabled={rule.actions.length <= 1}
                       sx={{ width: 36, height: 36, color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--destructive))' } }}
                     >
-                      <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                      <DeleteOutlineIcon size={16} />
                     </IconButton>
                   </Stack>
                   <TextField
@@ -899,7 +899,7 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
             <Button
               size="small"
               onClick={() => addAction(rule.id)}
-              startIcon={<AddIcon sx={{ fontSize: 14 }} />}
+              startIcon={<AddIcon size={14} />}
               sx={{
                 alignSelf: 'flex-start',
                 height: 28,

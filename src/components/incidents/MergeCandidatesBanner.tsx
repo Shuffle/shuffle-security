@@ -140,7 +140,7 @@ export const MergeCandidatesBanner = ({
           py: 1.25,
         }}
       >
-        <CallMergeIcon sx={{ fontSize: 20, color: 'hsl(var(--primary))' }} />
+        <CallMergeIcon size={20} style={{ color: 'hsl(var(--primary))' }} />
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography variant="body2" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
             {candidates.length} possible duplicate{candidates.length === 1 ? '' : 's'} found in the last 30 days
@@ -151,12 +151,12 @@ export const MergeCandidatesBanner = ({
         </Box>
         <Tooltip title={expanded ? 'Collapse' : 'Expand'}>
           <IconButton size="small" onClick={() => persistExpanded(!expanded)} sx={{ color: 'hsl(var(--muted-foreground))' }}>
-            {expanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+            {expanded ? <ExpandLessIcon size={20} /> : <ExpandMoreIcon size={20} />}
           </IconButton>
         </Tooltip>
         <Tooltip title="Dismiss">
           <IconButton size="small" onClick={persistDismissed} sx={{ color: 'hsl(var(--muted-foreground))' }}>
-            <CloseIcon fontSize="small" />
+            <CloseIcon size={20} />
           </IconButton>
         </Tooltip>
       </Box>
@@ -224,7 +224,7 @@ export const MergeCandidatesBanner = ({
                 onClick={() => onMergeWith(c.id)}
                 className="h-9 bg-[#ff6600] hover:bg-[#e55c00] text-white"
               >
-                <ArrowForwardIcon sx={{ fontSize: 16, mr: 0.5 }} />
+                <ArrowForwardIcon size={16} style={{ marginRight: '4px' }} />
                 Review &amp; merge
               </Button>
             </Box>

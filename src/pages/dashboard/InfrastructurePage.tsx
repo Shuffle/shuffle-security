@@ -1055,7 +1055,7 @@ const AllDataFlowsDrawer = ({
           </Typography>
         </Box>
         <IconButton onClick={onClose} size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-          <CloseIcon fontSize="small" />
+          <CloseIcon size={20} />
         </IconButton>
       </Box>
 
@@ -1361,7 +1361,7 @@ const EdgeDetailDrawer = ({
           </IconButton>
         </Tooltip>
         <IconButton onClick={onClose} size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-          <CloseIcon fontSize="small" />
+          <CloseIcon size={20} />
         </IconButton>
       </Box>
 
@@ -1787,7 +1787,7 @@ const CategoryDetailDrawer = ({
           </Typography>
         </Box>
         <IconButton onClick={onClose} size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-          <CloseIcon fontSize="small" />
+          <CloseIcon size={20} />
         </IconButton>
       </Box>
 

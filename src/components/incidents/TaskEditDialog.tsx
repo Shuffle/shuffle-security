@@ -246,7 +246,7 @@ export const TaskEditDialog = ({
         {task.completed && (
           <Chip
             size="small"
-            icon={<CheckCircleIcon sx={{ fontSize: 14 }} />}
+            icon={<CheckCircleIcon size={14} />}
             label="Completed"
             sx={{
               height: 22,
@@ -280,7 +280,7 @@ export const TaskEditDialog = ({
                     height: 32,
                   }}
                 >
-                  <ChevronLeftIcon fontSize="small" />
+                  <ChevronLeftIcon size={20} />
                 </IconButton>
               </span>
             </Tooltip>
@@ -297,7 +297,7 @@ export const TaskEditDialog = ({
                     height: 32,
                   }}
                 >
-                  <ChevronRightIcon fontSize="small" />
+                  <ChevronRightIcon size={20} />
                 </IconButton>
               </span>
             </Tooltip>
@@ -313,7 +313,7 @@ export const TaskEditDialog = ({
             height: 32,
           }}
         >
-          <CloseIcon fontSize="small" />
+          <CloseIcon size={20} />
         </IconButton>
       </DialogTitle>
 
@@ -346,9 +346,9 @@ export const TaskEditDialog = ({
               }}
             >
               {task.completed ? (
-                <CheckCircleIcon sx={{ fontSize: 36 }} />
+                <CheckCircleIcon size={36} />
               ) : (
-                <RadioButtonUncheckedIcon sx={{ fontSize: 36 }} />
+                <RadioButtonUncheckedIcon size={36} />
               )}
             </IconButton>
           </Tooltip>
@@ -605,7 +605,7 @@ export const TaskEditDialog = ({
                 '&:hover': { color: '#ef4444', borderColor: '#ef4444' },
               }}
             >
-              <DeleteOutlineIcon fontSize="small" />
+              <DeleteOutlineIcon size={20} />
             </IconButton>
           </Tooltip>
         )}

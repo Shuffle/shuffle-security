@@ -61,16 +61,16 @@ type SearchResult = NavResult | AppResult | CorrelationResult | WorkflowResult;
 
 const navItems: NavResult[] = [
   { type: 'nav', label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={16} /> },
-  { type: 'nav', label: 'Incidents', path: '/incidents', icon: <WarningAmberIcon sx={{ fontSize: 18 }} /> },
-  { type: 'nav', label: 'Templates', path: '/templates', icon: <DescriptionIcon sx={{ fontSize: 16 }} />, indent: true },
-  { type: 'nav', label: 'Custom Fields', path: '/incidents/custom-fields', icon: <TuneIcon sx={{ fontSize: 16 }} />, indent: true },
+  { type: 'nav', label: 'Incidents', path: '/incidents', icon: <WarningAmberIcon size={18} /> },
+  { type: 'nav', label: 'Templates', path: '/templates', icon: <DescriptionIcon size={16} />, indent: true },
+  { type: 'nav', label: 'Custom Fields', path: '/incidents/custom-fields', icon: <TuneIcon size={16} />, indent: true },
   { type: 'nav', label: 'Monitors', path: '/monitors', icon: <Radar size={16} /> },
-  { type: 'nav', label: 'Detection', path: '/detection', icon: <RadarIcon sx={{ fontSize: 18 }} /> },
+  { type: 'nav', label: 'Detection', path: '/detection', icon: <RadarIcon size={18} /> },
   { type: 'nav', label: 'Rules', path: '/detection/sigma', icon: <Braces size={16} />, indent: true },
   { type: 'nav', label: 'Pipelines', path: '/detection/pipelines', icon: <Network size={16} />, indent: true },
   { type: 'nav', label: 'ATT&CK', path: '/detection/mitre', icon: <Waypoints size={16} />, indent: true },
-  { type: 'nav', label: 'Threat Feeds', path: '/incidents/threat-feeds', icon: <RssFeedIcon sx={{ fontSize: 16 }} />, indent: true },
-  { type: 'nav', label: 'Observables', path: '/incidents/observables', icon: <FingerprintIcon sx={{ fontSize: 16 }} />, indent: true },
+  { type: 'nav', label: 'Threat Feeds', path: '/incidents/threat-feeds', icon: <RssFeedIcon size={16} />, indent: true },
+  { type: 'nav', label: 'Observables', path: '/incidents/observables', icon: <FingerprintIcon size={16} />, indent: true },
   { type: 'nav', label: 'Vulnerabilities', path: '/vulnerabilities', icon: <Shield size={16} />, indent: true },
   { type: 'nav', label: 'Assets', path: '/assets', icon: <HardDrive size={16} />, indent: true },
   { type: 'nav', label: 'Response Actions', path: '/incidents/response-actions', icon: <Shield size={16} />, indent: true },
@@ -78,7 +78,7 @@ const navItems: NavResult[] = [
   { type: 'nav', label: 'Agent', path: '/agent', icon: <AgentIcon size={16} /> },
   { type: 'nav', label: 'Automation', path: '/usecases', icon: <Activity size={16} /> },
   { type: 'nav', label: 'Documentation', path: '/docs', icon: <BookOpen size={16} /> },
-  { type: 'nav', label: 'Settings', path: '/settings', icon: <SettingsIcon sx={{ fontSize: 16 }} /> },
+  { type: 'nav', label: 'Settings', path: '/settings', icon: <SettingsIcon size={16} /> },
   { type: 'nav', label: 'Tenants', path: '/organizations', icon: <LayoutDashboard size={16} /> },
 ];
 
@@ -296,7 +296,7 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
             borderBottom: '1px solid hsl(var(--border))',
           }}
         >
-          <SearchIcon sx={{ color: 'hsl(var(--muted-foreground))', fontSize: 20 }} />
+          <SearchIcon size={20} style={{ color: 'hsl(var(--muted-foreground))' }} />
           <InputBase
             inputRef={inputRef}
             placeholder="Search pages, workflows, apps, correlations..."

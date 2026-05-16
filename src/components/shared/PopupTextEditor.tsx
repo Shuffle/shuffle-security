@@ -140,7 +140,7 @@ export const PopupTextEditor: React.FC<PopupTextEditorProps> = ({
         mt: mode === 'multiline' ? 0.25 : 0,
       }}
     >
-      <OpenInFullIcon sx={{ fontSize: 14 }} />
+      <OpenInFullIcon size={14} />
     </IconButton>
   );
 
@@ -208,7 +208,7 @@ export const PopupTextEditor: React.FC<PopupTextEditorProps> = ({
             onClick={() => setOpen(false)}
             sx={{ color: 'hsl(var(--muted-foreground))' }}
           >
-            <CloseIcon fontSize="small" />
+            <CloseIcon size={20} />
           </IconButton>
         </DialogTitle>
         <Divider sx={{ borderColor: 'hsl(var(--border))' }} />

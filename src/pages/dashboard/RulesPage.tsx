@@ -598,7 +598,7 @@ const RulesPage = () => {
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-            <SecurityIcon sx={{ color: 'hsl(var(--primary))', fontSize: 28 }} />
+            <SecurityIcon size={28} style={{ color: 'hsl(var(--primary))' }} />
             <Typography variant="h4" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
               Detection Rules
             </Typography>
@@ -643,7 +643,7 @@ const RulesPage = () => {
                 },
               }}
             >
-              <RefreshIcon fontSize="small" />
+              <RefreshIcon size={20} />
             </IconButton>
           </Tooltip>
           <Tooltip title="Upload rules">
@@ -661,7 +661,7 @@ const RulesPage = () => {
                 },
               }}
             >
-              {isUploading ? <CircularProgress size={16} color="inherit" /> : <UploadIcon fontSize="small" />}
+              {isUploading ? <CircularProgress size={16} color="inherit" /> : <UploadIcon size={20} />}
               <input
                 type="file"
                 hidden
@@ -700,7 +700,7 @@ const RulesPage = () => {
           backgroundColor: 'hsla(var(--primary) / 0.08)',
           border: '1px solid hsla(var(--primary) / 0.2)',
         }}>
-          <WarningAmberIcon sx={{ color: 'hsl(var(--primary))', fontSize: 20 }} />
+          <WarningAmberIcon size={20} style={{ color: 'hsl(var(--primary))' }} />
           <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--foreground))', flex: 1 }}>
             No Log Ingestion is running. Rules are uploaded but won't be active until Log Ingestion is running.
           </Typography>
@@ -739,7 +739,7 @@ const RulesPage = () => {
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon sx={{ color: 'hsl(var(--muted-foreground))', fontSize: 20 }} />
+                <SearchIcon size={20} style={{ color: 'hsl(var(--muted-foreground))' }} />
               </InputAdornment>
             ),
           }}
@@ -788,7 +788,7 @@ const RulesPage = () => {
                 <TableRow key={file.id} className="border-b border-border hover:bg-muted/50">
                   <TableCell className="py-3" style={{ maxWidth: 0 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                      <SecurityIcon sx={{ color: 'hsl(var(--primary))', fontSize: 18, flexShrink: 0 }} />
+                      <SecurityIcon size={18} style={{ color: 'hsl(var(--primary))', flexShrink: 0 }} />
                       <Typography sx={{ fontSize: '0.85rem', fontWeight: 500, color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {file.filename}
                       </Typography>
@@ -821,7 +821,7 @@ const RulesPage = () => {
                           onClick={() => handleEditFile(file)}
                           sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: '#FF6600' } }}
                         >
-                          <EditIcon sx={{ fontSize: 14 }} />
+                          <EditIcon size={14} />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Download">
@@ -850,7 +850,7 @@ const RulesPage = () => {
                           }}
                           sx={{ color: 'hsl(var(--muted-foreground))' }}
                         >
-                          <DownloadIcon sx={{ fontSize: 14 }} />
+                          <DownloadIcon size={14} />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Delete">
@@ -859,7 +859,7 @@ const RulesPage = () => {
                           onClick={() => handleDeleteFile(file)}
                           sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--destructive))' } }}
                         >
-                          <DeleteIcon sx={{ fontSize: 16 }} />
+                          <DeleteIcon size={16} />
                         </IconButton>
                       </Tooltip>
                     </Box>
@@ -892,7 +892,7 @@ const RulesPage = () => {
           alignItems: 'center',
           gap: 1.5,
         }}>
-          <SecurityIcon sx={{ color: 'hsl(var(--primary))' }} />
+          <SecurityIcon style={{ color: 'hsl(var(--primary))' }} />
           {selectedFile?.filename}
         </DialogTitle>
         <DialogContent sx={{ p: 0, mt: 0 }}>
@@ -951,7 +951,7 @@ const RulesPage = () => {
           alignItems: 'center',
           gap: 1.5,
         }}>
-          <AddIcon sx={{ color: 'hsl(var(--primary))' }} />
+          <AddIcon style={{ color: 'hsl(var(--primary))' }} />
           {editingFile ? 'Edit Sigma Rule' : 'Create Sigma Rule'}
         </DialogTitle>
         <DialogContent sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 2.5 }}>
@@ -965,7 +965,7 @@ const RulesPage = () => {
               <Button
                 size="small"
                 variant="outlined"
-                startIcon={isGenerating ? <CircularProgress size={14} color="inherit" /> : <AutoFixHighIcon sx={{ fontSize: 14 }} />}
+                startIcon={isGenerating ? <CircularProgress size={14} color="inherit" /> : <AutoFixHighIcon size={14} />}
                 onClick={handleGenerateFromLog}
                 disabled={isGenerating || !sampleLog.trim()}
                 sx={{
@@ -1094,7 +1094,7 @@ const RulesPage = () => {
                   <Button
                     size="small"
                     variant="outlined"
-                    startIcon={isGenerating ? <CircularProgress size={14} color="inherit" /> : <AutoFixHighIcon sx={{ fontSize: 14 }} />}
+                    startIcon={isGenerating ? <CircularProgress size={14} color="inherit" /> : <AutoFixHighIcon size={14} />}
                     onClick={handleImproveWithAI}
                     disabled={isGenerating || !ruleContent.trim() || !aiPrompt.trim()}
                     sx={{

@@ -768,7 +768,7 @@ Use case: ${aiPrompt}`,
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 4 }}>
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
-            <StorageIcon sx={{ color: '#FF6600', fontSize: 28 }} />
+            <StorageIcon size={28} style={{ color: '#FF6600' }} />
             <Typography variant="h4" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>
               Tenzir Pipelines
             </Typography>
@@ -794,7 +794,7 @@ Use case: ${aiPrompt}`,
                 },
               }}
             >
-              <RefreshIcon fontSize="small" />
+              <RefreshIcon size={20} />
             </IconButton>
           </Tooltip>
           <Tooltip title={hasValidSensor ? '' : 'A running sensor is required. Set one up on the Detection page first.'}>
@@ -832,7 +832,7 @@ Use case: ${aiPrompt}`,
           backgroundColor: 'hsla(var(--primary) / 0.08)',
           border: '1px solid hsla(var(--primary) / 0.2)',
         }}>
-          <WarningAmberIcon sx={{ color: 'hsl(var(--primary))', fontSize: 20 }} />
+          <WarningAmberIcon size={20} style={{ color: 'hsl(var(--primary))' }} />
           <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--foreground))', flex: 1 }}>
             No Log Ingestion is running. Set one up first to create detection pipelines.
           </Typography>
@@ -871,7 +871,7 @@ Use case: ${aiPrompt}`,
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon sx={{ color: 'hsl(var(--muted-foreground))', fontSize: 18 }} />
+                <SearchIcon size={18} style={{ color: 'hsl(var(--muted-foreground))' }} />
               </InputAdornment>
             ),
           }}
@@ -1021,7 +1021,7 @@ Use case: ${aiPrompt}`,
                     {s.ip}:{s.port}
                   </Typography>
                   <Tooltip title="Click to copy" placement="top">
-                    <ContentCopyIcon sx={{ fontSize: 14, color: 'hsl(var(--muted-foreground))', opacity: 0.6 }} />
+                    <ContentCopyIcon size={14} style={{ color: 'hsl(var(--muted-foreground))', opacity: 0.6 }} />
                   </Tooltip>
                   <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>
                     {s.envName}
@@ -1150,29 +1150,29 @@ Use case: ${aiPrompt}`,
                               {isRunning ? (
                                 <Tooltip title="Stop">
                                   <IconButton size="small" onClick={() => handleAction(p, 'stop')} sx={{ color: 'hsl(var(--destructive, 0 84% 60%))' }}>
-                                    <StopIcon fontSize="small" />
+                                    <StopIcon size={20} />
                                   </IconButton>
                                 </Tooltip>
                               ) : (
                                 <Tooltip title="Start">
                                   <IconButton size="small" onClick={() => handleAction(p, 'start')} sx={{ color: 'hsl(142 76% 36%)' }}>
-                                    <PlayArrowIcon fontSize="small" />
+                                    <PlayArrowIcon size={20} />
                                   </IconButton>
                                 </Tooltip>
                               )}
                               <Tooltip title="Edit">
                                 <IconButton size="small" onClick={() => openEditDialog(p)} sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: '#FF6600' } }}>
-                                  <EditIcon sx={{ fontSize: 14 }} />
+                                  <EditIcon size={14} />
                                 </IconButton>
                               </Tooltip>
                               <Tooltip title="Copy command">
                                 <IconButton size="small" onClick={() => copyToClipboard(definition)} sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                                  <ContentCopyIcon sx={{ fontSize: 14 }} />
+                                  <ContentCopyIcon size={14} />
                                 </IconButton>
                               </Tooltip>
                               <Tooltip title="Delete">
                                 <IconButton size="small" onClick={() => handleAction(p, 'delete')} sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--destructive, 0 84% 60%))' } }}>
-                                  <DeleteIcon sx={{ fontSize: 16 }} />
+                                  <DeleteIcon size={16} />
                                 </IconButton>
                               </Tooltip>
                             </>
@@ -1247,7 +1247,7 @@ Use case: ${aiPrompt}`,
                           '&:hover': { borderColor: deployedAndRunning ? 'rgba(34, 197, 94, 0.6)' : 'rgba(255, 102, 0, 0.5)', backgroundColor: deployedAndRunning ? 'rgba(34, 197, 94, 0.12)' : 'rgba(255, 102, 0, 0.08)' },
                         }}
                       >
-                        <RocketLaunchIcon sx={{ fontSize: 14, color: deployedAndRunning ? '#22c55e' : dp.recommended ? 'rgb(255, 102, 0)' : 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
+                        <RocketLaunchIcon size={14} style={{ color: deployedAndRunning ? '#22c55e' : dp.recommended ? 'rgb(255, 102, 0)' : 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
                         <Typography sx={{ color: 'hsl(var(--foreground))', fontSize: '0.8rem', fontWeight: (dp.recommended || deployedAndRunning) ? 600 : 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {dp.label}
                         </Typography>
@@ -1316,7 +1316,7 @@ Use case: ${aiPrompt}`,
             </Typography>
             <Button
               size="small"
-              startIcon={<AutoFixHighIcon sx={{ fontSize: '14px !important' }} />}
+              startIcon={<AutoFixHighIcon style={{ fontSize: '14px !important' }} />}
               onClick={() => setShowAiSection(s => !s)}
               sx={{
                 textTransform: 'none',
@@ -1483,7 +1483,7 @@ Use case: ${aiPrompt}`,
           return (
             <>
               <DialogTitle sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                <StorageIcon sx={{ color: '#FF6600' }} />
+                <StorageIcon style={{ color: '#FF6600' }} />
                 Pipeline Details
                 <Chip
                   label={state}
@@ -1544,7 +1544,7 @@ Use case: ${aiPrompt}`,
                     </Typography>
                     <Tooltip title="Copy">
                       <IconButton size="small" onClick={() => copyToClipboard(definition)} sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                        <ContentCopyIcon sx={{ fontSize: 14 }} />
+                        <ContentCopyIcon size={14} />
                       </IconButton>
                     </Tooltip>
                   </Box>

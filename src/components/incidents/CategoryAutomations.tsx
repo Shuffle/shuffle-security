@@ -80,7 +80,7 @@ export const CategoryAutomations: React.FC<CategoryAutomationsProps> = ({
   if (isLoading) {
     return (
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, opacity: 0.5 }}>
-        <BoltIcon sx={{ fontSize: 16 }} />
+        <BoltIcon size={16} />
         <Typography variant="caption">Loading automations...</Typography>
       </Box>
     );
@@ -93,7 +93,7 @@ export const CategoryAutomations: React.FC<CategoryAutomationsProps> = ({
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <AutoFixHighIcon sx={{ fontSize: 16, color: 'primary.main' }} />
+        <AutoFixHighIcon size={16} style={{ color: 'primary.main' }} />
         <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Active Automations
         </Typography>

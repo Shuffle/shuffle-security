@@ -377,7 +377,7 @@ export const IncidentActionsMenu = ({
     <>
       <Tooltip title="Actions">
         <IconButton size="small" onClick={(e) => setAnchor(e.currentTarget)} sx={buttonSx}>
-          <MoreVertIcon fontSize="small" />
+          <MoreVertIcon size={20} />
         </IconButton>
       </Tooltip>
 
@@ -399,25 +399,25 @@ export const IncidentActionsMenu = ({
             setShowShareDialog(true);
           }}
         >
-          <LinkIcon sx={{ fontSize: 16, mr: 1 }} />
+          <LinkIcon size={16} style={{ marginRight: '8px' }} />
           Share
         </MenuItem>
 
 
         <MenuItem disabled>
-          <LinkIcon sx={{ fontSize: 16, mr: 1 }} />
+          <LinkIcon size={16} style={{ marginRight: '8px' }} />
           Visit Source
         </MenuItem>
 
         <Divider />
 
         <MenuItem disabled={resyncDisabled || isResyncing} onClick={handleResync}>
-          <RefreshIcon sx={{ fontSize: 16, mr: 1 }} />
+          <RefreshIcon size={16} style={{ marginRight: '8px' }} />
           Resync
         </MenuItem>
 
         <MenuItem disabled onClick={openForwardDialog}>
-          <ForwardIcon sx={{ fontSize: 16, mr: 1 }} />
+          <ForwardIcon size={16} style={{ marginRight: '8px' }} />
           Forward
         </MenuItem>
 
@@ -430,7 +430,7 @@ export const IncidentActionsMenu = ({
             setShowMergeDialog(true);
           }}
         >
-          <CallMergeIcon sx={{ fontSize: 16, mr: 1 }} />
+          <CallMergeIcon size={16} style={{ marginRight: '8px' }} />
           Merge Into…
         </MenuItem>
 
@@ -444,7 +444,7 @@ export const IncidentActionsMenu = ({
             }}
             sx={{ color: '#22c55e' }}
           >
-            <CheckCircleIcon sx={{ fontSize: 16, mr: 1 }} />
+            <CheckCircleIcon size={16} style={{ marginRight: '8px' }} />
             Resolve
           </MenuItem>
         )}
@@ -569,7 +569,7 @@ export const IncidentActionsMenu = ({
             {t('Forward Incident')}
           </Typography>
           <IconButton size="small" onClick={() => setShowForwardDialog(false)}>
-            <CloseIcon fontSize="small" />
+            <CloseIcon size={20} />
           </IconButton>
         </DialogTitle>
         <DialogContent sx={{ pt: 1 }}>

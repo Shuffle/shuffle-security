@@ -320,7 +320,7 @@ export const MergeIncidentDialog = ({
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] flex flex-col gap-0 p-0">
         <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="flex items-center gap-2">
-            <MergeIcon sx={{ fontSize: 20, color: 'hsl(var(--primary))' }} />
+            <MergeIcon size={20} style={{ color: 'hsl(var(--primary))' }} />
             {step === 'select' ? t('Merge Incident') : 'Confirm Merge'}
           </DialogTitle>
           <DialogDescription>
@@ -343,7 +343,7 @@ export const MergeIncidentDialog = ({
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
-                      <SearchIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                      <SearchIcon size={18} style={{ color: 'text.secondary' }} />
                     </InputAdornment>
                   ),
                   sx: {
@@ -428,7 +428,7 @@ export const MergeIncidentDialog = ({
 
                         {/* Selected indicator */}
                         {isSelected && (
-                          <CheckCircleIcon sx={{ fontSize: 20, color: 'hsl(var(--primary))', flexShrink: 0 }} />
+                          <CheckCircleIcon size={20} style={{ color: 'hsl(var(--primary))', flexShrink: 0 }} />
                         )}
                       </Box>
                     );
@@ -479,7 +479,7 @@ export const MergeIncidentDialog = ({
                 </Box>
 
                 {/* Arrow */}
-                <ArrowForwardIcon sx={{ color: 'hsl(var(--primary))', fontSize: 28, flexShrink: 0 }} />
+                <ArrowForwardIcon size={28} style={{ color: 'hsl(var(--primary))', flexShrink: 0 }} />
 
                 {/* Target */}
                 <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -510,7 +510,7 @@ export const MergeIncidentDialog = ({
                     'Description — appended below target description',
                   ].map((item, i) => (
                     <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <CheckCircleIcon sx={{ fontSize: 14, color: 'hsl(var(--severity-low))' }} />
+                      <CheckCircleIcon size={14} style={{ color: 'hsl(var(--severity-low))' }} />
                       <Typography variant="caption" sx={{ color: 'text.secondary' }}>{item}</Typography>
                     </Box>
                   ))}
@@ -528,7 +528,7 @@ export const MergeIncidentDialog = ({
                 alignItems: 'flex-start',
                 gap: 1,
               }}>
-                <WarningAmberIcon sx={{ fontSize: 18, color: 'hsl(var(--severity-medium))', mt: 0.25 }} />
+                <WarningAmberIcon size={18} style={{ color: 'hsl(var(--severity-medium))', marginTop: '2px' }} />
                 <Typography variant="caption" sx={{ color: 'hsl(var(--severity-medium))' }}>
                   The current incident will be marked as "Merged" and will reference the target. The target's severity, assignee, and status will be kept as-is.
                 </Typography>
@@ -547,7 +547,7 @@ export const MergeIncidentDialog = ({
                 {merging ? (
                   <CircularProgress size={16} sx={{ color: 'white', mr: 1 }} />
                 ) : (
-                  <MergeIcon sx={{ fontSize: 16, mr: 0.5 }} />
+                  <MergeIcon size={16} style={{ marginRight: '4px' }} />
                 )}
                 Merge Incident
               </Button>

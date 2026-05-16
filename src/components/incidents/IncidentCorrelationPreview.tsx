@@ -164,7 +164,7 @@ export const IncidentCorrelationPreview = ({
       {!loading && !error && notFound && (
         <Alert
           severity="warning"
-          icon={<DeleteOutlineIcon sx={{ fontSize: 18 }} />}
+          icon={<DeleteOutlineIcon size={18} />}
           sx={{
             py: 0.75,
             px: 1.25,
@@ -189,7 +189,7 @@ export const IncidentCorrelationPreview = ({
               size="small"
               variant="outlined"
               onClick={(e) => e.stopPropagation()}
-              startIcon={<LaunchIcon sx={{ fontSize: 12 }} />}
+              startIcon={<LaunchIcon size={12} />}
               sx={{ height: 26, fontSize: '0.65rem', textTransform: 'none', borderColor: 'hsl(var(--border))', color: 'hsl(var(--muted-foreground))' }}
             >
               Open anyway
@@ -295,7 +295,7 @@ export const IncidentCorrelationPreview = ({
                 size="small"
                 variant="outlined"
                 onClick={(e) => e.stopPropagation()}
-                startIcon={<LaunchIcon sx={{ fontSize: 12 }} />}
+                startIcon={<LaunchIcon size={12} />}
                 sx={{ height: 28, fontSize: '0.7rem', textTransform: 'none', borderColor: 'hsl(var(--border))', color: 'hsl(var(--muted-foreground))' }}
               >
                 New tab
@@ -306,7 +306,7 @@ export const IncidentCorrelationPreview = ({
                 size="small"
                 variant="contained"
                 onClick={(e) => e.stopPropagation()}
-                endIcon={<OpenInNewIcon sx={{ fontSize: 12 }} />}
+                endIcon={<OpenInNewIcon size={12} />}
                 sx={{ height: 28, fontSize: '0.7rem', textTransform: 'none' }}
               >
                 Pivot

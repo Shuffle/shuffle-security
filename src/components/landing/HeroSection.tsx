@@ -82,12 +82,12 @@ const FloatingIcon = ({ name, abbr, color, x, y, delay, size }: typeof floatingI
 
 // Category icons with MUI icons
 const categoryIcons: Record<string, React.ReactNode> = {
-  'SIEM': <StorageIcon sx={{ fontSize: 20 }} />,
-  'Email': <EmailIcon sx={{ fontSize: 20 }} />,
-  'EDR': <BugReportIcon sx={{ fontSize: 20 }} />,
-  'ITSM': <BuildIcon sx={{ fontSize: 20 }} />,
-  'Threat Intel': <SecurityIcon sx={{ fontSize: 20 }} />,
-  'Cloud': <CloudIcon sx={{ fontSize: 20 }} />,
+  'SIEM': <StorageIcon size={20} />,
+  'Email': <EmailIcon size={20} />,
+  'EDR': <BugReportIcon size={20} />,
+  'ITSM': <BuildIcon size={20} />,
+  'Threat Intel': <SecurityIcon size={20} />,
+  'Cloud': <CloudIcon size={20} />,
 };
 
 export const HeroSection = () => {
