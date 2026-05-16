@@ -41,8 +41,9 @@ export const ProductChoiceStep = ({ onSelectCore, onSelectSecurity }: ProductCho
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'center',
-        py: { xs: 6, sm: 10 },
+        justifyContent: 'flex-start',
+        pt: { xs: 6, sm: 10 },
+        pb: { xs: 6, sm: 10 },
       }}
     >
       {/* Background effects */}
