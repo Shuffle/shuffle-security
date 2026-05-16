@@ -141,12 +141,16 @@ const FormInput = (defaultprops: any) => {
 		paddingBottom: 250,
 	}
 
-	const boxStyle = {
-		color: "white",
-		padding: "25px 50px 50px 50px", 
-		borderRadius: 25, 
-		minHeight: 500, 
+	const boxStyle: React.CSSProperties = {
+		color: "hsl(var(--foreground))",
+		backgroundColor: "hsl(var(--card))",
+		backgroundImage: "none",
+		border: "1px solid hsl(var(--border))",
+		padding: "32px 40px 40px 40px",
+		borderRadius: 12,
+		minHeight: 360,
 		position: "relative",
+		boxShadow: "none",
 	}
 
     const params = useParams();
