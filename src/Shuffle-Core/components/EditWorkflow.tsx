@@ -287,36 +287,37 @@ const EditWorkflow = (props) => {
 			.then((responseJson) => {
 				if (responseJson.id === workflow_id) {
 					console.log("GOT WORKFLOW: ", responseJson)
+					const nextWorkflow = {
+						...(innerWorkflow || {}),
+						id: responseJson.id,
+						blogpost: responseJson.blogpost,
+						actions: responseJson.actions,
+						triggers: responseJson.triggers,
+						branches: responseJson.branches,
+						comments: responseJson.comments,
+						workflow_variables: responseJson.workflow_variables,
+						execution_variables: responseJson.execution_variables,
+					}
 					if (name === "") {
-						innerWorkflow.name = responseJson.name
+						nextWorkflow.name = responseJson.name
 						setName(responseJson.name)
 					}
 
 					if (description === "") {
-						innerWorkflow.description = responseJson.description
-						setDescription(description)
+						nextWorkflow.description = responseJson.description
+						setDescription(responseJson.description)
 					}
 
 					if (Array.isArray(newWorkflowTags) && newWorkflowTags.length === 0) {
-						innerWorkflow.tags = responseJson.tags
-						setNewWorkflowTags(responseJson.tags)
+						nextWorkflow.tags = responseJson.tags
+						setNewWorkflowTags(cloneArray(responseJson.tags))
 					}
 
 					if (Array.isArray(selectedUsecases) && selectedUsecases.length === 0) {
 						setSelectedUsecases(responseJson.usecase_ids)
 					}
 
-					innerWorkflow.id = responseJson.id
-					innerWorkflow.blogpost = responseJson.blogpost
-					innerWorkflow.actions = responseJson.actions
-					innerWorkflow.triggers = responseJson.triggers
-					innerWorkflow.branches = responseJson.branches
-					innerWorkflow.comments = responseJson.comments
-					innerWorkflow.workflow_variables = responseJson.workflow_variables
-					innerWorkflow.execution_variables = responseJson.execution_variables
-
-
-					setInnerWorkflow(innerWorkflow)
+					setInnerWorkflow(nextWorkflow)
 					setUpdate(Math.random())
 				}
 			})
