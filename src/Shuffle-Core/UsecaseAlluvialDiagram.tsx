@@ -17,11 +17,10 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckIcon from '@mui/icons-material/Check';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Plus, Webhook } from 'lucide-react';
-import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
-import { useAuth } from '@/context/AuthContext';
-import { useAppDetail } from '@/Shuffle-MCPs/AppDetailContext';
-import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
-import { deduplicateAuthApps, backfillAppImages, type AuthAppEntry } from '@/lib/utils';
+import { AppSearchDrawer } from '@shuffleio/shuffle-mcps';
+import { useAppDetail } from '@shuffleio/shuffle-mcps';
+import { getApiUrl, getAuthHeader } from '@shuffleio/shuffle-mcps';
+import { deduplicateAuthApps, backfillAppImages, type AuthAppEntry } from './auth-utils';
 import {
   SIEM_PATTERNS,
   CASES_PATTERNS,
@@ -31,8 +30,8 @@ import {
   findForwardTicketsWorkflow,
   extractWorkflowAppNames,
   normalizeAppName,
-} from '@/Shuffle-MCPs/ingestionDetection';
-import { TOOL_CATEGORIES } from '@/config/usecases';
+} from './ingestionDetection';
+import { TOOL_CATEGORIES } from './Usecases';
 import shuffleInfraLogo from './assets/shuffle-infrastructure-logo.png';
 import shuffleIcon from './assets/shuffle-icon.png';
 import singulAgentIcon from './assets/singul-agent-icon.png';
@@ -612,7 +611,7 @@ export default function UsecaseAlluvialDiagram({
   highlightCategory,
 }: UsecaseAlluvialDiagramProps) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { isAuthenticated: isLoggedIn } = useAuth();
+  // isLoggedIn comes from props (host injects); defaults to false.
   const appDetailCtx = useAppDetail();
   const handleVisitApp = useCallback((appName: string) => {
     appDetailCtx.openApp(appName);
