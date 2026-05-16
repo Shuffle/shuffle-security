@@ -572,7 +572,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
     >
       <DialogTitle sx={{ pb: 2, pr: 6, pt: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <RocketLaunchIcon sx={{ color: enabledCount > 0 ? '#4ade80' : 'text.secondary', fontSize: 28 }} />
+          <RocketLaunchIcon size={28} style={{ color: enabledCount > 0 ? '#4ade80' : 'hsl(var(--muted-foreground))' }} />
           <Typography variant="h6" sx={{ fontSize: '1.1rem', fontWeight: 600 }}>
             Automation for Incidents
           </Typography>
@@ -683,12 +683,12 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                         },
                       }}
                     />
-                    <TypeIcon 
-                      sx={{ 
+                    <TypeIcon
+                      size={22}
+                      style={{
                         color: automation.enabled ? config.color : 'hsl(var(--muted-foreground))',
-                        fontSize: 22,
                         transition: 'color 0.15s',
-                      }} 
+                      }}
                     />
                     <Typography 
                       sx={{ 
@@ -1034,7 +1034,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
               border: '1px solid hsl(var(--border))',
             }}
           >
-            <DeleteSweepIcon sx={{ color: cleanupTimeout > 0 ? 'hsl(var(--severity-medium))' : 'hsl(var(--muted-foreground))', fontSize: 22 }} />
+            <DeleteSweepIcon size={22} style={{ color: cleanupTimeout > 0 ? 'hsl(var(--severity-medium))' : 'hsl(var(--muted-foreground))' }} />
             <Box sx={{ flex: 1 }}>
               <Typography sx={{ fontSize: '0.95rem', color: cleanupTimeout > 0 ? 'text.primary' : 'hsl(var(--muted-foreground))' }}>
                 Auto-delete incidents after

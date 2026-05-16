@@ -1840,7 +1840,7 @@ const IncidentsPage = () => {
                   '&:hover': { borderColor: 'text.secondary' },
                 }}
               >
-                <RefreshIcon size={20} sx={isRefreshing ? { animation: 'spin 1s linear infinite', '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } } : undefined} />
+                <RefreshIcon size={20} className={isRefreshing ? 'animate-spin' : ''} />
               </IconButton>
             </Tooltip>
             <Tooltip title={`Create ${entitySingular}`}>
@@ -2449,7 +2449,7 @@ const IncidentsPage = () => {
                 },
               }}
             >
-              <RefreshIcon size={20} sx={isRefreshing ? { animation: 'spin 1s linear infinite', '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } } : undefined} />
+              <RefreshIcon size={20} className={isRefreshing ? 'animate-spin' : ''} />
             </IconButton>
           </Tooltip>
           <Tooltip title={`Create ${entitySingular}`}>
