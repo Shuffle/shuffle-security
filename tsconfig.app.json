@@ -32,6 +32,8 @@
   "exclude": [
     "src/Shuffle-MCPs/tsup.config.ts",
     "src/Shuffle-MCPs/lib-shims.d.ts",
-    "src/Shuffle-MCPs/dist"
+    "src/Shuffle-MCPs/dist",
+    "src/Shuffle-Core/tsup.config.ts",
+    "src/Shuffle-Core/dist"
   ]
 }
