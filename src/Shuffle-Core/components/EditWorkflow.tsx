@@ -1026,28 +1026,24 @@ const EditWorkflow = (props) => {
 									fullWidth
 								/>
 
-								<div style={{ display: "flex" }}>
-									<FormControl style={{ marginTop: 15, }}>
-										<FormLabel id="demo-row-radio-buttons-group-label">Status</FormLabel>
-										<RadioGroup
-											row
-											aria-labelledby="demo-row-radio-buttons-group-label"
-											name="row-radio-buttons-group"
-											defaultValue={innerWorkflow.status}
-											onChange={(e) => {
-												console.log("Data: ", e.target.value)
-
-												//innerWorkflow.workflow_type = e.target.value
-												innerWorkflow.status = e.target.value
+								<div style={{ display: "flex", marginTop: 15, }}>
+									<FormControl>
+										<FormLabel style={{ marginBottom: 8 }}>Status</FormLabel>
+										<SegmentedControl
+											layoutId="edit-workflow-status"
+											value={innerWorkflow.status || "test"}
+											onChange={(val) => {
+												innerWorkflow.status = val
 												setInnerWorkflow(innerWorkflow)
+												setUpdate(Math.random())
 											}}
-										>
-											<FormControlLabel value="test" control={<Radio />} label="Test" />
-											<FormControlLabel value="staging" control={<Radio />} label="Staging" />
-											<FormControlLabel value="preprod" control={<Radio />} label="Pre-production" />
-											<FormControlLabel value="production" control={<Radio />} label="Production" />
-
-										</RadioGroup>
+											options={[
+												{ value: "test", label: "Test" },
+												{ value: "staging", label: "Staging" },
+												{ value: "preprod", label: "Pre-production" },
+												{ value: "production", label: "Production" },
+											]}
+										/>
 									</FormControl>
 								</div>
 								<div />
