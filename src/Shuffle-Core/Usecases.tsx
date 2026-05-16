@@ -29,8 +29,8 @@ import {
 } from '@mui/material';
 import { Search, ArrowRight, ArrowLeft, Download, Zap, Activity, CheckCircle2, Circle, AlertTriangle, Network, Clock, Power, PowerOff, FileJson, X, ExternalLink, Flame, PlayCircle, BookOpen, LayoutGrid, Server, Shield, MessageSquare, Mail, Crosshair, HardDrive, KeyRound, Cloud, Sparkles, Plus } from 'lucide-react';
 import ReactGA from 'react-ga4';
-import shuffleSecurityIcon from '@/assets/shuffle-icon.png';
-import UsecaseAlluvialDiagram from '@/components/usecases/UsecaseAlluvialDiagram';
+import shuffleSecurityIcon from './assets/shuffle-icon.png';
+import UsecaseAlluvialDiagram from './UsecaseAlluvialDiagram';
 import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
 // ── Flow phases ────────────────────────────────────────────────────────────────
 
@@ -1055,8 +1055,8 @@ function useApi() {
 
 // ============================================================================
 // Real sonner toast — visible UI feedback for success/error.
-import { toast as sonnerToast } from '@/lib/toast';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { toast as sonnerToast } from './toast';
+import { usePageMeta } from './usePageMeta';
 const toast = {
   success: (msg: string, opts?: { duration?: number; description?: string }) => {
     if (typeof window !== 'undefined') console.info('[toast]', msg);
