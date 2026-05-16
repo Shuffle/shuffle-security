@@ -1625,16 +1625,16 @@ const EditWorkflow = (props) => {
 										When running this workflow as a form, the output will be shown as a Markdown object by default, with JSON objects being rendered. By adding nodes below, they will be shown while the workflow is running as soon as they get a result. Failing/Skipped nodes are not shown. This makes it possible to track progress for more complex usecases.
 									</Typography>
 
-									<FormControl style={{ marginTop: 15, }}>
+									<FormControl style={{ marginTop: 15, width: 500, maxWidth: "100%" }}>
 										<Select
 											defaultValue=""
 											id="output-yield-control"
 											label="Yielding nodes"
 											multiple
 											fullWidth
-											style={{ width: 500, }}
+											sx={selectSx}
 											value={Array.isArray(selectedYieldActions) && selectedYieldActions.length === 0 ? ["none"] : selectedYieldActions}
-											renderValue={(selected) => selected.join(', ')}
+											renderValue={(selected) => renderActionSelectValue(selected, "No Returns")}
 											MenuProps={selectMenuProps}
 											onChange={(event) => {
 												console.log("Value: ", event.target.value)
