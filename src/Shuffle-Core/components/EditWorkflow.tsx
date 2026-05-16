@@ -315,6 +315,10 @@ const EditWorkflow = (props) => {
 	const handleActionMultiSelectChange = (event: any, setter: any) => {
 		setter(stripNoneValue(event?.target?.value))
 	}
+	const getActionSelectValue = (selectedActions: any) => {
+		const selectedIds = normalizeSelectValues(selectedActions).filter((value) => value !== "none")
+		return selectedIds.length === 0 ? ["none"] : selectedIds
+	}
 
 	return (
 		<Drawer
