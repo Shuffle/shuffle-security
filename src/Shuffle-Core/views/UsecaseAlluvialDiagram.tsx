@@ -20,7 +20,7 @@ import { Plus, Webhook } from 'lucide-react';
 import { AppSearchDrawer } from '@shuffleio/shuffle-mcps';
 import { useAppDetail } from '@shuffleio/shuffle-mcps';
 import { getApiUrl, getAuthHeader } from '@shuffleio/shuffle-mcps';
-import { deduplicateAuthApps, backfillAppImages, type AuthAppEntry } from './auth-utils';
+import { deduplicateAuthApps, backfillAppImages, type AuthAppEntry } from '../auth-utils';
 import {
   SIEM_PATTERNS,
   CASES_PATTERNS,
@@ -30,11 +30,11 @@ import {
   findForwardTicketsWorkflow,
   extractWorkflowAppNames,
   normalizeAppName,
-} from './ingestionDetection';
+} from '../ingestionDetection';
 import { TOOL_CATEGORIES } from './Usecases';
-import shuffleInfraLogo from './assets/shuffle-infrastructure-logo.png';
-import shuffleIcon from './assets/shuffle-icon.png';
-import singulAgentIcon from './assets/singul-agent-icon.png';
+import shuffleInfraLogo from '../assets/shuffle-infrastructure-logo.png';
+import shuffleIcon from '../assets/shuffle-icon.png';
+import singulAgentIcon from '../assets/singul-agent-icon.png';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 

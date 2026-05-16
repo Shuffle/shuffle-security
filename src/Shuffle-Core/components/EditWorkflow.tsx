@@ -54,14 +54,12 @@ import {
 	Slider,
 
 } from "@mui/material";
-import { Context } from "../context/ContextApi.jsx";
 import {
 	DatePicker,
 	LocalizationProvider,
-} from '@mui/x-date-pickers'
+} from '@mui/x-date-pickers';
 
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
-import { useStyles } from '../views/AppCreator.jsx'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
 import {
 	ExpandLess as ExpandLessIcon,
