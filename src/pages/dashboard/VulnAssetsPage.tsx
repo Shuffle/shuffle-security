@@ -391,11 +391,11 @@ const PublicMonitorsView = () => {
               account is free.
             </p>
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="default" className="gap-1.5" onClick={() => navigate('/register?returnUrl=%2Fmonitors')}>
+              <Button size="sm" variant="default" className="gap-1.5" onClick={() => navigate('/register?view=%2Fmonitors')}>
                 <Plus size={14} />
                 Create account
               </Button>
-              <Button size="sm" variant="outline" className="gap-1.5" onClick={() => navigate('/login?returnUrl=%2Fmonitors')}>
+              <Button size="sm" variant="outline" className="gap-1.5" onClick={() => navigate('/login?view=%2Fmonitors')}>
                 Sign in
               </Button>
               <Button size="sm" variant="ghost" onClick={() => navigate('/vulnerabilities')}>

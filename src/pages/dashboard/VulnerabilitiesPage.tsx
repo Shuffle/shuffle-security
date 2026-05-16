@@ -127,7 +127,7 @@ const PublicVulnerabilitiesView = () => {
               Sign in to connect Shuffle to your hosts and see exactly which systems are affected by each advisory.
             </p>
             <div className="flex items-center gap-2">
-              <Button size="sm" variant="outline" className="gap-1.5" onClick={() => navigate('/login?returnUrl=%2Fvulnerabilities')}>
+              <Button size="sm" variant="outline" className="gap-1.5" onClick={() => navigate('/login?view=%2Fvulnerabilities')}>
                 <LogIn size={14} />
                 Sign in
               </Button>

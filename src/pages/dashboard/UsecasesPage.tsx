@@ -1965,7 +1965,7 @@ function UsecaseDetailContent({
           <Box sx={{ display: 'flex', gap: 1, flexShrink: 0, width: { xs: '100%', sm: 'auto' } }}>
             <Button
               component={Link}
-              to={`/register?returnUrl=${encodeURIComponent(`/usecases/${slugify(flow.label)}`)}`}
+              to={`/register?view=${encodeURIComponent(`/usecases/${slugify(flow.label)}`)}`}
               variant="contained"
               disableElevation
               endIcon={<ArrowRight size={16} />}
@@ -1985,7 +1985,7 @@ function UsecaseDetailContent({
             </Button>
             <Button
               component={Link}
-              to={`/login?returnUrl=${encodeURIComponent(`/usecases/${slugify(flow.label)}`)}`}
+              to={`/login?view=${encodeURIComponent(`/usecases/${slugify(flow.label)}`)}`}
               variant="text"
               sx={{
                 textTransform: 'none',
@@ -3336,7 +3336,7 @@ function UsecaseCard({
           ) : (
             <Button
               component={Link}
-              to={`/register?returnUrl=${encodeURIComponent(`/usecases/${slugify(flow.label)}`)}`}
+              to={`/register?view=${encodeURIComponent(`/usecases/${slugify(flow.label)}`)}`}
               size="small"
               variant="contained"
               disableElevation

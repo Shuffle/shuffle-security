@@ -39,8 +39,8 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   if (!isAuthenticated) {
-    const returnUrl = encodeURIComponent(location.pathname + location.search);
-    return <Navigate to={`/login?returnUrl=${returnUrl}`} state={{ from: location }} replace />;
+    const view = encodeURIComponent(location.pathname + location.search);
+    return <Navigate to={`/login?view=${view}`} state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
