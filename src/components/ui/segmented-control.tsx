@@ -120,7 +120,7 @@ export function SegmentedControl<V extends string = string>({
                     "relative z-10 inline-flex items-center justify-center rounded-md font-semibold tabular-nums border border-border/60",
                     s.count,
                     active
-                      ? "bg-background/60 text-foreground"
+                      ? "bg-transparent text-foreground"
                       : "bg-transparent text-muted-foreground",
                   )}
                 >
