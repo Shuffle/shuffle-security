@@ -181,6 +181,24 @@ const OnboardingFlow = ({
   });
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Autostart demo mode when arriving on /onboarding/product?demo=true (e.g.
+  // from the Shuffle Core "See it immediately" button). Fires once.
+  const demoAutostartRef = useRef(false);
+  useEffect(() => {
+    if (demoAutostartRef.current) return;
+    if (product !== 'security' || !onStartDemo) return;
+    const search = typeof window !== 'undefined' ? window.location.search : '';
+    if (!search.includes('demo=true')) return;
+    demoAutostartRef.current = true;
+    onStartDemo();
+    // Strip the param so refreshes don't re-trigger it.
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('demo');
+      window.history.replaceState({}, '', url.toString());
+    } catch { /* ignore */ }
+  }, [product, onStartDemo, location.pathname]);
   
   const [selectedChallenge, setSelectedChallenge] = useState<string | null>(null);
   const [selectedApps, setSelectedApps] = useState<AlgoliaSearchApp[]>([]);
