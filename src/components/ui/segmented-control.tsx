@@ -108,10 +108,8 @@ export function SegmentedControl<V extends string = string>({
                   initial={false}
                   transition={{
                     type: "spring",
-                    stiffness: 380,
-                    damping: 28,
-                    mass: 0.9,
-                    bounce: 0.35,
+                    stiffness: 260,
+                    damping: 30,
                   }}
                 />
               )}
