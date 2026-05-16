@@ -482,7 +482,6 @@ export const AppAuthCard = ({
         if (data.success && data.app) {
           const decodedAppString = atob(data.app);
           const decodedApp = JSON.parse(decodedAppString) as DecodedApp;
-          console.log('[AppAuthCard] Decoded auth config for', decodedApp.name, ':', JSON.stringify(decodedApp.authentication, null, 2));
           setAppConfig(decodedApp);
         } else {
           throw new Error('Invalid response format');
@@ -2021,7 +2020,6 @@ export const AppAuthCard = ({
                           access_type: 'offline',
                         });
 
-                        console.log('[OAuth2] Built direct auth URL:', `${authorizationUrl}?${params.toString()}`);
                         return `${authorizationUrl}?${params.toString()}`;
                       };
 
