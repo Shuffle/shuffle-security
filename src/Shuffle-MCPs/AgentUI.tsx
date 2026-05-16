@@ -2405,100 +2405,57 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // Rendered inline (not a nested component) so it isn't remounted on every
   // parent re-render — the live duration ticker would otherwise reset hover
   // state every second and swallow clicks.
+  const tabBarRef = useRef<HTMLDivElement | null>(null);
   const tabBar = (
-    <Box sx={{
-      display: 'flex', alignItems: 'center', gap: 1.5,
-      p: 1,
-      borderRadius: 999,
-      border: '1px solid hsl(var(--border))',
-      bgcolor: 'hsl(var(--card))',
-      width: 'fit-content',
-      alignSelf: 'center',
-      position: 'sticky',
-      top: 8,
-      zIndex: 5,
-      boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
-    }}>
-      <LayoutGroup id="agentui-view-switcher">
-        <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25, p: 0.5, borderRadius: 999, border: '1px solid hsl(var(--border))', bgcolor: 'transparent' }}>
-          {(['start', 'simple', 'detailed'] as TabKey[]).map((t) => {
-            const active = activeTab === t;
-            const label = t === 'start' ? 'Start' : t === 'simple' ? 'Simple' : 'Detailed';
-            const disabled = (t === 'start' && disableStartTab) || ((t === 'simple' || t === 'detailed') && !hasExecution);
-            return (
-              <Box
-                key={t}
-                component="button"
-                type="button"
-                onClick={() => { if (!disabled) goToTab(t); }}
-                disabled={disabled}
-                sx={{
-                  all: 'unset', cursor: disabled ? 'not-allowed' : 'pointer',
-                  position: 'relative',
-                  px: 1.75, py: 0.75,
-                  borderRadius: 999,
-                  fontSize: '0.8rem',
-                  fontWeight: 600,
-                  color: active ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
-                  opacity: disabled ? 0.4 : 1,
-                  transition: 'color 0.3s ease',
-                  '&:hover': (active || disabled) ? {} : { color: 'hsl(var(--foreground))' },
-                }}
-              >
-                {active && (
-                  <motion.span
-                    layoutId="agentui-view-switcher-pill"
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      borderRadius: 999,
-                      background: 'hsl(var(--muted))',
-                      border: '1px solid hsl(var(--border))',
-                    }}
-                    initial={false}
-                    transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-                  />
-                )}
-                <Box component="span" sx={{ position: 'relative', zIndex: 1 }}>{label}</Box>
-              </Box>
-            );
-          })}
-        </Box>
-      </LayoutGroup>
-      <Tooltip title="Reload execution data">
-        <span>
-          <IconButton
-            size="small"
-            onClick={() => execution?.execution_id && execution?.authorization && getExecution(execution.execution_id, execution.authorization)}
-            disabled={!hasExecution}
-            sx={{
-              width: 30, height: 30,
-              color: 'hsl(var(--muted-foreground))',
-              '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted))' },
-            }}
-          >
-            <RefreshIcon size={16} />
-          </IconButton>
-        </span>
-      </Tooltip>
-      <Box sx={{ width: '1px', height: 20, bgcolor: 'hsl(var(--border))', mx: 0.25 }} />
-      <Tooltip title={scheduleDisabledTooltip || 'Schedule this prompt to run repeatedly on a cron schedule'}>
-        <span>
-          <IconButton
-            size="small"
-            onClick={(e) => { if (!scheduleDisabledReason) setScheduleAnchor(e.currentTarget); }}
-            disabled={Boolean(scheduleDisabledReason)}
-            sx={{
-              width: 30, height: 30,
-              color: 'hsl(var(--muted-foreground))',
-              '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted))' },
-              '&.Mui-disabled': { opacity: 0.4, color: 'hsl(var(--muted-foreground))' },
-            }}
-          >
-            <ScheduleIcon size={16} />
-          </IconButton>
-        </span>
-      </Tooltip>
+    <Box
+      ref={tabBarRef}
+      sx={{
+        display: 'flex', alignItems: 'center',
+        width: 'fit-content',
+        alignSelf: 'center',
+        position: 'sticky',
+        top: 8,
+        zIndex: 5,
+      }}
+    >
+      <SegmentedControl
+        layoutId="agentui-view-switcher"
+        ariaLabel="Agent view"
+        value={activeTab}
+        onChange={(v) => goToTab(v as TabKey)}
+        options={[
+          { value: 'start', label: 'Start', disabled: disableStartTab },
+          { value: 'simple', label: 'Simple', disabled: !hasExecution },
+          { value: 'detailed', label: 'Detailed', disabled: !hasExecution },
+          { type: 'divider', key: 'div' },
+          {
+            type: 'action',
+            key: 'reload',
+            label: <RefreshIcon size={14} />,
+            title: 'Reload execution data',
+            disabled: !hasExecution,
+            onClick: () => {
+              if (execution?.execution_id && execution?.authorization) {
+                getExecution(execution.execution_id, execution.authorization);
+              }
+            },
+          },
+          {
+            type: 'action',
+            key: 'schedule',
+            label: <ScheduleIcon size={14} />,
+            title: scheduleDisabledReason
+              ? `Cannot schedule: ${scheduleDisabledReason}`
+              : 'Schedule this prompt to run repeatedly on a cron schedule',
+            disabled: Boolean(scheduleDisabledReason),
+            onClick: () => {
+              if (!scheduleDisabledReason && tabBarRef.current) {
+                setScheduleAnchor(tabBarRef.current);
+              }
+            },
+          },
+        ]}
+      />
     </Box>
   );
 
