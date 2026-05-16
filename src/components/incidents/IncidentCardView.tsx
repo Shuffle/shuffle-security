@@ -367,7 +367,7 @@ export const IncidentCardView = ({
                 border: '1px solid',
                 borderColor: selected 
                   ? 'hsl(var(--primary) / 0.3)' 
-                  : 'hsl(var(--border))',
+                  : 'hsl(var(--border) / 0.6)',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
                 textDecoration: 'none',
