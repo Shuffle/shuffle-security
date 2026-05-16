@@ -690,7 +690,7 @@ export const OnCallScheduleManager = ({ users, loading = false, compact = false 
                   width: 44, height: 44, borderRadius: 1.5, bgcolor: `${stat.color}15`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
-                  <stat.icon sx={{ color: stat.color, fontSize: 22 }} />
+                  <stat.icon size={22} style={{ color: stat.color }} />
                 </Box>
                 <Box>
                   <Typography variant="h5" sx={{ fontWeight: 700, color: 'hsl(var(--foreground))' }}>

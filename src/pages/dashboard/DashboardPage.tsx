@@ -1017,10 +1017,8 @@ const DashboardPage = () => {
             >
               <RefreshIcon
                 size={20}
-                sx={{
-                  transition: 'transform 0.6s ease',
-                  ...(isRefreshing && { animation: 'spin 0.6s linear' }),
-                }}
+                className={isRefreshing ? 'animate-spin' : ''}
+                style={{ transition: 'transform 0.6s ease' }}
               />
             </IconButton>
           </Tooltip>

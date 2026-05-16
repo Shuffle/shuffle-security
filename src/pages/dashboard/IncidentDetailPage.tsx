@@ -6630,7 +6630,7 @@ const IncidentDetailPage = () => {
                   height: 32,
                 }}
               >
-                <RefreshIcon size={20} sx={{ animation: isRefreshing ? 'spin 1s linear infinite' : 'none', '@keyframes spin': { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } } }} />
+                <RefreshIcon size={20} className={isRefreshing ? 'animate-spin' : ''} />
               </IconButton>
             </Tooltip>
 
