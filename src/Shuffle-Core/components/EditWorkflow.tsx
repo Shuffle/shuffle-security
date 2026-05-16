@@ -122,8 +122,8 @@ const EditWorkflow = (props) => {
 	const [inputQuestions, setInputQuestions] = React.useState(workflow.input_questions !== undefined && workflow.input_questions !== null ? JSON.parse(JSON.stringify(workflow.input_questions)) : [])
 	const [inputMarkdown, setInputMarkdown] = React.useState(workflow?.form_control?.input_markdown !== undefined && workflow?.form_control?.input_markdown !== null ? workflow?.form_control?.input_markdown : "")
 	const [scrollDone, setScrollDone] = React.useState(false)
-	const [selectedYieldActions, setSelectedYieldActions] = React.useState(workflow?.form_control?.output_yields !== undefined && workflow?.form_control?.output_yields !== null ? JSON.parse(JSON.stringify(workflow?.form_control?.output_yields)) : [])
-	const [selectedCleanupActions, setSelectedCleanupActions] = React.useState(workflow?.form_control?.cleanup_actions !== undefined && workflow?.form_control?.cleanup_actions !== null ? JSON.parse(JSON.stringify(workflow?.form_control?.cleanup_actions)) : [])
+	const [selectedYieldActions, setSelectedYieldActions] = React.useState(normalizeActionIds(workflow?.form_control?.output_yields))
+	const [selectedCleanupActions, setSelectedCleanupActions] = React.useState(normalizeActionIds(workflow?.form_control?.cleanup_actions))
 
 	const [formWidth, setFormWidth] = React.useState(getWorkflowFormWidthValue(workflow, boxWidth))
 	const updateInnerWorkflow = (updater) => {
@@ -189,8 +189,8 @@ const EditWorkflow = (props) => {
 		setDueDate(nextWorkflow.due_date !== undefined && nextWorkflow.due_date !== null && nextWorkflow.due_date !== 0 ? dayjs(nextWorkflow.due_date * 1000) : dayjs().subtract(1, 'day'))
 		setInputQuestions(cloneArray(nextWorkflow.input_questions))
 		setInputMarkdown(nextWorkflow?.form_control?.input_markdown !== undefined && nextWorkflow?.form_control?.input_markdown !== null ? nextWorkflow.form_control.input_markdown : "")
-		setSelectedYieldActions(cloneArray(nextWorkflow?.form_control?.output_yields))
-		setSelectedCleanupActions(cloneArray(nextWorkflow?.form_control?.cleanup_actions))
+		setSelectedYieldActions(normalizeActionIds(nextWorkflow?.form_control?.output_yields))
+		setSelectedCleanupActions(normalizeActionIds(nextWorkflow?.form_control?.cleanup_actions))
 		setFormWidth(getWorkflowFormWidthValue(nextWorkflow, boxWidth))
 	}, [modalOpen, workflow?.id])
 
