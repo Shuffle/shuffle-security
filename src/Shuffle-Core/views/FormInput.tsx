@@ -156,7 +156,9 @@ const FormInput = (defaultprops: any) => {
     const params = useParams();
     var props = JSON.parse(JSON.stringify(defaultprops))
     props.match = {}
-    props.match.params = params
+    // Legacy code reads `params.key` — Shuffle Security routes use `/forms/:id`,
+    // so alias `id` -> `key` to keep all downstream lookups working.
+    props.match.params = { ...params, key: (params as any).key ?? (params as any).id }
 
 	const defaultTitle = workflow.name !== undefined ? "Form for " + workflow.name : "Shuffle - Form to Run Workflows"
 	if (document != undefined && document.title != defaultTitle) {
