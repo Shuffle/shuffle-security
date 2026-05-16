@@ -19,6 +19,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@shuffleio/shuffle-mcps": [
+        "./src/Shuffle-MCPs/index.ts"
       ]
     },
     "skipLibCheck": true,
@@ -34,6 +37,8 @@
     "src/Shuffle-MCPs/lib-shims.d.ts",
     "src/Shuffle-MCPs/dist",
     "src/Shuffle-Core/tsup.config.ts",
-    "src/Shuffle-Core/dist"
+    "src/Shuffle-Core/dist",
+    "src/Shuffle-Core/node_modules",
+    "src/Shuffle-MCPs/node_modules"
   ]
 }

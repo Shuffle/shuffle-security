@@ -31,7 +31,7 @@ import { Search, ArrowRight, ArrowLeft, Download, Zap, Activity, CheckCircle2, C
 import ReactGA from 'react-ga4';
 import shuffleSecurityIcon from './assets/shuffle-icon.png';
 import UsecaseAlluvialDiagram from './UsecaseAlluvialDiagram';
-import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
+import { AppSearchDrawer } from '@shuffleio/shuffle-mcps';
 // ── Flow phases ────────────────────────────────────────────────────────────────
 
 export type FlowPhase = 'ingest' | 'response' | 'correlation';
@@ -2136,6 +2136,7 @@ function UsecaseDetailContent({
             sourceCategory={flow.source}
             targetCategory={flow.target}
             highlightCategory={flow.source}
+            isLoggedIn={isAuthenticated}
           />
         ) : (
         <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>

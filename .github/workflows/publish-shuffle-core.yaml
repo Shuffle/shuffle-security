@@ -44,7 +44,7 @@ jobs:
 
       # Translate package.tpl.json -> package.json with the resolved version
       - name: Materialize package.json
-        working-directory: src/Shuffle-MCPs
+        working-directory: src/Shuffle-Core
         run: |
           node -e "
             const fs = require('fs');
