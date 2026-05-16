@@ -1450,9 +1450,9 @@ const EditWorkflow = (props) => {
 												variant="outlined"
 												defaultValue={data.name}
 												onChange={(e) => {
-													inputQuestions[index].name = e.target.value
-													setInputQuestions(inputQuestions)
-													pushRealtimeInputQuestions(inputQuestions)
+												const nextQuestions = inputQuestions.map((question, questionIndex) => questionIndex === index ? { ...question, name: e.target.value } : question)
+												setInputQuestions(nextQuestions)
+												pushRealtimeInputQuestions(nextQuestions)
 													setUpdate(Math.random());
 												}}
 												InputProps={{
@@ -1478,11 +1478,11 @@ const EditWorkflow = (props) => {
 												defaultValue={data.value}
 												onChange={(e) => {
 													// Replace multiple semicolon with one
-													e.target.value = e.target.value.replace(";;", ";")
-
-													inputQuestions[index].value = e.target.value
-													setInputQuestions(inputQuestions)
-													pushRealtimeInputQuestions(inputQuestions)
+												const nextValue = e.target.value.replace(";;", ";")
+												e.target.value = nextValue
+												const nextQuestions = inputQuestions.map((question, questionIndex) => questionIndex === index ? { ...question, value: nextValue } : question)
+												setInputQuestions(nextQuestions)
+												pushRealtimeInputQuestions(nextQuestions)
 													setUpdate(Math.random());
 												}}
 												InputProps={{
@@ -1497,10 +1497,9 @@ const EditWorkflow = (props) => {
 												disabled={data.deleted === true}
 												variant="outlined"
 												onClick={() => {
-													// Remove current index
-													console.log("Removing index: ", index)
-													inputQuestions[index].deleted = true
-													pushRealtimeInputQuestions(inputQuestions)
+										const nextQuestions = inputQuestions.map((question, questionIndex) => questionIndex === index ? { ...question, deleted: true } : question)
+										setInputQuestions(nextQuestions)
+										pushRealtimeInputQuestions(nextQuestions)
 													setUpdate(Math.random());
 												}}
 											>
@@ -1517,14 +1516,14 @@ const EditWorkflow = (props) => {
 
 									disabled={inputQuestions !== undefined && inputQuestions !== null && inputQuestions.length > 5}
 									onClick={() => {
-										inputQuestions.push({
+										const nextQuestions = [...inputQuestions, {
 											"name": "",
 											"value": "",
 											"deleted": false,
 											"required": false
-										})
-										setInputQuestions(inputQuestions)
-										pushRealtimeInputQuestions(inputQuestions)
+										}]
+										setInputQuestions(nextQuestions)
+										pushRealtimeInputQuestions(nextQuestions)
 										setUpdate(Math.random());
 									}}
 								>
