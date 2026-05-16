@@ -1556,6 +1556,7 @@ const EditWorkflow = (props) => {
 											"required": false
 										})
 										setInputQuestions(inputQuestions)
+										pushRealtimeInputQuestions(inputQuestions)
 										setUpdate(Math.random());
 									}}
 								>
