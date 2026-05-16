@@ -9,7 +9,7 @@ import path from 'node:path';
  * mapped to relative paths so esbuild can resolve them.
  */
 export default defineConfig({
-  entry: ['index.ts'],
+  entry: ['index.tsx'],
   format: ['esm', 'cjs'],
   tsconfig: 'tsconfig.build.json',
   dts: {
