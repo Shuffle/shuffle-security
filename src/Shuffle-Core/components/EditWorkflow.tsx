@@ -76,7 +76,15 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { SegmentedControl } from "@/components/ui/segmented-control";
 
 const EditWorkflow = (props) => {
-	const { globalUrl, workflow, setWorkflow, modalOpen, setModalOpen, showUpload, usecases, setNewWorkflow, appFramework, isEditing, userdata, apps, saveWorkflow, expanded, scrollTo, setRealtimeMarkdown, boxWidth, setBoxWidth, } = props
+	const { globalUrl, workflow, setWorkflow, modalOpen, setModalOpen, showUpload, usecases, setNewWorkflow, appFramework, isEditing, userdata, apps, saveWorkflow, expanded, scrollTo, setRealtimeMarkdown, setRealtimeInputQuestions, boxWidth, setBoxWidth, } = props
+
+	const pushRealtimeInputQuestions = (questions) => {
+		if (setRealtimeInputQuestions === undefined || setRealtimeInputQuestions === null) {
+			return
+		}
+		const valid = (questions || []).filter((q) => q && q.deleted !== true && q.value !== undefined && q.value !== null && q.value.length > 0)
+		setRealtimeInputQuestions(JSON.parse(JSON.stringify(valid)))
+	}
 
 	const [_, setUpdate] = React.useState(""); // Used for rendering, don't remove
 	const {themeMode, brandColor} = useContext(Context)
@@ -1476,6 +1484,7 @@ const EditWorkflow = (props) => {
 												onChange={(e) => {
 													inputQuestions[index].name = e.target.value
 													setInputQuestions(inputQuestions)
+													pushRealtimeInputQuestions(inputQuestions)
 													setUpdate(Math.random());
 												}}
 												InputProps={{
@@ -1505,6 +1514,7 @@ const EditWorkflow = (props) => {
 
 													inputQuestions[index].value = e.target.value
 													setInputQuestions(inputQuestions)
+													pushRealtimeInputQuestions(inputQuestions)
 													setUpdate(Math.random());
 												}}
 												InputProps={{
@@ -1522,6 +1532,7 @@ const EditWorkflow = (props) => {
 													// Remove current index
 													console.log("Removing index: ", index)
 													inputQuestions[index].deleted = true
+													pushRealtimeInputQuestions(inputQuestions)
 													setUpdate(Math.random());
 												}}
 											>
@@ -1545,6 +1556,7 @@ const EditWorkflow = (props) => {
 											"required": false
 										})
 										setInputQuestions(inputQuestions)
+										pushRealtimeInputQuestions(inputQuestions)
 										setUpdate(Math.random());
 									}}
 								>
