@@ -158,7 +158,7 @@ export const CategoryAutomations: React.FC<CategoryAutomationsProps> = ({
                         bgcolor: `${typeConfig.color}22`,
                       }}
                     >
-                      <TypeIcon sx={{ fontSize: 12, color: typeConfig.color }} />
+                      <TypeIcon size={12} style={{ color: typeConfig.color }} />
                     </Box>
                     <Typography variant="caption" sx={{ color: typeConfig.color, fontWeight: 500 }}>
                       {automation.name}

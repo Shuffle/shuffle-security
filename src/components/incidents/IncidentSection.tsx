@@ -104,7 +104,7 @@ export const IncidentSection = forwardRef<HTMLDivElement, IncidentSectionProps>(
           '&:hover': { bgcolor: 'hsl(var(--muted))' },
         }}
       >
-        <Icon sx={{ fontSize: 20, color: iconColor }} />
+        <Icon size={20} style={{ color: iconColor }} />
         <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
           {title}
         </Typography>
