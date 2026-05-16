@@ -1,5 +1,5 @@
-import { useNavigate } from 'react-router-dom';
 import { OnboardingFlow } from '@/Shuffle-Core/onboarding/OnboardingFlow';
+import { useDemo } from '@/context/DemoContext';
 
 /**
  * Shuffle Security wrapper around the shared Shuffle-Core onboarding flow.
@@ -7,15 +7,15 @@ import { OnboardingFlow } from '@/Shuffle-Core/onboarding/OnboardingFlow';
  * Shuffle Core (shuffler.io). This wrapper just tells it which product we are.
  */
 const OnboardingPage = () => {
-  const navigate = useNavigate();
+  const { startDemo } = useDemo();
   return (
     <OnboardingFlow
       product="security"
       coreRedirectUrl="https://shuffler.io/welcome"
       securityRedirectUrl="https://security.shuffler.io/onboarding"
-      // We are inside Shuffle Security — start the demo right here instead of
-      // round-tripping through a full page reload.
-      onStartDemo={() => navigate('/dashboard?demo=true')}
+      // We are already inside Shuffle Security — kick off the demo drawer in
+      // place instead of round-tripping through /dashboard?demo=true.
+      onStartDemo={() => { startDemo().catch(() => { /* surfaced via toast */ }); }}
     />
   );
 };
