@@ -1,8 +1,6 @@
+import { ChevronDown as ExpandMoreIcon, ChevronUp as ExpandLessIcon } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { Box, Button } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-
 interface CollapsibleContentProps {
   children: React.ReactNode;
   /** Maximum height (px) before collapse kicks in. Default 240. */

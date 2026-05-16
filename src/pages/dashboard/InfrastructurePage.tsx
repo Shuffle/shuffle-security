@@ -31,16 +31,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, Chip, Avatar, IconButton, Drawer, Tooltip, Button, Menu, MenuItem } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import {
-  ArrowRight,
-  ChevronRight,
-  Activity,
-  Download,
-  Zap,
-  X,
-  ExternalLink,
-} from 'lucide-react';
+import { ArrowRight, ChevronRight, Activity, Download, Zap, X, ExternalLink, X as CloseIcon } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { IntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
 import { AddAppModal } from '@/components/infrastructure/AddAppModal';

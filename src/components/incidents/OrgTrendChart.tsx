@@ -1,6 +1,6 @@
+import { X as CloseIcon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Box, Typography, Dialog, DialogContent, IconButton } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import {
   ResponsiveContainer,
   AreaChart,

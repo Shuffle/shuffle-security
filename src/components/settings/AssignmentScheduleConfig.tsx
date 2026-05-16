@@ -3,6 +3,7 @@
  * Manages user availability schedules for auto-assignment with escalation levels
  */
 
+import { Plus as AddIcon, Pencil as EditIcon, Trash2 as DeleteIcon, Clock as ScheduleIcon } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
@@ -33,12 +34,6 @@ import {
   Stack,
   Tooltip,
 } from '@mui/material';
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Schedule as ScheduleIcon,
-} from '@mui/icons-material';
 import { useUsers, User } from '@/hooks/useUsers';
 import { setDatastoreItem, getDatastoreItem, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 

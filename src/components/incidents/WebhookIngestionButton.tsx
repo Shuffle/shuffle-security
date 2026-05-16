@@ -1,10 +1,6 @@
+import { Webhook as WebhookIcon, Copy as ContentCopyIcon, Check as CheckIcon, CheckCircle as CheckCircleOutlineIcon, Ban as BlockIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { Box, IconButton, Popover, Typography, Tooltip, InputBase, Button, Chip } from '@mui/material';
-import WebhookIcon from '@mui/icons-material/Webhook';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CheckIcon from '@mui/icons-material/Check';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import BlockIcon from '@mui/icons-material/Block';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 import { toast } from '@/lib/toast';

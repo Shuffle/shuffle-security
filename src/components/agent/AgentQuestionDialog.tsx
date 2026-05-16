@@ -13,8 +13,7 @@ import {
   DialogContent,
   TextField,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import { HelpCircle, Send } from 'lucide-react';
+import { HelpCircle, Send, X as CloseIcon } from 'lucide-react';
 import { stripAgentTitlePrefix, type AgentNotification } from '@/services/notifications';
 
 interface Props {

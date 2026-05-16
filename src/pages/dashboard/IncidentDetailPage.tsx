@@ -30,46 +30,8 @@ import {
   Popover,
   Checkbox,
 } from '@mui/material';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import FingerprintIcon from '@mui/icons-material/Fingerprint';
 import { motion } from 'framer-motion';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import AddIcon from '@mui/icons-material/Add';
-import SendIcon from '@mui/icons-material/Send';
-import ReplyIcon from '@mui/icons-material/Reply';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
 import { createAndUploadFile } from '@/services/files';
-import PersonIcon from '@mui/icons-material/Person';
-import EditIcon from '@mui/icons-material/Edit';
-import HistoryIcon from '@mui/icons-material/History';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import SecurityIcon from '@mui/icons-material/Security';
-import LinkIcon from '@mui/icons-material/Link';
-import PeopleIcon from '@mui/icons-material/People';
-import SettingsIcon from '@mui/icons-material/Settings';
-import DescriptionIcon from '@mui/icons-material/Description';
-import TaskAltIcon from '@mui/icons-material/TaskAlt';
-import DeleteIcon from '@mui/icons-material/Delete';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
-import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import ForwardIcon from '@mui/icons-material/Forward';
-import CallMergeIcon from '@mui/icons-material/CallMerge';
-import CloseIcon from '@mui/icons-material/Close';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import LanguageIcon from '@mui/icons-material/Language';
-import SearchIcon from '@mui/icons-material/Search';
 import Menu from '@mui/material/Menu';
 import {
   AlertDialog,
@@ -145,7 +107,7 @@ import AgentRunDiagnosisBanner from '@/components/agent/AgentRunDiagnosisBanner'
 import { getRunTitle, getRunIconColor, formatDuration as formatAgentRunDuration, getTimeAgo as getAgentTimeAgo, STATUS_CONFIG as AGENT_STATUS_CONFIG } from '@/components/agent/AgentRunHeader';
 import { getFailureInfo as getAgentFailureInfo, hasOutputWarning as hasAgentOutputWarning, diagnoseOutputWarning as diagnoseAgentOutputWarning } from '@/components/agent/AgentRunResultViewer';
 import AgentRunStatusBadge from '@/components/agent/AgentRunStatusBadge';
-import { AlertTriangle as AlertTriangleIcon, Loader2 as Loader2Icon } from 'lucide-react';
+import { AlertTriangle as AlertTriangleIcon, Loader2 as Loader2Icon, ArrowDown as ArrowDownwardIcon, AlertTriangle as WarningAmberIcon, ArrowUp as ArrowUpwardIcon, Fingerprint as FingerprintIcon, ArrowLeft as ArrowBackIcon, CheckCircle2 as CheckCircleIcon, Plus as AddIcon, Send as SendIcon, Reply as ReplyIcon, Paperclip as AttachFileIcon, User as PersonIcon, Pencil as EditIcon, History as HistoryIcon, Clock as AccessTimeIcon, ChevronDown as ExpandMoreIcon, ChevronUp as ExpandLessIcon, Filter as FilterListIcon, Shield as SecurityIcon, Link as LinkIcon, Users as PeopleIcon, Settings as SettingsIcon, FileText as DescriptionIcon, CheckCircle2 as TaskAltIcon, Trash2 as DeleteIcon, GripVertical as DragIndicatorIcon, ListPlus as PlaylistAddIcon, RefreshCw as RefreshIcon, TrendingUp as TrendingUpIcon, Wand2 as AutoFixHighIcon, MoreVertical as MoreVertIcon, Forward as ForwardIcon, GitMerge as CallMergeIcon, X as CloseIcon, Eye as VisibilityIcon, EyeOff as VisibilityOffIcon, ChevronRight as ChevronRightIcon, Globe as LanguageIcon, Search as SearchIcon } from 'lucide-react';
 import { Zap as ZapIcon } from 'lucide-react';
 import type { AgentRun } from '@/services/agentActivity';
 import { getAgentSkipInfo } from '@/lib/agentParsers';

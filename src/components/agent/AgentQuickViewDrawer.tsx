@@ -13,17 +13,7 @@ import {
   TextField,
   Chip,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import {
-  CheckCircle,
-  Settings,
-  ArrowRight,
-  HelpCircle,
-  XCircle,
-  Zap,
-  Send,
-  Mail,
-} from 'lucide-react';
+import { CheckCircle, Settings, ArrowRight, HelpCircle, XCircle, Zap, Send, Mail, X as CloseIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
   stripAgentTitlePrefix,

@@ -3,6 +3,7 @@
  * navigation to untrusted links inside email bodies, AI output, etc.
  * Triggered via requestExternalLinkConfirm() from safeExternalLinks.
  */
+import { AlertTriangle as WarningAmberRoundedIcon, ExternalLink as OpenInNewIcon, X as CloseIcon, Link as LinkIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
   Dialog,
@@ -16,10 +17,6 @@ import {
   Stack,
   Chip,
 } from '@mui/material';
-import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import CloseIcon from '@mui/icons-material/Close';
-import LinkIcon from '@mui/icons-material/Link';
 import {
   onExternalLinkConfirmRequest,
   openExternalLink,

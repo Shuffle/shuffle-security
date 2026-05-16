@@ -1,3 +1,4 @@
+import { Paperclip as AttachFileIcon, Trash2 as DeleteIcon, Download as DownloadIcon, File as InsertDriveFileIcon, Image as ImageIcon, FileText as PictureAsPdfIcon, X as CloseIcon } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import {
   Box,
@@ -8,13 +9,6 @@ import {
   Chip,
   Dialog,
 } from '@mui/material';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
-import DeleteIcon from '@mui/icons-material/Delete';
-import DownloadIcon from '@mui/icons-material/Download';
-import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
-import ImageIcon from '@mui/icons-material/Image';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import CloseIcon from '@mui/icons-material/Close';
 import { 
   ShuffleFile, 
   createAndUploadFile, 

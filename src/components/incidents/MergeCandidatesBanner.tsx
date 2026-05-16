@@ -1,10 +1,6 @@
+import { GitMerge as CallMergeIcon, X as CloseIcon, ChevronDown as ExpandMoreIcon, ChevronUp as ExpandLessIcon, ArrowRight as ArrowForwardIcon } from 'lucide-react';
 import { useState } from 'react';
 import { Box, Typography, Chip, IconButton, Tooltip, Stack } from '@mui/material';
-import CallMergeIcon from '@mui/icons-material/CallMerge';
-import CloseIcon from '@mui/icons-material/Close';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { Button } from '@/components/ui/button';
 import { ScoredMergeCandidate, MergeMatchReason } from '@/utils/mergeCandidateScoring';
 

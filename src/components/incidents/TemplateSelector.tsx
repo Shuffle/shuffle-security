@@ -1,3 +1,4 @@
+import { ListPlus as PlaylistAddIcon, ClipboardList as AssignmentIcon } from 'lucide-react';
 import { useState } from 'react';
 import {
   Box,
@@ -9,8 +10,6 @@ import {
   Chip,
   CircularProgress,
 } from '@mui/material';
-import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
-import AssignmentIcon from '@mui/icons-material/Assignment';
 import { useCaseTemplates, CaseTemplate, TemplateTask } from '@/hooks/useCaseTemplates';
 import { IncidentTask } from './CreateIncidentDialog';
 

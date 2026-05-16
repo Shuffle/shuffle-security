@@ -1,3 +1,4 @@
+import { Plus as AddIcon, MoreVertical as MoreVertIcon, ClipboardList as AssignmentIcon, Pencil as EditIcon, Trash2 as DeleteIcon, RefreshCw as RefreshIcon, ListPlus as PlaylistAddIcon } from 'lucide-react';
 import { useState } from 'react';
 import {
   Box,
@@ -21,13 +22,6 @@ import {
 } from '@mui/material';
 import Grid from '@mui/material/Grid';
 import { motion } from 'framer-motion';
-import AddIcon from '@mui/icons-material/Add';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import PlaylistAddIcon from '@mui/icons-material/PlaylistAdd';
 import { useCaseTemplates, CaseTemplate, TemplateTask } from '@/hooks/useCaseTemplates';
 import { TaskEditor } from '@/components/incidents/TaskEditor';
 import { IncidentTask, taskCategories } from '@/components/incidents/CreateIncidentDialog';

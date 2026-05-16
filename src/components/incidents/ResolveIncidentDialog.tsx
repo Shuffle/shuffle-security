@@ -1,3 +1,4 @@
+import { CheckCircle2 as CheckCircleIcon, Filter as FilterListIcon } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import {
   Dialog,
@@ -16,8 +17,6 @@ import {
   FormControlLabel,
   Fade,
 } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
 import { useEntityText } from '@/hooks/useEntityLabel';
 

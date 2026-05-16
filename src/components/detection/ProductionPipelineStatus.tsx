@@ -1,13 +1,6 @@
+import { ArrowRight as ArrowForwardIcon, Database as StorageIcon, Radio as SensorsIcon, Webhook as WebhookIcon, AlertTriangle as ReportProblemIcon, Forward as ForwardToInboxIcon, CheckCircle2 as CheckCircleIcon, AlertCircle as ErrorOutlineIcon } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { Box, Typography, Chip, Tooltip, CircularProgress } from '@mui/material';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import StorageIcon from '@mui/icons-material/Storage';
-import SensorsIcon from '@mui/icons-material/Sensors';
-import WebhookIcon from '@mui/icons-material/Webhook';
-import ReportProblemIcon from '@mui/icons-material/ReportProblem';
-import ForwardToInboxIcon from '@mui/icons-material/ForwardToInbox';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { useWorkflows } from '@/hooks/useWorkflows';
 

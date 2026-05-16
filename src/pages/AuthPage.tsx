@@ -1,3 +1,4 @@
+import { Eye as VisibilityIcon, EyeOff as VisibilityOffIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
@@ -13,8 +14,6 @@ import {
   InputAdornment,
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { getApiUrl, API_ENDPOINTS, API_CONFIG, isDevEnvironment } from '@/Shuffle-MCPs/api';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
 import { useAuth } from '@/context/AuthContext';

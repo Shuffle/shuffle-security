@@ -7,6 +7,7 @@
  * so subsequent opens are instant.
  */
 
+import { X as CloseIcon, Printer as PrintIcon, RefreshCw as RefreshIcon, Wand2 as AutoFixHighIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import {
   Dialog,
@@ -21,10 +22,6 @@ import {
   Divider,
   Tooltip,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import PrintIcon from '@mui/icons-material/Print';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import { toast } from '@/lib/toast';
 import {
   generateIncidentReport,

@@ -8,11 +8,9 @@
  * chevron behaviour stay identical. If you find yourself building another
  * `<Box border borderRadius onClick toggle>` wrapper — use this instead.
  */
+import { ChevronDown as ExpandMoreIcon, ChevronUp as ExpandLessIcon } from 'lucide-react';
 import { forwardRef, useEffect, useState, type ReactNode, type ElementType } from 'react';
 import { Box, Collapse, Typography } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-
 export interface IncidentSectionProps {
   title: string;
   icon: ElementType;

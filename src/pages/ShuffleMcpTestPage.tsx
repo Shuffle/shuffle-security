@@ -1,3 +1,4 @@
+import { ChevronDown as ExpandMoreIcon, Copy as ContentCopyIcon, Check as CheckIcon, ChevronDown as KeyboardArrowDownIcon, Github as GitHubIcon } from 'lucide-react';
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import {
   Box,
@@ -12,11 +13,6 @@ import {
   Popover,
   Avatar,
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CheckIcon from '@mui/icons-material/Check';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import GitHubIcon from '@mui/icons-material/GitHub';
 import {
   ShuffleMCP,
   AppSearchDrawer,

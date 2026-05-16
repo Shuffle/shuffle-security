@@ -21,24 +21,7 @@
  * To add a new sidebar item, add it here and it will automatically appear
  * in `/preferences`. To remove one, delete it here.
  */
-import {
-  Braces,
-  Waypoints,
-  Network,
-  BookOpen,
-  LayoutDashboard,
-  HardDrive,
-  MonitorCheck,
-  Bug,
-  Zap,
-  Terminal,
-} from 'lucide-react';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import RadarIcon from '@mui/icons-material/Radar';
-import DescriptionIcon from '@mui/icons-material/Description';
-import TuneIcon from '@mui/icons-material/Tune';
-import RssFeedIcon from '@mui/icons-material/RssFeed';
-import FingerprintIcon from '@mui/icons-material/Fingerprint';
+import { Braces, Waypoints, Network, BookOpen, LayoutDashboard, HardDrive, MonitorCheck, Bug, Zap, Terminal, AlertTriangle as WarningAmberIcon, Radar as RadarIcon, FileText as DescriptionIcon, SlidersHorizontal as TuneIcon, Rss as RssFeedIcon, Fingerprint as FingerprintIcon } from 'lucide-react';
 import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 
 /** Stable identifiers used as keys in the persisted visibility map.

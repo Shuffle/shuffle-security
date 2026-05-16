@@ -1,3 +1,4 @@
+import { ArrowLeft as ArrowBackIcon, CheckCircle2 as CheckCircleIcon, AlertCircle as ErrorOutlineIcon, ExternalLink as OpenInNewIcon, RefreshCw as RefreshIcon, Activity as TimelineIcon, Lock as LockOutlinedIcon, ArrowRight as ArrowForwardIcon } from 'lucide-react';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast } from '@/lib/toast';
 import { useParams, useNavigate, Link } from 'react-router-dom';
@@ -16,14 +17,6 @@ import {
 import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import TimelineIcon from '@mui/icons-material/Timeline';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import type { AlgoliaSearchApp } from '@/Shuffle-MCPs';
 import { useAppAuth } from '@/Shuffle-MCPs/useAppAuth';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';

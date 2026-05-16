@@ -1,9 +1,6 @@
+import { Search as SearchIcon, ExternalLink as OpenInNewIcon, CheckCircle2 as CheckCircleIcon, HelpCircle as HelpOutlineIcon } from 'lucide-react';
 import { useState, type MouseEvent } from 'react';
 import { IconButton, Menu, MenuItem, ListItemIcon, ListItemText, Tooltip, CircularProgress, Divider, Typography } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { getDatastoreItem } from '@/Shuffle-MCPs/datastore';
 import { toast } from '@/lib/toast';
 

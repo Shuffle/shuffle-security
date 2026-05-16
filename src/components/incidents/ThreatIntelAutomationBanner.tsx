@@ -1,6 +1,5 @@
+import { CheckCircle2 as CheckCircleIcon, AlertCircle as ErrorOutlineIcon } from 'lucide-react';
 import { Alert, Box, Button, CircularProgress, Tooltip, Typography } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useIsSupport } from '@/hooks/useIsSupport';

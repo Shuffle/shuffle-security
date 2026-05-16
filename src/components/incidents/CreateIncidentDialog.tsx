@@ -1,3 +1,4 @@
+import { ChevronDown as ExpandMoreIcon, Plus as AddIcon, ListChecks as PlaylistAddCheckIcon } from 'lucide-react';
 import { useState } from 'react';
 import {
   Dialog,
@@ -20,9 +21,6 @@ import {
   Slider,
   Collapse,
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import AddIcon from '@mui/icons-material/Add';
-import PlaylistAddCheckIcon from '@mui/icons-material/PlaylistAddCheck';
 import { useUsers } from '@/hooks/useUsers';
 import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
 import { useIOCTypes } from '@/hooks/useIOCTypes';

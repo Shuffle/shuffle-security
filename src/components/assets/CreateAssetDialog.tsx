@@ -1,3 +1,4 @@
+import { ChevronDown as ExpandMoreIcon } from 'lucide-react';
 import { useState } from 'react';
 import {
   Dialog,
@@ -13,7 +14,6 @@ import {
   Slider,
   CircularProgress,
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import {
   OCSFDeviceInventory,
   DEVICE_TYPES,

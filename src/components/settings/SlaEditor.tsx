@@ -10,6 +10,7 @@
  * consistent. The "Fallback" row is always present and is used when an
  * incident lacks a severity.
  */
+import { RotateCcw as RestartAltIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
   Box,
@@ -19,7 +20,6 @@ import {
   Button,
   Tooltip,
 } from '@mui/material';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { toast } from '@/lib/toast';
 import {
   SLA_SEVERITY_ORDER,

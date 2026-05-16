@@ -1,3 +1,4 @@
+import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, Search as SearchIcon, X as CloseIcon, Plus as AddIcon, RefreshCw as RefreshIcon, Play as PlayArrowIcon, Rocket as RocketLaunchIcon, EyeOff as VisibilityOffIcon, AlertTriangle as WarningAmberIcon, Download as DownloadIcon, Calendar as CalendarTodayIcon } from 'lucide-react';
 import { useState, useEffect, useMemo, useCallback, useRef, useSyncExternalStore } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useEntityLabel, useShowAutomation, useEntityText } from '@/hooks/useEntityLabel';
@@ -20,18 +21,8 @@ import {
   Dialog,
   DialogContent,
 } from '@mui/material';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { motion } from 'framer-motion';
 import { normalizeStatus } from '@/config/incidentConfig';
-import SearchIcon from '@mui/icons-material/Search';
-import CloseIcon from '@mui/icons-material/Close';
-import AddIcon from '@mui/icons-material/Add';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useAuth } from '@/context/AuthContext';
 import { useDemo, TOUR_STEPS } from '@/context/DemoContext';
@@ -46,7 +37,6 @@ import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/com
 import { CategoryAutomationsDialog } from '@/components/incidents/CategoryAutomationsDialog';
 import { extractValidatedIngestionApps, ValidatedIngestionApp, findIngestTicketsWorkflow, findForwardTicketsWorkflow, extractWorkflowAppNames, normalizeAppName, isWorkflowScheduleStopped } from '@/Shuffle-MCPs/ingestionDetection';
 import { API_CONFIG, getApiUrl, getAuthHeader, isDevEnvironment } from '@/Shuffle-MCPs/api';
-import DownloadIcon from '@mui/icons-material/Download';
 import { IncidentCardView } from '@/components/incidents/IncidentCardView';
 import { IncidentStatsCards } from '@/components/incidents/IncidentStatsCards';
 import { ScheduleHealthBanner } from '@/components/users/ScheduleHealthBanner';
@@ -62,7 +52,6 @@ import { SourceTrendChart } from '@/components/incidents/ToolTrendChart';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover as RadixPopover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import { toast } from '@/lib/toast';
 import { resyncState } from '@/lib/resyncState';
 import { trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';

@@ -1,8 +1,6 @@
+import { Plus as AddIcon, Trash as DeleteOutlineIcon, GripVertical as DragIndicatorIcon } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Box, Typography, Chip, IconButton, TextField, Button } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import { IncidentTask, taskCategories } from '@/config/ocsfIncidentSchema';
 import { useTaskStatuses } from '@/hooks/useEntityLabel';
 import { TaskAssigneeChip } from './TaskAssigneeChip';

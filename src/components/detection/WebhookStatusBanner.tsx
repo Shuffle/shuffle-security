@@ -1,5 +1,5 @@
+import { Webhook as WebhookIcon } from 'lucide-react';
 import { Box, Typography, Button, CircularProgress, Chip } from '@mui/material';
-import WebhookIcon from '@mui/icons-material/Webhook';
 import { useWebhookStatus } from '@/hooks/useWebhookStatus';
 import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { toast } from '@/lib/toast';

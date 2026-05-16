@@ -1,3 +1,4 @@
+import { ChevronDown as ExpandMoreIcon, Shield as SecurityIcon, Mail as EmailIcon, MessageSquare as ChatIcon, Globe as TravelExploreIcon, ArrowLeftRight as SyncAltIcon, Download as DownloadIcon, ClipboardCheck as AssignmentIndIcon, Fingerprint as FingerprintIcon, CheckCircle2 as CheckCircleIcon, Plus as AddIcon, Trash2 as DeleteIcon, Pencil as EditIcon, Link as LinkIcon, RotateCcw as RestoreIcon, Bug as BugReportIcon } from 'lucide-react';
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { IntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
@@ -18,22 +19,6 @@ import {
   Button,
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import SecurityIcon from '@mui/icons-material/Security';
-import EmailIcon from '@mui/icons-material/Email';
-import ChatIcon from '@mui/icons-material/Chat';
-import TravelExploreIcon from '@mui/icons-material/TravelExplore';
-import SyncAltIcon from '@mui/icons-material/SyncAlt';
-import DownloadIcon from '@mui/icons-material/Download';
-import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
-import FingerprintIcon from '@mui/icons-material/Fingerprint';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import LinkIcon from '@mui/icons-material/Link';
-import RestoreIcon from '@mui/icons-material/Restore';
-import BugReportIcon from '@mui/icons-material/BugReport';
 import { OnCallScheduleManager } from '@/components/users/OnCallScheduleManager';
 import { useUsers } from '@/hooks/useUsers';
 import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';

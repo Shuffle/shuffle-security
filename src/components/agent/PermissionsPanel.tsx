@@ -14,37 +14,7 @@ import {
   Checkbox,
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import RestoreIcon from '@mui/icons-material/Restore';
-import {
-  Radar,
-  Zap,
-  Bell,
-  Server,
-  ShieldCheck,
-  ShieldAlert,
-  ShieldOff,
-  Search,
-  FileText,
-  Globe,
-  Ban,
-  MonitorOff,
-  UserX,
-  KeyRound,
-  Lightbulb,
-  Database,
-  Terminal,
-  Settings2,
-  Flame,
-  Megaphone,
-  AlertTriangle,
-  Mail,
-  Wifi,
-  Monitor,
-  Play,
-  Laptop,
-} from 'lucide-react';
+import { Radar, Zap, Bell, Server, ShieldCheck, ShieldAlert, ShieldOff, Search, FileText, Globe, Ban, MonitorOff, UserX, KeyRound, Lightbulb, Database, Terminal, Settings2, Flame, Megaphone, AlertTriangle, Mail, Wifi, Monitor, Play, Laptop, ChevronDown as ExpandMoreIcon, ChevronUp as ExpandLessIcon, RotateCcw as RestoreIcon } from 'lucide-react';
 import { useAgentPermissions, RiskLevel, AgentPermissionCategory, AgentPermission } from '@/hooks/useAgentPermissions';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import AssignedToolsSection from '@/components/agent/AssignedToolsSection';

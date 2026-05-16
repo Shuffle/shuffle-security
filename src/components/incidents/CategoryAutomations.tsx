@@ -1,3 +1,4 @@
+import { Wand2 as AutoFixHighIcon, Webhook as WebhookIcon, Network as AccountTreeIcon, Lock as EnhancedEncryptionIcon, Pencil as EditIcon, PlusCircle as AddCircleIcon, Trash2 as DeleteIcon, Zap as BoltIcon } from 'lucide-react';
 import React from 'react';
 import {
   Box,
@@ -7,16 +8,7 @@ import {
   Paper,
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import WebhookIcon from '@mui/icons-material/Webhook';
 import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
-import AccountTreeIcon from '@mui/icons-material/AccountTree';
-import EnhancedEncryptionIcon from '@mui/icons-material/EnhancedEncryption';
-import EditIcon from '@mui/icons-material/Edit';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
-import DeleteIcon from '@mui/icons-material/Delete';
-import BoltIcon from '@mui/icons-material/Bolt';
-
 export interface CategoryAutomation {
   id?: string;
   name: string;

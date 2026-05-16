@@ -12,12 +12,12 @@
  * updated in place and the banner refreshes.
  */
 
+import { X as CloseIcon, ChevronDown as ExpandMoreIcon, ExternalLink as OpenInNewIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Alert, AlertTitle, Box, Button, Collapse, IconButton, Stack, Typography,
   Select, MenuItem, FormControl, CircularProgress,
 } from '@mui/material';
-import { Close as CloseIcon, ExpandMore as ExpandMoreIcon, OpenInNew as OpenInNewIcon } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/lib/toast';
 import { getDatastoreItem, setDatastoreItem, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';

@@ -12,9 +12,8 @@ import {
   Chip,
   Button,
 } from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
 import { motion } from 'framer-motion';
-import { Settings, Play } from 'lucide-react';
+import { Settings, Play, RefreshCw as RefreshIcon } from 'lucide-react';
 import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import { useAgentActivity } from '@/hooks/useAgentActivity';
 import AgentActivityStatsPanel from '@/components/agent/AgentActivityStats';

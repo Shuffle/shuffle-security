@@ -14,8 +14,7 @@ import {
   TextField,
   Chip,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import { Settings, CheckCircle, AlertTriangle, Mail } from 'lucide-react';
+import { Settings, CheckCircle, AlertTriangle, Mail, X as CloseIcon } from 'lucide-react';
 import { stripAgentTitlePrefix, type AgentNotification } from '@/services/notifications';
 
 interface Props {

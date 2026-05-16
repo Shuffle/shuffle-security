@@ -12,9 +12,8 @@
  *  - Real user: name matches an entry in the org user list.
  *  - Unknown: neither — rendered as plain text without a hover card.
  */
+import { User as PersonIcon, Github as GitHubIcon } from 'lucide-react';
 import { Box, Typography, Avatar, Chip, Link as MuiLink } from '@mui/material';
-import PersonIcon from '@mui/icons-material/Person';
-import GitHubIcon from '@mui/icons-material/GitHub';
 import { useNavigate } from 'react-router-dom';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import AgentIcon from '@/Shuffle-MCPs/AgentIcon';

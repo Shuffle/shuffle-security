@@ -1,3 +1,4 @@
+import { ExternalLink as OpenInNewIcon, Plus as AddIcon, RotateCcw as RestartAltIcon, Trash2 as DeleteIcon, Pencil as EditIcon, Search as SearchIcon, CheckSquare as CheckBoxIcon, Square as CheckBoxOutlineBlankIcon, Wrench as BuildIcon, CheckCircle2 as CheckCircleIcon, XCircle as CancelIcon, Play as PlayArrowIcon } from 'lucide-react';
 import { useState, useEffect, useMemo, useRef, type SyntheticEvent } from 'react';
 import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
 import {
@@ -29,19 +30,7 @@ import {
   Link,
 } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { motion } from 'framer-motion';
-import AddIcon from '@mui/icons-material/Add';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import SearchIcon from '@mui/icons-material/Search';
-import CheckBoxIcon from '@mui/icons-material/CheckBox';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
-import BuildIcon from '@mui/icons-material/Build';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import { useDatastore } from '@/hooks/useDatastore';
 import { DEFAULT_IOC_TYPES, IOCType, IOC_CATEGORIES, IOCCategory, DEFAULT_ENABLED_IOCS, normalizeDefaultIOCType } from '@/hooks/useIOCTypes';
 import { DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';

@@ -17,18 +17,7 @@ import { toast } from '@/lib/toast';
 import { setDatastoreItem, getDatastoreItem, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import { motion, AnimatePresence } from 'framer-motion';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import RestoreIcon from '@mui/icons-material/Restore';
-import {
-  Radar,
-  Zap,
-  Bell,
-  Server,
-  ShieldCheck,
-  ShieldAlert,
-  ShieldOff,
-} from 'lucide-react';
+import { Radar, Zap, Bell, Server, ShieldCheck, ShieldAlert, ShieldOff, ChevronDown as ExpandMoreIcon, ChevronUp as ExpandLessIcon, RotateCcw as RestoreIcon } from 'lucide-react';
 import { useAgentPermissions, RiskLevel, AgentPermissionCategory } from '@/hooks/useAgentPermissions';
 import { usePageMeta } from '@/hooks/usePageMeta';
 
