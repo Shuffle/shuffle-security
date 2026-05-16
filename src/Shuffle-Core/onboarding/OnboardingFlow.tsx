@@ -1248,4 +1248,5 @@ const OnboardingFlow = ({
   );
 };
 
-export default OnboardingPage;
+export { OnboardingFlow };
+export default OnboardingFlow;
