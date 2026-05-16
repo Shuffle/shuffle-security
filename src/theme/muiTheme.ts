@@ -103,11 +103,11 @@ export const createMuiTheme = (mode: 'light' | 'dark') => {
     palette: {
       mode,
       primary: { main: 'hsl(var(--primary))', light: 'hsl(var(--primary-glow))', dark: 'hsl(var(--primary))', contrastText: 'hsl(var(--primary-foreground))' },
-      secondary: { main: 'hsl(var(--secondary))', light: 'hsl(var(--muted))', dark: 'hsl(var(--secondary))' },
-      error: { main: 'hsl(var(--destructive))', light: 'hsl(var(--destructive))', dark: 'hsl(var(--destructive))' },
-      warning: { main: 'hsl(var(--severity-medium))', light: 'hsl(var(--severity-medium))', dark: 'hsl(var(--severity-medium))' },
-      success: { main: 'hsl(var(--severity-low))', light: 'hsl(var(--severity-low))', dark: 'hsl(var(--severity-low))' },
-      info: { main: 'hsl(var(--severity-info))', light: 'hsl(var(--severity-info))', dark: 'hsl(var(--severity-info))' },
+      secondary: { main: 'hsl(var(--secondary))', light: 'hsl(var(--muted))', dark: 'hsl(var(--secondary))', contrastText: 'hsl(var(--secondary-foreground))' },
+      error: { main: 'hsl(var(--destructive))', light: 'hsl(var(--destructive))', dark: 'hsl(var(--destructive))', contrastText: 'hsl(var(--destructive-foreground))' },
+      warning: { main: 'hsl(var(--severity-medium))', light: 'hsl(var(--severity-medium))', dark: 'hsl(var(--severity-medium))', contrastText: 'hsl(var(--foreground))' },
+      success: { main: 'hsl(var(--severity-low))', light: 'hsl(var(--severity-low))', dark: 'hsl(var(--severity-low))', contrastText: 'hsl(var(--foreground))' },
+      info: { main: 'hsl(var(--severity-info))', light: 'hsl(var(--severity-info))', dark: 'hsl(var(--severity-info))', contrastText: 'hsl(var(--foreground))' },
       background: {
         default: 'hsl(var(--background))',
         paper: 'hsl(var(--card))',
