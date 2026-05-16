@@ -76,7 +76,15 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { SegmentedControl } from "@/components/ui/segmented-control";
 
 const EditWorkflow = (props) => {
-	const { globalUrl, workflow, setWorkflow, modalOpen, setModalOpen, showUpload, usecases, setNewWorkflow, appFramework, isEditing, userdata, apps, saveWorkflow, expanded, scrollTo, setRealtimeMarkdown, boxWidth, setBoxWidth, } = props
+	const { globalUrl, workflow, setWorkflow, modalOpen, setModalOpen, showUpload, usecases, setNewWorkflow, appFramework, isEditing, userdata, apps, saveWorkflow, expanded, scrollTo, setRealtimeMarkdown, setRealtimeInputQuestions, boxWidth, setBoxWidth, } = props
+
+	const pushRealtimeInputQuestions = (questions) => {
+		if (setRealtimeInputQuestions === undefined || setRealtimeInputQuestions === null) {
+			return
+		}
+		const valid = (questions || []).filter((q) => q && q.deleted !== true && q.value !== undefined && q.value !== null && q.value.length > 0)
+		setRealtimeInputQuestions(JSON.parse(JSON.stringify(valid)))
+	}
 
 	const [_, setUpdate] = React.useState(""); // Used for rendering, don't remove
 	const {themeMode, brandColor} = useContext(Context)
