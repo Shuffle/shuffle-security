@@ -1101,18 +1101,16 @@ const EditWorkflow = (props) => {
 										<Select
 											multiple
 											sx={{ ...selectSx, marginTop: "10px" }}
-											value={innerWorkflow.suborg_distribution === undefined || innerWorkflow.suborg_distribution === null ? ["none"] : innerWorkflow.suborg_distribution}
+										value={getNoneSelectValue(innerWorkflow.suborg_distribution)}
 											disabled={workflow?.parentorg_workflow !== undefined && workflow?.parentorg_workflow !== null && workflow?.parentorg_workflow.length > 0}
 											onChange={(e) => {
 													var newvalue = normalizeSelectValues(e.target.value)
-												if (newvalue.length > 1 && newvalue[0] === "none") {
-													newvalue = newvalue.filter(value => value !== "none")
-												}
-
-												if (newvalue.includes("none")) {
-													newvalue = ["none"]
+												if (newvalue[newvalue.length - 1] === "none") {
+													newvalue = []
 												} else if (newvalue.includes("all")) {
 													newvalue = userdata.orgs.filter(org => org.creator_org === userdata.active_org.id).map(org => org.id)
+												} else {
+													newvalue = newvalue.filter(value => value !== "none")
 												}
 
 													updateInnerWorkflow((next) => {
@@ -1122,8 +1120,8 @@ const EditWorkflow = (props) => {
 											label="Suborg Distribution"
 											fullWidth
 											renderValue={(selected) => {
-												const selectedIds = normalizeSelectValues(selected)
-												if (selectedIds.includes("none")) return "None"
+												const selectedIds = normalizeSelectValues(selected).filter((value) => value !== "none")
+												if (selectedIds.length === 0) return "None"
 												return userdata.orgs.filter((org) => selectedIds.includes(org.id)).map((org) => org.name).join(", ")
 											}}
 											MenuProps={selectMenuProps}
