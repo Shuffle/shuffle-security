@@ -336,7 +336,7 @@ const EditWorkflow = (props) => {
 												target="_blank"
 												style={{
 													textDecoration: "none",
-													color: "#f85a3e",
+													color: "hsl(var(--primary))",
 													marginLeft: 5,
 												}}
 											>
@@ -349,7 +349,7 @@ const EditWorkflow = (props) => {
 
 						</div>
 						<Typography variant="body2" color="textSecondary" style={{ marginTop: 20, maxWidth: 440, }}>
-							Workflows can be built from scratch, or from templates. <a href="/usecases2" rel="noopener noreferrer" target="_blank" style={{ textDecoration: "none", color: theme.palette.linkColor }}>Usecases</a> can help you discover next steps, and you can <a href="/search?tab=workflows" rel="noopener noreferrer" target="_blank" style={{ textDecoration: "none", color: theme.palette.linkColor }}>search</a> for them directly. <a href="/docs/workflows" rel="noopener noreferrer" target="_blank" style={{ textDecoration: "none", color:theme.palette.linkColor }}>Learn more</a>
+							Workflows can be built from scratch, or from templates. <a href="/usecases2" rel="noopener noreferrer" target="_blank" style={{ textDecoration: "none", color: "hsl(var(--primary))" }}>Usecases</a> can help you discover next steps, and you can <a href="/search?tab=workflows" rel="noopener noreferrer" target="_blank" style={{ textDecoration: "none", color: "hsl(var(--primary))" }}>search</a> for them directly. <a href="/docs/workflows" rel="noopener noreferrer" target="_blank" style={{ textDecoration: "none", color:"hsl(var(--primary))" }}>Learn more</a>
 						</Typography>
 
 						<div style={{marginTop: 10, marginBottom: 10, marginRight: 50, }}>
@@ -381,7 +381,7 @@ const EditWorkflow = (props) => {
 								Use a Template
 							</Typography>
 							<Typography variant="body2" color="textSecondary" style={{maxWidth: 440,}}>
-								Start your workflow from our templating system. This uses publied workflows from our <a href="/creators" rel="noopener noreferrer" target="_blank" style={{ textDecoration: "none", color: "#f86a3e"}}>Creators</a> to generate full Usecases or parts of your Workflow.
+								Start your workflow from our templating system. This uses publied workflows from our <a href="/creators" rel="noopener noreferrer" target="_blank" style={{ textDecoration: "none", color: "hsl(var(--primary))"}}>Creators</a> to generate full Usecases or parts of your Workflow.
 							</Typography>
 						</div>
 					: null*/}
@@ -1083,7 +1083,7 @@ const EditWorkflow = (props) => {
 								</Typography>
 
 								<Typography variant="body2" color="textSecondary" style={{ marginTop: 10, marginBottom: 10, }}>
-									Make one workflow, and keep a separate, synced copy in your other tenants. Control distributed auth, runtime locations, files, datastore keys etc. Can only distribute from parent org to child org. Need help trying it? <a href="https://shuffler.io/contact" target="_blank" style={{color: "#f85a3e", textDecoration: "none",}}>Contact us for a demo</a>
+									Make one workflow, and keep a separate, synced copy in your other tenants. Control distributed auth, runtime locations, files, datastore keys etc. Can only distribute from parent org to child org. Need help trying it? <a href="https://shuffler.io/contact" target="_blank" style={{color: "hsl(var(--primary))", textDecoration: "none",}}>Contact us for a demo</a>
 								</Typography>
 
 								{userdata !== undefined && userdata !== null && userdata.orgs !== undefined && userdata.orgs !== null && userdata.orgs.length > 0  ?
@@ -1091,11 +1091,11 @@ const EditWorkflow = (props) => {
 									userdata.orgs.filter(org => org.creator_org === userdata.active_org.id).length === 0 ?
 										userdata.active_org.creator_org === undefined || userdata.active_org.creator_org === null || userdata.active_org.creator_org === "" ?
 											<Typography variant="body2" style={{ marginTop: 10, color: "hsl(var(--muted-foreground))" }}>
-												Your organization does not have any suborgs yet OR your user may not have access to available suborgs. Please <a href="/admin?tab=tenants" style={{ textDecoration: "none", color: "#f86a3e" }} target="_blank">make one</a> or get access to suborgs by another admin, then try again.
+												Your organization does not have any suborgs yet OR your user may not have access to available suborgs. Please <a href="/admin?tab=tenants" style={{ textDecoration: "none", color: "hsl(var(--primary))" }} target="_blank">make one</a> or get access to suborgs by another admin, then try again.
 											</Typography>
 											:
 											<Typography variant="body2" style={{ marginTop: 10, color: "hsl(var(--muted-foreground))" }}>
-												{innerWorkflow.parentorg_workflow !== undefined && innerWorkflow.parentorg_workflow !== null && innerWorkflow.parentorg_workflow.length > 0 ? <span>This workflow is distributed from <a href={`/workflows/${innerWorkflow.parentorg_workflow}`} style={{ textDecoration: "none", color: "#f86a3e" }} target="_blank">your parent workflow</a> (you may not have access).</span> : null}
+												{innerWorkflow.parentorg_workflow !== undefined && innerWorkflow.parentorg_workflow !== null && innerWorkflow.parentorg_workflow.length > 0 ? <span>This workflow is distributed from <a href={`/workflows/${innerWorkflow.parentorg_workflow}`} style={{ textDecoration: "none", color: "hsl(var(--primary))" }} target="_blank">your parent workflow</a> (you may not have access).</span> : null}
 												<br />
 												<br />
 												You can only distribute to suborgs from a parent org.
@@ -1191,7 +1191,7 @@ const EditWorkflow = (props) => {
 											})}
 										</Select>
 									:
-									<Link to={"/admin?tab=tenants"} style={{ textDecoration: "none", color: "#f86a3e" }} target="_blank">
+									<Link to={"/admin?tab=tenants"} style={{ textDecoration: "none", color: "hsl(var(--primary))" }} target="_blank">
 										<Typography variant="body2" style={{ marginTop: 10, }}>
 											Create a sub-org to distribute workflows to suborgs.
 										</Typography>
@@ -1203,7 +1203,7 @@ const EditWorkflow = (props) => {
 									Git Backup Repository
 								</Typography>
 								<Typography variant="body2" style={{ textAlign: "left", marginTop: 5, }} color="textSecondary">
-									Decide where this workflow is backed up in a Git repository. Will create logs and notifications if upload fails. <b>The repository and branch must already have been initialized</b>. Files will show up in the root folder in the format 'orgid/workflow status/workflow id.json' and be formatted, with removed images, to make diffing easy. Overrides your <a href="/admin?admin_tab=org_config" style={{ textDecoration: "none", color: "#f86a3e" }} target="_blank">default backup repository</a>. <a href="/docs/configuration#environment-variables" style={{ textDecoration: "none", color: "#f86a3e" }} target="_blank">Credentials are encrypted.</a> Creates <a href="/admin?admin_tab=notifications" style={{ textDecoration: "none", color: "#f86a3e" }} target="_blank">notifications</a> if it fails.
+									Decide where this workflow is backed up in a Git repository. Will create logs and notifications if upload fails. <b>The repository and branch must already have been initialized</b>. Files will show up in the root folder in the format 'orgid/workflow status/workflow id.json' and be formatted, with removed images, to make diffing easy. Overrides your <a href="/admin?admin_tab=org_config" style={{ textDecoration: "none", color: "hsl(var(--primary))" }} target="_blank">default backup repository</a>. <a href="/docs/configuration#environment-variables" style={{ textDecoration: "none", color: "hsl(var(--primary))" }} target="_blank">Credentials are encrypted.</a> Creates <a href="/admin?admin_tab=notifications" style={{ textDecoration: "none", color: "hsl(var(--primary))" }} target="_blank">notifications</a> if it fails.
 								</Typography>
 								<Grid container style={{ marginTop: 10, }} spacing={2}>
 									<Grid item xs={6} style={{}}>
@@ -1423,7 +1423,7 @@ const EditWorkflow = (props) => {
 												target="_blank"
 												style={{
 													textDecoration: "none",
-													color: "#f85a3e",
+													color: "hsl(var(--primary))",
 													marginLeft: 5,
 												}}
 											>
@@ -1435,7 +1435,7 @@ const EditWorkflow = (props) => {
 								</div>
 
 								<Typography variant="body2" color="textSecondary" style={{ marginBottom: 20, }}>
-									Input fields are fields that will be used during the startup of the workflow. These will be formatted in JSON and is most commonly used from the <a href={`/forms/${workflow.id}`} rel="noopener noreferrer" target="_blank" style={{ textDecoration: "none", color: "#f86a3e" }}>Form page</a> for this workflow. If chosen in the User Input node, these will be required fields. Use Semi-Colon ";" to create dropdown options. The first key will be the name shown, and subsequent keys will be the available values.
+									Input fields are fields that will be used during the startup of the workflow. These will be formatted in JSON and is most commonly used from the <a href={`/forms/${workflow.id}`} rel="noopener noreferrer" target="_blank" style={{ textDecoration: "none", color: "hsl(var(--primary))" }}>Form page</a> for this workflow. If chosen in the User Input node, these will be required fields. Use Semi-Colon ";" to create dropdown options. The first key will be the name shown, and subsequent keys will be the available values.
 								</Typography>
 
 
@@ -1546,7 +1546,7 @@ const EditWorkflow = (props) => {
 										Input Markdown
 									</Typography>
 									<Typography variant="body2" color="textSecondary" style={{ marginBottom: 20, }}>
-										Markdown will be shown on the <a href={`/forms/${workflow.id}`} rel="noopener noreferrer" target="_blank" style={{ textDecoration: "none", color: "#f86a3e" }}>Form page</a>. The first image added will be used in your Form Toolbox list. Output for a Workflow is shown in Markdown, and is controlled by the LAST action that runs. Supports HTML.
+										Markdown will be shown on the <a href={`/forms/${workflow.id}`} rel="noopener noreferrer" target="_blank" style={{ textDecoration: "none", color: "hsl(var(--primary))" }}>Form page</a>. The first image added will be used in your Form Toolbox list. Output for a Workflow is shown in Markdown, and is controlled by the LAST action that runs. Supports HTML.
 									</Typography>
 									<TextField
 										multiline
@@ -1665,7 +1665,7 @@ const EditWorkflow = (props) => {
 								/>
 							</Typography>
 							<Typography variant="body2" color="textSecondary" style={{ marginTop: 10, }}>
-								Publishing is related to making this workflow itself public. When publishing a workflow, all the details (except sensitive info) become available to anyone. The fields below will help a user and Shuffle's system understand your workflow better. When a workflow is published, you keep the original, and a copy enters the Shuffle workflow search, and is associated with your <a href="/creators" style={{ textDecoration: "none", color: "#f86a3e" }} target="_blank">creator</a> or partner account, if you have one. You can always unpublish the workflow after. When ready to publish, click the three dots next to a workflow on the main workflow page. 
+								Publishing is related to making this workflow itself public. When publishing a workflow, all the details (except sensitive info) become available to anyone. The fields below will help a user and Shuffle's system understand your workflow better. When a workflow is published, you keep the original, and a copy enters the Shuffle workflow search, and is associated with your <a href="/creators" style={{ textDecoration: "none", color: "hsl(var(--primary))" }} target="_blank">creator</a> or partner account, if you have one. You can always unpublish the workflow after. When ready to publish, click the three dots next to a workflow on the main workflow page. 
 
 								You can always unpublish a workflow after.
 							</Typography>
