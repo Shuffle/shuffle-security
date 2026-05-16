@@ -73,6 +73,7 @@ import {
 } from '@mui/x-date-pickers';
 
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { SegmentedControl } from "@/components/ui/segmented-control";
 
 const EditWorkflow = (props) => {
 	const { globalUrl, workflow, setWorkflow, modalOpen, setModalOpen, showUpload, usecases, setNewWorkflow, appFramework, isEditing, userdata, apps, saveWorkflow, expanded, scrollTo, setRealtimeMarkdown, boxWidth, setBoxWidth, } = props
@@ -1025,28 +1026,24 @@ const EditWorkflow = (props) => {
 									fullWidth
 								/>
 
-								<div style={{ display: "flex" }}>
-									<FormControl style={{ marginTop: 15, }}>
-										<FormLabel id="demo-row-radio-buttons-group-label">Status</FormLabel>
-										<RadioGroup
-											row
-											aria-labelledby="demo-row-radio-buttons-group-label"
-											name="row-radio-buttons-group"
-											defaultValue={innerWorkflow.status}
-											onChange={(e) => {
-												console.log("Data: ", e.target.value)
-
-												//innerWorkflow.workflow_type = e.target.value
-												innerWorkflow.status = e.target.value
+								<div style={{ display: "flex", marginTop: 15, }}>
+									<FormControl>
+										<FormLabel style={{ marginBottom: 8 }}>Status</FormLabel>
+										<SegmentedControl
+											layoutId="edit-workflow-status"
+											value={innerWorkflow.status || "test"}
+											onChange={(val) => {
+												innerWorkflow.status = val
 												setInnerWorkflow(innerWorkflow)
+												setUpdate(Math.random())
 											}}
-										>
-											<FormControlLabel value="test" control={<Radio />} label="Test" />
-											<FormControlLabel value="staging" control={<Radio />} label="Staging" />
-											<FormControlLabel value="preprod" control={<Radio />} label="Pre-production" />
-											<FormControlLabel value="production" control={<Radio />} label="Production" />
-
-										</RadioGroup>
+											options={[
+												{ value: "test", label: "Test" },
+												{ value: "staging", label: "Staging" },
+												{ value: "preprod", label: "Pre-production" },
+												{ value: "production", label: "Production" },
+											]}
+										/>
 									</FormControl>
 								</div>
 								<div />
@@ -1691,36 +1688,22 @@ const EditWorkflow = (props) => {
 							</LocalizationProvider>
 
 							<FormControl style={{ marginTop: 15, }}>
-								<FormLabel id="demo-row-radio-buttons-group-label">Type</FormLabel>
-								<RadioGroup
-									row
-									aria-labelledby="demo-row-radio-buttons-group-label"
-									name="row-radio-buttons-group"
-									defaultValue={innerWorkflow.workflow_type}
-									onChange={(e) => {
-										console.log("Data: ", e.target.value)
-
-										innerWorkflow.workflow_type = e.target.value
+								<FormLabel style={{ marginBottom: 8 }}>Type</FormLabel>
+								<SegmentedControl
+									layoutId="edit-workflow-type"
+									value={innerWorkflow.workflow_type || "standalone"}
+									onChange={(val) => {
+										innerWorkflow.workflow_type = val
 										setInnerWorkflow(innerWorkflow)
+										setUpdate(Math.random())
 									}}
-								>
-									<Tooltip title="Agentic workflows takes an input based on input questions (forms) and performs actions based on it by itself, using Large Action Models & Singul">
-										<FormControlLabel value="agentic" control={<Radio />} label="Agentic" />
-									</Tooltip>
-
-									<Tooltip title="Trigger workflows are typically running a schedule to get some data, doing some deduplication before sending it to a subflow or standalone workflow.">
-										<FormControlLabel value="trigger" control={<Radio />} label="Trigger" />
-									</Tooltip>
-
-									<Tooltip title="Subflow workflows are typically used to subprocess some data, and in some cases return the result to the parent workflow.">
-										<FormControlLabel value="subflow" control={<Radio />} label="Subflow" />
-									</Tooltip>
-
-									<Tooltip title="Standalone is default. This has no impact on Shuffle as a system.">
-										<FormControlLabel value="standalone" control={<Radio />} label="Standalone" />
-									</Tooltip>
-
-								</RadioGroup>
+									options={[
+										{ value: "agentic", label: "Agentic", title: "Agentic workflows takes an input based on input questions (forms) and performs actions based on it by itself, using Large Action Models & Singul" },
+										{ value: "trigger", label: "Trigger", title: "Trigger workflows are typically running a schedule to get some data, doing some deduplication before sending it to a subflow or standalone workflow." },
+										{ value: "subflow", label: "Subflow", title: "Subflow workflows are typically used to subprocess some data, and in some cases return the result to the parent workflow." },
+										{ value: "standalone", label: "Standalone", title: "Standalone is default. This has no impact on Shuffle as a system." },
+									]}
+								/>
 							</FormControl>
 
 
