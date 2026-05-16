@@ -24,11 +24,10 @@ import {
   InputAdornment,
   MenuItem,
   Tooltip,
-  ToggleButton,
-  ToggleButtonGroup,
   Switch,
   Link,
 } from '@mui/material';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { useDatastore } from '@/hooks/useDatastore';
