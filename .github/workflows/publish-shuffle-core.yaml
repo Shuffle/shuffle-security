@@ -1,0 +1,81 @@
+name: Publish Shuffle-Core
+
+on:
+  push:
+    tags:
+      - 'shuffle-core-v*' # e.g. shuffle-core-v0.1.0
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish (e.g. 0.1.0). If empty, uses tag.'
+        required: false
+        type: string
+      dry_run:
+        description: 'Pack only, do not publish'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # for npm provenance
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      # Resolve the version: workflow_dispatch input wins, else strip "shuffle-core-v" from the tag
+      - name: Resolve version
+        id: version
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#shuffle-core-v}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Publishing version: $VERSION"
+
+      # Translate package.tpl.json -> package.json with the resolved version
+      - name: Materialize package.json
+        working-directory: src/Shuffle-MCPs
+        run: |
+          node -e "
+            const fs = require('fs');
+            const tpl = JSON.parse(fs.readFileSync('package.tpl.json', 'utf8'));
+            tpl.version = '${{ steps.version.outputs.version }}';
+            fs.writeFileSync('package.json', JSON.stringify(tpl, null, 2) + '\n');
+          "
+          cat package.json
+
+      - name: Install library deps
+        working-directory: src/Shuffle-Core
+        run: npm install --no-package-lock
+
+      - name: Build library
+        working-directory: src/Shuffle-Core
+        run: npm run build
+
+      - name: Pack
+        working-directory: src/Shuffle-Core
+        run: npm pack
+
+      - name: Upload tarball artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: shuffle-core-${{ steps.version.outputs.version }}.tgz
+          path: src/Shuffle-Core/*.tgz
+
+      - name: Publish to npm
+        if: ${{ inputs.dry_run != true }}
+        working-directory: src/Shuffle-Core
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
