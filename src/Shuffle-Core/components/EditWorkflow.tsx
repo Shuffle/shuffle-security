@@ -1120,6 +1120,7 @@ const EditWorkflow = (props) => {
 											}}
 											label="Suborg Distribution"
 											fullWidth
+											MenuProps={selectMenuProps}
 										>
 											<MenuItem value="none">
 												None
