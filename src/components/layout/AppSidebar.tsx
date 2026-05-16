@@ -1067,6 +1067,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           <MenuItem
             component={Link}
             to="/usecases"
+            selected={location.pathname === '/usecases' || location.pathname.startsWith('/usecases/')}
             onClick={() => setUserMenuAnchor(null)}
             sx={{
               py: 1.25,
@@ -1075,6 +1076,8 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               fontSize: '0.875rem',
               color: 'hsl(var(--foreground))',
               '&:hover': { backgroundColor: 'hsl(var(--muted))' },
+              '&.Mui-selected': { backgroundColor: 'hsl(var(--muted))' },
+              '&.Mui-selected:hover': { backgroundColor: 'hsl(var(--muted))' },
             }}
           >
             <Activity size={18} style={{ color: 'hsl(var(--muted-foreground))' }} />
@@ -1083,6 +1086,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           <MenuItem
             component={Link}
             to="/onboarding"
+            selected={location.pathname === '/onboarding' || location.pathname.startsWith('/onboarding/')}
             onClick={() => setUserMenuAnchor(null)}
             sx={{
               py: 1.25,
@@ -1091,6 +1095,8 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               fontSize: '0.875rem',
               color: 'hsl(var(--foreground))',
               '&:hover': { backgroundColor: 'hsl(var(--muted))' },
+              '&.Mui-selected': { backgroundColor: 'hsl(var(--muted))' },
+              '&.Mui-selected:hover': { backgroundColor: 'hsl(var(--muted))' },
             }}
           >
             <RocketLaunchIcon size={18} style={{ color: 'hsl(var(--muted-foreground))' }} />
@@ -1100,6 +1106,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           <MenuItem
             component={Link}
             to="/admin"
+            selected={location.pathname === '/admin' || location.pathname.startsWith('/admin/')}
             onClick={() => setUserMenuAnchor(null)}
             sx={{
               py: 1.25,
@@ -1108,6 +1115,8 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               fontSize: '0.875rem',
               color: 'hsl(var(--foreground))',
               '&:hover': { backgroundColor: 'hsl(var(--muted))' },
+              '&.Mui-selected': { backgroundColor: 'hsl(var(--muted))' },
+              '&.Mui-selected:hover': { backgroundColor: 'hsl(var(--muted))' },
             }}
           >
             <AdminPanelSettingsIcon size={18} style={{ color: 'hsl(var(--muted-foreground))' }} />
@@ -1116,6 +1125,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           <MenuItem
             component={Link}
             to="/preferences"
+            selected={location.pathname === '/preferences' || location.pathname.startsWith('/preferences/')}
             onClick={() => setUserMenuAnchor(null)}
             sx={{
               py: 1.25,
@@ -1124,6 +1134,8 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               fontSize: '0.875rem',
               color: 'hsl(var(--foreground))',
               '&:hover': { backgroundColor: 'hsl(var(--muted))' },
+              '&.Mui-selected': { backgroundColor: 'hsl(var(--muted))' },
+              '&.Mui-selected:hover': { backgroundColor: 'hsl(var(--muted))' },
             }}
           >
             <TuneIcon size={18} style={{ color: 'hsl(var(--muted-foreground))' }} />
@@ -1132,6 +1144,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           <MenuItem
             component={Link}
             to="/settings"
+            selected={location.pathname === '/settings' || location.pathname.startsWith('/settings/')}
             onClick={() => setUserMenuAnchor(null)}
             sx={{
               py: 1.25,
@@ -1140,6 +1153,8 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
               fontSize: '0.875rem',
               color: 'hsl(var(--foreground))',
               '&:hover': { backgroundColor: 'hsl(var(--muted))' },
+              '&.Mui-selected': { backgroundColor: 'hsl(var(--muted))' },
+              '&.Mui-selected:hover': { backgroundColor: 'hsl(var(--muted))' },
             }}
           >
             <SettingsIcon size={18} style={{ color: 'hsl(var(--muted-foreground))' }} />
