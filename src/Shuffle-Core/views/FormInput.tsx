@@ -1188,6 +1188,11 @@ const FormInput = (defaultprops: any) => {
 
 		if (props.match.params.key === undefined) {
   			setExplorerUi(true)
+			// Reset any per-workflow state left over from /forms/:id so the
+			// list view does not get stuck on a stale loader after a redirect.
+			setWorkflow({})
+			setMessage("")
+			setRealtimeMarkdown("")
 
 			if (isLoggedIn && userdata?.active_org?.id) {
 				loadForms(userdata?.active_org?.id)
@@ -1195,8 +1200,9 @@ const FormInput = (defaultprops: any) => {
 			}
 
 			return
-		} 
+		}
 
+		setExplorerUi(false)
 		getWorkflow(props.match.params.key, sourceNode) 
 		if (execution_id !== undefined && execution_id !== null && authorization !== undefined && authorization !== null) {
 			fetchUpdates(execution_id, authorization, true)
@@ -1205,7 +1211,7 @@ const FormInput = (defaultprops: any) => {
 		if (answer !== undefined && answer !== null) {
 			console.log("Got answer: ", answer)
 		}
-	}, [isLoaded])
+	}, [isLoaded, props.match.params.key])
 
 	useEffect(() => {
 		if (executionData === undefined || executionData === null || (typeof executionData === 'object' && Object.keys(executionData).length === 0)) {
