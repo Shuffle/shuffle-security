@@ -71,3 +71,76 @@ export type {
   CustomStyles,
   ShuffleMCPProps,
 } from './shuffle-mcp.helpers';
+
+// ---------------------------------------------------------------------------
+// Re-exports consumed by @shuffleio/shuffle-core (and other downstream apps).
+// Keep this block in sync when Shuffle-Core starts importing new symbols.
+// ---------------------------------------------------------------------------
+
+// AgentIcon
+export { default as AgentIcon } from './AgentIcon';
+
+// Auth configuration UI + types
+export { AppAuthConfig, AppAuthCard } from './AppAuthConfig';
+export type {
+  AuthStatus,
+  AppAuthState,
+  ApiAuthEntry,
+  AppAuthCardProps,
+} from './AppAuthConfig';
+
+// Datastore helpers
+export {
+  setRuntimeOrgId,
+  setDatastoreItem,
+  setDatastoreItems,
+  getDatastoreItem,
+  getDatastoreItemPublic,
+  getDatastoreByCategory,
+  deleteDatastoreItem,
+  deleteDatastoreItems,
+  DATASTORE_CATEGORIES,
+} from './datastore';
+export type {
+  DatastoreItem,
+  CategoryAutomation,
+  CategoryConfig,
+  DatastoreResponse,
+  DatastoreDiagnostics,
+} from './datastore';
+
+// Ingestion detection
+export {
+  EMAIL_APP_PATTERNS,
+  CASES_PATTERNS,
+  EDR_PATTERNS,
+  SIEM_PATTERNS,
+  THREAT_INTEL_PATTERNS,
+  COMMUNICATION_PATTERNS_NAMES,
+  VULN_SCANNER_PATTERNS,
+  INGEST_TICKETS_WORKFLOW_NAME,
+  FORWARD_TICKETS_WORKFLOW_NAME,
+  isEmailApp,
+  isThreatIntelApp,
+  isVulnScannerApp,
+  isIngestionApp,
+  normalizeAppName,
+  getIngestionCategory,
+  extractWorkflowAppNames,
+  extractValidatedIngestionApps,
+  findIngestTicketsWorkflow,
+  findForwardTicketsWorkflow,
+  isWorkflowScheduleStopped,
+} from './ingestionDetection';
+export type {
+  IngestionCategory,
+  ValidatedIngestionApp,
+} from './ingestionDetection';
+
+// Apps cache
+export {
+  fetchApps,
+  fetchAppsViaApiConfig,
+  invalidateAppsCache,
+} from './appsCache';
+export type { FetchAppsOptions } from './appsCache';
