@@ -285,6 +285,39 @@ export const AutomationConfig = ({
   const [newFeedUrl, setNewFeedUrl] = useState('');
   const [newFeedName, setNewFeedName] = useState('');
 
+  // Activated apps from /api/v1/apps — mirrors the source set used by the
+  // Integrations bar so the per-section app lists below stay in sync with
+  // what the user actually sees there.
+  const [activatedApps, setActivatedApps] = useState<Array<{ id: string; name: string; image: string; categories: string[] }>>([]);
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const apps = await fetchAppsViaApiConfig();
+        if (cancelled || !Array.isArray(apps)) return;
+        setActivatedApps(
+          apps
+            .filter((a: any) => a?.activated && a?.name)
+            .map((a: any) => ({
+              id: a.id || a.name,
+              name: a.name,
+              image: a.large_image || a.image_url || '',
+              categories: Array.isArray(a.categories) ? a.categories : [],
+            })),
+        );
+      } catch {
+        // non-critical
+      }
+    };
+    load();
+    const handler = () => load();
+    window.addEventListener('integrations-changed', handler);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('integrations-changed', handler);
+    };
+  }, []);
+
   // Create a set of selected app names (normalized) for quick lookup
   const selectedAppNames = useMemo(() => {
     const names = new Set<string>();
