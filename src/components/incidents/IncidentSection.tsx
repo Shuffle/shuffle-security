@@ -101,7 +101,7 @@ export const IncidentSection = forwardRef<HTMLDivElement, IncidentSectionProps>(
       ref={ref}
       {...(dataTour ? { 'data-tour': dataTour } : {})}
       sx={{
-        bgcolor: 'hsl(var(--card))',
+        bgcolor: variant === 'transparent' ? 'transparent' : 'hsl(var(--card))',
         borderRadius: 2,
         border: '1px solid hsl(var(--border))',
         overflow: 'hidden',
