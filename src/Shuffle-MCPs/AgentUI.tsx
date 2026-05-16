@@ -114,6 +114,7 @@ const deepParseJsonStrings = (obj: any, depth = 0): any => {
   return obj;
 };
 
+import { motion, LayoutGroup } from 'framer-motion';
 import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
 import AppDetailDrawer from '@/Shuffle-MCPs/AppDetailDrawer';
@@ -2417,36 +2418,52 @@ const AgentUI: React.FC<AgentUIProps> = ({
       zIndex: 5,
       boxShadow: '0 4px 16px rgba(0,0,0,0.25)',
     }}>
-      <Box sx={{ display: 'inline-flex', gap: 0.25, p: 0.25, borderRadius: 999, bgcolor: 'hsl(var(--muted) / 0.6)' }}>
-        {(['start', 'simple', 'detailed'] as TabKey[]).map((t) => {
-          const active = activeTab === t;
-          const label = t === 'start' ? 'Start' : t === 'simple' ? 'Simple' : 'Detailed';
-          const disabled = (t === 'start' && disableStartTab) || ((t === 'simple' || t === 'detailed') && !hasExecution);
-          return (
-            <Box
-              key={t}
-              component="button"
-              type="button"
-              onClick={() => { if (!disabled) goToTab(t); }}
-              disabled={disabled}
-              sx={{
-                all: 'unset', cursor: disabled ? 'not-allowed' : 'pointer',
-                px: 1.75, py: 0.5,
-                borderRadius: 999,
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                color: active ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))',
-                bgcolor: active ? 'hsl(var(--primary))' : 'transparent',
-                opacity: disabled ? 0.4 : 1,
-                transition: 'background 0.12s ease, color 0.12s ease',
-                '&:hover': (active || disabled) ? {} : { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted))' },
-              }}
-            >
-              {label}
-            </Box>
-          );
-        })}
-      </Box>
+      <LayoutGroup id="agentui-view-switcher">
+        <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25, p: 0.5, borderRadius: 999, border: '1px solid hsl(var(--border))', bgcolor: 'transparent' }}>
+          {(['start', 'simple', 'detailed'] as TabKey[]).map((t) => {
+            const active = activeTab === t;
+            const label = t === 'start' ? 'Start' : t === 'simple' ? 'Simple' : 'Detailed';
+            const disabled = (t === 'start' && disableStartTab) || ((t === 'simple' || t === 'detailed') && !hasExecution);
+            return (
+              <Box
+                key={t}
+                component="button"
+                type="button"
+                onClick={() => { if (!disabled) goToTab(t); }}
+                disabled={disabled}
+                sx={{
+                  all: 'unset', cursor: disabled ? 'not-allowed' : 'pointer',
+                  position: 'relative',
+                  px: 1.75, py: 0.75,
+                  borderRadius: 999,
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  color: active ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
+                  opacity: disabled ? 0.4 : 1,
+                  transition: 'color 0.3s ease',
+                  '&:hover': (active || disabled) ? {} : { color: 'hsl(var(--foreground))' },
+                }}
+              >
+                {active && (
+                  <motion.span
+                    layoutId="agentui-view-switcher-pill"
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      borderRadius: 999,
+                      background: 'hsl(var(--muted))',
+                      border: '1px solid hsl(var(--border))',
+                    }}
+                    initial={false}
+                    transition={{ type: 'spring', stiffness: 260, damping: 30 }}
+                  />
+                )}
+                <Box component="span" sx={{ position: 'relative', zIndex: 1 }}>{label}</Box>
+              </Box>
+            );
+          })}
+        </Box>
+      </LayoutGroup>
       <Tooltip title="Reload execution data">
         <span>
           <IconButton
