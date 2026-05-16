@@ -2118,6 +2118,7 @@ const FormInput = (defaultprops: any) => {
 
 				expanded={true}
 				setRealtimeMarkdown={setRealtimeMarkdown}
+				setRealtimeInputQuestions={setInputQuestions}
 				boxWidth={boxWidth}
 				setBoxWidth={setBoxWidth}
 				scrollTo={"form_fill"}
