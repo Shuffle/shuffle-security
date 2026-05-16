@@ -180,7 +180,11 @@ export const useAgentReadiness = (): AgentReadinessStatus => {
 
       // Step 2: wire up the "Run workflow" automation on the incidents category.
       // Re-fetch latest config so we don't clobber other automations.
-      const latestConfig = await fetchIncidentsCategoryConfig();
+      const latestFetched = await fetchIncidentsCategoryConfig();
+      const latestConfig: CategoryConfig | null =
+        latestFetched === CATEGORY_CONFIG_MISSING
+          ? null
+          : ((latestFetched as CategoryConfig | null | undefined) ?? null);
       const existing = latestConfig?.automations || [];
       const existingByName = new Map(existing.map((a) => [a.name, a]));
 
