@@ -13,6 +13,8 @@ const footerLinks = {
     { label: 'Detection Pipelines', href: '/detection' },
     { label: 'Host Monitors', href: '/monitors' },
     { label: 'Infrastructure', href: '/infrastructure' },
+    { label: 'Shuffle Core', href: 'https://github.com/shuffle/shuffle' },
+    { label: 'Shuffle MCPs Demo', href: 'https://github.com/shuffle/shuffle-mcps-demo' },
   ],
   Resources: [
     { label: 'Documentation', href: '/docs' },
