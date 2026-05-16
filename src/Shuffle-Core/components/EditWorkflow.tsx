@@ -312,7 +312,7 @@ const EditWorkflow = (props) => {
 					//minWidth: isMobile ? "90%" : newWorkflow === true ? 1000 : 550,
 					//maxWidth: isMobile ? "90%" : newWorkflow === true ? 1000 : 550,
 		    		borderRadius: `${theme.palette.DialogStyle.borderRadius}px 0 0 ${theme.palette.DialogStyle.borderRadius}px`,
-		    		backgroundColor: "hsl(var(--card))",
+		    		backgroundColor: themeMode === "dark" ? "hsl(0 0% 6%)" : "hsl(var(--card))",
 		    		borderLeft: "1px solid hsl(var(--border))",
 				},
 			}}
