@@ -977,15 +977,15 @@ export const AppAuthCard = ({
     <motion.div variants={itemVariants} style={{ width: '100%', maxWidth: '100%' }}>
       <Card
         sx={{
-          background: 'hsl(var(--card) / 0.9)',
-          border: '2px solid',
+          background: 'transparent',
+          border: '1px solid',
           borderColor: isTested
             ? 'hsl(var(--severity-low) / 0.5)'
             : authState.status === 'error'
             ? 'hsl(var(--destructive) / 0.3)'
-            : 'hsl(var(--severity-medium) / 0.3)',
+            : 'hsl(var(--border))',
           borderRadius: 3,
-          backdropFilter: 'blur(10px)',
+          boxShadow: 'none',
           overflow: 'hidden',
           transition: 'all 0.3s ease',
           width: '100%',
