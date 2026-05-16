@@ -13,13 +13,13 @@ export const ProductChoiceStep = ({ onSelectCore, onSelectSecurity }: ProductCho
       <div className="w-full max-w-4xl">
         <div className="mb-12 text-center">
           <p className="mb-3 text-sm font-medium uppercase tracking-widest text-primary">
-            Step 1 — Choose your product
+            Welcome to Shuffle
           </p>
           <h1 className="mb-4 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-            Welcome to Shuffle
+            What are you here to do?
           </h1>
           <p className="mx-auto max-w-xl text-base text-muted-foreground">
-            Pick where you want to start. You always have access to both.
+            You always have access to both. Pick the one you want to start with.
           </p>
         </div>
 
