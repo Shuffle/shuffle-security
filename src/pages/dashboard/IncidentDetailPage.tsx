@@ -6156,7 +6156,7 @@ const IncidentDetailPage = () => {
           gap: 2,
           p: 2,
           borderRadius: 2,
-          bgcolor: 'hsl(var(--card))',
+          bgcolor: 'transparent',
           border: '1px solid hsl(var(--border))',
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: { xs: '100%', sm: 'auto' }, flex: { sm: 1 }, minWidth: 0 }}>
