@@ -7280,7 +7280,7 @@ const IncidentDetailPage = () => {
             <IncidentSection
               title="Timeline"
               icon={HistoryIcon}
-              variant="transparent"
+              
               open={!timelineCollapsed}
               onOpenChange={(o) => setTimelineCollapsed(!o)}
               badge={renderTimelineBadge()}

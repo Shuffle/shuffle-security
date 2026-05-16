@@ -67,7 +67,7 @@ export const IncidentSection = forwardRef<HTMLDivElement, IncidentSectionProps>(
   bodyPadded = true,
   dataTour,
   sx,
-  variant = 'filled',
+  variant = 'transparent',
 }, ref) => {
   const [internalOpen, setInternalOpen] = useState<boolean>(() => {
     if (!storageKey || typeof window === 'undefined') return defaultOpen;
