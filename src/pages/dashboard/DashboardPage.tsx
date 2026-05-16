@@ -280,7 +280,7 @@ const NotificationRow = ({ notification, entityBasePath, onApprove, onQuickView,
         py: 2,
         borderRadius: 2,
         border: '1px solid hsl(var(--border))',
-        backgroundColor: 'hsl(var(--card))',
+        backgroundColor: 'transparent',
         cursor: 'pointer',
         transition: 'border-color 0.15s ease, background-color 0.15s ease',
         '&:hover': {
