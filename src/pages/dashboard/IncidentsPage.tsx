@@ -3145,7 +3145,7 @@ const IncidentsPage = () => {
                 px: 2,
                 py: 1.5,
                 borderRadius: 2,
-                backgroundColor: showIrrelevant ? 'rgba(107, 114, 128, 0.15)' : 'hsl(var(--card))',
+                backgroundColor: showIrrelevant ? 'rgba(107, 114, 128, 0.15)' : 'transparent',
                 border: '1px solid',
                 borderColor: showIrrelevant ? 'rgba(107, 114, 128, 0.4)' : 'hsl(var(--border))',
                 cursor: 'pointer',
