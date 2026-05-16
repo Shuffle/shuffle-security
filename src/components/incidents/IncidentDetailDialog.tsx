@@ -1,3 +1,4 @@
+import { CheckCircle2 as CheckCircleIcon, Save as SaveIcon, Plus as AddIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { htmlToPlainText } from '@/lib/utils';
 import {
@@ -20,9 +21,6 @@ import {
   FormControlLabel,
   Switch,
 } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import SaveIcon from '@mui/icons-material/Save';
-import AddIcon from '@mui/icons-material/Add';
 import { 
   OCSFIncidentFinding, 
   Observable, 

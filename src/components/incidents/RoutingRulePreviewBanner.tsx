@@ -19,12 +19,9 @@
  *   - add_comment       → calls onApply({ addComment: value })
  *   - set_priority/set_field — listed read-only (no canonical setter on the page yet).
  */
+import { X as CloseIcon, GitBranch as CallSplitIcon, ChevronDown as ExpandMoreIcon, ChevronUp as ExpandLessIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Box, Typography, Button, IconButton, Stack, Tooltip, Chip } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import CallSplitIcon from '@mui/icons-material/CallSplit';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useDatastore } from '@/hooks/useDatastore';
 import {
   ROUTING_DATASTORE_CATEGORY,

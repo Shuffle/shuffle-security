@@ -1,3 +1,4 @@
+import { Save as SaveIcon } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -14,7 +15,6 @@ import {
   Select,
   MenuItem,
 } from '@mui/material';
-import { Save as SaveIcon } from '@mui/icons-material';
 import { toast } from '@/lib/toast';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { useAuth } from '@/context/AuthContext';

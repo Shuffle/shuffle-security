@@ -1,3 +1,4 @@
+import { ChevronDown as ExpandMoreIcon, Plus as AddIcon, ArrowLeftRight as SwapIcon } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
@@ -22,11 +23,6 @@ import {
   TextField,
   Chip,
 } from '@mui/material';
-import {
-  ExpandMore as ExpandMoreIcon,
-  Add as AddIcon,
-  SwapHoriz as SwapIcon,
-} from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from '@/lib/toast';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';

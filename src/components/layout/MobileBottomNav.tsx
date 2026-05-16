@@ -1,9 +1,6 @@
 import { useLocation, Link } from 'react-router-dom';
 import { Box, Typography } from '@mui/material';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import RadarIcon from '@mui/icons-material/Radar';
-import SettingsIcon from '@mui/icons-material/Settings';
-import { Activity } from 'lucide-react';
+import { Activity, AlertTriangle as WarningAmberIcon, Radar as RadarIcon, Settings as SettingsIcon } from 'lucide-react';
 import { useEntityPreference } from '@/hooks/useEntityLabel';
 
 const MobileBottomNavInner = () => {

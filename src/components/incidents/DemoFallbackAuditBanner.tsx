@@ -10,11 +10,9 @@
  * see DEMO_IOC_AUDIT_KEY for the schema. This banner is read-only.
  */
 
+import { ChevronDown as ExpandMoreIcon, ChevronUp as ExpandLessIcon, FlaskConical as ScienceIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Box, Typography, Collapse, IconButton, Chip } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import ScienceIcon from '@mui/icons-material/Science';
 import { DEMO_IOC_AUDIT_KEY, type DemoIocAudit } from '@/services/demoMode';
 
 const REASON_LABELS: Record<string, string> = {

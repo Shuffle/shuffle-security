@@ -1,3 +1,4 @@
+import { Search as SearchIcon, Wand2 as AutoFixHighIcon, RefreshCw as RefreshIcon, Plus as AddIcon, Pencil as EditIcon, Play as PlayArrowIcon, Square as StopIcon, Trash2 as DeleteIcon, Copy as ContentCopyIcon, Rocket as RocketLaunchIcon, AlertTriangle as WarningAmberIcon, Eye as VisibilityIcon, Database as StorageIcon } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
@@ -19,19 +20,6 @@ import {
   MenuItem,
   Alert,
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import StopIcon from '@mui/icons-material/Stop';
-import DeleteIcon from '@mui/icons-material/Delete';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import StorageIcon from '@mui/icons-material/Storage';
 import { toast } from '@/lib/toast';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { getApiUrl, getAuthHeader, API_CONFIG } from '@/Shuffle-MCPs/api';

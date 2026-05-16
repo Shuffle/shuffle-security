@@ -6,6 +6,7 @@
  * Refactored to use the shared useAppAuthFlow hook.
  */
 
+import { X as CloseIcon, ArrowLeft as ArrowBackIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import {
   Box,
@@ -13,8 +14,6 @@ import {
   IconButton,
   CircularProgress,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Dialog,

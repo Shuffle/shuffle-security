@@ -1,3 +1,4 @@
+import { Plus as AddIcon, Trash2 as DeleteIcon, Pencil as EditIcon, Search as SearchIcon, RefreshCw as RefreshIcon, Rss as RssFeedIcon, ExternalLink as OpenInNewIcon } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import {
   Box,
@@ -26,13 +27,6 @@ import {
   MenuItem,
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import SearchIcon from '@mui/icons-material/Search';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import RssFeedIcon from '@mui/icons-material/RssFeed';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { useThreatFeeds, ThreatFeed, DEFAULT_THREAT_FEEDS } from '@/hooks/useThreatFeeds';
 import { useIOCTypes } from '@/hooks/useIOCTypes';
 import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';

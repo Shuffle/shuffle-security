@@ -1,3 +1,4 @@
+import { CheckCircle2 as CheckCircleIcon, Circle as RadioButtonUncheckedIcon, Radio as SensorsIcon, Gavel as RuleIcon, Play as PlayArrowIcon, Database as StorageIcon, ChevronDown as ExpandMoreIcon, ChevronUp as ExpandLessIcon, ArrowRight as ArrowForwardIcon, Plus as AddIcon, Rocket as RocketLaunchIcon } from 'lucide-react';
 import { useState, useEffect, forwardRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -20,22 +21,11 @@ import {
   DialogContent,
   DialogActions,
 } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
-import SensorsIcon from '@mui/icons-material/Sensors';
-import RuleIcon from '@mui/icons-material/Rule';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import StorageIcon from '@mui/icons-material/Storage';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import AddIcon from '@mui/icons-material/Add';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 import { DeploymentInstructions } from '@/components/detection/DeploymentInstructions';
 import WebhookStatusBanner from '@/components/detection/WebhookStatusBanner';
 import ProductionPipelineStatus from '@/components/detection/ProductionPipelineStatus';
-import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import azureLogo from '@/assets/azure-logo.png';
 import gcpLogo from '@/assets/gcp-logo.png';
 import awsLogo from '@/assets/aws-logo.png';

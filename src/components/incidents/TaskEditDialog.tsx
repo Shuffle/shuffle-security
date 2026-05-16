@@ -1,3 +1,4 @@
+import { X as CloseIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, CheckCircle2 as CheckCircleIcon, Circle as RadioButtonUncheckedIcon, Trash as DeleteOutlineIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Dialog,
@@ -15,12 +16,6 @@ import {
   MenuItem,
   Divider,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { IncidentTask, taskCategories } from '@/config/ocsfIncidentSchema';
 import { TaskAssigneeChip } from './TaskAssigneeChip';
 import { TaskDateTimePicker } from './TaskDateTimePicker';

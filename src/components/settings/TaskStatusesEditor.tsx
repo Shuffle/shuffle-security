@@ -8,6 +8,7 @@
  *     even if users rename a lane (the `done` key is preserved as-is).
  *   - At least 2 lanes must exist (one open + done).
  */
+import { Trash as DeleteOutlineIcon, Plus as AddIcon, RotateCcw as RestartAltIcon, GripVertical as DragIndicatorIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import {
   Box,
@@ -17,10 +18,6 @@ import {
   Button,
   Tooltip,
 } from '@mui/material';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import AddIcon from '@mui/icons-material/Add';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import {
   TaskStatusOption,
   DEFAULT_TASK_STATUSES,

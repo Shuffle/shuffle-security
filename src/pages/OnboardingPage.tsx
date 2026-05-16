@@ -1,3 +1,4 @@
+import { ArrowRight as ArrowForwardIcon, ArrowLeft as ArrowBackIcon, CheckCircle as CheckCircleOutlineIcon, Hand as WavingHandIcon, Link as LinkIcon, Key as VpnKeyIcon, Rocket as RocketLaunchIcon } from 'lucide-react';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Box, Container, Typography, Button, Stack } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,14 +9,6 @@ import { UnifiedSourceSetup } from '@/components/onboarding/UnifiedSourceSetup';
 import type { AlgoliaSearchApp } from '@/Shuffle-MCPs';
 import { AppAuthConfig, AppAuthState, AuthStatus } from '@/Shuffle-MCPs/AppAuthConfig';
 import { AutomationConfig, EnrichmentState } from '@/components/onboarding/AutomationConfig';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import WavingHandIcon from '@mui/icons-material/WavingHand';
-
-import LinkIcon from '@mui/icons-material/Link';
-import VpnKeyIcon from '@mui/icons-material/VpnKey';
-import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { setDatastoreItem, getDatastoreItem } from '@/Shuffle-MCPs/datastore';
 import {

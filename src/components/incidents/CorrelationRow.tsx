@@ -1,8 +1,6 @@
+import { AlertTriangle as WarningAmberIcon, Eye as VisibilityIcon, EyeOff as VisibilityOffIcon } from 'lucide-react';
 import { useState } from 'react';
 import { Box, Typography, Chip, Tooltip, Popover, IconButton } from '@mui/material';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import IncidentCorrelationPreview from './IncidentCorrelationPreview';
 import CorrelationContextStrip from './CorrelationContextStrip';
 

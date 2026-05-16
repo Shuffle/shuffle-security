@@ -25,6 +25,7 @@
  *   />
  */
 
+import { X as CloseIcon, Maximize2 as OpenInFullIcon } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import {
   Box,
@@ -39,9 +40,6 @@ import {
   Typography,
   type TextFieldProps,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import OpenInFullIcon from '@mui/icons-material/OpenInFull';
-
 export type PopupTextEditorSyntax = 'plain' | 'yaml' | 'json' | 'markdown';
 
 export interface PopupTextEditorProps {

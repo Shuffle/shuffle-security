@@ -1,3 +1,4 @@
+import { MoreVertical as MoreVertIcon, Link as LinkIcon, RefreshCw as RefreshIcon, Forward as ForwardIcon, GitMerge as CallMergeIcon, CheckCircle2 as CheckCircleIcon, Settings as SettingsIcon, X as CloseIcon } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -15,15 +16,6 @@ import {
   CircularProgress,
   Avatar,
 } from '@mui/material';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import LinkIcon from '@mui/icons-material/Link';
-
-import RefreshIcon from '@mui/icons-material/Refresh';
-import ForwardIcon from '@mui/icons-material/Forward';
-import CallMergeIcon from '@mui/icons-material/CallMerge';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import SettingsIcon from '@mui/icons-material/Settings';
-import CloseIcon from '@mui/icons-material/Close';
 import { toast } from '@/lib/toast';
 
 import { DATASTORE_CATEGORIES, getDatastoreItem, setDatastoreItem } from '@/Shuffle-MCPs/datastore';

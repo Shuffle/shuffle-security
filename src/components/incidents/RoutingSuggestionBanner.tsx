@@ -23,10 +23,8 @@
  * Standalone: takes the incident shape it needs as props plus an updater
  * callback. No knowledge of the page that hosts it.
  */
+import { X as CloseIcon, GitBranch as CallSplitIcon } from 'lucide-react';
 import { Box, Typography, Button, IconButton, Tooltip } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import CallSplitIcon from '@mui/icons-material/CallSplit';
-
 export interface RoutingSuggestion {
   ruleId: string;
   ruleName: string;

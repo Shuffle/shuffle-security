@@ -20,25 +20,9 @@ import {
   MenuItem,
   CircularProgress,
 } from '@mui/material';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import PeopleIcon from '@mui/icons-material/People';
-import BusinessIcon from '@mui/icons-material/Business';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import ExpandLess from '@mui/icons-material/ExpandLess';
-import ExpandMore from '@mui/icons-material/ExpandMore';
-import SearchIcon from '@mui/icons-material/Search';
-import SettingsIcon from '@mui/icons-material/Settings';
-import DescriptionIcon from '@mui/icons-material/Description';
-import FingerprintIcon from '@mui/icons-material/Fingerprint';
-import TuneIcon from '@mui/icons-material/Tune';
-import RssFeedIcon from '@mui/icons-material/RssFeed';
-import RadarIcon from '@mui/icons-material/Radar';
-import { Activity, Sun, Moon, Monitor, Shield, Radar, Users } from 'lucide-react';
+import { Activity, Sun, Moon, Monitor, Shield, Radar, Users, AlertTriangle as WarningAmberIcon, Users as PeopleIcon, Building2 as BusinessIcon, ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, ChevronUp as ExpandLess, ChevronDown as ExpandMore, Search as SearchIcon, Settings as SettingsIcon, FileText as DescriptionIcon, Fingerprint as FingerprintIcon, SlidersHorizontal as TuneIcon, Rss as RssFeedIcon, Radar as RadarIcon, LogOut as LogoutIcon, ShieldCheck as AdminPanelSettingsIcon } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
-import LogoutIcon from '@mui/icons-material/Logout';
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { SHUFFLE_AUTOMATION_URL } from '@/Shuffle-MCPs/api';
 import { IntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
 import { SidebarSearchDialog } from './SidebarSearchDialog';

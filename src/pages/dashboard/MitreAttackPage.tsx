@@ -1,3 +1,4 @@
+import { Search as SearchIcon, RefreshCw as SyncIcon, Network as AccountTreeIcon, ExternalLink as OpenInNewIcon } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -14,10 +15,6 @@ import {
   LinearProgress,
   Alert,
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import SyncIcon from '@mui/icons-material/Sync';
-import AccountTreeIcon from '@mui/icons-material/AccountTree';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { toast } from '@/lib/toast';
 import { useMitreAttack } from '@/hooks/useMitreAttack';
 import { Skeleton } from '@/components/ui/skeleton';

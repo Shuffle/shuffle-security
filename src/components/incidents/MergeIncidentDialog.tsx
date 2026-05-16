@@ -1,3 +1,4 @@
+import { Search as SearchIcon, GitMerge as MergeIcon, CheckCircle2 as CheckCircleIcon, ArrowRight as ArrowForwardIcon, AlertTriangle as WarningAmberIcon } from 'lucide-react';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Box,
@@ -19,11 +20,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import SearchIcon from '@mui/icons-material/Search';
-import MergeIcon from '@mui/icons-material/CallMerge';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { getDatastoreByCategory, setDatastoreItem, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import { mapOCSFSeverity, mapOCSFStatus, Observable } from '@/config/ocsfIncidentSchema';
 import { severityColors, statusConfig } from '@/config/incidentConfig';

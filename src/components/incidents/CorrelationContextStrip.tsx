@@ -14,9 +14,9 @@
  * dimension of relevance. A correlated incident from yesterday at Critical
  * severity is materially different from one from 8 months ago at Low.
  */
+import { Clock as ScheduleIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Box, Typography, Chip, CircularProgress, Tooltip } from '@mui/material';
-import ScheduleIcon from '@mui/icons-material/Schedule';
 import { getDatastoreItem } from '@/Shuffle-MCPs/datastore';
 
 interface CorrelationContextStripProps {

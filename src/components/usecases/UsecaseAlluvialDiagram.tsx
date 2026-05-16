@@ -10,13 +10,8 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { algoliasearch } from 'algoliasearch';
 import { Box, Typography, Avatar, Tooltip, IconButton, Chip, Popover, Button, Dialog, InputBase } from '@mui/material';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import BlockIcon from '@mui/icons-material/Block';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CheckIcon from '@mui/icons-material/Check';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Plus, Webhook } from 'lucide-react';
+import { Plus, Webhook, ExternalLink as OpenInNewIcon, Ban as BlockIcon, CheckCircle as CheckCircleOutlineIcon, Copy as ContentCopyIcon, Check as CheckIcon } from 'lucide-react';
 import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
 import { useAuth } from '@/context/AuthContext';
 import { useAppDetail } from '@/Shuffle-MCPs/AppDetailContext';

@@ -1,3 +1,4 @@
+import { Plus as AddIcon, Trash2 as DeleteIcon, Pencil as EditIcon } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import {
   Box,
@@ -25,9 +26,6 @@ import {
   InputLabel,
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
 import { useDatastore } from '@/hooks/useDatastore';
 
 import { DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';

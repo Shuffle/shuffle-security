@@ -1,3 +1,4 @@
+import { Search as SearchIcon, Bell as NotificationsIcon, Settings as SettingsIcon, User as PersonIcon, LogOut as LogoutIcon, HelpCircle as HelpOutlineIcon } from 'lucide-react';
 import {
   AppBar,
   Toolbar,
@@ -14,12 +15,6 @@ import {
 } from '@mui/material';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import SearchIcon from '@mui/icons-material/Search';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import SettingsIcon from '@mui/icons-material/Settings';
-import PersonIcon from '@mui/icons-material/Person';
-import LogoutIcon from '@mui/icons-material/Logout';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { useEntityText } from '@/hooks/useEntityLabel';
 
 interface AppHeaderProps {

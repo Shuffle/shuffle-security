@@ -1,3 +1,4 @@
+import { Search as SearchIcon, RefreshCw as RefreshIcon, Upload as UploadIcon, Trash2 as DeleteIcon, Eye as VisibilityIcon, Shield as SecurityIcon, Download as DownloadIcon, Plus as AddIcon, Pencil as EditIcon, Wand2 as AutoFixHighIcon, CloudDownload as CloudDownloadIcon, AlertTriangle as WarningAmberIcon } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
@@ -16,18 +17,6 @@ import {
   DialogContent,
   DialogActions,
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import UploadIcon from '@mui/icons-material/Upload';
-import DeleteIcon from '@mui/icons-material/Delete';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import SecurityIcon from '@mui/icons-material/Security';
-import DownloadIcon from '@mui/icons-material/Download';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { toast } from '@/lib/toast';
 import { askAI } from '@/services/ai';
 import { deleteFile, getFileDownloadUrl, formatFileSize, ShuffleFile, createAndUploadFile } from '@/services/files';

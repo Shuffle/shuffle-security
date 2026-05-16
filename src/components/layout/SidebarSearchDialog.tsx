@@ -11,15 +11,7 @@ import {
   DialogContent,
 } from '@/components/ui/dialog';
 import { Box, Typography, InputBase, CircularProgress } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import RadarIcon from '@mui/icons-material/Radar';
-import DescriptionIcon from '@mui/icons-material/Description';
-import TuneIcon from '@mui/icons-material/Tune';
-import FingerprintIcon from '@mui/icons-material/Fingerprint';
-import RssFeedIcon from '@mui/icons-material/RssFeed';
-import SettingsIcon from '@mui/icons-material/Settings';
-import { Network, Braces, Waypoints, Link2, Workflow, Activity, BookOpen, LayoutDashboard, Shield, HardDrive, Radar, Users } from 'lucide-react';
+import { Network, Braces, Waypoints, Link2, Workflow, Activity, BookOpen, LayoutDashboard, Shield, HardDrive, Radar, Users, Search as SearchIcon, AlertTriangle as WarningAmberIcon, Radar as RadarIcon, FileText as DescriptionIcon, SlidersHorizontal as TuneIcon, Fingerprint as FingerprintIcon, Rss as RssFeedIcon, Settings as SettingsIcon } from 'lucide-react';
 import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { useWorkflows } from '@/hooks/useWorkflows';

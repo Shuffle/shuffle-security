@@ -1,3 +1,4 @@
+import { Home as HomeIcon, Settings as SettingsIcon, Server as DnsIcon, Radio as SensorsIcon, ExternalLink as OpenInNewIcon, AlertTriangle as ReportProblemIcon, Radar as RadarIcon, Download as DownloadIcon } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import {
   Box,
@@ -8,15 +9,6 @@ import {
   ListItemText,
   Typography,
 } from '@mui/material';
-import HomeIcon from '@mui/icons-material/Home';
-import SettingsIcon from '@mui/icons-material/Settings';
-import DnsIcon from '@mui/icons-material/Dns';
-import SensorsIcon from '@mui/icons-material/Sensors';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import ReportProblemIcon from '@mui/icons-material/ReportProblem';
-import RadarIcon from '@mui/icons-material/Radar';
-import DownloadIcon from '@mui/icons-material/Download';
-
 interface DocLink {
   label: string;
   slug: string;

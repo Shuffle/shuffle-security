@@ -16,31 +16,8 @@ import {
   Autocomplete,
   TextField,
 } from '@mui/material';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import RefreshIcon from '@mui/icons-material/Refresh';
 import { motion } from 'framer-motion';
-import {
-  AlertTriangle,
-  CheckCircle,
-  Loader2,
-  HelpCircle,
-  Clock,
-  MessageSquare,
-  ChevronRight,
-  Plug,
-  KeyRound,
-  ArrowDownToLine,
-  Send,
-  Radar,
-  Monitor,
-  Shield,
-  Sparkles,
-  Check,
-  ArrowRight,
-  ExternalLink,
-  EyeOff,
-  Undo2,
-} from 'lucide-react';
+import { AlertTriangle, CheckCircle, Loader2, HelpCircle, Clock, MessageSquare, ChevronRight, Plug, KeyRound, ArrowDownToLine, Send, Radar, Monitor, Shield, Sparkles, Check, ArrowRight, ExternalLink, EyeOff, Undo2, ExternalLink as OpenInNewIcon, RefreshCw as RefreshIcon } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import AgentQuestionDialog from '@/components/agent/AgentQuestionDialog';
 import AgentQuickViewDrawer, { type QuickViewItem } from '@/components/agent/AgentQuickViewDrawer';

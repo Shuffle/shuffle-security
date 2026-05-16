@@ -13,13 +13,9 @@ import {
   Tooltip,
   Chip,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CheckIcon from '@mui/icons-material/Check';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { useAuth } from '@/context/AuthContext';
 import { API_CONFIG } from '@/Shuffle-MCPs/api';
-import { Server } from 'lucide-react';
+import { Server, X as CloseIcon, Copy as ContentCopyIcon, Check as CheckIcon, ExternalLink as OpenInNewIcon } from 'lucide-react';
 import gcpLogo from '@/assets/gcp-logo.png';
 import awsLogo from '@/assets/aws-logo.png';
 import azureLogo from '@/assets/azure-logo.png';

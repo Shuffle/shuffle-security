@@ -1,3 +1,4 @@
+import { CheckCircle2 as CheckCircleIcon, Trash2 as DeleteIcon, ChevronDown as ExpandMoreIcon, ChevronUp as ExpandLessIcon } from 'lucide-react';
 import { useState } from 'react';
 import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import {
@@ -11,10 +12,6 @@ import {
   Collapse,
   LinearProgress,
 } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import DeleteIcon from '@mui/icons-material/Delete';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { useUsers } from '@/hooks/useUsers';
 import { MentionInput } from './MentionInput';
 import { TaskDateTimePicker } from './TaskDateTimePicker';

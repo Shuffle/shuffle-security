@@ -1,6 +1,5 @@
 import { Box, Typography, Chip, Checkbox, Skeleton, Tooltip, CircularProgress } from '@mui/material';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import { Tag } from 'lucide-react';
+import { Tag, RefreshCw as RefreshIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {

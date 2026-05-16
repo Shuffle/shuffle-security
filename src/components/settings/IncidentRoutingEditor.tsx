@@ -20,6 +20,7 @@
  *   Only meaningful on a parent org (tenants exist). The hosting page
  *   should hide this card when there are no sub-orgs.
  */
+import { Plus as AddIcon, Trash as DeleteOutlineIcon, Copy as ContentCopyIcon, ChevronDown as ExpandMoreIcon, ChevronUp as ExpandLessIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import {
   Box,
@@ -40,11 +41,6 @@ import {
   DialogContentText,
   DialogActions,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { toast } from '@/lib/toast';
 import { useDatastore } from '@/hooks/useDatastore';
 import { useSubOrgs } from '@/hooks/useSubOrgs';

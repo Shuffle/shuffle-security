@@ -3,6 +3,7 @@
  * Detects email content (From/To/Subject headers, forwarded chains, "On … wrote:" markers)
  * and displays them as a threaded conversation. Stays within OCSF class_uid 2005.
  */
+import { Mail as EmailIcon, Reply as ReplyIcon, ChevronDown as ExpandMoreIcon, ChevronUp as ExpandLessIcon, Send as SendIcon, Forward as ForwardIcon, Paperclip as AttachFileIcon, User as PersonIcon, ExternalLink as OpenInNewIcon, X as CloseIcon, GripVertical as DragIndicatorIcon } from 'lucide-react';
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useDemo, TOUR_STEPS } from '@/context/DemoContext';
@@ -19,17 +20,6 @@ import {
   Divider,
   Stack,
 } from '@mui/material';
-import EmailIcon from '@mui/icons-material/Email';
-import ReplyIcon from '@mui/icons-material/Reply';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import SendIcon from '@mui/icons-material/Send';
-import ForwardIcon from '@mui/icons-material/Forward';
-import AttachFileIcon from '@mui/icons-material/AttachFile';
-import PersonIcon from '@mui/icons-material/Person';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import CloseIcon from '@mui/icons-material/Close';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import DOMPurify from 'dompurify';
 
 // Force every anchor in sanitized HTML to open in a new tab with safe rel.

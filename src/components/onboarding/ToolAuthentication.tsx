@@ -1,3 +1,4 @@
+import { ChevronDown as ExpandMoreIcon, CheckCircle2 as CheckCircleIcon, AlertCircle as ErrorIcon } from 'lucide-react';
 import { useState } from 'react';
 import {
   Box,
@@ -13,9 +14,6 @@ import {
   IconButton,
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorIcon from '@mui/icons-material/Error';
 import type { AlgoliaSearchApp } from '@/Shuffle-MCPs';
 
 export type AuthStatus = 'pending' | 'testing' | 'connected' | 'error';

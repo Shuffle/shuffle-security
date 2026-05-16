@@ -1,3 +1,4 @@
+import { Search as SearchIcon, Plus as AddIcon, Wrench as BuildIcon } from 'lucide-react';
 import { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Box,
@@ -11,9 +12,6 @@ import {
   Divider,
   Button,
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import AddIcon from '@mui/icons-material/Add';
-import BuildIcon from '@mui/icons-material/Build';
 import { IOC_CATEGORIES, IOCType, IOCCategory } from '@/hooks/useIOCTypes';
 import { useDatastore } from '@/hooks/useDatastore';
 import { DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';

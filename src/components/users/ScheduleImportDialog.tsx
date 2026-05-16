@@ -3,6 +3,7 @@
  * Allows importing schedules from common formats (CSV, iCal)
  */
 
+import { Upload as UploadIcon, AlertTriangle as WarningIcon, CheckCircle2 as CheckIcon } from 'lucide-react';
 import { useState, useRef } from 'react';
 import {
   Dialog,
@@ -28,12 +29,6 @@ import {
   Chip,
   CircularProgress,
 } from '@mui/material';
-import {
-  Upload as UploadIcon,
-  Warning as WarningIcon,
-  CheckCircle as CheckIcon,
-} from '@mui/icons-material';
-
 type EscalationLevel = 'tier1' | 'tier2' | 'tier3' | 'manager';
 
 interface ScheduleEntry {

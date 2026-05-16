@@ -1,3 +1,4 @@
+import { Rocket as RocketLaunchIcon, RotateCcw as RestoreIcon, X as CloseIcon, Network as AccountTreeIcon, Webhook as WebhookIcon, Lock as EnhancedEncryptionIcon, Trash2 as DeleteSweepIcon, Shield as SecurityIcon, ChevronDown as ExpandMoreIcon, Download as DownloadIcon, Plus as AddIcon } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -20,23 +21,12 @@ import {
   FormControl,
   InputLabel,
 } from '@mui/material';
-import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
-import RestoreIcon from '@mui/icons-material/Restore';
-import CloseIcon from '@mui/icons-material/Close';
-import AccountTreeIcon from '@mui/icons-material/AccountTree';
-import WebhookIcon from '@mui/icons-material/Webhook';
 import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
-import EnhancedEncryptionIcon from '@mui/icons-material/EnhancedEncryption';
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
-import SecurityIcon from '@mui/icons-material/Security';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { toast } from '@/lib/toast';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
-import DownloadIcon from '@mui/icons-material/Download';
 import PopupTextEditor from '@/components/shared/PopupTextEditor';
 import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
 import { useAuthenticatedApps } from '@/hooks/useAuthenticatedApps';
-import AddIcon from '@mui/icons-material/Add';
 import { Tooltip } from '@mui/material';
 
 import { CategoryAutomation } from '@/Shuffle-MCPs/datastore';

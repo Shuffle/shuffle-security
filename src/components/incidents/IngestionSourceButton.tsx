@@ -1,9 +1,6 @@
+import { Ban as BlockIcon, CheckCircle as CheckCircleOutlineIcon, ExternalLink as OpenInNewIcon, Download as DownloadIcon } from 'lucide-react';
 import { useState } from 'react';
 import { Box, IconButton, Popover, Typography, Chip, Button, Tooltip } from '@mui/material';
-import BlockIcon from '@mui/icons-material/Block';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import DownloadIcon from '@mui/icons-material/Download';
 import { ValidatedIngestionApp } from '@/Shuffle-MCPs/ingestionDetection';
 import { useAppDetail } from '@/Shuffle-MCPs/AppDetailContext';
 

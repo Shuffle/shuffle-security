@@ -12,8 +12,7 @@ import {
   Dialog,
   DialogContent,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import { ArrowRight, AlertTriangle, CheckCircle, Clock, HelpCircle, XCircle, Search } from 'lucide-react';
+import { ArrowRight, AlertTriangle, CheckCircle, Clock, HelpCircle, XCircle, Search, X as CloseIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { AgentRun } from '@/services/agentActivity';
 import { getAgentRunOutput, getIncidentTitleFromRun, getIncidentSeverityFromRun, parseDatastoreReference, isIncidentReference } from '@/lib/agentParsers';

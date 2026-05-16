@@ -12,6 +12,7 @@
  * re-implement (and inevitably drift from) the same UI.
  */
 
+import { Plus as AddIcon, Pencil as EditIcon, Trash2 as DeleteIcon, ChevronDown as ExpandMoreIcon, Clock as ScheduleIcon, CheckCircle2 as CheckCircleIcon, Upload as UploadIcon, CalendarDays as CalendarIcon, Clock as AccessTimeIcon, User as PersonIcon } from 'lucide-react';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Box,
@@ -32,18 +33,6 @@ import {
   Collapse,
   LinearProgress,
 } from '@mui/material';
-import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  ExpandMore as ExpandMoreIcon,
-  Schedule as ScheduleIcon,
-  CheckCircle as CheckCircleIcon,
-  Upload as UploadIcon,
-  CalendarMonth as CalendarIcon,
-  AccessTime as AccessTimeIcon,
-  Person as PersonIcon,
-} from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { toast } from '@/lib/toast';
 import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
