@@ -1792,7 +1792,7 @@ export const AppAuthCard = ({
             {(apiAuthEntries.length === 0 || showAddNewForm) && (
               <Box sx={{ 
                 p: 3, 
-                backgroundColor: 'hsl(var(--muted))', 
+                backgroundColor: 'hsl(var(--background) / 0.4)', 
                 borderRadius: 2,
                 border: '1px solid hsl(var(--border))',
               }}>
