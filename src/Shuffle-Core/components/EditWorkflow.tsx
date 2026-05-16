@@ -264,6 +264,38 @@ const EditWorkflow = (props) => {
         window.location.host === "localhost:3002" ||
         window.location.host === "shuffler.io";
 
+	// Selects inside a Drawer need to render their menu within the Drawer's
+	// focus trap, otherwise clicking a MenuItem is treated as an outside click
+	// and the interaction is swallowed (menu closes immediately, value never
+	// commits). disablePortal + an elevated z-index keeps menus on top and
+	// click-through working.
+	const selectMenuProps: any = {
+		disablePortal: true,
+		MenuListProps: { dense: true },
+		PaperProps: {
+			sx: {
+				zIndex: 9999,
+				maxHeight: 360,
+				mt: 0.5,
+				bgcolor: "hsl(var(--popover))",
+				color: "hsl(var(--popover-foreground))",
+				border: "1px solid hsl(var(--border))",
+				borderRadius: "10px",
+				boxShadow: "0 12px 32px hsl(var(--background) / 0.55)",
+				"& .MuiMenuItem-root": {
+					fontSize: 14,
+					minHeight: 36,
+				},
+				"& .MuiMenuItem-root.Mui-selected": {
+					backgroundColor: "hsl(var(--primary) / 0.12)",
+				},
+				"& .MuiMenuItem-root:hover": {
+					backgroundColor: "hsl(var(--muted))",
+				},
+			},
+		},
+	}
+
 	return (
 		<Drawer
 			anchor={"right"}
