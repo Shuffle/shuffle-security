@@ -7055,6 +7055,8 @@ const IncidentDetailPage = () => {
                 ]}
               />
             </Box>
+          </Box>
+
 
           {/* Tab Content */}
       <Box sx={isPublicView ? { pointerEvents: 'none', '& input, & textarea, & select, & button:not([data-public-ok])': { opacity: 0.7 } } : {}}>
