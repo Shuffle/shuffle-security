@@ -732,28 +732,30 @@ const EditWorkflow = (props) => {
 									innerWorkflow.due_date = new Date(`${dueDate["$y"]}-${dueDate["$M"] + 1}-${dueDate["$D"]}`).getTime() / 1000
 								}
 
+								// Clone so parent's useEffect([workflow]) actually fires.
+								const nextWorkflow2 = { ...innerWorkflow }
 								if (saveWorkflow !== undefined) {
-									saveWorkflow(innerWorkflow)
+									saveWorkflow(nextWorkflow2)
 
 									if (setWorkflow !== undefined) {
-										setWorkflow(innerWorkflow)
+										setWorkflow(nextWorkflow2)
 									}
 								} else if (setNewWorkflow !== undefined) {
 									setNewWorkflow(
-										innerWorkflow.name,
-										innerWorkflow.description,
-										innerWorkflow.tags,
-										innerWorkflow.default_return_value,
-										innerWorkflow,
+										nextWorkflow2.name,
+										nextWorkflow2.description,
+										nextWorkflow2.tags,
+										nextWorkflow2.default_return_value,
+										nextWorkflow2,
 										newWorkflow,
-										innerWorkflow.usecase_ids,
-										innerWorkflow.blogpost,
-										innerWorkflow.status,
+										nextWorkflow2.usecase_ids,
+										nextWorkflow2.blogpost,
+										nextWorkflow2.status,
 										workflowAsCode
 									)
 									setWorkflow({})
 								} else {
-									setWorkflow(innerWorkflow)
+									setWorkflow(nextWorkflow2)
 								}
 
 								setSubmitLoading(true)
