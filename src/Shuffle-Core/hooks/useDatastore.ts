@@ -13,7 +13,7 @@ import {
   DatastoreItem,
   DatastoreDiagnostics,
   CategoryConfig,
-} from '@/Shuffle-MCPs/datastore';
+} from '@shuffleio/shuffle-mcps';
 
 interface UseDatastoreOptions {
   category: string;

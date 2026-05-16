@@ -34,11 +34,11 @@ import {
   LinearProgress,
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import { toast } from '@/lib/toast';
-import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
-import { setDatastoreItem, getDatastoreItem, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
-import { WeeklyScheduleTimeline, AI_AGENT_SCHEDULE } from '@/components/users/WeeklyScheduleTimeline';
-import { ScheduleImportDialog } from '@/components/users/ScheduleImportDialog';
+import { toast } from '@/Shuffle-Core/lib/toast';
+import AgentIcon from '@shuffleio/shuffle-mcps';
+import { setDatastoreItem, getDatastoreItem, DATASTORE_CATEGORIES } from '@shuffleio/shuffle-mcps';
+import { WeeklyScheduleTimeline, AI_AGENT_SCHEDULE } from '@/Shuffle-Core/components/users/WeeklyScheduleTimeline';
+import { ScheduleImportDialog } from '@/Shuffle-Core/components/users/ScheduleImportDialog';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 export type EscalationLevel = 'tier1' | 'tier2' | 'tier3' | 'manager';

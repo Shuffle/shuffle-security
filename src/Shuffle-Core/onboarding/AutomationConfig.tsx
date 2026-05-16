@@ -26,9 +26,9 @@ import {
   Button,
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import { OnCallScheduleManager } from '@/components/users/OnCallScheduleManager';
-import { useUsers } from '@/hooks/useUsers';
-import { deduplicateAuthApps, type AuthAppEntry } from '@/lib/utils';
+import { OnCallScheduleManager } from '@/Shuffle-Core/components/users/OnCallScheduleManager';
+import { useUsers } from '@/Shuffle-Core/hooks/useUsers';
+import { deduplicateAuthApps, type AuthAppEntry } from '@/Shuffle-Core/lib/utils';
 import {
   EMAIL_APP_PATTERNS, CASES_PATTERNS, EDR_PATTERNS, SIEM_PATTERNS,
   THREAT_INTEL_PATTERNS, COMMUNICATION_PATTERNS_NAMES,
@@ -38,9 +38,9 @@ import {
 } from '@shuffleio/shuffle-mcps';
 import type { IngestionCategory } from '@shuffleio/shuffle-mcps';
 import shuffleLogo from '@/assets/shuffle-logo.png';
-import { useThreatFeeds, DEFAULT_THREAT_FEEDS, ThreatFeed } from '@/hooks/useThreatFeeds';
-import { getAutomationLabels } from '@/config/usecases';
-import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
+import { useThreatFeeds, DEFAULT_THREAT_FEEDS, ThreatFeed } from '@/Shuffle-Core/hooks/useThreatFeeds';
+import { getAutomationLabels } from '@/Shuffle-Core/config/usecases';
+import { useEnrichmentStatus } from '@/Shuffle-Core/hooks/useEnrichmentStatus';
 
 /** Convert internal app names (e.g. "google_sheets") to readable form ("Google Sheets") */
 const readableAppName = (name: string): string =>
@@ -57,7 +57,7 @@ const AUTOMATION_WORKFLOW_LABELS: Record<string, string[]> = {
 
 // Workflow generation now lives in the shared canonical helper so the
 // onboarding flow and demo-mode bootstrap stay in lockstep.
-import { generateWorkflow } from '@/lib/workflowGenerate';
+import { generateWorkflow } from '@/Shuffle-Core/lib/workflowGenerate';
 
 interface EnrichmentOption {
   id: string;
@@ -618,7 +618,7 @@ export const AutomationConfig = ({
     onSave?.(newState);
     
     // Track automation toggle
-    import('@/lib/analytics').then(({ trackPredefinedEvent, GA_EVENTS }) => {
+    import('@/Shuffle-Core/lib/analytics').then(({ trackPredefinedEvent, GA_EVENTS }) => {
       trackPredefinedEvent(GA_EVENTS.ONBOARDING_AUTOMATION_TOGGLE, id, isEnabling ? 1 : 0);
     });
     

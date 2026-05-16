@@ -28,10 +28,10 @@ import type {
   AuthStatus,
 } from '@shuffleio/shuffle-mcps';
 import { AutomationConfig, EnrichmentState } from './AutomationConfig';
-import { trackOnboardingStep, trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
-import { usePageMeta } from '@/hooks/usePageMeta';
+import { trackOnboardingStep, trackPredefinedEvent, GA_EVENTS } from '@/Shuffle-Core/lib/analytics';
+import { usePageMeta } from '@/Shuffle-Core/hooks/usePageMeta';
 import { ProductChoiceStep } from './ProductChoiceStep';
-import { SegmentedControl, type SegmentedItem } from '@/components/ui/segmented-control';
+import { SegmentedControl, type SegmentedItem } from '@/Shuffle-Core/components/ui/segmented-control';
 
 export type OnboardingProduct = 'core' | 'security';
 
@@ -331,7 +331,7 @@ const OnboardingFlow = ({
         const authData = result.data || result;
         if (Array.isArray(authData)) {
           const processed = processAuthData(authData);
-          const { deduplicateAuthApps, backfillAppImages } = await import('@/lib/utils');
+          const { deduplicateAuthApps, backfillAppImages } = await import('@/Shuffle-Core/lib/utils');
           const deduped = deduplicateAuthApps(processed);
           await backfillAppImages(deduped);
           const imageMap = new Map<string, string>();
