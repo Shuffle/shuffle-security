@@ -1601,21 +1601,47 @@ const FormInput = (defaultprops: any) => {
 							/>
 							*/}
 
-							<Typography variant="h6" style={{marginBottom: 10, marginTop: 50, textAlign: "center", }}>
-								{organization}
-							</Typography>
 							{organization?.length > 0 &&
-								<Divider style={{marginTop: 20, marginBottom: 20, }}/>
-							}
-
-							{disabledButtons && message.length > 0 ? null : 
-								<Typography color="textSecondary" style={{textAlign: "center", marginTop: 15, }}>
-									{message}
+								<Typography
+									style={{
+										marginTop: 8,
+										marginBottom: 6,
+										textAlign: "center",
+										fontSize: 12,
+										letterSpacing: "0.08em",
+										textTransform: "uppercase",
+										fontWeight: 600,
+										color: "hsl(var(--muted-foreground))",
+										overflow: "hidden",
+										textOverflow: "ellipsis",
+										whiteSpace: "nowrap",
+									}}
+								>
+									{organization}
 								</Typography>
 							}
 
 							{answer !== undefined && answer !== null ? null :
-								<Typography variant="h6" style={{marginBottom: 15, textAlign: "center", }}><b>{workflow.name}</b></Typography>
+								<Typography
+									style={{
+										marginTop: 4,
+										marginBottom: 24,
+										textAlign: "center",
+										fontSize: 24,
+										fontWeight: 600,
+										lineHeight: 1.25,
+										color: "hsl(var(--foreground))",
+									}}
+								>
+									{workflow.name}
+								</Typography>
+							}
+
+							{disabledButtons && message.length > 0 ? null :
+								message?.length > 0 &&
+								<Typography style={{textAlign: "center", marginTop: 4, marginBottom: 16, fontSize: 14, color: "hsl(var(--muted-foreground))"}}>
+									{message}
+								</Typography>
 							}
 
 							{workflowQuestion.length > 0 ?
@@ -1721,44 +1747,51 @@ const FormInput = (defaultprops: any) => {
 						(answer !== undefined && answer !== null) || message !== ""  ? null :
 						
 							executionRunning ? null : 
-								<span>
-									{foundSourcenode !== undefined && foundSourcenode !== null ? 
-										"Add Note"
-										:
-										"Runtime Argument"
-									}
+								<div style={{marginBottom: 4}}>
+									<Typography
+										style={{
+											fontSize: 13,
+											fontWeight: 500,
+											color: "hsl(var(--foreground))",
+											marginBottom: 6,
+										}}
+									>
+										{foundSourcenode !== undefined && foundSourcenode !== null
+											? "Add note"
+											: "Runtime argument"}
+									</Typography>
 
-									<div style={{marginBottom: 5}}>
-										<TextField
-											disabled={executionRunning}
-											color="primary"
-											style={{backgroundColor: theme.palette.inputColor, marginTop: 5, }}
-											multiLine
-											maxRows={2}
-											type="text"
-											autoComplete="off"
-											InputProps={{
-												autocomplete: "off",
-												form: {
-													autocomplete: "off",
-												},
-												style:{
-													height: "50px", 
-													color: "white",
-													fontSize: "1em",
-												},
-											}}
-											fullWidth={true}
-											placeholder=""
-											id="emailfield"
-											margin="normal"
-											variant="outlined"
-											onChange={(e) => {
-												setExecutionArgument(e.target.value)	
-											}}
-										/>
-									</div>
-								</span>
+									<TextField
+										disabled={executionRunning}
+										color="primary"
+										multiline
+										minRows={3}
+										maxRows={8}
+										type="text"
+										autoComplete="off"
+										fullWidth
+										placeholder="Enter a value to pass into the workflow"
+										id="runtime-argument"
+										variant="outlined"
+										sx={{
+											"& .MuiOutlinedInput-root": {
+												backgroundColor: "hsl(var(--background))",
+												borderRadius: "8px",
+												fontSize: 14,
+												color: "hsl(var(--foreground))",
+											},
+											"& .MuiOutlinedInput-notchedOutline": {
+												borderColor: "hsl(var(--border))",
+											},
+											"&:hover .MuiOutlinedInput-notchedOutline": {
+												borderColor: "hsl(var(--ring))",
+											},
+										}}
+										onChange={(e) => {
+											setExecutionArgument(e.target.value)
+										}}
+									/>
+								</div>
 							
 						}
 
@@ -1894,15 +1927,20 @@ const FormInput = (defaultprops: any) => {
 									: null}
 								</span>
 							:
-							<div style={{display: "flex", marginTop: "15px"}}>
+							<div style={{display: "flex", marginTop: 20}}>
 								<Button 
 									variant={executionData.result !== undefined && executionData.result !== null && executionData.result.length > 0 ? "outlined" : "contained"}
 									type="submit" 
 									color="primary" 
 									fullWidth 
+									disableElevation
 									disabled={!handleValidateForm(executionArgument) || executionLoading}
 									style={{
 										textTransform: "none",
+										height: 36,
+										borderRadius: 8,
+										fontWeight: 600,
+										fontSize: 14,
 									}}
 								>
 									{executionLoading ? 
