@@ -1323,43 +1323,61 @@ const FormInput = (defaultprops: any) => {
 	
 	const ExplorerUi = () => {
 		return (
-			<div style={{paddingTop: 50, marginTop: 50, width: 350, itemAlign: "center", textAlign: "center", margin: "auto", }}>
+			<div style={{paddingTop: 24, width: "100%", maxWidth: 480, margin: "0 auto", textAlign: "center"}}>
 
 				{forms !== undefined && forms !== null && forms.length > 0 ?
-					<div>
-						<Typography variant="h6" style={{marginBottom: 20, }}>
+					<div style={{textAlign: "left"}}>
+						<Typography variant="subtitle1" style={{marginBottom: 16, fontWeight: 600, color: "hsl(var(--foreground))"}}>
 							Available forms
 						</Typography>
 						<FormList />
 					</div>
 					:
 					!isLoggedIn ?
-					<div>
-						<Typography variant="h4" style={{marginTop: 125, marginBottom: 25, }}>
+					<div style={{paddingTop: 32, paddingBottom: 32}}>
+						<div style={{
+							width: 56, height: 56, borderRadius: 14,
+							backgroundColor: "hsl(var(--primary) / 0.1)",
+							border: "1px solid hsl(var(--primary) / 0.2)",
+							display: "flex", alignItems: "center", justifyContent: "center",
+							margin: "0 auto 20px",
+						}}>
+							<LockIcon style={{fontSize: 26, color: "hsl(var(--primary))"}} />
+						</div>
+						<Typography variant="h6" style={{marginBottom: 8, fontWeight: 600, color: "hsl(var(--foreground))"}}>
 							Log in to view your forms
 						</Typography>
-						<Typography variant="body1" color="textSecondary" style={{marginBottom: 20, }}>
+						<Typography variant="body2" style={{marginBottom: 24, color: "hsl(var(--muted-foreground))", lineHeight: 1.6}}>
 							You need to be logged in to see the forms available in your organization.
 						</Typography>
 						<Button
 							variant="contained"
-							color="primary"
 							onClick={() => {
 								const next = encodeURIComponent(window.location.pathname + window.location.search)
 								navigate(`/login?view=${next}`)
 							}}
-							style={{ textTransform: "none" }}
+							style={{
+								textTransform: "none",
+								height: 36,
+								backgroundColor: "hsl(var(--primary))",
+								color: "hsl(var(--primary-foreground))",
+								boxShadow: "none",
+								borderRadius: 8,
+								paddingLeft: 20,
+								paddingRight: 20,
+								fontWeight: 600,
+							}}
 						>
 							Log in
 						</Button>
 					</div>
 					:
-					<div>
-						<Typography variant="h4" style={{marginTop: 125, marginBottom: 25, }}>
-							No Forms Found
+					<div style={{paddingTop: 32, paddingBottom: 32}}>
+						<Typography variant="h6" style={{marginBottom: 8, fontWeight: 600, color: "hsl(var(--foreground))"}}>
+							No forms found
 						</Typography>
-						<Typography variant="body1" color="textSecondary">
-							<b>ALL</b> Workflows are forms, and can be accessed by going to /forms/{`{workflow_id}`}. You can control the form by editing the workflow details in the "Forms" section.
+						<Typography variant="body2" style={{color: "hsl(var(--muted-foreground))", lineHeight: 1.6}}>
+							All workflows are forms, and can be accessed by going to /forms/{`{workflow_id}`}. You can control the form by editing the workflow details in the Forms section.
 						</Typography>	
 					</div>
 				}
