@@ -1588,7 +1588,7 @@ export const AutomationConfig = ({
           variant="body1"
           sx={{ color: 'hsl(var(--muted-foreground))' }}
         >
-          Review your connected tools, configure automation, and you're all set.
+          Review your connected tools, configure automation, and you are all set.
         </Typography>
       </Box>
 
