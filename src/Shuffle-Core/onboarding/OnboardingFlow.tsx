@@ -1019,6 +1019,13 @@ const OnboardingFlow = ({
                           }
                         }, 250);
                       }}
+                      onStartDemo={() => {
+                        if (product === 'security' && onStartDemo) {
+                          onStartDemo();
+                        } else {
+                          window.location.href = demoRedirectUrl;
+                        }
+                      }}
                     />
                   )}
 
