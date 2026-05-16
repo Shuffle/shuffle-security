@@ -20,6 +20,7 @@ export default defineConfig(({ mode }) => ({
       // host dev/build keeps working while Shuffle-Core uses the package
       // identifier in its imports (so it builds standalone for npm).
       "@shuffleio/shuffle-mcps": path.resolve(__dirname, "./src/Shuffle-MCPs/index.ts"),
+      "@shuffleio/shuffle-core": path.resolve(__dirname, "./src/Shuffle-Core/index.tsx"),
     },
   },
 }));
