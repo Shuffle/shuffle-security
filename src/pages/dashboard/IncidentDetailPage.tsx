@@ -884,6 +884,23 @@ const IncidentDetailPage = () => {
   useEffect(() => {
     try { localStorage.setItem(TIMELINE_COLLAPSED_STORAGE_KEY, timelineCollapsed ? '1' : '0'); } catch { /* ignore */ }
   }, [timelineCollapsed]);
+
+  // Per-open guarantee: every time an incident detail page opens (or the
+  // user navigates to a different incident), make sure AT LEAST one of
+  // Email Thread or Timeline is expanded. If both are currently collapsed
+  // we force-open the Timeline so the page never looks empty.
+  useEffect(() => {
+    if (!id) return;
+    try {
+      const emailOpen = localStorage.getItem('shuffle-incident-email-thread-open') === '1';
+      const tlCollapsed = localStorage.getItem(TIMELINE_COLLAPSED_STORAGE_KEY) === '1';
+      if (!emailOpen && tlCollapsed) {
+        localStorage.setItem(TIMELINE_COLLAPSED_STORAGE_KEY, '0');
+        setTimelineCollapsed(false);
+      }
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
   // Anchor for the unified Timeline filters dropdown.
   const [timelineFilterAnchor, setTimelineFilterAnchor] = useState<HTMLElement | null>(null);
   const [revisionDialogData, setRevisionDialogData] = useState<{ json: string; changedKeys: Set<string> } | null>(null);
