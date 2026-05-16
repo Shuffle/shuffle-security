@@ -7624,7 +7624,7 @@ const IncidentDetailPage = () => {
       {activeTab === 2 && (
         /* Observables Tab */
         <Box sx={{ 
-          bgcolor: 'hsl(var(--card))', 
+          bgcolor: 'transparent', 
           borderRadius: 2, 
           border: '1px solid hsl(var(--border))',
           p: 2.5,
