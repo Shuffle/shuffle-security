@@ -296,11 +296,10 @@ const FormInput = (defaultprops: any) => {
 				toast.error("Failed saving workflow: " + (responseJson?.reason || "unknown"))
 				return
 			}
-			console.log("[saveWorkflow] response form_control:", responseJson?.form_control)
-			// Re-sync local state from server truth so the next open of the drawer reflects the saved width.
-			if (responseJson?.form_control?.form_width !== undefined && responseJson?.form_control?.form_width !== null && responseJson.form_control.form_width > 300) {
-				setBoxWidth(responseJson.form_control.form_width)
-			}
+			console.log("[saveWorkflow] response:", responseJson)
+			// Re-fetch from the server so we can confirm what was actually persisted
+			// (the PUT response typically only returns {success:true}, not the saved object).
+			getWorkflow(workflow.id, selectedNode)
 		})
 		.catch((error) => {
 			toast.error("Save workflow error: " + error)
