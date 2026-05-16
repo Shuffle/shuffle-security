@@ -987,27 +987,7 @@ const OnboardingPage = () => {
 
                   {steps[activeStep]?.key === 'sources' && (
                     <>
-                      <Box
-                        sx={{
-                          mb: 3,
-                          p: 2,
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: 1,
-                          backgroundColor: 'hsl(var(--card))',
-                        }}
-                      >
-                        <Typography
-                          sx={{
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            color: 'hsl(var(--muted-foreground))',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                            mb: 1.5,
-                          }}
-                        >
-                          Your active integrations
-                        </Typography>
+                      <Box sx={{ mb: 3 }}>
                         <IntegrationStatus collapsed={false} iconSize={30} showAll hideAddButton />
                       </Box>
                       <UnifiedSourceSetup
