@@ -104,7 +104,7 @@ export function SegmentedControl<V extends string = string>({
               {active && (
                 <motion.span
                   layoutId={`${groupId}-pill`}
-                  className="absolute inset-0 rounded-full bg-card border border-border"
+                  className="absolute inset-0 rounded-full bg-muted border border-border"
                   initial={false}
                   transition={{
                     type: "spring",
