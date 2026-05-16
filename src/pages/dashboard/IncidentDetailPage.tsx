@@ -3439,6 +3439,16 @@ const IncidentDetailPage = () => {
     },
   };
 
+  const transparentInputSx = {
+    '& .MuiOutlinedInput-root': {
+      bgcolor: 'transparent',
+      backgroundImage: 'none',
+      '& fieldset': { borderColor: 'hsl(var(--border))' },
+      '&:hover fieldset': { borderColor: 'hsl(var(--muted-foreground) / 0.4)' },
+      '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
+    },
+  };
+
   const renderCustomField = (field: CustomField) => {
     const value = editedCustomFields[field.key];
     
