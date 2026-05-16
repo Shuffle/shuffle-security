@@ -92,6 +92,12 @@ const EditWorkflow = (props) => {
 	function cloneArray(value) {
 		return Array.isArray(value) ? JSON.parse(JSON.stringify(value)) : []
 	}
+	function normalizeSelectValues(value) {
+		return Array.isArray(value) ? value.filter(Boolean) : String(value || "").split(",").filter(Boolean)
+	}
+	function normalizeActionIds(value) {
+		return normalizeSelectValues(value).filter((item) => item !== "none")
+	}
 	function getWorkflowFormWidthValue(targetWorkflow, fallbackWidth = 500) {
 		return targetWorkflow?.form_control?.form_width !== undefined && targetWorkflow?.form_control?.form_width !== null ? targetWorkflow.form_control.form_width : (fallbackWidth === undefined || fallbackWidth === null ? 500 : fallbackWidth)
 	}
@@ -117,6 +123,14 @@ const EditWorkflow = (props) => {
 	const [selectedCleanupActions, setSelectedCleanupActions] = React.useState(workflow?.form_control?.cleanup_actions !== undefined && workflow?.form_control?.cleanup_actions !== null ? JSON.parse(JSON.stringify(workflow?.form_control?.cleanup_actions)) : [])
 
 	const [formWidth, setFormWidth] = React.useState(getWorkflowFormWidthValue(workflow, boxWidth))
+	const updateInnerWorkflow = (updater) => {
+		setInnerWorkflow((current) => {
+			const next = { ...(current || {}) }
+			updater(next)
+			return next
+		})
+		setUpdate(Math.random())
+	}
 	
 	// Flowchart upload states
 	const [uploadedImage, setUploadedImage] = React.useState(null)
