@@ -78,7 +78,7 @@ export const TicketingSystemSearch = ({
               key={category.id}
               sx={{
                 p: 3,
-                backgroundColor: isActive ? 'hsl(var(--primary) / 0.1)' : 'hsl(var(--card))',
+                backgroundColor: isActive ? 'hsl(var(--primary) / 0.1)' : 'transparent',
                 border: '1px solid',
                 borderColor: isActive ? 'hsl(var(--primary))' : 'hsl(var(--border))',
                 borderRadius: 3,
@@ -137,7 +137,7 @@ export const TicketingSystemSearch = ({
       <Box
         sx={{
           p: 2,
-          backgroundColor: activeCategory === catchAllCategory.id ? 'hsl(var(--primary) / 0.1)' : 'hsl(var(--card))',
+          backgroundColor: activeCategory === catchAllCategory.id ? 'hsl(var(--primary) / 0.1)' : 'transparent',
           border: '1px solid',
           borderColor: activeCategory === catchAllCategory.id ? 'hsl(var(--primary))' : 'hsl(var(--border))',
           borderRadius: 2,
@@ -223,7 +223,7 @@ export const TicketingSystemSearch = ({
             gap: '12px',
           },
           dropdownItem: {
-            backgroundColor: 'hsl(var(--card))',
+            backgroundColor: 'transparent',
             border: '1px solid hsl(var(--border))',
             borderRadius: '12px',
             padding: '16px',

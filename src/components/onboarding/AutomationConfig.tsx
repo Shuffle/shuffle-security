@@ -1019,7 +1019,7 @@ export const AutomationConfig = ({
                     }
                   }}
                   sx={{
-                    background: 'hsl(var(--card))',
+                    background: 'transparent',
                     border: '1px solid',
                     borderColor: state.enabled && !isDisabled ? `${option.color}50` : 'hsl(var(--border))',
                     borderRadius: 3,
@@ -1227,7 +1227,7 @@ export const AutomationConfig = ({
                                                   borderColor: app.isValidated 
                                                     ? 'hsl(var(--severity-low) / 0.4)' 
                                                     : 'hsl(var(--severity-medium) / 0.4)',
-                                                  backgroundColor: 'hsl(var(--card))',
+                                                  backgroundColor: 'transparent',
                                                   ml: idx > 0 ? -0.5 : 0,
                                                 }}
                                               >

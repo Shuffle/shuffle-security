@@ -180,7 +180,7 @@ export const PrimaryToolStep = ({
                   cursor: 'pointer',
                   backgroundColor: isSelected 
                     ? 'hsl(var(--primary) / 0.12)' 
-                    : 'hsl(var(--card))',
+                    : 'transparent',
                   border: '1px solid',
                   borderColor: isSelected 
                     ? 'hsl(var(--primary))' 
@@ -301,7 +301,7 @@ export const PrimaryToolStep = ({
                 maxWidth: 800,
                 mx: 'auto',
                 p: 3,
-                backgroundColor: 'hsl(var(--card))',
+                backgroundColor: 'transparent',
                 border: '1px solid hsl(var(--border))',
                 borderRadius: 3,
               }}
@@ -346,7 +346,7 @@ export const PrimaryToolStep = ({
                   },
                   resultsContainer: { marginTop: '16px', gap: '12px' },
                   dropdownItem: {
-                    backgroundColor: 'hsl(var(--card))',
+                    backgroundColor: 'transparent',
                     border: '1px solid hsl(var(--border))',
                     borderRadius: '12px',
                     padding: '16px',

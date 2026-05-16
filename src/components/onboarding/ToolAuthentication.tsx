@@ -162,7 +162,7 @@ export const ToolAuthentication = ({
               <motion.div key={app.objectID} variants={itemVariants}>
                 <Card
                   sx={{
-                    backgroundColor: 'hsl(var(--card))',
+                    backgroundColor: 'transparent',
                     border: '1px solid',
                     borderColor:
                       authState.status === 'connected'

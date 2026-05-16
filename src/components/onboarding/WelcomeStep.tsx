@@ -164,7 +164,7 @@ export const WelcomeStep = ({ onSelect, selectedChallenge }: WelcomeStepProps) =
                   cursor: 'pointer',
                   backgroundColor: isSelected 
                     ? 'hsl(var(--primary) / 0.12)' 
-                    : 'hsl(var(--card))',
+                    : 'transparent',
                   border: '2px solid',
                   borderColor: isSelected 
                     ? 'hsl(var(--primary))' 

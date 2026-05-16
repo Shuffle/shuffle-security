@@ -356,7 +356,7 @@ const CategorySection = ({
               p: 2.5,
               borderRadius: 3,
               border: '1px solid hsl(var(--border))',
-              backgroundColor: 'hsl(var(--card))',
+              backgroundColor: 'transparent',
               transition: 'border-color 0.3s ease',
             }}
           >
