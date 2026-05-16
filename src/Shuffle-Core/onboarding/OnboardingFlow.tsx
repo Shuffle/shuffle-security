@@ -919,6 +919,56 @@ const OnboardingFlow = ({
         }}
       >
         <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 } }}>
+          {/* Product switcher — lets the user go back to the Core/Security picker */}
+          {showProductChoice && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 1.5 }}>
+              <Box
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  try { localStorage.removeItem(PRODUCT_CHOICE_STORAGE_KEY); } catch { /* ignore */ }
+                  setProductChosen(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    try { localStorage.removeItem(PRODUCT_CHOICE_STORAGE_KEY); } catch { /* ignore */ }
+                    setProductChosen(false);
+                  }
+                }}
+                sx={{
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  px: 1.25,
+                  py: 0.5,
+                  borderRadius: 999,
+                  border: '1px solid hsl(var(--border))',
+                  backgroundColor: 'hsl(var(--card))',
+                  color: 'hsl(var(--muted-foreground))',
+                  fontSize: '0.75rem',
+                  fontWeight: 500,
+                  transition: 'all 0.15s ease',
+                  '&:hover': {
+                    color: 'hsl(var(--foreground))',
+                    borderColor: 'hsl(var(--primary) / 0.6)',
+                  },
+                  '&:focus-visible': {
+                    outline: '2px solid hsl(var(--primary))',
+                    outlineOffset: 2,
+                  },
+                }}
+              >
+                <ArrowBackIcon size={12} />
+                <span>
+                  {product === 'security' ? 'Shuffle Security' : 'Shuffle Core'}
+                  <span style={{ opacity: 0.5, margin: '0 6px' }}>·</span>
+                  Switch product
+                </span>
+              </Box>
+            </Box>
+          )}
           {/* Step Indicator */}
           <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%', overflow: 'hidden' }}>
             <Stack 
