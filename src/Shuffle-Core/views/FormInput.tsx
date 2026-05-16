@@ -273,6 +273,7 @@ const FormInput = (defaultprops: any) => {
 
 	const saveWorkflow = (workflow) => {
 		const url = `${backendUrl}/api/v1/workflows/${workflow.id}`
+		console.log("[saveWorkflow] PUT form_control:", workflow?.form_control)
 		shuffleFetch(url, {
 			method: "PUT",
 			headers: {
@@ -284,16 +285,22 @@ const FormInput = (defaultprops: any) => {
 		})
 		.then((response) => {
 			if (response.status !== 200) {
-				console.log("Status not 200 for workflows :O!");
+				console.log("Status not 200 for workflows :O!", response.status);
+				toast.error(`Failed saving workflow (HTTP ${response.status}). Form settings may not be persisted.`)
 			}
 
 			return response.json();
 		})
 		.then((responseJson) => {
-			if (responseJson.success === false) {
-				toast.error("Failed saving workflow. Please try again.")
+			if (responseJson?.success === false) {
+				toast.error("Failed saving workflow: " + (responseJson?.reason || "unknown"))
+				return
 			}
-			//toast.success("Saved workflow")
+			console.log("[saveWorkflow] response form_control:", responseJson?.form_control)
+			// Re-sync local state from server truth so the next open of the drawer reflects the saved width.
+			if (responseJson?.form_control?.form_width !== undefined && responseJson?.form_control?.form_width !== null && responseJson.form_control.form_width > 300) {
+				setBoxWidth(responseJson.form_control.form_width)
+			}
 		})
 		.catch((error) => {
 			toast.error("Save workflow error: " + error)
