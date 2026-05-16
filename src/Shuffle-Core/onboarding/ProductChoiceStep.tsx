@@ -1,5 +1,5 @@
 import { ArrowRight } from 'lucide-react';
-import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
+import { AgentIcon } from '@shuffleio/shuffle-mcps';
 import shuffleInfraLogo from '@/assets/shuffle-infrastructure-logo.png';
 
 interface ProductChoiceStepProps {

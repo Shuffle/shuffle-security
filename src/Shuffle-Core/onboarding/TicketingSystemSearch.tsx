@@ -5,9 +5,8 @@ import {
   Chip,
 } from '@mui/material';
 import { Mail, Radar, Search, Globe, Ticket } from 'lucide-react';
-import { ShuffleMCP } from '@/Shuffle-MCPs';
-import type { AlgoliaSearchApp, ShuffleMCPHandle } from '@/Shuffle-MCPs';
-import { API_CONFIG } from '@/Shuffle-MCPs/api';
+import { ShuffleMCP, API_CONFIG } from '@shuffleio/shuffle-mcps';
+import type { AlgoliaSearchApp, ShuffleMCPHandle } from '@shuffleio/shuffle-mcps';
 
 interface TicketingSystemSearchProps {
   selectedApps: AlgoliaSearchApp[];

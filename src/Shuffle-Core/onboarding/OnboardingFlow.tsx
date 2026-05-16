@@ -6,17 +6,29 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { TicketingSystemSearch } from './TicketingSystemSearch';
 import { WelcomeStep } from './WelcomeStep';
 import { UnifiedSourceSetup } from './UnifiedSourceSetup';
-import type { AlgoliaSearchApp } from '@/Shuffle-MCPs';
-import { AppAuthConfig, AppAuthState, AuthStatus } from '@/Shuffle-MCPs/AppAuthConfig';
-import { AutomationConfig, EnrichmentState } from './AutomationConfig';
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
-import { setDatastoreItem, getDatastoreItem } from '@/Shuffle-MCPs/datastore';
 import {
-  isEmailApp, isIngestionApp, isThreatIntelApp,
-} from '@/Shuffle-MCPs/ingestionDetection';
-import { findIngestTicketsWorkflow, findForwardTicketsWorkflow, extractWorkflowAppNames } from '@/Shuffle-MCPs/ingestionDetection';
+  AppAuthConfig,
+  API_CONFIG,
+  getApiUrl,
+  getAuthHeader,
+  setDatastoreItem,
+  getDatastoreItem,
+  isEmailApp,
+  isIngestionApp,
+  isThreatIntelApp,
+  findIngestTicketsWorkflow,
+  findForwardTicketsWorkflow,
+  extractWorkflowAppNames,
+  IntegrationStatus,
+  refreshAllIntegrationStatus,
+} from '@shuffleio/shuffle-mcps';
+import type {
+  AlgoliaSearchApp,
+  AppAuthState,
+  AuthStatus,
+} from '@shuffleio/shuffle-mcps';
+import { AutomationConfig, EnrichmentState } from './AutomationConfig';
 import { trackOnboardingStep, trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
-import { IntegrationStatus, refreshAllIntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { ProductChoiceStep } from './ProductChoiceStep';
 import { SegmentedControl, type SegmentedItem } from '@/components/ui/segmented-control';

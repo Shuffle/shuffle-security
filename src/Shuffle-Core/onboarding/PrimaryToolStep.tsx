@@ -7,9 +7,8 @@ import {
   CheckCircle2,
   Sparkles
 } from 'lucide-react';
-import { ShuffleMCP } from '@/Shuffle-MCPs';
-import type { AlgoliaSearchApp, ShuffleMCPHandle } from '@/Shuffle-MCPs';
-import { API_CONFIG } from '@/Shuffle-MCPs/api';
+import { ShuffleMCP, API_CONFIG } from '@shuffleio/shuffle-mcps';
+import type { AlgoliaSearchApp, ShuffleMCPHandle } from '@shuffleio/shuffle-mcps';
 
 // Top integration options based on popularity
 const popularTools = [

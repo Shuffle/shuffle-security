@@ -15,12 +15,20 @@ import {
   ChevronDown,
   CheckCircle2,
 } from 'lucide-react';
-import { ShuffleMCP } from '@/Shuffle-MCPs';
-import type { AlgoliaSearchApp, ShuffleMCPHandle } from '@/Shuffle-MCPs';
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
-import { getIngestionCategory, type IngestionCategory } from '@/Shuffle-MCPs/ingestionDetection';
-import { invalidateAppsCache } from '@/Shuffle-MCPs/appsCache';
-import { refreshAllIntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
+import {
+  ShuffleMCP,
+  API_CONFIG,
+  getApiUrl,
+  getAuthHeader,
+  getIngestionCategory,
+  invalidateAppsCache,
+  refreshAllIntegrationStatus,
+} from '@shuffleio/shuffle-mcps';
+import type {
+  AlgoliaSearchApp,
+  ShuffleMCPHandle,
+  IngestionCategory,
+} from '@shuffleio/shuffle-mcps';
 
 /** Fire-and-forget activate call for a newly selected app. Refreshes the
  *  Integrations bar so the icon flips to "enabled" immediately. */
