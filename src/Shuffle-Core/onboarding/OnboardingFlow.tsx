@@ -18,6 +18,24 @@ import { findIngestTicketsWorkflow, findForwardTicketsWorkflow, extractWorkflowA
 import { trackOnboardingStep, trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 import { IntegrationStatus, refreshAllIntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { ProductChoiceStep } from './ProductChoiceStep';
+
+export type OnboardingProduct = 'core' | 'security';
+
+export interface OnboardingFlowProps {
+  /** Which product this app is. Default 'security'. */
+  product?: OnboardingProduct;
+  /** URL to send users to when they pick "Shuffle Core" from a non-Core app. */
+  coreRedirectUrl?: string;
+  /** URL to send users to when they pick "Shuffle Security" from a non-Security app. */
+  securityRedirectUrl?: string;
+  /** Optional override for the Shuffle API base URL (mirrors Shuffle-MCPs API_CONFIG.baseUrl). */
+  apiBaseUrl?: string;
+  /** When false, skips the Core vs Security picker entirely. Default true. */
+  showProductChoice?: boolean;
+}
+
+const PRODUCT_CHOICE_STORAGE_KEY = 'shuffle_onboarding_product';
 
 // Datastore category for onboarding config (using shuffle-security_ prefix for consistency)
 const ONBOARDING_CONFIG_CATEGORY = 'shuffle-security_onboarding';
