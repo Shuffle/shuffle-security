@@ -822,6 +822,7 @@ const EditWorkflow = (props) => {
 										multiple
 										value={selectedUsecases}
 										renderValue={(selected) => selected.join(', ')}
+										MenuProps={selectMenuProps}
 										onChange={(event) => {
 											console.log("Changed: ", event)
 										}}
