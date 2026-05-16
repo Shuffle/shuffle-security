@@ -261,8 +261,36 @@ export async function backfillAppImages(dedupedApps: DeduplicatedApp[]): Promise
   }
 
   // Second pass: find entries still missing images
-  const missing = dedupedApps.filter(d => !d.bestImage && !d.app.large_image);
+  let missing = dedupedApps.filter(d => !d.bestImage && !d.app.large_image);
   if (missing.length === 0) return dedupedApps;
+
+  // Fallback to the user's /api/v1/apps list (already cached, no rate limits).
+  // Runs BEFORE Algolia so icons keep resolving when the public catalog 429s.
+  try {
+    const { fetchAppsViaApiConfig } = await import('@/Shuffle-MCPs/appsCache');
+    const apps = await fetchAppsViaApiConfig().catch(() => []);
+    if (Array.isArray(apps) && apps.length > 0) {
+      const byName = new Map<string, string>();
+      for (const a of apps) {
+        const url = a?.large_image || a?.image_url;
+        if (!url) continue;
+        const n = _normalize(a?.name || '');
+        if (n && !byName.has(n)) byName.set(n, url);
+      }
+      for (const entry of missing) {
+        const url = byName.get(_normalize(entry.app.name));
+        if (url) {
+          entry.bestImage = url;
+          entry.app = { ...entry.app, large_image: url };
+          _imageCache.set(_normalize(entry.app.name), url);
+        }
+      }
+      missing = dedupedApps.filter(d => !d.bestImage && !d.app.large_image);
+      if (missing.length === 0) return dedupedApps;
+    }
+  } catch {
+    // ignore
+  }
 
   try {
     const { algoliasearch } = await import('algoliasearch');
