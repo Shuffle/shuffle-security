@@ -308,6 +308,10 @@ const EditWorkflow = (props) => {
 		const selectedIds = normalizeSelectValues(selected).filter((value) => value !== "none")
 		return selectedIds.length === 0 ? <span style={{ color: "hsl(var(--muted-foreground))" }}>{emptyLabel}</span> : selectedIds.map(getActionLabel).join(", ")
 	}
+	const handleActionMultiSelectChange = (event: any, setter: any) => {
+		const nextValue = normalizeSelectValues(event?.target?.value).filter((value) => value !== "none")
+		setter(nextValue)
+	}
 
 	return (
 		<Drawer
