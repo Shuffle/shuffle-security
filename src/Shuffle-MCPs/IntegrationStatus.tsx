@@ -48,6 +48,8 @@ interface IntegrationStatusProps {
   hideHeader?: boolean;
   /** When set, apps matching this category are sorted to the top */
   priorityCategory?: string;
+  /** Extra apps to merge in (e.g. apps selected in onboarding but not yet activated). Merged by name (case-insensitive) — not duplicated if already present. */
+  extraApps?: { id: string; name: string; icon?: string }[];
 }
 
 const PRIORITY_CATEGORY_PATTERNS: Record<string, string[]> = {
@@ -69,7 +71,7 @@ export const refreshAllIntegrationStatus = () => {
   window.dispatchEvent(new CustomEvent('integrations-changed'));
 };
 
-export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize = 26, onDisable, disabledApps, showAll, hideAddButton, hideHeader, priorityCategory }: IntegrationStatusProps) => {
+export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize = 26, onDisable, disabledApps, showAll, hideAddButton, hideHeader, priorityCategory, extraApps }: IntegrationStatusProps) => {
   const [allIntegrations, setAllIntegrations] = useState<Integration[]>([]);
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -77,10 +79,28 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const appDetail = useAppDetailOptional();
 
+  // Merge in any extra (pending/selected) apps not already present
+  const mergedIntegrations = (() => {
+    if (!extraApps || extraApps.length === 0) return allIntegrations;
+    const existing = new Set(allIntegrations.map(i => i.name.toLowerCase()));
+    const extras: Integration[] = extraApps
+      .filter(e => e.name && !existing.has(e.name.toLowerCase()))
+      .map(e => ({
+        id: e.id || e.name,
+        name: e.name,
+        icon: e.icon || '',
+        category: 'Integration',
+        hasValidAuth: false,
+        authInstances: [],
+        isActiveOnly: true,
+      }));
+    return [...allIntegrations, ...extras];
+  })();
+
   // Apply filter if provided (case-insensitive name match)
   const integrations = filterApps
-    ? allIntegrations.filter(i => filterApps.some(f => f.toLowerCase() === i.name.toLowerCase()))
-    : allIntegrations;
+    ? mergedIntegrations.filter(i => filterApps.some(f => f.toLowerCase() === i.name.toLowerCase()))
+    : mergedIntegrations;
 
   const defaultLimit = showAll ? integrations.length : (collapsed ? 3 : 7);
   const displayLimit = showAll ? integrations.length : (expanded ? integrations.length : defaultLimit);
