@@ -33,7 +33,7 @@ export const ProductChoiceStep = ({ onSelectCore, onSelectSecurity }: ProductCho
               <AgentIcon size={40} />
             </div>
             <h2 className="mb-1 text-lg font-semibold text-foreground">
-              Do you want incidents and host monitoring?
+              Incidents and host monitoring
             </h2>
             <p className="mb-4 flex-1 text-sm text-muted-foreground">
               Shuffle Security. A modern SOC platform. Connect data sources, enrich alerts, manage incidents and let AI agents do the heavy lifting.
@@ -53,7 +53,7 @@ export const ProductChoiceStep = ({ onSelectCore, onSelectSecurity }: ProductCho
               <img src={shuffleInfraLogo} alt="Shuffle Core" width={40} height={40} style={{ borderRadius: 6 }} />
             </div>
             <h2 className="mb-1 text-lg font-semibold text-foreground">
-              Do you want manual workflow and app building?
+              Manual workflow and app building
             </h2>
             <p className="mb-4 flex-1 text-sm text-muted-foreground">
               Shuffle Core. The original Shuffle. Build workflows, integrate 3,000+ apps, run AI agents and automate any process across your stack.
