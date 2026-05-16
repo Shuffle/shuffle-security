@@ -171,7 +171,7 @@ export const AutomationReadinessBanner = () => {
         mt: 2,
         p: 1.5,
         borderRadius: 2,
-        bgcolor: 'hsl(var(--card))',
+        bgcolor: 'transparent',
         border: '1px solid hsl(var(--border))',
       }}
     >

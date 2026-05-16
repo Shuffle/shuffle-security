@@ -220,7 +220,7 @@ export const SourceTrendChart = ({ incidents, dateFrom, dateTo, onDateRangeSelec
           px: 1.5,
           py: 1.5,
           borderRadius: 2,
-          backgroundColor: 'hsl(var(--card))',
+          backgroundColor: 'transparent',
           border: '1px solid hsl(var(--border))',
           cursor: 'pointer',
           transition: 'border-color 0.2s ease',
