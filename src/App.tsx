@@ -86,6 +86,7 @@ import DashboardPage from '@/pages/dashboard/DashboardPage';
 import VulnerabilitiesPage from '@/pages/dashboard/VulnerabilitiesPage';
 import VulnAssetsPage from '@/pages/dashboard/VulnAssetsPage';
 import AssetsPage from '@/pages/dashboard/AssetsPage';
+import WorkflowsNotSupportedPage from '@/pages/dashboard/WorkflowsNotSupportedPage';
 import HostTerminalPage from '@/pages/dashboard/HostTerminalPage';
 import MonitorDetailPage from '@/pages/dashboard/MonitorDetailPage';
 import EntityReferencePage from '@/pages/dashboard/EntityReferencePage';
@@ -239,6 +240,8 @@ const ThemedApp = () => {
               <Route path="/software/*" element={<EntityReferencePage type="software" />} />
               <Route path="/packages/*" element={<EntityReferencePage type="package" />} />
               <Route path="/assets" element={<SupportOnly><AssetsPage /></SupportOnly>} />
+              <Route path="/workflows" element={<WorkflowsNotSupportedPage />} />
+              <Route path="/workflows/:id" element={<WorkflowsNotSupportedPage />} />
             </Route>
 
             {/* App detail & usecase detail: uses sidebar when authenticated, standalone when guest */}
