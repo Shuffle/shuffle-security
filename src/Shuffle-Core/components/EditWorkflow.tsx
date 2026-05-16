@@ -156,7 +156,9 @@ const EditWorkflow = (props) => {
 			nextWorkflow.due_date = new Date(`${dueDate["$y"]}-${dueDate["$M"] + 1}-${dueDate["$D"]}`).getTime() / 1000
 		}
 
-		setWorkflow(nextWorkflow)
+		if (setWorkflow !== undefined) {
+			setWorkflow(nextWorkflow)
+		}
 		return nextWorkflow
 	}
 	
@@ -391,6 +393,10 @@ const EditWorkflow = (props) => {
 	}
 	const getActionSelectValue = (selectedActions: any) => {
 		const selectedIds = normalizeActionIds(selectedActions)
+		return selectedIds.length === 0 ? ["none"] : selectedIds
+	}
+	const getNoneSelectValue = (selectedValues: any) => {
+		const selectedIds = normalizeSelectValues(selectedValues).filter((value) => value !== "none")
 		return selectedIds.length === 0 ? ["none"] : selectedIds
 	}
 
