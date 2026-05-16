@@ -265,14 +265,11 @@ const EditWorkflow = (props) => {
         window.location.host === "localhost:3002" ||
         window.location.host === "shuffler.io";
 
-	// Selects inside a Drawer need to render their menu within the Drawer's
-	// focus trap, otherwise clicking a MenuItem is treated as an outside click
-	// and the interaction is swallowed (menu closes immediately, value never
-	// commits). disablePortal + an elevated z-index keeps menus on top and
-	// click-through working.
 	const selectMenuProps: any = {
-		disablePortal: true,
+		keepMounted: true,
 		MenuListProps: { dense: true },
+		ModalProps: { keepMounted: true },
+		sx: { zIndex: 9999 },
 		PaperProps: {
 			sx: {
 				zIndex: 9999,
@@ -295,6 +292,32 @@ const EditWorkflow = (props) => {
 				},
 			},
 		},
+	}
+	const selectSx = {
+		width: 500,
+		maxWidth: "100%",
+		"& .MuiSelect-select": {
+			color: "hsl(var(--foreground))",
+			display: "flex",
+			alignItems: "center",
+		},
+	}
+	const normalizeSelectValues = (value: any) => Array.isArray(value) ? value : String(value || "").split(",").filter(Boolean)
+	const getActionLabel = (actionId: string) => workflow?.actions?.find((action) => action.id === actionId)?.label || actionId
+	const stripNoneValue = (value: any) => {
+		const rawValue = normalizeSelectValues(value)
+		return rawValue[rawValue.length - 1] === "none" ? [] : rawValue.filter((item) => item !== "none")
+	}
+	const renderActionSelectValue = (selected: any, emptyLabel: string) => {
+		const selectedIds = stripNoneValue(selected)
+		return selectedIds.length === 0 ? <span style={{ color: "hsl(var(--muted-foreground))" }}>{emptyLabel}</span> : selectedIds.map(getActionLabel).join(", ")
+	}
+	const handleActionMultiSelectChange = (event: any, setter: any) => {
+		setter(stripNoneValue(event?.target?.value))
+	}
+	const getActionSelectValue = (selectedActions: any) => {
+		const selectedIds = normalizeSelectValues(selectedActions).filter((value) => value !== "none")
+		return selectedIds.length === 0 ? ["none"] : selectedIds
 	}
 
 	return (
@@ -824,18 +847,21 @@ const EditWorkflow = (props) => {
 								<FormControl style={{ flex: 1, marginRight: 5, }}>
 									<InputLabel htmlFor="grouped-select-usecase">Usecases</InputLabel>
 									<Select
-										defaultValue=""
+										defaultValue={[]}
 										id="grouped-select"
 										label="Matching Usecase"
 										multiple
+										sx={{ ...selectSx, width: "100%" }}
 										value={selectedUsecases}
 										renderValue={(selected) => selected.join(', ')}
 										MenuProps={selectMenuProps}
 										onChange={(event) => {
-											console.log("Changed: ", event)
+											const nextUsecases = normalizeSelectValues(event.target.value).filter((value) => value !== "none")
+											setSelectedUsecases(nextUsecases)
+											setUpdate(Math.random())
 										}}
 									>
-										<MenuItem value="">
+										<MenuItem value="none">
 											<em>None</em>
 										</MenuItem>
 										{usecases.map((usecase, index) => {
@@ -851,19 +877,7 @@ const EditWorkflow = (props) => {
 														//console.log(subcase)
 														total_count += 1
 														return (
-															<MenuItem key={subindex} value={total_count} onClick={(event) => {
-																if (selectedUsecases.includes(subcase.name)) {
-																	const itemIndex = selectedUsecases.indexOf(subcase.name)
-																	if (itemIndex > -1) {
-																		selectedUsecases.splice(itemIndex, 1)
-																	}
-																} else {
-																	selectedUsecases.push(subcase.name)
-																}
-
-																setUpdate(Math.random());
-																setSelectedUsecases(selectedUsecases)
-															}}>
+													<MenuItem key={subindex} value={subcase.name}>
 																<Checkbox style={{ color: selectedUsecases.includes(subcase.name) ? usecase.color : "hsl(var(--input))" }} checked={selectedUsecases.includes(subcase.name)} />
 																<ListItemText primary={subcase.name} />
 															</MenuItem>
@@ -1103,7 +1117,7 @@ const EditWorkflow = (props) => {
 										:
 										<Select
 											multiple
-											style={{ marginTop: 10, }}
+											sx={{ ...selectSx, marginTop: "10px" }}
 											value={innerWorkflow.suborg_distribution === undefined || innerWorkflow.suborg_distribution === null ? ["none"] : innerWorkflow.suborg_distribution}
 											disabled={workflow?.parentorg_workflow !== undefined && workflow?.parentorg_workflow !== null && workflow?.parentorg_workflow.length > 0}
 											onChange={(e) => {
@@ -1124,6 +1138,11 @@ const EditWorkflow = (props) => {
 											}}
 											label="Suborg Distribution"
 											fullWidth
+											renderValue={(selected) => {
+												const selectedIds = normalizeSelectValues(selected)
+												if (selectedIds.includes("none")) return "None"
+												return userdata.orgs.filter((org) => selectedIds.includes(org.id)).map((org) => org.name).join(", ")
+											}}
 											MenuProps={selectMenuProps}
 										>
 											<MenuItem value="none">
@@ -1354,33 +1373,23 @@ const EditWorkflow = (props) => {
 										When a workflow run is done, the data from the selected actions will be removed by replacing it with a default value. This is useful for cleaning up sensitive data, or data that is no longer needed. This is done after a workflow run is finished or aborted, and is not reversible. Data will remain in the workflow run result (last node value) even if the action result itself is cleaned up.
 									</Typography>
 
-									<FormControl style={{ marginTop: 15, }}>
+									<FormControl style={{ marginTop: 15, width: 500, maxWidth: "100%" }}>
+										<InputLabel id="result-cleanup-control-label">Cleaned Up nodes</InputLabel>
 										<Select
-											defaultValue=""
+											defaultValue={[]}
 											id="result-cleanup-control"
+											labelId="result-cleanup-control-label"
 											label="Cleaned Up nodes"
 											multiple
 											fullWidth
-											style={{ width: 500, }}
-											value={Array.isArray(selectedCleanupActions) && selectedCleanupActions.length === 0 ? ["none"] : selectedCleanupActions}
-											renderValue={(selected) => selected.join(', ')}
+											sx={selectSx}
+											value={getActionSelectValue(selectedCleanupActions)}
+											renderValue={(selected) => renderActionSelectValue(selected, "No cleanup yet")}
 											MenuProps={selectMenuProps}
-											onChange={(event) => {
-												if (event.target.value.length > 0) {
-													if (event.target.value.includes("none")) {
-														setSelectedCleanupActions([])
-														return
-													}
-												}
-
-												const newvalue = event?.target?.value
-												if (newvalue === undefined || newvalue === null) {
-												} else {
-													setSelectedCleanupActions(newvalue)
-												}
-											}}
+											onChange={(event) => handleActionMultiSelectChange(event, setSelectedCleanupActions)}
 										>
 											<MenuItem value="none">
+												<Checkbox checked={selectedCleanupActions.length === 0} />
 												<em>None</em>
 											</MenuItem>
 											{workflow?.actions?.map((action, actionIndex) => {
@@ -1389,6 +1398,7 @@ const EditWorkflow = (props) => {
 														key={actionIndex}
 														value={action.id}
 													>
+														<Checkbox checked={selectedCleanupActions.includes(action.id)} />
 														<Tooltip title={action.app_name} key={actionIndex}>
 															<img src={action.large_image !== undefined && action.large_image !== null && action.large_image.length > 0 ? action.large_image : theme.palette.defaultImage} style={{ width: 20, height: 20, marginRight: 10, }} />
 														</Tooltip>
@@ -1604,34 +1614,23 @@ const EditWorkflow = (props) => {
 										When running this workflow as a form, the output will be shown as a Markdown object by default, with JSON objects being rendered. By adding nodes below, they will be shown while the workflow is running as soon as they get a result. Failing/Skipped nodes are not shown. This makes it possible to track progress for more complex usecases.
 									</Typography>
 
-									<FormControl style={{ marginTop: 15, }}>
+									<FormControl style={{ marginTop: 15, width: 500, maxWidth: "100%" }}>
+										<InputLabel id="output-yield-control-label">Yielding nodes</InputLabel>
 										<Select
-											defaultValue=""
+											defaultValue={[]}
 											id="output-yield-control"
+											labelId="output-yield-control-label"
 											label="Yielding nodes"
 											multiple
 											fullWidth
-											style={{ width: 500, }}
-											value={Array.isArray(selectedYieldActions) && selectedYieldActions.length === 0 ? ["none"] : selectedYieldActions}
-											renderValue={(selected) => selected.join(', ')}
+											sx={selectSx}
+											value={getActionSelectValue(selectedYieldActions)}
+											renderValue={(selected) => renderActionSelectValue(selected, "No Returns")}
 											MenuProps={selectMenuProps}
-											onChange={(event) => {
-												console.log("Value: ", event.target.value)
-												if (event.target.value.length > 0) {
-													if (event.target.value.includes("none")) {
-														setSelectedYieldActions([])
-														return
-													}
-												}
-
-												const newvalue = event?.target?.value
-												if (newvalue === undefined || newvalue === null) {
-												} else {
-													setSelectedYieldActions(newvalue)
-												}
-											}}
+											onChange={(event) => handleActionMultiSelectChange(event, setSelectedYieldActions)}
 										>
 											<MenuItem value="none">
+												<Checkbox checked={selectedYieldActions.length === 0} />
 												<em>None</em>
 											</MenuItem>
 											{workflow?.actions?.map((action, actionIndex) => {
@@ -1640,6 +1639,7 @@ const EditWorkflow = (props) => {
 														key={actionIndex}
 														value={action.id}
 													>
+														<Checkbox checked={selectedYieldActions.includes(action.id)} />
 														<Tooltip title={action.app_name} key={actionIndex}>
 															<img src={action.large_image !== undefined && action.large_image !== null && action.large_image.length > 0 ? action.large_image : theme.palette.defaultImage} style={{ width: 20, height: 20, marginRight: 10, }} />
 														</Tooltip>
