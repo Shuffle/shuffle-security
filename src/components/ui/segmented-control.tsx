@@ -74,7 +74,7 @@ export function SegmentedControl<V extends string = string>({
         role="tablist"
         aria-label={ariaLabel}
         className={cn(
-          "inline-flex items-center gap-0.5 rounded-full border border-border bg-muted/40",
+          "inline-flex items-center gap-0.5 rounded-full border border-border bg-transparent",
           s.container,
           className,
         )}
@@ -91,7 +91,8 @@ export function SegmentedControl<V extends string = string>({
               disabled={opt.disabled}
               onClick={() => !opt.disabled && onChange(opt.value)}
               className={cn(
-                "relative inline-flex items-center rounded-full font-medium transition-colors",
+                "relative inline-flex items-center rounded-full font-medium",
+                "transition-colors duration-300",
                 "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 s.item,
                 active
@@ -103,19 +104,26 @@ export function SegmentedControl<V extends string = string>({
               {active && (
                 <motion.span
                   layoutId={`${groupId}-pill`}
-                  className="absolute inset-0 rounded-full bg-background border border-border shadow-sm"
-                  transition={{ type: "spring", stiffness: 500, damping: 38, mass: 0.6 }}
+                  className="absolute inset-0 rounded-full bg-card border border-border"
+                  initial={false}
+                  transition={{
+                    type: "spring",
+                    stiffness: 380,
+                    damping: 28,
+                    mass: 0.9,
+                    bounce: 0.35,
+                  }}
                 />
               )}
               <span className="relative z-10">{opt.label}</span>
               {typeof opt.count === "number" && (
                 <span
                   className={cn(
-                    "relative z-10 inline-flex items-center justify-center rounded-full font-semibold tabular-nums",
+                    "relative z-10 inline-flex items-center justify-center rounded-md font-semibold tabular-nums border border-border/60",
                     s.count,
                     active
-                      ? "bg-muted text-foreground"
-                      : "bg-muted/70 text-muted-foreground",
+                      ? "bg-background/60 text-foreground"
+                      : "bg-transparent text-muted-foreground",
                   )}
                 >
                   {opt.count}
