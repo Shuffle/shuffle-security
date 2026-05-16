@@ -1,31 +1,32 @@
 /**
- * FormsPage — host wrapper that mounts the Shuffle-Core <FormInput /> at
- * `/forms` and `/forms/:id`. Bridges AuthContext into the props the original
- * RunWorkflow component expects (`isLoaded`, `isLoggedIn`, `userdata`,
- * `globalUrl`).
+ * FormsPage — host wrapper that bridges AuthContext + API_CONFIG into the
+ * standalone FormInput component from `@/Shuffle-Core`.
+ *
+ * Routes:
+ *   /forms        -> list of forms (no id selected)
+ *   /forms/:id    -> a specific form's run page
+ *
+ * Note: many of FormInput's features are powered by stubs in
+ * `@/Shuffle-Core/FormInputStubs` because the original Shuffle Core
+ * dependencies (EditWorkflow, RecentWorkflow, theme, etc.) are not yet
+ * ported. See that file for the list of degraded features.
  */
-import FormInput from '@/Shuffle-Core/FormInput';
 import { useAuth } from '@/context/AuthContext';
 import { API_CONFIG } from '@/Shuffle-MCPs/api';
+import FormInput from '@/Shuffle-Core/FormInput';
 
 const FormsPage = () => {
-  const { isAuthenticated, isLoading, userInfo } = useAuth();
+  const { userInfo, isAuthenticated } = useAuth();
   return (
     <FormInput
       globalUrl={API_CONFIG.baseUrl}
-      isLoaded={!isLoading}
-      isLoggedIn={isAuthenticated}
+      userdata={userInfo || {}}
+      isLoaded={true}
+      isLoggedIn={!!isAuthenticated}
       setIsLoggedIn={() => {}}
       setCookie={() => {}}
       register={false}
       serverside={false}
-      userdata={userInfo ? {
-        id: userInfo.id,
-        username: userInfo.username,
-        support: userInfo.support,
-        active_org: userInfo.active_org,
-        orgs: userInfo.orgs,
-      } as any : { active_org: {} } as any}
     />
   );
 };

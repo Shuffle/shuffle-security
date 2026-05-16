@@ -1,41 +1,44 @@
 // @ts-nocheck
+/* eslint-disable */
+// Ported from RunWorkflow.jsx. See FormInputStubs.tsx for missing-feature notes.
 /* eslint-disable react/no-multi-comp */
-/**
- * FormInput — versatile, Google-Docs-style form runner for Shuffle workflows.
- *
- * Direct port of the Shuffle Core `RunWorkflow.jsx`, converted to TypeScript.
- * All host-app and third-party imports that are not available in this project
- * are routed through `./FormInputStubs` — see that file's banner comment for
- * the exact list of features that are degraded (EditWorkflow, RecentWorkflow,
- * ReactJson, GetIconInfo, rehype-raw, isMobile live-resize, theme switching).
- *
- * Everything else — form validation, /api/v1/streams polling, agentic decision
- * continuation, markdown questions, sharing dialog, sidebar form list — is the
- * unmodified original logic.
- */
+import React, {useState, useEffect, useContext} from 'react';
 
-import React, { useState, useEffect, useContext } from 'react';
-import { useNavigate, Link, useParams } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import Markdown from 'react-markdown';
+import { ReactJson } from "./FormInputStubs";
+import { green, yellow, red, grey } from "./FormInputStubs";
+import { CodeHandler, Img, OuterLink } from "./FormInputStubs";
+import { useNavigate, Link, useParams } from "react-router-dom";
+import { validateJson, collapseField, GetIconInfo } from "./FormInputStubs";
+import EditWorkflow from "./FormInputStubs";
+import { toast } from "react-toastify" 
+
+import { useInterval } from "./FormInputStubs";
+import { isMobile } from "./FormInputStubs";
+import Markdown from "react-markdown";
+import { getTheme } from "./FormInputStubs";
+const rehypeRaw: any = undefined;
+import { RecentWorkflow } from "./FormInputStubs";
+
 import {
-  Tooltip,
-  Fade,
-  Select,
-  IconButton,
-  CircularProgress,
-  TextField,
-  Button,
-  ButtonGroup,
-  Paper,
-  Typography,
-  Divider,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  MenuItem,
-  Autocomplete,
+  	Tooltip,
+  	Fade,
+	Select,
+	IconButton,
+	CircularProgress, 
+	TextField, 
+	Button, 
+	ButtonGroup, 
+	Paper, 
+	Typography,
+	Divider,
+
+	Dialog,
+	DialogTitle,
+	DialogContent,
+	MenuItem,
+    Autocomplete,
 } from '@mui/material';
+
 import {
   Preview as PreviewIcon,
   ContentCopy as ContentCopyIcon,
@@ -49,25 +52,9 @@ import {
   CheckCircle as CheckCircleIcon,
   DirectionsRun as DirectionsRunIcon,
   Error as ErrorIcon,
-  Pause as PauseIcon,
+  Pause as PauseIcon, 
 } from '@mui/icons-material';
-
-import {
-  green, yellow, red, grey,
-  CodeHandler, Img, OuterLink,
-  validateJson, collapseField, GetIconInfo,
-  EditWorkflow,
-  RecentWorkflow,
-  ReactJson as ReactJsonStub,
-  useInterval,
-  isMobile,
-  rehypeRaw,
-  getTheme,
-  Context,
-} from './FormInputStubs';
-// Original source uses `ReactJson` as the JSX tag name.
-const ReactJson: any = ReactJsonStub;
-
+import { Context } from "./FormInputStubs";
 
 const hrefStyle = {
 	color: "white", 
@@ -75,12 +62,12 @@ const hrefStyle = {
 }
 
 
-const RunWorkflow = (defaultprops) => {
+const FormInput = (defaultprops: any) => {
   const { globalUrl, userdata, isLoaded, isLoggedIn, setIsLoggedIn, setCookie, register, serverside } = defaultprops;
-  const themeMode = 'dark'; const brandColor = '#FF6600';
+  const { themeMode, brandColor } = useContext(Context);
   const theme = getTheme(themeMode, brandColor);
 
-  const supportEmail = 'support@shuffler.io';
+  const { supportEmail } = useContext(Context);
   let navigate = useNavigate();
   const [_, setUpdate] = useState(""); // Used to force rendring, don't remove
   const [explorerUi, setExplorerUi] = useState(false)
@@ -919,8 +906,7 @@ const RunWorkflow = (defaultprops) => {
 
 		//console.log("Got response: ", responseJson)
 
-		/* ReactDOM.unstable_batchedUpdates removed — React 18 auto-batches */
-
+		(function(fn){fn()})(() => {
 		  if (JSON.stringify(responseJson) !== JSON.stringify(executionData)) {
 			// FIXME: If another is selected, don't edit..
 			// Doesn't work because this is some async garbage
@@ -990,6 +976,7 @@ const RunWorkflow = (defaultprops) => {
         stop();
         //getWorkflowExecution(props.match.params.key, "");
       }
+		})
 	}
 
   const handleGetOrg = (orgId, execution_id, authorization) => {
@@ -2126,4 +2113,4 @@ const RunWorkflow = (defaultprops) => {
 	)
 }
 
-export default RunWorkflow
+export default FormInput

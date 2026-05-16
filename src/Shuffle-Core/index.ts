@@ -13,6 +13,6 @@ import './shuffle-core.css';
 export { default as Usecases } from './Usecases';
 export { default } from './Usecases';
 export { default as UsecaseAlluvialDiagram } from './UsecaseAlluvialDiagram';
-export { default as FormInput } from './FormInput';
 export { usePageMeta } from './usePageMeta';
 export { toast, setToastImpl } from './toast';
+export { default as FormInput } from './FormInput';

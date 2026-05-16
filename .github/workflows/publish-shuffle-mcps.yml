@@ -1,4 +1,4 @@
-name: Publish Shuffle-MCPs
+name: Publish shuffle-mcps
 
 on:
   push:
