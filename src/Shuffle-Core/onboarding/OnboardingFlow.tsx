@@ -1033,6 +1033,23 @@ const OnboardingFlow = ({
                   transition={{ duration: 0.15 }}
                   style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}
                 >
+                  {steps[activeStep]?.key === 'product' && (
+                    <ProductChoiceStep
+                      onSelectCore={handlePickCore}
+                      onSelectSecurity={() => {
+                        handlePickSecurity();
+                        // Auto-advance to the next step after picking Security
+                        setTimeout(() => {
+                          const nextIdx = activeStep + 1;
+                          if (nextIdx < steps.length) {
+                            trackOnboardingStep(nextIdx, steps[nextIdx].label);
+                            setActiveStepKey(steps[nextIdx].key);
+                          }
+                        }, 250);
+                      }}
+                    />
+                  )}
+
                   {steps[activeStep]?.key === 'welcome' && (
                     <WelcomeStep
                       selectedChallenge={selectedChallenge}
