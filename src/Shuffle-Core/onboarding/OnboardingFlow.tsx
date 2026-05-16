@@ -1,4 +1,4 @@
-import { ArrowRight as ArrowForwardIcon, ArrowLeft as ArrowBackIcon, CheckCircle as CheckCircleOutlineIcon, Hand as WavingHandIcon, Link as LinkIcon, Key as VpnKeyIcon, Rocket as RocketLaunchIcon } from 'lucide-react';
+import { ArrowRight as ArrowForwardIcon, ArrowLeft as ArrowBackIcon, CheckCircle as CheckCircleOutlineIcon, Hand as WavingHandIcon, Link as LinkIcon, Key as VpnKeyIcon, Rocket as RocketLaunchIcon, Sparkles as SparklesIcon } from 'lucide-react';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Box, Container, Typography, Button, Stack } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -85,9 +85,10 @@ const processAuthData = (authData: ApiAuthEntry[]): ApiAuthEntry[] => {
   });
 };
 
-// All possible steps (Welcome is conditional)
+// All possible steps. 'product' is conditional on showProductChoice; 'welcome' is hidden when already configured.
 const ALL_STEPS = [
-  { key: 'welcome', label: 'Welcome', icon: <WavingHandIcon />, path: '/onboarding' },
+  { key: 'product', label: 'Product', icon: <SparklesIcon />, path: '/onboarding/product' },
+  { key: 'welcome', label: 'Welcome', icon: <WavingHandIcon />, path: '/onboarding/welcome' },
   { key: 'sources', label: 'Sources', icon: <LinkIcon />, path: '/onboarding/sources' },
   { key: 'authenticate', label: 'Authenticate', icon: <VpnKeyIcon />, path: '/onboarding/authenticate' },
   { key: 'automate', label: 'Automate', icon: <RocketLaunchIcon />, path: '/onboarding/automate' },
@@ -189,11 +190,12 @@ const OnboardingFlow = ({
 
   // Compute dynamic steps
   const steps = useMemo(() => {
-    if (hideWelcome) {
-      return ALL_STEPS.filter(s => s.key !== 'welcome');
-    }
-    return ALL_STEPS;
-  }, [hideWelcome]);
+    return ALL_STEPS.filter(s => {
+      if (s.key === 'product' && !showProductChoice) return false;
+      if (s.key === 'welcome' && hideWelcome) return false;
+      return true;
+    });
+  }, [hideWelcome, showProductChoice]);
 
   // Build path-to-key and key-to-path mappings
   const pathToKey = useMemo(() => {
