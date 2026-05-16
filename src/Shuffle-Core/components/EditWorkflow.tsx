@@ -426,7 +426,7 @@ const EditWorkflow = (props) => {
 		>
 			<DialogTitle style={{ padding: 30, paddingBottom: 0, zIndex: 1000, paddingTop: "25px", paddingLeft: "50px"}}>
 				<div style={{ display: "flex" }}>
-					<div style={{ flex: 1, color: "hsl(var(--sidebar-foreground))" }}>
+					<div style={{ flex: 1, color: "hsl(var(--foreground))" }}>
 						<div style={{ display: "flex" }}>
 							<Typography variant="h4" style={{ flex: 9, marginTop: newWorkflow ? 50 : 25, }}>
 								{newWorkflow ? "New" : "Editing"} Workflow
