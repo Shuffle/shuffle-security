@@ -645,9 +645,8 @@ const ShuffleCoreTestPage = () => {
           >
             <Box sx={{ border: '1px solid hsl(var(--border))', borderRadius: 1.5, p: 2 }}>
               <ProductChoiceStep
-                onSelect={(p) => console.log('picked', p)}
-                coreRedirectUrl="https://shuffler.io/onboarding"
-                securityRedirectUrl="https://security.shuffler.io/onboarding"
+                onSelectCore={() => console.log('picked core')}
+                onSelectSecurity={() => console.log('picked security')}
               />
             </Box>
           </DemoSection>
