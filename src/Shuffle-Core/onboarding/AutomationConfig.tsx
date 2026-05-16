@@ -1,10 +1,16 @@
 import { ChevronDown as ExpandMoreIcon, Shield as SecurityIcon, Mail as EmailIcon, MessageSquare as ChatIcon, Globe as TravelExploreIcon, ArrowLeftRight as SyncAltIcon, Download as DownloadIcon, ClipboardCheck as AssignmentIndIcon, Fingerprint as FingerprintIcon, CheckCircle2 as CheckCircleIcon, Plus as AddIcon, Trash2 as DeleteIcon, Pencil as EditIcon, Link as LinkIcon, RotateCcw as RestoreIcon, Bug as BugReportIcon } from 'lucide-react';
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { IntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
-import { fetchAppsViaApiConfig } from '@/Shuffle-MCPs/appsCache';
-import { AppAuthCard, type AppAuthState, type ApiAuthEntry as AppAuthApiEntry } from '@/Shuffle-MCPs/AppAuthConfig';
-import type { AlgoliaSearchApp } from '@/Shuffle-MCPs';
+import {
+  IntegrationStatus,
+  fetchAppsViaApiConfig,
+  AppAuthCard,
+} from '@shuffleio/shuffle-mcps';
+import type {
+  AppAuthState,
+  ApiAuthEntry as AppAuthApiEntry,
+  AlgoliaSearchApp,
+} from '@shuffleio/shuffle-mcps';
 import {
   Box,
   Typography,
