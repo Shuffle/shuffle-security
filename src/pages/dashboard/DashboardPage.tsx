@@ -18,8 +18,7 @@ import {
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { AlertTriangle, CheckCircle, Loader2, HelpCircle, Clock, MessageSquare, ChevronRight, Plug, KeyRound, ArrowDownToLine, Send, Radar, Monitor, Shield, Sparkles, Check, ArrowRight, ExternalLink, EyeOff, Undo2, ExternalLink as OpenInNewIcon, RefreshCw as RefreshIcon } from 'lucide-react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { useDemo } from '@/context/DemoContext';
+import { Link, useNavigate } from 'react-router-dom';
 import AgentQuestionDialog from '@/components/agent/AgentQuestionDialog';
 import AgentQuickViewDrawer, { type QuickViewItem } from '@/components/agent/AgentQuickViewDrawer';
 import InlineMarkdown from '@/components/shared/InlineMarkdown';
