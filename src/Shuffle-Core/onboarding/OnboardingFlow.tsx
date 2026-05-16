@@ -935,7 +935,11 @@ const OnboardingFlow = ({
                 value: step.key,
                 label: (
                   <span className="inline-flex items-center gap-1.5">
-                    {index < activeStep ? <CheckCircleOutlineIcon size={14} /> : step.icon}
+                    {index < activeStep
+                      ? <CheckCircleOutlineIcon size={14} />
+                      : React.isValidElement(step.icon)
+                        ? React.cloneElement(step.icon as React.ReactElement, { size: 14 })
+                        : step.icon}
                     <span className="hidden md:inline">{step.label}</span>
                   </span>
                 ),
