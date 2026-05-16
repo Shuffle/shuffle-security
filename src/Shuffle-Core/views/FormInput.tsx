@@ -1767,10 +1767,12 @@ const FormInput = (defaultprops: any) => {
 								<div style={{marginBottom: 4}}>
 									<Typography
 										style={{
-											fontSize: 13,
-											fontWeight: 500,
-											color: "hsl(var(--foreground))",
-											marginBottom: 6,
+											fontSize: 12,
+											fontWeight: 600,
+											letterSpacing: "0.06em",
+											textTransform: "uppercase",
+											color: "hsl(var(--muted-foreground))",
+											marginBottom: 8,
 										}}
 									>
 										{foundSourcenode !== undefined && foundSourcenode !== null
@@ -1782,32 +1784,53 @@ const FormInput = (defaultprops: any) => {
 										disabled={executionRunning}
 										color="primary"
 										multiline
-										minRows={3}
-										maxRows={8}
+										minRows={4}
+										maxRows={10}
 										type="text"
 										autoComplete="off"
 										fullWidth
-										placeholder="Enter a value to pass into the workflow"
+										placeholder="Paste JSON, text, or any value to pass into the workflow…"
 										id="runtime-argument"
 										variant="outlined"
 										sx={{
 											"& .MuiOutlinedInput-root": {
-												backgroundColor: "hsl(var(--background))",
-												borderRadius: "8px",
+												backgroundColor: "hsl(var(--background) / 0.6)",
+												borderRadius: "10px",
 												fontSize: 14,
+												lineHeight: 1.55,
 												color: "hsl(var(--foreground))",
+												padding: "12px 14px",
+												transition: "border-color .15s ease, box-shadow .15s ease",
+											},
+											"& .MuiOutlinedInput-input::placeholder": {
+												color: "hsl(var(--muted-foreground))",
+												opacity: 1,
 											},
 											"& .MuiOutlinedInput-notchedOutline": {
 												borderColor: "hsl(var(--border))",
 											},
 											"&:hover .MuiOutlinedInput-notchedOutline": {
-												borderColor: "hsl(var(--ring))",
+												borderColor: "hsl(var(--border))",
+											},
+											"& .Mui-focused .MuiOutlinedInput-notchedOutline, & .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+												borderColor: "hsl(var(--primary))",
+												borderWidth: "1px",
+												boxShadow: "0 0 0 3px hsl(var(--primary) / 0.15)",
 											},
 										}}
 										onChange={(e) => {
 											setExecutionArgument(e.target.value)
 										}}
 									/>
+									<Typography
+										style={{
+											marginTop: 8,
+											fontSize: 12,
+											color: "hsl(var(--muted-foreground))",
+										}}
+									>
+										This value is forwarded to the workflow as the execution argument.
+									</Typography>
 								</div>
 							
 						}
