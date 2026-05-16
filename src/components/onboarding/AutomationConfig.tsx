@@ -1567,6 +1567,11 @@ export const AutomationConfig = ({
 
   return (
     <Box>
+      {/* Connected Apps — reuse sidebar component */}
+      <Box sx={{ mb: 3, ml: -2 }}>
+        <IntegrationStatus collapsed={false} iconSize={30} showAll hideAddButton />
+      </Box>
+
       {/* Header */}
       <Box sx={{ mb: 3 }}>
         <Typography
@@ -1585,11 +1590,6 @@ export const AutomationConfig = ({
         >
           Review your connected tools, configure automation, and you're all set.
         </Typography>
-      </Box>
-
-      {/* Connected Apps — reuse sidebar component */}
-      <Box sx={{ mb: 3 }}>
-        <IntegrationStatus collapsed={false} iconSize={30} showAll hideAddButton />
       </Box>
 
       {/* Automation Sections */}
