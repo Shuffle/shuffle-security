@@ -272,6 +272,7 @@ const EditWorkflow = (props) => {
 	// click-through working.
 	const selectMenuProps: any = {
 		disablePortal: true,
+		keepMounted: true,
 		MenuListProps: { dense: true },
 		PaperProps: {
 			sx: {
@@ -295,6 +296,21 @@ const EditWorkflow = (props) => {
 				},
 			},
 		},
+	}
+	const selectSx = {
+		width: 500,
+		maxWidth: "100%",
+		"& .MuiSelect-select": {
+			color: "hsl(var(--foreground))",
+			display: "flex",
+			alignItems: "center",
+		},
+	}
+	const normalizeSelectValues = (value: any) => Array.isArray(value) ? value : String(value || "").split(",").filter(Boolean)
+	const getActionLabel = (actionId: string) => workflow?.actions?.find((action) => action.id === actionId)?.label || actionId
+	const renderActionSelectValue = (selected: any, emptyLabel: string) => {
+		const selectedIds = normalizeSelectValues(selected).filter((value) => value !== "none")
+		return selectedIds.length === 0 ? <span style={{ color: "hsl(var(--muted-foreground))" }}>{emptyLabel}</span> : selectedIds.map(getActionLabel).join(", ")
 	}
 
 	return (
