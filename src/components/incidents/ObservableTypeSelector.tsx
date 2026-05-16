@@ -134,10 +134,11 @@ export const ObservableTypeSelector = ({
             borderRadius: 1,
             border: '1px solid',
             borderColor: open ? 'primary.main' : 'hsl(var(--border))',
-            bgcolor: 'hsl(var(--background))',
+            bgcolor: 'transparent',
+            backgroundImage: 'none',
             cursor: 'pointer',
             minWidth: 140,
-            '&:hover': { borderColor: 'hsl(var(--border) / 0.8)' },
+            '&:hover': { bgcolor: 'hsl(var(--muted) / 0.25)', borderColor: 'hsl(var(--border) / 0.8)' },
           }}
         >
           <Typography variant="body2" sx={{ flex: 1 }}>
@@ -193,7 +194,8 @@ export const ObservableTypeSelector = ({
                 }}
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    bgcolor: 'hsl(var(--background))',
+                    bgcolor: 'transparent',
+                    backgroundImage: 'none',
                     '& fieldset': { borderColor: 'hsl(var(--border))' },
                   },
                 }}
