@@ -6,29 +6,33 @@ import { getAutomationLabels } from '@/config/usecases';
 import { CategoryAutomation, CategoryConfig, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 
 /**
- * "Ask agent" / @AIAgent handling requires TWO things to be in place:
+ * "Ask agent" / @AIAgent handling is satisfied by EITHER of these paths on
+ * the `shuffle-security_incidents` category:
  *
- *   1. The "Assign & Escalate" background workflow exists
- *      (background_processing=true).
- *   2. The shuffle-security_incidents category has a "Run workflow"
- *      automation enabled, pointing at that workflow's id.
+ *   A. The new built-in "Run AI Agent" automation (type=ai_agent) is enabled.
+ *      No workflow plumbing is needed — Shuffle runs the agent directly.
  *
- * Without #2 the @AIAgent comment never triggers anything — the agent
- * appears silent. This hook is the single source of truth for whether the
- * agent is wired up, and exposes an `enable()` that fixes both at
- * once (mirroring what /onboarding/automate does).
+ *   B. The legacy path: the "Assign & Escalate" background workflow exists
+ *      (background_processing=true) AND a "Run workflow" automation is
+ *      enabled and points at that workflow's id.
+ *
+ * If neither is in place the @AIAgent comment never triggers anything.
+ * This hook is the single source of truth and exposes `enable()` which
+ * fixes the legacy path (mirroring /onboarding/automate).
  */
 
 export interface AgentReadinessStatus {
-  /** Both conditions met */
+  /** Either path A or path B is satisfied */
   active: boolean;
-  /** Workflow exists with background_processing=true */
+  /** Path A: "Run AI Agent" automation is enabled */
+  hasAiAgentAutomation: boolean;
+  /** Path B part 1: workflow exists with background_processing=true */
   hasWorkflow: boolean;
-  /** Category has "Run workflow" enabled with this workflow id */
+  /** Path B part 2: "Run workflow" enabled with this workflow id */
   hasCategoryAutomation: boolean;
   /** Still loading server state */
   isLoading: boolean;
-  /** Force-enable both: generates workflow + wires up category automation */
+  /** Force-enable the legacy path: generates workflow + wires up category automation */
   enable: () => Promise<void>;
   /** Enable in-flight */
   isEnabling: boolean;
@@ -90,6 +94,13 @@ export const useAgentReadiness = (): AgentReadinessStatus => {
 
   const hasWorkflow = !!matchingWorkflow;
 
+  const hasAiAgentAutomation = useMemo(() => {
+    if (!categoryConfig?.automations) return false;
+    return categoryConfig.automations.some(
+      (a) => a.enabled && ((a as any).type === 'ai_agent' || a.name === 'Run AI Agent'),
+    );
+  }, [categoryConfig]);
+
   const hasCategoryAutomation = useMemo(() => {
     if (!hasWorkflow || !categoryConfig?.automations) return false;
     const wfAutomation = categoryConfig.automations.find(
@@ -102,7 +113,8 @@ export const useAgentReadiness = (): AgentReadinessStatus => {
     return matchingWorkflow ? ids.includes(matchingWorkflow.id) : false;
   }, [categoryConfig, hasWorkflow, matchingWorkflow]);
 
-  const serverActive = hasWorkflow && hasCategoryAutomation;
+  // Either path satisfies "agent is wired up".
+  const serverActive = hasAiAgentAutomation || (hasWorkflow && hasCategoryAutomation);
   const active = optimistic !== null ? optimistic : serverActive;
 
   const refetchAll = useCallback(async () => {
@@ -221,6 +233,7 @@ export const useAgentReadiness = (): AgentReadinessStatus => {
 
   return {
     active,
+    hasAiAgentAutomation,
     hasWorkflow,
     hasCategoryAutomation,
     isLoading: wfLoading || cfgLoading,

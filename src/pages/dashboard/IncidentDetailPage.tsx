@@ -6546,8 +6546,8 @@ const IncidentDetailPage = () => {
                       AI Agent is not enabled
                     </Typography>
                     <Typography variant="caption" sx={{ display: 'block', color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem', lineHeight: 1.4 }}>
-                      {!agentReadiness.hasWorkflow && !agentReadiness.hasCategoryAutomation
-                        ? 'The "Assign & Escalate" workflow and the incident "Run workflow" automation need to be set up.'
+                      {!agentReadiness.hasWorkflow && !agentReadiness.hasCategoryAutomation && !agentReadiness.hasAiAgentAutomation
+                        ? 'Neither the "Run AI Agent" automation nor the "Assign & Escalate" workflow is wired up on Incidents.'
                         : !agentReadiness.hasWorkflow
                           ? 'The "Assign & Escalate" workflow is missing.'
                           : 'The incident "Run workflow" automation is not pointing at the agent workflow.'}
