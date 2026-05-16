@@ -324,7 +324,7 @@ const FormInput = (defaultprops: any) => {
 	const ShowExecutionResults = (props) => {
 		const { executionData } = props;
 
-		if (executionData === undefined || executionData === null || executionData === {}) {
+		if (executionData === undefined || executionData === null || (typeof executionData === 'object' && Object.keys(executionData).length === 0)) {
 			return null
 		}
 
@@ -1204,11 +1204,11 @@ const FormInput = (defaultprops: any) => {
 	}, [isLoaded])
 
 	useEffect(() => {
-		if (executionData === undefined || executionData === null || executionData === {}) {
+		if (executionData === undefined || executionData === null || (typeof executionData === 'object' && Object.keys(executionData).length === 0)) {
 			return
 		}
 
-		if (foundSourcenode === undefined || foundSourcenode === null || foundSourcenode === {}) {
+		if (foundSourcenode === undefined || foundSourcenode === null || (typeof foundSourcenode === 'object' && Object.keys(foundSourcenode).length === 0)) {
 			return
 		}
 

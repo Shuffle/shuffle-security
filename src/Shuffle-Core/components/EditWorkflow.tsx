@@ -215,12 +215,12 @@ const EditWorkflow = (props) => {
 						setDescription(description)
 					}
 
-					if (newWorkflowTags === []) {
+					if (Array.isArray(newWorkflowTags) && newWorkflowTags.length === 0) {
 						innerWorkflow.tags = responseJson.tags
 						setNewWorkflowTags(responseJson.tags)
 					}
 
-					if (selectedUsecases === []) {
+					if (Array.isArray(selectedUsecases) && selectedUsecases.length === 0) {
 						setSelectedUsecases(responseJson.usecase_ids)
 					}
 
@@ -979,7 +979,6 @@ const EditWorkflow = (props) => {
 									color="primary"
 									defaultValue={innerWorkflow.description}
 									placeholder="Description"
-									multiline
 									label="Description"
 									margin="dense"
 									fullWidth
@@ -1325,7 +1324,7 @@ const EditWorkflow = (props) => {
 											multiple
 											fullWidth
 											style={{ width: 500, }}
-											value={selectedCleanupActions === [] ? ["none"] : selectedCleanupActions}
+											value={Array.isArray(selectedCleanupActions) && selectedCleanupActions.length === 0 ? ["none"] : selectedCleanupActions}
 											renderValue={(selected) => selected.join(', ')}
 											onChange={(event) => {
 												if (event.target.value.length > 0) {
@@ -1576,7 +1575,7 @@ const EditWorkflow = (props) => {
 											multiple
 											fullWidth
 											style={{ width: 500, }}
-											value={selectedYieldActions === [] ? ["none"] : selectedYieldActions}
+											value={Array.isArray(selectedYieldActions) && selectedYieldActions.length === 0 ? ["none"] : selectedYieldActions}
 											renderValue={(selected) => selected.join(', ')}
 											onChange={(event) => {
 												console.log("Value: ", event.target.value)
