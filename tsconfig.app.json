@@ -19,6 +19,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@shuffleio/shuffle-mcps": [
+        "./src/Shuffle-MCPs/index.ts"
       ]
     },
     "skipLibCheck": true,
