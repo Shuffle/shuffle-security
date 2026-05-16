@@ -7811,7 +7811,7 @@ const IncidentDetailPage = () => {
                 label="Clear filters"
                 size="small"
                 onDelete={() => { setObsFilterTypes([]); setObsFilterText(''); setObsSortField('first_seen'); setObsSortDir('desc'); }}
-                sx={{ fontSize: '0.65rem', cursor: 'pointer', color: 'hsl(var(--muted-foreground))', bgcolor: 'rgba(255,255,255,0.05)' }}
+                sx={{ fontSize: '0.65rem', cursor: 'pointer', color: 'hsl(var(--muted-foreground))', bgcolor: 'transparent', border: '1px solid hsl(var(--border))', '&:hover': { bgcolor: 'hsl(var(--muted) / 0.25)' } }}
               />
             )}
             {/* Show / hide ignored observables — per-org list of indicators
@@ -7837,11 +7837,11 @@ const IncidentDetailPage = () => {
                     height: 22,
                     cursor: 'pointer',
                     color: showIgnoredObs ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
-                    bgcolor: showIgnoredObs ? 'hsl(var(--primary) / 0.1)' : 'rgba(255,255,255,0.05)',
+                    bgcolor: showIgnoredObs ? 'hsl(var(--primary) / 0.1)' : 'transparent',
                     border: '1px solid',
                     borderColor: showIgnoredObs ? 'hsl(var(--primary) / 0.4)' : 'hsl(var(--border))',
                     '& .MuiChip-icon': { ml: 0.75, mr: -0.25, color: 'inherit' },
-                    '&:hover': { bgcolor: showIgnoredObs ? 'hsl(var(--primary) / 0.18)' : 'rgba(255,255,255,0.08)' },
+                    '&:hover': { bgcolor: showIgnoredObs ? 'hsl(var(--primary) / 0.18)' : 'hsl(var(--muted) / 0.25)' },
                   }}
                 />
               </Tooltip>
