@@ -5,25 +5,45 @@ import { cn } from "@/lib/utils";
 /**
  * SegmentedControl
  *
- * A reusable iOS-style segmented control where the active "pill" smoothly
- * slides/morphs between options using a shared layoutId. Supports an optional
- * count badge per option (chip-in-chip).
+ * iOS-style pill with a smoothly sliding active background (shared layoutId).
+ * Items can be tabs (`type: 'tab'`, default) OR action buttons
+ * (`type: 'action'`) — actions just fire onClick and never become "active".
+ * A vertical divider can be inserted with `{ type: 'divider' }`.
  *
- * Use this anywhere we need filter tabs like: All • Public • Private, or
- * All • Ignored, etc. One standard component to optimise everywhere.
+ * Use this anywhere we need filter tabs (All • Public • Private) or a
+ * mixed pill like Start • Simple • Detailed | Reload Schedule.
  */
 
-export interface SegmentedOption<V extends string = string> {
-  value: V;
-  label: React.ReactNode;
-  count?: number;
-  title?: string;
-  disabled?: boolean;
-  dataTour?: string;
-}
+export type SegmentedItem<V extends string = string> =
+  | {
+      type?: "tab";
+      value: V;
+      label: React.ReactNode;
+      count?: number;
+      title?: string;
+      disabled?: boolean;
+      dataTour?: string;
+    }
+  | {
+      type: "action";
+      /** Stable key, required since `value` is absent. */
+      key: string;
+      label: React.ReactNode;
+      title?: string;
+      disabled?: boolean;
+      onClick: () => void;
+      dataTour?: string;
+    }
+  | {
+      type: "divider";
+      key?: string;
+    };
+
+// Back-compat alias.
+export type SegmentedOption<V extends string = string> = SegmentedItem<V>;
 
 export interface SegmentedControlProps<V extends string = string> {
-  options: SegmentedOption<V>[];
+  options: SegmentedItem<V>[];
   value: V;
   onChange: (value: V) => void;
   size?: "sm" | "md";
@@ -38,11 +58,13 @@ const sizeClasses = {
     container: "p-0.5 text-[11px]",
     item: "px-2.5 py-1 gap-1.5",
     count: "min-w-[16px] h-[16px] px-1 text-[10px]",
+    divider: "h-4 mx-0.5",
   },
   md: {
     container: "p-1 text-xs",
     item: "px-3 py-1.5 gap-1.5",
     count: "min-w-[18px] h-[18px] px-1.5 text-[10px]",
+    divider: "h-5 mx-1",
   },
 };
 
@@ -80,18 +102,35 @@ export function SegmentedControl<V extends string = string>({
           className,
         )}
       >
-        {options.map((opt) => {
-          const active = opt.value === value;
+        {options.map((opt, i) => {
+          if (opt.type === "divider") {
+            return (
+              <span
+                key={opt.key ?? `divider-${i}`}
+                aria-hidden
+                className={cn("w-px bg-border self-center", s.divider)}
+              />
+            );
+          }
+
+          const isAction = opt.type === "action";
+          const active = !isAction && opt.value === value;
+          const key = isAction ? opt.key : opt.value;
+
           return (
             <button
-              key={opt.value}
+              key={key}
               type="button"
               data-tour={opt.dataTour}
-              role="tab"
-              aria-selected={active}
+              role={isAction ? "button" : "tab"}
+              aria-selected={isAction ? undefined : active}
               title={opt.title}
               disabled={opt.disabled}
-              onClick={() => !opt.disabled && onChange(opt.value)}
+              onClick={() => {
+                if (opt.disabled) return;
+                if (isAction) opt.onClick();
+                else onChange(opt.value);
+              }}
               className={cn(
                 "relative inline-flex items-center rounded-full font-medium",
                 "transition-colors duration-300",
@@ -115,8 +154,10 @@ export function SegmentedControl<V extends string = string>({
                   }}
                 />
               )}
-              <span className="relative z-10">{opt.label}</span>
-              {typeof opt.count === "number" && (
+              <span className="relative z-10 inline-flex items-center gap-1.5">
+                {opt.label}
+              </span>
+              {!isAction && typeof opt.count === "number" && (
                 <span
                   className={cn(
                     "relative z-10 inline-flex items-center justify-center rounded-md font-semibold tabular-nums border border-border/60",
