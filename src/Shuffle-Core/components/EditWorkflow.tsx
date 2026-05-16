@@ -312,7 +312,7 @@ const EditWorkflow = (props) => {
 					//minWidth: isMobile ? "90%" : newWorkflow === true ? 1000 : 550,
 					//maxWidth: isMobile ? "90%" : newWorkflow === true ? 1000 : 550,
 		    		borderRadius: `${theme.palette.DialogStyle.borderRadius}px 0 0 ${theme.palette.DialogStyle.borderRadius}px`,
-		    		backgroundColor: themeMode === "dark" ? "hsl(0 0% 6%)" : "hsl(var(--card))",
+		    		backgroundColor: "hsl(var(--background))",
 		    		borderLeft: "1px solid hsl(var(--border))",
 				},
 			}}
@@ -397,7 +397,8 @@ const EditWorkflow = (props) => {
 					height: 75, 
 					paddingTop: 20, 
 					paddingLeft: 30, 
-					backgroundColor: themeMode === "dark" ? "#262626" :  theme.palette.DialogStyle.backgroundColor,
+					backgroundColor: "hsl(var(--card))",
+					borderTop: "1px solid hsl(var(--border))",
 				}}>
 					{newWorkflow === true ? (
 						<div style={{ display: "flex", gap: 10 }}>
