@@ -9,10 +9,11 @@
  */
 
 import { Box, Drawer, IconButton, Tooltip, Typography } from '@mui/material';
+import {
+  X as CloseIcon,
+  ExternalLink as OpenInNewIcon
+} from 'lucide-react';
 import type { SxProps, Theme } from '@mui/material/styles';
-import CloseIcon from '@mui/icons-material/Close';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-
 import AgentUI, { type AgentUIProps } from './AgentUI';
 import AgentIcon from './AgentIcon';
 import {
@@ -187,7 +188,7 @@ const AgentExecutionDrawer = ({
                 '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted))' },
               }}
             >
-              <OpenInNewIcon fontSize="small" />
+              <OpenInNewIcon size={16} />
             </IconButton>
           </Tooltip>
         )}
@@ -200,7 +201,7 @@ const AgentExecutionDrawer = ({
               '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted))' },
             }}
           >
-            <CloseIcon fontSize="small" />
+            <CloseIcon size={16} />
           </IconButton>
         </Tooltip>
       </Box>

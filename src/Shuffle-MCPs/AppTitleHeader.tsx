@@ -8,8 +8,10 @@
  */
 
 import { Box, Typography, Avatar, Chip, Button } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorOutlineIcon from '@mui/icons-material/ErrorOutlined';
+import {
+  CheckCircle2 as CheckCircleIcon,
+  AlertCircle as ErrorOutlineIcon
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export interface AppTitleHeaderProps {
@@ -89,7 +91,7 @@ export default function AppTitleHeader({
             </Typography>
             {isAuthenticated && hasValidAuth && (
               <Chip
-                icon={<CheckCircleIcon sx={{ fontSize: 14 }} />}
+                icon={<CheckCircleIcon size={14} />}
                 label="Verified"
                 size="small"
                 sx={{ height: 22, backgroundColor: 'hsla(142, 76%, 36%, 0.15)', color: 'hsl(var(--severity-low))', fontWeight: 600, fontSize: '0.7rem', '& .MuiChip-icon': { color: 'hsl(var(--severity-low))' } }}
@@ -97,7 +99,7 @@ export default function AppTitleHeader({
             )}
             {isAuthenticated && !hasValidAuth && hasAnyAuth && (
               <Chip
-                icon={<ErrorOutlineIcon sx={{ fontSize: 14 }} />}
+                icon={<ErrorOutlineIcon size={14} />}
                 label="Pending"
                 size="small"
                 sx={{ height: 22, backgroundColor: 'hsla(38, 92%, 50%, 0.15)', color: 'hsl(var(--severity-medium))', fontWeight: 600, fontSize: '0.7rem', '& .MuiChip-icon': { color: 'hsl(var(--severity-medium))' } }}

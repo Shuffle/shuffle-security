@@ -5,6 +5,9 @@
  * `RecentWorkflow.jsx`. Self-contained: no external Shuffle Core deps.
  */
 import React, { useContext } from "react";
+import {
+  Lock as LockIcon
+} from 'lucide-react';
 import { Link } from "react-router-dom";
 import {
   Avatar,
@@ -13,7 +16,6 @@ import {
   Typography,
   Tooltip,
 } from "@mui/material";
-import { Lock as LockIcon } from "@mui/icons-material";
 import { getTheme, Context } from "./stubs";
 
 interface RecentWorkflowProps {

@@ -25,7 +25,6 @@ import {
   Typography,
 } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
-import SearchIcon from '@mui/icons-material/Search';
 import {
   Activity,
   AlertCircle,
@@ -37,6 +36,7 @@ import {
   Server,
   XCircle,
   Zap,
+  Search as SearchIcon
 } from 'lucide-react';
 
 import {
@@ -567,7 +567,7 @@ const AgentActivityList = ({
                 input: {
                   startAdornment: (
                     <InputAdornment position="start">
-                      <SearchIcon sx={{ fontSize: 18, color: 'hsl(var(--muted-foreground))' }} />
+                      <SearchIcon size={18} color={'hsl(var(--muted-foreground))'} />
                     </InputAdornment>
                   ),
                 },

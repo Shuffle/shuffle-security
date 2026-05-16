@@ -10,6 +10,19 @@
  * ported into Shuffle-Core.
  */
 import React, { useEffect, useContext } from "react";
+import {
+  Plus as AddIcon,
+  Sparkles as AutoAwesomeIcon,
+  CheckCircle2 as CheckCircleIcon,
+  X as CloseIcon,
+  UploadCloud as CloudUploadIcon,
+  FileEdit as EditNoteIcon,
+  ChevronUp as ExpandLessIcon,
+  ChevronDown as ExpandMoreIcon,
+  ExternalLink as OpenInNewIcon,
+  Upload as PublishIcon,
+  Minus as RemoveIcon
+} from 'lucide-react';
 import { getTheme, Context, UsecaseSearch, WorkflowGrid, WorkflowTemplatePopup, WorkflowValidationTimeline, useStyles } from "./stubs";
 import { isMobile } from "react-device-detect";
 import { MuiChipsInput } from "mui-chips-input";
@@ -60,20 +73,6 @@ import {
 } from '@mui/x-date-pickers';
 
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-
-import {
-	ExpandLess as ExpandLessIcon,
-	ExpandMore as ExpandMoreIcon,
-	Publish as PublishIcon,
-	OpenInNew as OpenInNewIcon,
-	Add as AddIcon,
-	Remove as RemoveIcon,
-	EditNote as EditNoteIcon,
-	AutoAwesome as AutoAwesomeIcon,
-	CloudUpload as CloudUploadIcon,
-	CheckCircle as CheckCircleIcon,
-	Close as CloseIcon
-} from "@mui/icons-material";
 
 const EditWorkflow = (props) => {
 	const { globalUrl, workflow, setWorkflow, modalOpen, setModalOpen, showUpload, usecases, setNewWorkflow, appFramework, isEditing, userdata, apps, saveWorkflow, expanded, scrollTo, setRealtimeMarkdown, boxWidth, setBoxWidth, } = props
@@ -914,12 +913,8 @@ const EditWorkflow = (props) => {
 											</div>
 										) : (
 											<div>
-												<CloudUploadIcon 
-													style={{ 
-														fontSize: 48, 
-														color: theme.palette.secondary || '#666',
-														marginBottom: 10 
-													}} 
+												<CloudUploadIcon size={48} style={{color: theme.palette.secondary || '#666',
+														marginBottom: 10}} 
 												/>
 												<Typography variant="h6" style={{ marginBottom: 5 }}>
 													Generate Workflow from Flowchart (beta)

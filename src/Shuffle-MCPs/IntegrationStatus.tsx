@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
+  Plus as AddIcon
+} from 'lucide-react';
+import {
   Box,
   Typography,
   Tooltip,
@@ -7,7 +10,6 @@ import {
   Avatar,
   CircularProgress,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
 import { Link as RouterLink } from 'react-router-dom';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { fetchAuthenticatedApps } from '@/Shuffle-MCPs/authenticatedApps';
@@ -435,7 +437,7 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
                     },
                   }}
                 >
-                  <AddIcon sx={{ fontSize: 14 }} />
+                  <AddIcon size={14} />
                 </IconButton>
               ) : (
                 <IconButton
@@ -454,7 +456,7 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
                     },
                   }}
                 >
-                  <AddIcon sx={{ fontSize: 14 }} />
+                  <AddIcon size={14} />
                 </IconButton>
               )}
             </Tooltip>

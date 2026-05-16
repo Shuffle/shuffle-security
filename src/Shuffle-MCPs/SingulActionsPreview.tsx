@@ -22,11 +22,14 @@ import {
   Tooltip,
   Avatar,
 } from '@mui/material';
-import PlayArrowIcon from '@mui/icons-material/PlayArrow';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CheckIcon from '@mui/icons-material/Check';
-import LockIcon from '@mui/icons-material/Lock';
-import { Code2, Terminal } from 'lucide-react';
+import {
+  Code2,
+  Terminal,
+  Check as CheckIcon,
+  Copy as ContentCopyIcon,
+  Lock as LockIcon,
+  Play as PlayArrowIcon
+} from 'lucide-react';
 import { API_CONFIG, getApiUrl, getAuthHeader, getTrackedOrgId } from '@/Shuffle-MCPs/api';
 import JsonView from 'react18-json-view';
 import 'react18-json-view/src/style.css';
@@ -634,14 +637,14 @@ const SingulActionsPreview = ({
                 </Box>
                 <Tooltip title={copied ? 'Copied!' : 'Copy'} arrow>
                   <IconButton size="small" onClick={handleCopy} sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                    {copied ? <CheckIcon sx={{ fontSize: 14 }} /> : <ContentCopyIcon sx={{ fontSize: 14 }} />}
+                    {copied ? <CheckIcon size={14} /> : <ContentCopyIcon size={14} />}
                   </IconButton>
                 </Tooltip>
                 <Button
                   size="small"
                   onClick={handlePlay}
                   disabled={playLoading}
-                  startIcon={!playLoading && <PlayArrowIcon sx={{ fontSize: 14 }} />}
+                  startIcon={!playLoading && <PlayArrowIcon size={14} />}
                   sx={{
                     height: 26,
                     minWidth: 0,
@@ -776,7 +779,7 @@ const SingulActionsPreview = ({
                     bgcolor: 'hsla(var(--severity-medium) / 0.08)',
                   }}
                 >
-                  <LockIcon sx={{ color: 'hsl(var(--severity-medium))', fontSize: 22 }} />
+                  <LockIcon size={22} color={'hsl(var(--severity-medium))'} />
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
                       {pretty} requires authentication

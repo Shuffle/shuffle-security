@@ -4,8 +4,10 @@
  */
 
 import { useState, useEffect } from 'react';
+import {
+  X as CloseIcon
+} from 'lucide-react';
 import { Box, Typography, IconButton, Drawer, Avatar, Tooltip } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShuffleMCP, AppDetailDrawer } from '@/Shuffle-MCPs';
 import type { AppSelectedEvent } from '@/Shuffle-MCPs';
@@ -301,7 +303,7 @@ export default function AppSearchDrawer({
             onClick={handleClose}
             sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--foreground))' } }}
           >
-            <CloseIcon fontSize="small" />
+            <CloseIcon size={16} />
           </IconButton>
         </Box>
 

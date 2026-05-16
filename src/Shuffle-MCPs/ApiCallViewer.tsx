@@ -4,9 +4,12 @@
  */
 import { useState } from 'react';
 import { Box, Typography, IconButton, Tooltip, Chip } from '@mui/material';
-import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CheckIcon from '@mui/icons-material/Check';
-import { Code2, Terminal } from 'lucide-react';
+import {
+  Code2,
+  Terminal,
+  Check as CheckIcon,
+  Copy as ContentCopyIcon
+} from 'lucide-react';
 
 export interface ApiCallConfig {
   method: string;
@@ -157,7 +160,7 @@ const ApiCallViewer = ({ config, maskAuth = true }: ApiCallViewerProps) => {
         </Box>
         <Tooltip title={copied ? 'Copied!' : 'Copy'} arrow>
           <IconButton size="small" onClick={handleCopy} sx={{ color: 'hsl(var(--muted-foreground))' }}>
-            {copied ? <CheckIcon sx={{ fontSize: 14 }} /> : <ContentCopyIcon sx={{ fontSize: 14 }} />}
+            {copied ? <CheckIcon size={14} /> : <ContentCopyIcon size={14} />}
           </IconButton>
         </Tooltip>
       </Box>

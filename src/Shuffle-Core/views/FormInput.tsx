@@ -3,6 +3,21 @@
 // Ported from RunWorkflow.jsx. See FormInputStubs.tsx for missing-feature notes.
 /* eslint-disable react/no-multi-comp */
 import React, {useState, useEffect, useContext} from 'react';
+import {
+  ArrowLeft as ArrowBackIcon,
+  ArrowRight as ArrowForwardIcon,
+  CheckCircle2 as CheckCircleIcon,
+  Copy as ContentCopyIcon,
+  Activity as DirectionsRunIcon,
+  Pencil as EditIcon,
+  AlertCircle as ErrorIcon,
+  Lock as LockIcon,
+  Unlock as LockOpenIcon,
+  ExternalLink as OpenInNewIcon,
+  Pause as PauseIcon,
+  Workflow as PolylineIcon,
+  Eye as PreviewIcon
+} from 'lucide-react';
 
 import { ReactJson, green, yellow, red, grey, CodeHandler, Img, OuterLink, validateJson, collapseField, GetIconInfo, useInterval, getTheme, Context } from "../components/stubs";
 import { isMobile } from "react-device-detect";
@@ -33,23 +48,6 @@ import {
 	MenuItem,
     Autocomplete,
 } from '@mui/material';
-
-import {
-  Preview as PreviewIcon,
-  ContentCopy as ContentCopyIcon,
-  ArrowBack as ArrowBackIcon,
-  ArrowForward as ArrowForwardIcon,
-  Lock as LockIcon,
-  LockOpen as LockOpenIcon,
-  OpenInNew as OpenInNewIcon,
-  Edit as EditIcon,
-  Polyline as PolylineIcon,
-  CheckCircle as CheckCircleIcon,
-  DirectionsRun as DirectionsRunIcon,
-  Error as ErrorIcon,
-  Pause as PauseIcon, 
-} from '@mui/icons-material';
-
 
 const hrefStyle = {
 	color: "white", 
@@ -1344,7 +1342,7 @@ const FormInput = (defaultprops: any) => {
 							display: "flex", alignItems: "center", justifyContent: "center",
 							margin: "0 auto 20px",
 						}}>
-							<LockIcon style={{fontSize: 26, color: "hsl(var(--primary))"}} />
+							<LockIcon size={26} style={{color: "hsl(var(--primary))"}} />
 						</div>
 						<Typography variant="h6" style={{marginBottom: 8, fontWeight: 600, color: "hsl(var(--foreground))"}}>
 							Log in to view your forms

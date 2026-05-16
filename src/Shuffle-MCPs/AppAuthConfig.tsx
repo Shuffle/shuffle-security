@@ -1,4 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  CheckCircle2 as CheckCircleIcon,
+  X as CloseIcon,
+  Trash2 as DeleteOutlineIcon,
+  Pencil as EditIcon,
+  ChevronDown as ExpandMoreIcon,
+  Lock as LockIcon,
+  BookOpen as MenuBookIcon
+} from 'lucide-react';
 import { toast } from '@/Shuffle-MCPs/toast';
 import {
   Box,
@@ -26,13 +35,6 @@ import {
   DialogContent,
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import LockIcon from '@mui/icons-material/Lock';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
-import CloseIcon from '@mui/icons-material/Close';
 import type { AlgoliaSearchApp } from '@/Shuffle-MCPs';
 import { AppFallbackIcon } from '@/Shuffle-MCPs/AppFallbackIcon';
 import { API_CONFIG, getApiUrl, getAuthHeader, isDevEnvironment, isCloudDomain } from '@/Shuffle-MCPs/api';
@@ -1127,7 +1129,7 @@ export const AppAuthCard = ({
                   },
                 }}
               >
-                <MenuBookIcon fontSize="small" />
+                <MenuBookIcon size={16} />
               </IconButton>
             </Tooltip>
             )}
@@ -1297,7 +1299,7 @@ export const AppAuthCard = ({
                                     },
                                   }}
                                 >
-                                  <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                                  <DeleteOutlineIcon size={16} />
                                 </IconButton>
                               </Tooltip>
                             )}
@@ -1483,20 +1485,7 @@ export const AppAuthCard = ({
                           }`,
                           flexShrink: 0,
                         }}>
-                          <CheckCircleIcon sx={{ 
-                            color: localTestStatus === 'success' 
-                              ? 'hsl(var(--severity-low))' 
-                              : localTestStatus === 'pending_validation'
-                              ? 'hsl(var(--severity-medium))'
-                              : localTestStatus === 'error'
-                              ? 'hsl(var(--destructive))'
-                              : isTested
-                              ? 'hsl(var(--severity-low))'
-                              : isConfigured
-                              ? 'hsl(var(--severity-medium))' // Yellow for configured but not tested
-                              : 'hsl(var(--muted-foreground))', 
-                            fontSize: 20 
-                          }} />
+                          <CheckCircleIcon size={20} />
                         </Box>
                         <Box sx={{ minWidth: 0, flex: 1 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -1583,7 +1572,7 @@ export const AppAuthCard = ({
                                       '&:hover': { color: 'hsl(var(--primary))' },
                                     }}
                                   >
-                                    <EditIcon sx={{ fontSize: 14 }} />
+                                    <EditIcon size={14} />
                                   </IconButton>
                                 </Tooltip>
                               </>
@@ -1632,7 +1621,7 @@ export const AppAuthCard = ({
                         startIcon={
                           authState.status === 'testing' 
                             ? <CircularProgress size={16} sx={{ color: 'inherit' }} />
-                            : <CheckCircleIcon sx={{ fontSize: 18 }} />
+                            : <CheckCircleIcon size={18} />
                         }
                         sx={{
                           borderColor: authState.status === 'testing' ? 'transparent' : 'hsl(var(--primary) / 0.5)',
@@ -2037,7 +2026,7 @@ export const AppAuthCard = ({
                                   sx={{ width: 20, height: 20, borderRadius: 0.5, objectFit: 'contain' }}
                                 />
                               ) : (
-                                <LockIcon sx={{ fontSize: 18 }} />
+                                <LockIcon size={18} />
                               )
                             }
                             onClick={(e) => {
