@@ -46,3 +46,7 @@ export { ShuffleCoreThemeProvider };
 export { usePageMeta } from './usePageMeta';
 export { toast, setToastImpl } from './toast';
 export { API_CONFIG, getApiUrl, getAuthHeader, shuffleFetch, setRegionUrl, resetRegionUrl } from './api';
+
+// Onboarding flow — shared between Shuffle Core and Shuffle Security.
+export { OnboardingFlow, ProductChoiceStep } from './onboarding';
+export type { OnboardingFlowProps, OnboardingProduct } from './onboarding';
