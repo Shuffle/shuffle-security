@@ -131,6 +131,30 @@ const EditWorkflow = (props) => {
 		})
 		setUpdate(Math.random())
 	}
+	const getValidInputQuestions = () => cloneArray(inputQuestions).filter((question) => question?.deleted !== true && question?.value !== undefined && question?.value !== null && question.value.length > 0)
+	const buildWorkflowForSave = () => {
+		const nextWorkflow = {
+			...(innerWorkflow || {}),
+			form_control: { ...(innerWorkflow?.form_control || {}) },
+			backup_config: { ...(innerWorkflow?.backup_config || {}) },
+		}
+
+		nextWorkflow.input_questions = getValidInputQuestions()
+		nextWorkflow.form_control.input_markdown = inputMarkdown
+		nextWorkflow.form_control.output_yields = normalizeActionIds(selectedYieldActions)
+		nextWorkflow.form_control.form_width = formWidth
+		nextWorkflow.form_control.cleanup_actions = normalizeActionIds(selectedCleanupActions)
+		nextWorkflow.name = name
+		nextWorkflow.description = description
+		nextWorkflow.tags = cloneArray(newWorkflowTags)
+		nextWorkflow.usecase_ids = cloneArray(selectedUsecases)
+
+		if (dueDate > 0) {
+			nextWorkflow.due_date = new Date(`${dueDate["$y"]}-${dueDate["$M"] + 1}-${dueDate["$D"]}`).getTime() / 1000
+		}
+
+		return nextWorkflow
+	}
 	
 	// Flowchart upload states
 	const [uploadedImage, setUploadedImage] = React.useState(null)
