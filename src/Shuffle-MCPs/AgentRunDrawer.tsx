@@ -28,8 +28,12 @@ import {
   Typography,
 } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material/styles';
-import CloseIcon from '@mui/icons-material/Close';
-import { Play, Server, ShieldCheck } from 'lucide-react';
+import {
+  Play,
+  Server,
+  ShieldCheck,
+  X as CloseIcon
+} from 'lucide-react';
 
 import AgentIcon from './AgentIcon';
 import AgentUI, { type AgentUIProps } from './AgentUI';
@@ -178,7 +182,7 @@ const AgentRunDrawer = ({
           </Typography>
         </Box>
         <IconButton onClick={onClose} size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-          <CloseIcon fontSize="small" />
+          <CloseIcon size={16} />
         </IconButton>
       </Box>
 
