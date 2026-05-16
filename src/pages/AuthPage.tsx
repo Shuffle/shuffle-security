@@ -51,9 +51,10 @@ const AuthPage = ({ mode }: AuthPageProps) => {
 
   const isLogin = mode === 'login';
   
-  // Get return URL from state (set by ProtectedRoute) or from URL param (persists on refresh)
+  // Get return URL from state (set by ProtectedRoute) or from URL param (persists on refresh).
+  // Prefer `view` (current canonical param); fall back to legacy `returnUrl` for backwards compatibility.
   const searchParams = new URLSearchParams(location.search);
-  const returnUrl = searchParams.get('returnUrl');
+  const returnUrl = searchParams.get('view') || searchParams.get('returnUrl');
   // First login detection: if no explicit returnUrl and user has never logged in, go to onboarding
   const hasLoggedInBefore = localStorage.getItem('shuffle_has_logged_in') === 'true';
   const defaultDestination = hasLoggedInBefore ? '/dashboard' : '/onboarding';
