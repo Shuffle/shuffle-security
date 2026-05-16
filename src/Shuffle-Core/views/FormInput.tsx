@@ -1328,7 +1328,28 @@ const FormInput = (defaultprops: any) => {
 						</Typography>
 						<FormList />
 					</div>
-					: 
+					:
+					!isLoggedIn ?
+					<div>
+						<Typography variant="h4" style={{marginTop: 125, marginBottom: 25, }}>
+							Log in to view your forms
+						</Typography>
+						<Typography variant="body1" color="textSecondary" style={{marginBottom: 20, }}>
+							You need to be logged in to see the forms available in your organization.
+						</Typography>
+						<Button
+							variant="contained"
+							color="primary"
+							onClick={() => {
+								const next = encodeURIComponent(window.location.pathname + window.location.search)
+								navigate(`/login?view=${next}`)
+							}}
+							style={{ textTransform: "none" }}
+						>
+							Log in
+						</Button>
+					</div>
+					:
 					<div>
 						<Typography variant="h4" style={{marginTop: 125, marginBottom: 25, }}>
 							No Forms Found
