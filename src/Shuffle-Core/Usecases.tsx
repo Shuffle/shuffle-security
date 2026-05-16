@@ -2136,6 +2136,7 @@ function UsecaseDetailContent({
             sourceCategory={flow.source}
             targetCategory={flow.target}
             highlightCategory={flow.source}
+            isLoggedIn={isAuthenticated}
           />
         ) : (
         <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
