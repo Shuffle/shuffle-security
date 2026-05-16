@@ -1,14 +1,21 @@
+// @ts-nocheck
+/* eslint-disable */
+/**
+ * EditWorkflow — Drawer for creating / editing a Shuffle workflow (incl. form
+ * configuration). Ported from Shuffle Core's `EditWorkflow.jsx`.
+ *
+ * Stubbed sub-components (see `./stubs`): UsecaseSearch, WorkflowGrid,
+ * WorkflowTemplatePopup, WorkflowValidationTimeline, useStyles. These render
+ * placeholders or null so the surrounding UI keeps working until they are
+ * ported into Shuffle-Core.
+ */
 import React, { useEffect, useContext } from "react";
-import { getTheme } from '../theme.jsx';
-import { isMobile } from "react-device-detect"
+import { getTheme, Context, UsecaseSearch, WorkflowGrid, WorkflowTemplatePopup, WorkflowValidationTimeline, useStyles } from "./stubs";
+import { isMobile } from "react-device-detect";
 import { MuiChipsInput } from "mui-chips-input";
-import { toast } from "react-toastify"
-import ReactGA from 'react-ga4';
-import UsecaseSearch from "../components/UsecaseSearch.jsx"
-import WorkflowGrid from "../components/WorkflowGrid.jsx"
-import dayjs from 'dayjs';
-import WorkflowTemplatePopup from "./WorkflowTemplatePopup.jsx";
-import WorkflowValidationTimeline from "../components/WorkflowValidationTimeline.jsx"
+import { toast } from "react-toastify";
+import ReactGA from "react-ga4";
+import dayjs from "dayjs";
 
 import {
 	Badge,
