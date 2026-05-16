@@ -1078,6 +1078,22 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
             <Activity size={18} style={{ color: 'hsl(var(--muted-foreground))' }} />
             Usecases
           </MenuItem>
+          <MenuItem
+            component={Link}
+            to="/onboarding"
+            onClick={() => setUserMenuAnchor(null)}
+            sx={{
+              py: 1.25,
+              px: 2,
+              gap: 1.5,
+              fontSize: '0.875rem',
+              color: 'hsl(var(--foreground))',
+              '&:hover': { backgroundColor: 'hsl(var(--muted))' },
+            }}
+          >
+            <RocketLaunchIcon size={18} style={{ color: 'hsl(var(--muted-foreground))' }} />
+            Onboarding
+          </MenuItem>
           <Divider sx={{ borderColor: 'hsl(var(--border))', my: 0.5 }} />
           <MenuItem
             component={Link}
