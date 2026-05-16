@@ -115,7 +115,7 @@ const deepParseJsonStrings = (obj: any, depth = 0): any => {
 };
 
 
-import { SegmentedControl } from '@/components/ui/segmented-control';
+import { SegmentedControl } from './SegmentedControl';
 import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
 import AppSearchDrawer from '@/Shuffle-MCPs/AppSearchDrawer';
 import AppDetailDrawer from '@/Shuffle-MCPs/AppDetailDrawer';

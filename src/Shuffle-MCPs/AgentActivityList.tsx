@@ -49,7 +49,7 @@ import {
 } from './agentActivity';
 import { diagnoseOutputWarning } from './agentDiagnosis';
 import { Pencil, StopCircle, AlertTriangle } from 'lucide-react';
-import { SegmentedControl } from '@/components/ui/segmented-control';
+import { SegmentedControl } from './SegmentedControl';
 
 // ── Status / icon helpers ────────────────────────────────────────────────────
 

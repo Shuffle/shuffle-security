@@ -12,7 +12,7 @@ import AppDetailDrawer from './AppDetailDrawer';
 import './shuffle-mcp.css';
 import { fetchApps } from './appsCache';
 import { AppFallbackIcon } from './AppFallbackIcon';
-import { SegmentedControl } from '@/components/ui/segmented-control';
+import { SegmentedControl } from './SegmentedControl';
 
 const DEFAULT_ALGOLIA_APP_ID = 'JNSS5CFDZZ';
 const DEFAULT_ALGOLIA_API_KEY = '33e4e3564f4f060e96e0531957bed552';
