@@ -265,15 +265,10 @@ const EditWorkflow = (props) => {
         window.location.host === "localhost:3002" ||
         window.location.host === "shuffler.io";
 
-	// Selects inside a Drawer need to render their menu within the Drawer's
-	// focus trap, otherwise clicking a MenuItem is treated as an outside click
-	// and the interaction is swallowed (menu closes immediately, value never
-	// commits). disablePortal + an elevated z-index keeps menus on top and
-	// click-through working.
 	const selectMenuProps: any = {
-		disablePortal: true,
 		keepMounted: true,
 		MenuListProps: { dense: true },
+		ModalProps: { keepMounted: true },
 		PaperProps: {
 			sx: {
 				zIndex: 9999,
