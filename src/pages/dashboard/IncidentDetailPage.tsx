@@ -6988,7 +6988,6 @@ const IncidentDetailPage = () => {
           }}>
             <SegmentedControl
               layoutId="incident-detail-tabs"
-              variant="filled"
               ariaLabel="Incident sections"
               value={String(activeTab)}
               onChange={(v) => setActiveTab(Number(v))}
