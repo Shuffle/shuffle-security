@@ -34,10 +34,10 @@ import {
   THREAT_INTEL_PATTERNS, COMMUNICATION_PATTERNS_NAMES,
   isEmailApp, isThreatIntelApp, getIngestionCategory,
   normalizeAppName, extractValidatedIngestionApps,
-  type IngestionCategory,
-} from '@/Shuffle-MCPs/ingestionDetection';
+  API_CONFIG, getApiUrl, getAuthHeader,
+} from '@shuffleio/shuffle-mcps';
+import type { IngestionCategory } from '@shuffleio/shuffle-mcps';
 import shuffleLogo from '@/assets/shuffle-logo.png';
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { useThreatFeeds, DEFAULT_THREAT_FEEDS, ThreatFeed } from '@/hooks/useThreatFeeds';
 import { getAutomationLabels } from '@/config/usecases';
 import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
