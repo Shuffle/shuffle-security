@@ -58,6 +58,7 @@ export const GA_EVENTS = {
   ONBOARDING_AUTH_TEST_SUCCESS: { category: 'onboarding', action: 'auth_test_success' },
   ONBOARDING_AUTH_TEST_FAILURE: { category: 'onboarding', action: 'auth_test_failure' },
   ONBOARDING_AUTOMATION_TOGGLE: { category: 'onboarding', action: 'automation_toggle' },
+  ONBOARDING_PRODUCT_CHOICE: { category: 'onboarding', action: 'product_choice' },
 
   // Navigation events
   CTA_CLICK: { category: 'navigation', action: 'cta_click' },

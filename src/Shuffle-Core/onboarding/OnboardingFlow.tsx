@@ -127,6 +127,10 @@ const OnboardingFlow = ({
 
   const handlePickSecurity = () => {
     try { localStorage.setItem(PRODUCT_CHOICE_STORAGE_KEY, 'security'); } catch { /* ignore */ }
+    trackPredefinedEvent(GA_EVENTS.ONBOARDING_PRODUCT_CHOICE, 'security', undefined, {
+      current_product: product,
+      will_redirect: product !== 'security',
+    });
     if (product === 'security') {
       setProductChosen(true);
     } else {
@@ -135,6 +139,10 @@ const OnboardingFlow = ({
   };
   const handlePickCore = () => {
     try { localStorage.setItem(PRODUCT_CHOICE_STORAGE_KEY, 'core'); } catch { /* ignore */ }
+    trackPredefinedEvent(GA_EVENTS.ONBOARDING_PRODUCT_CHOICE, 'core', undefined, {
+      current_product: product,
+      will_redirect: product !== 'core',
+    });
     if (product === 'core') {
       setProductChosen(true);
     } else {
