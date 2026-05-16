@@ -3439,6 +3439,16 @@ const IncidentDetailPage = () => {
     },
   };
 
+  const transparentInputSx = {
+    '& .MuiOutlinedInput-root': {
+      bgcolor: 'transparent',
+      backgroundImage: 'none',
+      '& fieldset': { borderColor: 'hsl(var(--border))' },
+      '&:hover fieldset': { borderColor: 'hsl(var(--muted-foreground) / 0.4)' },
+      '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
+    },
+  };
+
   const renderCustomField = (field: CustomField) => {
     const value = editedCustomFields[field.key];
     
@@ -7623,8 +7633,9 @@ const IncidentDetailPage = () => {
 
       {activeTab === 2 && (
         /* Observables Tab */
-        <Box sx={{ 
+          <Box sx={{ 
           bgcolor: 'transparent', 
+          backgroundImage: 'none',
           borderRadius: 2, 
           border: '1px solid hsl(var(--border))',
           p: 2.5,
@@ -7708,11 +7719,11 @@ const IncidentDetailPage = () => {
                     placeholder="Enter observable value..."
                     fullWidth
                     onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddObservable())}
-                    sx={{ ...inputSx, '& .MuiOutlinedInput-root': { ...(inputSx as any)['& .MuiOutlinedInput-root'], height: 36 } }}
+                    sx={{ ...transparentInputSx, '& .MuiOutlinedInput-root': { ...(transparentInputSx as any)['& .MuiOutlinedInput-root'], height: 36 } }}
                     error={!!regexWarning}
                     helperText={regexWarning || undefined}
                   />
-                  <IconButton onClick={handleAddObservable} disabled={!newObservableValue.trim()} sx={{ width: 36, height: 36, bgcolor: 'rgba(255,255,255,0.05)', alignSelf: regexWarning ? 'flex-start' : 'center', mt: regexWarning ? '4px' : 0 }}>
+                  <IconButton onClick={handleAddObservable} disabled={!newObservableValue.trim()} sx={{ width: 36, height: 36, bgcolor: 'transparent', border: '1px solid hsl(var(--border))', alignSelf: regexWarning ? 'flex-start' : 'center', mt: regexWarning ? '4px' : 0, '&:hover': { bgcolor: 'hsl(var(--muted) / 0.35)' } }}>
                     <AddIcon />
                   </IconButton>
                 </>
@@ -7727,7 +7738,7 @@ const IncidentDetailPage = () => {
               value={obsFilterText}
               onChange={(e) => setObsFilterText(e.target.value)}
               placeholder="Search observables..."
-              sx={{ ...inputSx, minWidth: 160, flex: 1, maxWidth: 280, '& .MuiOutlinedInput-root': { ...(inputSx as any)['& .MuiOutlinedInput-root'], height: 36 } }}
+              sx={{ ...transparentInputSx, minWidth: 160, flex: 1, maxWidth: 280, '& .MuiOutlinedInput-root': { ...(transparentInputSx as any)['& .MuiOutlinedInput-root'], height: 36 } }}
               InputProps={{
                 startAdornment: <SearchIcon size={16} style={{ color: 'text.disabled', marginRight: '4px' }} />,
               }}
@@ -7750,7 +7761,8 @@ const IncidentDetailPage = () => {
                     minWidth: 120,
                     height: 36,
                     fontSize: '0.8rem',
-                    bgcolor: 'hsl(var(--input))',
+                    bgcolor: 'transparent',
+                    backgroundImage: 'none',
                     '& .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--border))' },
                     '& .MuiSelect-select': { py: 0.75, px: 1.5 },
                   }}
@@ -7774,7 +7786,8 @@ const IncidentDetailPage = () => {
                 minWidth: 110,
                 height: 36,
                 fontSize: '0.75rem',
-                bgcolor: 'hsl(var(--input))',
+                bgcolor: 'transparent',
+                backgroundImage: 'none',
                 '& .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--border))' },
                 '& .MuiSelect-select': { py: 0.75, px: 1.5 },
               }}
@@ -7798,7 +7811,7 @@ const IncidentDetailPage = () => {
                 label="Clear filters"
                 size="small"
                 onDelete={() => { setObsFilterTypes([]); setObsFilterText(''); setObsSortField('first_seen'); setObsSortDir('desc'); }}
-                sx={{ fontSize: '0.65rem', cursor: 'pointer', color: 'hsl(var(--muted-foreground))', bgcolor: 'rgba(255,255,255,0.05)' }}
+                sx={{ fontSize: '0.65rem', cursor: 'pointer', color: 'hsl(var(--muted-foreground))', bgcolor: 'transparent', border: '1px solid hsl(var(--border))', '&:hover': { bgcolor: 'hsl(var(--muted) / 0.25)' } }}
               />
             )}
             {/* Show / hide ignored observables — per-org list of indicators
@@ -7824,11 +7837,11 @@ const IncidentDetailPage = () => {
                     height: 22,
                     cursor: 'pointer',
                     color: showIgnoredObs ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
-                    bgcolor: showIgnoredObs ? 'hsl(var(--primary) / 0.1)' : 'rgba(255,255,255,0.05)',
+                    bgcolor: showIgnoredObs ? 'hsl(var(--primary) / 0.1)' : 'transparent',
                     border: '1px solid',
                     borderColor: showIgnoredObs ? 'hsl(var(--primary) / 0.4)' : 'hsl(var(--border))',
                     '& .MuiChip-icon': { ml: 0.75, mr: -0.25, color: 'inherit' },
-                    '&:hover': { bgcolor: showIgnoredObs ? 'hsl(var(--primary) / 0.18)' : 'rgba(255,255,255,0.08)' },
+                    '&:hover': { bgcolor: showIgnoredObs ? 'hsl(var(--primary) / 0.18)' : 'hsl(var(--muted) / 0.25)' },
                   }}
                 />
               </Tooltip>
@@ -7997,11 +8010,12 @@ const IncidentDetailPage = () => {
                         gap: mismatch ? 0.5 : 0,
                         p: 1.5,
                         borderRadius: 1,
-                        bgcolor: 'hsl(var(--input))',
-                        border: mismatch ? '1px solid rgba(251, 146, 60, 0.3)' : isExpanded ? '1px solid hsl(var(--primary) / 0.3)' : '1px solid hsl(var(--border-subtle))',
+                        bgcolor: 'transparent',
+                        backgroundImage: 'none',
+                        border: mismatch ? '1px solid hsl(var(--warning, 38 92% 50%) / 0.35)' : isExpanded ? '1px solid hsl(var(--primary) / 0.35)' : '1px solid hsl(var(--border))',
                         opacity: isThisIgnored ? 0.55 : 1,
-                        transition: 'border-color 0.15s ease, opacity 0.15s ease',
-                        '&:hover': { borderColor: 'hsl(var(--primary) / 0.2)', opacity: isThisIgnored ? 0.85 : 1 },
+                        transition: 'border-color 0.15s ease, background-color 0.15s ease, opacity 0.15s ease',
+                        '&:hover': { bgcolor: 'hsl(var(--muted) / 0.25)', borderColor: 'hsl(var(--primary) / 0.25)', opacity: isThisIgnored ? 0.85 : 1 },
                       }}
                     >
                       <Box
@@ -8022,8 +8036,8 @@ const IncidentDetailPage = () => {
                             fontSize: '0.7rem',
                             textTransform: 'uppercase',
                             bgcolor: 'transparent',
-                            borderColor: mismatch ? 'rgba(251, 146, 60, 0.4)' : 'hsl(var(--primary) / 0.4)',
-                            color: mismatch ? '#fb923c' : 'hsl(var(--primary))',
+                            borderColor: mismatch ? 'hsl(var(--warning, 38 92% 50%) / 0.45)' : 'hsl(var(--primary) / 0.4)',
+                            color: mismatch ? 'hsl(var(--warning, 38 92% 50%))' : 'hsl(var(--primary))',
                           }}
                         />
                         <Typography variant="body2" sx={{ flex: 1, fontFamily: 'monospace', fontSize: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
@@ -8070,11 +8084,11 @@ const IncidentDetailPage = () => {
                                   fontWeight: 700,
                                   cursor: 'pointer',
                                   bgcolor: iocHit ? 'hsl(var(--destructive) / 0.1)' : 'transparent',
-                                  borderColor: iocHit ? 'hsl(var(--destructive) / 0.5)' : 'rgba(59, 130, 246, 0.4)',
-                                  color: iocHit ? 'hsl(var(--destructive))' : '#3b82f6',
+                                  borderColor: iocHit ? 'hsl(var(--destructive) / 0.5)' : 'hsl(var(--primary) / 0.4)',
+                                  color: iocHit ? 'hsl(var(--destructive))' : 'hsl(var(--primary))',
                                   '& .MuiChip-icon': { ml: 0.5, mr: -0.25 },
                                   '&:hover': {
-                                    bgcolor: iocHit ? 'hsl(var(--destructive) / 0.16)' : 'rgba(59, 130, 246, 0.08)',
+                                     bgcolor: iocHit ? 'hsl(var(--destructive) / 0.16)' : 'hsl(var(--primary) / 0.08)',
                                   },
                                 }}
                               />
