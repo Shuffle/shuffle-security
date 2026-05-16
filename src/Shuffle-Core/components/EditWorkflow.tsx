@@ -98,6 +98,9 @@ const EditWorkflow = (props) => {
 	function normalizeActionIds(value) {
 		return normalizeSelectValues(value).filter((item) => item !== "none")
 	}
+	function getWorkflowActions() {
+		return Array.isArray(innerWorkflow?.actions) ? innerWorkflow.actions : Array.isArray(workflow?.actions) ? workflow.actions : []
+	}
 	function getWorkflowFormWidthValue(targetWorkflow, fallbackWidth = 500) {
 		return targetWorkflow?.form_control?.form_width !== undefined && targetWorkflow?.form_control?.form_width !== null ? targetWorkflow.form_control.form_width : (fallbackWidth === undefined || fallbackWidth === null ? 500 : fallbackWidth)
 	}
@@ -373,7 +376,7 @@ const EditWorkflow = (props) => {
 			alignItems: "center",
 		},
 	}
-	const getActionLabel = (actionId: string) => workflow?.actions?.find((action) => action.id === actionId)?.label || actionId
+	const getActionLabel = (actionId: string) => getWorkflowActions().find((action) => action.id === actionId)?.label || actionId
 	const stripNoneValue = (value: any) => {
 		const rawValue = normalizeSelectValues(value)
 		return rawValue[rawValue.length - 1] === "none" ? [] : rawValue.filter((item) => item !== "none")
