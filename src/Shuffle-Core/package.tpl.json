@@ -50,7 +50,7 @@
     "react-router-dom": ">=6",
     "react-ga4": ">=2",
     "react-device-detect": ">=2",
-    "mui-chips-input": ">=2",
+    "mui-chips-input": "^2.1.0",
     "react-toastify": ">=9",
     "dayjs": ">=1",
     "@shuffleio/shuffle-mcps": ">=0.0.1"
