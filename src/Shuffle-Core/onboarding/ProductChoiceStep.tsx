@@ -1,6 +1,6 @@
-import { Box, Container, Typography, Stack } from '@mui/material';
-import { Shield, Workflow, ArrowRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
+import AgentIcon from '@/Shuffle-MCPs/AgentIcon';
+import shuffleInfraLogo from '@/assets/shuffle-infrastructure-logo.png';
 
 interface ProductChoiceStepProps {
   onSelectCore: () => void;
@@ -8,150 +8,64 @@ interface ProductChoiceStepProps {
 }
 
 export const ProductChoiceStep = ({ onSelectCore, onSelectSecurity }: ProductChoiceStepProps) => {
-  const cards = [
-    {
-      key: 'security',
-      title: 'Shuffle Security',
-      tagline: 'Detect, triage and respond to incidents',
-      description:
-        'A modern SOC platform built on Shuffle. Connect data sources, enrich alerts, manage incidents and let AI agents do the heavy lifting.',
-      icon: <Shield size={28} />,
-      onClick: onSelectSecurity,
-      cta: 'Continue with Security',
-    },
-    {
-      key: 'core',
-      title: 'Shuffle Core',
-      tagline: 'Automation platform for everything else',
-      description:
-        'The original Shuffle. Build workflows, integrate 3,000+ apps, run AI agents and automate any process across your stack.',
-      icon: <Workflow size={28} />,
-      onClick: onSelectCore,
-      cta: 'Continue with Core',
-    },
-  ];
-
   return (
-    <Box sx={{ width: '100%' }}>
-      <Container maxWidth="md" disableGutters sx={{ position: 'relative', zIndex: 1 }}>
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <Stack spacing={1} sx={{ textAlign: 'center', mb: { xs: 3, sm: 4 } }}>
-            <Typography
-              variant="h3"
-              sx={{
-                fontWeight: 700,
-                color: 'hsl(var(--foreground))',
-                fontSize: { xs: '1.75rem', sm: '2.25rem' },
-              }}
-            >
-              Welcome to Shuffle
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{ color: 'hsl(var(--muted-foreground))', maxWidth: 560, mx: 'auto' }}
-            >
-              Which product are you setting up today? You can switch later.
-            </Typography>
-          </Stack>
-        </motion.div>
+    <div className="w-full flex justify-center px-6 py-8">
+      <div className="w-full max-w-4xl">
+        <div className="mb-12 text-center">
+          <p className="mb-3 text-sm font-medium uppercase tracking-widest text-primary">
+            Step 1 — Choose your product
+          </p>
+          <h1 className="mb-4 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+            Welcome to Shuffle
+          </h1>
+          <p className="mx-auto max-w-xl text-base text-muted-foreground">
+            Which product are you setting up today? You can switch later.
+          </p>
+        </div>
 
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
-          {cards.map((card, idx) => (
-            <motion.div
-              key={card.key}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.1 + idx * 0.1 }}
-              style={{ flex: 1 }}
-            >
-              <Box
-                role="button"
-                tabIndex={0}
-                onClick={card.onClick}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    card.onClick();
-                  }
-                }}
-                sx={{
-                  cursor: 'pointer',
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: 4,
-                  p: { xs: 3, sm: 4 },
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  transition: 'all 0.2s ease',
-                  '&:hover': {
-                    borderColor: 'hsl(var(--primary))',
-                    boxShadow: '0 10px 30px -10px hsl(var(--primary) / 0.3)',
-                    transform: 'translateY(-2px)',
-                  },
-                  '&:focus-visible': {
-                    outline: '2px solid hsl(var(--primary))',
-                    outlineOffset: 2,
-                  },
-                }}
-              >
-                <Box
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background:
-                      'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 100%)',
-                    color: 'hsl(var(--primary-foreground))',
-                    mb: 2.5,
-                  }}
-                >
-                  {card.icon}
-                </Box>
-                <Typography
-                  variant="h5"
-                  sx={{ fontWeight: 700, color: 'hsl(var(--foreground))', mb: 0.5 }}
-                >
-                  {card.title}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{ color: 'hsl(var(--muted-foreground))', mb: 2, fontWeight: 500 }}
-                >
-                  {card.tagline}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  sx={{ color: 'hsl(var(--muted-foreground))', flex: 1, mb: 3, lineHeight: 1.6 }}
-                >
-                  {card.description}
-                </Typography>
-                <Stack
-                  direction="row"
-                  alignItems="center"
-                  spacing={1}
-                  sx={{
-                    color: 'hsl(var(--primary))',
-                    fontWeight: 600,
-                    fontSize: '0.9rem',
-                  }}
-                >
-                  <span>{card.cta}</span>
-                  <ArrowRight size={16} />
-                </Stack>
-              </Box>
-            </motion.div>
-          ))}
-        </Stack>
-      </Container>
-    </Box>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={onSelectSecurity}
+            className="group flex flex-col rounded-xl border border-border bg-card p-6 text-left transition-colors hover:border-primary hover:bg-card/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            <div className="mb-4 flex h-10 w-10 items-center justify-center">
+              <AgentIcon size={40} />
+            </div>
+            <h2 className="mb-1 text-lg font-semibold text-foreground">
+              Shuffle Security
+            </h2>
+            <p className="mb-4 flex-1 text-sm text-muted-foreground">
+              A modern SOC platform. Connect data sources, enrich alerts, manage incidents and let AI agents do the heavy lifting.
+            </p>
+            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary">
+              Continue with Security
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={onSelectCore}
+            className="group flex flex-col rounded-xl border border-border bg-card p-6 text-left transition-colors hover:border-primary hover:bg-card/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            <div className="mb-4 flex h-10 w-10 items-center justify-center">
+              <img src={shuffleInfraLogo} alt="Shuffle Core" width={40} height={40} style={{ borderRadius: 6 }} />
+            </div>
+            <h2 className="mb-1 text-lg font-semibold text-foreground">
+              Shuffle Core
+            </h2>
+            <p className="mb-4 flex-1 text-sm text-muted-foreground">
+              The original Shuffle. Build workflows, integrate 3,000+ apps, run AI agents and automate any process across your stack.
+            </p>
+            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary">
+              Continue with Core
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 
