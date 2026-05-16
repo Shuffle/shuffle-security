@@ -1190,7 +1190,8 @@ const OnboardingFlow = ({
         </Container>
       </Box>
 
-      {/* Fixed Footer with Navigation */}
+      {/* Fixed Footer with Navigation — hidden when embedded outside /onboarding (e.g. /shuffle-core-demo) */}
+      {isOnboardingRoute && (
       <Box
         sx={{
           position: 'fixed',
