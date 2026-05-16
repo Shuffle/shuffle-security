@@ -7003,7 +7003,6 @@ const IncidentDetailPage = () => {
             <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 0.75, flexShrink: 0 }}>
               <SegmentedControl
                 layoutId="incident-source-tabs"
-                variant="filled"
                 ariaLabel="Source data"
                 value={String(activeTab === 6 ? 6 : activeTab === 5 ? 5 : activeTab === 4 ? 4 : -1)}
                 onChange={(v) => {
