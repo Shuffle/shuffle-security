@@ -19,17 +19,25 @@ import { ShuffleMCP } from '@/Shuffle-MCPs';
 import type { AlgoliaSearchApp, ShuffleMCPHandle } from '@/Shuffle-MCPs';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { getIngestionCategory, type IngestionCategory } from '@/Shuffle-MCPs/ingestionDetection';
+import { invalidateAppsCache } from '@/Shuffle-MCPs/appsCache';
+import { refreshAllIntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
 
-/** Fire-and-forget activate call for a newly selected app */
+/** Fire-and-forget activate call for a newly selected app. Refreshes the
+ *  Integrations bar so the icon flips to "enabled" immediately. */
 const activateApp = (appId: string) => {
-  
   fetch(getApiUrl(`/api/v1/apps/${encodeURIComponent(appId)}/activate`), {
     method: 'GET',
     credentials: 'include',
     headers: { ...getAuthHeader() },
-  }).catch(() => {
-    // Non-critical
-  });
+  })
+    .then((res) => {
+      if (!res.ok) return;
+      invalidateAppsCache();
+      refreshAllIntegrationStatus();
+    })
+    .catch(() => {
+      // Non-critical
+    });
 };
 
 // Extended category type for the Sources page (includes 'other')
