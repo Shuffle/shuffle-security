@@ -14,8 +14,7 @@ const getCommon = () => ({
   shape: { borderRadius: 8 },
 });
 
-const getComponents = (mode: 'light' | 'dark') => {
-  const isDark = mode === 'dark';
+const getComponents = (_mode: 'light' | 'dark') => {
   const border = 'hsl(var(--border))';
   const cardBg = 'var(--gradient-card)';
   const drawerBg = 'hsl(var(--sidebar-background))';
@@ -99,7 +98,6 @@ const getComponents = (mode: 'light' | 'dark') => {
 };
 
 export const createMuiTheme = (mode: 'light' | 'dark') => {
-  const isDark = mode === 'dark';
   return createTheme({
     ...getCommon(),
     palette: {
