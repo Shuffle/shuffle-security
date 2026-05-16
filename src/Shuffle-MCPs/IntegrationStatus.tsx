@@ -206,17 +206,50 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
     }
   }, [priorityCategory]);
 
+  // Load apps selected in the onboarding wizard (persisted to datastore).
+  // This keeps every IntegrationStatus instance in sync with /onboarding/sources
+  // without each parent having to plumb extraApps down manually.
+  const fetchOnboardingApps = useCallback(async () => {
+    try {
+      const resp = await getDatastoreItem(SELECTED_TOOLS_KEY, ONBOARDING_CONFIG_CATEGORY);
+      if (!resp?.success || !resp.item?.value) {
+        setOnboardingApps([]);
+        return;
+      }
+      const raw = typeof resp.item.value === 'string' ? JSON.parse(resp.item.value) : resp.item.value;
+      if (!Array.isArray(raw)) {
+        setOnboardingApps([]);
+        return;
+      }
+      setOnboardingApps(
+        raw
+          .map((a: any) => ({
+            id: a?.objectID || a?.id || a?.name,
+            name: a?.name,
+            icon: a?.image_url || a?.large_image || '',
+          }))
+          .filter((a: any) => a.name)
+      );
+    } catch (_) {
+      setOnboardingApps([]);
+    }
+  }, []);
+
   // Fetch on mount
   useEffect(() => {
     fetchIntegrations();
-  }, [fetchIntegrations]);
+    fetchOnboardingApps();
+  }, [fetchIntegrations, fetchOnboardingApps]);
 
   // Re-fetch whenever any integration auth changes globally
   useEffect(() => {
-    const handler = () => fetchIntegrations();
+    const handler = () => {
+      fetchIntegrations();
+      fetchOnboardingApps();
+    };
     window.addEventListener('integrations-changed', handler);
     return () => window.removeEventListener('integrations-changed', handler);
-  }, [fetchIntegrations]);
+  }, [fetchIntegrations, fetchOnboardingApps]);
 
   const getStatusColor = (integration: Integration) => {
     if (integration.isActiveOnly) return 'hsl(var(--destructive))';
