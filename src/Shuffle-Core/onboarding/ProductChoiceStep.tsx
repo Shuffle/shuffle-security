@@ -27,7 +27,7 @@ export const ProductChoiceStep = ({ onSelectCore, onSelectSecurity }: ProductCho
           <button
             type="button"
             onClick={onSelectSecurity}
-            className="group flex flex-col rounded-xl border border-transparent bg-card p-6 text-left transition-colors hover:border-primary hover:bg-card/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="group flex flex-col rounded-xl border border-border bg-transparent p-6 text-left transition-colors hover:border-primary hover:bg-card/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             <div className="mb-4 flex h-10 w-10 items-center justify-center">
               <AgentIcon size={40} />
@@ -47,7 +47,7 @@ export const ProductChoiceStep = ({ onSelectCore, onSelectSecurity }: ProductCho
           <button
             type="button"
             onClick={onSelectCore}
-            className="group flex flex-col rounded-xl border border-transparent bg-card p-6 text-left transition-colors hover:border-primary hover:bg-card/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="group flex flex-col rounded-xl border border-border bg-transparent p-6 text-left transition-colors hover:border-primary hover:bg-card/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             <div className="mb-4 flex h-10 w-10 items-center justify-center">
               <img src={shuffleInfraLogo} alt="Shuffle Core" width={40} height={40} style={{ borderRadius: 6 }} />
