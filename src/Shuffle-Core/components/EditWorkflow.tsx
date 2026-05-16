@@ -1018,9 +1018,9 @@ const EditWorkflow = (props) => {
 											layoutId="edit-workflow-status"
 											value={innerWorkflow.status || "test"}
 											onChange={(val) => {
-												innerWorkflow.status = val
-												setInnerWorkflow(innerWorkflow)
-												setUpdate(Math.random())
+										updateInnerWorkflow((next) => {
+											next.status = val
+										})
 											}}
 											options={[
 												{ value: "test", label: "Test" },
@@ -1037,8 +1037,9 @@ const EditWorkflow = (props) => {
 
 								<TextField
 									onBlur={(event) => {
-										innerWorkflow.default_return_value = event.target.value
-										setInnerWorkflow(innerWorkflow)
+									updateInnerWorkflow((next) => {
+										next.default_return_value = event.target.value
+									})
 									}}
 									InputProps={{
 										style: {
@@ -1093,7 +1094,7 @@ const EditWorkflow = (props) => {
 											value={innerWorkflow.suborg_distribution === undefined || innerWorkflow.suborg_distribution === null ? ["none"] : innerWorkflow.suborg_distribution}
 											disabled={workflow?.parentorg_workflow !== undefined && workflow?.parentorg_workflow !== null && workflow?.parentorg_workflow.length > 0}
 											onChange={(e) => {
-												var newvalue = e.target.value
+													var newvalue = normalizeSelectValues(e.target.value)
 												if (newvalue.length > 1 && newvalue[0] === "none") {
 													newvalue = newvalue.filter(value => value !== "none")
 												}
@@ -1104,9 +1105,9 @@ const EditWorkflow = (props) => {
 													newvalue = userdata.orgs.filter(org => org.creator_org === userdata.active_org.id).map(org => org.id)
 												}
 
-												innerWorkflow.suborg_distribution = newvalue
-												setInnerWorkflow(innerWorkflow)
-												setUpdate(Math.random())
+													updateInnerWorkflow((next) => {
+														next.suborg_distribution = [...newvalue]
+													})
 											}}
 											label="Suborg Distribution"
 											fullWidth
