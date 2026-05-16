@@ -840,18 +840,21 @@ const EditWorkflow = (props) => {
 								<FormControl style={{ flex: 1, marginRight: 5, }}>
 									<InputLabel htmlFor="grouped-select-usecase">Usecases</InputLabel>
 									<Select
-										defaultValue=""
+										defaultValue={[]}
 										id="grouped-select"
 										label="Matching Usecase"
 										multiple
+										sx={{ ...selectSx, width: "100%" }}
 										value={selectedUsecases}
 										renderValue={(selected) => selected.join(', ')}
 										MenuProps={selectMenuProps}
 										onChange={(event) => {
-											console.log("Changed: ", event)
+											const nextUsecases = normalizeSelectValues(event.target.value).filter((value) => value !== "none")
+											setSelectedUsecases(nextUsecases)
+											setUpdate(Math.random())
 										}}
 									>
-										<MenuItem value="">
+										<MenuItem value="none">
 											<em>None</em>
 										</MenuItem>
 										{usecases.map((usecase, index) => {
@@ -867,19 +870,7 @@ const EditWorkflow = (props) => {
 														//console.log(subcase)
 														total_count += 1
 														return (
-															<MenuItem key={subindex} value={total_count} onClick={(event) => {
-																if (selectedUsecases.includes(subcase.name)) {
-																	const itemIndex = selectedUsecases.indexOf(subcase.name)
-																	if (itemIndex > -1) {
-																		selectedUsecases.splice(itemIndex, 1)
-																	}
-																} else {
-																	selectedUsecases.push(subcase.name)
-																}
-
-																setUpdate(Math.random());
-																setSelectedUsecases(selectedUsecases)
-															}}>
+													<MenuItem key={subindex} value={subcase.name}>
 																<Checkbox style={{ color: selectedUsecases.includes(subcase.name) ? usecase.color : "hsl(var(--input))" }} checked={selectedUsecases.includes(subcase.name)} />
 																<ListItemText primary={subcase.name} />
 															</MenuItem>
