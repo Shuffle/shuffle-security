@@ -16,7 +16,7 @@ import {
 } from '@/Shuffle-MCPs/ingestionDetection';
 import { findIngestTicketsWorkflow, findForwardTicketsWorkflow, extractWorkflowAppNames } from '@/Shuffle-MCPs/ingestionDetection';
 import { trackOnboardingStep, trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
-import { refreshAllIntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
+import { IntegrationStatus, refreshAllIntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
 import { usePageMeta } from '@/hooks/usePageMeta';
 
 // Datastore category for onboarding config (using shuffle-security_ prefix for consistency)
