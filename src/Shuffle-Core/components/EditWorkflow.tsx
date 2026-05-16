@@ -1119,7 +1119,7 @@ const EditWorkflow = (props) => {
 										:
 										<Select
 											multiple
-											style={{ marginTop: 10, }}
+											sx={{ ...selectSx, marginTop: "10px" }}
 											value={innerWorkflow.suborg_distribution === undefined || innerWorkflow.suborg_distribution === null ? ["none"] : innerWorkflow.suborg_distribution}
 											disabled={workflow?.parentorg_workflow !== undefined && workflow?.parentorg_workflow !== null && workflow?.parentorg_workflow.length > 0}
 											onChange={(e) => {
@@ -1140,6 +1140,11 @@ const EditWorkflow = (props) => {
 											}}
 											label="Suborg Distribution"
 											fullWidth
+											renderValue={(selected) => {
+												const selectedIds = normalizeSelectValues(selected)
+												if (selectedIds.includes("none")) return "None"
+												return userdata.orgs.filter((org) => selectedIds.includes(org.id)).map((org) => org.name).join(", ")
+											}}
 											MenuProps={selectMenuProps}
 										>
 											<MenuItem value="none">
@@ -1370,16 +1375,16 @@ const EditWorkflow = (props) => {
 										When a workflow run is done, the data from the selected actions will be removed by replacing it with a default value. This is useful for cleaning up sensitive data, or data that is no longer needed. This is done after a workflow run is finished or aborted, and is not reversible. Data will remain in the workflow run result (last node value) even if the action result itself is cleaned up.
 									</Typography>
 
-									<FormControl style={{ marginTop: 15, }}>
+									<FormControl style={{ marginTop: 15, width: 500, maxWidth: "100%" }}>
 										<Select
 											defaultValue=""
 											id="result-cleanup-control"
 											label="Cleaned Up nodes"
 											multiple
 											fullWidth
-											style={{ width: 500, }}
+											sx={selectSx}
 											value={Array.isArray(selectedCleanupActions) && selectedCleanupActions.length === 0 ? ["none"] : selectedCleanupActions}
-											renderValue={(selected) => selected.join(', ')}
+											renderValue={(selected) => renderActionSelectValue(selected, "No cleanup yet")}
 											MenuProps={selectMenuProps}
 											onChange={(event) => {
 												if (event.target.value.length > 0) {
