@@ -6986,153 +6986,28 @@ const IncidentDetailPage = () => {
             justifyContent: 'space-between',
             mb: 2,
           }}>
-            <Box sx={{ 
-              display: 'flex', 
-              alignItems: 'center',
-              gap: 0.5, 
-              p: 0.5, 
-              bgcolor: 'hsl(var(--card))', 
-              borderRadius: 2,
-              border: '1px solid hsl(var(--border))',
-              overflowX: 'auto',
-              WebkitOverflowScrolling: 'touch',
-              '&::-webkit-scrollbar': { display: 'none' },
-              msOverflowStyle: 'none',
-              scrollbarWidth: 'none',
-            }}>
-              {[
-                { label: 'Details', count: null, tour: 'incident-tab-details' },
-                { label: 'Tasks', count: visibleTasks.length > 0 ? `${visibleTasks.filter(t => t.completed).length}/${visibleTasks.length}` : null, tour: 'incident-tab-tasks' },
-                { label: 'Observables', count: visibleObservablesCount > 0 ? visibleObservablesCount : null, loading: refreshingObservables, tour: 'incident-tab-observables' },
-                { label: 'Correlations', count: visibleCorrelations.length > 0 ? visibleCorrelations.length : null, loading: correlationsLoading, tour: 'incident-tab-correlations' },
-              ].map((tab, index) => (
-                <Box
-                  key={tab.label}
-                  data-tour={tab.tour}
-                  data-active={activeTab === index ? 'true' : 'false'}
-                  onClick={() => setActiveTab(index)}
-                  sx={{
-                    px: 2,
-                    py: 1,
-                    borderRadius: 1.5,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                    transition: 'all 0.2s ease',
-                    bgcolor: activeTab === index ? '#ff6600' : 'transparent',
-                    color: activeTab === index ? '#ffffff' : 'text.secondary',
-                    fontWeight: activeTab === index ? 600 : 400,
-                    fontSize: '0.875rem',
-                    '&:hover': {
-                      bgcolor: activeTab === index ? '#ff6600' : 'rgba(255,255,255,0.05)',
-                    },
-                  }}
-                >
-                  {tab.label}
-                  {tab.loading ? (
-                    <CircularProgress size={12} sx={{ color: 'text.secondary' }} />
-                  ) : tab.count !== null && (
-                    <Box
-                      component="span"
-                      sx={{
-                        fontSize: '0.7rem',
-                        fontWeight: 600,
-                        px: 0.75,
-                        py: 0.25,
-                        borderRadius: 1,
-                        bgcolor: activeTab === index ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)',
-                        color: activeTab === index ? '#ffffff' : 'text.secondary',
-                      }}
-                    >
-                      {tab.count}
-                    </Box>
-                  )}
-                </Box>
-              ))}
-              {/* Changes tab removed — revisions now in Activity sidebar */}
-            </Box>
+            <SegmentedControl
+              layoutId="incident-detail-tabs"
+              ariaLabel="Incident sections"
+              value={String(activeTab)}
+              onChange={(v) => setActiveTab(Number(v))}
+              options={[
+                { value: '0', label: 'Details', dataTour: 'incident-tab-details' },
+                { value: '1', label: 'Tasks', dataTour: 'incident-tab-tasks', count: visibleTasks.length > 0 ? visibleTasks.length : undefined, title: visibleTasks.length > 0 ? `${visibleTasks.filter(t => t.completed).length}/${visibleTasks.length} completed` : undefined },
+                { value: '2', label: 'Observables', dataTour: 'incident-tab-observables', count: visibleObservablesCount > 0 ? visibleObservablesCount : undefined },
+                { value: '3', label: 'Correlations', dataTour: 'incident-tab-correlations', count: visibleCorrelations.length > 0 ? visibleCorrelations.length : undefined },
+              ]}
+            />
 
-            {/* Right tab group island: Automation + Raw — hidden on small screens to prevent crowding */}
-            <Box sx={{ 
-              display: { xs: 'none', md: 'flex' }, 
-              alignItems: 'center', 
-              gap: 0.5, 
-              p: 0.5,
-              bgcolor: 'hsl(var(--card))',
-              borderRadius: 2,
-              border: '1px solid hsl(var(--border))',
-              flexShrink: 0,
-            }}>
-              {/* Original tab - only visible when data exists */}
-              {unmappedOriginal && (
-                <>
-                  <Tooltip title="The raw data before any translation" arrow>
-                    <Box
-                      onClick={() => setActiveTab(6)}
-                      sx={{
-                        px: 2,
-                        py: 1,
-                        borderRadius: 1.5,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        transition: 'all 0.2s ease',
-                        bgcolor: activeTab === 6 ? '#ff6600' : 'transparent',
-                        color: activeTab === 6 ? '#ffffff' : 'text.secondary',
-                        fontWeight: activeTab === 6 ? 600 : 400,
-                        fontSize: '0.875rem',
-                        '&:hover': {
-                          bgcolor: activeTab === 6 ? '#ff6600' : 'rgba(255,255,255,0.05)',
-                        },
-                      }}
-                    >
-                      Original
-                    </Box>
-                  </Tooltip>
-
-                  {/* Arrow: Original → Translation */}
-                  <ChevronRightIcon size={16} style={{ color: 'text.disabled' }} />
-                </>
-              )}
-
-              {/* File tab - only visible when translation file exists */}
-              {!!incidentFileRef && (
-                <>
-                  <Tooltip title="The translation file that maps original data to OCSF" arrow>
-                    <Box
-                      onClick={() => setActiveTab(5)}
-                      sx={{
-                        px: 2,
-                        py: 1,
-                        borderRadius: 1.5,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 1,
-                        transition: 'all 0.2s ease',
-                        bgcolor: activeTab === 5 ? '#ff6600' : 'transparent',
-                        color: activeTab === 5 ? '#ffffff' : 'text.secondary',
-                        fontWeight: activeTab === 5 ? 600 : 400,
-                        fontSize: '0.875rem',
-                        '&:hover': {
-                          bgcolor: activeTab === 5 ? '#ff6600' : 'rgba(255,255,255,0.05)',
-                        },
-                      }}
-                    >
-                      Translation
-                    </Box>
-                  </Tooltip>
-
-                  {/* Arrow: Translation → OCSF */}
-                  <ChevronRightIcon size={16} style={{ color: 'text.disabled' }} />
-                </>
-              )}
-
-              <Tooltip title="The normalized OCSF Incident Finding output" arrow>
-                <Box
-                  onClick={() => {
+            {/* Right tab group island: Source → Translation → OCSF */}
+            <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', gap: 0.75, flexShrink: 0 }}>
+              <SegmentedControl
+                layoutId="incident-source-tabs"
+                ariaLabel="Source data"
+                value={String(activeTab === 6 ? 6 : activeTab === 5 ? 5 : activeTab === 4 ? 4 : -1)}
+                onChange={(v) => {
+                  const next = Number(v);
+                  if (next === 4) {
                     if (incident?.rawOCSF) {
                       const severityOption = severityOptions.find(s => s.value === editedSeverity);
                       const statusLabel = editedStatus === 'new' ? 'New' : editedStatus === 'in_progress' ? 'In Progress' : editedStatus === 'on_hold' ? 'On Hold' : 'Resolved';
@@ -7166,36 +7041,20 @@ const IncidentDetailPage = () => {
                             },
                           },
                         },
-                      enrichments: enrichments,
+                        enrichments: enrichments,
                       };
                       setRawJsonText(JSON.stringify(liveSnapshot, null, 2));
                     }
-                    setActiveTab(4);
-                  }}
-                  sx={{
-                    px: 2,
-                    py: 1,
-                    borderRadius: 1.5,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    transition: 'all 0.2s ease',
-                    bgcolor: activeTab === 4 ? '#ff6600' : 'transparent',
-                    color: activeTab === 4 ? '#ffffff' : 'text.secondary',
-                    fontWeight: activeTab === 4 ? 600 : 400,
-                    fontSize: '0.875rem',
-                    '&:hover': {
-                      bgcolor: activeTab === 4 ? '#ff6600' : 'rgba(255,255,255,0.05)',
-                      color: activeTab === 4 ? '#ffffff' : 'text.secondary',
-                    },
-                  }}
-                >
-                  OCSF
-                </Box>
-              </Tooltip>
+                  }
+                  setActiveTab(next);
+                }}
+                options={[
+                  ...(unmappedOriginal ? [{ value: '6', label: 'Original', title: 'The raw data before any translation' }] : []),
+                  ...(incidentFileRef ? [{ value: '5', label: 'Translation', title: 'The translation file that maps original data to OCSF' }] : []),
+                  { value: '4', label: 'OCSF', title: 'The normalized OCSF Incident Finding output' },
+                ]}
+              />
             </Box>
-          </Box>
 
           {/* Tab Content */}
       <Box sx={isPublicView ? { pointerEvents: 'none', '& input, & textarea, & select, & button:not([data-public-ok])': { opacity: 0.7 } } : {}}>
