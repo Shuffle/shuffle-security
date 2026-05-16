@@ -689,7 +689,6 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
                         color: automation.enabled ? config.color : 'hsl(var(--muted-foreground))',
                         transition: 'color 0.15s',
                       }}
-                      }} 
                     />
                     <Typography 
                       sx={{ 
