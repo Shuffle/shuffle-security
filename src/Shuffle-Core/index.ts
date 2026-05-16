@@ -15,3 +15,4 @@ export { default } from './Usecases';
 export { default as UsecaseAlluvialDiagram } from './UsecaseAlluvialDiagram';
 export { usePageMeta } from './usePageMeta';
 export { toast, setToastImpl } from './toast';
+export { default as FormInput } from './FormInput';
