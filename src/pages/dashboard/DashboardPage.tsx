@@ -18,7 +18,8 @@ import {
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { AlertTriangle, CheckCircle, Loader2, HelpCircle, Clock, MessageSquare, ChevronRight, Plug, KeyRound, ArrowDownToLine, Send, Radar, Monitor, Shield, Sparkles, Check, ArrowRight, ExternalLink, EyeOff, Undo2, ExternalLink as OpenInNewIcon, RefreshCw as RefreshIcon } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useDemo } from '@/context/DemoContext';
 import AgentQuestionDialog from '@/components/agent/AgentQuestionDialog';
 import AgentQuickViewDrawer, { type QuickViewItem } from '@/components/agent/AgentQuickViewDrawer';
 import InlineMarkdown from '@/components/shared/InlineMarkdown';
@@ -505,7 +506,24 @@ const DashboardPage = () => {
     url: '/dashboard',
   });
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { userInfo } = useAuth();
+  const { active: demoActive, startDemo } = useDemo();
+  // Autostart demo mode when arriving via ?demo=true (e.g. from the
+  // onboarding "Try Demo Mode" button, or a deep link from Shuffle Core).
+  const demoAutostartRef = useRef(false);
+  useEffect(() => {
+    if (searchParams.get('demo') !== 'true') return;
+    if (demoAutostartRef.current) return;
+    demoAutostartRef.current = true;
+    if (!demoActive) {
+      startDemo().catch(() => { /* surfaced via toast */ });
+    }
+    // Strip the param so refreshes don't re-trigger it.
+    const next = new URLSearchParams(searchParams);
+    next.delete('demo');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, demoActive, startDemo, setSearchParams]);
   const isSupport = userInfo?.support === true;
   const { notifications, isLoading, refresh: refreshNotifications } = useAgentNotifications();
   const { singular: entitySingular, basePath: entityBasePath } = useEntityPreference();

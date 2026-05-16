@@ -1,13 +1,14 @@
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, PlayCircle } from 'lucide-react';
 import { AgentIcon } from '@shuffleio/shuffle-mcps';
 import shuffleInfraLogo from '@/assets/shuffle-infrastructure-logo.png';
 
 interface ProductChoiceStepProps {
   onSelectCore: () => void;
   onSelectSecurity: () => void;
+  onStartDemo?: () => void;
 }
 
-export const ProductChoiceStep = ({ onSelectCore, onSelectSecurity }: ProductChoiceStepProps) => {
+export const ProductChoiceStep = ({ onSelectCore, onSelectSecurity, onStartDemo }: ProductChoiceStepProps) => {
   return (
     <div className="w-full flex justify-center px-6 py-8">
       <div className="w-full max-w-4xl">
@@ -64,6 +65,20 @@ export const ProductChoiceStep = ({ onSelectCore, onSelectSecurity }: ProductCho
             </span>
           </button>
         </div>
+
+        {onStartDemo && (
+          <div className="mt-6 flex justify-center">
+            <button
+              type="button"
+              onClick={onStartDemo}
+              className="group inline-flex h-9 items-center gap-2 rounded-md border border-border bg-transparent px-4 text-sm font-medium text-foreground transition-colors hover:border-primary hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <PlayCircle className="h-4 w-4" />
+              See it immediately — Try Demo Mode
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

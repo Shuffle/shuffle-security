@@ -48,6 +48,14 @@ export interface OnboardingFlowProps {
   apiBaseUrl?: string;
   /** When false, skips the Core vs Security picker entirely. Default true. */
   showProductChoice?: boolean;
+  /** Optional handler for the "Try Demo Mode" button on the product picker.
+   *  When omitted, falls back to navigating to `${securityRedirectUrl}` with
+   *  `/dashboard?demo=true` so the demo autostarts in Shuffle Security. */
+  onStartDemo?: () => void;
+  /** URL the Demo Mode button should send users to when no `onStartDemo`
+   *  handler is provided (typically the Shuffle Security dashboard with
+   *  `?demo=true` to autostart). */
+  demoRedirectUrl?: string;
 }
 
 const PRODUCT_CHOICE_STORAGE_KEY = 'shuffle_onboarding_product';
@@ -115,6 +123,8 @@ const OnboardingFlow = ({
   securityRedirectUrl = 'https://security.shuffler.io/onboarding',
   apiBaseUrl,
   showProductChoice = true,
+  onStartDemo,
+  demoRedirectUrl = 'https://security.shuffler.io/dashboard?demo=true',
 }: OnboardingFlowProps = {}) => {
 
   // Apply API base URL override before any requests fire
@@ -1008,6 +1018,13 @@ const OnboardingFlow = ({
                             setActiveStepKey(steps[nextIdx].key);
                           }
                         }, 250);
+                      }}
+                      onStartDemo={() => {
+                        if (product === 'security' && onStartDemo) {
+                          onStartDemo();
+                        } else {
+                          window.location.href = demoRedirectUrl;
+                        }
                       }}
                     />
                   )}
