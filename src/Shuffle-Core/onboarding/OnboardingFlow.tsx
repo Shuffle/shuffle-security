@@ -1021,9 +1021,6 @@ const OnboardingFlow = ({
             <Box
               sx={{
                 backgroundColor: 'transparent',
-                border: '1px solid',
-                borderColor: 'hsl(var(--border))',
-                borderRadius: 4,
                 p: { xs: 2, sm: 3, md: 4 },
                 minHeight: 400,
                 width: '100%',
