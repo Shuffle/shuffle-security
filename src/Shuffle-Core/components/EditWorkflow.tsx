@@ -805,7 +805,7 @@ const EditWorkflow = (props) => {
 								}}
 								InputProps={{
 									style: {
-										color: "white",
+										color: "hsl(var(--foreground))",
 									},
 								}}
 								color="primary"
@@ -1012,7 +1012,7 @@ const EditWorkflow = (props) => {
 									}}
 									InputProps={{
 										style: {
-											color: "white",
+											color: "hsl(var(--foreground))",
 										},
 									}}
 									multiline
@@ -1060,7 +1060,7 @@ const EditWorkflow = (props) => {
 									}}
 									InputProps={{
 										style: {
-											color: "white",
+											color: "hsl(var(--foreground))",
 										},
 									}}
 									color="primary"
@@ -1239,7 +1239,7 @@ const EditWorkflow = (props) => {
 														notchedOutline: classes.notchedOutline,
 													},
 													style: {
-														color: "white",
+														color: "hsl(var(--foreground))",
 													},
 												}}
 											/>
@@ -1272,7 +1272,7 @@ const EditWorkflow = (props) => {
 														notchedOutline: classes.notchedOutline,
 													},
 													style: {
-														color: "white",
+														color: "hsl(var(--foreground))",
 													},
 												}}
 											/>
@@ -1307,7 +1307,7 @@ const EditWorkflow = (props) => {
 														notchedOutline: classes.notchedOutline,
 													},
 													style: {
-														color: "white",
+														color: "hsl(var(--foreground))",
 													},
 												}}
 											/>
@@ -1340,7 +1340,7 @@ const EditWorkflow = (props) => {
 														notchedOutline: classes.notchedOutline,
 													},
 													style: {
-														color: "white",
+														color: "hsl(var(--foreground))",
 													},
 												}}
 												type="password"
@@ -1459,8 +1459,7 @@ const EditWorkflow = (props) => {
 													flex: 2,
 													marginTop: 0,
 													marginBottom: 0,
-													backgroundColor: theme.palette.inputColor,
-													marginRight: 5,
+																	marginRight: 5,
 												}}
 												fullWidth={true}
 												placeholder="Question"
@@ -1485,8 +1484,7 @@ const EditWorkflow = (props) => {
 													flex: 2,
 													marginTop: 0,
 													marginBottom: 0,
-													backgroundColor: theme.palette.inputColor,
-													marginRight: 5,
+																	marginRight: 5,
 												}}
 												fullWidth={true}
 												placeholder="$exec JSON key"
@@ -1733,7 +1731,7 @@ const EditWorkflow = (props) => {
 								}}
 								InputProps={{
 									style: {
-										color: "white",
+										color: "hsl(var(--foreground))",
 									},
 								}}
 								color="primary"
@@ -1751,7 +1749,7 @@ const EditWorkflow = (props) => {
 								}}
 								InputProps={{
 									style: {
-										color: "white",
+										color: "hsl(var(--foreground))",
 									},
 								}}
 								color="primary"
