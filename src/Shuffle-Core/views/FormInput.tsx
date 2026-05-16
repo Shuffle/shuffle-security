@@ -144,14 +144,15 @@ const FormInput = (defaultprops: any) => {
 	// as a heavy filled panel.
 	const boxStyle: React.CSSProperties = {
 		color: "hsl(var(--foreground))",
-		backgroundColor: "transparent",
+		backgroundColor: "hsl(var(--card) / 0.4)",
 		backgroundImage: "none",
 		border: "1px solid hsl(var(--border))",
-		padding: "28px 32px 36px 32px",
-		borderRadius: 12,
+		padding: "40px 44px 36px 44px",
+		borderRadius: 16,
 		minHeight: 360,
 		position: "relative",
-		boxShadow: "none",
+		boxShadow: "0 1px 0 hsl(var(--border) / 0.4)",
+		backdropFilter: "blur(6px)",
 	}
 
     const params = useParams();
