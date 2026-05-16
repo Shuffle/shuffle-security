@@ -13,7 +13,7 @@ npm install @shuffleio/shuffle-core
 ```
 
 Peer deps: `react >= 18`, `react-dom >= 18`, `@mui/material >= 5`,
-`@mui/icons-material >= 5`, `lucide-react`, `react-router-dom`, `react-ga4`,
+`lucide-react`, `react-router-dom`, `react-ga4`,
 and `@shuffleio/shuffle-mcps` (used for the embedded app search drawer).
 
 ## Quick start
