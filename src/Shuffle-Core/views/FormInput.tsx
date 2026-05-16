@@ -1442,16 +1442,54 @@ const FormInput = (defaultprops: any) => {
 
 						  //key={index}
 						  return (
-							<Tooltip arrow placement="left" title={
-							  <span style={{}}>
-								{data.image !== undefined && data.image !== null && data.image.length > 0 ?
-								  <img src={data.image} alt={data.name} style={{ backgroundColor: theme.palette.surfaceColor, maxHeight: 200, minHeigth: 200, maxWidth: 285, borderRadius: theme.palette?.borderRadius, }} />
-								  : null}
-								<Typography>
-								  Choose Subflow '{data.name}'
-								</Typography>
-							  </span>
-							}>
+							<Tooltip
+							  arrow
+							  placement="left"
+							  componentsProps={{
+								tooltip: {
+								  sx: {
+									backgroundColor: 'hsl(var(--popover))',
+									color: 'hsl(var(--popover-foreground))',
+									border: '1px solid hsl(var(--border))',
+									borderRadius: '10px',
+									padding: '10px',
+									maxWidth: 260,
+									boxShadow: '0 10px 30px hsl(var(--background) / 0.45)',
+								  },
+								},
+								arrow: { sx: { color: 'hsl(var(--popover))' } },
+							  }}
+							  title={
+								<div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+								  {data.image !== undefined && data.image !== null && data.image.length > 0 ? (
+									<img
+									  src={data.image}
+									  alt={data.name}
+									  style={{
+										display: 'block',
+										width: '100%',
+										height: 140,
+										objectFit: 'cover',
+										backgroundColor: 'hsl(var(--muted))',
+										borderRadius: 8,
+										border: '1px solid hsl(var(--border))',
+									  }}
+									/>
+								  ) : null}
+								  <Typography
+									variant="body2"
+									sx={{
+									  fontSize: 13,
+									  fontWeight: 500,
+									  lineHeight: 1.4,
+									  color: 'hsl(var(--popover-foreground))',
+									}}
+								  >
+									Choose workflow "{data.name}"
+								  </Typography>
+								</div>
+							  }
+							>
 							  <MenuItem
 								style={{
 								  backgroundColor: theme.palette.inputColor,
