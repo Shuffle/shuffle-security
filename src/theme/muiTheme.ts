@@ -16,33 +16,31 @@ const getCommon = () => ({
 
 const getComponents = (mode: 'light' | 'dark') => {
   const isDark = mode === 'dark';
-  const border = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.08)';
-  const cardBg = isDark
-    ? 'linear-gradient(145deg, #262626 0%, #1f1f1f 100%)'
-    : 'linear-gradient(145deg, #ffffff 0%, #f8f8f8 100%)';
+  const border = 'hsl(var(--border))';
+  const cardBg = 'var(--gradient-card)';
   const drawerBg = 'hsl(var(--sidebar-background))';
-  const tooltipBg = isDark ? '#111111' : '#ffffff';
-  const tooltipColor = isDark ? '#ffffff' : '#1a1a1a';
-  const tableHeadBg = isDark ? 'rgba(33, 33, 33, 0.5)' : 'rgba(245, 245, 245, 0.8)';
-  const appBarBg = isDark ? 'rgba(26, 26, 26, 0.9)' : 'rgba(255, 255, 255, 0.9)';
+  const tooltipBg = 'hsl(var(--popover))';
+  const tooltipColor = 'hsl(var(--popover-foreground))';
+  const tableHeadBg = 'hsl(var(--muted) / 0.5)';
+  const appBarBg = 'hsl(var(--background) / 0.9)';
 
   return {
     MuiButton: {
       styleOverrides: {
         root: { borderRadius: 8, padding: '10px 24px', fontWeight: 600 },
         containedPrimary: {
-          background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
-          boxShadow: '0 4px 14px rgba(255, 102, 0, 0.25)',
+          background: 'var(--gradient-accent)',
+          boxShadow: '0 4px 14px hsl(var(--primary) / 0.25)',
           '&:hover': {
-            background: 'linear-gradient(135deg, #FF8533 0%, #FF9955 100%)',
-            boxShadow: '0 6px 20px rgba(255, 102, 0, 0.35)',
+            background: 'var(--gradient-accent)',
+            boxShadow: '0 6px 20px hsl(var(--primary) / 0.35)',
           },
         },
         outlined: {
-          borderColor: 'rgba(255, 102, 0, 0.5)',
+          borderColor: 'hsl(var(--primary) / 0.5)',
           '&:hover': {
-            borderColor: '#FF6600',
-            backgroundColor: 'rgba(255, 102, 0, 0.08)',
+            borderColor: 'hsl(var(--primary))',
+            backgroundColor: 'hsl(var(--primary) / 0.08)',
           },
         },
       },
@@ -90,7 +88,7 @@ const getComponents = (mode: 'light' | 'dark') => {
         tooltip: {
           backgroundColor: tooltipBg,
           color: tooltipColor,
-          border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'}`,
+          border: '1px solid hsl(var(--border))',
           fontSize: '0.75rem',
           maxWidth: 280,
         },
