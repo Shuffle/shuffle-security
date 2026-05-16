@@ -34,34 +34,58 @@ export interface EnrichmentStatus {
 const THREAT_FEEDS_WORKFLOW = 'Enable Threat feeds';
 const IOC_EXTRACTION_WORKFLOW = 'Realtime IOC extraction';
 
-/**
- * Fetch the category config for shuffle-security_incidents.
- * We do a minimal datastore list (limit=1) just to get category_config.
- */
-const fetchIncidentsCategoryConfig = async (): Promise<CategoryConfig | null> => {
-  try {
-    const orgId = (() => {
-      try {
-        const info = localStorage.getItem('shuffle_user_info');
-        return info ? JSON.parse(info)?.active_org?.id : null;
-      } catch { return null; }
-    })();
-    if (!orgId) return null;
+const CATEGORY_CONFIG_CACHE_KEY = 'shuffle-enrichment-category-config';
 
-    // Use the same list_cache endpoint as useDatastore, limit=1 to just get category_config
-    const url = getApiUrl(
-      `/api/v1/orgs/${orgId}/list_cache?category=${encodeURIComponent(DATASTORE_CATEGORIES.INCIDENTS)}&top=1`,
-    );
-    const res = await fetch(url, {
-      credentials: 'include',
-      headers: { ...getAuthHeader() },
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.category_config || null;
+const readCachedCategoryConfig = (orgId: string | null): CategoryConfig | null => {
+  if (!orgId) return null;
+  try {
+    const raw = localStorage.getItem(`${CATEGORY_CONFIG_CACHE_KEY}::${orgId}`);
+    return raw ? (JSON.parse(raw) as CategoryConfig) : null;
   } catch {
     return null;
   }
+};
+
+const writeCachedCategoryConfig = (orgId: string | null, cfg: CategoryConfig | null) => {
+  if (!orgId || !cfg) return;
+  try {
+    localStorage.setItem(`${CATEGORY_CONFIG_CACHE_KEY}::${orgId}`, JSON.stringify(cfg));
+  } catch {
+    /* ignore quota */
+  }
+};
+
+const getActiveOrgId = (): string | null => {
+  try {
+    const info = localStorage.getItem('shuffle_user_info');
+    return info ? JSON.parse(info)?.active_org?.id ?? null : null;
+  } catch { return null; }
+};
+
+/**
+ * Fetch the category config for shuffle-security_incidents.
+ * Throws on transport / non-OK responses so react-query can retry.
+ * Falls back to the last cached config when the request can't be made
+ * (e.g. no org id available).
+ */
+const fetchIncidentsCategoryConfig = async (): Promise<CategoryConfig | null> => {
+  const orgId = getActiveOrgId();
+  if (!orgId) return readCachedCategoryConfig(orgId);
+
+  const url = getApiUrl(
+    `/api/v1/orgs/${orgId}/list_cache?category=${encodeURIComponent(DATASTORE_CATEGORIES.INCIDENTS)}&top=1`,
+  );
+  const res = await fetch(url, {
+    credentials: 'include',
+    headers: { ...getAuthHeader() },
+  });
+  if (!res.ok) {
+    throw new Error(`list_cache responded with ${res.status}`);
+  }
+  const data = await res.json();
+  const cfg = (data?.category_config as CategoryConfig | undefined) || null;
+  if (cfg) writeCachedCategoryConfig(orgId, cfg);
+  return cfg;
 };
 
 /**
@@ -83,15 +107,25 @@ export const useEnrichmentStatus = (
   const [pendingAction, setPendingAction] = useState<'enable' | 'disable' | null>(null);
   const [optimistic, setOptimistic] = useState<boolean | null>(null);
 
-  const { data: fetchedConfig, isLoading: cfgLoading } = useQuery<CategoryConfig | null>({
+  const { data: fetchedConfig, isLoading: cfgLoading, isError: cfgError } = useQuery<CategoryConfig | null>({
     queryKey: ['enrichment-category-config'],
     queryFn: fetchIncidentsCategoryConfig,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     enabled: categoryConfigOverride === undefined,
+    retry: 4,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
   });
 
-  const categoryConfig = categoryConfigOverride !== undefined ? categoryConfigOverride : fetchedConfig;
+  // Fall back to last cached config when the live request fails so a
+  // transient /list_cache hiccup doesn't flip Enrich automation to Inactive.
+  const resolvedFetched = useMemo<CategoryConfig | null>(() => {
+    if (fetchedConfig) return fetchedConfig;
+    if (cfgError) return readCachedCategoryConfig(getActiveOrgId());
+    return fetchedConfig ?? null;
+  }, [fetchedConfig, cfgError]);
+
+  const categoryConfig = categoryConfigOverride !== undefined ? categoryConfigOverride : resolvedFetched;
   const isLoading = wfLoading || (categoryConfigOverride === undefined && cfgLoading);
 
   const refetchAll = useCallback(async () => {
