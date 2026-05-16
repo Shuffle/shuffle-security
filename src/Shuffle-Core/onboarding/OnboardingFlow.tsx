@@ -331,7 +331,7 @@ const OnboardingFlow = ({
         const authData = result.data || result;
         if (Array.isArray(authData)) {
           const processed = processAuthData(authData);
-          const { deduplicateAuthApps, backfillAppImages } = await import('@/Shuffle-Core/lib/utils');
+          const { deduplicateAuthApps, backfillAppImages } = await import('@/Shuffle-Core/auth-utils');
           const deduped = deduplicateAuthApps(processed);
           await backfillAppImages(deduped);
           const imageMap = new Map<string, string>();

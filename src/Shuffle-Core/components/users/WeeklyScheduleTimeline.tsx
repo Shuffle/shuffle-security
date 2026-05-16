@@ -11,7 +11,7 @@ import {
   Tooltip,
   Avatar,
 } from '@mui/material';
-import AgentIcon from '@shuffleio/shuffle-mcps';
+import { AgentIcon } from '@shuffleio/shuffle-mcps';
 
 type EscalationLevel = 'tier1' | 'tier2' | 'tier3' | 'manager';
 
