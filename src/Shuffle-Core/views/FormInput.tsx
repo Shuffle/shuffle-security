@@ -1967,7 +1967,7 @@ const FormInput = (defaultprops: any) => {
 									: null}
 								</span>
 							:
-							<div style={{display: "flex", marginTop: 20}}>
+							<div style={{display: "flex", marginTop: 28}}>
 								<Button 
 									variant={executionData.result !== undefined && executionData.result !== null && executionData.result.length > 0 ? "outlined" : "contained"}
 									type="submit" 
@@ -1975,21 +1975,36 @@ const FormInput = (defaultprops: any) => {
 									fullWidth 
 									disableElevation
 									disabled={!handleValidateForm(executionArgument) || executionLoading}
-									style={{
+									sx={{
 										textTransform: "none",
-										height: 36,
-										borderRadius: 8,
+										height: 44,
+										borderRadius: "10px",
 										fontWeight: 600,
-										fontSize: 14,
+										fontSize: 15,
+										letterSpacing: "0.01em",
+										backgroundColor: "hsl(var(--primary))",
+										color: "hsl(var(--primary-foreground))",
+										boxShadow: "0 6px 18px hsl(var(--primary) / 0.25)",
+										transition: "transform .12s ease, box-shadow .12s ease, background-color .12s ease",
+										"&:hover": {
+											backgroundColor: "hsl(var(--primary) / 0.92)",
+											boxShadow: "0 8px 22px hsl(var(--primary) / 0.32)",
+											transform: "translateY(-1px)",
+										},
+										"&.Mui-disabled": {
+											backgroundColor: "hsl(var(--muted))",
+											color: "hsl(var(--muted-foreground))",
+											boxShadow: "none",
+										},
 									}}
 								>
 									{executionLoading ? 
-										<CircularProgress color="secondary" style={{color: "white",}} /> 
+										<CircularProgress size={20} style={{color: "hsl(var(--primary-foreground))"}} /> 
 									: executionData.result !== undefined && executionData.result !== null && executionData.result.length > 0 ? 
 										"Run Again" 
 									: executionData?.status === "WAITING" ? 
 										"Submit answers"
-									: "Submit"}
+									: "Run workflow"}
 							</Button> 				
 							</div>
 						}
