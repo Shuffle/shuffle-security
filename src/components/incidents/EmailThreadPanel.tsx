@@ -801,6 +801,7 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
       title="Email Thread"
       icon={EmailIcon}
       iconColor="#ff6600"
+      variant="transparent"
       open={!threadCollapsed}
       onOpenChange={(o) => {
         setThreadCollapsed(!o);

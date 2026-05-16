@@ -36,6 +36,21 @@ export interface IncidentSectionProps {
   dataTour?: string;
   /** Optional extra sx overrides on the outer container. */
   sx?: object;
+  /**
+   * Visual style of the section container. Platform standard:
+   *  - `'filled'` (default): solid card surface (`hsl(var(--card))`) + hairline
+   *     border. Use for primary content panels.
+   *  - `'transparent'`: no fill, only a hairline border. Acts as a minimal
+   *     "track" so any pills/chips/avatars inside read as the prominent
+   *     filled surfaces. Modern Linear/Vercel/Arc-style look. Use this for
+   *     sections whose body is itself a list of self-contained items
+   *     (Email Thread messages, Timeline feed) where a second filled
+   *     surface around them feels heavy.
+   *
+   * This is the canonical knob — do not roll your own `bgcolor: 'transparent'`
+   * overrides on individual sections. Pick a variant.
+   */
+  variant?: 'filled' | 'transparent';
 }
 
 export const IncidentSection = forwardRef<HTMLDivElement, IncidentSectionProps>(({
@@ -52,6 +67,7 @@ export const IncidentSection = forwardRef<HTMLDivElement, IncidentSectionProps>(
   bodyPadded = true,
   dataTour,
   sx,
+  variant = 'filled',
 }, ref) => {
   const [internalOpen, setInternalOpen] = useState<boolean>(() => {
     if (!storageKey || typeof window === 'undefined') return defaultOpen;
@@ -85,7 +101,7 @@ export const IncidentSection = forwardRef<HTMLDivElement, IncidentSectionProps>(
       ref={ref}
       {...(dataTour ? { 'data-tour': dataTour } : {})}
       sx={{
-        bgcolor: 'hsl(var(--card))',
+        bgcolor: variant === 'transparent' ? 'transparent' : 'hsl(var(--card))',
         borderRadius: 2,
         border: '1px solid hsl(var(--border))',
         overflow: 'hidden',
