@@ -554,9 +554,13 @@ const FormInput = (defaultprops: any) => {
 					start()
 				}
 
-				// If execution_id or authorization, add them to the URL
+				// If execution_id or authorization, add them to the URL.
+				// Use { replace: true } so the in-progress run does not push
+				// a new history entry (which feels like a page reload).
 				if (responseJson?.execution_id !== undefined && responseJson?.execution_id !== null && responseJson?.execution_id?.length > 0 && responseJson?.authorization !== undefined && responseJson?.authorization !== null && responseJson?.authorization?.length > 0) {
-					navigate(`?execution_id=${responseJson.execution_id}&authorization=${responseJson.authorization}`)
+					navigate(`?execution_id=${responseJson.execution_id}&authorization=${responseJson.authorization}`, { replace: true })
+				} else if (responseJson?.execution_id !== undefined && responseJson?.execution_id !== null && responseJson?.execution_id?.length > 0) {
+					navigate(`?execution_id=${responseJson.execution_id}`, { replace: true })
 				}
 			}
 		})
