@@ -426,6 +426,8 @@ const FormInput = (defaultprops: any) => {
 		stop()
   	    setMessage("")
 		setExecutionData({})
+		setExecutionRequest({})
+		setExecutionRunning(false)
 		setExecutionInfo("")
 
 		setTimeout(() => {
