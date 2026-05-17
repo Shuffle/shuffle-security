@@ -1917,6 +1917,14 @@ const FormInput = (defaultprops: any) => {
 												onChange={(e) => {
 													setExecutionArgument(e.target.value)
 												}}
+												onKeyDown={(e) => {
+													if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+														e.preventDefault()
+														if (!disabledButtons) {
+															onSubmit(null, execution_id, authorization, false)
+														}
+													}
+												}}
 												style={{marginBottom: 10, }}
 											/>
 											<Button
