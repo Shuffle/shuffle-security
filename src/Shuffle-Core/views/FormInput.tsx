@@ -523,9 +523,6 @@ const FormInput = (defaultprops: any) => {
 			//}
 
 			setExecutionLoading(false)
-			if (responseJson?.execution_id !== undefined && responseJson?.execution_id !== null && responseJson?.execution_id?.length > 0) {
-				navigate(`?execution_id=${responseJson.execution_id}`)
-			}
 
 			if (responseJson.success === false) {
 
