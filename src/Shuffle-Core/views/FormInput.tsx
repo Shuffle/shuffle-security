@@ -1841,6 +1841,16 @@ const FormInput = (defaultprops: any) => {
 										onChange={(e) => {
 											setExecutionArgument(e.target.value)
 										}}
+										onKeyDown={(e) => {
+											// Cmd/Ctrl+Enter submits the form even from
+											// inside the multiline Runtime Argument field.
+											if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+												e.preventDefault()
+												if (handleValidateForm(executionArgument) && !executionLoading) {
+													onSubmit(null)
+												}
+											}
+										}}
 									/>
 									<Typography
 										style={{
