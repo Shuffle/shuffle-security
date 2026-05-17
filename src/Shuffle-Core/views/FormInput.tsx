@@ -426,6 +426,8 @@ const FormInput = (defaultprops: any) => {
 		stop()
   	    setMessage("")
 		setExecutionData({})
+		setExecutionRequest({})
+		setExecutionRunning(false)
 		setExecutionInfo("")
 
 		setTimeout(() => {
@@ -926,61 +928,66 @@ const FormInput = (defaultprops: any) => {
 		//console.log("Got response: ", responseJson)
 
 		(function(fn){fn()})(() => {
-		  if (JSON.stringify(responseJson) !== JSON.stringify(executionData)) {
-			// FIXME: If another is selected, don't edit..
-			// Doesn't work because this is some async garbage
-			if (executionData.execution_id === undefined || (responseJson.execution_id === executionData.execution_id && responseJson.results !== undefined && responseJson.results !== null)) {
-			  if (executionData.status !== responseJson.status || executionData.result !== responseJson.result || (executionData.results !== undefined && responseJson.results !== null && executionData.results.length !== responseJson.results.length)) {
+		  // Use a functional setState so we always compare against the latest
+		  // executionData (closure-captured executionData goes stale across
+		  // re-submits and causes new poll responses to be dropped, leaving
+		  // the form looking like nothing happened).
+		  setExecutionData((prev) => {
+			if (JSON.stringify(responseJson) === JSON.stringify(prev)) {
+				return prev
+			}
 
-				if (responseJson.result !== undefined && responseJson.result !== null && responseJson.result.length > 0) {
-					if (responseJson.result.startsWith("[") && responseJson.result.endsWith("]")) { 
-						try {
-							responseJson.result = JSON.parse(responseJson.result).length
-						} catch (e) {
-							console.log("Error parsing length: ", e)
-						}
+			// Accept the response if we have no previous data, or if it
+			// belongs to the currently-polled execution (either prev's id
+			// or the incoming request's id).
+			const matchesPrev = prev && prev.execution_id && responseJson.execution_id === prev.execution_id
+			const matchesRequest = executionRequest && executionRequest.execution_id && responseJson.execution_id === executionRequest.execution_id
+			const prevEmpty = !prev || prev.execution_id === undefined
+			if (!prevEmpty && !matchesPrev && !matchesRequest) {
+				return prev
+			}
+
+			if (responseJson.result !== undefined && responseJson.result !== null && responseJson.result.length > 0) {
+				if (responseJson.result.startsWith("[") && responseJson.result.endsWith("]")) {
+					try {
+						responseJson.result = JSON.parse(responseJson.result).length
+					} catch (e) {
+						console.log("Error parsing length: ", e)
 					}
 				}
+			}
 
-				//console.log("Updating data!")
-				setExecutionData(responseJson)
-				for (var key in responseJson.results) {
-					if (responseJson.results[key].status !== "WAITING") {
-						continue
-					}
+			for (var key in responseJson.results) {
+				if (responseJson.results[key].status !== "WAITING") {
+					continue
+				}
 
+				const validate = validateJson(responseJson.results[key].result)
+				if (validate.valid && typeof validate.result === "string") {
+					validate.result = JSON.parse(validate.result)
+				}
 
-					const validate = validateJson(responseJson.results[key].result)
-					if (validate.valid && typeof validate.result === "string") {
-						validate.result = JSON.parse(validate.result)
-					} 
+				console.log("Found waiting!: ", validate.result)
 
-					console.log("Found waiting!: ", validate.result)
-
-					if (validate?.result?.information !== undefined && validate?.result?.information !== null) {
-						console.log("Success! Not checking again.")
-						setWorkflowQuestion(typeof validate?.result?.information === "string" ? validate.result.information : "")
+				if (validate?.result?.information !== undefined && validate?.result?.information !== null) {
+					console.log("Success! Not checking again.")
+					setWorkflowQuestion(typeof validate?.result?.information === "string" ? validate.result.information : "")
+				} else {
+					console.log("No information found for questions?: ", validate.result)
+					if (typeof validate.result === "string" || Object.keys(validate.result).length === 2) {
+						setTimeout(() => {
+							fetchUpdates(responseJson.execution_id, responseJson.authorization)
+						}, 2000)
 					} else {
-						console.log("No information found for questions?: ", validate.result)
-
-						// Specific case for "too early" config of waiting 
-						if (typeof validate.result === "string" || Object.keys(validate.result).length === 2) {
-							setTimeout(() => {
-								fetchUpdates(responseJson.execution_id, responseJson.authorization)
-							}, 2000)
-						} else {
-							console.log("NOT re-fetching")
-						}
-						//setWorkflowQuestions{
+						console.log("NOT re-fetching")
 					}
-
-					break
 				}
-          } else {
-            console.log("NOT updating executiondata state.");
-          }
-        }
-      }
+
+				break
+			}
+
+			return responseJson
+		  })
 
       if (responseJson.status === "ABORTED" || responseJson.status === "STOPPED" || responseJson.status === "FAILURE" || responseJson.status === "WAITING") {
         stop();
