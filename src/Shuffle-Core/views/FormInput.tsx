@@ -372,7 +372,6 @@ const FormInput = (defaultprops: any) => {
 							a: OuterLink,
 						  }}
 						  id="markdown_wrapper"
-						  escapeHtml={false}
 						  style={{
 							maxWidth: "100%", 
 							minWidth: "100%", 
@@ -1590,7 +1589,6 @@ const FormInput = (defaultprops: any) => {
 									a: OuterLink,
 								  }}
 								  id="markdown_wrapper"
-								  escapeHtml={false}
 								  style={{
 									maxWidth: "100%", minWidth: "100%",
 								  }}
