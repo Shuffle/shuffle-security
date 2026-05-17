@@ -523,9 +523,6 @@ const FormInput = (defaultprops: any) => {
 			//}
 
 			setExecutionLoading(false)
-			if (responseJson?.execution_id !== undefined && responseJson?.execution_id !== null && responseJson?.execution_id?.length > 0) {
-				navigate(`?execution_id=${responseJson.execution_id}`)
-			}
 
 			if (responseJson.success === false) {
 
@@ -557,9 +554,13 @@ const FormInput = (defaultprops: any) => {
 					start()
 				}
 
-				// If execution_id or authorization, add them to the URL
+				// If execution_id or authorization, add them to the URL.
+				// Use { replace: true } so the in-progress run does not push
+				// a new history entry (which feels like a page reload).
 				if (responseJson?.execution_id !== undefined && responseJson?.execution_id !== null && responseJson?.execution_id?.length > 0 && responseJson?.authorization !== undefined && responseJson?.authorization !== null && responseJson?.authorization?.length > 0) {
-					navigate(`?execution_id=${responseJson.execution_id}&authorization=${responseJson.authorization}`)
+					navigate(`?execution_id=${responseJson.execution_id}&authorization=${responseJson.authorization}`, { replace: true })
+				} else if (responseJson?.execution_id !== undefined && responseJson?.execution_id !== null && responseJson?.execution_id?.length > 0) {
+					navigate(`?execution_id=${responseJson.execution_id}`, { replace: true })
 				}
 			}
 		})
@@ -1840,6 +1841,16 @@ const FormInput = (defaultprops: any) => {
 										onChange={(e) => {
 											setExecutionArgument(e.target.value)
 										}}
+										onKeyDown={(e) => {
+											// Cmd/Ctrl+Enter submits the form even from
+											// inside the multiline Runtime Argument field.
+											if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+												e.preventDefault()
+												if (handleValidateForm(executionArgument) && !executionLoading) {
+													onSubmit(null)
+												}
+											}
+										}}
 									/>
 									<Typography
 										style={{
@@ -1905,6 +1916,14 @@ const FormInput = (defaultprops: any) => {
 												value={executionArgument || ""}
 												onChange={(e) => {
 													setExecutionArgument(e.target.value)
+												}}
+												onKeyDown={(e) => {
+													if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+														e.preventDefault()
+														if (!disabledButtons) {
+															onSubmit(null, execution_id, authorization, false)
+														}
+													}
 												}}
 												style={{marginBottom: 10, }}
 											/>
