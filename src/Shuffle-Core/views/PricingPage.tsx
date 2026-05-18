@@ -2487,11 +2487,13 @@ const PricingPage = ({
                       onChange={(e) => {
                         const stripped = e.target.value.replace(/^0+(?=\d)/, "");
                         if (stripped !== e.target.value) e.target.value = stripped;
-                        setCalcAlerts(Math.max(0, Number(stripped)));
+                        const clamped = Math.min(1000000, Math.max(0, Number(stripped)));
+                        if (String(clamped) !== stripped) e.target.value = String(clamped);
+                        setCalcAlerts(clamped);
                       }}
                       fullWidth
                       size="small"
-                      inputProps={{ min: 0, step: 50 }}
+                      inputProps={{ min: 0, max: 1000000, step: 50 }}
                       sx={{
                         "& .MuiOutlinedInput-root": { backgroundColor: "#111", color: "#fff", borderRadius: "8px" },
                         "& .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,0.12)" },
@@ -2509,11 +2511,13 @@ const PricingPage = ({
                       onChange={(e) => {
                         const stripped = e.target.value.replace(/^0+(?=\d)/, "");
                         if (stripped !== e.target.value) e.target.value = stripped;
-                        setCalcMonitors(Math.max(0, Number(stripped)));
+                        const clamped = Math.min(100000, Math.max(0, Number(stripped)));
+                        if (String(clamped) !== stripped) e.target.value = String(clamped);
+                        setCalcMonitors(clamped);
                       }}
                       fullWidth
                       size="small"
-                      inputProps={{ min: 0, step: 5 }}
+                      inputProps={{ min: 0, max: 100000, step: 5 }}
                       sx={{
                         "& .MuiOutlinedInput-root": { backgroundColor: "#111", color: "#fff", borderRadius: "8px" },
                         "& .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,0.12)" },
