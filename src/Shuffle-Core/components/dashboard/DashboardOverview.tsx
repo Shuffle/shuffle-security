@@ -29,6 +29,7 @@ import {
 import { format, subDays, startOfDay } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { NEON, TooltipContent, KpiTile, Panel, EmptyState, buildBuckets, buildBucketsBetween, bucketIndexOf, useChartRangeDrag, ReferenceArea, type Granularity } from './_shared';
+import { ChartShimmer } from './ChartShimmer';
 
 import type { ShuffleCoreHostProps } from '../../types/host-props';
 
