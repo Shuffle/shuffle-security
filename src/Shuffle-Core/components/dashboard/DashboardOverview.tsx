@@ -239,7 +239,7 @@ export const DashboardOverview = ({
         >
           <Box sx={{ height: 260 }}>
             {incidentsLoading ? (
-              <Skeleton variant="rounded" height={260} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
+              <ChartShimmer height={260} variant="area" label="Loading incident activity" />
             ) : trendHasData ? (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={trendData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} {...trendDrag.chartProps}>
