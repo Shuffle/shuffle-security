@@ -2535,7 +2535,11 @@ const PricingPage = ({
                 >
                   {Object.entries(planRates).map(([planName, rate]) => {
                     const isEnterprise = planName === "Enterprise";
-                    const cost = totalRuns * rate * annualMultiplier;
+                    const isStandard = planName === "Standard";
+                    const STANDARD_MIN_RUNS = 300000;
+                    const billedRuns = isStandard ? Math.max(totalRuns, STANDARD_MIN_RUNS) : totalRuns;
+                    const cost = billedRuns * rate * annualMultiplier;
+                    const standardBelowMin = isStandard && totalRuns < STANDARD_MIN_RUNS;
                     return (
                       <Box
                         key={planName}
@@ -2556,8 +2560,13 @@ const PricingPage = ({
                           )}
                         </Typography>
                         <Typography sx={{ fontSize: "11px", color: "#7a7a7a", mt: 0.5 }}>
-                          {isEnterprise ? "Custom pricing" : `$${rate.toFixed(4)} per App Run`}
+                          {isEnterprise
+                            ? "Custom pricing"
+                            : standardBelowMin
+                              ? `$${rate.toFixed(4)} per App Run · min ${fmt(STANDARD_MIN_RUNS)} runs`
+                              : `$${rate.toFixed(4)} per App Run`}
                         </Typography>
+
                       </Box>
                     );
                   })}
