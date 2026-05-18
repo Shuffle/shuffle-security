@@ -1380,16 +1380,17 @@ const PricingPage = ({
                       selectedPlan.toLowerCase() === plan.type.toLowerCase()
                         ? "block"
                         : "none",
-                    lg: "block",
+                    md: "block",
                   },
                   marginTop: {
-                    xs: 
-                      selectedDeployment === "Self-Hosted" && 
-                      plan.type.toLowerCase() === "enterprise" 
-                        ? 3 
+                    xs:
+                      selectedDeployment === "Self-Hosted" &&
+                      plan.type.toLowerCase() === "enterprise"
+                        ? 3
                         : 0,
-                    lg: 0,
+                    md: 0,
                   },
+
                   transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
                   animation: "fadeIn 0.6s ease-in-out",
                   "@keyframes fadeIn": {
