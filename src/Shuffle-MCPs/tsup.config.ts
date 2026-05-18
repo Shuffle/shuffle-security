@@ -44,6 +44,7 @@ export default defineConfig({
     /^rehype-/,
     'react18-json-view',
     /^react18-json-view\//,
+    'sonner',
   ],
   // Also pass noExternal=false equivalent via esbuild to ensure
   // these are truly skipped even when tsup regex handling varies:
