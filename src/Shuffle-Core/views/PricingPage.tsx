@@ -2655,6 +2655,9 @@ const PricingPage = ({
                         fontWeight: "bold",
                         color: "#ffffff",
                         fontSize: "24px",
+                        display: "flex",
+                        flexDirection: "column",
+                        lineHeight: 1.15,
                         paddingTop:
                           plan.type.toLowerCase() === "starter"
                             ? 1
@@ -2663,12 +2666,20 @@ const PricingPage = ({
                             : 0,
                       }}
                     >
-                      {plan.type === "Scale"
-                        ? `$${getPrice(32) * (scaleValue / 10)}`
-                        : (plan.type === "Standard" ||
-                            (plan.type === "Enterprise" && selectedDeployment === "Cloud"))
-                        ? `Starts from ${plan.title}/month`
-                        : plan.title}
+                      {(plan.type === "Standard" ||
+                        (plan.type === "Enterprise" && selectedDeployment === "Cloud")) && (
+                        <span style={{ fontSize: "11px", fontWeight: 500, color: "#c5c5c5", letterSpacing: "0.3px" }}>
+                          Starts from
+                        </span>
+                      )}
+                      <span>
+                        {plan.type === "Scale"
+                          ? `$${getPrice(32) * (scaleValue / 10)}`
+                          : (plan.type === "Standard" ||
+                              (plan.type === "Enterprise" && selectedDeployment === "Cloud"))
+                          ? `${plan.title}/month`
+                          : plan.title}
+                      </span>
                     </Typography>
 
                     {plan.type === "Scale" && (
