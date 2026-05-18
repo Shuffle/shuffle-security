@@ -2524,6 +2524,7 @@ const PricingPage = ({
                   }}
                 >
                   {Object.entries(planRates).map(([planName, rate]) => {
+                    const isEnterprise = planName === "Enterprise";
                     const cost = totalRuns * rate * annualMultiplier;
                     return (
                       <Box
@@ -2538,16 +2539,19 @@ const PricingPage = ({
                         <Typography sx={{ fontSize: "12px", color: "#c5c5c5", textTransform: "uppercase", letterSpacing: "0.4px" }}>
                           {planName}
                         </Typography>
-                        <Typography sx={{ fontSize: "28px", fontWeight: 700, color: "#ffffff", lineHeight: 1.1, mt: 0.5 }}>
-                          {fmtMoney(cost)}
-                          <span style={{ fontSize: "13px", fontWeight: 500, color: "#c5c5c5", marginLeft: 4 }}>/month</span>
+                        <Typography sx={{ fontSize: isEnterprise ? "20px" : "28px", fontWeight: 700, color: "#ffffff", lineHeight: 1.1, mt: 0.5 }}>
+                          {isEnterprise ? "Contact Us" : fmtMoney(cost)}
+                          {!isEnterprise && (
+                            <span style={{ fontSize: "13px", fontWeight: 500, color: "#c5c5c5", marginLeft: 4 }}>/month</span>
+                          )}
                         </Typography>
                         <Typography sx={{ fontSize: "11px", color: "#7a7a7a", mt: 0.5 }}>
-                          ${rate.toFixed(4)} per App Run
+                          {isEnterprise ? "Custom pricing" : `$${rate.toFixed(4)} per App Run`}
                         </Typography>
                       </Box>
                     );
                   })}
+
                 </Box>
 
                 <Typography sx={{ fontSize: "12px", color: "#7a7a7a", mt: 2 }}>
