@@ -78,6 +78,10 @@ export const AutomationDashboard = ({
 
   const [stats, setStats] = useState<StatsResponse | null>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [statKeys, setStatKeys] = useState<string[]>([]);
+  const [selectedStat, setSelectedStat] = useState<string>('');
+  const [statSeries, setStatSeries] = useState<Array<{ date: string; value: number }>>([]);
+  const [statLoading, setStatLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [days, setDays] = useState<string>('30');
@@ -91,12 +95,16 @@ export const AutomationDashboard = ({
     if (serverside || !isLoaded || !isLoggedIn || !orgId) { setLoading(false); return; }
     silent ? setRefreshing(true) : setLoading(true);
     try {
-      const [statsRes, notifRes] = await Promise.all([
+      const [statsRes, notifRes, statListRes] = await Promise.all([
         fetch(buildUrl(`/api/v1/orgs/${orgId}/stats`), {
           credentials: 'include',
           headers: { ...getAuthHeader() },
         }),
         fetch(buildUrl(`/api/v1/notifications`), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
+        }),
+        fetch(buildUrl(`/api/v1/stats`), {
           credentials: 'include',
           headers: { ...getAuthHeader() },
         }),
@@ -106,12 +114,57 @@ export const AutomationDashboard = ({
         const nd = await notifRes.json();
         setNotifications(Array.isArray(nd) ? nd : (nd.notifications || []));
       }
+      if (statListRes.ok) {
+        const sd = await statListRes.json();
+        // Tolerate multiple shapes: string[], {stats:[...]}, {key:value}.
+        let keys: string[] = [];
+        const raw = Array.isArray(sd) ? sd : (sd?.stats ?? sd?.keys ?? sd);
+        if (Array.isArray(raw)) {
+          keys = raw.map((x: any) => typeof x === 'string' ? x : (x?.name || x?.key || x?.id)).filter(Boolean);
+        } else if (raw && typeof raw === 'object') {
+          keys = Object.keys(raw);
+        }
+        keys = Array.from(new Set(keys)).sort();
+        setStatKeys(keys);
+        setSelectedStat(prev => prev || keys[0] || '');
+      }
     } catch { /* noop */ } finally {
       setLoading(false); setRefreshing(false);
     }
   };
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [orgId, isLoaded, isLoggedIn, globalUrl]);
+
+  // Fetch the selected custom stat series whenever the key or range changes.
+  useEffect(() => {
+    if (serverside || !isLoaded || !isLoggedIn || !selectedStat) return;
+    let cancelled = false;
+    setStatLoading(true);
+    fetch(buildUrl(`/api/v1/stats/${encodeURIComponent(selectedStat)}?days=${days}`), {
+      credentials: 'include',
+      headers: { ...getAuthHeader() },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (cancelled || !d) { setStatSeries([]); return; }
+        // Normalise into [{date, value}]. Accept several common shapes.
+        const raw = Array.isArray(d) ? d
+          : d.additions ?? d.data ?? d.values ?? d.daily_statistics ?? d.series ?? [];
+        const series = (Array.isArray(raw) ? raw : []).map((item: any) => {
+          const date = item?.date || item?.day || item?.timestamp || item?.t || '';
+          const value = Number(
+            item?.value ?? item?.count ?? item?.total ?? item?.amount ?? item?.v ?? 0
+          ) || 0;
+          return { date: String(date).slice(0, 10), value };
+        }).filter(p => p.date);
+        series.sort((a, b) => a.date.localeCompare(b.date));
+        setStatSeries(series);
+      })
+      .catch(() => { if (!cancelled) setStatSeries([]); })
+      .finally(() => { if (!cancelled) setStatLoading(false); });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line
+  }, [selectedStat, days, isLoaded, isLoggedIn, globalUrl]);
 
   const daily = stats?.daily_statistics || [];
   const rangeDays = parseInt(days, 10);
@@ -290,32 +343,59 @@ export const AutomationDashboard = ({
         </Box>
       </Box>
 
-      {/* Bottom bar chart */}
+      {/* Bottom bar chart — custom stat from /api/v1/stats */}
       <Box sx={cardSx}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, gap: 2, flexWrap: 'wrap' }}>
           <Typography sx={{ fontSize: '0.95rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-            {isApps ? 'Apps' : 'Workflows'} ({chartData.length})
+            {selectedStat || 'Custom Stat'} ({statSeries.length})
           </Typography>
-          <IconButton size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-            <ExternalLink size={14} />
-          </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <FormControl size="small" sx={{ minWidth: 220 }}>
+              <InputLabel>Find your Stat</InputLabel>
+              <Select
+                label="Find your Stat"
+                value={selectedStat}
+                onChange={(e) => setSelectedStat(String(e.target.value))}
+              >
+                {statKeys.length === 0 && (
+                  <MenuItem value="" disabled>No stats available</MenuItem>
+                )}
+                {statKeys.map(k => (
+                  <MenuItem key={k} value={k}>{k}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <IconButton size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+              <ExternalLink size={14} />
+            </IconButton>
+          </Box>
         </Box>
-        <Box sx={{ height: 320 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={monthData} margin={{ top: 8, right: 12, left: -10, bottom: 0 }}>
-              <defs>
-                <linearGradient id="barFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
-                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} />
-              <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} />
-              <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }} />
-              <Bar dataKey="runs" fill="url(#barFill)" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+        <Box sx={{ height: 320, position: 'relative' }}>
+          {statLoading ? (
+            <Skeleton variant="rounded" height={320} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
+          ) : statSeries.length === 0 ? (
+            <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))' }}>
+                {selectedStat ? 'No data for this range' : 'Select a stat to view data'}
+              </Typography>
+            </Box>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={statSeries} margin={{ top: 8, right: 12, left: -10, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="barFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
+                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} />
+                <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} />
+                <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }} />
+                <Bar dataKey="value" name={selectedStat} fill="url(#barFill)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </Box>
       </Box>
     </Box>
