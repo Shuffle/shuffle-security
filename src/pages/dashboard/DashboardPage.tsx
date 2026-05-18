@@ -532,6 +532,10 @@ const DashboardPage = () => {
   const [overviewCollapsed, setOverviewCollapsed] = useState(false);
   const [setupCollapsed, setSetupCollapsed] = useState(false);
   const setupAutoCollapsedRef = useRef(false);
+  const [dashboardTab, setDashboardTab] = useState<'security' | 'automation'>(() => {
+    try { return (localStorage.getItem('shuffle_dashboard_tab') as 'security' | 'automation') || 'security'; } catch { return 'security'; }
+  });
+  useEffect(() => { try { localStorage.setItem('shuffle_dashboard_tab', dashboardTab); } catch {} }, [dashboardTab]);
 
   // Incidents + vulnerabilities for the overview charts
   const currentOrgId = userInfo?.active_org?.id;
