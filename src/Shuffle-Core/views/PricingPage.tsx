@@ -541,11 +541,7 @@ const PricingPage = ({
                   }
                 }}
               >
-                <img
-                  src="/icons/mail.svg"
-                  alt="chat"
-                  style={{ width: "18px", height: "18px" }}
-                />
+                <MailLucide size={18} strokeWidth={1.8} aria-label="mail" />
                 support@shuffler.io
               </Button>
 
