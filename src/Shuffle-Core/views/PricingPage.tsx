@@ -2034,7 +2034,7 @@ const PricingPage = ({
 
         {/* Additional sections */}
         <Grid container spacing={2} sx={{ mt: 8 }}>
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Box
               sx={{
                 backgroundColor: "#212121",
