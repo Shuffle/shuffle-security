@@ -1095,22 +1095,38 @@ const IncidentDetailPage = () => {
           normalizeToMs(b.edited ?? b.created) - normalizeToMs(a.edited ?? a.created)
         );
 
-        // Deduplicate only on a true per-revision identifier. We must NOT
-        // dedup on `rev.key`, because every revision of an incident shares
-        // the same datastore key (the incident id) — that would collapse the
-        // whole history down to a single entry. We also do NOT collapse
-        // consecutive "semantically identical" snapshots anymore: hiding
-        // them made the Timeline misleading and blocked manual
-        // rollback/merge against the exact snapshot the user wanted.
-        const seenRevisionIds = new Set<string>();
-        const deduped: any[] = [];
-
-        for (const rev of sorted) {
-          const revisionId = rev?.id || rev?.revision_id || rev?.revisionId;
-          if (revisionId) {
-            if (seenRevisionIds.has(revisionId)) continue;
-            seenRevisionIds.add(revisionId);
+        // Deduplicate on a composite fingerprint: per-revision id when the
+        // API provides one, otherwise (edited-or-created timestamp + a cheap
+        // hash of the value payload). We must NOT dedup on `rev.key`, since
+        // every revision of an incident shares the same datastore key (the
+        // incident id) — that would collapse the whole history to one entry.
+        // We also intentionally no longer collapse consecutive "semantically
+        // identical" snapshots: hiding them made the Timeline misleading and
+        // blocked manual rollback/merge against the exact snapshot the user
+        // wanted.
+        const cheapHash = (s: string): string => {
+          let h = 0;
+          for (let i = 0; i < s.length; i++) {
+            h = ((h << 5) - h + s.charCodeAt(i)) | 0;
           }
+          return h.toString(36);
+        };
+        const fingerprintFor = (rev: any): string => {
+          const explicitId = rev?.id || rev?.revision_id || rev?.revisionId;
+          if (explicitId) return `id:${explicitId}`;
+          const ts = normalizeToMs(rev?.edited ?? rev?.created) || 0;
+          const valStr = typeof rev?.value === 'string'
+            ? rev.value
+            : (() => { try { return JSON.stringify(rev?.value); } catch { return String(rev?.value ?? ''); } })();
+          return `ts:${ts}|h:${cheapHash(valStr)}`;
+        };
+
+        const seenFingerprints = new Set<string>();
+        const deduped: any[] = [];
+        for (const rev of sorted) {
+          const fp = fingerprintFor(rev);
+          if (seenFingerprints.has(fp)) continue;
+          seenFingerprints.add(fp);
           deduped.push(rev);
         }
 
