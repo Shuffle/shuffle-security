@@ -80,6 +80,31 @@ const greeting = () => {
   return 'Good evening';
 };
 
+/** Strip leading `total_`, replace underscores with spaces, sentence-case. */
+const prettyStatLabel = (key: string): string => {
+  const bare = key.startsWith('total_') ? key.slice(6) : key;
+  const spaced = bare.replace(/_/g, ' ').trim();
+  if (!spaced) return key;
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1).toLowerCase();
+};
+
+/** Compact number formatter (1.2k, 3.4M). */
+const formatCompact = (n: number): string => {
+  if (!Number.isFinite(n)) return '0';
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000) return (n / 1_000_000).toFixed(abs >= 10_000_000 ? 0 : 1).replace(/\.0$/, '') + 'M';
+  if (abs >= 1_000) return (n / 1_000).toFixed(abs >= 10_000 ? 0 : 1).replace(/\.0$/, '') + 'k';
+  return String(Math.round(n));
+};
+
+/** Magnitude-based color tier for custom-stat counts. */
+const statColor = (n: number): string => {
+  if (!n) return 'hsl(var(--muted-foreground))';
+  if (n >= 1_000_000) return NEON.red;
+  if (n >= 100_000) return NEON.amber;
+  return NEON.green;
+};
+
 export const AutomationDashboard = ({
   orgId: orgIdProp,
   displayName,
