@@ -220,12 +220,21 @@ export const AutomationDashboard = ({
 
   // Time buckets (daily or monthly) — every chart in this dashboard renders
   // one section per bucket, so widths are uniform regardless of range.
-  const buckets = useMemo(() => buildBuckets(rangeDays, gran), [rangeDays, gran]);
+  const buckets = useMemo(
+    () => customRange
+      ? buildBucketsBetween(customRange.fromMs, customRange.toMs, gran)
+      : buildBuckets(rangeDays, gran),
+    [rangeDays, gran, customRange],
+  );
 
   const filtered = useMemo(() => {
-    const cutoff = buckets[0]?.startMs ?? (Date.now() - rangeDays * 86400_000);
+    const start = buckets[0]?.startMs ?? (Date.now() - rangeDays * 86400_000);
+    const end = buckets[buckets.length - 1]?.endMs ?? Date.now();
     return daily
-      .filter(d => new Date(d.date).getTime() >= cutoff)
+      .filter(d => {
+        const ms = new Date(d.date).getTime();
+        return ms >= start && ms < end;
+      })
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [daily, rangeDays, buckets]);
 
