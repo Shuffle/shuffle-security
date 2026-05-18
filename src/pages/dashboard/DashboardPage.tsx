@@ -9,7 +9,7 @@ import {
   Skeleton,
   Chip,
   IconButton,
-  Tooltip,
+  Tooltip, Tooltip as MuiTooltip,
   Button,
   Avatar,
   LinearProgress,
@@ -546,6 +546,13 @@ const DashboardPage = () => {
     try { return localStorage.getItem('shuffle_dashboard_days') || '30'; } catch { return '30'; }
   });
   useEffect(() => { try { localStorage.setItem('shuffle_dashboard_days', dashboardDays); } catch {} }, [dashboardDays]);
+  // Shared granularity for both dashboard tabs.
+  const [dashboardGran, setDashboardGran] = useState<'daily' | 'monthly'>(() => {
+    try { return ((localStorage.getItem('shuffle_dashboard_gran') as 'daily' | 'monthly') || 'daily'); } catch { return 'daily'; }
+  });
+  useEffect(() => { try { localStorage.setItem('shuffle_dashboard_gran', dashboardGran); } catch {} }, [dashboardGran]);
+  // Bumped by the shared refresh button — Automation watches this, Security re-fetches via handleDashboardRefresh.
+  const [dashboardRefreshKey, setDashboardRefreshKey] = useState(0);
 
   // Incidents + vulnerabilities for the overview charts
   const currentOrgId = userInfo?.active_org?.id;
@@ -1066,32 +1073,62 @@ const DashboardPage = () => {
                 ]}
               />
             );
-            const rangeFilter = (
-              <FormControl size="small" sx={{ minWidth: 130 }}>
-                <InputLabel>Last</InputLabel>
-                <Select label="Last" value={dashboardDays} onChange={(e) => setDashboardDays(String(e.target.value))}>
-                  {AUTOMATION_RANGE_OPTIONS.map(o => (
-                    <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+            const handleDashboardRefresh = () => {
+              // Bump key so AutomationDashboard re-fetches; also refresh Security data.
+              setDashboardRefreshKey(k => k + 1);
+              try { fetchIncidents(); } catch { /* noop */ }
+              try { refreshNotifications(); } catch { /* noop */ }
+            };
+            const sharedControls = (
+              <>
+                <FormControl size="small" sx={{ minWidth: 130 }}>
+                  <InputLabel>Last</InputLabel>
+                  <Select label="Last" value={dashboardDays} onChange={(e) => setDashboardDays(String(e.target.value))}>
+                    {AUTOMATION_RANGE_OPTIONS.map(o => (
+                      <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <Box sx={{ alignSelf: 'flex-end' }}>
+                  <SegmentedControl
+                    ariaLabel="Granularity"
+                    value={dashboardGran}
+                    onChange={(v) => setDashboardGran(v as 'daily' | 'monthly')}
+                    options={[{ value: 'daily', label: 'Daily' }, { value: 'monthly', label: 'Monthly' }]}
+                  />
+                </Box>
+                <MuiTooltip title="Refresh">
+                  <IconButton size="small" onClick={handleDashboardRefresh} sx={{ color: 'hsl(var(--muted-foreground))', alignSelf: 'flex-end' }}>
+                    <RefreshIcon size={16} />
+                  </IconButton>
+                </MuiTooltip>
+              </>
+            );
+            const sharedHeader = (
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', minHeight: 36 }}>
+                  {dashboardTabs}
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+                  {sharedControls}
+                </Box>
+              </Box>
             );
             return dashboardTab === 'automation' ? (
-              <AutomationDashboard
-                headerLeft={dashboardTabs}
-                days={dashboardDays}
-                onDaysChange={setDashboardDays}
-              />
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
+                {sharedHeader}
+                <AutomationDashboard
+                  days={dashboardDays}
+                  onDaysChange={setDashboardDays}
+                  gran={dashboardGran}
+                  onGranChange={setDashboardGran}
+                  refreshKey={dashboardRefreshKey}
+                  hideRefresh
+                />
+              </Box>
             ) : (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', minHeight: 36 }}>
-                    {dashboardTabs}
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-                    {rangeFilter}
-                  </Box>
-                </Box>
+                {sharedHeader}
                 <DashboardOverview
                   incidents={overviewIncidents}
                   incidentsLoading={incidentsLoading}

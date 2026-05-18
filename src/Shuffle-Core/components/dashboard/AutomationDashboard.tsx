@@ -39,6 +39,14 @@ export interface AutomationDashboardProps extends ShuffleCoreHostProps {
   days?: string;
   /** Called when the user changes the time range. Required if `days` is controlled. */
   onDaysChange?: (days: string) => void;
+  /** Controlled granularity (daily/monthly). When provided, the internal selector is hidden. */
+  gran?: 'daily' | 'monthly';
+  /** Called when the user changes granularity. Required if `gran` is controlled. */
+  onGranChange?: (gran: 'daily' | 'monthly') => void;
+  /** When this value changes, the dashboard re-fetches stats. Use to wire up an external refresh button. */
+  refreshKey?: number;
+  /** When provided, hides the internal refresh button (parent owns it). */
+  hideRefresh?: boolean;
 }
 
 /** Time-range options shared with parents that render the Last filter themselves. */
@@ -116,6 +124,10 @@ export const AutomationDashboard = ({
   headerLeft,
   days: daysProp,
   onDaysChange,
+  gran: granProp,
+  onGranChange,
+  refreshKey,
+  hideRefresh,
 }: AutomationDashboardProps) => {
   const orgId = orgIdProp ?? userdata?.active_org?.id ?? null;
   const _name = (displayName || userdata?.username || '').split('@')[0] || 'there';
@@ -134,7 +146,13 @@ export const AutomationDashboard = ({
     if (!isDaysControlled) setDaysInternal(v);
   };
   const [mode, setMode] = useState<ModeKind>('workflows');
-  const [gran, setGran] = useState<GranKind>('daily');
+  const isGranControlled = granProp !== undefined;
+  const [granInternal, setGranInternal] = useState<GranKind>('daily');
+  const gran = isGranControlled ? (granProp as GranKind) : granInternal;
+  const setGran = (v: GranKind) => {
+    if (onGranChange) onGranChange(v);
+    if (!isGranControlled) setGranInternal(v);
+  };
 
 
   const buildUrl = (path: string) =>
@@ -165,6 +183,12 @@ export const AutomationDashboard = ({
   };
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [orgId, isLoaded, isLoggedIn, globalUrl]);
+
+  // External refresh trigger — parent bumps `refreshKey` to re-fetch silently.
+  useEffect(() => {
+    if (refreshKey === undefined) return;
+    load(true); /* eslint-disable-next-line */
+  }, [refreshKey]);
 
   const daily = stats?.daily_statistics || [];
   const rangeDays = parseInt(days, 10);
@@ -300,19 +324,23 @@ export const AutomationDashboard = ({
               options={[{ value: 'workflows', label: 'Workflows' }, { value: 'apps', label: 'Apps' }]}
             />
           </Box>
-          <Box sx={{ alignSelf: 'flex-end' }}>
-            <SegmentedControl
-              ariaLabel="Granularity"
-              value={gran}
-              onChange={(v) => setGran(v as GranKind)}
-              options={[{ value: 'daily', label: 'Daily' }, { value: 'monthly', label: 'Monthly' }]}
-            />
-          </Box>
-          <MuiTooltip title="Refresh">
-            <IconButton size="small" onClick={() => load(true)} sx={{ color: 'hsl(var(--muted-foreground))', alignSelf: 'flex-end' }}>
-              <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
-            </IconButton>
-          </MuiTooltip>
+          {!isGranControlled && (
+            <Box sx={{ alignSelf: 'flex-end' }}>
+              <SegmentedControl
+                ariaLabel="Granularity"
+                value={gran}
+                onChange={(v) => setGran(v as GranKind)}
+                options={[{ value: 'daily', label: 'Daily' }, { value: 'monthly', label: 'Monthly' }]}
+              />
+            </Box>
+          )}
+          {!hideRefresh && (
+            <MuiTooltip title="Refresh">
+              <IconButton size="small" onClick={() => load(true)} sx={{ color: 'hsl(var(--muted-foreground))', alignSelf: 'flex-end' }}>
+                <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+              </IconButton>
+            </MuiTooltip>
+          )}
         </Box>
       </Box>
 
