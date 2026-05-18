@@ -2788,6 +2788,9 @@ const PricingPage = ({
                         p: 1.5,
                         mx: "auto",
                         textAlign: "center",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
                     >
                       {included.plan === "Enterprise"
