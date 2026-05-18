@@ -1350,36 +1350,20 @@ const PricingPage = ({
         {/* Pricing cards */}
         <Grid
           container
-          spacing={{
-            xs: 3,
-            md: selectedDeployment === "Self-Hosted" ? 6 : 4
-          }}
+          spacing={{ xs: 3, md: 4 }}
           justifyContent="center"
           sx={{
-            mt: {
-              xs: selectedDeployment === "Self-Hosted" ? 0.5 : 1,
-              sm: selectedDeployment === "Self-Hosted" ? 0.5 : 2,
-            },
+            mt: { xs: 1, sm: 2 },
             transition: "all 0.5s ease-in-out",
           }}
         >
           {getFilteredPlans().map((plan, index) => (
             <Grid
-              size={{
-                xs: 12,
-                sm: 12,
-                md: selectedDeployment === "Self-Hosted" ? 6 : 4,
-                lg: selectedDeployment === "Self-Hosted" ? 5 : 4,
-              }}
+              size={{ xs: 12, sm: 12, md: 4, lg: 4 }}
               key={index}
-              sx={{
-                maxWidth: {
-                  xs: "500px",
-                  md: selectedDeployment === "Self-Hosted" ? "590px" : "100%",
-                  lg: "100%",
-                },
-              }}
+              sx={{ maxWidth: { xs: "500px", md: "100%" } }}
             >
+
 
               <Box
                 sx={{
