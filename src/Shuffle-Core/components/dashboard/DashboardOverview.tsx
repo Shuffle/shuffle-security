@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 import { format, subDays, startOfDay } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-import { NEON, TooltipContent, KpiTile, Panel, EmptyState, buildBuckets, bucketIndexOf, type Granularity } from './_shared';
+import { NEON, TooltipContent, KpiTile, Panel, EmptyState, buildBuckets, buildBucketsBetween, bucketIndexOf, useChartRangeDrag, ReferenceArea, type Granularity } from './_shared';
 
 import type { ShuffleCoreHostProps } from '../../types/host-props';
 
