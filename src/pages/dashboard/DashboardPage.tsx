@@ -1087,11 +1087,43 @@ const DashboardPage = () => {
               try { fetchIncidents(); } catch { /* noop */ }
               try { refreshNotifications(); } catch { /* noop */ }
             };
+            const fmtShort = (ms: number) => {
+              const d = new Date(ms);
+              const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+              return `${M} ${d.getDate()}`;
+            };
+            const customRangeLabel = dashboardCustomRange
+              ? `${fmtShort(dashboardCustomRange.fromMs)} → ${fmtShort(dashboardCustomRange.toMs)}`
+              : null;
             const sharedControls = (
               <>
-                <FormControl size="small" sx={{ minWidth: 130 }}>
+                <FormControl size="small" sx={{ minWidth: customRangeLabel ? 220 : 130 }}>
                   <InputLabel>Last</InputLabel>
-                  <Select label="Last" value={dashboardDays} onChange={(e) => setDashboardDays(String(e.target.value))}>
+                  <Select
+                    label="Last"
+                    value={dashboardCustomRange ? '__custom__' : dashboardDays}
+                    onChange={(e) => {
+                      const v = String(e.target.value);
+                      if (v === '__custom__') return;
+                      setDashboardCustomRange(null);
+                      setDashboardDays(v);
+                    }}
+                    renderValue={() => customRangeLabel ?? (AUTOMATION_RANGE_OPTIONS.find(o => o.value === dashboardDays)?.label ?? `${dashboardDays} days`)}
+                    endAdornment={dashboardCustomRange ? (
+                      <IconButton
+                        size="small"
+                        onMouseDown={(e) => { e.stopPropagation(); }}
+                        onClick={(e) => { e.stopPropagation(); setDashboardCustomRange(null); }}
+                        sx={{ mr: 3, p: 0.25, color: 'hsl(var(--muted-foreground))' }}
+                        aria-label="Clear custom range"
+                      >
+                        <CloseIcon size={14} />
+                      </IconButton>
+                    ) : undefined}
+                  >
+                    {customRangeLabel && (
+                      <MenuItem value="__custom__" disabled>{customRangeLabel} (custom)</MenuItem>
+                    )}
                     {AUTOMATION_RANGE_OPTIONS.map(o => (
                       <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
                     ))}
