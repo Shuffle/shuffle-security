@@ -43,13 +43,13 @@ export const RegionSwitcher = ({
 
   return (
     <div className={cn('flex flex-col items-center gap-2', className)}>
-      {showLabel && (
-        <label className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-          Region
-        </label>
-      )}
       <Select value={value} onValueChange={(v) => onChange?.(v as RegionCode)} disabled={disabled}>
         <SelectTrigger className={cn('h-9 w-[220px]', triggerClassName)}>
+          {showLabel && (
+            <span className="mr-2 text-xs font-medium uppercase tracking-widest text-muted-foreground">
+              Region
+            </span>
+          )}
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
