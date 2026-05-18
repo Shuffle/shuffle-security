@@ -6,7 +6,7 @@ const footerLinks = {
     { label: 'Features', href: '#features' },
     { label: 'Usecases', href: '/usecases' },
     { label: 'Integrations', href: '/apps' },
-    { label: 'Pricing', href: 'https://shuffler.io/pricing' },
+    { label: 'Pricing', href: '/pricing' },
   ],
   Platform: [
     { label: 'Incidents', href: '/incidents' },
