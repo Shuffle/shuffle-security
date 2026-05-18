@@ -56,7 +56,7 @@ const greeting = () => {
 export const AutomationDashboard = () => {
   const { userInfo } = useAuth();
   const orgId = userInfo?.active_org?.id;
-  const displayName = (userInfo?.username || userInfo?.email || '').split('@')[0] || 'there';
+  const displayName = String(userInfo?.username || '').split('@')[0] || 'there';
 
   const [stats, setStats] = useState<StatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
