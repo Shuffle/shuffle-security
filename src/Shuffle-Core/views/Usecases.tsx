@@ -1711,6 +1711,13 @@ const ACTIVE_USECASE_IDS = [
   'threat_intel_cloud_1',
 ];
 
+// Small wrapper so UsecaseDetailContent can render an Outcome block without
+// threading the outcomes map through every call site.
+function FlowOutcomeBlock({ flow, sourceCategoryLabel }: { flow: Usecase; sourceCategoryLabel?: string }) {
+  const { getOutcome } = useUsecaseOutcomes([flow]);
+  return <UsecaseOutcomeSection outcome={getOutcome(flow.id)} sourceCategoryLabel={sourceCategoryLabel} />;
+}
+
 function UsecaseDetailContent({
   flowId,
   hideBackNav = false,
@@ -2132,7 +2139,7 @@ function UsecaseDetailContent({
         </Box>
       </Box>
 
-      <UsecaseOutcomeSectionForFlow flow={flow} sourceCategoryLabel={sourceCat?.label} />
+      <FlowOutcomeBlock flow={flow} sourceCategoryLabel={sourceCat?.label} />
 
       {showConnectionPath && (
       <Box sx={{ p: 3, borderRadius: 2, border: CARD_BORDER, bgcolor: CARD_BG, mb: 3 }}>
