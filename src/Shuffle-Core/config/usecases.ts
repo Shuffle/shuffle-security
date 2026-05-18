@@ -639,6 +639,20 @@ export const DEFAULT_USECASES: Usecase[] = [
     automationArea: 'assign_escalate',
   },
   {
+    id: 'case_management_ai_agents_1', phase: 'response', source: 'case_management', target: 'case_management',
+    label: 'AI Agents', animated: true,
+    tags: ['Response', 'AI', 'Agent', 'Any Tool'],
+    priority: 95,
+    description: 'Enable AI Agents to investigate, triage, and act on incidents on your behalf. Unlike a usecase that is tied to a single category (like SIEM or EDR), AI Agents can talk to ANY tool you have connected — SIEM, EDR, IAM, Cloud, Email, Threat Intel, Cases, custom apps — anything reachable through Shuffle. Toggle agents on or off here, decide which tools each agent is allowed to use, and review what they did.',
+    agenticDescription: 'An AI Agent reads the incident, decides which connected tools to query (Splunk, CrowdStrike, Okta, VirusTotal, Slack, …), enriches observables, proposes or executes containment actions, and writes its reasoning back to the case. You stay in control via per-tool permissions and an approval queue for high-impact actions.',
+    automationArea: 'response',
+    customAction: {
+      label: 'Configure AI Agents',
+      href: '/agents',
+      description: 'Open the Agents page to enable, disable, and assign tools to each AI Agent.',
+    },
+  },
+  {
     id: 'case_management_asset_management_monitors_1', phase: 'response', source: 'case_management', target: 'asset_management',
     label: 'Add Monitors', animated: true,
     tags: ['Response', 'Monitoring', 'Endpoint'],
