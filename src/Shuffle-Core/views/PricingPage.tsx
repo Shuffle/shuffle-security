@@ -331,16 +331,20 @@ const PricingPage = ({
       const endOfFeatures = document.getElementById("end-of-features");
       const endOfFeaturesRect = endOfFeatures.getBoundingClientRect();
 
-      if (coreFeaturesRect.top === 70 || coreFeaturesRect.top === 60) {
-        coreFeatures.style.backgroundColor = "#1a1a1a"; // Change background color
-        coreFeatures.style.boxShadow = "0 5px 5px -5px rgba(0, 0, 0, 0.3)";
+      const isStuck = coreFeaturesRect.top === 70 || coreFeaturesRect.top === 60;
+      if (isStuck) {
+        coreFeatures.style.backgroundColor = "#1a1a1a";
+        coreFeatures.style.boxShadow =
+          "0 0 0 100vmax #1a1a1a, 0 5px 5px -5px rgba(0, 0, 0, 0.3)";
+        coreFeatures.style.clipPath = "inset(0 -100vmax)";
         coreFeatures.style.marginLeft = "-16px";
         coreFeatures.style.borderBottom = "1px solid rgba(255, 255, 255, 0.1)";
         blurImage.style.display = "none";
       } else {
-        coreFeatures.style.backgroundColor = "#1a1a1a"; // Keep solid background
-        blurImage.style.display = "block";
+        coreFeatures.style.backgroundColor = "transparent";
         coreFeatures.style.boxShadow = "none";
+        coreFeatures.style.clipPath = "none";
+        blurImage.style.display = "block";
         coreFeatures.style.marginLeft = "-15px";
         coreFeatures.style.borderBottom = "none";
       }
@@ -2431,7 +2435,8 @@ const PricingPage = ({
               paddingTop: 20,
               zIndex: 5,
               marginLeft: -1.5,
-              backgroundColor: "#1a1a1a",
+              backgroundColor: "transparent",
+              transition: "background-color 0.3s ease, box-shadow 0.3s ease",
               display: "flex",
               flexDirection: "row",
               alignItems: "flex-end",
