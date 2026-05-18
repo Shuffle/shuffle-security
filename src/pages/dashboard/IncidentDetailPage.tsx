@@ -1092,18 +1092,12 @@ const IncidentDetailPage = () => {
           normalizeToMs(b.edited ?? b.created) - normalizeToMs(a.edited ?? a.created)
         );
 
-        // Deduplicate on a composite fingerprint: per-revision id when the
-        // API provides one, otherwise (edited-or-created timestamp + a cheap
-        // hash of the value payload). We must NOT dedup on `rev.key`, since
-        // every revision of an incident shares the same datastore key (the
-        // incident id) — that would collapse the whole history to one entry.
-        // We also intentionally no longer collapse consecutive "semantically
-        // identical" snapshots: hiding them made the Timeline misleading and
-        // blocked manual rollback/merge against the exact snapshot the user
-        // wanted.
+        // Deduplicate by the canonical revision payload. The API can return
+        // the same snapshot more than once with different revision ids or
+        // timestamps, while every revision also shares the same datastore key.
+        // Keep the newest copy of each unique snapshot and show it once.
         const fingerprintFor = (rev: any): string => {
-          const ts = normalizeToMs(rev?.edited ?? rev?.created) || 0;
-          return `ts:${ts}|h:${cheapHash(stableRevisionValueString(rev?.value))}`;
+          return `payload:${cheapHash(stableRevisionValueString(rev?.value))}`;
         };
 
         const seenFingerprints = new Set<string>();
