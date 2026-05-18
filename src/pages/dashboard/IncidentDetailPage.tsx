@@ -280,6 +280,34 @@ const parseRevisionValue = (raw: unknown): any | null => {
   return null;
 };
 
+const stableRevisionValueString = (raw: unknown): string => {
+  const normalize = (value: any): any => {
+    if (Array.isArray(value)) return value.map(normalize);
+    if (value && typeof value === 'object') {
+      return Object.keys(value).sort().reduce((acc, key) => {
+        acc[key] = normalize(value[key]);
+        return acc;
+      }, {} as Record<string, any>);
+    }
+    return value;
+  };
+
+  const parsed = parseRevisionValue(raw);
+  try {
+    return JSON.stringify(normalize(parsed ?? raw));
+  } catch {
+    return String(raw ?? '');
+  }
+};
+
+const cheapHash = (s: string): string => {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) {
+    h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  }
+  return h.toString(36);
+};
+
 
 // Strict check: only return string if it has meaningful non-whitespace content
 // Also rejects raw JSON objects/arrays that shouldn't be displayed as text
@@ -1059,73 +1087,28 @@ const IncidentDetailPage = () => {
         const result = await response.json();
         const rawRevisions: any[] = Array.isArray(result) ? result : (result.data || result.revisions || []);
 
-        const NOISE_FIELDS = new Set(['activity', 'updated_by', 'edited_time', 'updated_at', 'last_updated', 'comments']);
-
-        const getMeaningfulSignature = (rev: any): string => {
-          let parsed: any = rev?.value;
-
-          if (typeof parsed === 'string') {
-            const decoded = decodeIfBase64(parsed);
-            try {
-              parsed = JSON.parse(decoded);
-            } catch {
-              try {
-                parsed = JSON.parse(parsed);
-              } catch {
-                // keep raw string if not JSON
-              }
-            }
-          }
-
-          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-            const cleaned = { ...parsed } as Record<string, any>;
-            NOISE_FIELDS.forEach((field) => delete cleaned[field]);
-            return JSON.stringify(cleaned);
-          }
-
-          try {
-            return JSON.stringify(parsed);
-          } catch {
-            return String(parsed ?? '');
-          }
-        };
-
         // Always sort revisions by normalized timestamp (newest first)
         const sorted = [...rawRevisions].sort((a: any, b: any) =>
           normalizeToMs(b.edited ?? b.created) - normalizeToMs(a.edited ?? a.created)
         );
 
-        // Deduplicate on a composite fingerprint: per-revision id when the
-        // API provides one, otherwise (edited-or-created timestamp + a cheap
-        // hash of the value payload). We must NOT dedup on `rev.key`, since
-        // every revision of an incident shares the same datastore key (the
-        // incident id) — that would collapse the whole history to one entry.
-        // We also intentionally no longer collapse consecutive "semantically
-        // identical" snapshots: hiding them made the Timeline misleading and
-        // blocked manual rollback/merge against the exact snapshot the user
-        // wanted.
-        const cheapHash = (s: string): string => {
-          let h = 0;
-          for (let i = 0; i < s.length; i++) {
-            h = ((h << 5) - h + s.charCodeAt(i)) | 0;
-          }
-          return h.toString(36);
-        };
+        // Deduplicate by the canonical revision payload. The API can return
+        // the same snapshot more than once with different revision ids or
+        // timestamps, while every revision also shares the same datastore key.
+        // Keep the newest copy of each unique snapshot and show it once.
         const fingerprintFor = (rev: any): string => {
-          const explicitId = rev?.id || rev?.revision_id || rev?.revisionId;
-          if (explicitId) return `id:${explicitId}`;
-          const ts = normalizeToMs(rev?.edited ?? rev?.created) || 0;
-          const valStr = typeof rev?.value === 'string'
-            ? rev.value
-            : (() => { try { return JSON.stringify(rev?.value); } catch { return String(rev?.value ?? ''); } })();
-          return `ts:${ts}|h:${cheapHash(valStr)}`;
+          return `payload:${cheapHash(stableRevisionValueString(rev?.value))}`;
         };
 
         const seenFingerprints = new Set<string>();
+        const seenRevisionIds = new Set<string>();
         const deduped: any[] = [];
         for (const rev of sorted) {
+          const explicitId = rev?.revision_id || rev?.revisionId || rev?.id;
+          if (explicitId && seenRevisionIds.has(String(explicitId))) continue;
           const fp = fingerprintFor(rev);
           if (seenFingerprints.has(fp)) continue;
+          if (explicitId) seenRevisionIds.add(String(explicitId));
           seenFingerprints.add(fp);
           deduped.push(rev);
         }
@@ -4514,7 +4497,10 @@ const IncidentDetailPage = () => {
     const getItemKey = (it: TimelineItem): string => {
       if (it.type === 'revision') {
         const rev = it.data;
-        return `rev-${rev.id || rev.key || it.idx}`;
+        const explicitId = rev?.revision_id || rev?.revisionId || rev?.id;
+        const ts = normalizeToMs(rev?.edited ?? rev?.created) || 0;
+        const valueHash = cheapHash(stableRevisionValueString(rev?.value));
+        return `rev-${explicitId || `${ts}-${valueHash}`}-${it.idx}`;
       }
       if (it.type === 'agent') return `agent-${it.data.execution_id}`;
       if (it.type === 'step') return it.id;
@@ -4626,7 +4612,7 @@ const IncidentDetailPage = () => {
 
         return (
           <Box
-            key={`rev-${rev.id || rev.key || item.idx}`}
+            key={itemKey}
             onClick={showAsCreation ? () => {
               // The "Incident created" entry points to the email evidence
               // when this incident is an email-sourced one. Scroll to the
