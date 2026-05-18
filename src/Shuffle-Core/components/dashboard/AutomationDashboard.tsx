@@ -24,10 +24,12 @@ import { AlertCircle, CheckCircle, RefreshCw, ExternalLink } from 'lucide-react'
 import { SegmentedControl } from '../ui/segmented-control';
 import { getApiUrl, getAuthHeader } from '../../api';
 
-export interface AutomationDashboardProps {
-  /** Organization id to fetch stats for. Required. */
-  orgId: string | null | undefined;
-  /** Optional display name used in the greeting. */
+import type { ShuffleCoreHostProps } from '../../types/host-props';
+
+export interface AutomationDashboardProps extends ShuffleCoreHostProps {
+  /** Organization id to fetch stats for. Falls back to `userdata.active_org.id`. */
+  orgId?: string | null;
+  /** Optional display name used in the greeting. Falls back to `userdata.username`. */
   displayName?: string;
 }
 
@@ -62,8 +64,17 @@ const greeting = () => {
   return 'Good evening';
 };
 
-export const AutomationDashboard = ({ orgId, displayName }: AutomationDashboardProps) => {
-  const name = (displayName || '').split('@')[0] || 'there';
+export const AutomationDashboard = ({
+  orgId: orgIdProp,
+  displayName,
+  serverside,
+  isLoaded = true,
+  isLoggedIn = true,
+  globalUrl,
+  userdata,
+}: AutomationDashboardProps) => {
+  const orgId = orgIdProp ?? userdata?.active_org?.id ?? null;
+  const name = (displayName || userdata?.username || '').split('@')[0] || 'there';
 
   const [stats, setStats] = useState<StatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -72,11 +83,14 @@ export const AutomationDashboard = ({ orgId, displayName }: AutomationDashboardP
   const [mode, setMode] = useState<ModeKind>('workflows');
   const [gran, setGran] = useState<GranKind>('daily');
 
+  const buildUrl = (path: string) =>
+    globalUrl ? `${globalUrl.replace(/\/$/, '')}${path}` : getApiUrl(path);
+
   const load = async (silent = false) => {
-    if (!orgId) { setLoading(false); return; }
+    if (serverside || !isLoaded || !isLoggedIn || !orgId) { setLoading(false); return; }
     silent ? setRefreshing(true) : setLoading(true);
     try {
-      const res = await fetch(getApiUrl(`/api/v1/orgs/${orgId}/stats`), {
+      const res = await fetch(buildUrl(`/api/v1/orgs/${orgId}/stats`), {
         credentials: 'include',
         headers: { ...getAuthHeader() },
       });
@@ -86,7 +100,7 @@ export const AutomationDashboard = ({ orgId, displayName }: AutomationDashboardP
     }
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [orgId]);
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [orgId, isLoaded, isLoggedIn, globalUrl]);
 
   const daily = stats?.daily_statistics || [];
   const rangeDays = parseInt(days, 10);

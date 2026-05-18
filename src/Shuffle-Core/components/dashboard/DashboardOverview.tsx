@@ -34,13 +34,15 @@ import {
 import { format, subDays, startOfDay } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 
+import type { ShuffleCoreHostProps } from '../../types/host-props';
+
 interface OverviewIncident {
   status: string;
   severity: string;
   createdTs: number;
 }
 
-interface OverviewProps {
+interface OverviewProps extends ShuffleCoreHostProps {
   incidents: OverviewIncident[];
   incidentsLoading?: boolean;
   vulnSeverityCounts: { critical: number; high: number; medium: number; low: number; info: number };
@@ -319,6 +321,14 @@ export const DashboardOverview = ({
   monitorHostCount,
   runningSensorCount,
   monitorsLoading,
+  // Standard Shuffle-Core host props — accepted for API consistency across
+  // components mounted in multiple places. Not currently consumed because this
+  // surface is purely presentational over host-supplied data.
+  serverside: _serverside,
+  isLoaded: _isLoaded,
+  isLoggedIn: _isLoggedIn,
+  globalUrl: _globalUrl,
+  userdata: _userdata,
 }: OverviewProps) => {
   const navigate = useNavigate();
 
