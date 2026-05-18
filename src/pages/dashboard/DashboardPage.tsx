@@ -536,6 +536,11 @@ const DashboardPage = () => {
     try { return (localStorage.getItem('shuffle_dashboard_tab') as 'security' | 'automation') || 'security'; } catch { return 'security'; }
   });
   useEffect(() => { try { localStorage.setItem('shuffle_dashboard_tab', dashboardTab); } catch {} }, [dashboardTab]);
+  // Shared time-range filter for both dashboard tabs (Security Operations + Automation).
+  const [dashboardDays, setDashboardDays] = useState<string>(() => {
+    try { return localStorage.getItem('shuffle_dashboard_days') || '30'; } catch { return '30'; }
+  });
+  useEffect(() => { try { localStorage.setItem('shuffle_dashboard_days', dashboardDays); } catch {} }, [dashboardDays]);
 
   // Incidents + vulnerabilities for the overview charts
   const currentOrgId = userInfo?.active_org?.id;
