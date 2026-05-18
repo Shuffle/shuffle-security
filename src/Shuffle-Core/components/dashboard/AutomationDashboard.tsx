@@ -158,7 +158,13 @@ export const AutomationDashboard = ({
     if (onDaysChange) onDaysChange(v);
     if (!isDaysControlled) setDaysInternal(v);
   };
-  const [mode, setMode] = useState<ModeKind>('workflows');
+  const isModeControlled = modeProp !== undefined;
+  const [modeInternal, setModeInternal] = useState<ModeKind>('workflows');
+  const mode = isModeControlled ? (modeProp as ModeKind) : modeInternal;
+  const setMode = (v: ModeKind) => {
+    if (onModeChange) onModeChange(v);
+    if (!isModeControlled) setModeInternal(v);
+  };
   const isGranControlled = granProp !== undefined;
   const [granInternal, setGranInternal] = useState<GranKind>('daily');
   const gran = isGranControlled ? (granProp as GranKind) : granInternal;
