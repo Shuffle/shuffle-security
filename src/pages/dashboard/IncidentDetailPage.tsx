@@ -2089,44 +2089,51 @@ const IncidentDetailPage = () => {
 
     ocsfFallbackAttemptedRef.current = true;
 
-    // Find the newest OCSF-shaped revision that ALSO supplies the missing
-    // critical fields (so a corrupted revision chain doesn't keep masking the
-    // problem). When the live payload isn't OCSF at all, any OCSF revision
-    // works as the base.
-    let ocsfBase: any = null;
-    let ocsfBaseTs = 0;
-    for (const rev of revisions) {
+    // Walk ALL revisions oldest → newest and fold every OCSF-shaped one into
+    // an accumulator. A single bad revision can drop a field that an earlier
+    // (and a later) revision still has — folding the whole chain lets us
+    // recover from any of them instead of stopping at the first hit.
+    // `revisions` is sorted newest-first, so iterate in reverse.
+    const ocsfRevisions: Array<{ data: any; ts: number; index: number }> = [];
+    for (let i = revisions.length - 1; i >= 0; i--) {
+      const rev = revisions[i];
       const parsed = parseRevisionValue(rev?.value);
       if (!parsed || !isOcsfShapedData(parsed)) continue;
-      if (liveIsOcsf) {
-        // Need a revision that fills at least one of the missing fields.
-        const stillMissing = getMissingCriticalFields(parsed);
-        const fills = missingFields.some(f => !stillMissing.includes(f));
-        if (!fills) continue;
-      }
-      ocsfBase = parsed;
-      ocsfBaseTs = normalizeToMs(rev?.edited ?? rev?.created);
-      break; // revisions are sorted newest-first
+      ocsfRevisions.push({
+        data: parsed,
+        ts: normalizeToMs(rev?.edited ?? rev?.created),
+        index: i,
+      });
     }
-    if (!ocsfBase) return; // Nothing to recover from
+    if (ocsfRevisions.length === 0) return; // Nothing to recover from
 
-    // When the live payload IS OCSF (just missing fields), it's the newer
-    // edit and should win on conflicts. When it's not OCSF at all, the
-    // revision should win on conflicts.
+    let ocsfBase: any = ocsfRevisions[0].data;
+    let ocsfBaseTs = ocsfRevisions[0].ts;
+    for (let i = 1; i < ocsfRevisions.length; i++) {
+      const next = ocsfRevisions[i];
+      try {
+        ocsfBase = deepMergeIncidents(ocsfBase, next.data, ocsfBaseTs, next.ts);
+        ocsfBaseTs = next.ts || ocsfBaseTs;
+      } catch (err) {
+        console.warn('[OCSF Fallback] Skipping revision merge at index', next.index, err);
+      }
+    }
+    const recoveredRevisionCount = ocsfRevisions.length;
+    const newestRevisionTs = ocsfRevisions[ocsfRevisions.length - 1].ts || ocsfBaseTs;
+
+    // Overlay the live payload last so the freshest edits win on conflicts,
+    // while any field still missing from live gets backfilled from the merged
+    // revision history.
     const liveData = incident.rawOCSF || {};
     const liveTs = incident.editedTs || incident.createdTs || 0;
     let merged: any;
     let overlaidFieldCount = 0;
     if (liveData && typeof liveData === 'object' && !Array.isArray(liveData)) {
       try {
-        if (liveIsOcsf) {
-          // Live wins, but missing fields get backfilled from the older revision.
-          merged = deepMergeIncidents(ocsfBase, liveData, ocsfBaseTs, liveTs);
-          overlaidFieldCount = missingFields.length;
-        } else {
-          merged = deepMergeIncidents(ocsfBase, liveData, ocsfBaseTs, liveTs);
-          overlaidFieldCount = Object.keys(liveData).filter(k => !(k in ocsfBase)).length;
-        }
+        merged = deepMergeIncidents(ocsfBase, liveData, ocsfBaseTs, liveTs);
+        overlaidFieldCount = liveIsOcsf
+          ? missingFields.length
+          : Object.keys(liveData).filter(k => !(k in ocsfBase)).length;
       } catch (err) {
         console.warn('[OCSF Fallback] deepMergeIncidents failed, using base only:', err);
         merged = ocsfBase;
