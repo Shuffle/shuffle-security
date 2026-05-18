@@ -88,6 +88,106 @@ export const buildBuckets = (days: number, gran: Granularity): TimeBucket[] => {
   return out;
 };
 
+/**
+ * Same shape as `buildBuckets` but for an explicit [fromMs, toMs] window.
+ * Used when the user click-drags on a chart to pick an arbitrary range.
+ */
+export const buildBucketsBetween = (fromMs: number, toMs: number, gran: Granularity): TimeBucket[] => {
+  const out: TimeBucket[] = [];
+  if (!Number.isFinite(fromMs) || !Number.isFinite(toMs) || toMs < fromMs) return out;
+  if (gran === 'monthly') {
+    const d = new Date(startOfMonthMs(fromMs));
+    while (d.getTime() <= toMs) {
+      const startMs = d.getTime();
+      const next = new Date(d); next.setMonth(next.getMonth() + 1);
+      out.push({
+        key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+        label: `${MONTHS[d.getMonth()]} ${d.getFullYear()}`,
+        startMs,
+        endMs: next.getTime(),
+      });
+      d.setMonth(d.getMonth() + 1);
+    }
+    return out;
+  }
+  const start = startOfDayMs(fromMs);
+  const end = startOfDayMs(toMs);
+  for (let t = start; t <= end; t += 86400_000) {
+    const dt = new Date(t);
+    out.push({
+      key: dt.toISOString().slice(0, 10),
+      label: `${MONTHS[dt.getMonth()]} ${dt.getDate()}`,
+      startMs: t,
+      endMs: t + 86400_000,
+    });
+  }
+  return out;
+};
+
+// Re-export ReferenceArea so charts using `useChartRangeDrag` can import the
+// selection visual from the same module.
+export { ReferenceArea };
+
+/**
+ * Shared chart drag-to-select hook. Pairs with a recharts chart's
+ * onMouseDown/Move/Up handlers to let the user paint a date range. When the
+ * user releases, calls `onRangeSelect(fromMs, toMs)` with the bucket-aligned
+ * window. Returns the props you need to spread onto the chart + the
+ * ReferenceArea props for the active selection (or null).
+ */
+export const useChartRangeDrag = (
+  buckets: TimeBucket[],
+  onRangeSelect?: (fromMs: number, toMs: number) => void,
+) => {
+  const [leftLabel, setLeftLabel] = useState<string | null>(null);
+  const [rightLabel, setRightLabel] = useState<string | null>(null);
+  const selecting = useRef(false);
+  const enabled = !!onRangeSelect && buckets.length > 1;
+
+  const onMouseDown = useCallback((e: any) => {
+    if (!enabled || !e?.activeLabel) return;
+    selecting.current = true;
+    setLeftLabel(e.activeLabel);
+    setRightLabel(e.activeLabel);
+  }, [enabled]);
+
+  const onMouseMove = useCallback((e: any) => {
+    if (!enabled || !selecting.current || !e?.activeLabel) return;
+    setRightLabel(e.activeLabel);
+  }, [enabled]);
+
+  const finish = useCallback(() => {
+    if (!enabled || !selecting.current) return;
+    selecting.current = false;
+    if (leftLabel && rightLabel && onRangeSelect) {
+      const left = buckets.find(b => b.label === leftLabel);
+      const right = buckets.find(b => b.label === rightLabel);
+      if (left && right) {
+        const fromMs = Math.min(left.startMs, right.startMs);
+        const toMs = Math.max(left.endMs, right.endMs) - 1;
+        if (toMs > fromMs) onRangeSelect(fromMs, toMs);
+      }
+    }
+    setLeftLabel(null);
+    setRightLabel(null);
+  }, [enabled, leftLabel, rightLabel, buckets, onRangeSelect]);
+
+  return {
+    enabled,
+    chartProps: enabled ? {
+      onMouseDown,
+      onMouseMove,
+      onMouseUp: finish,
+      onMouseLeave: finish,
+      style: { cursor: 'crosshair' as const },
+    } : {},
+    refArea: enabled && leftLabel && rightLabel && leftLabel !== rightLabel ? {
+      x1: leftLabel,
+      x2: rightLabel,
+    } : null,
+  };
+};
+
 /** Find the bucket index covering a given ms timestamp, or -1. */
 export const bucketIndexOf = (buckets: TimeBucket[], ms: number): number => {
   // buckets are sorted ascending; do a binary search.
