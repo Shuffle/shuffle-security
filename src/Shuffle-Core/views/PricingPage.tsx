@@ -2430,10 +2430,26 @@ const PricingPage = ({
             const totalRuns =
               (Number(calcAlerts) || 0) * RUNS_PER_ALERT +
               (Number(calcMonitors) || 0) * RUNS_PER_MONITOR;
-            const costPerThousand = getPrice(32) / 10;
-            const monthlyCost = (totalRuns / 1000) * costPerThousand;
+
+            // Per-App-Run rates by deployment + plan
+            const RATES = {
+              Cloud: {
+                Starter: 0.0032,
+                Standard: 0.0064,
+                Enterprise: 0.0096,
+              },
+              "Self-Hosted": {
+                Standard: 0.0072,
+                Enterprise: 0.00112,
+              },
+            };
+            const planRates = RATES[selectedDeployment] || RATES.Cloud;
+            const annualMultiplier = billingCycle === "annual" ? 0.9 : 1;
+
             const fmt = (n) => n.toLocaleString("en-US", { maximumFractionDigits: 0 });
-            const fmtMoney = (n) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+            const fmtMoney = (n) =>
+              `$${n.toLocaleString("en-US", { maximumFractionDigits: n < 100 ? 2 : 0 })}`;
+
             return (
               <Box
                 sx={{
@@ -2456,7 +2472,8 @@ const PricingPage = ({
                 <Typography sx={{ fontSize: "22px", fontWeight: 600, color: "#ffffff", mb: 3 }}>
                   Estimate your monthly cost
                 </Typography>
-                <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 3, alignItems: "center" }}>
+
+                <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 3, mb: 3 }}>
                   <Box>
                     <Typography sx={{ fontSize: "13px", color: "#c5c5c5", mb: 1 }}>
                       Alerts per month
@@ -2493,18 +2510,49 @@ const PricingPage = ({
                       }}
                     />
                   </Box>
-                  <Box sx={{ textAlign: "right", borderLeft: "1px solid rgba(255,255,255,0.08)", pl: 3, ml: 1, minWidth: 200 }}>
-                    <Typography sx={{ fontSize: "12px", color: "#c5c5c5" }}>
-                      {fmt(totalRuns)} App Runs / month
-                    </Typography>
-                    <Typography sx={{ fontSize: "32px", fontWeight: 700, color: "#ffffff", lineHeight: 1.1, mt: 0.5 }}>
-                      {fmtMoney(monthlyCost)}
-                      <span style={{ fontSize: "14px", fontWeight: 500, color: "#c5c5c5", marginLeft: 4 }}>/month</span>
-                    </Typography>
-                  </Box>
                 </Box>
+
+                <Typography sx={{ fontSize: "12px", color: "#7a7a7a", mb: 1.5 }}>
+                  {fmt(totalRuns)} App Runs / month
+                </Typography>
+
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: `repeat(${Object.keys(planRates).length}, 1fr)`,
+                    gap: 2,
+                  }}
+                >
+                  {Object.entries(planRates).map(([planName, rate]) => {
+                    const cost = totalRuns * rate * annualMultiplier;
+                    return (
+                      <Box
+                        key={planName}
+                        sx={{
+                          p: 2.5,
+                          borderRadius: "12px",
+                          backgroundColor: "rgba(255,255,255,0.03)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                        }}
+                      >
+                        <Typography sx={{ fontSize: "12px", color: "#c5c5c5", textTransform: "uppercase", letterSpacing: "0.4px" }}>
+                          {planName}
+                        </Typography>
+                        <Typography sx={{ fontSize: "28px", fontWeight: 700, color: "#ffffff", lineHeight: 1.1, mt: 0.5 }}>
+                          {fmtMoney(cost)}
+                          <span style={{ fontSize: "13px", fontWeight: 500, color: "#c5c5c5", marginLeft: 4 }}>/month</span>
+                        </Typography>
+                        <Typography sx={{ fontSize: "11px", color: "#7a7a7a", mt: 0.5 }}>
+                          ${rate.toFixed(4)} per App Run
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Box>
+
                 <Typography sx={{ fontSize: "12px", color: "#7a7a7a", mt: 2 }}>
-                  Estimate based on ${costPerThousand.toFixed(2)} per 1,000 App Runs{billingCycle === "annual" ? " (annual pricing)" : ""}.
+                  Estimates for {selectedDeployment}
+                  {billingCycle === "annual" ? " with annual pricing (10% off)" : ""}.
                 </Typography>
               </Box>
             );
