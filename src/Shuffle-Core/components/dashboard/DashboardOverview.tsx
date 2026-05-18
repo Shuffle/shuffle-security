@@ -38,7 +38,7 @@ interface OverviewIncident {
   createdTs: number;
 }
 
-interface OverviewProps extends ShuffleCoreHostProps {
+export interface OverviewProps extends ShuffleCoreHostProps {
   incidents: OverviewIncident[];
   incidentsLoading?: boolean;
   vulnSeverityCounts: { critical: number; high: number; medium: number; low: number; info: number };
