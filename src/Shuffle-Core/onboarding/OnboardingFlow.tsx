@@ -426,6 +426,24 @@ const OnboardingFlow = ({
       .catch(error => console.error('Failed to persist selected tools:', error));
   }, [selectedToolsLoaded, selectedApps]);
 
+  // Track tool additions (one event per new app) so we can see what users pick
+  // and which combinations correlate with finishing onboarding.
+  const trackedToolsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!selectedToolsLoaded) return;
+    selectedApps.forEach(app => {
+      const id = app.objectID || app.name;
+      if (!id || trackedToolsRef.current.has(id)) return;
+      trackedToolsRef.current.add(id);
+      trackPredefinedEvent(GA_EVENTS.TOOL_SELECTED, app.name, undefined, {
+        app_id: app.objectID,
+        app_name: app.name,
+        total_selected: selectedApps.length,
+        product,
+      });
+    });
+  }, [selectedApps, selectedToolsLoaded, product]);
+
   // Fetch authenticated apps from API
   const fetchAuthenticatedApps = useCallback(async () => {
     try {
