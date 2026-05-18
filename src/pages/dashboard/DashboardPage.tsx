@@ -37,6 +37,8 @@ import { useDatastore } from '@/hooks/useDatastore';
 import { DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import { useVulnerabilities } from '@/hooks/useVulnerabilities';
 import { DashboardOverview } from '@/components/dashboard/DashboardOverview';
+import { AutomationDashboard } from '@/components/dashboard/AutomationDashboard';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { useAuth } from '@/context/AuthContext';
 import { useSubOrgs } from '@/hooks/useSubOrgs';
 import { ChevronDown, ChevronUp } from 'lucide-react';
@@ -530,6 +532,10 @@ const DashboardPage = () => {
   const [overviewCollapsed, setOverviewCollapsed] = useState(false);
   const [setupCollapsed, setSetupCollapsed] = useState(false);
   const setupAutoCollapsedRef = useRef(false);
+  const [dashboardTab, setDashboardTab] = useState<'security' | 'automation'>(() => {
+    try { return (localStorage.getItem('shuffle_dashboard_tab') as 'security' | 'automation') || 'security'; } catch { return 'security'; }
+  });
+  useEffect(() => { try { localStorage.setItem('shuffle_dashboard_tab', dashboardTab); } catch {} }, [dashboardTab]);
 
   // Incidents + vulnerabilities for the overview charts
   const currentOrgId = userInfo?.active_org?.id;
@@ -1024,10 +1030,27 @@ const DashboardPage = () => {
           </Tooltip>
         </Box>
       </Box>
-      <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem', mb: 4 }}>
+      <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem', mb: 2 }}>
         Get started by completing the setup steps below, then monitor agent activity.
       </Typography>
 
+      {/* ── Dashboard tabs ───────────────────────────────────────────────────── */}
+      <Box sx={{ mb: 3 }}>
+        <SegmentedControl
+          ariaLabel="Dashboard view"
+          value={dashboardTab}
+          onChange={(v) => setDashboardTab(v as 'security' | 'automation')}
+          options={[
+            { value: 'security', label: 'Security Operations' },
+            { value: 'automation', label: 'Automation' },
+          ]}
+        />
+      </Box>
+
+      {dashboardTab === 'automation' ? (
+        <AutomationDashboard />
+      ) : (
+      <>
       {/* ── Demo Mode CTA ────────────────────────────────────────────────────── */}
       <DemoModeCard />
 
@@ -1311,6 +1334,8 @@ const DashboardPage = () => {
         </>)}
       </Box>
       </Box>
+      </>
+      )}
     </Box>
 
     <AgentQuestionDialog
