@@ -4,9 +4,9 @@ import path from 'node:path';
 /**
  * Build config for publishing @shuffleio/shuffle-core to npm.
  *
- * Mirrors the Shuffle-MCPs config: all UI / runtime peers are marked external,
- * and the Vite-style `@/Shuffle-Core/*` and `@/assets/*` path aliases are
- * mapped to relative paths so esbuild can resolve them.
+ * Mirrors the Shuffle-MCPs config: host-provided UI peers are marked external,
+ * while markdown utilities are bundled to avoid downstream webpack ESM and
+ * source-map-loader issues in consuming apps.
  */
 export default defineConfig({
   entry: ['index.tsx'],
@@ -16,13 +16,14 @@ export default defineConfig({
     resolve: true,
     tsconfig: 'tsconfig.build.json',
   },
-  sourcemap: true,
+  sourcemap: false,
   clean: true,
   external: [
     'react',
     'react-dom',
     'react/jsx-runtime',
-    /^@mui\//,
+    '@mui/material',
+    '@mui/system',
     /^@emotion\//,
     'lucide-react',
     'react-router-dom',
@@ -41,8 +42,6 @@ export default defineConfig({
     'date-fns',
     /^date-fns\//,
     'framer-motion',
-    'react-markdown',
-    /^@mui\/x-date-pickers/,
   ],
   loader: {
     '.css': 'copy',
