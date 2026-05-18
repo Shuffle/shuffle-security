@@ -411,6 +411,26 @@ function deriveOutcome(usecase: UsecaseShape, bundle: OutcomeBundle): UsecaseOut
   if (notEnabled && outcome.isEmpty) {
     outcome.emptyReason = 'not_enabled';
   }
+
+  // Add Host-Monitors usecase: surface deployed sensor count alongside the
+  // primary "open vulnerabilities" figure so users see BOTH the value the
+  // automation produces and the prerequisite (host coverage) at a glance.
+  if (usecase.id === 'case_management_asset_management_monitors_1') {
+    outcome = {
+      ...outcome,
+      extraMetrics: [
+        {
+          label: 'host monitors deployed',
+          value: bundle.sensors.total,
+          emptyHint: bundle.sensors.total === 0 ? 'No host monitors deployed yet' : undefined,
+        },
+      ],
+      // Force the section to render even when there are zero vulnerabilities,
+      // so the monitors-deployed metric is always visible.
+      isEmpty: outcome.isEmpty && bundle.sensors.total === 0,
+    };
+  }
+
   return attachIcons(outcome, bundle.iconByName);
 }
 
