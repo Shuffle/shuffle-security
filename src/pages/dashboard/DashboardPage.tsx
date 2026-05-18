@@ -9,7 +9,7 @@ import {
   Skeleton,
   Chip,
   IconButton,
-  Tooltip,
+  Tooltip, Tooltip as MuiTooltip,
   Button,
   Avatar,
   LinearProgress,
