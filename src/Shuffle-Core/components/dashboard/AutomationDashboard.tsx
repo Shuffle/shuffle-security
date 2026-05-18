@@ -349,6 +349,10 @@ export const AutomationDashboard = ({
     return out;
   }, [statKeys, filtered]);
 
+  // Click-drag a range on any time-series chart to zoom the dashboard.
+  const activityDrag = useChartRangeDrag(buckets, onRangeSelect);
+  const statsDrag = useChartRangeDrag(buckets, onRangeSelect);
+
 
   if (loading) {
     return (
