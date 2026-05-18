@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { ArrowRight, PlayCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { AgentIcon } from '@shuffleio/shuffle-mcps';
 import shuffleInfraLogo from '@/assets/shuffle-infrastructure-logo.png';
 
