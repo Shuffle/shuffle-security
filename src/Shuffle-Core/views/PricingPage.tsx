@@ -2487,7 +2487,9 @@ const PricingPage = ({
                       onChange={(e) => {
                         const stripped = e.target.value.replace(/^0+(?=\d)/, "");
                         if (stripped !== e.target.value) e.target.value = stripped;
-                        setCalcAlerts(Math.max(0, Number(stripped)));
+                        const clamped = Math.min(1000000, Math.max(0, Number(stripped)));
+                        if (String(clamped) !== stripped) e.target.value = String(clamped);
+                        setCalcAlerts(clamped);
                       }}
                       fullWidth
                       size="small"
