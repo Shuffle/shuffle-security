@@ -95,6 +95,8 @@ import VulnerabilityDetailPage from '@/pages/dashboard/VulnerabilityDetailPage';
 import AppsPage from '@/pages/AppsPage';
 import ShuffleMcpTestPage from '@/pages/ShuffleMcpTestPage';
 import ShuffleCoreTestPage from '@/pages/ShuffleCoreTestPage';
+import PricingPage from '@/pages/PricingPage';
+
 import NotFound from './pages/NotFound';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import { DemoProvider } from '@/context/DemoContext';
