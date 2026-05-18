@@ -190,6 +190,21 @@ export function UsecaseOutcomeSection({
             )}
           </Box>
 
+          {outcome.extraMetrics && outcome.extraMetrics.length > 0 && (
+            <Box sx={{ mt: 1.5, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+              {outcome.extraMetrics.map((m) => (
+                <Box key={m.label} sx={{ display: 'flex', alignItems: 'baseline', gap: 0.75 }}>
+                  <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, color: FG, lineHeight: 1 }}>
+                    {formatNumber(m.value)}
+                  </Typography>
+                  <Typography sx={{ fontSize: '0.78rem', color: MUTED }}>
+                    {m.label}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          )}
+
           {outcome.breakdown.length > 0 && (
             <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 0.75 }}>
               <Typography sx={{ fontSize: '0.7rem', color: MUTED, textTransform: 'uppercase', letterSpacing: 0.5 }}>
