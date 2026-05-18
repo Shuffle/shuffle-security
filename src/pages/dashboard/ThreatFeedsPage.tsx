@@ -168,6 +168,31 @@ const ThreatFeedsPage = () => {
 
   const enabledCount = useMemo(() => feeds.filter(f => f.enabled).length, [feeds]);
 
+  // Per-IOC-type totals — counts the live `ioc_<type>` datastore categories
+  // for every type that appears in at least one feed, plus the universally
+  // useful defaults so the strip is never empty when feeds exist.
+  const trackedIocNames = useMemo(() => {
+    const set = new Set<string>();
+    for (const f of feeds) {
+      if (f.type) set.add(f.type);
+    }
+    // Always include the most common IOC types so the user sees a meaningful
+    // overview even when feeds do not declare a type.
+    ['url', 'ipv4', 'domain', 'hash_md5', 'hash_sha256'].forEach((n) => set.add(n));
+    return Array.from(set);
+  }, [feeds]);
+  const { data: iocCounts = {}, isLoading: countsLoading } = useObservableCounts(trackedIocNames);
+  const totalIocs = useMemo(
+    () => Object.values(iocCounts).reduce((sum, n) => sum + (n || 0), 0),
+    [iocCounts],
+  );
+  const topIocs = useMemo(
+    () => Object.entries(iocCounts)
+      .filter(([, n]) => n > 0)
+      .sort((a, b) => b[1] - a[1]),
+    [iocCounts],
+  );
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
