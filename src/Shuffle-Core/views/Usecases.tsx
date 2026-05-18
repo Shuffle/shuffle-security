@@ -32,6 +32,8 @@ import ReactGA from 'react-ga4';
 import shuffleSecurityIcon from '../assets/shuffle-icon.png';
 import UsecaseAlluvialDiagram from './UsecaseAlluvialDiagram';
 import { AppSearchDrawer } from '@shuffleio/shuffle-mcps';
+import { useUsecaseOutcomes } from '../hooks/useUsecaseOutcomes';
+import { UsecaseOutcomeSection } from '../components/UsecaseOutcome';
 // ── Flow phases ────────────────────────────────────────────────────────────────
 
 export type FlowPhase = 'ingest' | 'response' | 'correlation';
