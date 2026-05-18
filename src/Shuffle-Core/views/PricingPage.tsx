@@ -193,7 +193,7 @@ const PricingPage = ({
     py: 1,
   };
 
-  const checkIcon = <img src="/icons/tickMark.svg" alt="check" />;
+  const checkIcon = <CheckLucide size={16} strokeWidth={3} color="#FF6600" aria-label="check" />;
 
   // Button actions for pricing plans
   const openSourceButtonAction = () => {
