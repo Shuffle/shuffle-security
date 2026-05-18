@@ -128,8 +128,9 @@ const PricingPage = ({
     };
 
     const plans = selectedDeployment === "Self-Hosted" 
-      ? [processedOpenSourcePlan, pricingPlans[2]] // Open Source + Enterprise
+      ? [processedOpenSourcePlan, pricingPlans[1], pricingPlans[2]] // Open Source + Standard + Enterprise
       : pricingPlans; // Starter + Scale + Enterprise for Cloud
+
     
     // Add deploymentOptions to Enterprise plan for the features section toggle
     return plans.map(plan => {
