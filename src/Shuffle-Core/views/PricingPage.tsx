@@ -2141,7 +2141,7 @@ const PricingPage = ({
             </Box>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid size={{ xs: 12, md: 6 }}>
             <Box
               sx={{
                 backgroundColor: "#212121",
