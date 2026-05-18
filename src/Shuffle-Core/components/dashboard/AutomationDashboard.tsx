@@ -343,32 +343,59 @@ export const AutomationDashboard = ({
         </Box>
       </Box>
 
-      {/* Bottom bar chart */}
+      {/* Bottom bar chart — custom stat from /api/v1/stats */}
       <Box sx={cardSx}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2, gap: 2, flexWrap: 'wrap' }}>
           <Typography sx={{ fontSize: '0.95rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-            {isApps ? 'Apps' : 'Workflows'} ({chartData.length})
+            {selectedStat || 'Custom Stat'} ({statSeries.length})
           </Typography>
-          <IconButton size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-            <ExternalLink size={14} />
-          </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <FormControl size="small" sx={{ minWidth: 220 }}>
+              <InputLabel>Find your Stat</InputLabel>
+              <Select
+                label="Find your Stat"
+                value={selectedStat}
+                onChange={(e) => setSelectedStat(String(e.target.value))}
+              >
+                {statKeys.length === 0 && (
+                  <MenuItem value="" disabled>No stats available</MenuItem>
+                )}
+                {statKeys.map(k => (
+                  <MenuItem key={k} value={k}>{k}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <IconButton size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+              <ExternalLink size={14} />
+            </IconButton>
+          </Box>
         </Box>
-        <Box sx={{ height: 320 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={monthData} margin={{ top: 8, right: 12, left: -10, bottom: 0 }}>
-              <defs>
-                <linearGradient id="barFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
-                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} />
-              <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} />
-              <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }} />
-              <Bar dataKey="runs" fill="url(#barFill)" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+        <Box sx={{ height: 320, position: 'relative' }}>
+          {statLoading ? (
+            <Skeleton variant="rounded" height={320} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
+          ) : statSeries.length === 0 ? (
+            <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))' }}>
+                {selectedStat ? 'No data for this range' : 'Select a stat to view data'}
+              </Typography>
+            </Box>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={statSeries} margin={{ top: 8, right: 12, left: -10, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="barFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
+                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} />
+                <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} />
+                <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }} />
+                <Bar dataKey="value" name={selectedStat} fill="url(#barFill)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </Box>
       </Box>
     </Box>
