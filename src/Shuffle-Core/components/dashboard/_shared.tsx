@@ -305,7 +305,7 @@ export const KpiTile = ({ icon: Icon, glow, value, label, delta, spark, isLoadin
 
         <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, position: 'relative' }}>
           {isLoading ? (
-            <Skeleton variant="text" width={70} height={32} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
+            <Skeleton variant="text" width={70} height={32} animation="wave" sx={{ bgcolor: 'hsl(var(--muted) / 0.5)', '&::after': { background: 'linear-gradient(90deg, transparent, hsl(var(--foreground) / 0.12), transparent)' } }} />
           ) : (
             <Typography sx={{
               fontWeight: 600,
