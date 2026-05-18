@@ -184,6 +184,12 @@ export const AutomationDashboard = ({
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [orgId, isLoaded, isLoggedIn, globalUrl]);
 
+  // External refresh trigger — parent bumps `refreshKey` to re-fetch silently.
+  useEffect(() => {
+    if (refreshKey === undefined) return;
+    load(true); /* eslint-disable-next-line */
+  }, [refreshKey]);
+
   const daily = stats?.daily_statistics || [];
   const rangeDays = parseInt(days, 10);
 
