@@ -65,12 +65,17 @@ export const useDatastore = ({ category, orgId: overrideOrgId }: UseDatastoreOpt
     setError(null);
     setLastDiagnostics(null);
     try {
-      // Fetch all pages automatically by following cursors
+      // Fetch all pages automatically by following cursors.
+      // IMPORTANT: stream each page into state as soon as it arrives so the
+      // UI can render the first results immediately instead of blocking on
+      // every page completing. Subsequent pages append progressively.
       let allItems: DatastoreItem[] = [];
       let currentCursor: string | undefined = cursorParam;
       let lastResponse: Awaited<ReturnType<typeof getDatastoreByCategory>> | null = null;
       const MAX_PAGES = 10; // Safety limit to prevent infinite loops
       let page = 0;
+      const isFreshFetch = !cursorParam;
+      let firstPageApplied = false;
 
       do {
         page++;
@@ -88,9 +93,8 @@ export const useDatastore = ({ category, orgId: overrideOrgId }: UseDatastoreOpt
           break;
         }
 
-        if (response.data) {
-          allItems = [...allItems, ...response.data];
-        }
+        const pageItems = response.data || [];
+        allItems = [...allItems, ...pageItems];
 
         if (response.categoryConfig) {
           setCategoryConfig(response.categoryConfig);
@@ -99,30 +103,41 @@ export const useDatastore = ({ category, orgId: overrideOrgId }: UseDatastoreOpt
           setTotalAmount(response.totalAmount);
         }
 
+        // Progressive render: push results to state after each page.
+        if (isFreshFetch) {
+          if (!firstPageApplied) {
+            // Replace on first page — only if data actually changed (avoids
+            // scroll reset when the list is identical to the previous fetch).
+            const snapshot = [...allItems];
+            setItems(prev => {
+              if (prev.length === snapshot.length && prev.every((item, i) => item.key === snapshot[i].key && item.edited === snapshot[i].edited)) {
+                return prev;
+              }
+              return snapshot;
+            });
+            // Flip hasFetched after first page so the page can exit its
+            // initial loading state and start showing rows immediately.
+            setIsLoading(false);
+            setHasFetched(true);
+            hasFetchedRef.current = true;
+            firstPageApplied = true;
+          } else if (pageItems.length > 0) {
+            setItems(prev => [...prev, ...pageItems]);
+          }
+        } else if (pageItems.length > 0) {
+          // Manual pagination call — append each page as it arrives.
+          setItems(prev => [...prev, ...pageItems]);
+        }
+
         currentCursor = response.cursor || undefined;
       } while (currentCursor && page < MAX_PAGES);
 
-      if (lastResponse?.success && allItems.length > 0) {
-        if (cursorParam) {
-          // Manual pagination call — append
-          setItems(prev => [...prev, ...allItems]);
-        } else {
-          // Fresh fetch — only update if data actually changed to avoid scroll reset
-          setItems(prev => {
-            if (prev.length === allItems.length && prev.every((item, i) => item.key === allItems[i].key && item.edited === allItems[i].edited)) {
-              return prev;
-            }
-            return allItems;
-          });
+      if (lastResponse?.success) {
+        if (isFreshFetch && allItems.length === 0 && !firstPageApplied) {
+          setItems([]);
         }
         setCursor(currentCursor || null);
         setHasMore(!!currentCursor);
-      } else if (lastResponse?.success && allItems.length === 0) {
-        if (!cursorParam) {
-          setItems([]);
-        }
-        setCursor(null);
-        setHasMore(false);
       } else {
         setError(lastResponse?.error || 'Failed to fetch items');
       }
