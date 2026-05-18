@@ -369,7 +369,7 @@ export const AutomationDashboard = ({
   const showHeader = !!headerLeft || !isDaysControlled || !isModeControlled || !isGranControlled || !hideRefresh;
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: showHeader ? 2 : 0 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mt: showHeader ? 2 : 0 }}>
       {/* Header row — caller-supplied left content (e.g. dashboard tabs) + filters */}
       {showHeader && (
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
