@@ -109,24 +109,19 @@ export const DashboardOverview = ({
   }, [incidents]);
 
   const trendData = useMemo(() => {
-    const buckets: { date: string; ms: number; New: number; 'In Progress': number; Resolved: number }[] = [];
-    const today = new Date();
-    for (let i = 29; i >= 0; i--) {
-      const d = startOfDay(subDays(today, i));
-      buckets.push({ date: format(d, 'MMM d'), ms: d.getTime(), New: 0, 'In Progress': 0, Resolved: 0 });
-    }
+    const buckets = buildBuckets(days, gran);
+    const rows = buckets.map(b => ({ date: b.label, New: 0, 'In Progress': 0, Resolved: 0 }));
     for (const inc of incidents) {
       if (!inc.createdTs) continue;
-      const dayMs = startOfDay(new Date(inc.createdTs)).getTime();
-      const b = buckets.find(x => x.ms === dayMs);
-      if (!b) continue;
+      const idx = bucketIndexOf(buckets, inc.createdTs);
+      if (idx < 0) continue;
       const s = (inc.status || '').toLowerCase().replace(/[_\s]+/g, '');
-      if (s === 'resolved' || s === 'closed') b.Resolved++;
-      else if (s === 'inprogress') b['In Progress']++;
-      else b.New++;
+      if (s === 'resolved' || s === 'closed') rows[idx].Resolved++;
+      else if (s === 'inprogress') rows[idx]['In Progress']++;
+      else rows[idx].New++;
     }
-    return buckets;
-  }, [incidents]);
+    return rows;
+  }, [incidents, days, gran]);
 
   const trendHasData = trendData.some(d => d.New || d['In Progress'] || d.Resolved);
 
