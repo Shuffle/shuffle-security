@@ -50,6 +50,10 @@ export interface OverviewProps extends ShuffleCoreHostProps {
   days?: number;
   /** Bucketing granularity for the incident trend chart. Defaults to 'daily'. */
   gran?: Granularity;
+  /** Custom date range — when set, overrides `days` and is used for bucketing. */
+  customRange?: { fromMs: number; toMs: number } | null;
+  /** Called when the user click-drags on a chart to pick a range. */
+  onRangeSelect?: (fromMs: number, toMs: number) => void;
 }
 
 const STATUS_COLORS = {
