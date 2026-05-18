@@ -1095,10 +1095,13 @@ const IncidentDetailPage = () => {
           normalizeToMs(b.edited ?? b.created) - normalizeToMs(a.edited ?? a.created)
         );
 
-        // Deduplicate by id/key and collapse consecutive semantically identical snapshots
+        // Deduplicate by id/key only. We intentionally do NOT collapse
+        // consecutive revisions with the same "meaningful signature" anymore —
+        // hiding them made the Timeline misleading and blocked manual
+        // rollback/merge against the exact snapshot the user wanted. Each
+        // distinct stored revision now renders as its own Timeline entry.
         const seenRevisionIds = new Set<string>();
         const deduped: any[] = [];
-        let previousSignature: string | null = null;
 
         for (const rev of sorted) {
           const revisionId = rev?.id || rev?.key;
@@ -1106,12 +1109,7 @@ const IncidentDetailPage = () => {
             if (seenRevisionIds.has(revisionId)) continue;
             seenRevisionIds.add(revisionId);
           }
-
-          const signature = getMeaningfulSignature(rev);
-          if (signature && signature === previousSignature) continue;
-
           deduped.push(rev);
-          previousSignature = signature;
         }
 
         setRevisions(deduped);
