@@ -43,6 +43,10 @@ export interface AutomationDashboardProps extends ShuffleCoreHostProps {
   gran?: 'daily' | 'monthly';
   /** Called when the user changes granularity. Required if `gran` is controlled. */
   onGranChange?: (gran: 'daily' | 'monthly') => void;
+  /** Controlled mode (workflows/apps). When provided, the internal toggle is hidden. */
+  mode?: 'workflows' | 'apps';
+  /** Called when the user changes the mode. Required if `mode` is controlled. */
+  onModeChange?: (mode: 'workflows' | 'apps') => void;
   /** When this value changes, the dashboard re-fetches stats. Use to wire up an external refresh button. */
   refreshKey?: number;
   /** When provided, hides the internal refresh button (parent owns it). */
