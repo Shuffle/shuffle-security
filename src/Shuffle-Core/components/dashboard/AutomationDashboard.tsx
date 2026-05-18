@@ -429,19 +429,52 @@ export const AutomationDashboard = ({
         accent={NEON.violet}
         delay={0.3}
         action={
-          <FormControl size="small" sx={{ minWidth: 220 }}>
+          <FormControl size="small" sx={{ minWidth: 260 }}>
+            <InputLabel sx={{ color: NEON.violet }}>Find your stat</InputLabel>
             <Select
               displayEmpty
+              label="Find your stat"
               value={selectedStat}
               onChange={(e) => setSelectedStat(String(e.target.value))}
-              renderValue={(v) => (v as string) || 'Select stat'}
+              renderValue={(v) => (v ? prettyStatLabel(v as string) : 'Select stat')}
+              MenuProps={{
+                PaperProps: {
+                  sx: {
+                    maxHeight: 420,
+                    bgcolor: 'hsl(var(--popover))',
+                    border: '1px solid hsl(var(--border))',
+                    '& .MuiMenuItem-root': { py: 1, px: 1.5 },
+                  },
+                },
+              }}
             >
               {statKeys.length === 0 && (
                 <MenuItem value="" disabled>No stats available</MenuItem>
               )}
-              {statKeys.map(k => (
-                <MenuItem key={k} value={k}>{k}</MenuItem>
-              ))}
+              {statKeys.map(k => {
+                const total = statTotals[k] || 0;
+                return (
+                  <MenuItem key={k} value={k}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: '100%' }}>
+                      <Typography
+                        sx={{
+                          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                          fontSize: 13,
+                          fontWeight: 600,
+                          color: statColor(total),
+                          minWidth: 56,
+                          textAlign: 'left',
+                        }}
+                      >
+                        {formatCompact(total)}
+                      </Typography>
+                      <Typography sx={{ fontSize: 13, color: 'hsl(var(--foreground))' }}>
+                        {prettyStatLabel(k)}
+                      </Typography>
+                    </Box>
+                  </MenuItem>
+                );
+              })}
             </Select>
           </FormControl>
         }
