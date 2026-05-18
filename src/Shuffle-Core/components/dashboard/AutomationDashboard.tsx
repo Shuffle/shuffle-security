@@ -476,7 +476,7 @@ export const AutomationDashboard = ({
               />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }} {...activityDrag.chartProps}>
+                <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} {...activityDrag.chartProps}>
                   <defs>
                     <linearGradient id="auto-grad-success" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor={NEON.green} stopOpacity={0.55} />
@@ -570,7 +570,7 @@ export const AutomationDashboard = ({
             <EmptyState text={`No values for "${prettyStatLabel(selectedStat)}" in the last ${days} days`} />
                     ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={statSeries} margin={{ top: 8, right: 8, left: -20, bottom: 0 }} {...statsDrag.chartProps}>
+              <BarChart data={statSeries} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} {...statsDrag.chartProps}>
                 <defs>
                   <linearGradient id="auto-bar-fill" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor={NEON.violet} stopOpacity={1} />
