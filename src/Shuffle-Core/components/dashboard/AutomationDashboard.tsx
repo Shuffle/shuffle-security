@@ -77,6 +77,7 @@ export const AutomationDashboard = ({
   const name = (displayName || userdata?.username || '').split('@')[0] || 'there';
 
   const [stats, setStats] = useState<StatsResponse | null>(null);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [days, setDays] = useState<string>('30');
@@ -90,11 +91,21 @@ export const AutomationDashboard = ({
     if (serverside || !isLoaded || !isLoggedIn || !orgId) { setLoading(false); return; }
     silent ? setRefreshing(true) : setLoading(true);
     try {
-      const res = await fetch(buildUrl(`/api/v1/orgs/${orgId}/stats`), {
-        credentials: 'include',
-        headers: { ...getAuthHeader() },
-      });
-      if (res.ok) setStats(await res.json());
+      const [statsRes, notifRes] = await Promise.all([
+        fetch(buildUrl(`/api/v1/orgs/${orgId}/stats`), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
+        }),
+        fetch(buildUrl(`/api/v1/notifications`), {
+          credentials: 'include',
+          headers: { ...getAuthHeader() },
+        }),
+      ]);
+      if (statsRes.ok) setStats(await statsRes.json());
+      if (notifRes.ok) {
+        const nd = await notifRes.json();
+        setNotifications(Array.isArray(nd) ? nd : (nd.notifications || []));
+      }
     } catch { /* noop */ } finally {
       setLoading(false); setRefreshing(false);
     }
@@ -127,6 +138,18 @@ export const AutomationDashboard = ({
   const total = totalSuccess + totalFailed;
   const successRate = total > 0 ? Math.round((totalSuccess / total) * 100) : 0;
   const failRate = total > 0 ? 100 - successRate : 0;
+
+  // Count of notifications whose created_at falls within the selected range.
+  // `created_at` may arrive as seconds or milliseconds — normalise to ms.
+  const notificationCount = useMemo(() => {
+    const cutoff = Date.now() - rangeDays * 86400_000;
+    return notifications.filter((n: any) => {
+      const raw = Number(n?.created_at) || 0;
+      if (!raw) return false;
+      const ms = raw < 1e12 ? raw * 1000 : raw;
+      return ms >= cutoff;
+    }).length;
+  }, [notifications, rangeDays]);
 
   // Per-month aggregated counts for the bottom bar chart.
   const monthData = useMemo(() => {
@@ -200,10 +223,10 @@ export const AutomationDashboard = ({
         <Box sx={{ ...cardSx, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Box>
             <Typography sx={{ fontSize: '2rem', fontWeight: 700, color: 'hsl(var(--foreground))', lineHeight: 1.1 }}>
-              {totalFailed}
+              {notificationCount}
             </Typography>
             <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))', mt: 0.5 }}>
-              Total errors
+              Notifications
             </Typography>
           </Box>
           <AlertCircle size={22} style={{ color: 'hsl(var(--severity-high))' }} />
