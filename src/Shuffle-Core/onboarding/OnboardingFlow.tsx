@@ -1134,6 +1134,7 @@ const OnboardingFlow = ({
                     <WelcomeStep
                       selectedChallenge={selectedChallenge}
                       onSelect={(challengeId) => {
+                        trackPredefinedEvent(GA_EVENTS.CHALLENGE_SELECTED, challengeId, undefined, { challenge: challengeId, product });
                         setSelectedChallenge(challengeId);
                         // Auto-advance to next step after selection
                         setTimeout(() => {
