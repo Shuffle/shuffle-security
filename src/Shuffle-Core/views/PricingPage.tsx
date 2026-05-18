@@ -2435,7 +2435,7 @@ const PricingPage = ({
                     >
                       {plan.type.toLowerCase() === "enterprise"
                         ? `${plan.type} (${selectedDeployment})`
-                        : plan.type}
+                        : (plan.displayType || plan.type)}
                     </Typography>
                     {plan.deploymentOptions && (
                       <ToggleButtonGroup
