@@ -1414,6 +1414,9 @@ function IntegrationStatusLite({
   singleLine = false,
   isResolving = false,
   syntheticApps,
+  onHover,
+  onSelect,
+  selectedId,
 }: {
   filterApps?: string[];
   singleLine?: boolean;
@@ -1425,6 +1428,12 @@ function IntegrationStatusLite({
    * installed app. Used to surface the Shuffle platform itself under the
    * Cases category. */
   syntheticApps?: IntegrationItem[];
+  /** Hover preview callback — called with the item on enter, null on leave. */
+  onHover?: (item: IntegrationItem | null) => void;
+  /** Click handler — receives the item that was clicked. */
+  onSelect?: (item: IntegrationItem) => void;
+  /** Item id currently pinned by the parent (renders a stronger outline). */
+  selectedId?: string;
 }) {
   const { apiUrl, authHeader } = useApi();
   const [integrations, setIntegrations] = useState<IntegrationItem[]>([]);
@@ -1569,13 +1578,16 @@ function IntegrationStatusLite({
         arrow
       >
         <Box
+          onMouseEnter={() => onHover?.(integration)}
+          onMouseLeave={() => onHover?.(null)}
+          onClick={onSelect ? () => onSelect(integration) : undefined}
           sx={{
             position: 'relative',
             width: 32,
             height: 32,
             flexShrink: 0,
             borderRadius: '50% !important',
-            border: `1px solid ${borderColor}`,
+            border: `${selectedId === integration.id ? '2px' : '1px'} solid ${selectedId === integration.id ? 'hsl(var(--primary))' : borderColor}`,
             // overflow visible so the status dot can sit outside the circle
             overflow: 'visible',
             bgcolor: bgColor,
@@ -1584,6 +1596,7 @@ function IntegrationStatusLite({
             justifyContent: 'center',
             opacity: isReady ? 1 : 0.45,
             filter: isReady ? 'none' : 'grayscale(1)',
+            cursor: onSelect ? 'pointer' : 'default',
             transition: 'transform 0.15s ease, opacity 0.15s ease, filter 0.15s ease',
             '&:hover': {
               transform: 'scale(1.1)',
@@ -1769,6 +1782,12 @@ function UsecaseDetailContent({
   // users can force-add a Source or Destination tool from this view too.
   const [addToolFor, setAddToolFor] = useState<null | { side: 'source' | 'destination'; categoryId: string }>(null);
   const [integrationsRefreshKey, setIntegrationsRefreshKey] = useState(0);
+  // Per-side tool detail state: `hoveredTool` is the transient preview shown
+  // while the cursor is over an icon; `pinnedTool` is the sticky selection
+  // after a click (clicking the same icon again clears it).
+  type ToolSideState = { source: IntegrationItem | null; destination: IntegrationItem | null };
+  const [hoveredTool, setHoveredTool] = useState<ToolSideState>({ source: null, destination: null });
+  const [pinnedTool, setPinnedTool] = useState<ToolSideState>({ source: null, destination: null });
   // Mirror the card's "Coming soon" gate so the detail page does not show a
   // live "Enable" button for usecases that are not yet wired up server-side.
   const isComingSoon = !!flow && !ACTIVE_USECASE_IDS.includes(flow.id);
@@ -2143,9 +2162,6 @@ function UsecaseDetailContent({
 
       {showConnectionPath && (
       <Box sx={{ p: 3, borderRadius: 2, border: CARD_BORDER, bgcolor: CARD_BG, mb: 3 }}>
-        <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1.5 }}>
-          Connection Path
-        </Typography>
         {useAlluvialDiagram && ['siem_case_management_1', 'edr_case_management_1', 'email_case_management_1'].includes(flow.id) ? (
           <UsecaseAlluvialDiagram
             sourceCategory={flow.source}
@@ -2180,6 +2196,10 @@ function UsecaseDetailContent({
                   active: true,
                 }]
               : undefined;
+            const side: 'source' | 'destination' = endpoint.title === 'Source' ? 'source' : 'destination';
+            const hovered = hoveredTool[side];
+            const pinned = pinnedTool[side];
+            const activeTool = hovered || pinned;
             return (
             <Box key={endpoint.title} sx={{ flex: 1, minWidth: 0 }}>
               <Typography sx={{ fontSize: '0.66rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1 }}>
@@ -2187,18 +2207,33 @@ function UsecaseDetailContent({
               </Typography>
               <Box sx={{ p: 1.5, borderRadius: 1.5, bgcolor: accentBg(endpoint.meta?.color, 0.06), border: `1px solid ${accentBg(endpoint.meta?.color, 0.15)}`, mb: 1.25 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                  <Box sx={{ width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: accentBg(endpoint.meta?.color, 0.12), color: accent(endpoint.meta?.color), flexShrink: 0 }}>
-                    {endpoint.meta?.icon}
-                  </Box>
-                  <Box sx={{ minWidth: 0 }}>
-                    <Typography sx={{ fontSize: '0.9rem', fontWeight: 700, color: accent(endpoint.meta?.color) }}>
-                      {endpoint.meta?.label || 'Unknown'}
-                    </Typography>
-                    {endpoint.details && (
-                      <Typography sx={{ fontSize: '0.72rem', color: MUTED, lineHeight: 1.5 }}>
-                        {endpoint.details.description.split('—')[0].trim()}
-                      </Typography>
+                  <Box sx={{ width: 32, height: 32, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: activeTool ? '#ffffff' : accentBg(endpoint.meta?.color, 0.12), color: accent(endpoint.meta?.color), flexShrink: 0 }}>
+                    {activeTool && activeTool.icon ? (
+                      <Box component="img" src={activeTool.icon} alt={activeTool.name} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      endpoint.meta?.icon
                     )}
+                  </Box>
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                      <Typography sx={{ fontSize: '0.9rem', fontWeight: 700, color: accent(endpoint.meta?.color) }}>
+                        {activeTool ? activeTool.name : (endpoint.meta?.label || 'Unknown')}
+                      </Typography>
+                      {activeTool && (
+                        <Typography sx={{ fontSize: '0.62rem', fontWeight: 700, px: 0.75, py: 0.2, borderRadius: 0.75, textTransform: 'uppercase', letterSpacing: '0.04em',
+                          color: activeTool.validated ? '#22c55e' : activeTool.active ? '#f59e0b' : MUTED,
+                          bgcolor: activeTool.validated ? 'rgba(34,197,94,0.12)' : activeTool.active ? 'rgba(245,158,11,0.12)' : 'hsla(0,0%,60%,0.1)',
+                          border: `1px solid ${activeTool.validated ? 'rgba(34,197,94,0.35)' : activeTool.active ? 'rgba(245,158,11,0.35)' : 'hsla(0,0%,60%,0.25)'}`,
+                        }}>
+                          {activeTool.validated ? 'Validated' : activeTool.active ? 'Configured' : 'Not configured'}
+                        </Typography>
+                      )}
+                    </Box>
+                    <Typography sx={{ fontSize: '0.72rem', color: MUTED, lineHeight: 1.5 }}>
+                      {activeTool
+                        ? `${endpoint.meta?.label || endpoint.title} tool · ${activeTool.validated ? 'Authentication tested and working' : activeTool.active ? 'Authentication added, not yet validated' : 'Not connected yet'}`
+                        : (endpoint.details ? endpoint.details.description.split('—')[0].trim() : '')}
+                    </Typography>
                   </Box>
                 </Box>
               </Box>
@@ -2210,7 +2245,7 @@ function UsecaseDetailContent({
                   <IconButton
                     size="small"
                     onClick={() => setAddToolFor({
-                      side: endpoint.title === 'Source' ? 'source' : 'destination',
+                      side,
                       categoryId: endpoint.categoryId,
                     })}
                     sx={{
@@ -2236,6 +2271,9 @@ function UsecaseDetailContent({
                 filterApps={appNamesWithShuffle}
                 isResolving={!categoryAppsResolved}
                 syntheticApps={synthetic}
+                onHover={(item) => setHoveredTool((prev) => ({ ...prev, [side]: item }))}
+                onSelect={(item) => setPinnedTool((prev) => ({ ...prev, [side]: prev[side]?.id === item.id ? null : item }))}
+                selectedId={pinned?.id}
               />
             </Box>
             );

@@ -48,6 +48,7 @@ interface OutcomeBundle {
   incidents: { total: number; sample: SampledIncident[] };
   vulns: { total: number; sample: SampledVuln[] };
   iocs: Array<{ type: string; total: number }>;
+  iconByName: Record<string, string>;
 }
 
 const getOrgId = (): string | null => {
@@ -159,6 +160,24 @@ const productMatchesCategory = (product: string | undefined, category: string | 
   return patterns.some((re) => re.test(product));
 };
 
+async function fetchAppIconMap(): Promise<Record<string, string>> {
+  try {
+    const res = await fetch(getApiUrl('/api/v1/apps'), { credentials: 'include', headers: { ...getAuthHeader() } });
+    if (!res.ok) return {};
+    const data = await res.json();
+    const list = Array.isArray(data) ? data : (data?.data || []);
+    const map: Record<string, string> = {};
+    for (const a of Array.isArray(list) ? list : []) {
+      const n = a?.name ? String(a.name).toLowerCase() : '';
+      const icon = a?.large_image || a?.image || '';
+      if (n && icon && !map[n]) map[n] = icon;
+    }
+    return map;
+  } catch {
+    return {};
+  }
+}
+
 async function fetchOutcomeBundle(): Promise<OutcomeBundle> {
   const orgId = getOrgId();
   if (!orgId) {
@@ -166,12 +185,14 @@ async function fetchOutcomeBundle(): Promise<OutcomeBundle> {
       incidents: { total: 0, sample: [] },
       vulns: { total: 0, sample: [] },
       iocs: IOC_TYPES.map((type) => ({ type, total: 0 })),
+      iconByName: {},
     };
   }
 
-  const [incidentsRes, vulnsRes, ...iocResults] = await Promise.all([
+  const [incidentsRes, vulnsRes, iconByName, ...iocResults] = await Promise.all([
     fetchListCache(orgId, INCIDENTS_CATEGORY, 100),
     fetchListCache(orgId, VULNS_CATEGORY, 100),
+    fetchAppIconMap(),
     ...IOC_TYPES.map((t) => fetchListCache(orgId, `ioc_${t}`, 1)),
   ]);
 
@@ -198,6 +219,7 @@ async function fetchOutcomeBundle(): Promise<OutcomeBundle> {
     incidents: { total: incidentsRes.total, sample: incidentSample },
     vulns: { total: vulnsRes.total, sample: vulnSample },
     iocs: IOC_TYPES.map((type, idx) => ({ type, total: iocResults[idx].total })),
+    iconByName,
   };
 }
 
@@ -331,6 +353,21 @@ function emptyOutcome(kind: OutcomeKind, reason: UsecaseOutcome['emptyReason']):
   };
 }
 
+function attachIcons(outcome: UsecaseOutcome, iconByName: Record<string, string>): UsecaseOutcome {
+  if (!outcome.breakdown.length) return outcome;
+  const enrich = (entries: OutcomeBreakdownEntry[]) =>
+    entries.map((e) => {
+      if (e.iconUrl) return e;
+      const url = iconByName[String(e.key).toLowerCase()] || iconByName[String(e.label).toLowerCase()];
+      return url ? { ...e, iconUrl: url } : e;
+    });
+  return {
+    ...outcome,
+    breakdown: enrich(outcome.breakdown),
+    secondary: outcome.secondary ? { ...outcome.secondary, entries: enrich(outcome.secondary.entries) } : outcome.secondary,
+  };
+}
+
 function deriveOutcome(usecase: UsecaseShape, bundle: OutcomeBundle): UsecaseOutcome {
   const kind = resolveOutcomeKind(usecase);
   if (kind === 'none') return emptyOutcome('none', 'no_data_yet');
@@ -369,7 +406,7 @@ function deriveOutcome(usecase: UsecaseShape, bundle: OutcomeBundle): UsecaseOut
   if (notEnabled && outcome.isEmpty) {
     outcome.emptyReason = 'not_enabled';
   }
-  return outcome;
+  return attachIcons(outcome, bundle.iconByName);
 }
 
 export function useUsecaseOutcomes(usecases: UsecaseShape[] | undefined) {

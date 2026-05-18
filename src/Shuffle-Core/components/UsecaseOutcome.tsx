@@ -199,11 +199,44 @@ export function UsecaseOutcomeSection({
                 const share = outcome.primary.value > 0
                   ? Math.min(100, Math.round((entry.value / outcome.primary.value) * 100))
                   : 0;
+                const pretty = entry.label
+                  .replace(/_/g, ' ')
+                  .replace(/\b\w/g, (c) => c.toUpperCase());
                 return (
                   <Box key={entry.key} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <Typography sx={{ fontSize: '0.82rem', color: FG, minWidth: 140, textTransform: 'capitalize' }}>
-                      {entry.label}
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 160 }}>
+                      <Box
+                        sx={{
+                          width: 20,
+                          height: 20,
+                          borderRadius: '50%',
+                          overflow: 'hidden',
+                          flexShrink: 0,
+                          bgcolor: '#ffffff',
+                          border: `1px solid ${BORDER}`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        {entry.iconUrl ? (
+                          <Box
+                            component="img"
+                            src={entry.iconUrl}
+                            alt={pretty}
+                            loading="lazy"
+                            sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: '#333' }}>
+                            {pretty.slice(0, 1)}
+                          </Typography>
+                        )}
+                      </Box>
+                      <Typography sx={{ fontSize: '0.82rem', color: FG }}>
+                        {pretty}
+                      </Typography>
+                    </Box>
                     <Box sx={{ flex: 1, height: 6, borderRadius: 3, bgcolor: BORDER, overflow: 'hidden' }}>
                       <Box sx={{ height: '100%', width: `${share}%`, bgcolor: PRIMARY }} />
                     </Box>
