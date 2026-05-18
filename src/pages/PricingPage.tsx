@@ -11,15 +11,17 @@ const PricingPage: React.FC = () => {
   return (
     <>
       <LandingNavbar />
-      <PricingPageRaw
-        theme={theme}
-        stripeKey={undefined}
-        serverside={false}
-        isLoaded={!isLoading}
-        isLoggedIn={isAuthenticated}
-        userdata={userInfo}
-        globalUrl={typeof window !== 'undefined' ? window.location.origin : ''}
-      />
+      <div style={{ paddingTop: 96 }}>
+        <PricingPageRaw
+          theme={theme}
+          stripeKey={undefined}
+          serverside={false}
+          isLoaded={!isLoading}
+          isLoggedIn={isAuthenticated}
+          userdata={userInfo}
+          globalUrl={typeof window !== 'undefined' ? window.location.origin : ''}
+        />
+      </div>
     </>
   );
 };
