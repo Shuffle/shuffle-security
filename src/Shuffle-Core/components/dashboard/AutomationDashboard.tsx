@@ -525,7 +525,8 @@ export const AutomationDashboard = ({
               size="small"
               options={statKeys}
               value={selectedStat || null}
-              onChange={(_, v) => pickSelectedStat(v || '')}
+              onChange={(_, v) => { if (v) pickSelectedStat(v); }}
+              disableClearable
               getOptionLabel={(k) => prettyStatLabel(k)}
               isOptionEqualToValue={(a, b) => a === b}
               noOptionsText={statKeys.length === 0 ? 'No stats available' : 'No matches'}
