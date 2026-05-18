@@ -98,7 +98,9 @@ const greeting = () => {
 
 /** Strip leading `total_`, replace underscores with spaces, sentence-case. */
 const prettyStatLabel = (key: string): string => {
-  const bare = key.startsWith('total_') ? key.slice(6) : key;
+  let bare = key;
+  if (bare.startsWith('total_')) bare = bare.slice(6);
+  if (bare.toLowerCase().startsWith('categorylabel_')) bare = bare.slice('categorylabel_'.length);
   const spaced = bare.replace(/_/g, ' ').trim();
   if (!spaced) return key;
   return spaced.charAt(0).toUpperCase() + spaced.slice(1).toLowerCase();
