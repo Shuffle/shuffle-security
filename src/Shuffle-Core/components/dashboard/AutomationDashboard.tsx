@@ -138,6 +138,8 @@ export const AutomationDashboard = ({
   onModeChange,
   refreshKey,
   hideRefresh,
+  customRange,
+  onRangeSelect,
 }: AutomationDashboardProps) => {
   const orgId = orgIdProp ?? userdata?.active_org?.id ?? null;
   const _name = (displayName || userdata?.username || '').split('@')[0] || 'there';
