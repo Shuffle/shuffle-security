@@ -551,6 +551,11 @@ const DashboardPage = () => {
     try { return ((localStorage.getItem('shuffle_dashboard_gran') as 'daily' | 'monthly') || 'daily'); } catch { return 'daily'; }
   });
   useEffect(() => { try { localStorage.setItem('shuffle_dashboard_gran', dashboardGran); } catch {} }, [dashboardGran]);
+  // Shared Workflows | Apps toggle for the Automation dashboard (shown but disabled on Security).
+  const [dashboardMode, setDashboardMode] = useState<'workflows' | 'apps'>(() => {
+    try { return ((localStorage.getItem('shuffle_dashboard_mode') as 'workflows' | 'apps') || 'workflows'); } catch { return 'workflows'; }
+  });
+  useEffect(() => { try { localStorage.setItem('shuffle_dashboard_mode', dashboardMode); } catch {} }, [dashboardMode]);
   // Bumped by the shared refresh button — Automation watches this, Security re-fetches via handleDashboardRefresh.
   const [dashboardRefreshKey, setDashboardRefreshKey] = useState(0);
 
