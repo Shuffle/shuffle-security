@@ -1703,6 +1703,16 @@ const PricingPage = ({
                           /month for {scaleValue}k App Runs
                         </Typography>
                       )}
+
+                      {(plan.type === "Standard" ||
+                        (plan.type === "Enterprise" && selectedDeployment === "Cloud")) && (
+                        <Typography
+                          sx={{ mb: "-2px", fontSize: "14px", pt: 2.2 }}
+                          color="#c5c5c5"
+                        >
+                          /month
+                        </Typography>
+                      )}
                     </div>
 
                     {plan.type === "Scale" ? (
