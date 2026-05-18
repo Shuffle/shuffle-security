@@ -1085,7 +1085,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           </MenuItem>
           <MenuItem
             component={Link}
-            to="/onboarding"
+            to="/onboarding/sources"
             selected={location.pathname === '/onboarding' || location.pathname.startsWith('/onboarding/')}
             onClick={() => setUserMenuAnchor(null)}
             sx={{
