@@ -1102,17 +1102,19 @@ const IncidentDetailPage = () => {
         // blocked manual rollback/merge against the exact snapshot the user
         // wanted.
         const fingerprintFor = (rev: any): string => {
-          const explicitId = rev?.revision_id || rev?.revisionId || rev?.id;
-          if (explicitId) return `id:${explicitId}`;
           const ts = normalizeToMs(rev?.edited ?? rev?.created) || 0;
           return `ts:${ts}|h:${cheapHash(stableRevisionValueString(rev?.value))}`;
         };
 
         const seenFingerprints = new Set<string>();
+        const seenRevisionIds = new Set<string>();
         const deduped: any[] = [];
         for (const rev of sorted) {
+          const explicitId = rev?.revision_id || rev?.revisionId || rev?.id;
+          if (explicitId && seenRevisionIds.has(String(explicitId))) continue;
           const fp = fingerprintFor(rev);
           if (seenFingerprints.has(fp)) continue;
+          if (explicitId) seenRevisionIds.add(String(explicitId));
           seenFingerprints.add(fp);
           deduped.push(rev);
         }
