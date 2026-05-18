@@ -2493,7 +2493,7 @@ const PricingPage = ({
                       }}
                       fullWidth
                       size="small"
-                      inputProps={{ min: 0, step: 50 }}
+                      inputProps={{ min: 0, max: 1000000, step: 50 }}
                       sx={{
                         "& .MuiOutlinedInput-root": { backgroundColor: "#111", color: "#fff", borderRadius: "8px" },
                         "& .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,0.12)" },
