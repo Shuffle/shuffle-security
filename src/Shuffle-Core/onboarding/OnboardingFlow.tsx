@@ -298,10 +298,57 @@ const OnboardingFlow = ({
     return idx >= 0 ? idx : 0;
   }, [activeStepKey, steps]);
 
+  // Fire ONBOARDING_STEP on EVERY step change (direct URL / back button too).
+  useEffect(() => {
+    const stepDef = steps.find(s => s.key === activeStepKey);
+    if (!stepDef) return;
+    const now = Date.now();
+    const prevKey = lastStepKeyRef.current;
+    const msOnPrev = prevKey ? now - stepEnteredAtRef.current : 0;
+    const stepIndex = steps.findIndex(s => s.key === activeStepKey);
+    trackPredefinedEvent(GA_EVENTS.ONBOARDING_STEP, stepDef.key, stepIndex, {
+      step_key: stepDef.key,
+      step_label: stepDef.label,
+      step_index: stepIndex,
+      from_step: prevKey,
+      ms_on_prev_step: msOnPrev,
+      ms_since_start: now - onboardingStartedAtRef.current,
+      product,
+    });
+    lastStepKeyRef.current = activeStepKey;
+    stepEnteredAtRef.current = now;
+  }, [activeStepKey, steps, product]);
+
+  // Abandonment on unload.
+  useEffect(() => {
+    const handler = () => {
+      if (onboardingCompletedRef.current) return;
+      const stepDef = steps.find(s => s.key === activeStepKey);
+      if (!stepDef) return;
+      const stepIndex = steps.findIndex(s => s.key === activeStepKey);
+      trackEvent({
+        category: 'onboarding',
+        action: 'onboarding_abandon',
+        label: stepDef.key,
+        value: stepIndex,
+        custom: {
+          step_key: stepDef.key,
+          step_index: stepIndex,
+          ms_on_step: Date.now() - stepEnteredAtRef.current,
+          ms_since_start: Date.now() - onboardingStartedAtRef.current,
+          product,
+        },
+      });
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [activeStepKey, steps, product]);
+
   // When embedded outside the /onboarding route tree (e.g. the standalone
   // /shuffle-core-demo showcase page), do NOT hijack the URL. The flow
   // should render in-place without redirecting the host route.
   const isOnboardingRoute = location.pathname === '/onboarding' || location.pathname.startsWith('/onboarding/');
+
 
   // Single useEffect: sync URL ↔ step key without circular fighting
   useEffect(() => {
