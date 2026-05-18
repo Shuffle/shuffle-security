@@ -1350,36 +1350,20 @@ const PricingPage = ({
         {/* Pricing cards */}
         <Grid
           container
-          spacing={{
-            xs: 3,
-            md: selectedDeployment === "Self-Hosted" ? 6 : 4
-          }}
+          spacing={{ xs: 3, md: 4 }}
           justifyContent="center"
           sx={{
-            mt: {
-              xs: selectedDeployment === "Self-Hosted" ? 0.5 : 1,
-              sm: selectedDeployment === "Self-Hosted" ? 0.5 : 2,
-            },
+            mt: { xs: 1, sm: 2 },
             transition: "all 0.5s ease-in-out",
           }}
         >
           {getFilteredPlans().map((plan, index) => (
             <Grid
-              size={{
-                xs: 12,
-                sm: 12,
-                md: selectedDeployment === "Self-Hosted" ? 6 : 4,
-                lg: selectedDeployment === "Self-Hosted" ? 5 : 4,
-              }}
+              size={{ xs: 12, sm: 12, md: 4, lg: 4 }}
               key={index}
-              sx={{
-                maxWidth: {
-                  xs: "500px",
-                  md: selectedDeployment === "Self-Hosted" ? "590px" : "100%",
-                  lg: "100%",
-                },
-              }}
+              sx={{ maxWidth: { xs: "500px", md: "100%" } }}
             >
+
 
               <Box
                 sx={{
@@ -1806,7 +1790,7 @@ const PricingPage = ({
                         borderColor:
                           plan.type.toLowerCase() === "enterprise"
                             ? "transparent"
-                            : plan.type.toLowerCase() === "scale" || plan.type.toLowerCase() === "open source"
+                            : plan.type.toLowerCase() === "scale" || plan.type.toLowerCase() === "open source" || plan.type.toLowerCase() === "standard"
                             ? "transparent"
                             : isLoggedIn
                             ? "#c5c5c5"
@@ -1814,7 +1798,7 @@ const PricingPage = ({
                         background:
                           plan.type.toLowerCase() === "enterprise"
                             ? "#2BC07E"
-                            : plan.type.toLowerCase() === "scale" || plan.type.toLowerCase() === "open source"
+                            : plan.type.toLowerCase() === "scale" || plan.type.toLowerCase() === "open source" || plan.type.toLowerCase() === "standard"
                             ? "#FF8544"
                             : isLoggedIn
                             ? "rgba(255, 255, 255, 0.1)"
@@ -1824,7 +1808,7 @@ const PricingPage = ({
                           background:
                             plan.type.toLowerCase() === "enterprise"
                               ? "#3FDF98"
-                              : plan.type.toLowerCase() === "scale" || plan.type.toLowerCase() === "open source"
+                              : plan.type.toLowerCase() === "scale" || plan.type.toLowerCase() === "open source" || plan.type.toLowerCase() === "standard"
                               ? "#FF955C"
                               : isLoggedIn
                               ? "rgba(255, 255, 255, 0.1)"
@@ -1832,7 +1816,7 @@ const PricingPage = ({
                           borderColor:
                             plan.type.toLowerCase() === "enterprise"
                               ? "#3FDF98"
-                              : plan.type.toLowerCase() === "scale" || plan.type.toLowerCase() === "open source"
+                              : plan.type.toLowerCase() === "scale" || plan.type.toLowerCase() === "open source" || plan.type.toLowerCase() === "standard"
                               ? "transparent"
                               : isLoggedIn
                               ? "#c5c5c5"
