@@ -256,7 +256,7 @@ export const DashboardOverview = ({
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <EmptyState text="No incident activity in the last 30 days" ctaLabel="Set up incident ingestion" onCta={() => navigate('/incidents?highlight=ingest')} />
+              <EmptyState text={`No incident activity in the last ${days} days`} ctaLabel="Set up incident ingestion" onCta={() => navigate('/incidents?highlight=ingest')} />
             )}
           </Box>
         </Panel>
