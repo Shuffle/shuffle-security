@@ -186,35 +186,59 @@ export const AutomationDashboard = ({
    * Custom stat keys come from two places in /api/v1/orgs/{orgId}/stats:
    *   1. Top-level `total_*` keys (map to the matching field in daily entries)
    *   2. `additions[].key` across the org-level + daily-level additions arrays
+   *
+   * We dedupe on the canonical key (with `total_` stripped) so the user does
+   * not see e.g. both "Workflow executions" and "Total workflow executions".
+   * Preference order: top-level `total_*` > addition key.
    */
   const statKeys = useMemo(() => {
     if (!stats) return [] as string[];
-    const totals = Object.keys(stats).filter(k => k.startsWith('total_'));
-    const additionKeys = new Set<string>();
-    (stats.additions || []).forEach(a => a?.key && additionKeys.add(a.key));
+    const map = new Map<string, string>(); // canonical -> rawKey
+    Object.keys(stats)
+      .filter(k => k.startsWith('total_'))
+      .forEach(k => {
+        const canon = k.slice(6);
+        if (!map.has(canon)) map.set(canon, k);
+      });
+    const addAddition = (k?: string) => {
+      if (!k) return;
+      const canon = k.startsWith('total_') ? k.slice(6) : k;
+      if (!map.has(canon)) map.set(canon, k);
+    };
+    (stats.additions || []).forEach(a => addAddition(a?.key));
     (stats.daily_statistics || []).forEach(d =>
-      (d.additions || []).forEach(a => a?.key && additionKeys.add(a.key))
+      (d.additions || []).forEach(a => addAddition(a?.key))
     );
-    return Array.from(new Set([...totals, ...Array.from(additionKeys)])).sort();
+    return Array.from(map.values()).sort((a, b) =>
+      prettyStatLabel(a).localeCompare(prettyStatLabel(b))
+    );
   }, [stats]);
 
   useEffect(() => {
     if (!selectedStat && statKeys.length) setSelectedStat(statKeys[0]);
   }, [statKeys, selectedStat]);
 
+  const valueForStat = (d: any, key: string): number => {
+    const bare = key.startsWith('total_') ? key.slice(6) : key;
+    if (d[bare] != null) return Number(d[bare]) || 0;
+    if (d[key] != null) return Number(d[key]) || 0;
+    const hit = (d.additions || []).find((a: Addition) => a?.key === key || a?.key === bare);
+    return hit ? Number(hit.value) || 0 : 0;
+  };
+
   const statSeries = useMemo(() => {
     if (!selectedStat) return [] as Array<{ date: string; value: number }>;
-    const fromTotal = selectedStat.startsWith('total_') ? selectedStat.slice(6) : null;
-    return filtered.map(d => {
-      let value = 0;
-      if (fromTotal && d[fromTotal] != null) value = Number(d[fromTotal]) || 0;
-      else {
-        const hit = (d.additions || []).find(a => a?.key === selectedStat);
-        value = hit ? Number(hit.value) || 0 : 0;
-      }
-      return { date: d.date.slice(5, 10), value };
-    });
+    return filtered.map(d => ({ date: d.date.slice(5, 10), value: valueForStat(d, selectedStat) }));
   }, [filtered, selectedStat]);
+
+  /** Aggregate value per stat key across the currently-filtered date range. */
+  const statTotals = useMemo(() => {
+    const out: Record<string, number> = {};
+    statKeys.forEach(k => {
+      out[k] = filtered.reduce((sum, d) => sum + valueForStat(d, k), 0);
+    });
+    return out;
+  }, [statKeys, filtered]);
 
 
   if (loading) {
