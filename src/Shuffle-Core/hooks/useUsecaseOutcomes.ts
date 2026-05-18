@@ -48,6 +48,7 @@ interface OutcomeBundle {
   incidents: { total: number; sample: SampledIncident[] };
   vulns: { total: number; sample: SampledVuln[] };
   iocs: Array<{ type: string; total: number }>;
+  iconByName: Record<string, string>;
 }
 
 const getOrgId = (): string | null => {
