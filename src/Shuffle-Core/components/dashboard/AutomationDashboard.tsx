@@ -39,6 +39,14 @@ export interface AutomationDashboardProps extends ShuffleCoreHostProps {
   days?: string;
   /** Called when the user changes the time range. Required if `days` is controlled. */
   onDaysChange?: (days: string) => void;
+  /** Controlled granularity (daily/monthly). When provided, the internal selector is hidden. */
+  gran?: 'daily' | 'monthly';
+  /** Called when the user changes granularity. Required if `gran` is controlled. */
+  onGranChange?: (gran: 'daily' | 'monthly') => void;
+  /** When this value changes, the dashboard re-fetches stats. Use to wire up an external refresh button. */
+  refreshKey?: number;
+  /** When provided, hides the internal refresh button (parent owns it). */
+  hideRefresh?: boolean;
 }
 
 /** Time-range options shared with parents that render the Last filter themselves. */
