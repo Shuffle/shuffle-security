@@ -61,6 +61,8 @@ const PricingPage = ({
   const [currentFeatureTitle, setCurrentFeatureTitle] =
     useState("Core Features");
   const [expandedIndex, setExpandedIndex] = useState(null);
+  const [calcAlerts, setCalcAlerts] = useState(500);
+  const [calcMonitors, setCalcMonitors] = useState(20);
 
   useEffect(() => {
     window.scrollTo(0, 0);
