@@ -29,6 +29,7 @@ import {
 import { motion } from 'framer-motion';
 import { useThreatFeeds, ThreatFeed, DEFAULT_THREAT_FEEDS } from '@/hooks/useThreatFeeds';
 import { useIOCTypes } from '@/hooks/useIOCTypes';
+import { useObservableCounts } from '@/hooks/useObservableCounts';
 import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
 import { toast } from '@/lib/toast';
 import ThreatIntelAutomationBanner from '@/components/incidents/ThreatIntelAutomationBanner';
@@ -167,6 +168,31 @@ const ThreatFeedsPage = () => {
 
   const enabledCount = useMemo(() => feeds.filter(f => f.enabled).length, [feeds]);
 
+  // Per-IOC-type totals — counts the live `ioc_<type>` datastore categories
+  // for every type that appears in at least one feed, plus the universally
+  // useful defaults so the strip is never empty when feeds exist.
+  const trackedIocNames = useMemo(() => {
+    const set = new Set<string>();
+    for (const f of feeds) {
+      if (f.type) set.add(f.type);
+    }
+    // Always include the most common IOC types so the user sees a meaningful
+    // overview even when feeds do not declare a type.
+    ['url', 'ipv4', 'domain', 'hash_md5', 'hash_sha256'].forEach((n) => set.add(n));
+    return Array.from(set);
+  }, [feeds]);
+  const { data: iocCounts = {}, isLoading: countsLoading } = useObservableCounts(trackedIocNames);
+  const totalIocs = useMemo(
+    () => Object.values(iocCounts).reduce((sum, n) => sum + (n || 0), 0),
+    [iocCounts],
+  );
+  const topIocs = useMemo(
+    () => Object.entries(iocCounts)
+      .filter(([, n]) => n > 0)
+      .sort((a, b) => b[1] - a[1]),
+    [iocCounts],
+  );
+
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
@@ -250,6 +276,61 @@ const ThreatFeedsPage = () => {
         </Typography>
       </Card>
 
+      {/* IOC stats — totals per IOC category collected from active feeds */}
+      {feeds.length > 0 && (
+        <Card sx={{ mb: 2, p: 2, border: '1px solid hsl(var(--border))', bgcolor: 'transparent' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1.5, mb: topIocs.length > 0 ? 1.5 : 0 }}>
+            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
+              <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: '0.08em', fontWeight: 700 }}>
+                IOCs collected
+              </Typography>
+              {countsLoading ? (
+                <CircularProgress size={14} />
+              ) : (
+                <Typography sx={{ fontSize: '1.15rem', fontWeight: 700, color: 'hsl(var(--primary))' }}>
+                  {totalIocs.toLocaleString()}
+                </Typography>
+              )}
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                across {topIocs.length || trackedIocNames.length} categories
+              </Typography>
+            </Box>
+          </Box>
+          {topIocs.length > 0 ? (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {topIocs.map(([name, count]) => (
+                <Tooltip key={name} title={`Datastore category: ioc_${name}`} arrow>
+                  <Chip
+                    label={
+                      <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}>
+                        <Box component="span" sx={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.72rem' }}>
+                          {name}
+                        </Box>
+                        <Box component="span" sx={{ fontWeight: 700, color: 'hsl(var(--primary))' }}>
+                          {count.toLocaleString()}
+                        </Box>
+                      </Box>
+                    }
+                    size="small"
+                    variant="outlined"
+                    sx={{
+                      height: 24,
+                      borderColor: 'hsl(var(--primary) / 0.35)',
+                      bgcolor: 'hsl(var(--primary) / 0.06)',
+                      '& .MuiChip-label': { px: 1 },
+                    }}
+                  />
+                </Tooltip>
+              ))}
+            </Box>
+          ) : !countsLoading && (
+            <Typography variant="caption" sx={{ color: 'text.disabled' }}>
+              No IOCs collected yet — enable feeds and let the Threat Intel automation run.
+            </Typography>
+          )}
+        </Card>
+      )}
+
       <Card elevation={0} sx={{ bgcolor: 'transparent', backgroundImage: 'none', border: '1px solid hsl(var(--border))' }}>
         <CardContent sx={{ p: 0 }}>
           <TableContainer>
@@ -292,20 +373,38 @@ const ThreatFeedsPage = () => {
                     </TableCell>
                     <TableCell>
                       {feed.type ? (
-                        <Chip
-                          label={feed.type}
-                          size="small"
-                          variant="outlined"
-                          sx={{
-                            height: 20,
-                            fontSize: '0.7rem',
-                            fontFamily: 'JetBrains Mono, monospace',
-                            borderColor: 'hsl(var(--primary) / 0.4)',
-                            color: 'hsl(var(--primary))',
-                            bgcolor: 'hsl(var(--primary) / 0.06)',
-                            '& .MuiChip-label': { px: 0.75 },
-                          }}
-                        />
+                        <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}>
+                          <Chip
+                            label={feed.type}
+                            size="small"
+                            variant="outlined"
+                            sx={{
+                              height: 20,
+                              fontSize: '0.7rem',
+                              fontFamily: 'JetBrains Mono, monospace',
+                              borderColor: 'hsl(var(--primary) / 0.4)',
+                              color: 'hsl(var(--primary))',
+                              bgcolor: 'hsl(var(--primary) / 0.06)',
+                              '& .MuiChip-label': { px: 0.75 },
+                            }}
+                          />
+                          {typeof iocCounts[feed.type] === 'number' && (
+                            <Tooltip title={`Total IOCs in ioc_${feed.type}`} arrow>
+                              <Chip
+                                label={iocCounts[feed.type].toLocaleString()}
+                                size="small"
+                                sx={{
+                                  height: 20,
+                                  fontSize: '0.7rem',
+                                  fontWeight: 700,
+                                  bgcolor: iocCounts[feed.type] > 0 ? 'hsl(var(--severity-low) / 0.15)' : 'hsl(var(--muted))',
+                                  color: iocCounts[feed.type] > 0 ? 'hsl(var(--severity-low))' : 'text.secondary',
+                                  '& .MuiChip-label': { px: 0.75 },
+                                }}
+                              />
+                            </Tooltip>
+                          )}
+                        </Box>
                       ) : (
                         <Typography variant="caption" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>
                           auto
