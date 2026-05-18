@@ -1030,10 +1030,27 @@ const DashboardPage = () => {
           </Tooltip>
         </Box>
       </Box>
-      <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem', mb: 4 }}>
+      <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem', mb: 2 }}>
         Get started by completing the setup steps below, then monitor agent activity.
       </Typography>
 
+      {/* ── Dashboard tabs ───────────────────────────────────────────────────── */}
+      <Box sx={{ mb: 3 }}>
+        <SegmentedControl
+          ariaLabel="Dashboard view"
+          value={dashboardTab}
+          onChange={(v) => setDashboardTab(v as 'security' | 'automation')}
+          options={[
+            { value: 'security', label: 'Security Operations' },
+            { value: 'automation', label: 'Automation' },
+          ]}
+        />
+      </Box>
+
+      {dashboardTab === 'automation' ? (
+        <AutomationDashboard />
+      ) : (
+      <>
       {/* ── Demo Mode CTA ────────────────────────────────────────────────────── */}
       <DemoModeCard />
 
