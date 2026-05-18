@@ -3314,10 +3314,10 @@ function UsecaseCard({
               size="small"
               variant="contained"
               disableElevation
+              disabled
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 e.preventDefault();
-                onClick();
               }}
               startIcon={<Sparkles size={12} />}
               sx={{
@@ -3330,14 +3330,15 @@ function UsecaseCard({
                 bgcolor: 'hsl(var(--card))',
                 color: 'hsl(45 93% 47%)',
                 border: '1px solid hsl(45 93% 47% / 0.4)',
-                '&:hover': {
-                  bgcolor: 'hsl(45 93% 47% / 0.1)',
-                  borderColor: 'hsl(45 93% 47%)',
+                '&.Mui-disabled': {
+                  color: 'hsl(45 93% 47% / 0.6)',
+                  borderColor: 'hsl(45 93% 47% / 0.3)',
                 },
               }}
             >
-              Notify me
+              Coming soon
             </Button>
+
           ) : canToggle ? (
             <Tooltip
               title={
