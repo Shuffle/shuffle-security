@@ -1096,6 +1096,15 @@ const DashboardPage = () => {
                 </FormControl>
                 <Box sx={{ alignSelf: 'flex-end' }}>
                   <SegmentedControl
+                    ariaLabel="Mode"
+                    value={dashboardMode}
+                    onChange={(v) => setDashboardMode(v as 'workflows' | 'apps')}
+                    disabled={dashboardTab === 'security'}
+                    options={[{ value: 'workflows', label: 'Workflows' }, { value: 'apps', label: 'Apps' }]}
+                  />
+                </Box>
+                <Box sx={{ alignSelf: 'flex-end' }}>
+                  <SegmentedControl
                     ariaLabel="Granularity"
                     value={dashboardGran}
                     onChange={(v) => setDashboardGran(v as 'daily' | 'monthly')}
@@ -1103,7 +1112,11 @@ const DashboardPage = () => {
                   />
                 </Box>
                 <MuiTooltip title="Refresh">
-                  <IconButton size="small" onClick={handleDashboardRefresh} sx={{ color: 'hsl(var(--muted-foreground))', alignSelf: 'flex-end' }}>
+                  <IconButton
+                    size="small"
+                    onClick={handleDashboardRefresh}
+                    sx={{ color: 'hsl(var(--muted-foreground))', alignSelf: 'flex-end', width: 36, height: 36, borderRadius: '8px' }}
+                  >
                     <RefreshIcon size={16} />
                   </IconButton>
                 </MuiTooltip>
