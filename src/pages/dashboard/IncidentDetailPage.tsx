@@ -1087,37 +1087,6 @@ const IncidentDetailPage = () => {
         const result = await response.json();
         const rawRevisions: any[] = Array.isArray(result) ? result : (result.data || result.revisions || []);
 
-        const NOISE_FIELDS = new Set(['activity', 'updated_by', 'edited_time', 'updated_at', 'last_updated', 'comments']);
-
-        const getMeaningfulSignature = (rev: any): string => {
-          let parsed: any = rev?.value;
-
-          if (typeof parsed === 'string') {
-            const decoded = decodeIfBase64(parsed);
-            try {
-              parsed = JSON.parse(decoded);
-            } catch {
-              try {
-                parsed = JSON.parse(parsed);
-              } catch {
-                // keep raw string if not JSON
-              }
-            }
-          }
-
-          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-            const cleaned = { ...parsed } as Record<string, any>;
-            NOISE_FIELDS.forEach((field) => delete cleaned[field]);
-            return JSON.stringify(cleaned);
-          }
-
-          try {
-            return JSON.stringify(parsed);
-          } catch {
-            return String(parsed ?? '');
-          }
-        };
-
         // Always sort revisions by normalized timestamp (newest first)
         const sorted = [...rawRevisions].sort((a: any, b: any) =>
           normalizeToMs(b.edited ?? b.created) - normalizeToMs(a.edited ?? a.created)
@@ -1132,21 +1101,11 @@ const IncidentDetailPage = () => {
         // identical" snapshots: hiding them made the Timeline misleading and
         // blocked manual rollback/merge against the exact snapshot the user
         // wanted.
-        const cheapHash = (s: string): string => {
-          let h = 0;
-          for (let i = 0; i < s.length; i++) {
-            h = ((h << 5) - h + s.charCodeAt(i)) | 0;
-          }
-          return h.toString(36);
-        };
         const fingerprintFor = (rev: any): string => {
-          const explicitId = rev?.id || rev?.revision_id || rev?.revisionId;
+          const explicitId = rev?.revision_id || rev?.revisionId || rev?.id;
           if (explicitId) return `id:${explicitId}`;
           const ts = normalizeToMs(rev?.edited ?? rev?.created) || 0;
-          const valStr = typeof rev?.value === 'string'
-            ? rev.value
-            : (() => { try { return JSON.stringify(rev?.value); } catch { return String(rev?.value ?? ''); } })();
-          return `ts:${ts}|h:${cheapHash(valStr)}`;
+          return `ts:${ts}|h:${cheapHash(stableRevisionValueString(rev?.value))}`;
         };
 
         const seenFingerprints = new Set<string>();
