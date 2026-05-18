@@ -163,6 +163,41 @@ export const AutomationDashboard = ({
     }).length;
   }, [notifications, rangeDays]);
 
+  /**
+   * Custom stat keys come from two places in /api/v1/orgs/{orgId}/stats:
+   *   1. Top-level `total_*` keys (map to the matching field in daily entries)
+   *   2. `additions[].key` across the org-level + daily-level additions arrays
+   */
+  const statKeys = useMemo(() => {
+    if (!stats) return [] as string[];
+    const totals = Object.keys(stats).filter(k => k.startsWith('total_'));
+    const additionKeys = new Set<string>();
+    (stats.additions || []).forEach(a => a?.key && additionKeys.add(a.key));
+    (stats.daily_statistics || []).forEach(d =>
+      (d.additions || []).forEach(a => a?.key && additionKeys.add(a.key))
+    );
+    return Array.from(new Set([...totals, ...Array.from(additionKeys)])).sort();
+  }, [stats]);
+
+  useEffect(() => {
+    if (!selectedStat && statKeys.length) setSelectedStat(statKeys[0]);
+  }, [statKeys, selectedStat]);
+
+  const statSeries = useMemo(() => {
+    if (!selectedStat) return [] as Array<{ date: string; value: number }>;
+    const fromTotal = selectedStat.startsWith('total_') ? selectedStat.slice(6) : null;
+    return filtered.map(d => {
+      let value = 0;
+      if (fromTotal && d[fromTotal] != null) value = Number(d[fromTotal]) || 0;
+      else {
+        const hit = (d.additions || []).find(a => a?.key === selectedStat);
+        value = hit ? Number(hit.value) || 0 : 0;
+      }
+      return { date: d.date.slice(5, 10), value };
+    });
+  }, [filtered, selectedStat]);
+
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 3 }}>
