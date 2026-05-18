@@ -2423,6 +2423,91 @@ const PricingPage = ({
               opacity: 0.8,
             }}
           />
+          {(() => {
+            const RUNS_PER_ALERT = 10;
+            const RUNS_PER_MONITOR = 30;
+            const totalRuns =
+              (Number(calcAlerts) || 0) * RUNS_PER_ALERT +
+              (Number(calcMonitors) || 0) * RUNS_PER_MONITOR;
+            const costPerThousand = getPrice(32) / 10;
+            const monthlyCost = (totalRuns / 1000) * costPerThousand;
+            const fmt = (n) => n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+            const fmtMoney = (n) => `$${n.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+            return (
+              <Box
+                sx={{
+                  position: "relative",
+                  zIndex: 1,
+                  mt: 12,
+                  mb: 2,
+                  p: 4,
+                  borderRadius: "16px",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  backgroundColor: "rgba(26,26,26,0.7)",
+                  backdropFilter: "blur(6px)",
+                  maxWidth: 980,
+                  mx: "auto",
+                }}
+              >
+                <Typography sx={{ fontSize: "13px", letterSpacing: "0.5px", color: "#c5c5c5", textTransform: "uppercase", mb: 0.5 }}>
+                  Pricing Calculator
+                </Typography>
+                <Typography sx={{ fontSize: "22px", fontWeight: 600, color: "#ffffff", mb: 3 }}>
+                  Estimate your monthly cost
+                </Typography>
+                <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 3, alignItems: "center" }}>
+                  <Box>
+                    <Typography sx={{ fontSize: "13px", color: "#c5c5c5", mb: 1 }}>
+                      Alerts per month
+                      <span style={{ marginLeft: 6, color: "#7a7a7a" }}>· {RUNS_PER_ALERT} App Runs each</span>
+                    </Typography>
+                    <TextField
+                      type="number"
+                      value={calcAlerts}
+                      onChange={(e) => setCalcAlerts(Math.max(0, Number(e.target.value)))}
+                      fullWidth
+                      size="small"
+                      inputProps={{ min: 0, step: 50 }}
+                      sx={{
+                        "& .MuiOutlinedInput-root": { backgroundColor: "#111", color: "#fff", borderRadius: "8px" },
+                        "& .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,0.12)" },
+                      }}
+                    />
+                  </Box>
+                  <Box>
+                    <Typography sx={{ fontSize: "13px", color: "#c5c5c5", mb: 1 }}>
+                      Host Monitors
+                      <span style={{ marginLeft: 6, color: "#7a7a7a" }}>· {RUNS_PER_MONITOR} App Runs / month each</span>
+                    </Typography>
+                    <TextField
+                      type="number"
+                      value={calcMonitors}
+                      onChange={(e) => setCalcMonitors(Math.max(0, Number(e.target.value)))}
+                      fullWidth
+                      size="small"
+                      inputProps={{ min: 0, step: 5 }}
+                      sx={{
+                        "& .MuiOutlinedInput-root": { backgroundColor: "#111", color: "#fff", borderRadius: "8px" },
+                        "& .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(255,255,255,0.12)" },
+                      }}
+                    />
+                  </Box>
+                  <Box sx={{ textAlign: "right", borderLeft: "1px solid rgba(255,255,255,0.08)", pl: 3, ml: 1, minWidth: 200 }}>
+                    <Typography sx={{ fontSize: "12px", color: "#c5c5c5" }}>
+                      {fmt(totalRuns)} App Runs / month
+                    </Typography>
+                    <Typography sx={{ fontSize: "32px", fontWeight: 700, color: "#ffffff", lineHeight: 1.1, mt: 0.5 }}>
+                      {fmtMoney(monthlyCost)}
+                      <span style={{ fontSize: "14px", fontWeight: 500, color: "#c5c5c5", marginLeft: 4 }}>/month</span>
+                    </Typography>
+                  </Box>
+                </Box>
+                <Typography sx={{ fontSize: "12px", color: "#7a7a7a", mt: 2 }}>
+                  Estimate based on ${costPerThousand.toFixed(2)} per 1,000 App Runs{billingCycle === "annual" ? " (annual pricing)" : ""}.
+                </Typography>
+              </Box>
+            );
+          })()}
           <Typography
             component="h2"
             align="center"
