@@ -245,15 +245,25 @@ const PricingPage = ({
           action: 'Scale Plan Selected',
           label: 'User is not logged in',
         });
+        navigate(
+          "/register?view=pricing&app_runs=" +
+            scaleValue +
+            "&billing_cycle=" +
+            billingCycle +
+            "&env=" +
+            selectedDeployment
+        );
+      } else {
+        window.open(
+          "https://shuffler.io/register?view=pricing&app_runs=" +
+            scaleValue +
+            "&billing_cycle=" +
+            billingCycle +
+            "&env=" +
+            selectedDeployment,
+          "_blank"
+        );
       }
-      navigate(
-        "/register?view=pricing&app_runs=" +
-          scaleValue +
-          "&billing_cycle=" +
-          billingCycle +
-          "&env=" +
-          selectedDeployment
-      );
     }
   };
 
