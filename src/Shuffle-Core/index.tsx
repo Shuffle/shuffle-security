@@ -41,6 +41,9 @@ export const UsecaseAlluvialDiagram = withTheme(UsecaseAlluvialDiagramRaw, 'Usec
 export const FormInput = withTheme(FormInputRaw, 'FormInput');
 export const EditWorkflow = withTheme(EditWorkflowRaw, 'EditWorkflow');
 export const RecentWorkflow = withTheme(RecentWorkflowRaw, 'RecentWorkflow');
+export const AutomationDashboard = withTheme(AutomationDashboardRaw, 'AutomationDashboard');
+export const DashboardOverview = withTheme(DashboardOverviewRaw, 'DashboardOverview');
+export type { AutomationDashboardProps } from './components/dashboard/AutomationDashboard';
 
 export default Usecases;
 
