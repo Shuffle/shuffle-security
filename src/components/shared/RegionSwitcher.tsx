@@ -39,7 +39,7 @@ export const RegionSwitcher = ({
 }: RegionSwitcherProps) => {
   const isSupport = useIsSupport();
   const disabled = forceDisabled || !isSupport;
-  const current = REGION_OPTIONS.find((o) => o.value === value);
+  
 
   return (
     <div className={cn('flex flex-col items-center gap-2', className)}>
