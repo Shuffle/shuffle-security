@@ -43,6 +43,10 @@ export interface AutomationDashboardProps extends ShuffleCoreHostProps {
   gran?: 'daily' | 'monthly';
   /** Called when the user changes granularity. Required if `gran` is controlled. */
   onGranChange?: (gran: 'daily' | 'monthly') => void;
+  /** Controlled mode (workflows/apps). When provided, the internal toggle is hidden. */
+  mode?: 'workflows' | 'apps';
+  /** Called when the user changes the mode. Required if `mode` is controlled. */
+  onModeChange?: (mode: 'workflows' | 'apps') => void;
   /** When this value changes, the dashboard re-fetches stats. Use to wire up an external refresh button. */
   refreshKey?: number;
   /** When provided, hides the internal refresh button (parent owns it). */
@@ -126,6 +130,8 @@ export const AutomationDashboard = ({
   onDaysChange,
   gran: granProp,
   onGranChange,
+  mode: modeProp,
+  onModeChange,
   refreshKey,
   hideRefresh,
 }: AutomationDashboardProps) => {
@@ -152,7 +158,13 @@ export const AutomationDashboard = ({
     if (onDaysChange) onDaysChange(v);
     if (!isDaysControlled) setDaysInternal(v);
   };
-  const [mode, setMode] = useState<ModeKind>('workflows');
+  const isModeControlled = modeProp !== undefined;
+  const [modeInternal, setModeInternal] = useState<ModeKind>('workflows');
+  const mode = isModeControlled ? (modeProp as ModeKind) : modeInternal;
+  const setMode = (v: ModeKind) => {
+    if (onModeChange) onModeChange(v);
+    if (!isModeControlled) setModeInternal(v);
+  };
   const isGranControlled = granProp !== undefined;
   const [granInternal, setGranInternal] = useState<GranKind>('daily');
   const gran = isGranControlled ? (granProp as GranKind) : granInternal;
@@ -349,14 +361,16 @@ export const AutomationDashboard = ({
               </Select>
             </FormControl>
           )}
-          <Box sx={{ alignSelf: 'flex-end' }}>
-            <SegmentedControl
-              ariaLabel="Mode"
-              value={mode}
-              onChange={(v) => setMode(v as ModeKind)}
-              options={[{ value: 'workflows', label: 'Workflows' }, { value: 'apps', label: 'Apps' }]}
-            />
-          </Box>
+          {!isModeControlled && (
+            <Box sx={{ alignSelf: 'flex-end' }}>
+              <SegmentedControl
+                ariaLabel="Mode"
+                value={mode}
+                onChange={(v) => setMode(v as ModeKind)}
+                options={[{ value: 'workflows', label: 'Workflows' }, { value: 'apps', label: 'Apps' }]}
+              />
+            </Box>
+          )}
           {!isGranControlled && (
             <Box sx={{ alignSelf: 'flex-end' }}>
               <SegmentedControl

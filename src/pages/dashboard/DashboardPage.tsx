@@ -551,6 +551,11 @@ const DashboardPage = () => {
     try { return ((localStorage.getItem('shuffle_dashboard_gran') as 'daily' | 'monthly') || 'daily'); } catch { return 'daily'; }
   });
   useEffect(() => { try { localStorage.setItem('shuffle_dashboard_gran', dashboardGran); } catch {} }, [dashboardGran]);
+  // Shared Workflows | Apps toggle for the Automation dashboard (shown but disabled on Security).
+  const [dashboardMode, setDashboardMode] = useState<'workflows' | 'apps'>(() => {
+    try { return ((localStorage.getItem('shuffle_dashboard_mode') as 'workflows' | 'apps') || 'workflows'); } catch { return 'workflows'; }
+  });
+  useEffect(() => { try { localStorage.setItem('shuffle_dashboard_mode', dashboardMode); } catch {} }, [dashboardMode]);
   // Bumped by the shared refresh button — Automation watches this, Security re-fetches via handleDashboardRefresh.
   const [dashboardRefreshKey, setDashboardRefreshKey] = useState(0);
 
@@ -1089,6 +1094,17 @@ const DashboardPage = () => {
                     ))}
                   </Select>
                 </FormControl>
+                <Box sx={{ alignSelf: 'flex-end', opacity: dashboardTab === 'security' ? 0.5 : 1, pointerEvents: dashboardTab === 'security' ? 'none' : 'auto' }}>
+                  <SegmentedControl
+                    ariaLabel="Mode"
+                    value={dashboardMode}
+                    onChange={(v) => setDashboardMode(v as 'workflows' | 'apps')}
+                    options={[
+                      { value: 'workflows', label: 'Workflows', disabled: dashboardTab === 'security' },
+                      { value: 'apps', label: 'Apps', disabled: dashboardTab === 'security' },
+                    ]}
+                  />
+                </Box>
                 <Box sx={{ alignSelf: 'flex-end' }}>
                   <SegmentedControl
                     ariaLabel="Granularity"
@@ -1098,7 +1114,11 @@ const DashboardPage = () => {
                   />
                 </Box>
                 <MuiTooltip title="Refresh">
-                  <IconButton size="small" onClick={handleDashboardRefresh} sx={{ color: 'hsl(var(--muted-foreground))', alignSelf: 'flex-end' }}>
+                  <IconButton
+                    size="small"
+                    onClick={handleDashboardRefresh}
+                    sx={{ color: 'hsl(var(--muted-foreground))', alignSelf: 'flex-end', width: 36, height: 36, borderRadius: '8px' }}
+                  >
                     <RefreshIcon size={16} />
                   </IconButton>
                 </MuiTooltip>
@@ -1122,6 +1142,8 @@ const DashboardPage = () => {
                   onDaysChange={setDashboardDays}
                   gran={dashboardGran}
                   onGranChange={setDashboardGran}
+                  mode={dashboardMode}
+                  onModeChange={setDashboardMode}
                   refreshKey={dashboardRefreshKey}
                   hideRefresh
                 />
