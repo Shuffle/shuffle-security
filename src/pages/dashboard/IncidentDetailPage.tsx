@@ -4501,7 +4501,10 @@ const IncidentDetailPage = () => {
     const getItemKey = (it: TimelineItem): string => {
       if (it.type === 'revision') {
         const rev = it.data;
-        return `rev-${rev.id || rev.key || it.idx}`;
+        const explicitId = rev?.revision_id || rev?.revisionId || rev?.id;
+        const ts = normalizeToMs(rev?.edited ?? rev?.created) || 0;
+        const valueHash = cheapHash(stableRevisionValueString(rev?.value));
+        return `rev-${explicitId || `${ts}-${valueHash}`}-${it.idx}`;
       }
       if (it.type === 'agent') return `agent-${it.data.execution_id}`;
       if (it.type === 'step') return it.id;
