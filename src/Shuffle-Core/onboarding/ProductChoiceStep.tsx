@@ -1,15 +1,17 @@
+import type { ReactNode } from 'react';
 import { ArrowRight, PlayCircle } from 'lucide-react';
 import { AgentIcon } from '@shuffleio/shuffle-mcps';
-import { RegionSwitcher } from '@/components/shared/RegionSwitcher';
 import shuffleInfraLogo from '@/assets/shuffle-infrastructure-logo.png';
 
 interface ProductChoiceStepProps {
   onSelectCore: () => void;
   onSelectSecurity: () => void;
   onStartDemo?: () => void;
+  /** Optional slot for a host-supplied region switcher (Shuffle Security renders one; the standalone library doesn't). */
+  regionSwitcher?: ReactNode;
 }
 
-export const ProductChoiceStep = ({ onSelectCore, onSelectSecurity, onStartDemo }: ProductChoiceStepProps) => {
+export const ProductChoiceStep = ({ onSelectCore, onSelectSecurity, onStartDemo, regionSwitcher }: ProductChoiceStepProps) => {
   return (
     <div className="w-full flex justify-center px-6 py-8">
       <div className="w-full max-w-4xl">
@@ -81,7 +83,7 @@ export const ProductChoiceStep = ({ onSelectCore, onSelectSecurity, onStartDemo 
           </div>
         )}
 
-        <RegionSwitcher className="mt-6" />
+        {regionSwitcher && <div className="mt-6">{regionSwitcher}</div>}
       </div>
     </div>
   );

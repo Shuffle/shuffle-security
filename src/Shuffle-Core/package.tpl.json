@@ -47,7 +47,10 @@
     "@emotion/styled": ">=11",
     "lucide-react": ">=0.300.0",
     "react-router-dom": ">=6",
-    "@shuffleio/shuffle-mcps": ">=0.0.1"
+    "@shuffleio/shuffle-mcps": ">=0.0.1",
+    "recharts": ">=2",
+    "date-fns": ">=2",
+    "framer-motion": ">=10"
   },
   "dependencies": {
     "algoliasearch": "^5.0.0",

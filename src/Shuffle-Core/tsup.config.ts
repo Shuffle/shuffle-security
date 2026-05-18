@@ -37,6 +37,10 @@ export default defineConfig({
     /^@tanstack\//,
     'tailwind-merge',
     'clsx',
+    'recharts',
+    'date-fns',
+    /^date-fns\//,
+    'framer-motion',
   ],
   loader: {
     '.css': 'copy',
