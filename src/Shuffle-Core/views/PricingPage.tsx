@@ -1684,22 +1684,32 @@ const PricingPage = ({
                           fontWeight: "bold",
                           mb: 1,
                           fontSize: "40px",
+                          display: "flex",
+                          flexDirection: "column",
+                          lineHeight: 1.1,
                           pt:
                             plan.type.toLowerCase() === "enterprise"
-                              ? (selectedDeployment === "Cloud" ? 2.2 : 4.5)
+                              ? (selectedDeployment === "Cloud" ? 0.6 : 4.5)
                               : plan.type.toLowerCase() === "scale"
                               ? 0
                               : plan.type.toLowerCase() === "open source"
                               ? 4.5
+                              : plan.type.toLowerCase() === "standard"
+                              ? 0.6
                               : 2.2,
                         }}
                       >
-                        {plan.type === "Scale"
-                          ? `$${getPrice(32) * (scaleValue / 10)}`
-                          : (plan.type === "Standard" ||
-                              (plan.type === "Enterprise" && selectedDeployment === "Cloud"))
-                          ? `Starts from ${plan.title}`
-                          : plan.title}
+                        {(plan.type === "Standard" ||
+                          (plan.type === "Enterprise" && selectedDeployment === "Cloud")) && (
+                          <span style={{ fontSize: "12px", fontWeight: 500, color: "#c5c5c5", letterSpacing: "0.3px" }}>
+                            Starts from
+                          </span>
+                        )}
+                        <span>
+                          {plan.type === "Scale"
+                            ? `$${getPrice(32) * (scaleValue / 10)}`
+                            : plan.title}
+                        </span>
                       </Typography>
 
                       {plan.type === "Scale" && (
