@@ -10,7 +10,7 @@
  * Standalone port (no host AuthContext / shadcn). Pass `orgId` + optional
  * `displayName`. API helpers come from `../../api` (Shuffle-Core).
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   Box, Typography, Skeleton, IconButton, Tooltip as MuiTooltip,
   Select, MenuItem, FormControl, InputLabel,
@@ -31,6 +31,8 @@ export interface AutomationDashboardProps extends ShuffleCoreHostProps {
   orgId?: string | null;
   /** Optional display name used in the greeting. Falls back to `userdata.username`. */
   displayName?: string;
+  /** Optional content rendered on the left of the header row (e.g. dashboard tabs). */
+  headerLeft?: React.ReactNode;
 }
 
 interface DailyStat {
@@ -72,9 +74,10 @@ export const AutomationDashboard = ({
   isLoggedIn = true,
   globalUrl,
   userdata,
+  headerLeft,
 }: AutomationDashboardProps) => {
   const orgId = orgIdProp ?? userdata?.active_org?.id ?? null;
-  const name = (displayName || userdata?.username || '').split('@')[0] || 'there';
+  const _name = (displayName || userdata?.username || '').split('@')[0] || 'there';
 
   const [stats, setStats] = useState<StatsResponse | null>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -235,11 +238,11 @@ export const AutomationDashboard = ({
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
-      {/* Header row with greeting + controls */}
-      <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
-        <Typography variant="h5" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-          {greeting()}, {name}!
-        </Typography>
+      {/* Header row — caller-supplied left content (e.g. dashboard tabs) + filters */}
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', minHeight: 36 }}>
+          {headerLeft}
+        </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
           <FormControl size="small" sx={{ minWidth: 130 }}>
             <InputLabel>Last</InputLabel>

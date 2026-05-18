@@ -1044,30 +1044,41 @@ const DashboardPage = () => {
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
       {!setupLoading && isSupport && (
         <Box sx={{ mb: 2, mt: 3, order: allComplete ? 0 : 2 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
-            <SegmentedControl
-              ariaLabel="Dashboard view"
-              value={dashboardTab}
-              onChange={(v) => setDashboardTab(v as 'security' | 'automation')}
-              options={[
-                { value: 'security', label: 'Security Operations' },
-                { value: 'automation', label: 'Automation' },
-              ]}
-            />
-          </Box>
-          {dashboardTab === 'automation' ? (
-            <AutomationDashboard />
-          ) : (
-            <DashboardOverview
-              incidents={overviewIncidents}
-              incidentsLoading={incidentsLoading}
-              vulnSeverityCounts={vulnSeverityCounts}
-              vulnLoading={vulnLoading}
-              monitorHostCount={hostMonitorCount}
-              runningSensorCount={runningSensorCount}
-              monitorsLoading={hasHostMonitor === null}
-            />
-          )}
+          {(() => {
+            const dashboardTabs = (
+              <SegmentedControl
+                ariaLabel="Dashboard view"
+                value={dashboardTab}
+                onChange={(v) => setDashboardTab(v as 'security' | 'automation')}
+                options={[
+                  { value: 'security', label: 'Security Operations' },
+                  { value: 'automation', label: 'Automation' },
+                ]}
+              />
+            );
+            return dashboardTab === 'automation' ? (
+              <AutomationDashboard headerLeft={dashboardTabs} />
+            ) : (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', minHeight: 36 }}>
+                    {dashboardTabs}
+                  </Box>
+                  {/* Filter slot — Security Operations has no filters today. */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }} />
+                </Box>
+                <DashboardOverview
+                  incidents={overviewIncidents}
+                  incidentsLoading={incidentsLoading}
+                  vulnSeverityCounts={vulnSeverityCounts}
+                  vulnLoading={vulnLoading}
+                  monitorHostCount={hostMonitorCount}
+                  runningSensorCount={runningSensorCount}
+                  monitorsLoading={hasHostMonitor === null}
+                />
+              </Box>
+            );
+          })()}
         </Box>
       )}
       <Box sx={{ order: 3 }}>
