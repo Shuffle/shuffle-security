@@ -435,7 +435,6 @@ export const AutomationDashboard = ({
           glow={NEON.red}
           value={totalFailed}
           label={`Failed ${isApps ? 'App' : 'Workflow'} Runs`}
-          spark={chartData.map(d => d.failed)}
           isLoading={loading}
           delay={0.1}
         />
