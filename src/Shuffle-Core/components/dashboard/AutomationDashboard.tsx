@@ -425,10 +425,7 @@ export const AutomationDashboard = ({
           label="Notifications"
           isLoading={loading}
           delay={0}
-          onClick={() => {
-            const el = document.getElementById('agent-notifications');
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }}
+          onClick={() => window.open('https://shuffler.io/admin?admin_tab=notifications', '_blank', 'noopener,noreferrer')}
         />
         <KpiTile
           icon={Workflow}
