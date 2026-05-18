@@ -1,4 +1,4 @@
-import { Globe, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -12,10 +12,10 @@ import { cn } from '@/lib/utils';
 export type RegionCode = 'us' | 'eu2' | 'ca' | 'uk' | 'aus';
 
 export const REGION_OPTIONS: { value: RegionCode; label: string; flag: string; url: string }[] = [
+  { value: 'uk', label: 'UK', flag: '🇬🇧', url: 'shuffler.io' },
   { value: 'us', label: 'US', flag: '🇺🇸', url: 'us.shuffler.io' },
   { value: 'eu2', label: 'EU-2', flag: '🇪🇺', url: 'eu2.shuffler.io' },
   { value: 'ca', label: 'CA', flag: '🇨🇦', url: 'ca.shuffler.io' },
-  { value: 'uk', label: 'UK', flag: '🇬🇧', url: 'shuffler.io' },
   { value: 'aus', label: 'AUS (test)', flag: '🇦🇺', url: 'aus.shuffler.io' },
 ];
 
@@ -39,7 +39,7 @@ export const RegionSwitcher = ({
 }: RegionSwitcherProps) => {
   const isSupport = useIsSupport();
   const disabled = forceDisabled || !isSupport;
-  const current = REGION_OPTIONS.find((o) => o.value === value);
+  
 
   return (
     <div className={cn('flex flex-col items-center gap-2', className)}>
@@ -50,14 +50,7 @@ export const RegionSwitcher = ({
       )}
       <Select value={value} onValueChange={(v) => onChange?.(v as RegionCode)} disabled={disabled}>
         <SelectTrigger className={cn('h-9 w-[220px]', triggerClassName)}>
-          <div className="flex items-center gap-2">
-            {current ? (
-              <span className="text-base leading-none">{current.flag}</span>
-            ) : (
-              <Globe className="h-4 w-4 text-muted-foreground" />
-            )}
-            <SelectValue />
-          </div>
+          <SelectValue />
         </SelectTrigger>
         <SelectContent>
           {REGION_OPTIONS.map((opt) => (
