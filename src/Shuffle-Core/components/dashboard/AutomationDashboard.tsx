@@ -366,51 +366,55 @@ export const AutomationDashboard = ({
     );
   }
 
+  const showHeader = !!headerLeft || !isDaysControlled || !isModeControlled || !isGranControlled || !hideRefresh;
+
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: showHeader ? 2 : 0 }}>
       {/* Header row — caller-supplied left content (e.g. dashboard tabs) + filters */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', minHeight: 36 }}>
-          {headerLeft}
+      {showHeader && (
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', minHeight: 36 }}>
+            {headerLeft}
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+            {!isDaysControlled && (
+              <FormControl size="small" sx={{ minWidth: 130 }}>
+                <InputLabel>Last</InputLabel>
+                <Select label="Last" value={days} onChange={(e) => setDays(String(e.target.value))}>
+                  {RANGE_OPTIONS.map(o => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
+                </Select>
+              </FormControl>
+            )}
+            {!isModeControlled && (
+              <Box sx={{ alignSelf: 'flex-end' }}>
+                <SegmentedControl
+                  ariaLabel="Mode"
+                  value={mode}
+                  onChange={(v) => setMode(v as ModeKind)}
+                  options={[{ value: 'workflows', label: 'Workflows' }, { value: 'apps', label: 'Apps' }]}
+                />
+              </Box>
+            )}
+            {!isGranControlled && (
+              <Box sx={{ alignSelf: 'flex-end' }}>
+                <SegmentedControl
+                  ariaLabel="Granularity"
+                  value={gran}
+                  onChange={(v) => setGran(v as GranKind)}
+                  options={[{ value: 'daily', label: 'Daily' }, { value: 'monthly', label: 'Monthly' }]}
+                />
+              </Box>
+            )}
+            {!hideRefresh && (
+              <MuiTooltip title="Refresh">
+                <IconButton size="small" onClick={() => load(true)} sx={{ color: 'hsl(var(--muted-foreground))', alignSelf: 'flex-end' }}>
+                  <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+                </IconButton>
+              </MuiTooltip>
+            )}
+          </Box>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-          {!isDaysControlled && (
-            <FormControl size="small" sx={{ minWidth: 130 }}>
-              <InputLabel>Last</InputLabel>
-              <Select label="Last" value={days} onChange={(e) => setDays(String(e.target.value))}>
-                {RANGE_OPTIONS.map(o => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
-              </Select>
-            </FormControl>
-          )}
-          {!isModeControlled && (
-            <Box sx={{ alignSelf: 'flex-end' }}>
-              <SegmentedControl
-                ariaLabel="Mode"
-                value={mode}
-                onChange={(v) => setMode(v as ModeKind)}
-                options={[{ value: 'workflows', label: 'Workflows' }, { value: 'apps', label: 'Apps' }]}
-              />
-            </Box>
-          )}
-          {!isGranControlled && (
-            <Box sx={{ alignSelf: 'flex-end' }}>
-              <SegmentedControl
-                ariaLabel="Granularity"
-                value={gran}
-                onChange={(v) => setGran(v as GranKind)}
-                options={[{ value: 'daily', label: 'Daily' }, { value: 'monthly', label: 'Monthly' }]}
-              />
-            </Box>
-          )}
-          {!hideRefresh && (
-            <MuiTooltip title="Refresh">
-              <IconButton size="small" onClick={() => load(true)} sx={{ color: 'hsl(var(--muted-foreground))', alignSelf: 'flex-end' }}>
-                <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
-              </IconButton>
-            </MuiTooltip>
-          )}
-        </Box>
-      </Box>
+      )}
 
       {/* KPI tiles */}
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 1.5 }}>
