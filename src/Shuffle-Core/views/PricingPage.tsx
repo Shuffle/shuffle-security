@@ -193,7 +193,7 @@ const PricingPage = ({
     py: 1,
   };
 
-  const checkIcon = <CheckLucide size={16} strokeWidth={3} color="#FF6600" aria-label="check" />;
+  const checkIcon = <CheckLucide size={16} strokeWidth={3} color="#ffffff" aria-label="check" />;
 
   // Button actions for pricing plans
   const openSourceButtonAction = () => {
@@ -2788,6 +2788,9 @@ const PricingPage = ({
                         p: 1.5,
                         mx: "auto",
                         textAlign: "center",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
                     >
                       {included.plan === "Enterprise"
@@ -2944,6 +2947,9 @@ const PricingPage = ({
                               p: 1.5,
                               mx: "auto",
                               textAlign: "center",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
                             }}
                           >
                             {included.plan === "Enterprise"
