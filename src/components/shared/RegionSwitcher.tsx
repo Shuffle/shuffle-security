@@ -9,13 +9,14 @@ import {
 import { useIsSupport } from '@/hooks/useIsSupport';
 import { cn } from '@/lib/utils';
 
-export type RegionCode = 'eu' | 'us' | 'ca' | 'onprem';
+export type RegionCode = 'us' | 'eu2' | 'ca' | 'uk' | 'aus';
 
-export const REGION_OPTIONS: { value: RegionCode; label: string; url: string }[] = [
-  { value: 'eu', label: 'Europe', url: 'shuffler.io' },
-  { value: 'us', label: 'United States', url: 'us.shuffler.io' },
-  { value: 'ca', label: 'Canada', url: 'ca.shuffler.io' },
-  { value: 'onprem', label: 'Self-hosted / On-prem', url: '' },
+export const REGION_OPTIONS: { value: RegionCode; label: string; flag: string; url: string }[] = [
+  { value: 'us', label: 'US', flag: '🇺🇸', url: 'us.shuffler.io' },
+  { value: 'eu2', label: 'EU-2', flag: '🇪🇺', url: 'eu2.shuffler.io' },
+  { value: 'ca', label: 'CA', flag: '🇨🇦', url: 'ca.shuffler.io' },
+  { value: 'uk', label: 'UK', flag: '🇬🇧', url: 'shuffler.io' },
+  { value: 'aus', label: 'AUS (test)', flag: '🇦🇺', url: 'aus.shuffler.io' },
 ];
 
 interface RegionSwitcherProps {
@@ -29,7 +30,7 @@ interface RegionSwitcherProps {
 }
 
 export const RegionSwitcher = ({
-  value = 'eu',
+  value = 'uk',
   onChange,
   forceDisabled = false,
   showLabel = true,
@@ -38,6 +39,7 @@ export const RegionSwitcher = ({
 }: RegionSwitcherProps) => {
   const isSupport = useIsSupport();
   const disabled = forceDisabled || !isSupport;
+  const current = REGION_OPTIONS.find((o) => o.value === value);
 
   return (
     <div className={cn('flex flex-col items-center gap-2', className)}>
@@ -47,16 +49,23 @@ export const RegionSwitcher = ({
         </label>
       )}
       <Select value={value} onValueChange={(v) => onChange?.(v as RegionCode)} disabled={disabled}>
-        <SelectTrigger className={cn('h-9 w-[260px]', triggerClassName)}>
+        <SelectTrigger className={cn('h-9 w-[220px]', triggerClassName)}>
           <div className="flex items-center gap-2">
-            <Globe className="h-4 w-4 text-muted-foreground" />
+            {current ? (
+              <span className="text-base leading-none">{current.flag}</span>
+            ) : (
+              <Globe className="h-4 w-4 text-muted-foreground" />
+            )}
             <SelectValue />
           </div>
         </SelectTrigger>
         <SelectContent>
           {REGION_OPTIONS.map((opt) => (
             <SelectItem key={opt.value} value={opt.value}>
-              {opt.label}{opt.url ? ` — ${opt.url}` : ''}
+              <span className="flex items-center gap-2">
+                <span className="text-base leading-none">{opt.flag}</span>
+                <span>{opt.label}</span>
+              </span>
             </SelectItem>
           ))}
         </SelectContent>
