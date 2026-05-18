@@ -50,14 +50,7 @@ export const RegionSwitcher = ({
       )}
       <Select value={value} onValueChange={(v) => onChange?.(v as RegionCode)} disabled={disabled}>
         <SelectTrigger className={cn('h-9 w-[220px]', triggerClassName)}>
-          <div className="flex items-center gap-2">
-            {current ? (
-              <span className="text-base leading-none">{current.flag}</span>
-            ) : (
-              <Globe className="h-4 w-4 text-muted-foreground" />
-            )}
-            <SelectValue />
-          </div>
+          <SelectValue />
         </SelectTrigger>
         <SelectContent>
           {REGION_OPTIONS.map((opt) => (
