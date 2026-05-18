@@ -32,7 +32,8 @@ export default defineConfig({
     'react-dom',
     'react/jsx-runtime',
     // Host-app provided peers — never bundle:
-    /^@mui\//,
+    '@mui/material',
+    '@mui/system',
     /^@emotion\//,
     'framer-motion',
     'sonner',
