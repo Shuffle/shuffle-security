@@ -124,6 +124,10 @@ export const AutomationDashboard = ({
   headerLeft,
   days: daysProp,
   onDaysChange,
+  gran: granProp,
+  onGranChange,
+  refreshKey,
+  hideRefresh,
 }: AutomationDashboardProps) => {
   const orgId = orgIdProp ?? userdata?.active_org?.id ?? null;
   const _name = (displayName || userdata?.username || '').split('@')[0] || 'there';
@@ -142,7 +146,13 @@ export const AutomationDashboard = ({
     if (!isDaysControlled) setDaysInternal(v);
   };
   const [mode, setMode] = useState<ModeKind>('workflows');
-  const [gran, setGran] = useState<GranKind>('daily');
+  const isGranControlled = granProp !== undefined;
+  const [granInternal, setGranInternal] = useState<GranKind>('daily');
+  const gran = isGranControlled ? (granProp as GranKind) : granInternal;
+  const setGran = (v: GranKind) => {
+    if (onGranChange) onGranChange(v);
+    if (!isGranControlled) setGranInternal(v);
+  };
 
 
   const buildUrl = (path: string) =>
