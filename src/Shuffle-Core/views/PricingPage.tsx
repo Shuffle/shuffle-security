@@ -229,14 +229,12 @@ const PricingPage = ({
   };
 
   const scaleButtonAction = () => {
-    if (isLoggedIn) {
-      if(isCloud){
-        ReactGA.event({
-          category: 'NewPricingPage',
-          action: 'Scale Plan Selected',
-          label: 'User is logged in',
-        });
-      }
+    if (isLoggedIn && isCloud) {
+      ReactGA.event({
+        category: 'NewPricingPage',
+        action: 'Scale Plan Selected',
+        label: 'User is logged in',
+      });
       isLoggedInHandler();
     } else {
       if(isCloud){
