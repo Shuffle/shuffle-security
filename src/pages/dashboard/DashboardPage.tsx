@@ -37,6 +37,8 @@ import { useDatastore } from '@/hooks/useDatastore';
 import { DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import { useVulnerabilities } from '@/hooks/useVulnerabilities';
 import { DashboardOverview } from '@/components/dashboard/DashboardOverview';
+import { AutomationDashboard } from '@/components/dashboard/AutomationDashboard';
+import { SegmentedControl } from '@/components/ui/segmented-control';
 import { useAuth } from '@/context/AuthContext';
 import { useSubOrgs } from '@/hooks/useSubOrgs';
 import { ChevronDown, ChevronUp } from 'lucide-react';
