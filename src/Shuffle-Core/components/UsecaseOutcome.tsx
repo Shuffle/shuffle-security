@@ -161,8 +161,8 @@ export function UsecaseOutcomeSection({
         <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: 0.6 }}>
           Outcome · last {outcome.windowDays} days
         </Typography>
-        {!outcome.isEmpty && <Sparkline trendPct={outcome.trendPct} />}
       </Box>
+
 
       {outcome.isEmpty ? (
         <Typography sx={{ fontSize: '0.85rem', color: MUTED }}>
