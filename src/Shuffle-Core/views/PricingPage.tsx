@@ -1977,17 +1977,10 @@ const PricingPage = ({
                                 },
                               }}
                             >
-                              <InfoOutlined
-                                sx={{
-                                  fontSize: "16px",
-                                  color: "#888",
-                                  ml: 1,
-                                  cursor: "help",
-                                  "&:hover": {
-                                    color: "#fff",
-                                  },
-                                }}
-                              />
+                              <Box component="span" sx={{ display: "inline-flex", alignItems: "center", ml: 1, color: "#888", cursor: "help", "&:hover": { color: "#fff" } }}>
+                                <Info size={16} />
+                              </Box>
+
                             </Tooltip>
                           )}
                         </Box>
