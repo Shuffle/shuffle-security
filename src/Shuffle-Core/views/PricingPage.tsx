@@ -1355,20 +1355,22 @@ const PricingPage = ({
         >
           {getFilteredPlans().map((plan, index) => (
             <Grid
-              item
-              xs={12}
-              sm={12}
-              md={selectedDeployment === "Self-Hosted" ? 6 : 12}
-              lg={selectedDeployment === "Self-Hosted" ? 5 : 4}
+              size={{
+                xs: 12,
+                sm: 12,
+                md: selectedDeployment === "Self-Hosted" ? 6 : 4,
+                lg: selectedDeployment === "Self-Hosted" ? 5 : 4,
+              }}
               key={index}
               sx={{
                 maxWidth: {
                   xs: "500px",
-                  md: selectedDeployment === "Self-Hosted" ? "590px" : "510px",
+                  md: selectedDeployment === "Self-Hosted" ? "590px" : "100%",
                   lg: "100%",
                 },
               }}
             >
+
               <Box
                 sx={{
                   position: "relative",
