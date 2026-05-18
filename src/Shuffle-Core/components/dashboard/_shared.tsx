@@ -25,6 +25,81 @@ export const NEON = {
   orange: '#FF6600', // brand
 } as const;
 
+// ── Time-bucketing ─────────────────────────────────────────────────────────
+// Shared across dashboards so each "section" (bar / area segment) is always
+// the same width regardless of the time range. Daily = one bucket per day,
+// Monthly = one bucket per calendar month covering the range.
+export type Granularity = 'daily' | 'monthly';
+
+export interface TimeBucket {
+  /** Stable key (ISO date for day, `YYYY-MM` for month). */
+  key: string;
+  /** Display label (e.g. `Mar 12` or `Mar 2024`). */
+  label: string;
+  /** Start of the bucket as ms since epoch. */
+  startMs: number;
+  /** End of the bucket (exclusive) as ms since epoch. */
+  endMs: number;
+}
+
+const startOfDayMs = (ms: number): number => {
+  const d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime();
+};
+const startOfMonthMs = (ms: number): number => {
+  const d = new Date(ms); d.setDate(1); d.setHours(0, 0, 0, 0); return d.getTime();
+};
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+/** Build N evenly-spaced buckets ending today, oldest first. */
+export const buildBuckets = (days: number, gran: Granularity): TimeBucket[] => {
+  const out: TimeBucket[] = [];
+  const now = Date.now();
+  if (gran === 'monthly') {
+    // How many months are needed to fully cover the requested range?
+    const cutoffMs = startOfDayMs(now - (days - 1) * 86400_000);
+    const startBucket = startOfMonthMs(cutoffMs);
+    const d = new Date(startBucket);
+    while (d.getTime() <= now) {
+      const startMs = d.getTime();
+      const next = new Date(d); next.setMonth(next.getMonth() + 1);
+      out.push({
+        key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+        label: `${MONTHS[d.getMonth()]} ${d.getFullYear()}`,
+        startMs,
+        endMs: next.getTime(),
+      });
+      d.setMonth(d.getMonth() + 1);
+    }
+    return out;
+  }
+  // daily
+  for (let i = days - 1; i >= 0; i--) {
+    const startMs = startOfDayMs(now - i * 86400_000);
+    const dt = new Date(startMs);
+    out.push({
+      key: dt.toISOString().slice(0, 10),
+      label: `${MONTHS[dt.getMonth()]} ${dt.getDate()}`,
+      startMs,
+      endMs: startMs + 86400_000,
+    });
+  }
+  return out;
+};
+
+/** Find the bucket index covering a given ms timestamp, or -1. */
+export const bucketIndexOf = (buckets: TimeBucket[], ms: number): number => {
+  // buckets are sorted ascending; do a binary search.
+  let lo = 0, hi = buckets.length - 1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    const b = buckets[mid];
+    if (ms < b.startMs) hi = mid - 1;
+    else if (ms >= b.endMs) lo = mid + 1;
+    else return mid;
+  }
+  return -1;
+};
+
 // Shared recharts tooltip — glass card, monospace numbers.
 export const TooltipContent = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
