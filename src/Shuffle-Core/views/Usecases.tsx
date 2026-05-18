@@ -1578,13 +1578,16 @@ function IntegrationStatusLite({
         arrow
       >
         <Box
+          onMouseEnter={() => onHover?.(integration)}
+          onMouseLeave={() => onHover?.(null)}
+          onClick={onSelect ? () => onSelect(integration) : undefined}
           sx={{
             position: 'relative',
             width: 32,
             height: 32,
             flexShrink: 0,
             borderRadius: '50% !important',
-            border: `1px solid ${borderColor}`,
+            border: `${selectedId === integration.id ? '2px' : '1px'} solid ${selectedId === integration.id ? 'hsl(var(--primary))' : borderColor}`,
             // overflow visible so the status dot can sit outside the circle
             overflow: 'visible',
             bgcolor: bgColor,
@@ -1593,6 +1596,7 @@ function IntegrationStatusLite({
             justifyContent: 'center',
             opacity: isReady ? 1 : 0.45,
             filter: isReady ? 'none' : 'grayscale(1)',
+            cursor: onSelect ? 'pointer' : 'default',
             transition: 'transform 0.15s ease, opacity 0.15s ease, filter 0.15s ease',
             '&:hover': {
               transform: 'scale(1.1)',
