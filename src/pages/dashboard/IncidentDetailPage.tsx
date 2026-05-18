@@ -2150,8 +2150,9 @@ const IncidentDetailPage = () => {
     });
     if (!reParsed) return;
 
-    console.log('[OCSF Fallback] Recovered from revision', new Date(ocsfBaseTs).toISOString(),
-      `with ${overlaidFieldCount} new field(s) overlaid`);
+    console.log('[OCSF Fallback] Recovered by folding', recoveredRevisionCount,
+      'OCSF revision(s); newest at', new Date(newestRevisionTs).toISOString(),
+      `— ${overlaidFieldCount} field(s) overlaid from live`);
 
     setIncident(reParsed);
     setEditedTitle(reParsed.title);
