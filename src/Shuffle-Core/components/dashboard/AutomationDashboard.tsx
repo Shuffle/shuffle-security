@@ -403,8 +403,8 @@ export const AutomationDashboard = ({
         />
       </Box>
 
-      {/* Hero chart + success rate gauges */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 1.5 }}>
+      {/* Hero chart */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: 1.5 }}>
         <Panel
           title={`${isApps ? 'App' : 'Workflow'} Activity`}
           accent={NEON.green}
@@ -450,23 +450,6 @@ export const AutomationDashboard = ({
                   <Area type="monotone" dataKey="failed" stroke={NEON.red} strokeWidth={2} fill="url(#auto-grad-failed)" name="Failed" isAnimationActive={false} />
                 </AreaChart>
               </ResponsiveContainer>
-            )}
-          </Box>
-        </Panel>
-
-        <Panel title={`${isApps ? 'App' : 'Workflow'} Success Rates`} accent={NEON.cyan} delay={0.25}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, justifyContent: 'center', flex: 1, minHeight: 240 }}>
-            {(totalSuccess + totalFailed) <= 2 ? (
-              <EmptyState
-                text="Run a few workflows to see success rates"
-                ctaLabel="Build a workflow"
-                onCta={() => navigate('/workflows')}
-              />
-            ) : (
-              <>
-                <Gauge value={successRate} color={NEON.green} label="Successful runs" />
-                <Gauge value={failRate} color={NEON.red} label="Failed runs" />
-              </>
             )}
           </Box>
         </Panel>
