@@ -79,8 +79,5 @@ export const RegionSwitcher = ({
     </div>
   );
 };
-    </div>
-  );
-};
 
 export default RegionSwitcher;
