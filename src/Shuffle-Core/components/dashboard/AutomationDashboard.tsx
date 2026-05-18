@@ -193,22 +193,38 @@ export const AutomationDashboard = ({
   const daily = stats?.daily_statistics || [];
   const rangeDays = parseInt(days, 10);
 
+  // Time buckets (daily or monthly) — every chart in this dashboard renders
+  // one section per bucket, so widths are uniform regardless of range.
+  const buckets = useMemo(() => buildBuckets(rangeDays, gran), [rangeDays, gran]);
+
   const filtered = useMemo(() => {
-    const cutoff = Date.now() - rangeDays * 86400_000;
+    const cutoff = buckets[0]?.startMs ?? (Date.now() - rangeDays * 86400_000);
     return daily
       .filter(d => new Date(d.date).getTime() >= cutoff)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [daily, rangeDays]);
+  }, [daily, rangeDays, buckets]);
 
   const isApps = mode === 'apps';
   const successKey = isApps ? 'app_executions' : 'workflow_executions_finished';
   const failedKey = isApps ? 'app_executions_failed' : 'workflow_executions_failed';
 
-  const chartData = useMemo(() => filtered.map(d => ({
-    date: d.date.slice(5, 10),
-    success: (d as any)[successKey] || 0,
-    failed: (d as any)[failedKey] || 0,
-  })), [filtered, successKey, failedKey]);
+  /** Sum a numeric daily-stats field into the configured buckets. */
+  const bucketed = (key: string): number[] => {
+    const acc = new Array(buckets.length).fill(0);
+    for (const d of filtered) {
+      const ms = new Date(d.date).getTime();
+      const idx = bucketIndexOf(buckets, ms);
+      if (idx >= 0) acc[idx] += Number((d as any)[key]) || 0;
+    }
+    return acc;
+  };
+
+  const chartData = useMemo(() => {
+    const s = bucketed(successKey);
+    const f = bucketed(failedKey);
+    return buckets.map((b, i) => ({ date: b.label, success: s[i], failed: f[i] }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [buckets, filtered, successKey, failedKey]);
 
   const totalSuccess = chartData.reduce((s, d) => s + d.success, 0);
   const totalFailed = chartData.reduce((s, d) => s + d.failed, 0);
