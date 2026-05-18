@@ -242,7 +242,7 @@ export const DashboardOverview = ({
               <Skeleton variant="rounded" height={260} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
             ) : trendHasData ? (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={trendData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+                <AreaChart data={trendData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }} {...trendDrag.chartProps}>
                   <defs>
                     {Object.entries(STATUS_COLORS).map(([k, c]) => (
                       <linearGradient key={k} id={`ov-grad-${k.replace(/\s/g, '')}`} x1="0" y1="0" x2="0" y2="1">
@@ -267,6 +267,9 @@ export const DashboardOverview = ({
                       isAnimationActive={false}
                     />
                   ))}
+                  {trendDrag.refArea && (
+                    <ReferenceArea x1={trendDrag.refArea.x1} x2={trendDrag.refArea.x2} stroke="hsl(var(--primary))" strokeOpacity={0.4} fill="hsl(var(--primary))" fillOpacity={0.12} />
+                  )}
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
