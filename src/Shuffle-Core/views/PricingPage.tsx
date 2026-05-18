@@ -1682,7 +1682,7 @@ const PricingPage = ({
                           fontSize: "40px",
                           pt:
                             plan.type.toLowerCase() === "enterprise"
-                              ? 4.5
+                              ? (selectedDeployment === "Cloud" ? 2.2 : 4.5)
                               : plan.type.toLowerCase() === "scale"
                               ? 0
                               : plan.type.toLowerCase() === "open source"
