@@ -1338,7 +1338,7 @@ const DashboardPage = () => {
       </Box>
 
       {/* ── Setup Checklist ──────────────────────────────────────────────────── */}
-      <Box sx={{ mt: 5, order: allComplete ? 2 : 1 }}>
+      <Box sx={{ mt: 5, mb: allComplete ? 4 : 0, order: allComplete ? 2 : 1 }}>
         <Box
           sx={{
             display: 'flex',
