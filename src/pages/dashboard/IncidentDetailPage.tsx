@@ -1095,16 +1095,18 @@ const IncidentDetailPage = () => {
           normalizeToMs(b.edited ?? b.created) - normalizeToMs(a.edited ?? a.created)
         );
 
-        // Deduplicate by id/key only. We intentionally do NOT collapse
-        // consecutive revisions with the same "meaningful signature" anymore —
-        // hiding them made the Timeline misleading and blocked manual
-        // rollback/merge against the exact snapshot the user wanted. Each
-        // distinct stored revision now renders as its own Timeline entry.
+        // Deduplicate only on a true per-revision identifier. We must NOT
+        // dedup on `rev.key`, because every revision of an incident shares
+        // the same datastore key (the incident id) — that would collapse the
+        // whole history down to a single entry. We also do NOT collapse
+        // consecutive "semantically identical" snapshots anymore: hiding
+        // them made the Timeline misleading and blocked manual
+        // rollback/merge against the exact snapshot the user wanted.
         const seenRevisionIds = new Set<string>();
         const deduped: any[] = [];
 
         for (const rev of sorted) {
-          const revisionId = rev?.id || rev?.key;
+          const revisionId = rev?.id || rev?.revision_id || rev?.revisionId;
           if (revisionId) {
             if (seenRevisionIds.has(revisionId)) continue;
             seenRevisionIds.add(revisionId);
