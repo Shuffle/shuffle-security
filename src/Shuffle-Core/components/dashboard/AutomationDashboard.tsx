@@ -403,8 +403,8 @@ export const AutomationDashboard = ({
         />
       </Box>
 
-      {/* Hero chart + success rate gauges */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 1.5 }}>
+      {/* Hero chart */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr', gap: 1.5 }}>
         <Panel
           title={`${isApps ? 'App' : 'Workflow'} Activity`}
           accent={NEON.green}
