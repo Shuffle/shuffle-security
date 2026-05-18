@@ -32,6 +32,8 @@ import ReactGA from 'react-ga4';
 import shuffleSecurityIcon from '../assets/shuffle-icon.png';
 import UsecaseAlluvialDiagram from './UsecaseAlluvialDiagram';
 import { AppSearchDrawer } from '@shuffleio/shuffle-mcps';
+import { useUsecaseOutcomes } from '../hooks/useUsecaseOutcomes';
+import { UsecaseOutcomeSection } from '../components/UsecaseOutcome';
 // ── Flow phases ────────────────────────────────────────────────────────────────
 
 export type FlowPhase = 'ingest' | 'response' | 'correlation';
@@ -1709,6 +1711,13 @@ const ACTIVE_USECASE_IDS = [
   'threat_intel_cloud_1',
 ];
 
+// Small wrapper so UsecaseDetailContent can render an Outcome block without
+// threading the outcomes map through every call site.
+function FlowOutcomeBlock({ flow, sourceCategoryLabel }: { flow: Usecase; sourceCategoryLabel?: string }) {
+  const { getOutcome } = useUsecaseOutcomes([flow]);
+  return <UsecaseOutcomeSection outcome={getOutcome(flow.id)} sourceCategoryLabel={sourceCategoryLabel} />;
+}
+
 function UsecaseDetailContent({
   flowId,
   hideBackNav = false,
@@ -2129,6 +2138,8 @@ function UsecaseDetailContent({
           </Box>
         </Box>
       </Box>
+
+      <FlowOutcomeBlock flow={flow} sourceCategoryLabel={sourceCat?.label} />
 
       {showConnectionPath && (
       <Box sx={{ p: 3, borderRadius: 2, border: CARD_BORDER, bgcolor: CARD_BG, mb: 3 }}>
