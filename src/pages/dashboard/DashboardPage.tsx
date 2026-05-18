@@ -46,7 +46,7 @@ import { AUTOMATION_RANGE_OPTIONS } from '@/Shuffle-Core';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { useAuth } from '@/context/AuthContext';
 import { useSubOrgs } from '@/hooks/useSubOrgs';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, X as CloseIcon } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 
 // ── Setup Step ─────────────────────────────────────────────────────────────────
@@ -556,6 +556,9 @@ const DashboardPage = () => {
     try { return ((localStorage.getItem('shuffle_dashboard_mode') as 'workflows' | 'apps') || 'workflows'); } catch { return 'workflows'; }
   });
   useEffect(() => { try { localStorage.setItem('shuffle_dashboard_mode', dashboardMode); } catch {} }, [dashboardMode]);
+  // Ephemeral custom date range — set when the user click-drags on a chart to
+  // zoom in. Cleared via the × on the "Last" select. Not persisted on purpose.
+  const [dashboardCustomRange, setDashboardCustomRange] = useState<{ fromMs: number; toMs: number } | null>(null);
   // Bumped by the shared refresh button — Automation watches this, Security re-fetches via handleDashboardRefresh.
   const [dashboardRefreshKey, setDashboardRefreshKey] = useState(0);
 
@@ -1084,11 +1087,43 @@ const DashboardPage = () => {
               try { fetchIncidents(); } catch { /* noop */ }
               try { refreshNotifications(); } catch { /* noop */ }
             };
+            const fmtShort = (ms: number) => {
+              const d = new Date(ms);
+              const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+              return `${M} ${d.getDate()}`;
+            };
+            const customRangeLabel = dashboardCustomRange
+              ? `${fmtShort(dashboardCustomRange.fromMs)} → ${fmtShort(dashboardCustomRange.toMs)}`
+              : null;
             const sharedControls = (
               <>
-                <FormControl size="small" sx={{ minWidth: 130 }}>
+                <FormControl size="small" sx={{ minWidth: customRangeLabel ? 220 : 130 }}>
                   <InputLabel>Last</InputLabel>
-                  <Select label="Last" value={dashboardDays} onChange={(e) => setDashboardDays(String(e.target.value))}>
+                  <Select
+                    label="Last"
+                    value={dashboardCustomRange ? '__custom__' : dashboardDays}
+                    onChange={(e) => {
+                      const v = String(e.target.value);
+                      if (v === '__custom__') return;
+                      setDashboardCustomRange(null);
+                      setDashboardDays(v);
+                    }}
+                    renderValue={() => customRangeLabel ?? (AUTOMATION_RANGE_OPTIONS.find(o => o.value === dashboardDays)?.label ?? `${dashboardDays} days`)}
+                    endAdornment={dashboardCustomRange ? (
+                      <IconButton
+                        size="small"
+                        onMouseDown={(e) => { e.stopPropagation(); }}
+                        onClick={(e) => { e.stopPropagation(); setDashboardCustomRange(null); }}
+                        sx={{ mr: 3, p: 0.25, color: 'hsl(var(--muted-foreground))' }}
+                        aria-label="Clear custom range"
+                      >
+                        <CloseIcon size={14} />
+                      </IconButton>
+                    ) : undefined}
+                  >
+                    {customRangeLabel && (
+                      <MenuItem value="__custom__" disabled>{customRangeLabel} (custom)</MenuItem>
+                    )}
                     {AUTOMATION_RANGE_OPTIONS.map(o => (
                       <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
                     ))}
@@ -1146,6 +1181,8 @@ const DashboardPage = () => {
                   onModeChange={setDashboardMode}
                   refreshKey={dashboardRefreshKey}
                   hideRefresh
+                  customRange={dashboardCustomRange}
+                  onRangeSelect={(fromMs, toMs) => setDashboardCustomRange({ fromMs, toMs })}
                 />
               </Box>
             ) : (
@@ -1161,6 +1198,8 @@ const DashboardPage = () => {
                   monitorsLoading={hasHostMonitor === null}
                   days={parseInt(dashboardDays, 10) || 30}
                   gran={dashboardGran}
+                  customRange={dashboardCustomRange}
+                  onRangeSelect={(fromMs, toMs) => setDashboardCustomRange({ fromMs, toMs })}
                 />
               </Box>
             );

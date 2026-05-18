@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 import { format, subDays, startOfDay } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-import { NEON, TooltipContent, KpiTile, Panel, EmptyState, buildBuckets, bucketIndexOf, type Granularity } from './_shared';
+import { NEON, TooltipContent, KpiTile, Panel, EmptyState, buildBuckets, buildBucketsBetween, bucketIndexOf, useChartRangeDrag, ReferenceArea, type Granularity } from './_shared';
 
 import type { ShuffleCoreHostProps } from '../../types/host-props';
 
@@ -50,6 +50,10 @@ export interface OverviewProps extends ShuffleCoreHostProps {
   days?: number;
   /** Bucketing granularity for the incident trend chart. Defaults to 'daily'. */
   gran?: Granularity;
+  /** Custom date range — when set, overrides `days` and is used for bucketing. */
+  customRange?: { fromMs: number; toMs: number } | null;
+  /** Called when the user click-drags on a chart to pick a range. */
+  onRangeSelect?: (fromMs: number, toMs: number) => void;
 }
 
 const STATUS_COLORS = {
@@ -68,6 +72,8 @@ export const DashboardOverview = ({
   monitorsLoading,
   days = 30,
   gran = 'daily',
+  customRange,
+  onRangeSelect,
   // Standard Shuffle-Core host props — accepted for API consistency across
   // components mounted in multiple places. Not currently consumed because this
   // surface is purely presentational over host-supplied data.
@@ -108,12 +114,18 @@ export const DashboardOverview = ({
     return arr;
   }, [incidents]);
 
+  const trendBuckets = useMemo(
+    () => customRange
+      ? buildBucketsBetween(customRange.fromMs, customRange.toMs, gran)
+      : buildBuckets(days, gran),
+    [days, gran, customRange],
+  );
+
   const trendData = useMemo(() => {
-    const buckets = buildBuckets(days, gran);
-    const rows = buckets.map(b => ({ date: b.label, New: 0, 'In Progress': 0, Resolved: 0 }));
+    const rows = trendBuckets.map(b => ({ date: b.label, New: 0, 'In Progress': 0, Resolved: 0 }));
     for (const inc of incidents) {
       if (!inc.createdTs) continue;
-      const idx = bucketIndexOf(buckets, inc.createdTs);
+      const idx = bucketIndexOf(trendBuckets, inc.createdTs);
       if (idx < 0) continue;
       const s = (inc.status || '').toLowerCase().replace(/[_\s]+/g, '');
       if (s === 'resolved' || s === 'closed') rows[idx].Resolved++;
@@ -121,9 +133,11 @@ export const DashboardOverview = ({
       else rows[idx].New++;
     }
     return rows;
-  }, [incidents, days, gran]);
+  }, [incidents, trendBuckets]);
 
   const trendHasData = trendData.some(d => d.New || d['In Progress'] || d.Resolved);
+
+  const trendDrag = useChartRangeDrag(trendBuckets, onRangeSelect);
 
   const vulnTotal =
     vulnSeverityCounts.critical + vulnSeverityCounts.high + vulnSeverityCounts.medium +
@@ -228,7 +242,7 @@ export const DashboardOverview = ({
               <Skeleton variant="rounded" height={260} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
             ) : trendHasData ? (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={trendData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+                <AreaChart data={trendData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }} {...trendDrag.chartProps}>
                   <defs>
                     {Object.entries(STATUS_COLORS).map(([k, c]) => (
                       <linearGradient key={k} id={`ov-grad-${k.replace(/\s/g, '')}`} x1="0" y1="0" x2="0" y2="1">
@@ -253,6 +267,9 @@ export const DashboardOverview = ({
                       isAnimationActive={false}
                     />
                   ))}
+                  {trendDrag.refArea && (
+                    <ReferenceArea x1={trendDrag.refArea.x1} x2={trendDrag.refArea.x2} stroke="hsl(var(--primary))" strokeOpacity={0.4} fill="hsl(var(--primary))" fillOpacity={0.12} />
+                  )}
                 </AreaChart>
               </ResponsiveContainer>
             ) : (

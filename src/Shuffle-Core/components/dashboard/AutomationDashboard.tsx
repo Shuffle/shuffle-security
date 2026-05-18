@@ -24,7 +24,7 @@ import { AlertCircle, RefreshCw, Zap, Workflow, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SegmentedControl } from '../ui/segmented-control';
 import { getApiUrl, getAuthHeader } from '../../api';
-import { NEON, TooltipContent, KpiTile, Panel, EmptyState, buildBuckets, bucketIndexOf } from './_shared';
+import { NEON, TooltipContent, KpiTile, Panel, EmptyState, buildBuckets, buildBucketsBetween, bucketIndexOf, useChartRangeDrag, ReferenceArea } from './_shared';
 
 import type { ShuffleCoreHostProps } from '../../types/host-props';
 
@@ -51,6 +51,10 @@ export interface AutomationDashboardProps extends ShuffleCoreHostProps {
   refreshKey?: number;
   /** When provided, hides the internal refresh button (parent owns it). */
   hideRefresh?: boolean;
+  /** Custom date range — when set, overrides `days` and is used for bucketing. */
+  customRange?: { fromMs: number; toMs: number } | null;
+  /** Called when the user click-drags on a chart to pick a range. */
+  onRangeSelect?: (fromMs: number, toMs: number) => void;
 }
 
 /** Time-range options shared with parents that render the Last filter themselves. */
@@ -134,6 +138,8 @@ export const AutomationDashboard = ({
   onModeChange,
   refreshKey,
   hideRefresh,
+  customRange,
+  onRangeSelect,
 }: AutomationDashboardProps) => {
   const orgId = orgIdProp ?? userdata?.active_org?.id ?? null;
   const _name = (displayName || userdata?.username || '').split('@')[0] || 'there';
@@ -214,12 +220,21 @@ export const AutomationDashboard = ({
 
   // Time buckets (daily or monthly) — every chart in this dashboard renders
   // one section per bucket, so widths are uniform regardless of range.
-  const buckets = useMemo(() => buildBuckets(rangeDays, gran), [rangeDays, gran]);
+  const buckets = useMemo(
+    () => customRange
+      ? buildBucketsBetween(customRange.fromMs, customRange.toMs, gran)
+      : buildBuckets(rangeDays, gran),
+    [rangeDays, gran, customRange],
+  );
 
   const filtered = useMemo(() => {
-    const cutoff = buckets[0]?.startMs ?? (Date.now() - rangeDays * 86400_000);
+    const start = buckets[0]?.startMs ?? (Date.now() - rangeDays * 86400_000);
+    const end = buckets[buckets.length - 1]?.endMs ?? Date.now();
     return daily
-      .filter(d => new Date(d.date).getTime() >= cutoff)
+      .filter(d => {
+        const ms = new Date(d.date).getTime();
+        return ms >= start && ms < end;
+      })
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [daily, rangeDays, buckets]);
 
@@ -333,6 +348,10 @@ export const AutomationDashboard = ({
     });
     return out;
   }, [statKeys, filtered]);
+
+  // Click-drag a range on any time-series chart to zoom the dashboard.
+  const activityDrag = useChartRangeDrag(buckets, onRangeSelect);
+  const statsDrag = useChartRangeDrag(buckets, onRangeSelect);
 
 
   if (loading) {
@@ -457,7 +476,7 @@ export const AutomationDashboard = ({
               />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+                <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }} {...activityDrag.chartProps}>
                   <defs>
                     <linearGradient id="auto-grad-success" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor={NEON.green} stopOpacity={0.55} />
@@ -474,6 +493,9 @@ export const AutomationDashboard = ({
                   <RechartsTooltip content={<TooltipContent />} cursor={{ stroke: NEON.violet, strokeOpacity: 0.3, strokeWidth: 1 }} />
                   <Area type="monotone" dataKey="success" stroke={NEON.green} strokeWidth={2} fill="url(#auto-grad-success)" name="Successful" isAnimationActive={false} />
                   <Area type="monotone" dataKey="failed" stroke={NEON.red} strokeWidth={2} fill="url(#auto-grad-failed)" name="Failed" isAnimationActive={false} />
+                  {activityDrag.refArea && (
+                    <ReferenceArea x1={activityDrag.refArea.x1} x2={activityDrag.refArea.x2} stroke="hsl(var(--primary))" strokeOpacity={0.4} fill="hsl(var(--primary))" fillOpacity={0.12} />
+                  )}
                 </AreaChart>
               </ResponsiveContainer>
             )}
@@ -548,7 +570,7 @@ export const AutomationDashboard = ({
             <EmptyState text={`No values for "${prettyStatLabel(selectedStat)}" in the last ${days} days`} />
                     ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={statSeries} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+              <BarChart data={statSeries} margin={{ top: 8, right: 8, left: -20, bottom: 0 }} {...statsDrag.chartProps}>
                 <defs>
                   <linearGradient id="auto-bar-fill" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor={NEON.violet} stopOpacity={1} />
@@ -560,6 +582,9 @@ export const AutomationDashboard = ({
                 <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} allowDecimals={false} width={32} />
                 <RechartsTooltip content={<TooltipContent />} cursor={{ fill: 'hsl(var(--muted) / 0.15)' }} />
                 <Bar dataKey="value" name={selectedStat ? prettyStatLabel(selectedStat) : 'value'} radius={[6, 6, 0, 0]} maxBarSize={64} fill="url(#auto-bar-fill)" />
+                {statsDrag.refArea && (
+                  <ReferenceArea x1={statsDrag.refArea.x1} x2={statsDrag.refArea.x2} stroke="hsl(var(--primary))" strokeOpacity={0.4} fill="hsl(var(--primary))" fillOpacity={0.12} />
+                )}
               </BarChart>
             </ResponsiveContainer>
           )}
