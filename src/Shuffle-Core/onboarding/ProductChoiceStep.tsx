@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { ArrowRight, PlayCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { AgentIcon } from '@shuffleio/shuffle-mcps';
 import shuffleInfraLogo from '@/assets/shuffle-infrastructure-logo.png';
 
@@ -71,7 +72,8 @@ export const ProductChoiceStep = ({ onSelectCore, onSelectSecurity, onStartDemo,
 
         {onStartDemo && (
           <div className="mt-6 flex justify-center">
-            <button
+            <motion.button
+              layoutId="onboarding-demo-cta"
               type="button"
               onClick={onStartDemo}
               className="group inline-flex h-9 items-center gap-2 rounded-md border border-border bg-transparent px-4 text-sm font-medium text-foreground transition-colors hover:border-primary hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
@@ -79,7 +81,7 @@ export const ProductChoiceStep = ({ onSelectCore, onSelectSecurity, onStartDemo,
               <PlayCircle className="h-4 w-4" />
               See it immediately — Try Demo Mode
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </button>
+            </motion.button>
           </div>
         )}
 
