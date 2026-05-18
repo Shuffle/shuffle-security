@@ -1480,7 +1480,7 @@ const PricingPage = ({
                             fontFamily: theme.typography.fontFamily,
                           }}
                         >
-                          {plan.type}
+                          {plan.displayType || plan.type}
                         </Typography>
                       </Box>
 
