@@ -7,7 +7,7 @@ const PricingPage: React.FC = () => {
   const theme = useTheme();
   const { isAuthenticated, isLoading, userInfo } = useAuth();
   return (
-    // @ts-expect-error — legacy PricingPage props are loosely typed
+    
     <PricingPageRaw
       theme={theme}
       stripeKey={undefined}
