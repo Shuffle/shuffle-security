@@ -19,6 +19,7 @@ import { resolveOutcomeKind, OUTCOME_PRIMARY_LABEL, type UsecaseOutcome, type Ou
 
 const INCIDENTS_CATEGORY = 'shuffle-security_incidents';
 const VULNS_CATEGORY = 'shuffle-security_vulnerabilities';
+const SENSORS_CATEGORY = 'shuffle-security_sensors';
 const IOC_TYPES = ['ipv4_addr', 'domain', 'sha256', 'email_addr', 'url'];
 
 interface UsecaseShape {
@@ -48,6 +49,7 @@ interface OutcomeBundle {
   incidents: { total: number; sample: SampledIncident[] };
   vulns: { total: number; sample: SampledVuln[] };
   iocs: Array<{ type: string; total: number }>;
+  sensors: { total: number };
   iconByName: Record<string, string>;
 }
 
@@ -185,13 +187,15 @@ async function fetchOutcomeBundle(): Promise<OutcomeBundle> {
       incidents: { total: 0, sample: [] },
       vulns: { total: 0, sample: [] },
       iocs: IOC_TYPES.map((type) => ({ type, total: 0 })),
+      sensors: { total: 0 },
       iconByName: {},
     };
   }
 
-  const [incidentsRes, vulnsRes, iconByName, ...iocResults] = await Promise.all([
+  const [incidentsRes, vulnsRes, sensorsRes, iconByName, ...iocResults] = await Promise.all([
     fetchListCache(orgId, INCIDENTS_CATEGORY, 100),
     fetchListCache(orgId, VULNS_CATEGORY, 100),
+    fetchListCache(orgId, SENSORS_CATEGORY, 1),
     fetchAppIconMap(),
     ...IOC_TYPES.map((t) => fetchListCache(orgId, `ioc_${t}`, 1)),
   ]);
@@ -219,6 +223,7 @@ async function fetchOutcomeBundle(): Promise<OutcomeBundle> {
     incidents: { total: incidentsRes.total, sample: incidentSample },
     vulns: { total: vulnsRes.total, sample: vulnSample },
     iocs: IOC_TYPES.map((type, idx) => ({ type, total: iocResults[idx].total })),
+    sensors: { total: sensorsRes.total },
     iconByName,
   };
 }
@@ -406,6 +411,26 @@ function deriveOutcome(usecase: UsecaseShape, bundle: OutcomeBundle): UsecaseOut
   if (notEnabled && outcome.isEmpty) {
     outcome.emptyReason = 'not_enabled';
   }
+
+  // Add Host-Monitors usecase: surface deployed sensor count alongside the
+  // primary "open vulnerabilities" figure so users see BOTH the value the
+  // automation produces and the prerequisite (host coverage) at a glance.
+  if (usecase.id === 'case_management_asset_management_monitors_1') {
+    outcome = {
+      ...outcome,
+      extraMetrics: [
+        {
+          label: 'host monitors deployed',
+          value: bundle.sensors.total,
+          emptyHint: bundle.sensors.total === 0 ? 'No host monitors deployed yet' : undefined,
+        },
+      ],
+      // Force the section to render even when there are zero vulnerabilities,
+      // so the monitors-deployed metric is always visible.
+      isEmpty: outcome.isEmpty && bundle.sensors.total === 0,
+    };
+  }
+
   return attachIcons(outcome, bundle.iconByName);
 }
 

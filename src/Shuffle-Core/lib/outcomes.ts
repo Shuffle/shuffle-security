@@ -35,6 +35,8 @@ export interface UsecaseOutcome {
   breakdown: OutcomeBreakdownEntry[];
   /** Optional secondary line, e.g. top hosts for vulns. */
   secondary?: { label: string; entries: OutcomeBreakdownEntry[] };
+  /** Optional additional headline metrics rendered beside the primary value. */
+  extraMetrics?: { label: string; value: number; emptyHint?: string }[];
   windowDays: 30;
   isEmpty: boolean;
   emptyReason?: 'not_enabled' | 'no_source_tool' | 'no_data_yet';
