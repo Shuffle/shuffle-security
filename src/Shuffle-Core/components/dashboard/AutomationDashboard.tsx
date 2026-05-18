@@ -156,6 +156,9 @@ export const AutomationDashboard = ({
   const notificationCount = useMemo(() => {
     const cutoff = Date.now() - rangeDays * 86400_000;
     return notifications.filter((n: any) => {
+      const type = String(n?.type || n?.notification_type || '').toLowerCase();
+      // Exclude agent-driven notifications (approvals, questions, handoffs, etc.)
+      if (type.startsWith('agent_') || type.startsWith('agent-')) return false;
       const raw = Number(n?.created_at) || 0;
       if (!raw) return false;
       const ms = raw < 1e12 ? raw * 1000 : raw;
