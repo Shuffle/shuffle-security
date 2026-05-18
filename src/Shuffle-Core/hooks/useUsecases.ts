@@ -6,7 +6,8 @@
 
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getApiUrl, shuffleFetch } from '@shuffleio/shuffle-mcps';
+import { getApiUrl } from '@shuffleio/shuffle-mcps';
+import { shuffleFetch } from '@/Shuffle-MCPs/api';
 import {
   DEFAULT_USECASES,
   type Usecase,
