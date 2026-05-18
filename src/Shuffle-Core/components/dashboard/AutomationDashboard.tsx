@@ -487,7 +487,7 @@ export const AutomationDashboard = ({
               onCta={() => window.open('https://shuffler.io/docs/API#count-stats-for-custom-key', '_blank', 'noopener,noreferrer')}
             />
           ) : statSeries.every(p => p.value === 0) ? (
-            <EmptyState text={`No values for "${selectedStat}" in the last ${days} days`} />
+            <EmptyState text={`No values for "${prettyStatLabel(selectedStat)}" in the last ${days} days`} />
                     ) : (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={statSeries} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
