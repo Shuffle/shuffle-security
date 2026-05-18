@@ -242,7 +242,7 @@ export const DashboardOverview = ({
               <Skeleton variant="rounded" height={260} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
             ) : trendHasData ? (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={trendData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }} {...trendDrag.chartProps}>
+                <AreaChart data={trendData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} {...trendDrag.chartProps}>
                   <defs>
                     {Object.entries(STATUS_COLORS).map(([k, c]) => (
                       <linearGradient key={k} id={`ov-grad-${k.replace(/\s/g, '')}`} x1="0" y1="0" x2="0" y2="1">
@@ -383,7 +383,7 @@ export const DashboardOverview = ({
             <Skeleton variant="rounded" height={200} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
           ) : vulnTotal > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={vulnData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+              <BarChart data={vulnData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                 <defs>
                   {vulnData.map((d) => (
                     <linearGradient key={d.gradId} id={d.gradId} x1="0" y1="0" x2="0" y2="1">
