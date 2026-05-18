@@ -7,10 +7,12 @@
 import { Box, Typography, Skeleton } from '@mui/material';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, type LucideIcon } from 'lucide-react';
+import { useCallback, useRef, useState } from 'react';
 import {
   ResponsiveContainer,
   LineChart,
   Line,
+  ReferenceArea,
 } from 'recharts';
 
 // Cyberpunk neon palette shared across dashboards.
