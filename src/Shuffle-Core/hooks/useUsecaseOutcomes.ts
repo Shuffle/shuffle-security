@@ -49,6 +49,7 @@ interface OutcomeBundle {
   incidents: { total: number; sample: SampledIncident[] };
   vulns: { total: number; sample: SampledVuln[] };
   iocs: Array<{ type: string; total: number }>;
+  sensors: { total: number };
   iconByName: Record<string, string>;
 }
 
