@@ -15,6 +15,10 @@ import {
   LinearProgress,
   Autocomplete,
   TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { AlertTriangle, CheckCircle, Loader2, HelpCircle, Clock, MessageSquare, ChevronRight, Plug, KeyRound, ArrowDownToLine, Send, Radar, Monitor, Shield, Sparkles, Check, ArrowRight, ExternalLink, EyeOff, Undo2, ExternalLink as OpenInNewIcon, RefreshCw as RefreshIcon } from 'lucide-react';
@@ -38,6 +42,7 @@ import { DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import { useVulnerabilities } from '@/hooks/useVulnerabilities';
 import { DashboardOverview } from '@/components/dashboard/DashboardOverview';
 import { AutomationDashboard } from '@/components/dashboard/AutomationDashboard';
+import { AUTOMATION_RANGE_OPTIONS } from '@/Shuffle-Core';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { useAuth } from '@/context/AuthContext';
 import { useSubOrgs } from '@/hooks/useSubOrgs';
@@ -536,6 +541,11 @@ const DashboardPage = () => {
     try { return (localStorage.getItem('shuffle_dashboard_tab') as 'security' | 'automation') || 'security'; } catch { return 'security'; }
   });
   useEffect(() => { try { localStorage.setItem('shuffle_dashboard_tab', dashboardTab); } catch {} }, [dashboardTab]);
+  // Shared time-range filter for both dashboard tabs (Security Operations + Automation).
+  const [dashboardDays, setDashboardDays] = useState<string>(() => {
+    try { return localStorage.getItem('shuffle_dashboard_days') || '30'; } catch { return '30'; }
+  });
+  useEffect(() => { try { localStorage.setItem('shuffle_dashboard_days', dashboardDays); } catch {} }, [dashboardDays]);
 
   // Incidents + vulnerabilities for the overview charts
   const currentOrgId = userInfo?.active_org?.id;
@@ -1056,16 +1066,31 @@ const DashboardPage = () => {
                 ]}
               />
             );
+            const rangeFilter = (
+              <FormControl size="small" sx={{ minWidth: 130 }}>
+                <InputLabel>Last</InputLabel>
+                <Select label="Last" value={dashboardDays} onChange={(e) => setDashboardDays(String(e.target.value))}>
+                  {AUTOMATION_RANGE_OPTIONS.map(o => (
+                    <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            );
             return dashboardTab === 'automation' ? (
-              <AutomationDashboard headerLeft={dashboardTabs} />
+              <AutomationDashboard
+                headerLeft={dashboardTabs}
+                days={dashboardDays}
+                onDaysChange={setDashboardDays}
+              />
             ) : (
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', minHeight: 36 }}>
                     {dashboardTabs}
                   </Box>
-                  {/* Filter slot — Security Operations has no filters today. */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }} />
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+                    {rangeFilter}
+                  </Box>
                 </Box>
                 <DashboardOverview
                   incidents={overviewIncidents}

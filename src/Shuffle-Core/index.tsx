@@ -44,6 +44,7 @@ export const RecentWorkflow = withTheme(RecentWorkflowRaw, 'RecentWorkflow');
 export const AutomationDashboard = withTheme(AutomationDashboardRaw, 'AutomationDashboard');
 export const DashboardOverview = withTheme(DashboardOverviewRaw, 'DashboardOverview');
 export type { AutomationDashboardProps } from './components/dashboard/AutomationDashboard';
+export { AUTOMATION_RANGE_OPTIONS } from './components/dashboard/AutomationDashboard';
 export type { ShuffleCoreHostProps } from './types/host-props';
 
 export default Usecases;

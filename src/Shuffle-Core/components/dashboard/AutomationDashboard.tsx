@@ -35,7 +35,19 @@ export interface AutomationDashboardProps extends ShuffleCoreHostProps {
   displayName?: string;
   /** Optional content rendered on the left of the header row (e.g. dashboard tabs). */
   headerLeft?: React.ReactNode;
+  /** Controlled time-range (in days). When provided, the internal "Last" filter is hidden — the parent owns it. */
+  days?: string;
+  /** Called when the user changes the time range. Required if `days` is controlled. */
+  onDaysChange?: (days: string) => void;
 }
+
+/** Time-range options shared with parents that render the Last filter themselves. */
+export const AUTOMATION_RANGE_OPTIONS = [
+  { value: '7', label: '7 days' },
+  { value: '30', label: '30 days' },
+  { value: '90', label: '90 days' },
+  { value: '365', label: '12 months' },
+];
 
 interface Addition { key: string; value: number }
 interface DailyStat {
@@ -59,12 +71,7 @@ interface StatsResponse {
 type ModeKind = 'workflows' | 'apps';
 type GranKind = 'daily' | 'monthly';
 
-const RANGE_OPTIONS = [
-  { value: '7', label: '7 days' },
-  { value: '30', label: '30 days' },
-  { value: '90', label: '90 days' },
-  { value: '365', label: '12 months' },
-];
+const RANGE_OPTIONS = AUTOMATION_RANGE_OPTIONS;
 
 const greeting = () => {
   const h = new Date().getHours();
@@ -82,6 +89,8 @@ export const AutomationDashboard = ({
   globalUrl,
   userdata,
   headerLeft,
+  days: daysProp,
+  onDaysChange,
 }: AutomationDashboardProps) => {
   const orgId = orgIdProp ?? userdata?.active_org?.id ?? null;
   const _name = (displayName || userdata?.username || '').split('@')[0] || 'there';
@@ -92,9 +101,16 @@ export const AutomationDashboard = ({
   const [selectedStat, setSelectedStat] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [days, setDays] = useState<string>('30');
+  const isDaysControlled = daysProp !== undefined;
+  const [daysInternal, setDaysInternal] = useState<string>('30');
+  const days = isDaysControlled ? (daysProp as string) : daysInternal;
+  const setDays = (v: string) => {
+    if (onDaysChange) onDaysChange(v);
+    if (!isDaysControlled) setDaysInternal(v);
+  };
   const [mode, setMode] = useState<ModeKind>('workflows');
   const [gran, setGran] = useState<GranKind>('daily');
+
 
   const buildUrl = (path: string) =>
     globalUrl ? `${globalUrl.replace(/\/$/, '')}${path}` : getApiUrl(path);
@@ -219,12 +235,14 @@ export const AutomationDashboard = ({
           {headerLeft}
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-          <FormControl size="small" sx={{ minWidth: 130 }}>
-            <InputLabel>Last</InputLabel>
-            <Select label="Last" value={days} onChange={(e) => setDays(String(e.target.value))}>
-              {RANGE_OPTIONS.map(o => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
-            </Select>
-          </FormControl>
+          {!isDaysControlled && (
+            <FormControl size="small" sx={{ minWidth: 130 }}>
+              <InputLabel>Last</InputLabel>
+              <Select label="Last" value={days} onChange={(e) => setDays(String(e.target.value))}>
+                {RANGE_OPTIONS.map(o => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
+              </Select>
+            </FormControl>
+          )}
           <Box sx={{ alignSelf: 'flex-end' }}>
             <SegmentedControl
               ariaLabel="Mode"
