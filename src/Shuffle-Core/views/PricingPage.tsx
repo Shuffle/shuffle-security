@@ -51,7 +51,7 @@ const PricingPage = ({
       : (isCloud ? "Cloud" : "Self-Hosted")
   ); // Could be Cloud or Self-Hosted
   const [selectedPlan, setSelectedPlan] = useState(
-    selectedDeployment === "Self-Hosted" ? "open source" : "starter"
+    selectedDeployment === "Self-Hosted" ? "open source" : "scale"
   );
   const [scaleValue, setScaleValue] = useState(
     (typeof window !== "undefined" && window.location?.search)
