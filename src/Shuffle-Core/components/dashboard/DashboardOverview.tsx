@@ -114,12 +114,18 @@ export const DashboardOverview = ({
     return arr;
   }, [incidents]);
 
+  const trendBuckets = useMemo(
+    () => customRange
+      ? buildBucketsBetween(customRange.fromMs, customRange.toMs, gran)
+      : buildBuckets(days, gran),
+    [days, gran, customRange],
+  );
+
   const trendData = useMemo(() => {
-    const buckets = buildBuckets(days, gran);
-    const rows = buckets.map(b => ({ date: b.label, New: 0, 'In Progress': 0, Resolved: 0 }));
+    const rows = trendBuckets.map(b => ({ date: b.label, New: 0, 'In Progress': 0, Resolved: 0 }));
     for (const inc of incidents) {
       if (!inc.createdTs) continue;
-      const idx = bucketIndexOf(buckets, inc.createdTs);
+      const idx = bucketIndexOf(trendBuckets, inc.createdTs);
       if (idx < 0) continue;
       const s = (inc.status || '').toLowerCase().replace(/[_\s]+/g, '');
       if (s === 'resolved' || s === 'closed') rows[idx].Resolved++;
@@ -127,9 +133,11 @@ export const DashboardOverview = ({
       else rows[idx].New++;
     }
     return rows;
-  }, [incidents, days, gran]);
+  }, [incidents, trendBuckets]);
 
   const trendHasData = trendData.some(d => d.New || d['In Progress'] || d.Resolved);
+
+  const trendDrag = useChartRangeDrag(trendBuckets, onRangeSelect);
 
   const vulnTotal =
     vulnSeverityCounts.critical + vulnSeverityCounts.high + vulnSeverityCounts.medium +
