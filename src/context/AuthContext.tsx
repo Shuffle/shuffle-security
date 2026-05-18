@@ -20,6 +20,7 @@ interface UserInfo {
   support?: boolean;
   app_execution_limit?: number;
   app_execution_usage?: number;
+  app_executions_suborgs?: number;
 }
 
 interface AuthContextType {
