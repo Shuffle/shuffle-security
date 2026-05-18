@@ -42,7 +42,7 @@ export const openSourcePlan = {
 export const pricingPlansData = [
   {
     type: "Scale",
-    displayType: "Starter + Scale",
+    displayType: "Starter",
     title: "$29",
     subtitle: "Start free with 2k App-Runs, then scale up with more App-Runs and higher limits as you grow.",
     price: 32, // Base price before discount calculation
