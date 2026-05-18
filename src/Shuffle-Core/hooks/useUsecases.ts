@@ -6,8 +6,7 @@
 
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/context/AuthContext';
-import { getApiUrl, shuffleFetch } from '@/Shuffle-MCPs/api';
+import { getApiUrl, shuffleFetch } from '@shuffleio/shuffle-mcps';
 import {
   DEFAULT_USECASES,
   type Usecase,
@@ -19,7 +18,13 @@ import {
   getAutomationLabels,
   apiCategoryToPhase,
   normalizeCategory,
-} from '@/config/usecases';
+} from '@/Shuffle-Core/config/usecases';
+
+// The host AuthContext is not available inside Shuffle-Core; treat
+// authentication as a cache-key seed only. Callers that need the actual auth
+// state should pass it via React Query invalidation. We default to `true` so
+// the cache key is stable in both standalone and host environments.
+const useAuth = () => ({ isAuthenticated: true });
 
 export type DriftType =
   | 'api_only'
