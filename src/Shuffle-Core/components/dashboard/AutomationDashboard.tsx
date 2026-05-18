@@ -18,11 +18,13 @@ import {
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip as RechartsTooltip, BarChart, Bar, RadialBarChart, RadialBar,
-  PolarAngleAxis,
+  PolarAngleAxis, Cell,
 } from 'recharts';
-import { AlertCircle, CheckCircle, RefreshCw, ExternalLink } from 'lucide-react';
+import { AlertCircle, CheckCircle, RefreshCw, ExternalLink, Zap, Workflow, Activity } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { SegmentedControl } from '../ui/segmented-control';
 import { getApiUrl, getAuthHeader } from '../../api';
+import { NEON, TooltipContent, KpiTile, Panel, EmptyState } from './_shared';
 
 import type { ShuffleCoreHostProps } from '../../types/host-props';
 
@@ -78,6 +80,7 @@ export const AutomationDashboard = ({
 }: AutomationDashboardProps) => {
   const orgId = orgIdProp ?? userdata?.active_org?.id ?? null;
   const _name = (displayName || userdata?.username || '').split('@')[0] || 'there';
+  const navigate = useNavigate();
 
   const [stats, setStats] = useState<StatsResponse | null>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -207,18 +210,6 @@ export const AutomationDashboard = ({
     }).length;
   }, [notifications, rangeDays]);
 
-  // Per-month aggregated counts for the bottom bar chart.
-  const monthData = useMemo(() => {
-    const map: Record<string, number> = {};
-    daily.forEach(d => {
-      const dt = new Date(d.date);
-      const k = dt.toLocaleString('en', { month: 'short' });
-      map[k] = (map[k] || 0) + ((d as any)[successKey] || 0) + ((d as any)[failedKey] || 0);
-    });
-    const order = ['Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May'];
-    return order.map(m => ({ month: m, runs: map[m] || 0 }));
-  }, [daily, successKey, failedKey]);
-
   if (loading) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 3 }}>
@@ -228,13 +219,6 @@ export const AutomationDashboard = ({
       </Box>
     );
   }
-
-  const cardSx = {
-    border: '1px solid hsl(var(--border))',
-    borderRadius: 2,
-    backgroundColor: 'hsl(var(--card))',
-    p: 3,
-  } as const;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
@@ -274,110 +258,121 @@ export const AutomationDashboard = ({
         </Box>
       </Box>
 
-      {/* Stat cards */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-        <Box sx={{ ...cardSx, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box>
-            <Typography sx={{ fontSize: '2rem', fontWeight: 700, color: 'hsl(var(--foreground))', lineHeight: 1.1 }}>
-              {notificationCount}
-            </Typography>
-            <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))', mt: 0.5 }}>
-              Notifications
-            </Typography>
-          </Box>
-          <AlertCircle size={22} style={{ color: 'hsl(var(--severity-high))' }} />
-        </Box>
-        <Box sx={{ ...cardSx, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Box>
-            <Typography sx={{ fontSize: '2rem', fontWeight: 700, color: 'hsl(var(--foreground))', lineHeight: 1.1 }}>
-              0
-            </Typography>
-            <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))', mt: 0.5 }}>
-              Errors resolved
-            </Typography>
-          </Box>
-          <CheckCircle size={22} style={{ color: 'hsl(var(--severity-low))' }} />
-        </Box>
+      {/* KPI tiles */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', md: 'repeat(4, 1fr)' }, gap: 1.5 }}>
+        <KpiTile
+          icon={AlertCircle}
+          glow={NEON.magenta}
+          value={notificationCount}
+          label="Notifications"
+          isLoading={loading}
+          delay={0}
+        />
+        <KpiTile
+          icon={Workflow}
+          glow={NEON.green}
+          value={totalSuccess}
+          label={`Successful ${isApps ? 'App' : 'Workflow'} Runs`}
+          spark={chartData.map(d => d.success)}
+          isLoading={loading}
+          delay={0.05}
+        />
+        <KpiTile
+          icon={Zap}
+          glow={NEON.red}
+          value={totalFailed}
+          label={`Failed ${isApps ? 'App' : 'Workflow'} Runs`}
+          spark={chartData.map(d => d.failed)}
+          isLoading={loading}
+          delay={0.1}
+        />
+        <KpiTile
+          icon={Activity}
+          glow={NEON.cyan}
+          value={`${successRate}%`}
+          label="Success rate"
+          isLoading={loading}
+          delay={0.15}
+        />
       </Box>
 
-      {/* Area chart + success rate gauges */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 2 }}>
-        <Box sx={cardSx}>
-          <Typography sx={{ fontSize: '0.95rem', fontWeight: 600, color: 'hsl(var(--foreground))', mb: 2 }}>
-            Successful vs Failed Runs ({isApps ? 'Apps' : 'Workflows'})
-          </Typography>
-          <Box sx={{ height: 280 }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 8, right: 12, left: -10, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="successFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(var(--severity-low))" stopOpacity={0.45} />
-                    <stop offset="100%" stopColor="hsl(var(--severity-low))" stopOpacity={0.02} />
-                  </linearGradient>
-                  <linearGradient id="failFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(var(--severity-high))" stopOpacity={0.45} />
-                    <stop offset="100%" stopColor="hsl(var(--severity-high))" stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} />
-                <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} />
-                <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }} />
-                <Area type="monotone" dataKey="success" stroke="hsl(var(--severity-low))" fill="url(#successFill)" strokeWidth={2} name="Successful" />
-                <Area type="monotone" dataKey="failed" stroke="hsl(var(--severity-high))" fill="url(#failFill)" strokeWidth={2} name="Failed" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 2, mt: 1.5 }}>
-            <LegendDot color="hsl(var(--severity-low))" label="Successful Runs" />
-            <LegendDot color="hsl(var(--severity-high))" label="Failed Runs" />
-            <Typography sx={{ ml: 'auto', fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>
-              X: Date (MM-DD)  |  Y: Runs
-            </Typography>
-          </Box>
-        </Box>
-
-        <Box sx={{ ...cardSx, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <Typography sx={{ fontSize: '0.95rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-            {isApps ? 'App' : 'Workflow'} Success Rates
-          </Typography>
-          <Gauge value={successRate} color="hsl(var(--severity-low))" label="Successful runs" />
-          <Gauge value={failRate} color="hsl(var(--severity-high))" label="Failed runs" />
-        </Box>
-      </Box>
-
-      {/* Bottom bar chart — custom stat from /api/v1/stats */}
-      <Box sx={cardSx}>
-        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2, gap: 2, flexWrap: 'wrap' }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, minWidth: 0 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography sx={{ fontSize: '0.95rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-                Custom Stats
-              </Typography>
-              <Box
-                component="span"
-                sx={{
-                  fontSize: '0.65rem',
-                  fontWeight: 600,
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase',
-                  px: 0.75,
-                  py: 0.2,
-                  borderRadius: 0.75,
-                  color: 'hsl(var(--primary))',
-                  border: '1px solid hsl(var(--primary) / 0.4)',
-                  bgcolor: 'hsl(var(--primary) / 0.08)',
-                }}
-              >
-                Track anything
-              </Box>
+      {/* Hero chart + success rate gauges */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 1.5 }}>
+        <Panel
+          title={`${isApps ? 'App' : 'Workflow'} Activity`}
+          accent={NEON.green}
+          delay={0.2}
+          action={
+            <Box sx={{ display: 'flex', gap: 1.5 }}>
+              {([['Successful', NEON.green], ['Failed', NEON.red]] as const).map(([label, color]) => (
+                <Box key={label} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: color }} />
+                  <Typography sx={{ fontSize: '0.68rem', color: 'hsl(var(--muted-foreground))', fontWeight: 500 }}>{label}</Typography>
+                </Box>
+              ))}
             </Box>
-            <Typography sx={{ fontSize: '0.78rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.45 }}>
-              Count anything across your tenant with a custom key — usage, runs, errors, tokens, business events. Increment from any workflow and it shows up here.
-            </Typography>
+          }
+        >
+          <Box sx={{ height: 260 }}>
+            {loading ? (
+              <Skeleton variant="rounded" height={260} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
+            ) : (totalSuccess + totalFailed) <= 2 ? (
+              <EmptyState
+                text={`Not enough ${isApps ? 'app' : 'workflow'} runs in this range to chart trends yet`}
+                ctaLabel="Build a workflow"
+                onCta={() => navigate('/workflows')}
+              />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="auto-grad-success" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={NEON.green} stopOpacity={0.55} />
+                      <stop offset="100%" stopColor={NEON.green} stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="auto-grad-failed" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={NEON.red} stopOpacity={0.55} />
+                      <stop offset="100%" stopColor={NEON.red} stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="2 4" stroke="hsl(var(--border))" strokeOpacity={0.35} vertical={false} />
+                  <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={32} />
+                  <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} allowDecimals={false} width={32} />
+                  <RechartsTooltip content={<TooltipContent />} cursor={{ stroke: NEON.violet, strokeOpacity: 0.3, strokeWidth: 1 }} />
+                  <Area type="monotone" dataKey="success" stroke={NEON.green} strokeWidth={2} fill="url(#auto-grad-success)" name="Successful" isAnimationActive={false} />
+                  <Area type="monotone" dataKey="failed" stroke={NEON.red} strokeWidth={2} fill="url(#auto-grad-failed)" name="Failed" isAnimationActive={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <FormControl size="small" sx={{ minWidth: 220 }}>
+        </Panel>
+
+        <Panel title={`${isApps ? 'App' : 'Workflow'} Success Rates`} accent={NEON.cyan} delay={0.25}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, justifyContent: 'center', flex: 1, minHeight: 240 }}>
+            {(totalSuccess + totalFailed) <= 2 ? (
+              <EmptyState
+                text="Run a few workflows to see success rates"
+                ctaLabel="Build a workflow"
+                onCta={() => navigate('/workflows')}
+              />
+            ) : (
+              <>
+                <Gauge value={successRate} color={NEON.green} label="Successful runs" />
+                <Gauge value={failRate} color={NEON.red} label="Failed runs" />
+              </>
+            )}
+          </Box>
+        </Panel>
+      </Box>
+
+      {/* Custom Stats */}
+      <Panel
+        title="Custom Stats"
+        accent={NEON.violet}
+        delay={0.3}
+        action={
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <FormControl size="small" sx={{ minWidth: 200 }}>
               <InputLabel>Find your Stat</InputLabel>
               <Select
                 label="Find your Stat"
@@ -405,50 +400,48 @@ export const AutomationDashboard = ({
               </IconButton>
             </MuiTooltip>
           </Box>
-        </Box>
-        {selectedStat && (
-          <Typography sx={{ fontSize: '0.78rem', color: 'hsl(var(--muted-foreground))', mb: 1.5 }}>
-            Showing <Box component="span" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>{selectedStat}</Box> · {statSeries.length} data points
-          </Typography>
-        )}
-        <Box sx={{ height: 320, position: 'relative' }}>
+        }
+      >
+        <Typography sx={{ fontSize: '0.78rem', color: 'hsl(var(--muted-foreground))', mb: 1.5, mt: -1 }}>
+          Count anything across your tenant with a custom key — usage, runs, errors, tokens, business events. Increment from any workflow and it shows up here.
+        </Typography>
+        <Box sx={{ height: 280 }}>
           {statLoading ? (
-            <Skeleton variant="rounded" height={320} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
-          ) : statSeries.length === 0 ? (
-            <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))' }}>
-                {selectedStat ? 'No data for this range' : 'Select a stat to view data'}
-              </Typography>
-            </Box>
+            <Skeleton variant="rounded" height={280} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
+          ) : statKeys.length <= 2 ? (
+            <EmptyState
+              text="No custom stats yet — start tracking any counter from your workflows and it shows up here."
+              ctaLabel="View Custom Stats API"
+              onCta={() => window.open('https://shuffler.io/docs/API#count-stats-for-custom-key', '_blank', 'noopener,noreferrer')}
+            />
+          ) : statSeries.length <= 2 ? (
+            <EmptyState
+              text={selectedStat ? `Not enough data points for "${selectedStat}" in this range` : 'Select a stat to view data'}
+              ctaLabel="View Custom Stats API"
+              onCta={() => window.open('https://shuffler.io/docs/API#count-stats-for-custom-key', '_blank', 'noopener,noreferrer')}
+            />
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={statSeries} margin={{ top: 8, right: 12, left: -10, bottom: 0 }}>
+              <BarChart data={statSeries} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="barFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
-                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                  <linearGradient id="auto-bar-fill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={NEON.violet} stopOpacity={1} />
+                    <stop offset="100%" stopColor={NEON.violet} stopOpacity={0.25} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} />
-                <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 11 }} />
-                <RechartsTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }} />
-                <Bar dataKey="value" name={selectedStat} fill="url(#barFill)" radius={[4, 4, 0, 0]} />
+                <CartesianGrid strokeDasharray="2 4" stroke="hsl(var(--border))" strokeOpacity={0.35} vertical={false} />
+                <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} interval="preserveStartEnd" minTickGap={32} />
+                <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} allowDecimals={false} width={32} />
+                <RechartsTooltip content={<TooltipContent />} cursor={{ fill: 'hsl(var(--muted) / 0.15)' }} />
+                <Bar dataKey="value" name={selectedStat || 'value'} radius={[6, 6, 0, 0]} maxBarSize={64} fill="url(#auto-bar-fill)" />
               </BarChart>
             </ResponsiveContainer>
           )}
         </Box>
-      </Box>
+      </Panel>
     </Box>
   );
 };
-
-const LegendDot = ({ color, label }: { color: string; label: string }) => (
-  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-    <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: color }} />
-    <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))' }}>{label}</Typography>
-  </Box>
-);
 
 const Gauge = ({ value, color, label }: { value: number; color: string; label: string }) => {
   const data = [{ name: 'v', value, fill: color }];
