@@ -210,18 +210,6 @@ export const AutomationDashboard = ({
     }).length;
   }, [notifications, rangeDays]);
 
-  // Per-month aggregated counts for the bottom bar chart.
-  const monthData = useMemo(() => {
-    const map: Record<string, number> = {};
-    daily.forEach(d => {
-      const dt = new Date(d.date);
-      const k = dt.toLocaleString('en', { month: 'short' });
-      map[k] = (map[k] || 0) + ((d as any)[successKey] || 0) + ((d as any)[failedKey] || 0);
-    });
-    const order = ['Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May'];
-    return order.map(m => ({ month: m, runs: map[m] || 0 }));
-  }, [daily, successKey, failedKey]);
-
   if (loading) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 3 }}>
@@ -231,13 +219,6 @@ export const AutomationDashboard = ({
       </Box>
     );
   }
-
-  const cardSx = {
-    border: '1px solid hsl(var(--border))',
-    borderRadius: 2,
-    backgroundColor: 'hsl(var(--card))',
-    p: 3,
-  } as const;
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
