@@ -83,7 +83,7 @@ export const ProductChoiceStep = ({ onSelectCore, onSelectSecurity, onStartDemo,
           </div>
         )}
 
-        <RegionSwitcher className="mt-6" />
+        {regionSwitcher && <div className="mt-6">{regionSwitcher}</div>}
       </div>
     </div>
   );
