@@ -30,7 +30,7 @@ interface RegionSwitcherProps {
 }
 
 export const RegionSwitcher = ({
-  value = 'eu',
+  value = 'uk',
   onChange,
   forceDisabled = false,
   showLabel = true,
@@ -39,6 +39,7 @@ export const RegionSwitcher = ({
 }: RegionSwitcherProps) => {
   const isSupport = useIsSupport();
   const disabled = forceDisabled || !isSupport;
+  const current = REGION_OPTIONS.find((o) => o.value === value);
 
   return (
     <div className={cn('flex flex-col items-center gap-2', className)}>
@@ -48,16 +49,23 @@ export const RegionSwitcher = ({
         </label>
       )}
       <Select value={value} onValueChange={(v) => onChange?.(v as RegionCode)} disabled={disabled}>
-        <SelectTrigger className={cn('h-9 w-[260px]', triggerClassName)}>
+        <SelectTrigger className={cn('h-9 w-[220px]', triggerClassName)}>
           <div className="flex items-center gap-2">
-            <Globe className="h-4 w-4 text-muted-foreground" />
+            {current ? (
+              <span className="text-base leading-none">{current.flag}</span>
+            ) : (
+              <Globe className="h-4 w-4 text-muted-foreground" />
+            )}
             <SelectValue />
           </div>
         </SelectTrigger>
         <SelectContent>
           {REGION_OPTIONS.map((opt) => (
             <SelectItem key={opt.value} value={opt.value}>
-              {opt.label}{opt.url ? ` — ${opt.url}` : ''}
+              <span className="flex items-center gap-2">
+                <span className="text-base leading-none">{opt.flag}</span>
+                <span>{opt.label}</span>
+              </span>
             </SelectItem>
           ))}
         </SelectContent>
@@ -68,6 +76,9 @@ export const RegionSwitcher = ({
           Region switching is restricted to Shuffle support.
         </p>
       )}
+    </div>
+  );
+};
     </div>
   );
 };
