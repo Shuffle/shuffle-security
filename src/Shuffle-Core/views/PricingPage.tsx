@@ -1732,7 +1732,7 @@ const PricingPage = ({
                             : isLoggedIn
                             ? "#c5c5c5"
                             : "#ff8544",
-                        backgroundColor:
+                        background:
                           plan.type.toLowerCase() === "enterprise"
                             ? "#2BC07E"
                             : plan.type.toLowerCase() === "scale" || plan.type.toLowerCase() === "open source"
@@ -1742,7 +1742,7 @@ const PricingPage = ({
                             : "transparent",
                         boxShadow: "none",
                         "&:hover": {
-                          backgroundColor:
+                          background:
                             plan.type.toLowerCase() === "enterprise"
                               ? "#3FDF98"
                               : plan.type.toLowerCase() === "scale" || plan.type.toLowerCase() === "open source"
