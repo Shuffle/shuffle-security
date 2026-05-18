@@ -10,7 +10,7 @@
  * Standalone port (no host AuthContext / shadcn). Pass `orgId` + optional
  * `displayName`. API helpers come from `../../api` (Shuffle-Core).
  */
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   Box, Typography, Skeleton, IconButton, Tooltip as MuiTooltip,
   Select, MenuItem, FormControl, InputLabel,
@@ -135,7 +135,14 @@ export const AutomationDashboard = ({
 
   const [stats, setStats] = useState<StatsResponse | null>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
-  const [selectedStat, setSelectedStat] = useState<string>('');
+  const [selectedStat, setSelectedStat] = useState<string>(() => {
+    if (typeof window === 'undefined') return '';
+    try { return localStorage.getItem('shuffle-automation-custom-stat') || ''; } catch { return ''; }
+  });
+  const pickSelectedStat = useCallback((key: string) => {
+    setSelectedStat(key);
+    try { localStorage.setItem('shuffle-automation-custom-stat', key); } catch {}
+  }, []);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const isDaysControlled = daysProp !== undefined;
@@ -280,8 +287,13 @@ export const AutomationDashboard = ({
   }, [stats]);
 
   useEffect(() => {
-    if (!selectedStat && statKeys.length) setSelectedStat(statKeys[0]);
-  }, [statKeys, selectedStat]);
+    if (!statKeys.length) return;
+    if (selectedStat && statKeys.includes(selectedStat)) return;
+    const firstWithData = statKeys.find(k =>
+      filtered.reduce((sum, d) => sum + valueForStat(d, k), 0) > 0
+    );
+    setSelectedStat(firstWithData || statKeys[0]);
+  }, [statKeys, selectedStat, filtered]);
 
   const valueForStat = (d: any, key: string): number => {
     const bare = key.startsWith('total_') ? key.slice(6) : key;
@@ -467,7 +479,7 @@ export const AutomationDashboard = ({
               displayEmpty
               label="Find your stat"
               value={selectedStat}
-              onChange={(e) => setSelectedStat(String(e.target.value))}
+              onChange={(e) => pickSelectedStat(String(e.target.value))}
               renderValue={(v) => (v ? prettyStatLabel(v as string) : 'Select stat')}
               MenuProps={{
                 PaperProps: {
