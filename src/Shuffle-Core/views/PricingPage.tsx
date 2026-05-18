@@ -2167,9 +2167,10 @@ const PricingPage = ({
               </Typography>
               <Button
                 disableRipple
-                component={Link}
+                component="a"
                 target="_blank"
-                to="/articles/Shuffle_Open_Source"
+                rel="noopener noreferrer"
+                href="https://shuffler.io/articles/Shuffle_Open_Source"
                 onClick={() => {
                   if (isCloud) {
                     ReactGA.event({
