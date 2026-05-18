@@ -337,7 +337,7 @@ const PricingPage = ({
         coreFeatures.style.borderBottom = "1px solid rgba(255, 255, 255, 0.1)";
         blurImage.style.display = "none";
       } else {
-        coreFeatures.style.backgroundColor = "transparent"; // Reset background color
+        coreFeatures.style.backgroundColor = "#1a1a1a"; // Keep solid background
         blurImage.style.display = "block";
         coreFeatures.style.boxShadow = "none";
         coreFeatures.style.marginLeft = "-15px";
