@@ -73,7 +73,7 @@ import {
 } from '@mui/x-date-pickers';
 
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { SegmentedControl } from "@/components/ui/segmented-control";
+import { SegmentedControl } from "./ui/segmented-control";
 
 const EditWorkflow = (props) => {
 	const { globalUrl, workflow, setWorkflow, modalOpen, setModalOpen, showUpload, usecases, setNewWorkflow, appFramework, isEditing, userdata, apps, saveWorkflow, expanded, scrollTo, setRealtimeMarkdown, setRealtimeInputQuestions, boxWidth, setBoxWidth, } = props
