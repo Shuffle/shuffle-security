@@ -43,23 +43,22 @@
     "react": ">=18",
     "react-dom": ">=18",
     "@mui/material": ">=5",
-    
     "@emotion/react": ">=11",
     "@emotion/styled": ">=11",
     "lucide-react": ">=0.300.0",
     "react-router-dom": ">=6",
-    "react-ga4": ">=2",
-    "react-device-detect": ">=2",
-    "mui-chips-input": "^2.1.0",
-    "react-toastify": ">=9",
-    "dayjs": ">=1",
-    "@shuffleio/shuffle-mcps": ">=0.0.1",
-    "@tanstack/react-query": ">=5",
-    "tailwind-merge": ">=2",
-    "clsx": ">=2"
+    "@shuffleio/shuffle-mcps": ">=0.0.1"
   },
   "dependencies": {
-    "algoliasearch": "^5.0.0"
+    "algoliasearch": "^5.0.0",
+    "@tanstack/react-query": "^5.0.0",
+    "react-ga4": "^2.1.0",
+    "react-device-detect": "^2.2.0",
+    "mui-chips-input": "^2.1.0",
+    "react-toastify": "^9.1.3",
+    "dayjs": "^1.11.0",
+    "tailwind-merge": "^2.0.0",
+    "clsx": "^2.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.0",
