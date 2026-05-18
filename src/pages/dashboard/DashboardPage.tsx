@@ -1181,6 +1181,8 @@ const DashboardPage = () => {
                   onModeChange={setDashboardMode}
                   refreshKey={dashboardRefreshKey}
                   hideRefresh
+                  customRange={dashboardCustomRange}
+                  onRangeSelect={(fromMs, toMs) => setDashboardCustomRange({ fromMs, toMs })}
                 />
               </Box>
             ) : (
@@ -1196,6 +1198,8 @@ const DashboardPage = () => {
                   monitorsLoading={hasHostMonitor === null}
                   days={parseInt(dashboardDays, 10) || 30}
                   gran={dashboardGran}
+                  customRange={dashboardCustomRange}
+                  onRangeSelect={(fromMs, toMs) => setDashboardCustomRange({ fromMs, toMs })}
                 />
               </Box>
             );
