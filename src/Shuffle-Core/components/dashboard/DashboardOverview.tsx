@@ -281,7 +281,7 @@ export const DashboardOverview = ({
         <Panel title="Detection Coverage" accent={NEON.cyan} delay={0.25}>
           <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', minHeight: 240 }}>
             {monitorsLoading ? (
-              <Skeleton variant="circular" width={160} height={160} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
+              <ChartShimmer height={220} variant="radial" label="Loading coverage" />
             ) : monitorTotal > 0 ? (
               <>
                 <ResponsiveContainer width="100%" height={220}>
