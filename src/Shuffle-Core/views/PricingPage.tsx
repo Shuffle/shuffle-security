@@ -517,7 +517,7 @@ const PricingPage = ({
                   }
                 }}
               >
-                <MessageCircle size={18} strokeWidth={1.8} aria-label="chat" />
+                <MessageCircle size={18} strokeWidth={1.8} color="#ffffff" aria-label="chat" />
                 Send us a message
               </Button>
               <Button
