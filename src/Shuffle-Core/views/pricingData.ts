@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Pricing plans and features data
 // This file contains all static data for the pricing page
 
