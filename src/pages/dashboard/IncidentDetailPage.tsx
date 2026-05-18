@@ -4616,7 +4616,7 @@ const IncidentDetailPage = () => {
 
         return (
           <Box
-            key={`rev-${rev.id || rev.key || item.idx}`}
+            key={itemKey}
             onClick={showAsCreation ? () => {
               // The "Incident created" entry points to the email evidence
               // when this incident is an email-sourced one. Scroll to the
