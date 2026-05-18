@@ -546,6 +546,13 @@ const DashboardPage = () => {
     try { return localStorage.getItem('shuffle_dashboard_days') || '30'; } catch { return '30'; }
   });
   useEffect(() => { try { localStorage.setItem('shuffle_dashboard_days', dashboardDays); } catch {} }, [dashboardDays]);
+  // Shared granularity for both dashboard tabs.
+  const [dashboardGran, setDashboardGran] = useState<'daily' | 'monthly'>(() => {
+    try { return ((localStorage.getItem('shuffle_dashboard_gran') as 'daily' | 'monthly') || 'daily'); } catch { return 'daily'; }
+  });
+  useEffect(() => { try { localStorage.setItem('shuffle_dashboard_gran', dashboardGran); } catch {} }, [dashboardGran]);
+  // Bumped by the shared refresh button — Automation watches this, Security re-fetches via handleDashboardRefresh.
+  const [dashboardRefreshKey, setDashboardRefreshKey] = useState(0);
 
   // Incidents + vulnerabilities for the overview charts
   const currentOrgId = userInfo?.active_org?.id;
