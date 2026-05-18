@@ -443,13 +443,6 @@ export const AutomationDashboard = ({
   );
 };
 
-const LegendDot = ({ color, label }: { color: string; label: string }) => (
-  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-    <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: color }} />
-    <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))' }}>{label}</Typography>
-  </Box>
-);
-
 const Gauge = ({ value, color, label }: { value: number; color: string; label: string }) => {
   const data = [{ name: 'v', value, fill: color }];
   return (
