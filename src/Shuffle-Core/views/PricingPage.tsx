@@ -296,21 +296,24 @@ const PricingPage = ({
   // Process imported pricing plans with dynamic values and button actions
   const pricingPlans = pricingPlansData.map(plan => {
     switch(plan.type) {
-      case "Starter":
-        return {
-          ...plan,
-          buttonText: isLoggedIn ? "Current Plan" : "Start for Free",
-          buttonAction: starterButtonAction
-        };
       case "Scale":
         return {
           ...plan,
           price: getPrice(plan.price), // Apply discount calculation
-          buttonAction: scaleButtonAction
+          buttonText: isLoggedIn ? "Current Plan" : "Start for Free",
+          secondaryButtonText: "Get more App Runs",
+          buttonAction: starterButtonAction,
+          secondaryButtonAction: scaleButtonAction,
+        };
+      case "Standard":
+        return {
+          ...plan,
+          buttonAction: enterpriseButtonAction,
         };
       case "Enterprise":
         return {
           ...plan,
+          title: selectedDeployment === "Cloud" ? "$2920" : plan.title,
           buttonAction: enterpriseButtonAction
         };
       default:
