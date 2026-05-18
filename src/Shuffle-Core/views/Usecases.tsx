@@ -1414,6 +1414,9 @@ function IntegrationStatusLite({
   singleLine = false,
   isResolving = false,
   syntheticApps,
+  onHover,
+  onSelect,
+  selectedId,
 }: {
   filterApps?: string[];
   singleLine?: boolean;
@@ -1425,6 +1428,12 @@ function IntegrationStatusLite({
    * installed app. Used to surface the Shuffle platform itself under the
    * Cases category. */
   syntheticApps?: IntegrationItem[];
+  /** Hover preview callback — called with the item on enter, null on leave. */
+  onHover?: (item: IntegrationItem | null) => void;
+  /** Click handler — receives the item that was clicked. */
+  onSelect?: (item: IntegrationItem) => void;
+  /** Item id currently pinned by the parent (renders a stronger outline). */
+  selectedId?: string;
 }) {
   const { apiUrl, authHeader } = useApi();
   const [integrations, setIntegrations] = useState<IntegrationItem[]>([]);
