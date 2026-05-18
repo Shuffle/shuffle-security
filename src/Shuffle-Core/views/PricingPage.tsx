@@ -505,11 +505,7 @@ const PricingPage = ({
                   }
                 }}
               >
-                <img
-                  src="/icons/liveChat.svg"
-                  alt="chat"
-                  style={{ width: "18px", height: "18px" }}
-                />
+                <MessageCircle size={18} strokeWidth={1.8} aria-label="chat" />
                 Send us a message
               </Button>
               <Button
