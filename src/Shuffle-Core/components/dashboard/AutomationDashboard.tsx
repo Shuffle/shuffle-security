@@ -35,7 +35,19 @@ export interface AutomationDashboardProps extends ShuffleCoreHostProps {
   displayName?: string;
   /** Optional content rendered on the left of the header row (e.g. dashboard tabs). */
   headerLeft?: React.ReactNode;
+  /** Controlled time-range (in days). When provided, the internal "Last" filter is hidden — the parent owns it. */
+  days?: string;
+  /** Called when the user changes the time range. Required if `days` is controlled. */
+  onDaysChange?: (days: string) => void;
 }
+
+/** Time-range options shared with parents that render the Last filter themselves. */
+export const AUTOMATION_RANGE_OPTIONS = [
+  { value: '7', label: '7 days' },
+  { value: '30', label: '30 days' },
+  { value: '90', label: '90 days' },
+  { value: '365', label: '12 months' },
+];
 
 interface Addition { key: string; value: number }
 interface DailyStat {
