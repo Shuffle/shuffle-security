@@ -589,7 +589,7 @@ const PricingPage = ({
                   },
                 }}
               >
-                <MessagesSquare size={18} strokeWidth={1.8} aria-label="discord" />
+                <MessagesSquare size={18} strokeWidth={1.8} color="#ffffff" aria-label="discord" />
                 Join our Discord
               </Button>
             </Box>
