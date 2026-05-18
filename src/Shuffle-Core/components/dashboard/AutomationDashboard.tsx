@@ -31,6 +31,8 @@ export interface AutomationDashboardProps extends ShuffleCoreHostProps {
   orgId?: string | null;
   /** Optional display name used in the greeting. Falls back to `userdata.username`. */
   displayName?: string;
+  /** Optional content rendered on the left of the header row (e.g. dashboard tabs). */
+  headerLeft?: React.ReactNode;
 }
 
 interface DailyStat {
