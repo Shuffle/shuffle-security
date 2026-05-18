@@ -216,58 +216,13 @@ const OnboardingFlow = ({
     });
   }, []);
 
-  // Fire ONBOARDING_STEP on EVERY step change (incl. direct URL access / back
-  // button), with `value` = ms spent on the previous step. This is what powers
-  // the "how far, how fast" funnel in GA.
+  // Refs used by the step-change / abandonment effects declared further down
+  // (after `steps` / `activeStepKey` exist).
   const lastStepKeyRef = useRef<string | null>(null);
   const stepEnteredAtRef = useRef<number>(Date.now());
-  useEffect(() => {
-    const stepDef = steps.find(s => s.key === activeStepKey);
-    if (!stepDef) return;
-    const now = Date.now();
-    const prevKey = lastStepKeyRef.current;
-    const msOnPrev = prevKey ? now - stepEnteredAtRef.current : 0;
-    const stepIndex = steps.findIndex(s => s.key === activeStepKey);
-    trackPredefinedEvent(
-      GA_EVENTS.ONBOARDING_STEP,
-      stepDef.key,
-      stepIndex,
-      {
-        step_key: stepDef.key,
-        step_label: stepDef.label,
-        step_index: stepIndex,
-        from_step: prevKey,
-        ms_on_prev_step: msOnPrev,
-        ms_since_start: now - onboardingStartedAtRef.current,
-        product,
-      },
-    );
-    lastStepKeyRef.current = activeStepKey;
-    stepEnteredAtRef.current = now;
-  }, [activeStepKey, steps, product]);
-
-  // Abandonment: when the user leaves the page without completing onboarding,
-  // emit a final event with the last step + total time so we can measure drop-off.
   const onboardingCompletedRef = useRef(false);
-  useEffect(() => {
-    const handler = () => {
-      if (onboardingCompletedRef.current) return;
-      const stepDef = steps.find(s => s.key === activeStepKey);
-      if (!stepDef) return;
-      const stepIndex = steps.findIndex(s => s.key === activeStepKey);
-      trackEventBeacon('onboarding', 'onboarding_abandon', stepDef.key, stepIndex, {
-        step_key: stepDef.key,
-        step_index: stepIndex,
-        ms_on_step: Date.now() - stepEnteredAtRef.current,
-        ms_since_start: Date.now() - onboardingStartedAtRef.current,
-        product,
-      });
-    };
-    window.addEventListener('beforeunload', handler);
-    return () => window.removeEventListener('beforeunload', handler);
-  }, [activeStepKey, steps, product]);
 
-  
+
   const [selectedChallenge, setSelectedChallenge] = useState<string | null>(null);
   const [selectedApps, setSelectedApps] = useState<AlgoliaSearchApp[]>([]);
   const [searchQuery, setSearchQuery] = useState('email');
