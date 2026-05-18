@@ -879,7 +879,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
 
         {/* Execution Usage Warning */}
         {userInfo?.app_execution_limit && userInfo.app_execution_limit > 0 && (() => {
-          const usage = userInfo.app_execution_usage || 0;
+          const usage = (userInfo.app_execution_usage || 0) + (userInfo.app_executions_suborgs || 0);
           const limit = userInfo.app_execution_limit;
           const pct = (usage / limit) * 100;
           if (pct < 65) return null;
