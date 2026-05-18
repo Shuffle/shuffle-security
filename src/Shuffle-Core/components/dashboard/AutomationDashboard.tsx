@@ -37,6 +37,7 @@ export interface AutomationDashboardProps extends ShuffleCoreHostProps {
   headerLeft?: React.ReactNode;
 }
 
+interface Addition { key: string; value: number }
 interface DailyStat {
   date: string;
   app_executions?: number;
@@ -44,11 +45,15 @@ interface DailyStat {
   workflow_executions?: number;
   workflow_executions_finished?: number;
   workflow_executions_failed?: number;
+  additions?: Addition[] | null;
+  [k: string]: any;
 }
 interface StatsResponse {
   org_id?: string;
   org_name?: string;
   daily_statistics?: DailyStat[];
+  additions?: Addition[] | null;
+  [k: string]: any;
 }
 
 type ModeKind = 'workflows' | 'apps';
