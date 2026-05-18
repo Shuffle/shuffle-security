@@ -46,7 +46,7 @@ import { AUTOMATION_RANGE_OPTIONS } from '@/Shuffle-Core';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { useAuth } from '@/context/AuthContext';
 import { useSubOrgs } from '@/hooks/useSubOrgs';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, X as CloseIcon } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 
 // ── Setup Step ─────────────────────────────────────────────────────────────────
