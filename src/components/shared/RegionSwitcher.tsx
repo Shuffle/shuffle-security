@@ -9,13 +9,14 @@ import {
 import { useIsSupport } from '@/hooks/useIsSupport';
 import { cn } from '@/lib/utils';
 
-export type RegionCode = 'eu' | 'us' | 'ca' | 'onprem';
+export type RegionCode = 'us' | 'eu2' | 'ca' | 'uk' | 'aus';
 
-export const REGION_OPTIONS: { value: RegionCode; label: string; url: string }[] = [
-  { value: 'eu', label: 'Europe', url: 'shuffler.io' },
-  { value: 'us', label: 'United States', url: 'us.shuffler.io' },
-  { value: 'ca', label: 'Canada', url: 'ca.shuffler.io' },
-  { value: 'onprem', label: 'Self-hosted / On-prem', url: '' },
+export const REGION_OPTIONS: { value: RegionCode; label: string; flag: string; url: string }[] = [
+  { value: 'us', label: 'US', flag: '🇺🇸', url: 'us.shuffler.io' },
+  { value: 'eu2', label: 'EU-2', flag: '🇪🇺', url: 'eu2.shuffler.io' },
+  { value: 'ca', label: 'CA', flag: '🇨🇦', url: 'ca.shuffler.io' },
+  { value: 'uk', label: 'UK', flag: '🇬🇧', url: 'shuffler.io' },
+  { value: 'aus', label: 'AUS (test)', flag: '🇦🇺', url: 'aus.shuffler.io' },
 ];
 
 interface RegionSwitcherProps {
