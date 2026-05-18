@@ -158,7 +158,7 @@ export const DashboardOverview = ({
         <KpiTile
           icon={AlertTriangle}
           glow={NEON.magenta}
-          gradient={''}
+
           value={incidentStats.openCount}
           label="Open Incidents"
           delta={incidentStats.delta}
@@ -169,7 +169,7 @@ export const DashboardOverview = ({
         <KpiTile
           icon={Flame}
           glow={NEON.red}
-          gradient={''}
+
           value={incidentStats.criticalCount}
           label="Critical / High"
           isLoading={incidentsLoading}
@@ -179,7 +179,7 @@ export const DashboardOverview = ({
         <KpiTile
           icon={MonitorCheck}
           glow={NEON.cyan}
-          gradient={''}
+
           value={monitorHostCount ?? 0}
           label={runningSensorCount ? `Hosts • ${runningSensorCount} sensors` : 'Host Monitors'}
           isLoading={monitorsLoading}
@@ -189,7 +189,7 @@ export const DashboardOverview = ({
         <KpiTile
           icon={Bug}
           glow={NEON.violet}
-          gradient={''}
+
           value={vulnTotal}
           label="Vulnerabilities"
           isLoading={vulnLoading}
