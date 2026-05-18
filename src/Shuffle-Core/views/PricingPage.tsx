@@ -245,15 +245,25 @@ const PricingPage = ({
           action: 'Scale Plan Selected',
           label: 'User is not logged in',
         });
+        navigate(
+          "/register?view=pricing&app_runs=" +
+            scaleValue +
+            "&billing_cycle=" +
+            billingCycle +
+            "&env=" +
+            selectedDeployment
+        );
+      } else {
+        window.open(
+          "https://shuffler.io/register?view=pricing&app_runs=" +
+            scaleValue +
+            "&billing_cycle=" +
+            billingCycle +
+            "&env=" +
+            selectedDeployment,
+          "_blank"
+        );
       }
-      navigate(
-        "/register?view=pricing&app_runs=" +
-          scaleValue +
-          "&billing_cycle=" +
-          billingCycle +
-          "&env=" +
-          selectedDeployment
-      );
     }
   };
 
@@ -473,9 +483,11 @@ const PricingPage = ({
               </Typography>
               <Button
                 variant="text"
-                component={Link}
+                component="a"
                 disableRipple
-                to="/contact?category=contact"
+                href="https://shuffler.io/contact?category=contact"
+                target="_blank"
+                rel="noopener noreferrer"
                 sx={{
                   color: "#ff8544",
                   textTransform: "none",
@@ -2075,9 +2087,10 @@ const PricingPage = ({
               </Button> */}
               <Button
                 disableRipple
-                component={Link}
+                component="a"
                 target="_blank"
-                to="/articles/Shuffle_Pricing#why-shuffle-pricing-works"
+                rel="noopener noreferrer"
+                href="https://shuffler.io/articles/Shuffle_Pricing#why-shuffle-pricing-works"
                 onClick={() => {
                   if (isCloud) {
                     ReactGA.event({
@@ -2154,9 +2167,10 @@ const PricingPage = ({
               </Typography>
               <Button
                 disableRipple
-                component={Link}
+                component="a"
                 target="_blank"
-                to="/articles/Shuffle_Open_Source"
+                rel="noopener noreferrer"
+                href="https://shuffler.io/articles/Shuffle_Open_Source"
                 onClick={() => {
                   if (isCloud) {
                     ReactGA.event({
