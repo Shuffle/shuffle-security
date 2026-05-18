@@ -1034,23 +1034,6 @@ const DashboardPage = () => {
         Get started by completing the setup steps below, then monitor agent activity.
       </Typography>
 
-      {/* ── Dashboard tabs ───────────────────────────────────────────────────── */}
-      <Box sx={{ mb: 3 }}>
-        <SegmentedControl
-          ariaLabel="Dashboard view"
-          value={dashboardTab}
-          onChange={(v) => setDashboardTab(v as 'security' | 'automation')}
-          options={[
-            { value: 'security', label: 'Security Operations' },
-            { value: 'automation', label: 'Automation' },
-          ]}
-        />
-      </Box>
-
-      {dashboardTab === 'automation' ? (
-        <AutomationDashboard />
-      ) : (
-      <>
       {/* ── Demo Mode CTA ────────────────────────────────────────────────────── */}
       <DemoModeCard />
 
@@ -1061,28 +1044,30 @@ const DashboardPage = () => {
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
       {!setupLoading && isSupport && (
         <Box sx={{ mb: 2, mt: 3, order: allComplete ? 0 : 2 }}>
-          <Chip
-            size="small"
-            label="Dashboards (Support only)"
-            sx={{
-              height: 22,
-              fontSize: '0.7rem',
-              fontWeight: 600,
-              backgroundColor: 'hsl(var(--primary) / 0.12)',
-              color: 'hsl(var(--primary))',
-              border: '1px solid hsl(var(--primary) / 0.3)',
-              mb: 1,
-            }}
-          />
-          <DashboardOverview
-            incidents={overviewIncidents}
-            incidentsLoading={incidentsLoading}
-            vulnSeverityCounts={vulnSeverityCounts}
-            vulnLoading={vulnLoading}
-            monitorHostCount={hostMonitorCount}
-            runningSensorCount={runningSensorCount}
-            monitorsLoading={hasHostMonitor === null}
-          />
+          <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+            <SegmentedControl
+              ariaLabel="Dashboard view"
+              value={dashboardTab}
+              onChange={(v) => setDashboardTab(v as 'security' | 'automation')}
+              options={[
+                { value: 'security', label: 'Security Operations' },
+                { value: 'automation', label: 'Automation' },
+              ]}
+            />
+          </Box>
+          {dashboardTab === 'automation' ? (
+            <AutomationDashboard />
+          ) : (
+            <DashboardOverview
+              incidents={overviewIncidents}
+              incidentsLoading={incidentsLoading}
+              vulnSeverityCounts={vulnSeverityCounts}
+              vulnLoading={vulnLoading}
+              monitorHostCount={hostMonitorCount}
+              runningSensorCount={runningSensorCount}
+              monitorsLoading={hasHostMonitor === null}
+            />
+          )}
         </Box>
       )}
       <Box sx={{ order: 3 }}>
@@ -1334,8 +1319,6 @@ const DashboardPage = () => {
         </>)}
       </Box>
       </Box>
-      </>
-      )}
     </Box>
 
     <AgentQuestionDialog
