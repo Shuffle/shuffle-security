@@ -41,7 +41,6 @@ export default defineConfig({
     'date-fns',
     /^date-fns\//,
     'framer-motion',
-    /^@mui\/x-date-pickers/,
   ],
   loader: {
     '.css': 'copy',
