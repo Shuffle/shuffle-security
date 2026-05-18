@@ -41,53 +41,18 @@ export const openSourcePlan = {
 
 export const pricingPlansData = [
   {
-    type: "Starter",
-    title: "Free Trial",
-    subtitle: "Start automating right away with 2k App-Runs per month for free.",
-    price: "Free",
-    isRecommended: false,
-    buttonText: "Start for Free", // This will be dynamically updated based on login status
-    exclusive: {
-      title: "Pricing Model for Starter:",
-      features: [
-        {
-          text: "License — 2k App-Runs per month",
-          tooltip: "Shuffle License is based on app-runs or usage of the platform."
-        },
-        {
-          text: "Support — Community Level",
-          tooltip: "Access our [Discord](https://discord.gg/shuffle) to get help from fellow community members"
-        },
-        {
-          text: "Onboarding — Docs based",
-        }
-      ],
-    },
-    features: [
-       "1 Day workflow run history",
-      "7 Days workflow backup",
-      "1 Tenant",
-      "1 Environment",
-      "5 Users",
-      "10 Workflows",
-      "Airgap support",
-      "All 2500+ Apps",
-      "All Security Usecase Templates",
-    ],
-    additionalText: "Includes: ",
-  },
-  {
     type: "Scale",
+    displayType: "Starter + Scale",
     title: "$29",
-    subtitle: "Scale your automation needs with extra features and higher limits.",
+    subtitle: "Start free with 2k App-Runs, then scale up with more App-Runs and higher limits as you grow.",
     price: 32, // Base price before discount calculation
     isRecommended: false,
     buttonText: "Select Plan",
     exclusive: {
-      title: "Pricing Model for Scale:",
+      title: "Pricing Model for Starter + Scale:",
       features: [
         {
-          text: "License — 10k App-Runs per month",
+          text: "License — From 2k App-Runs (Free) up to custom volume",
           tooltip: "Shuffle License is based on app-runs or usage of the platform."
         },
         {
@@ -107,8 +72,45 @@ export const pricingPlansData = [
       "15 Users",
       "25 Workflows",
       "Select Datacenter Region",
+      "All 2500+ Apps",
+      "All Security Usecase Templates",
     ],
-    additionalText: "Everything in Starter, plus:",
+    additionalText: "Includes everything in Starter, plus:",
+  },
+  {
+    type: "Standard",
+    title: "$1920",
+    subtitle: "For growing teams that need standard support and higher capacity.",
+    price: 1920,
+    isRecommended: false,
+    buttonText: "Contact Us",
+    exclusive: {
+      title: "Pricing Model for Standard:",
+      features: [
+        {
+          text: "License — High volume App-Runs",
+          tooltip: "Shuffle License is based on app-runs or usage of the platform."
+        },
+        {
+          text: "Support — Standard Level",
+          tooltip: "Standard Support includes Email with SLA."
+        },
+        {
+          text: "Onboarding — Guided Set-Up",
+        }
+      ],
+    },
+    features: [
+      "90 Days workflow run history",
+      "30 Days workflow backup",
+      "10 Tenants",
+      "5 Environments",
+      "50 Users",
+      "Unlimited Workflows",
+      "Select Datacenter Region",
+      "Priority Apps Support",
+    ],
+    additionalText: "Everything in Starter + Scale, plus:",
   },
   {
     type: "Enterprise",

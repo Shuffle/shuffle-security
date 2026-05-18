@@ -51,7 +51,7 @@ const PricingPage = ({
       : (isCloud ? "Cloud" : "Self-Hosted")
   ); // Could be Cloud or Self-Hosted
   const [selectedPlan, setSelectedPlan] = useState(
-    selectedDeployment === "Self-Hosted" ? "open source" : "starter"
+    selectedDeployment === "Self-Hosted" ? "open source" : "scale"
   );
   const [scaleValue, setScaleValue] = useState(
     (typeof window !== "undefined" && window.location?.search)
@@ -296,21 +296,24 @@ const PricingPage = ({
   // Process imported pricing plans with dynamic values and button actions
   const pricingPlans = pricingPlansData.map(plan => {
     switch(plan.type) {
-      case "Starter":
-        return {
-          ...plan,
-          buttonText: isLoggedIn ? "Current Plan" : "Start for Free",
-          buttonAction: starterButtonAction
-        };
       case "Scale":
         return {
           ...plan,
           price: getPrice(plan.price), // Apply discount calculation
-          buttonAction: scaleButtonAction
+          buttonText: isLoggedIn ? "Current Plan" : "Start for Free",
+          secondaryButtonText: "Get more App Runs",
+          buttonAction: starterButtonAction,
+          secondaryButtonAction: scaleButtonAction,
+        };
+      case "Standard":
+        return {
+          ...plan,
+          buttonAction: enterpriseButtonAction,
         };
       case "Enterprise":
         return {
           ...plan,
+          title: selectedDeployment === "Cloud" ? "$2920" : plan.title,
           buttonAction: enterpriseButtonAction
         };
       default:
@@ -1237,11 +1240,11 @@ const PricingPage = ({
               </>
             ) : (
               <>
-                <ToggleButton value="starter" aria-label="starter">
-                  Starter
+                <ToggleButton value="scale" aria-label="starter-scale">
+                  Starter + Scale
                 </ToggleButton>
-                <ToggleButton value="scale" aria-label="scale">
-                  Scale
+                <ToggleButton value="standard" aria-label="standard">
+                  Standard
                 </ToggleButton>
                 <ToggleButton value="enterprise" aria-label="enterprise">
                   Enterprise
@@ -1263,7 +1266,7 @@ const PricingPage = ({
                 if (newValue === "Self-Hosted") {
                   setSelectedPlan("open source");
                 } else {
-                  setSelectedPlan("starter");
+                  setSelectedPlan("scale");
                 }
                 if(isCloud){
                   ReactGA.event({
@@ -1477,7 +1480,7 @@ const PricingPage = ({
                             fontFamily: theme.typography.fontFamily,
                           }}
                         >
-                          {plan.type}
+                          {plan.displayType || plan.type}
                         </Typography>
                       </Box>
 
@@ -1679,7 +1682,7 @@ const PricingPage = ({
                           fontSize: "40px",
                           pt:
                             plan.type.toLowerCase() === "enterprise"
-                              ? 4.5
+                              ? (selectedDeployment === "Cloud" ? 2.2 : 4.5)
                               : plan.type.toLowerCase() === "scale"
                               ? 0
                               : plan.type.toLowerCase() === "open source"
@@ -1700,8 +1703,64 @@ const PricingPage = ({
                           /month for {scaleValue}k App Runs
                         </Typography>
                       )}
+
+                      {(plan.type === "Standard" ||
+                        (plan.type === "Enterprise" && selectedDeployment === "Cloud")) && (
+                        <Typography
+                          sx={{ mb: "-2px", fontSize: "14px", pt: 2.2 }}
+                          color="#c5c5c5"
+                        >
+                          /month
+                        </Typography>
+                      )}
                     </div>
 
+                    {plan.type === "Scale" ? (
+                      <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mt: 2, mb: 1.5 }}>
+                        <Button
+                          variant="outlined"
+                          fullWidth
+                          disableRipple
+                          onClick={plan.buttonAction}
+                          sx={{
+                            py: 1.2,
+                            borderRadius: "8px",
+                            textTransform: "none",
+                            fontSize: { xs: "12px", sm: "14px" },
+                            color: "#ffffff",
+                            border: "1.5px solid #ff8544",
+                            background: isLoggedIn ? "rgba(255, 255, 255, 0.05)" : "transparent",
+                            boxShadow: "none",
+                            "&:hover": {
+                              background: "rgba(255, 133, 68, 0.1)",
+                              borderColor: "#ff8544",
+                              boxShadow: "none",
+                            },
+                            cursor: isLoggedIn ? "default" : "pointer",
+                          }}
+                        >
+                          {plan.buttonText}
+                        </Button>
+                        <Button
+                          variant="contained"
+                          fullWidth
+                          disableRipple
+                          onClick={plan.secondaryButtonAction}
+                          sx={{
+                            py: 1.2,
+                            borderRadius: "8px",
+                            textTransform: "none",
+                            fontSize: { xs: "12px", sm: "14px" },
+                            color: "#1A1A1A",
+                            background: "#FF8544",
+                            boxShadow: "none",
+                            "&:hover": { background: "#FF955C", boxShadow: "none" },
+                          }}
+                        >
+                          {plan.secondaryButtonText}
+                        </Button>
+                      </Box>
+                    ) : (
                     <Button
                       variant="contained"
                       fullWidth
@@ -1770,6 +1829,7 @@ const PricingPage = ({
                     >
                       {plan.buttonText}
                     </Button>
+                    )}
 
                     <Divider sx={{ my: 1.5 }} />
 
@@ -2432,7 +2492,7 @@ const PricingPage = ({
                     >
                       {plan.type.toLowerCase() === "enterprise"
                         ? `${plan.type} (${selectedDeployment})`
-                        : plan.type}
+                        : (plan.displayType || plan.type)}
                     </Typography>
                     {plan.deploymentOptions && (
                       <ToggleButtonGroup
