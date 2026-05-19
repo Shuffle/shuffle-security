@@ -3196,6 +3196,34 @@ function UsecasesPageInner() {
     return () => { cancelled = true; };
   }, [apiUrl, authHeader]);
 
+  // Detect whether the "Run AI Agent" automation is enabled on the
+  // shuffle-security_incidents category. Powers the Agent Response usecase.
+  const [aiAgentAutomationActive, setAiAgentAutomationActive] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const info = localStorage.getItem('shuffle_user_info');
+        const orgId = info ? JSON.parse(info)?.active_org?.id : null;
+        if (!orgId) return;
+        const res = await fetch(
+          apiUrl(`/api/v1/orgs/${orgId}/list_cache?category=shuffle-security_incidents&top=1`),
+          { credentials: 'include', headers: { ...authHeader() } },
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        const automations: any[] = data?.category_config?.automations || [];
+        const active = automations.some(
+          (a) => a?.enabled && (a?.type === 'ai_agent' || a?.name === 'Run AI Agent'),
+        );
+        if (!cancelled) setAiAgentAutomationActive(active);
+      } catch {
+        /* keep previous state */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [apiUrl, authHeader]);
+
   // Compose the final per-flow "is enabled" predicate. A flow is shown as
   // enabled only when (a) a workflow exists for its automationLabel AND
   // (b) at least one validated source-tool covers `flow.source`. Without (b)
@@ -3203,9 +3231,12 @@ function UsecasesPageInner() {
   // "Disable" button there is misleading.
   const isFlowVisuallyEnabled = React.useCallback(
     (flow: Usecase): boolean => {
+      // Agent Response is driven by the category automation, not a workflow.
+      if (flow.id === 'case_management_agent_response_1') return aiAgentAutomationActive;
       if (!flow.automationLabel) return false;
       if (!enabledLabels.has(flow.automationLabel)) return false;
       if (!validatedCategories.has(flow.source)) return false;
+
       // Ingestion usecases (email/edr/siem) share a workflow but each one
       // only counts as "enabled" when an app of its own source category is
       // actually wired into that workflow. Otherwise "Email reports" would
