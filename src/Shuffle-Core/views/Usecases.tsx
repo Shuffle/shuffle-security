@@ -1425,6 +1425,30 @@ interface IntegrationItem {
   active: boolean;
 }
 
+// Module-level shared cache so the multiple IntegrationStatusLite instances
+// rendered per page (Source + Destination per usecase, plus sidebars) reuse
+// a single in-flight fetch for /api/v1/apps and /api/v1/apps/authentication
+// instead of each firing their own. TTL is short so a manual refresh
+// (integrationsRefreshKey bump) still gets fresh data within ~5s, but a
+// burst of mounts within that window collapses to one network request.
+const APPS_TTL_MS = 5000;
+type CacheEntry = { ts: number; promise: Promise<Response> };
+const _appsFetchCache = new Map<string, CacheEntry>();
+function fetchAppsCached(url: string, init: RequestInit): Promise<Response> {
+  const now = Date.now();
+  const cached = _appsFetchCache.get(url);
+  if (cached && now - cached.ts < APPS_TTL_MS) {
+    // Clone so multiple consumers can each read the body.
+    return cached.promise.then((res) => res.clone());
+  }
+  const promise = fetch(url, init);
+  _appsFetchCache.set(url, { ts: now, promise });
+  return promise.then((res) => res.clone());
+}
+export function invalidateAppsCache() {
+  _appsFetchCache.clear();
+}
+
 function IntegrationStatusLite({
   filterApps,
   singleLine = false,
