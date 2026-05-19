@@ -10,6 +10,7 @@ import {
   Copy as ContentCopyIcon,
   Activity as DirectionsRunIcon,
   Pencil as EditIcon,
+  FileText as DescriptionIcon,
   AlertCircle as ErrorIcon,
   Lock as LockIcon,
   Unlock as LockOpenIcon,
@@ -1366,15 +1367,7 @@ const FormInput = (defaultprops: any) => {
 		return (
 			<div style={{paddingTop: 24, width: "100%", maxWidth: 480, margin: "0 auto", textAlign: "center"}}>
 
-				{forms !== undefined && forms !== null && forms.length > 0 ?
-					<div style={{textAlign: "left"}}>
-						<Typography variant="subtitle1" style={{marginBottom: 16, fontWeight: 600, color: "hsl(var(--foreground))"}}>
-							Available forms
-						</Typography>
-						<FormList />
-					</div>
-					:
-					!isLoggedIn ?
+				{!isLoggedIn ?
 					<div style={{paddingTop: 32, paddingBottom: 32}}>
 						<div style={{
 							width: 56, height: 56, borderRadius: 14,
@@ -1412,7 +1405,7 @@ const FormInput = (defaultprops: any) => {
 							Log in
 						</Button>
 					</div>
-					:
+					: (forms === undefined || forms === null || forms.length === 0) ?
 					<div style={{paddingTop: 32, paddingBottom: 32}}>
 						<Typography variant="h6" style={{marginBottom: 8, fontWeight: 600, color: "hsl(var(--foreground))"}}>
 							No forms found
@@ -1421,14 +1414,15 @@ const FormInput = (defaultprops: any) => {
 							All workflows are forms, and can be accessed by going to /forms/{`{workflow_id}`}. You can control the form by editing the workflow details in the Forms section.
 						</Typography>	
 					</div>
+					: null
 				}
 
-				{workflows === undefined || workflows === null || workflows.length === 0 ? null : 
+				{forms === undefined || forms === null || forms.length === 0 ? null :
 					<Autocomplete
-						disabled={workflows === undefined || workflows === null || workflows.length === 0}
+						disabled={forms === undefined || forms === null || forms.length === 0}
 						id="form-workflow-search"
 						autoHighlight
-						value={""}
+						value={null}
 						ListboxProps={{
 						  style: {
 							backgroundColor: theme.palette.inputColor,
@@ -1437,10 +1431,10 @@ const FormInput = (defaultprops: any) => {
 						}}
 						sx={{
 						  '& .MuiOutlinedInput-root': {
-							height: 40, // Adjust the input height
+							height: 40,
 						  },
 						  '& .MuiAutocomplete-input': {
-							padding: '8px', // Adjust the text padding
+							padding: '8px',
 						  },
 						}}
 						getOptionSelected={(option, value) => option.id === value.id}
@@ -1451,7 +1445,7 @@ const FormInput = (defaultprops: any) => {
 							option.name === undefined ||
 							option.name === null
 						  ) {
-							return "No Workflow Selected";
+							return "";
 						  }
 
 						  const newname = (
@@ -1459,81 +1453,60 @@ const FormInput = (defaultprops: any) => {
 						  ).replaceAll("_", " ");
 						  return newname;
 						}}
-						options={workflows}
+						options={forms}
 						fullWidth
 						style={{
 						  backgroundColor: theme.palette.inputColor,
 						  borderRadius: theme.palette?.borderRadius,
-						  marginTop: 75, 
+						  marginTop: 0,
 						}}
 						renderOption={(props, data, state) => {
 						  if (data.id === workflow.id) {
 							data = workflow;
 						  }
 
-						  //key={index}
+						  const formDescription = data?.form_control?.form_description || data?.description || ""
+						  const isPrivate = data?.sharing !== "form"
+
 						  return (
-							<Tooltip
-							  arrow
-							  placement="left"
-							  componentsProps={{
-								tooltip: {
-								  sx: {
-									backgroundColor: 'hsl(var(--popover))',
-									color: 'hsl(var(--popover-foreground))',
-									border: '1px solid hsl(var(--border))',
-									borderRadius: '10px',
-									padding: '10px',
-									maxWidth: 260,
-									boxShadow: '0 10px 30px hsl(var(--background) / 0.45)',
-								  },
-								},
-								arrow: { sx: { color: 'hsl(var(--popover))' } },
-							  }}
-							  title={
-								<div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-								  {data.image !== undefined && data.image !== null && data.image.length > 0 ? (
-									<img
-									  src={data.image}
-									  alt={data.name}
-									  style={{
-										display: 'block',
-										width: '100%',
-										height: 140,
-										objectFit: 'cover',
-										backgroundColor: 'hsl(var(--muted))',
-										borderRadius: 8,
-										border: '1px solid hsl(var(--border))',
-									  }}
-									/>
-								  ) : null}
-								  <Typography
-									variant="body2"
-									sx={{
-									  fontSize: 13,
-									  fontWeight: 500,
-									  lineHeight: 1.4,
-									  color: 'hsl(var(--popover-foreground))',
-									}}
-								  >
-									Choose workflow "{data.name}"
-								  </Typography>
-								</div>
-							  }
-							>
-							  <MenuItem
+							<MenuItem
+								{...props}
+								key={data.id}
 								style={{
 								  backgroundColor: theme.palette.inputColor,
+								  display: 'flex',
+								  alignItems: 'flex-start',
+								  gap: 10,
+								  padding: '10px 12px',
 								}}
-							  	onClick={() => {
+								onClick={() => {
 									navigate(`/forms/${data.id}`)
+									getWorkflow(data.id, sourceNode)
+									setExplorerUi(false)
 								}}
 								value={data}
-							  >
-								<PolylineIcon style={{ marginRight: 8 }} />
-								{data.name}
-							  </MenuItem>
-							</Tooltip>
+							>
+							  <DescriptionIcon style={{ marginTop: 2, color: 'hsl(var(--muted-foreground))' }} />
+							  <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
+								<div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+								  <Typography variant="body2" style={{ fontWeight: 600, color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+									{data.name}
+								  </Typography>
+								  {isPrivate ? (
+									<LockIcon size={12} style={{ color: 'hsl(var(--muted-foreground))' }} />
+								  ) : null}
+								</div>
+								{formDescription ? (
+								  <Typography variant="caption" style={{ color: 'hsl(var(--muted-foreground))', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+									{formDescription}
+								  </Typography>
+								) : (
+								  <Typography variant="caption" style={{ color: 'hsl(var(--muted-foreground))' }}>
+									Form
+								  </Typography>
+								)}
+							  </div>
+							</MenuItem>
 						  )
 						}}
 						renderInput={(params) => {
@@ -1542,7 +1515,8 @@ const FormInput = (defaultprops: any) => {
 							  <TextField
 								style={theme.palette.textFieldStyle}
 								{...params}
-								label="Find your form"
+								label="Available forms"
+								placeholder="Search forms"
 								variant="outlined"
 							  />
 							</div>
