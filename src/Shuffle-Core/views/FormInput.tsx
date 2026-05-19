@@ -10,6 +10,7 @@ import {
   Copy as ContentCopyIcon,
   Activity as DirectionsRunIcon,
   Pencil as EditIcon,
+  FileText as DescriptionIcon,
   AlertCircle as ErrorIcon,
   Lock as LockIcon,
   Unlock as LockOpenIcon,
