@@ -537,6 +537,16 @@ const DashboardPage = () => {
   const [hostMonitorCount, setHostMonitorCount] = useState<number>(0);
   const [overviewCollapsed, setOverviewCollapsed] = useState(false);
   const [setupCollapsed, setSetupCollapsed] = useState(false);
+  const [agentNotificationsCollapsed, setAgentNotificationsCollapsed] = useState<boolean>(() => {
+    try {
+      const stored = localStorage.getItem('dashboard-agent-notifications-collapsed');
+      // Default to collapsed when no preference is stored.
+      return stored === null ? true : stored === '1';
+    } catch { return true; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('dashboard-agent-notifications-collapsed', agentNotificationsCollapsed ? '1' : '0'); } catch { /* ignore */ }
+  }, [agentNotificationsCollapsed]);
   const setupAutoCollapsedRef = useRef(false);
   const [dashboardTab, setDashboardTab] = useState<'security' | 'automation'>(() => {
     try { return (localStorage.getItem('shuffle_dashboard_tab') as 'security' | 'automation') || 'security'; } catch { return 'security'; }
