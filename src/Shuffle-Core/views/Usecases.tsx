@@ -2652,11 +2652,6 @@ function UsecaseDetailContent({
                 </Box>
               </Box>
 
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.75 }}>
-                <Typography sx={{ fontSize: '0.64rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  Your Tools
-                </Typography>
-              </Box>
               <IntegrationStatusLite
                 key={`${endpoint.categoryId}-${integrationsRefreshKey}`}
                 filterApps={appNamesWithShuffle}
