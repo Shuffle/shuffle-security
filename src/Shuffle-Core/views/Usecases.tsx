@@ -1441,6 +1441,7 @@ function IntegrationStatusLite({
   const appDetail = useAppDetailOptional();
   const [integrations, setIntegrations] = useState<IntegrationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [popoverFor, setPopoverFor] = useState<{ el: HTMLElement; item: IntegrationItem } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
