@@ -1436,6 +1436,7 @@ function IntegrationStatusLite({
   selectedId?: string;
 }) {
   const { apiUrl, authHeader } = useApi();
+  const appDetail = useAppDetailOptional();
   const [integrations, setIntegrations] = useState<IntegrationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
