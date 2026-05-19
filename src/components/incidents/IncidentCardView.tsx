@@ -730,13 +730,13 @@ export const IncidentCardView = ({
                              <Chip
                                label={`+${visibleLabels.length - 3}`}
                                size="small"
-                               sx={{
-                                 backgroundColor: 'hsl(var(--severity-info) / 0.08)',
-                                 color: 'hsl(var(--severity-info))',
-                                 fontWeight: 500,
-                                 fontSize: '0.65rem',
-                                 height: 22,
-                               }}
+                                sx={{
+                                  backgroundColor: 'hsl(var(--muted) / 0.3)',
+                                  color: 'hsl(var(--muted-foreground))',
+                                  fontWeight: 500,
+                                  fontSize: '0.65rem',
+                                  height: 22,
+                                }}
                              />
                            </Tooltip>
                          )}
