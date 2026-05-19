@@ -1346,17 +1346,16 @@ const FormInput = (defaultprops: any) => {
 					}
 
 					return (
-						<div key={formIndex} style={{marginBottom: 10, }}>
-							<RecentWorkflow 
-								workflow={form}
-								onclickHandler={() => {
-									navigate(`/forms/${form.id}`)
-									getWorkflow(form.id, sourceNode) 
-									setExplorerUi(false)
-								}}
-								currentWorkflowId={workflow.id}
-							/>
-						</div>
+						<RecentWorkflow
+							key={formIndex}
+							workflow={form}
+							onclickHandler={() => {
+								navigate(`/forms/${form.id}`)
+								getWorkflow(form.id, sourceNode)
+								setExplorerUi(false)
+							}}
+							currentWorkflowId={workflow.id}
+						/>
 					)
 				})}
 			</div>
@@ -2356,39 +2355,41 @@ const FormInput = (defaultprops: any) => {
 
 	const formSidebar = explorerUi === true || !isLoaded || overlap || !(forms !== undefined && forms !== null && forms.length > 1) ? null :
 		<div style={{
-			minWidth: 215, 
-			maxWidth: 215,
+			minWidth: 240,
+			maxWidth: 240,
 			overflowX: "hidden",
 			overflowY: "auto",
-			minHeight: 500,
-			maxHeight: 500, 
-			position: "absolute", 
-			left: 150, 
-			top: 75, 
-			border: "1px solid rgba(255,255,255,0.3)",
-			borderRadius: theme.palette?.borderRadius,
-
-			padding: 25, 
-
-			backgroundColor: theme.palette.inputColor,
-			zIndex: 1000, 
+			maxHeight: 500,
+			position: "absolute",
+			left: 150,
+			top: 75,
+			border: "1px solid hsl(var(--border))",
+			borderRadius: 12,
+			padding: 12,
+			backgroundColor: "hsl(var(--card))",
+			zIndex: 1000,
 		}}>
 			{selectedOrganization !== undefined && selectedOrganization !== null ?
-				<div style={{display: "flex", marginBottom: 20, }}>
-					<img src={selectedOrganization.image} style={{width: 40, height: 40, borderRadius: theme.palette?.borderRadius, }} />
-					<Typography variant="body1" style={{marginTop: 7, marginLeft: 10, }}>
+				<div style={{display: "flex", alignItems: "center", gap: 8, marginBottom: 10, paddingBottom: 10, borderBottom: "1px solid hsl(var(--border))"}}>
+					<img src={selectedOrganization.image} style={{width: 24, height: 24, borderRadius: 6}} />
+					<Typography variant="body2" style={{fontWeight: 600, color: "hsl(var(--foreground))", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>
 						{selectedOrganization.name}
 					</Typography>
-					<Divider style={{marginTop: 10, marginBottom: 10, }}/>
 				</div>
 			: null}
 
+			<Typography variant="caption" style={{display: "block", color: "hsl(var(--muted-foreground))", textTransform: "uppercase", letterSpacing: 0.5, fontSize: 11, fontWeight: 600, marginBottom: 6, paddingLeft: 4}}>
+				Available forms
+			</Typography>
+
 			{forms !== undefined && forms !== null && forms.length > 0 ?
-				<FormList />
-			: 
-				<div>
-					No forms loaded
+				<div style={{display: "flex", flexDirection: "column", gap: 2}}>
+					<FormList />
 				</div>
+			:
+				<Typography variant="body2" style={{color: "hsl(var(--muted-foreground))", padding: 4}}>
+					No forms loaded
+				</Typography>
 			}
 		</div>
 
