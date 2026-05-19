@@ -31,16 +31,26 @@ export default defineConfig({
     'react',
     'react-dom',
     'react/jsx-runtime',
-    // Host-app provided peers — never bundle:
+    // Host-app provided peers — never bundle.
+    // List deep MUI/emotion subpaths explicitly (as plain strings, not regex)
+    // so esbuild emits bare specifiers that webpack 5's `fullySpecified`
+    // check in consuming apps accepts without extension.
     '@mui/material',
+    '@mui/material/styles',
+    '@mui/material/utils',
     '@mui/system',
-    /^@emotion\//,
+    '@mui/system/RtlProvider',
+    '@mui/system/createTheme',
+    '@mui/system/styled',
+    '@mui/icons-material',
+    '@emotion/react',
+    '@emotion/styled',
+    '@emotion/cache',
     'framer-motion',
     'sonner',
     'lucide-react',
     'react-router-dom',
     'react-router',
-    'sonner',
   ],
   // Also pass noExternal=false equivalent via esbuild to ensure
   // these are truly skipped even when tsup regex handling varies:
