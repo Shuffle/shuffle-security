@@ -205,6 +205,22 @@
   code, pre {
     font-family: 'JetBrains Mono', monospace;
   }
+
+  /* Global text-selection styling. Guarantees a readable, branded
+   * highlight everywhere — even on gradient-text / bg-clip-text elements
+   * where the text is technically transparent (which would otherwise
+   * render as a solid orange block during selection). */
+  ::selection {
+    background-color: hsl(var(--primary) / 0.28);
+    color: hsl(var(--foreground));
+    /* Override -webkit-text-fill-color used by bg-clip-text utilities so
+     * selected gradient text falls back to the readable foreground. */
+    -webkit-text-fill-color: hsl(var(--foreground));
+  }
+  ::-moz-selection {
+    background-color: hsl(var(--primary) / 0.28);
+    color: hsl(var(--foreground));
+  }
 }
 
 @layer components {
