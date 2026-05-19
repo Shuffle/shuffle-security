@@ -1063,16 +1063,17 @@ function useApi() {
 // Real sonner toast — visible UI feedback for success/error.
 import { toast as sonnerToast } from '../toast';
 import { usePageMeta } from '../usePageMeta';
+type ToastOpts = { duration?: number; description?: string; action?: { label: string; onClick: () => void } };
 const toast = {
-  success: (msg: string, opts?: { duration?: number; description?: string }) => {
+  success: (msg: string, opts?: ToastOpts) => {
     if (typeof window !== 'undefined') console.info('[toast]', msg);
     sonnerToast.success(msg, opts);
   },
-  error: (msg: string, opts?: { duration?: number; description?: string }) => {
+  error: (msg: string, opts?: ToastOpts) => {
     if (typeof window !== 'undefined') console.error('[toast]', msg);
     sonnerToast.error(msg, opts);
   },
-  warning: (msg: string, opts?: { duration?: number; description?: string }) => {
+  warning: (msg: string, opts?: ToastOpts) => {
     if (typeof window !== 'undefined') console.warn('[toast]', msg);
     sonnerToast.warning(msg, opts);
   },
