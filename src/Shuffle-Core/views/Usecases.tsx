@@ -3218,7 +3218,6 @@ function UsecaseCard({
       onEnable();
       return;
     }
-    const willBeEnabled = !effectiveEnabled;
     if (willBeEnabled && !hasValidatedSource) {
       toast.warning(`No active ${sourceCat} integration`, {
         description: `Enabling ${flow.label} will not do anything until you connect and validate a ${sourceCat} tool. The workflow has no input to react to and may be disabled again automatically.`,
