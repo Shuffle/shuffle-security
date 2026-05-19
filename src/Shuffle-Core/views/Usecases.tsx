@@ -1709,20 +1709,42 @@ function IntegrationStatusLite({
 
   const renderPopover = () => {
     const item = popoverFor?.item;
+    const itemKey = item ? item.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_') : '';
+    const inUsecase = !!item && !!usecaseEnabledNames && usecaseEnabledNames.has(itemKey);
+    const showUsecaseToggle = !!item && !!onUsecaseAppToggle;
+    const isToggling = !!item && togglingName === item.name;
+
     const statusLabel = !item
       ? ''
-      : item.validated
-        ? 'Validated'
-        : item.active
-          ? 'Configured'
-          : 'Not configured';
+      : showUsecaseToggle
+        ? (inUsecase ? 'In use' : 'Not in use')
+        : item.validated
+          ? 'Validated'
+          : item.active
+            ? 'Configured'
+            : 'Not configured';
     const statusColor = !item
       ? 'hsl(var(--muted-foreground))'
-      : item.validated
-        ? 'hsl(var(--severity-low))'
-        : item.active
-          ? 'hsl(var(--severity-medium))'
-          : 'hsl(var(--muted-foreground))';
+      : showUsecaseToggle
+        ? (inUsecase ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))')
+        : item.validated
+          ? 'hsl(var(--severity-low))'
+          : item.active
+            ? 'hsl(var(--severity-medium))'
+            : 'hsl(var(--muted-foreground))';
+
+    const handleUsecaseToggle = async () => {
+      if (!item || !onUsecaseAppToggle) return;
+      const willBeEnabled = !inUsecase;
+      setTogglingName(item.name);
+      try {
+        await onUsecaseAppToggle(item.name, willBeEnabled);
+        setPopoverFor(null);
+      } finally {
+        setTogglingName(null);
+      }
+    };
+
     return (
       <Popover
         open={Boolean(popoverFor)}
@@ -1738,14 +1760,14 @@ function IntegrationStatusLite({
               border: '1px solid hsl(var(--border))',
               borderRadius: 1.5,
               p: 1.5,
-              minWidth: 200,
+              minWidth: 220,
             },
           },
         }}
       >
         {item && (
           <>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.5, flexWrap: 'wrap' }}>
               <Typography variant="caption" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', textTransform: 'capitalize', fontSize: '0.8rem' }}>
                 {item.name.replace(/_/g, ' ')}
               </Typography>
@@ -1761,7 +1783,47 @@ function IntegrationStatusLite({
                 }}
               />
             </Box>
+            {showUsecaseToggle && usecaseLabel && (
+              <Typography variant="caption" sx={{ display: 'block', color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem', mb: 1 }}>
+                {inUsecase
+                  ? `Active in ${usecaseLabel}`
+                  : `Not part of ${usecaseLabel}`}
+              </Typography>
+            )}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 1 }}>
+              {showUsecaseToggle && (
+                <Button
+                  size="small"
+                  disabled={isToggling || (!inUsecase && !item.validated && !item.active)}
+                  startIcon={
+                    isToggling
+                      ? <CircularProgress size={12} sx={{ color: 'inherit' }} />
+                      : (inUsecase ? <PowerOff size={14} /> : <Power size={14} />)
+                  }
+                  onClick={handleUsecaseToggle}
+                  sx={{
+                    justifyContent: 'flex-start',
+                    textTransform: 'none',
+                    fontSize: '0.75rem',
+                    color: inUsecase ? 'hsl(var(--destructive))' : 'hsl(var(--severity-low))',
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 1,
+                    '&:hover': {
+                      bgcolor: inUsecase ? 'hsla(var(--destructive) / 0.1)' : 'hsla(var(--severity-low) / 0.1)',
+                    },
+                    '&.Mui-disabled': { color: 'hsl(var(--muted-foreground))', opacity: 0.5 },
+                  }}
+                >
+                  {isToggling
+                    ? (inUsecase ? 'Disabling…' : 'Enabling…')
+                    : (inUsecase
+                        ? `Disable for ${usecaseLabel || 'this usecase'}`
+                        : (!item.validated && !item.active
+                            ? 'Authenticate first to enable'
+                            : `Enable for ${usecaseLabel || 'this usecase'}`))}
+                </Button>
+              )}
               <Button
                 size="small"
                 startIcon={<ExternalLink size={14} />}
@@ -1781,28 +1843,9 @@ function IntegrationStatusLite({
                   '&:hover': { bgcolor: 'hsl(var(--muted))' },
                 }}
               >
-                Visit app
-              </Button>
-              <Button
-                size="small"
-                startIcon={<CheckCircle2 size={14} />}
-                onClick={() => {
-                  const name = item.name;
-                  setPopoverFor(null);
-                  if (appDetail && name) appDetail.openApp(name);
-                }}
-                sx={{
-                  justifyContent: 'flex-start',
-                  textTransform: 'none',
-                  fontSize: '0.75rem',
-                  color: item.validated ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
-                  px: 1,
-                  py: 0.5,
-                  borderRadius: 1,
-                  '&:hover': { bgcolor: 'hsl(var(--muted))' },
-                }}
-              >
-                {item.validated ? 'Manage authentication' : 'Configure authentication'}
+                {showUsecaseToggle
+                  ? 'Open app'
+                  : (item.validated ? 'Manage authentication' : 'Configure authentication')}
               </Button>
             </Box>
           </>
