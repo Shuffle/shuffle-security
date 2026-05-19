@@ -1950,23 +1950,19 @@ function IntegrationStatusLite({
   if (useGroups) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, px: 0.5, py: 0.5 }}>
-        <Box>
-          <GroupLabel>
-            Enabled{enabledList.length > 0 ? ` · ${enabledList.length}` : ''}
-          </GroupLabel>
-          {enabledList.length > 0 ? (
+        {enabledList.length > 0 && (
+          <Box>
+            <GroupLabel>
+              Enabled Tools · {enabledList.length}
+            </GroupLabel>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
               {enabledList.map(renderIcon)}
             </Box>
-          ) : (
-            <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', fontStyle: 'italic' }}>
-              None yet — pick one from Available below.
-            </Typography>
-          )}
-        </Box>
+          </Box>
+        )}
         <Box>
           <GroupLabel>
-            Available{availableList.length > 0 ? ` · ${availableList.length}` : ''}
+            Available Tools{availableList.length > 0 ? ` · ${availableList.length}` : ''}
           </GroupLabel>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
             {availableList.map(renderIcon)}
@@ -2656,11 +2652,6 @@ function UsecaseDetailContent({
                 </Box>
               </Box>
 
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.75 }}>
-                <Typography sx={{ fontSize: '0.64rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  Your Tools
-                </Typography>
-              </Box>
               <IntegrationStatusLite
                 key={`${endpoint.categoryId}-${integrationsRefreshKey}`}
                 filterApps={appNamesWithShuffle}
