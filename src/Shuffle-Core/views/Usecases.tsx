@@ -3557,8 +3557,14 @@ function UsecasesPageInner() {
 
   // Full-page detail view: /usecases/:flowId/details renders just
   // UsecaseDetailContent at full width, instead of the card grid + drawer.
+  // We also treat a deep-link / refresh of /usecases/:flowId the same way —
+  // otherwise the grid + drawer both render at once and the page looks
+  // doubled. The drawer-over-grid pattern still kicks in for in-app card
+  // clicks that mount the page first and then set drawerFlowId.
   const location = useLocation();
-  const isDetailsRoute = location.pathname.endsWith('/details');
+  const initialFlowIdRef = React.useRef<string | null>(routeParams.flowId ?? null);
+  const isDetailsRoute =
+    location.pathname.endsWith('/details') || initialFlowIdRef.current !== null;
   if (isDetailsRoute) {
     const detailFlow = drawerFlowId ? usecases.find(u => u.id === drawerFlowId) : null;
     const detailEnabled = detailFlow ? isFlowVisuallyEnabled(detailFlow) : false;
