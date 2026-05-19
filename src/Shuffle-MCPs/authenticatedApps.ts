@@ -49,6 +49,27 @@ const cache = new Map<string, CacheEntry>();
 
 const cacheKey = (crossOrgId?: string | null): string => crossOrgId || '';
 
+// Mirror of processAuthData in useAppAuth.ts: invalidate validations that are
+// older than 30 days so every consumer of this fetcher (IntegrationStatus dot,
+// AppDetailDrawer badge, etc.) agrees on whether an auth is still "valid".
+// Without this, the sidebar could show a green dot while the drawer shows
+// yellow "Pending" — they were reading the same row but applying different
+// freshness rules.
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+const applyValidationStaleness = (data: AuthenticatedAppRaw[]): AuthenticatedAppRaw[] => {
+  const cutoff = Date.now() - THIRTY_DAYS_MS;
+  return data.map((entry) => {
+    const v: any = entry.validation;
+    if (v?.valid === true && v?.last_valid) {
+      const lastValidMs = v.last_valid > 1e12 ? v.last_valid : v.last_valid * 1000;
+      if (lastValidMs < cutoff) {
+        return { ...entry, validation: { ...v, valid: false, error: 'Validation expired (older than 30 days)' } };
+      }
+    }
+    return entry;
+  });
+};
+
 const doFetch = async (crossOrgId?: string | null): Promise<AuthenticatedAppRaw[]> => {
   // getAuthHeader() now scopes to the active org by default; pass crossOrgId
   // explicitly to override when reading from a different tenant.
@@ -62,7 +83,7 @@ const doFetch = async (crossOrgId?: string | null): Promise<AuthenticatedAppRaw[
   if (!response.ok) return [];
   const result = await response.json();
   const data = result?.data || result;
-  return Array.isArray(data) ? data : [];
+  return Array.isArray(data) ? applyValidationStaleness(data) : [];
 };
 
 /**
