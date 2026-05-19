@@ -31,7 +31,7 @@ import { Search, ArrowRight, ArrowLeft, Download, Zap, Activity, CheckCircle2, C
 import ReactGA from 'react-ga4';
 import shuffleSecurityIcon from '../assets/shuffle-icon.png';
 import UsecaseAlluvialDiagram from './UsecaseAlluvialDiagram';
-import { AppSearchDrawer } from '@shuffleio/shuffle-mcps';
+import { AppSearchDrawer, useAppDetailOptional } from '@shuffleio/shuffle-mcps';
 import { useUsecaseOutcomes } from '../hooks/useUsecaseOutcomes';
 import { UsecaseOutcomeSection } from '../components/UsecaseOutcome';
 // ── Flow phases ────────────────────────────────────────────────────────────────
@@ -1436,6 +1436,7 @@ function IntegrationStatusLite({
   selectedId?: string;
 }) {
   const { apiUrl, authHeader } = useApi();
+  const appDetail = useAppDetailOptional();
   const [integrations, setIntegrations] = useState<IntegrationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -1580,7 +1581,10 @@ function IntegrationStatusLite({
         <Box
           onMouseEnter={() => onHover?.(integration)}
           onMouseLeave={() => onHover?.(null)}
-          onClick={onSelect ? () => onSelect(integration) : undefined}
+          onClick={() => {
+            if (appDetail && integration.name) appDetail.openApp(integration.name);
+            onSelect?.(integration);
+          }}
           sx={{
             position: 'relative',
             width: 32,
@@ -1596,7 +1600,7 @@ function IntegrationStatusLite({
             justifyContent: 'center',
             opacity: isReady ? 1 : 0.45,
             filter: isReady ? 'none' : 'grayscale(1)',
-            cursor: onSelect ? 'pointer' : 'default',
+            cursor: 'pointer',
             transition: 'transform 0.15s ease, opacity 0.15s ease, filter 0.15s ease',
             '&:hover': {
               transform: 'scale(1.1)',
