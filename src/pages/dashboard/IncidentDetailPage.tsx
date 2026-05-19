@@ -5036,6 +5036,13 @@ const IncidentDetailPage = () => {
           } else {
             pillOnClick = () => focusCorrelationFromTimeline(null);
           }
+        } else if (item.kind === 'routing-matched') {
+          // Scroll to the RoutingRulePreviewBanner so the user can act on the
+          // matched rule (apply severity/status, suggest move, etc.).
+          pillOnClick = () => {
+            const el = document.getElementById('routing-rule-preview-banner');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          };
         }
         const isClickable = !!pillOnClick;
         // Detect whether the pill represents (or correlates to) an observable
