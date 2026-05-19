@@ -552,7 +552,7 @@ export const IncidentCardView = ({
                         />
                       </Tooltip>
                     )}
-                    <StatusIcon size={16} color={statusInfo.color} />
+                    
                   </Box>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
