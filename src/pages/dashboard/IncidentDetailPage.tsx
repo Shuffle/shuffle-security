@@ -7127,6 +7127,23 @@ const IncidentDetailPage = () => {
                   </MenuItem>
                 </span>
               </Tooltip>
+              {/* Move to Tenant */}
+              <Tooltip title={isSaving ? 'Saving in progress — please wait' : ''} placement="left" disableHoverListener={!isSaving}>
+                <span>
+                  <MenuItem
+                    disabled={isSaving}
+                    sx={{ width: '100%' }}
+                    onClick={() => {
+                      setActionsMenuAnchor(null);
+                      setMoveTargetOrgId('');
+                      setShowMoveDialog(true);
+                    }}
+                  >
+                    <ForwardIcon size={16} style={{ marginRight: '8px' }} />
+                    Move to Tenant…
+                  </MenuItem>
+                </span>
+              </Tooltip>
               {!isResolved && <Divider />}
               {!isResolved && (
                 <Tooltip title={isSaving ? 'Saving in progress — please wait' : ''} placement="left" disableHoverListener={!isSaving}>
