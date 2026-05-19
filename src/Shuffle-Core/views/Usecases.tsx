@@ -3242,7 +3242,7 @@ function UsecaseCard({
             {flow.label}
           </Typography>
           {hasInterest && (
-            <Tooltip title="Interest shown" placement="top" arrow>
+            <Tooltip title="Interest shown (support only)" placement="top" arrow>
               <Box sx={{ display: 'inline-flex' }}>
                 <Sparkles size={13} style={{ color: 'hsl(var(--primary))' }} />
               </Box>
