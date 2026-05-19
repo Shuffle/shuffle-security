@@ -4710,19 +4710,27 @@ const IncidentDetailPage = () => {
             key={itemKey}
             onClick={showAsCreation ? () => {
               // The "Incident created" entry opens the source evidence:
-              // Email Thread panel for email-sourced incidents, otherwise
-              // the Description panel. Scroll into view and expand it if
-              // currently collapsed.
-              const el =
-                (document.querySelector('[data-tour="incident-email-thread"]') as HTMLElement | null)
-                || (document.querySelector('[data-tour="incident-description"]') as HTMLElement | null);
-              if (!el) return;
-              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              const header = el.querySelector(':scope > div') as HTMLElement | null;
-              if (header && header.getBoundingClientRect().height > 0) {
-                const expanded = el.children.length > 1;
-                if (!expanded) header.click();
-              }
+              // Email Thread for email-sourced incidents, otherwise the
+              // Description. Always expand the section if it's currently
+              // collapsed, then scroll it into view.
+              const emailEl = document.querySelector('[data-tour="incident-email-thread"]') as HTMLElement | null;
+              const descEl = document.querySelector('[data-tour="incident-description"]') as HTMLElement | null;
+              const target = emailEl
+                ? { el: emailEl, key: 'shuffle-incident-email-thread-open' }
+                : descEl
+                  ? { el: descEl, key: 'shuffle-incident-description-open' }
+                  : null;
+              if (!target) return;
+              try {
+                const isOpen = localStorage.getItem(target.key) === '1';
+                if (!isOpen) {
+                  const header = target.el.querySelector(':scope > div') as HTMLElement | null;
+                  header?.click();
+                }
+              } catch { /* ignore */ }
+              setTimeout(() => {
+                target.el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }, 80);
             } : undefined}
             sx={{
               p: 1.5,
