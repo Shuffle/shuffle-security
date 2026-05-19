@@ -2640,30 +2640,6 @@ function UsecaseDetailContent({
                 <Typography sx={{ fontSize: '0.64rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                   Your Tools
                 </Typography>
-                <Tooltip title={`Add ${endpoint.meta?.label || endpoint.title} tool`} placement="top" arrow>
-                  <IconButton
-                    size="small"
-                    onClick={() => setAddToolFor({
-                      side,
-                      categoryId: endpoint.categoryId,
-                    })}
-                    sx={{
-                      width: 18,
-                      height: 18,
-                      p: 0,
-                      border: '1px dashed hsla(var(--muted-foreground) / 0.4)',
-                      color: 'hsl(var(--muted-foreground))',
-                      transition: 'all 0.15s ease',
-                      '&:hover': {
-                        borderColor: 'hsl(var(--primary))',
-                        color: 'hsl(var(--primary))',
-                        bgcolor: 'hsla(var(--primary) / 0.08)',
-                      },
-                    }}
-                  >
-                    <Plus size={11} />
-                  </IconButton>
-                </Tooltip>
               </Box>
               <IntegrationStatusLite
                 key={`${endpoint.categoryId}-${integrationsRefreshKey}`}
@@ -2676,6 +2652,8 @@ function UsecaseDetailContent({
                 usecaseEnabledNames={enabledNamesSet}
                 onUsecaseAppToggle={flow.automationLabel ? handleUsecaseAppToggle : undefined}
                 usecaseLabel={flow.label}
+                onAddApp={() => setAddToolFor({ side, categoryId: endpoint.categoryId })}
+                addAppLabel={`Add ${endpoint.meta?.label || endpoint.title} tool`}
               />
             </Box>
             );
