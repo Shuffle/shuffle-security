@@ -1062,12 +1062,11 @@ const DashboardPage = () => {
       {/* ── Demo Mode CTA ────────────────────────────────────────────────────── */}
       <DemoModeCard />
 
-      {/* Overview is gated to support users only. When the Setup Guide is
-          incomplete it renders BELOW the guide; once complete it moves to the
-          top of the page. Not yet ready for general availability. */}
+      {/* Overview is shown to all users. When the Setup Guide is incomplete
+          it renders BELOW the guide; once complete it moves to the top. */}
       {/* ── Agent Notifications + Setup Guide + Overview (order swaps when setup complete) ── */}
       <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-      {!setupLoading && isSupport && (
+      {!setupLoading && (
         <Box sx={{ mb: 2, mt: 3, order: allComplete ? 0 : 2 }}>
           {(() => {
             const dashboardTabs = (
