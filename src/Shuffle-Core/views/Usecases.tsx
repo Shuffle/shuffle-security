@@ -2121,6 +2121,92 @@ function NotificationsOutcomeBlock() {
 }
 
 
+// IOC feeds usecase — discovers `ioc_<name>` datastore categories by
+// reading the IOC type config, then renders a total + per-type breakdown
+// inside the standard Outcome block.
+function IocFeedsOutcomeBlock() {
+  const { apiUrl, authHeader } = useApi();
+  const [entries, setEntries] = useState<{ name: string; total: number }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    const getOrgId = (): string | null => {
+      try {
+        const info = localStorage.getItem('shuffle_user_info');
+        return info ? JSON.parse(info)?.active_org?.id ?? null : null;
+      } catch {
+        return null;
+      }
+    };
+    const fetchTotal = async (orgId: string, category: string): Promise<number> => {
+      try {
+        const res = await fetch(
+          apiUrl(`/api/v1/orgs/${orgId}/list_cache?category=${encodeURIComponent(category)}&top=1`),
+          { credentials: 'include', headers: { ...authHeader() } },
+        );
+        if (!res.ok) return 0;
+        const data = await res.json();
+        const n = data?.total_amount ?? data?.total ?? data?.amount ?? 0;
+        return typeof n === 'number' && Number.isFinite(n) ? n : 0;
+      } catch {
+        return 0;
+      }
+    };
+    (async () => {
+      setLoading(true);
+      try {
+        const orgId = getOrgId();
+        if (!orgId) { if (!cancelled) setEntries([]); return; }
+
+        // Discover configured IOC type names from the ioc-config datastore.
+        const cfgRes = await fetch(
+          apiUrl(`/api/v1/orgs/${orgId}/list_cache?category=shuffle-security_ioc-config&top=200`),
+          { credentials: 'include', headers: { ...authHeader() } },
+        );
+        const cfgData = cfgRes.ok ? await cfgRes.json() : null;
+        const items: any[] = cfgData?.items || cfgData?.data || cfgData?.list_cache || [];
+        const names: string[] = Array.from(new Set(
+          (Array.isArray(items) ? items : [])
+            .map((it: any) => String(it?.key || it?.name || '').trim())
+            .filter(Boolean),
+        ));
+
+        const totals = await Promise.all(
+          names.map(async (name) => ({ name, total: await fetchTotal(orgId, `ioc_${name}`) })),
+        );
+        if (!cancelled) {
+          setEntries(totals.filter((e) => e.total > 0).sort((a, b) => b.total - a.total));
+        }
+      } catch {
+        if (!cancelled) setEntries([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [apiUrl, authHeader]);
+
+  const total = entries.reduce((s, e) => s + e.total, 0);
+  const outcome = {
+    kind: 'iocs_managed' as const,
+    primary: { value: total, label: 'observables tracked' },
+    breakdown: entries.slice(0, 8).map((e) => ({
+      key: e.name,
+      label: e.name.replace(/_/g, ' '),
+      value: e.total,
+    })),
+    windowDays: 30 as const,
+    isEmpty: !loading && total === 0,
+    emptyReason: 'no_data_yet' as const,
+  };
+
+  return <UsecaseOutcomeSection outcome={outcome} />;
+}
+
+
+
+
 function UsecaseDetailContent({
   flowId,
   hideBackNav = false,
