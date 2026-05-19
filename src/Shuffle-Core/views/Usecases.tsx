@@ -3275,7 +3275,7 @@ function UsecasesPageInner() {
             Usecases
           </Typography>
           <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-            All data flows across your security stack — grouped by implementation phase.
+            Some of Shuffle's default usecases across your security stack — grouped by implementation phase.
           </Typography>
         </Box>
         <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
