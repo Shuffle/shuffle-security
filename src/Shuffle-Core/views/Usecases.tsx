@@ -2572,11 +2572,16 @@ function UsecaseDetailContent({
                 onHover={(item) => setHoveredTool((prev) => ({ ...prev, [side]: item }))}
                 onSelect={(item) => setPinnedTool((prev) => ({ ...prev, [side]: prev[side]?.id === item.id ? null : item }))}
                 selectedId={pinned?.id}
+                usecaseEnabledNames={enabledNamesSet}
+                onUsecaseAppToggle={flow.automationLabel ? handleUsecaseAppToggle : undefined}
+                usecaseLabel={flow.label}
               />
             </Box>
             );
           })}
         </Box>
+          );
+        })()
         )}
       </Box>
       )}
