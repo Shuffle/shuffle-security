@@ -1600,7 +1600,7 @@ function IntegrationStatusLite({
             justifyContent: 'center',
             opacity: isReady ? 1 : 0.45,
             filter: isReady ? 'none' : 'grayscale(1)',
-            cursor: onSelect ? 'pointer' : 'default',
+            cursor: 'pointer',
             transition: 'transform 0.15s ease, opacity 0.15s ease, filter 0.15s ease',
             '&:hover': {
               transform: 'scale(1.1)',
