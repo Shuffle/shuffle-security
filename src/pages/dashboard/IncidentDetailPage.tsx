@@ -53,7 +53,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useAppDetail } from '@/Shuffle-MCPs/AppDetailContext';
 import { useDemo } from '@/context/DemoContext';
 import { forceCreateSingleDemoIncidentReturningKey } from '@/services/demoMode';
-import { DATASTORE_CATEGORIES, getDatastoreItem, getDatastoreItemPublic, setDatastoreItem, getDatastoreByCategory } from '@/Shuffle-MCPs/datastore';
+import { DATASTORE_CATEGORIES, getDatastoreItem, getDatastoreItemPublic, setDatastoreItem, deleteDatastoreItem, getDatastoreByCategory } from '@/Shuffle-MCPs/datastore';
 import IncidentReportDialog from '@/components/incidents/IncidentReportDialog';
 import type { GenerateReportInput } from '@/services/incidentReports';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
