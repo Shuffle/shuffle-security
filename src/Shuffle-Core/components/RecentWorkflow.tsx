@@ -1,22 +1,16 @@
 // @ts-nocheck
 /**
- * RecentWorkflow — list item used by FormInput's sidebar / explorer to render
- * a single recent workflow (form). Ported from Shuffle Core's
- * `RecentWorkflow.jsx`. Self-contained: no external Shuffle Core deps.
+ * RecentWorkflow — list item used by FormInput's sidebar to render a single
+ * recent workflow (form). Self-contained: no external Shuffle Core deps.
+ *
+ * Sized + colored using HSL tokens so it visually matches the rest of the
+ * Shuffle Security shell. Hover uses a subtle neutral background — never the
+ * brand orange — so the foreground text stays readable.
  */
-import React, { useContext } from "react";
-import {
-  Lock as LockIcon
-} from 'lucide-react';
+import React from "react";
+import { Lock as LockIcon } from "lucide-react";
 import { Link } from "react-router-dom";
-import {
-  Avatar,
-  Box,
-  Button,
-  Typography,
-  Tooltip,
-} from "@mui/material";
-import { getTheme, Context } from "./stubs";
+import { Avatar, Box, Tooltip, Typography } from "@mui/material";
 
 export interface RecentWorkflowProps {
   workflow: any;
@@ -31,13 +25,12 @@ const RecentWorkflow: React.FC<RecentWorkflowProps> = ({
   leftNavOpen,
   currentWorkflowId,
 }) => {
-  const { themeMode, brandColor } = useContext(Context);
-  const theme = getTheme(themeMode, brandColor);
-
   const [hovered, setHovered] = React.useState(false);
   if (!workflow) return null;
 
   const expandLeftNav = leftNavOpen === true || leftNavOpen === undefined;
+  const isActive = currentWorkflowId === workflow.id;
+  const isPrivate = workflow?.sharing !== "form";
 
   // Pull a header image out of input_markdown (<img src="..."> or ![](src))
   let relevantImageUrl = "";
@@ -56,82 +49,85 @@ const RecentWorkflow: React.FC<RecentWorkflowProps> = ({
     }
   }
 
-  return (
-    <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
-      <Link to={`/forms/${workflow?.id}`} style={{ textDecoration: "none" }}>
-        <Button
-          onClick={(e) => {
-            if (onclickHandler) {
-              e.preventDefault();
-              e.stopPropagation();
-              onclickHandler();
-            }
-          }}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            textTransform: "none",
-            width: "100%",
-            justifyContent: "flex-start",
-            textAlign: "left",
-            opacity: expandLeftNav ? 1 : 0,
-            transition: "opacity 0.1s",
-            borderRadius: theme.palette?.borderRadius,
-            backgroundColor:
-              hovered || currentWorkflowId === workflow.id
-                ? theme.palette.hoverColor
-                : "transparent",
-          }}
-          disableRipple
-        >
-          <Box style={{ display: "flex", marginRight: "auto", alignItems: "center", position: "relative" }}>
-            {relevantImageUrl ? (
-              <Avatar
-                alt={workflow?.name}
-                src={relevantImageUrl}
-                style={{ width: 24, height: 24, marginRight: 5 }}
-              />
-            ) : (
-              workflow?.apps?.slice(0, 2).map((data: any, index: number) => (
-                <Box key={index} style={{ position: "relative", marginLeft: index === 1 ? -8 : 0 }}>
-                  <Avatar
-                    alt={data.app_name}
-                    src={data.large_image ? data.large_image : "/images/no_image.png"}
-                    style={{ width: 24, height: 24 }}
-                  />
-                </Box>
-              ))
-            )}
-            <Typography
-              style={{
-                fontSize: 16,
-                marginLeft: 8,
-                maxWidth: 180,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {workflow?.name}
-            </Typography>
+  const background = isActive
+    ? "hsl(var(--primary) / 0.12)"
+    : hovered
+    ? "hsl(var(--muted) / 0.6)"
+    : "transparent";
 
-            {onclickHandler !== undefined && workflow.sharing !== "form" ? (
-              <Tooltip title="Private Org Form" placement="right">
-                <LockIcon
-                  style={{
-                    height: 15,
-                    width: 15,
-                    color: "hsl(var(--muted-foreground))",
-                    position: "absolute",
-                    left: -17,
-                  }}
-                />
-              </Tooltip>
-            ) : null}
-          </Box>
-        </Button>
-      </Link>
-    </div>
+  const border = isActive
+    ? "1px solid hsl(var(--primary) / 0.35)"
+    : "1px solid transparent";
+
+  const textColor = isActive
+    ? "hsl(var(--primary))"
+    : "hsl(var(--foreground))";
+
+  return (
+    <Link
+      to={`/forms/${workflow?.id}`}
+      style={{ textDecoration: "none", display: "block" }}
+      onClick={(e) => {
+        if (onclickHandler) {
+          e.preventDefault();
+          e.stopPropagation();
+          onclickHandler();
+        }
+      }}
+    >
+      <Box
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          width: "100%",
+          height: 32,
+          paddingX: 1,
+          borderRadius: 1,
+          backgroundColor: background,
+          border,
+          opacity: expandLeftNav ? 1 : 0,
+          transition: "background-color 120ms, border-color 120ms, opacity 120ms",
+          cursor: "pointer",
+        }}
+      >
+        {isPrivate ? (
+          <Tooltip title="Private org form" placement="right">
+            <LockIcon
+              size={12}
+              style={{ color: "hsl(var(--muted-foreground))", flexShrink: 0 }}
+            />
+          </Tooltip>
+        ) : (
+          <Box sx={{ width: 12, flexShrink: 0 }} />
+        )}
+
+        {relevantImageUrl ? (
+          <Avatar
+            alt={workflow?.name}
+            src={relevantImageUrl}
+            sx={{ width: 18, height: 18, flexShrink: 0 }}
+          />
+        ) : null}
+
+        <Typography
+          sx={{
+            fontSize: 13,
+            fontWeight: isActive ? 600 : 500,
+            color: textColor,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            flex: 1,
+            minWidth: 0,
+          }}
+        >
+          {workflow?.name}
+        </Typography>
+      </Box>
+    </Link>
   );
 };
 
