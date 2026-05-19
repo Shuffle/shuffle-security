@@ -8636,15 +8636,70 @@ const IncidentDetailPage = () => {
                   }}
                   MenuProps={{ PaperProps: { sx: { maxHeight: 360 } } }}
                 >
-                  {revisions.map((rev: any, i: number) => {
-                    const ts = normalizeToMs(rev?.edited ?? rev?.created);
-                    const label = ts ? new Date(ts).toLocaleString() : `Revision ${i + 1}`;
-                    return (
-                      <MenuItem key={i} value={i} sx={{ fontSize: '0.75rem' }}>
-                        {i === 0 ? `${label} · latest` : label}
-                      </MenuItem>
-                    );
-                  })}
+                  {(() => {
+                    const parseVal = (v: any) => {
+                      if (v === undefined || v === null) return null;
+                      if (typeof v === 'string') {
+                        try { return JSON.parse(v); } catch { return v; }
+                      }
+                      return v;
+                    };
+                    const flatten = (obj: any, prefix = '', out: Record<string, string> = {}) => {
+                      if (obj === null || obj === undefined) {
+                        out[prefix || '$'] = JSON.stringify(obj);
+                        return out;
+                      }
+                      if (typeof obj !== 'object') {
+                        out[prefix || '$'] = JSON.stringify(obj);
+                        return out;
+                      }
+                      if (Array.isArray(obj)) {
+                        if (obj.length === 0) out[prefix || '$'] = '[]';
+                        obj.forEach((v, i) => flatten(v, `${prefix}[${i}]`, out));
+                        return out;
+                      }
+                      const keys = Object.keys(obj);
+                      if (keys.length === 0) out[prefix || '$'] = '{}';
+                      keys.forEach((k) => flatten(obj[k], prefix ? `${prefix}.${k}` : k, out));
+                      return out;
+                    };
+                    const diffCount = (a: any, b: any) => {
+                      const fa = flatten(parseVal(a));
+                      const fb = flatten(parseVal(b));
+                      const keys = new Set([...Object.keys(fa), ...Object.keys(fb)]);
+                      let added = 0, removed = 0, changed = 0;
+                      keys.forEach((k) => {
+                        const inA = k in fa, inB = k in fb;
+                        if (inA && !inB) removed++;
+                        else if (!inA && inB) added++;
+                        else if (fa[k] !== fb[k]) changed++;
+                      });
+                      return { added, removed, changed, total: added + removed + changed };
+                    };
+                    return revisions.map((rev: any, i: number) => {
+                      const ts = normalizeToMs(rev?.edited ?? rev?.created);
+                      const label = ts ? new Date(ts).toLocaleString() : `Revision ${i + 1}`;
+                      // Compare against the previous (older) revision: index i+1
+                      const prev = revisions[i + 1];
+                      const counts = prev ? diffCount(prev?.value, rev?.value) : null;
+                      return (
+                        <MenuItem key={i} value={i} sx={{ fontSize: '0.75rem', display: 'flex', justifyContent: 'space-between', gap: 2 }}>
+                          <span>{i === 0 ? `${label} · latest` : label}</span>
+                          {counts && counts.total > 0 ? (
+                            <span style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>
+                              {counts.added > 0 && <span style={{ color: 'hsl(142 70% 45%)' }}>+{counts.added} </span>}
+                              {counts.removed > 0 && <span style={{ color: 'hsl(0 70% 55%)' }}>-{counts.removed} </span>}
+                              {counts.changed > 0 && <span style={{ color: 'hsl(var(--primary))' }}>~{counts.changed}</span>}
+                            </span>
+                          ) : prev ? (
+                            <span style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>no changes</span>
+                          ) : (
+                            <span style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>initial</span>
+                          )}
+                        </MenuItem>
+                      );
+                    });
+                  })()}
                 </Select>
               )}
               <Button
