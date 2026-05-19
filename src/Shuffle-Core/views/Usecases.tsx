@@ -33,7 +33,7 @@ import ReactGA from 'react-ga4';
 import shuffleSecurityIcon from '../assets/shuffle-icon.png';
 import UsecaseAlluvialDiagram from './UsecaseAlluvialDiagram';
 import { AppSearchDrawer, useAppDetailOptional } from '@shuffleio/shuffle-mcps';
-import { extractWorkflowAppNames, normalizeAppName } from '@/Shuffle-MCPs/ingestionDetection';
+import { extractWorkflowAppNames, normalizeAppName, getIngestionCategory } from '@/Shuffle-MCPs/ingestionDetection';
 import { useUsecaseOutcomes } from '../hooks/useUsecaseOutcomes';
 import { UsecaseOutcomeSection } from '../components/UsecaseOutcome';
 // ── Flow phases ────────────────────────────────────────────────────────────────
@@ -2112,15 +2112,59 @@ function UsecaseDetailContent({
     setToggling(true);
     setOptimisticEnabled(willBeEnabled);
     try {
+      // When disabling, the same workflow (e.g. "Ingest Tickets") may also be
+      // powering sibling usecases that share a category (SIEM / EDR / Email
+      // all generate the same ingestion workflow). A blind action_name=remove
+      // would nuke the workflow for those siblings too. Instead, strip only
+      // the apps belonging to THIS usecase's source category and re-post the
+      // remaining list. If nothing is left, fall back to remove.
+      const requestBody: Record<string, string> = {
+        label: flow.automationLabel,
+      };
+      if (flow.automationCategory) requestBody.category = flow.automationCategory;
+      if (willBeEnabled) {
+        // no extra fields — generate as usual
+      } else {
+        const linkedForApps = findWorkflowsForUsecase(flow, workflows);
+        const currentNames = new Set<string>();
+        for (const wf of linkedForApps) {
+          extractWorkflowAppNames(wf).forEach((n) => currentNames.add(n));
+        }
+        const stripKeys = new Set(
+          (categoryAppNames[flow.source] || []).map((n) => normalizeAppName(n)),
+        );
+        const remainingKeys = new Set(
+          Array.from(currentNames).filter((k) => !stripKeys.has(k)),
+        );
+        // Preserve original casing from the catalog where possible.
+        const catalog: string[] = [
+          ...((categoryAppNames[flow.source] || []) as string[]),
+          ...((categoryAppNames[flow.target] || []) as string[]),
+        ];
+        const remainingNames: string[] = [];
+        const seen = new Set<string>();
+        for (const n of catalog) {
+          const k = normalizeAppName(n);
+          if (remainingKeys.has(k) && !seen.has(k)) {
+            remainingNames.push(n);
+            seen.add(k);
+          }
+        }
+        // Add any leftover names that weren't in the local catalog snapshot.
+        for (const k of remainingKeys) {
+          if (!seen.has(k)) { remainingNames.push(k); seen.add(k); }
+        }
+        if (remainingNames.length > 0) {
+          requestBody.app_name = remainingNames.join(',');
+        } else {
+          requestBody.action_name = 'remove';
+        }
+      }
       const res = await fetch(apiUrl('/api/v2/workflows/generate'), {
         method: 'POST',
         credentials: 'include',
         headers: { ...authHeader(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          label: flow.automationLabel,
-          ...(flow.automationCategory ? { category: flow.automationCategory } : {}),
-          ...(willBeEnabled ? {} : { action_name: 'remove' }),
-        }),
+        body: JSON.stringify(requestBody),
       });
       let body: any = null;
       try { body = await res.json(); } catch { /* ignore */ }
@@ -3384,12 +3428,14 @@ function UsecasesPageInner() {
                 isAuthenticated={isAuthenticated}
                 hasValidatedSource={validatedCategories.has(flow.source)}
                 onToggled={handleUsecaseWorkflowGenerated}
+                workflows={workflows}
                 onClick={() => setDrawerFlowId(flow.id)}
                 onEnable={() => {
                   setAutoEnableFlowId(flow.id);
                   setDrawerFlowId(flow.id);
                 }}
               />
+
             ))}
           </Box>
         </Box>
@@ -3505,6 +3551,7 @@ function UsecaseCard({
   isAuthenticated = true,
   hasValidatedSource = true,
   onToggled,
+  workflows = [],
   onClick,
   onEnable,
 }: {
@@ -3517,6 +3564,7 @@ function UsecaseCard({
   isAuthenticated?: boolean;
   hasValidatedSource?: boolean;
   onToggled?: (label: string, enabled: boolean) => void;
+  workflows?: WorkflowSummary[];
   onClick: () => void;
   /** Optional parent handler — when provided, clicking the card's Enable
    *  button delegates to this instead of toggling inline. The list view uses
@@ -3564,15 +3612,47 @@ function UsecaseCard({
     setToggling(true);
     setOptimisticEnabled(willBeEnabled);
     try {
+      // Same logic as UsecaseDetailContent.handleToggle: when disabling, the
+      // backing workflow may be shared with sibling usecases (SIEM / EDR /
+      // Email all share "Ingest Tickets"). Strip only this usecase's source
+      // apps and re-post the remainder instead of nuking the workflow.
+      const requestBody: Record<string, string> = { label: flow.automationLabel };
+      if (flow.automationCategory) requestBody.category = flow.automationCategory;
+      if (!willBeEnabled) {
+        const sourceToIngest: Record<string, string> = {
+          email: 'email', edr: 'edr', siem: 'siem', case_management: 'cases',
+        };
+        const thisCat = sourceToIngest[flow.source];
+        const linked = findWorkflowsForUsecase(flow, workflows);
+        const currentNames: string[] = [];
+        const seen = new Set<string>();
+        for (const wf of linked) {
+          for (const action of (wf.actions || [])) {
+            const candidates: string[] = [];
+            if (action.app_name) candidates.push(action.app_name);
+            if (Array.isArray(action.parameters)) {
+              for (const p of action.parameters) {
+                if (p?.name === 'app_name' && p.value) candidates.push(p.value);
+              }
+            }
+            for (const n of candidates) {
+              const k = normalizeAppName(n);
+              if (!seen.has(k)) { currentNames.push(n); seen.add(k); }
+            }
+          }
+        }
+        const remaining = currentNames.filter((n) => {
+          const cat = getIngestionCategory(n);
+          return thisCat ? cat !== thisCat : true;
+        });
+        if (remaining.length > 0) requestBody.app_name = remaining.join(',');
+        else requestBody.action_name = 'remove';
+      }
       const res = await fetch(apiUrl('/api/v2/workflows/generate'), {
         method: 'POST',
         credentials: 'include',
         headers: { ...authHeader(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          label: flow.automationLabel,
-          ...(flow.automationCategory ? { category: flow.automationCategory } : {}),
-          ...(willBeEnabled ? {} : { action_name: 'remove' }),
-        }),
+        body: JSON.stringify(requestBody),
       });
       let body: any = null;
       try { body = await res.json(); } catch { /* ignore */ }
