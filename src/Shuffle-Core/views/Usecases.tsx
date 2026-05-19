@@ -2112,15 +2112,59 @@ function UsecaseDetailContent({
     setToggling(true);
     setOptimisticEnabled(willBeEnabled);
     try {
+      // When disabling, the same workflow (e.g. "Ingest Tickets") may also be
+      // powering sibling usecases that share a category (SIEM / EDR / Email
+      // all generate the same ingestion workflow). A blind action_name=remove
+      // would nuke the workflow for those siblings too. Instead, strip only
+      // the apps belonging to THIS usecase's source category and re-post the
+      // remaining list. If nothing is left, fall back to remove.
+      const requestBody: Record<string, string> = {
+        label: flow.automationLabel,
+      };
+      if (flow.automationCategory) requestBody.category = flow.automationCategory;
+      if (willBeEnabled) {
+        // no extra fields — generate as usual
+      } else {
+        const linkedForApps = findWorkflowsForUsecase(flow, workflows);
+        const currentNames = new Set<string>();
+        for (const wf of linkedForApps) {
+          extractWorkflowAppNames(wf).forEach((n) => currentNames.add(n));
+        }
+        const stripKeys = new Set(
+          (categoryAppNames[flow.source] || []).map((n) => normalizeAppName(n)),
+        );
+        const remainingKeys = new Set(
+          Array.from(currentNames).filter((k) => !stripKeys.has(k)),
+        );
+        // Preserve original casing from the catalog where possible.
+        const catalog: string[] = [
+          ...((categoryAppNames[flow.source] || []) as string[]),
+          ...((categoryAppNames[flow.target] || []) as string[]),
+        ];
+        const remainingNames: string[] = [];
+        const seen = new Set<string>();
+        for (const n of catalog) {
+          const k = normalizeAppName(n);
+          if (remainingKeys.has(k) && !seen.has(k)) {
+            remainingNames.push(n);
+            seen.add(k);
+          }
+        }
+        // Add any leftover names that weren't in the local catalog snapshot.
+        for (const k of remainingKeys) {
+          if (!seen.has(k)) { remainingNames.push(k); seen.add(k); }
+        }
+        if (remainingNames.length > 0) {
+          requestBody.app_name = remainingNames.join(',');
+        } else {
+          requestBody.action_name = 'remove';
+        }
+      }
       const res = await fetch(apiUrl('/api/v2/workflows/generate'), {
         method: 'POST',
         credentials: 'include',
         headers: { ...authHeader(), 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          label: flow.automationLabel,
-          ...(flow.automationCategory ? { category: flow.automationCategory } : {}),
-          ...(willBeEnabled ? {} : { action_name: 'remove' }),
-        }),
+        body: JSON.stringify(requestBody),
       });
       let body: any = null;
       try { body = await res.json(); } catch { /* ignore */ }
