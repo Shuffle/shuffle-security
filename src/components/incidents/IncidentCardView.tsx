@@ -626,13 +626,13 @@ export const IncidentCardView = ({
                           onFilterChange?.('assignee', incident.assignee || '');
                         }}
                         sx={{
-                          backgroundColor: 'hsl(var(--primary) / 0.12)',
-                          color: 'hsl(var(--primary))',
+                          backgroundColor: 'hsl(var(--muted) / 0.5)',
+                          color: 'hsl(var(--muted-foreground))',
                           fontWeight: 500,
                           fontSize: '0.65rem',
                           height: 22,
                           cursor: 'pointer',
-                          '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.22)' },
+                          '&:hover': { backgroundColor: 'hsl(var(--muted))' },
                         }}
                       />
                     </>
