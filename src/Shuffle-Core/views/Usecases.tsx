@@ -1749,6 +1749,8 @@ function UsecaseDetailContent({
   hasValidatedSource = true,
   onToggled,
   workflows = [],
+  autoEnable = false,
+  onAutoEnableConsumed,
 }: {
   flowId: string | undefined;
   hideBackNav?: boolean;
@@ -1769,6 +1771,13 @@ function UsecaseDetailContent({
   onToggled?: (label: string, enabled: boolean) => void;
   /** Org workflows from /api/v1/workflows — used to render the "Linked Workflows" section */
   workflows?: WorkflowSummary[];
+  /** When true and this flow is not yet enabled, automatically trigger Enable
+   *  on mount. Used by the list view so clicking Enable on a card opens the
+   *  detail drawer AND fires the enable action, letting the user watch the
+   *  workflow appear in realtime. */
+  autoEnable?: boolean;
+  /** Called once after autoEnable has been honored so the parent can clear its flag. */
+  onAutoEnableConsumed?: () => void;
 }) {
   const navigate = useNavigate();
   const { apiUrl, authHeader } = useApi();
@@ -1854,6 +1863,33 @@ function UsecaseDetailContent({
       setToggling(false);
     }
   };
+
+  // Auto-enable bridge: when the list view opens the detail drawer with the
+  // `autoEnable` flag set, fire Enable exactly once as soon as we have a
+  // toggleable flow that is not already on. This is what lets a user click
+  // Enable on a card and immediately watch the workflow materialize inside the
+  // detail view (linked workflow appearing, Enabled chip, etc.).
+  const autoEnableFiredRef = React.useRef(false);
+  useEffect(() => {
+    if (!autoEnable) {
+      autoEnableFiredRef.current = false;
+      return;
+    }
+    if (autoEnableFiredRef.current) return;
+    if (!flow || !canToggle || toggling) return;
+    if (effectiveEnabled) {
+      // Already on — nothing to do; just consume the flag.
+      autoEnableFiredRef.current = true;
+      onAutoEnableConsumed?.();
+      return;
+    }
+    autoEnableFiredRef.current = true;
+    onAutoEnableConsumed?.();
+    handleToggle();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoEnable, flow?.id, canToggle, effectiveEnabled, toggling]);
+
+
 
 
   useEffect(() => {
@@ -2479,6 +2515,8 @@ function UsecasesPageInner() {
   // We still accept legacy URL-encoded labels ("SIEM%20alerts") for back-compat.
   const drawerLabel = routeParams.flowId ? decodeURIComponent(routeParams.flowId) : null;
   const [drawerFlowId, setDrawerFlowIdState] = useState<string | null>(null);
+  // When set, the drawer auto-fires Enable for this flow id once it mounts.
+  const [autoEnableFlowId, setAutoEnableFlowId] = useState<string | null>(null);
 
   // Resolve a slug/label from the URL to a flow id once usecases load (and
   // whenever the URL segment changes). Match is permissive so deep-links keep
@@ -3020,6 +3058,10 @@ function UsecasesPageInner() {
                 hasValidatedSource={validatedCategories.has(flow.source)}
                 onToggled={handleUsecaseWorkflowGenerated}
                 onClick={() => setDrawerFlowId(flow.id)}
+                onEnable={() => {
+                  setAutoEnableFlowId(flow.id);
+                  setDrawerFlowId(flow.id);
+                }}
               />
             ))}
           </Box>
@@ -3114,6 +3156,8 @@ function UsecasesPageInner() {
                 hasValidatedSource={drawerHasValidatedSource}
                 onToggled={handleUsecaseWorkflowGenerated}
                 workflows={workflows}
+                autoEnable={autoEnableFlowId !== null && autoEnableFlowId === drawerFlowId}
+                onAutoEnableConsumed={() => setAutoEnableFlowId(null)}
               />
             );
           })()}
@@ -3135,6 +3179,7 @@ function UsecaseCard({
   hasValidatedSource = true,
   onToggled,
   onClick,
+  onEnable,
 }: {
   flow: Usecase;
   drift?: UsecaseDrift;
@@ -3146,6 +3191,12 @@ function UsecaseCard({
   hasValidatedSource?: boolean;
   onToggled?: (label: string, enabled: boolean) => void;
   onClick: () => void;
+  /** Optional parent handler — when provided, clicking the card's Enable
+   *  button delegates to this instead of toggling inline. The list view uses
+   *  this to open the detail drawer first and then auto-fire Enable inside
+   *  it, so the user can watch the workflow appear in realtime. Disable
+   *  still happens inline (no need for context). */
+  onEnable?: () => void;
 }) {
   const sourceCat = categoryLabel(flow.source);
   const isComingSoon = !ACTIVE_USECASE_IDS.includes(flow.id);
@@ -3169,6 +3220,12 @@ function UsecaseCard({
     e.preventDefault();
     if (!flow.automationLabel || toggling) return;
     const willBeEnabled = !effectiveEnabled;
+    // When enabling from the list, hand off to the parent so the detail
+    // drawer opens and the user can watch the workflow materialize.
+    if (willBeEnabled && onEnable) {
+      onEnable();
+      return;
+    }
     if (willBeEnabled && !hasValidatedSource) {
       toast.warning(`No active ${sourceCat} integration`, {
         description: `Enabling ${flow.label} will not do anything until you connect and validate a ${sourceCat} tool. The workflow has no input to react to and may be disabled again automatically.`,
