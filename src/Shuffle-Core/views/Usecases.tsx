@@ -2391,67 +2391,87 @@ function UsecaseDetailContent({
                   <Clock size={14} />
                   Coming soon
                 </Box>
-              ) : canToggle && flow.automationLabel && (
-                <Tooltip
-                  title={
-                    !effectiveEnabled && !hasValidatedSource
-                      ? `No active ${flow.source ? categoryLabel(flow.source) : 'source'} integration is connected. Enabling will not do anything until a ${flow.source ? categoryLabel(flow.source) : 'source'} tool is authenticated — the workflow will be disabled again automatically.`
-                      : ''
-                  }
-                  placement="top"
-                  arrow
-                  disableHoverListener={effectiveEnabled || hasValidatedSource}
-                  disableFocusListener={effectiveEnabled || hasValidatedSource}
-                  disableTouchListener={effectiveEnabled || hasValidatedSource}
-                >
-                  <span>
-                    <Button
-                      size="small"
-                      variant="contained"
-                      disableElevation
-                      onClick={handleToggle}
-                      disabled={toggling}
-                      startIcon={
-                        toggling ? (
-                          <CircularProgress size={12} sx={{ color: 'inherit' }} />
-                        ) : effectiveEnabled ? (
-                          <PowerOff size={14} />
-                        ) : (
-                          <Power size={14} />
-                        )
-                      }
-                      sx={{
-                        flexShrink: 0,
-                        textTransform: 'none',
-                        fontSize: '0.78rem',
-                        fontWeight: 600,
-                        minHeight: 0,
-                        py: 0.6,
-                        px: 1.25,
-                        bgcolor: effectiveEnabled
-                          ? 'transparent'
-                          : 'hsl(var(--primary, 24 100% 50%))',
-                        color: effectiveEnabled
-                          ? 'hsl(var(--foreground))'
-                          : 'hsl(var(--primary-foreground, 0 0% 100%))',
-                        border: effectiveEnabled
-                          ? '1px solid hsl(var(--border))'
-                          : '1px solid transparent',
-                        boxShadow: 'none',
-                        '&:hover': {
-                          bgcolor: effectiveEnabled
-                            ? 'transparent'
-                            : 'hsla(24, 100%, 50%, 0.9)',
-                          borderColor: effectiveEnabled ? 'hsl(var(--foreground) / 0.4)' : 'transparent',
+              ) : canToggle && flow.automationLabel && (() => {
+                const needsAuth = !effectiveEnabled && !hasValidatedSource;
+                const sourceName = flow.source ? categoryLabel(flow.source) : 'source';
+                return (
+                  <Tooltip
+                    title={
+                      needsAuth
+                        ? `${sourceName} is not authenticated yet. This usecase cannot run until a ${sourceName} tool is connected and validated.`
+                        : ''
+                    }
+                    placement="top"
+                    arrow
+                    disableHoverListener={!needsAuth}
+                    disableFocusListener={!needsAuth}
+                    disableTouchListener={!needsAuth}
+                  >
+                    <span>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        disableElevation
+                        onClick={needsAuth && flow.source
+                          ? () => setAddToolFor({ side: 'source', categoryId: flow.source! })
+                          : handleToggle}
+                        disabled={toggling}
+                        startIcon={
+                          toggling ? (
+                            <CircularProgress size={12} sx={{ color: 'inherit' }} />
+                          ) : needsAuth ? (
+                            <AlertTriangle size={14} />
+                          ) : effectiveEnabled ? (
+                            <PowerOff size={14} />
+                          ) : (
+                            <Power size={14} />
+                          )
+                        }
+                        sx={{
+                          flexShrink: 0,
+                          textTransform: 'none',
+                          fontSize: '0.78rem',
+                          fontWeight: 600,
+                          minHeight: 0,
+                          py: 0.6,
+                          px: 1.25,
+                          bgcolor: needsAuth
+                            ? 'hsla(45, 93%, 47%, 0.12)'
+                            : effectiveEnabled
+                              ? 'transparent'
+                              : 'hsl(var(--primary, 24 100% 50%))',
+                          color: needsAuth
+                            ? 'hsl(45 93% 47%)'
+                            : effectiveEnabled
+                              ? 'hsl(var(--foreground))'
+                              : 'hsl(var(--primary-foreground, 0 0% 100%))',
+                          border: needsAuth
+                            ? '1px solid hsl(45 93% 47% / 0.4)'
+                            : effectiveEnabled
+                              ? '1px solid hsl(var(--border))'
+                              : '1px solid transparent',
                           boxShadow: 'none',
-                        },
-                      }}
-                    >
-                      {effectiveEnabled ? 'Disable' : 'Enable'}
-                    </Button>
-                  </span>
-                </Tooltip>
-              )}
+                          '&:hover': {
+                            bgcolor: needsAuth
+                              ? 'hsla(45, 93%, 47%, 0.2)'
+                              : effectiveEnabled
+                                ? 'transparent'
+                                : 'hsla(24, 100%, 50%, 0.9)',
+                            borderColor: needsAuth
+                              ? 'hsl(45 93% 47% / 0.6)'
+                              : effectiveEnabled ? 'hsl(var(--foreground) / 0.4)' : 'transparent',
+                            boxShadow: 'none',
+                          },
+                        }}
+                      >
+                        {needsAuth
+                          ? `Authenticate ${sourceName} first`
+                          : effectiveEnabled ? 'Disable' : 'Enable'}
+                      </Button>
+                    </span>
+                  </Tooltip>
+                );
+              })()}
             </Box>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1.25 }}>
               <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, px: 1, py: 0.35, borderRadius: 1, bgcolor: accentBg(phaseInfo.color, 0.12), color: accent(phaseInfo.color), border: `1px solid ${accentBg(phaseInfo.color, 0.25)}` }}>
