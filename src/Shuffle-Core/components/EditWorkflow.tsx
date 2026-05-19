@@ -67,11 +67,6 @@ import {
 	Slider,
 
 } from "@mui/material";
-import {
-	DatePicker,
-	LocalizationProvider,
-} from '@mui/x-date-pickers';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
 
 import { SegmentedControl } from "./ui/segmented-control";
@@ -1663,20 +1658,19 @@ const EditWorkflow = (props) => {
 							</Typography>
 
 
-							<LocalizationProvider style={{marginLeft: 0, }} dateAdapter={AdapterDayjs}>
-								<DatePicker
-									sx={{
-										marginTop: 3,
-										marginLeft: 3,
-									}}
-									value={dueDate}
-									label="Due Date"
-									format="YYYY-MM-DD"
-									onChange={(newValue) => {
-										setDueDate(newValue)
-									}}
-								/>
-							</LocalizationProvider>
+							<TextField
+								type="date"
+								label="Due Date"
+								sx={{
+									marginTop: 3,
+									marginLeft: 3,
+								}}
+								value={dueDate?.format ? dueDate.format("YYYY-MM-DD") : ""}
+								onChange={(event) => {
+									setDueDate(event.target.value ? dayjs(event.target.value) : null)
+								}}
+								InputLabelProps={{ shrink: true }}
+							/>
 
 							<FormControl style={{ marginTop: 15, }}>
 								<FormLabel style={{ marginBottom: 8 }}>Type</FormLabel>
