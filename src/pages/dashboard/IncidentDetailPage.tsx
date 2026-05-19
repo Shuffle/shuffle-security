@@ -90,6 +90,13 @@ import { MergeCandidatesBanner } from '@/components/incidents/MergeCandidatesBan
 import { DemoFallbackAuditBanner } from '@/components/incidents/DemoFallbackAuditBanner';
 import { useMergeCandidates } from '@/hooks/useMergeCandidates';
 import { RoutingRulePreviewBanner } from '@/components/incidents/RoutingRulePreviewBanner';
+import {
+  ROUTING_DATASTORE_CATEGORY,
+  type RoutingRule,
+  ACTION_TYPE_LABELS,
+} from '@/components/settings/IncidentRoutingEditor';
+import { evaluateRoutingRules, type IncidentEvaluationContext } from '@/utils/routingRuleEvaluator';
+import { GitBranch as CallSplitIcon } from 'lucide-react';
 import { buildAgentContextBlock, stripAgentContextBlock } from '@/utils/agentContextBlock';
 import { MentionText } from '@/components/incidents/MentionText';
 import CollapsibleContent from '@/components/incidents/CollapsibleContent';
@@ -1583,6 +1590,58 @@ const IncidentDetailPage = () => {
     const found = subOrgs.find(o => o.id === crossOrgId);
     return found ? { name: found.name, image: found.image } : null;
   }, [crossOrgId, subOrgs, parentOrg]);
+
+  // ── Routing rule matches (powers both the preview banner AND timeline pills) ──
+  // Rules live on the PARENT org's `shuffle-security_routing` datastore; on a
+  // parent we fall back to the active org id. The result is also injected as
+  // synthetic "routing-matched" steps in the unified timeline so users can see
+  // at a glance which rules would fire — without scrolling up to the banner.
+  const routingRulesOrgId = parentOrg?.id || userInfo?.active_org?.id;
+  const { items: routingRuleItems, fetchItems: fetchRoutingRules } = useDatastore({
+    category: ROUTING_DATASTORE_CATEGORY,
+    orgId: routingRulesOrgId,
+  });
+  useEffect(() => {
+    if (routingRulesOrgId) fetchRoutingRules();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routingRulesOrgId]);
+  const routingRules: RoutingRule[] = useMemo(() => {
+    const out: RoutingRule[] = [];
+    for (const it of routingRuleItems) {
+      try {
+        const v = typeof it.value === 'string' ? JSON.parse(it.value) : it.value;
+        if (v && typeof v === 'object') {
+          const actions = Array.isArray(v.actions) ? v.actions : (v.action ? [v.action] : []);
+          out.push({
+            id: v.id || it.key,
+            name: v.name || 'Untitled rule',
+            enabled: v.enabled !== false,
+            priority: Number.isFinite(v.priority) ? v.priority : 100,
+            matchMode: v.matchMode === 'any' ? 'any' : 'all',
+            conditions: Array.isArray(v.conditions) ? v.conditions : [],
+            actions,
+          });
+        }
+      } catch { /* skip malformed */ }
+    }
+    return out;
+  }, [routingRuleItems]);
+  const routingContext: IncidentEvaluationContext = useMemo(() => ({
+    title: editedTitle || incident?.title,
+    description: editedMessage,
+    source: incident?.source,
+    severity: editedSeverity,
+    status: editedStatus,
+    labels: editedLabels,
+    observables: editedObservables,
+    stakeholders: editedStakeholders,
+    rawOCSF: incident?.rawOCSF,
+  }), [editedTitle, editedMessage, editedSeverity, editedStatus, editedLabels, editedObservables, editedStakeholders, incident]);
+  const routingMatches = useMemo(
+    () => evaluateRoutingRules(routingContext, routingRules),
+    [routingContext, routingRules]
+  );
+
 
   // Detect which other orgs share the same incident key
   // Primary source: shared_orgs query param from the list page (most reliable)
@@ -4162,7 +4221,7 @@ const IncidentDetailPage = () => {
   // Builder for the unified timeline items (revisions + agent runs + comments).
   // Returns an array of JSX nodes (or a single empty-state node).
   const renderTimelineFeedItems = (variant: 'sidebar' | 'inline' = 'sidebar') => {
-    type StepKind = 'task-created' | 'task-completed' | 'task-status-changed' | 'observable-added' | 'correlation-found' | 'incident-created';
+    type StepKind = 'task-created' | 'task-completed' | 'task-status-changed' | 'observable-added' | 'correlation-found' | 'incident-created' | 'routing-matched';
     type TimelineItem =
       | { type: 'revision'; timestamp: number; data: any; idx: number; parsedCurrent: any; parsedPrevious: any | null }
       | { type: 'agent'; timestamp: number; data: typeof agentRuns[number] }
@@ -4239,6 +4298,31 @@ const IncidentDetailPage = () => {
         items.push({ type: 'agent', timestamp: ts, data: run });
       });
     }
+
+    // Routing rule matches — synthetic step pills anchored to incident creation
+    // so they appear at the bottom of the (newest-first) timeline. Rides along
+    // with the Agent filter since routing decisions are automation events.
+    if (isFilterActive('agent') && routingMatches.length > 0) {
+      const ts = incident?.createdTs ? normalizeToMs(incident.createdTs) : Date.now();
+      routingMatches.forEach((m, i) => {
+        const firstAction = m.rule.actions[0];
+        const actionLabel = firstAction
+          ? `${ACTION_TYPE_LABELS[firstAction.type] || firstAction.type}${firstAction.value ? `: ${firstAction.value}` : ''}`
+          : 'no action';
+        const more = m.rule.actions.length > 1 ? ` (+${m.rule.actions.length - 1} more)` : '';
+        items.push({
+          type: 'step',
+          kind: 'routing-matched',
+          // Stagger by 1ms so multiple matches keep a stable order.
+          timestamp: ts + i,
+          id: `step-routing-${m.rule.id}`,
+          label: `Routing rule matched: ${m.rule.name}`,
+          detail: `${actionLabel}${more}`,
+        });
+      });
+    }
+
+
 
     if (isFilterActive('manual')) {
       activity.forEach((item) => {
@@ -4888,6 +4972,7 @@ const IncidentDetailPage = () => {
           'observable-added':     { color: '#06b6d4', icon: <VisibilityIcon size={12} /> },
           'correlation-found':    { color: '#f59e0b', icon: <LinkIcon size={12} /> },
           'incident-created':     { color: '#6495ed', icon: <HistoryIcon size={12} /> },
+          'routing-matched':      { color: 'hsl(var(--primary))', icon: <CallSplitIcon size={12} /> },
         };
         const cfg = stepStyle[item.kind];
         // Highlight observable-added pills when the underlying observable
@@ -4951,6 +5036,13 @@ const IncidentDetailPage = () => {
           } else {
             pillOnClick = () => focusCorrelationFromTimeline(null);
           }
+        } else if (item.kind === 'routing-matched') {
+          // Scroll to the RoutingRulePreviewBanner so the user can act on the
+          // matched rule (apply severity/status, suggest move, etc.).
+          pillOnClick = () => {
+            const el = document.getElementById('routing-rule-preview-banner');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          };
         }
         const isClickable = !!pillOnClick;
         // Detect whether the pill represents (or correlates to) an observable
@@ -6014,6 +6106,7 @@ const IncidentDetailPage = () => {
           rules against the current incident state. Suggests applying matched
           actions without waiting for the workflow to write back results. */}
       {!isPublicView && incident && (
+        <div id="routing-rule-preview-banner">
         <RoutingRulePreviewBanner
           incidentId={incident.id}
           context={{
@@ -6055,6 +6148,7 @@ const IncidentDetailPage = () => {
             );
           }}
         />
+        </div>
       )}
 
       {/* Agent action required banner — shown when navigating from dashboard */}
