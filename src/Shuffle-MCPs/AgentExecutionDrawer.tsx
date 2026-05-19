@@ -13,7 +13,7 @@ import {
   X as CloseIcon,
   ExternalLink as OpenInNewIcon
 } from 'lucide-react';
-import type { SxProps, Theme } from '@mui/material/styles';
+import type { SxProps, Theme } from '@mui/material';
 import AgentUI, { type AgentUIProps } from './AgentUI';
 import AgentIcon from './AgentIcon';
 import {
