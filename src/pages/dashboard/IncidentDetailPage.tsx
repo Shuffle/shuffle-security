@@ -6099,6 +6099,7 @@ const IncidentDetailPage = () => {
           rules against the current incident state. Suggests applying matched
           actions without waiting for the workflow to write back results. */}
       {!isPublicView && incident && (
+        <div id="routing-rule-preview-banner">
         <RoutingRulePreviewBanner
           incidentId={incident.id}
           context={{
