@@ -714,15 +714,15 @@ export const IncidentCardView = ({
                                e.preventDefault();
                                onFilterChange?.('tag', label);
                              }}
-                             sx={{
-                               backgroundColor: 'hsl(var(--severity-info) / 0.12)',
-                               color: 'hsl(var(--severity-info))',
-                               fontWeight: 500,
-                               fontSize: '0.65rem',
-                               height: 22,
-                               cursor: 'pointer',
-                               '&:hover': { backgroundColor: 'hsl(var(--severity-info) / 0.22)' },
-                             }}
+                              sx={{
+                                backgroundColor: 'hsl(var(--muted) / 0.5)',
+                                color: 'hsl(var(--muted-foreground))',
+                                fontWeight: 500,
+                                fontSize: '0.65rem',
+                                height: 22,
+                                cursor: 'pointer',
+                                '&:hover': { backgroundColor: 'hsl(var(--muted))' },
+                              }}
                            />
                          ))}
                          {visibleLabels.length > 3 && (
