@@ -1366,15 +1366,7 @@ const FormInput = (defaultprops: any) => {
 		return (
 			<div style={{paddingTop: 24, width: "100%", maxWidth: 480, margin: "0 auto", textAlign: "center"}}>
 
-				{forms !== undefined && forms !== null && forms.length > 0 ?
-					<div style={{textAlign: "left"}}>
-						<Typography variant="subtitle1" style={{marginBottom: 16, fontWeight: 600, color: "hsl(var(--foreground))"}}>
-							Available forms
-						</Typography>
-						<FormList />
-					</div>
-					:
-					!isLoggedIn ?
+				{!isLoggedIn ?
 					<div style={{paddingTop: 32, paddingBottom: 32}}>
 						<div style={{
 							width: 56, height: 56, borderRadius: 14,
@@ -1412,7 +1404,7 @@ const FormInput = (defaultprops: any) => {
 							Log in
 						</Button>
 					</div>
-					:
+					: (forms === undefined || forms === null || forms.length === 0) ?
 					<div style={{paddingTop: 32, paddingBottom: 32}}>
 						<Typography variant="h6" style={{marginBottom: 8, fontWeight: 600, color: "hsl(var(--foreground))"}}>
 							No forms found
@@ -1421,6 +1413,7 @@ const FormInput = (defaultprops: any) => {
 							All workflows are forms, and can be accessed by going to /forms/{`{workflow_id}`}. You can control the form by editing the workflow details in the Forms section.
 						</Typography>	
 					</div>
+					: null
 				}
 
 				{workflows === undefined || workflows === null || workflows.length === 0 ? null : 
