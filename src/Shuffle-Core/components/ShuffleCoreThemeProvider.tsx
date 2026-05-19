@@ -8,7 +8,7 @@
  * every call site.
  */
 import React from "react";
-import { ThemeProvider, createTheme, useTheme as useMuiTheme } from "@mui/material/styles";
+import { ThemeProvider, createTheme, useTheme as useMuiTheme } from "@mui/material";
 
 const shuffleCoreTheme = createTheme({
   components: {
