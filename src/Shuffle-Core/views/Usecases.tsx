@@ -3647,6 +3647,10 @@ function UsecaseCard({
         }
         const remaining = currentNames.filter((n) => {
           const cat = getIngestionCategory(n);
+          // Only sibling ingestion sources (siem/edr/email) justify keeping
+          // the workflow alive — destination/Cases apps are shared by every
+          // ingestion usecase and would falsely leave it looking enabled.
+          if (!cat || cat === 'other' || cat === 'cases') return false;
           return thisCat ? cat !== thisCat : true;
         });
         if (remaining.length > 0) requestBody.app_name = remaining.join(',');
