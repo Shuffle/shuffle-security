@@ -3239,11 +3239,12 @@ function UsecaseCard({
       return;
     }
     if (willBeEnabled && !hasValidatedSource) {
-      toast.warning(`No active ${sourceCat} integration`, {
-        description: `Enabling ${flow.label} will not do anything until you connect and validate a ${sourceCat} tool. The workflow has no input to react to and may be disabled again automatically.`,
-        duration: 9000,
+      // Hard-block — see UsecaseDetailContent.handleToggle for rationale.
+      toast.error(`Authenticate a ${sourceCat} tool first`, {
+        description: `${flow.label} needs a validated ${sourceCat} integration as input. Without one, the workflow has nothing to react to and will not be created.`,
+        duration: 10000,
       });
-      // Continue and let the user enable it anyway — the backend will reflect reality.
+      return;
     }
     setToggling(true);
     setOptimisticEnabled(willBeEnabled);
