@@ -178,7 +178,7 @@ export const OrgTrendChart = ({ incidents, dateFrom, dateTo }: OrgTrendChartProp
           </Box>
         </Box>
         {hasData ? (
-          <ChartContent height={100} />
+          <OrgChartContent buckets={buckets} orgNames={orgNames} height={100} />
         ) : (
           <Box sx={{ height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem' }}>No data in range</Typography>
@@ -229,7 +229,7 @@ export const OrgTrendChart = ({ incidents, dateFrom, dateTo }: OrgTrendChartProp
             </Box>
           </Box>
           {hasData ? (
-            <ChartContent height={350} />
+            <OrgChartContent buckets={buckets} orgNames={orgNames} height={350} />
           ) : (
             <Box sx={{ height: 350, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Typography sx={{ color: 'hsl(var(--muted-foreground))' }}>No data in range</Typography>
