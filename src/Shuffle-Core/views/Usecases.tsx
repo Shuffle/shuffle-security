@@ -2783,7 +2783,7 @@ function UsecaseDetailContent({
               toast.success(enabled
                 ? `${appName} enabled for ${flow.label}`
                 : `${appName} disabled for ${flow.label}`);
-              setIntegrationsRefreshKey((k2) => k2 + 1);
+              invalidateAppsCache(); setIntegrationsRefreshKey((k2) => k2 + 1);
               onToggled?.(flow.automationLabel, activeNames.length > 0);
             } catch (err: any) {
               toast.error(`Failed to ${enabled ? 'enable' : 'disable'} ${appName}`, {
@@ -2979,7 +2979,7 @@ function UsecaseDetailContent({
           setAddToolFor(null);
           // Force IntegrationStatusLite to re-fetch so a newly authenticated
           // app shows up immediately under Your Tools.
-          setIntegrationsRefreshKey((k) => k + 1);
+          invalidateAppsCache(); setIntegrationsRefreshKey((k) => k + 1);
         }}
         title={`Add ${addToolFor ? categoryLabel(addToolFor.categoryId) : ''} Tool`}
         subtitle="Search and authenticate an integration"
@@ -3029,7 +3029,7 @@ function UsecaseDetailContent({
               return;
             }
             toast.success(`${app.name} added to ${flow.label}`);
-            setIntegrationsRefreshKey((k) => k + 1);
+            invalidateAppsCache(); setIntegrationsRefreshKey((k) => k + 1);
             onToggled?.(flow.automationLabel!, true);
           }).catch((err) => {
             toast.error(`Failed to add ${app.name}`, {
