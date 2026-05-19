@@ -7,7 +7,7 @@
  */
 
 import { Box, Typography, Button, Chip, CircularProgress, Tooltip } from '@mui/material';
-import { Sparkles, Play, Trash2, ArrowRight } from 'lucide-react';
+import { Play, Trash2, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useDemo } from '@/context/DemoContext';
