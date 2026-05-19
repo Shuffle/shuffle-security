@@ -637,35 +637,7 @@ export const IncidentCardView = ({
                       />
                     </>
                   )}
-                  {isParentOrg && incident.orgName && !(incident.sharedOrgs && incident.sharedOrgs.length > 1) && (
-                    <>
-                      <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-                        •
-                      </Typography>
-                      <Chip
-                        avatar={incident.orgImage ? <img src={incident.orgImage} alt="" style={{ width: 14, height: 14, borderRadius: '50%', objectFit: 'cover' }} /> : undefined}
-                        icon={!incident.orgImage ? <Globe size={10} /> : undefined}
-                        label={incident.orgName && incident.orgName.length > 20 ? incident.orgName.slice(0, 18) + '…' : incident.orgName}
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          onFilterChange?.('org', incident.orgId || incident.orgName || '');
-                        }}
-                        title={incident.orgName}
-                        sx={{
-                          backgroundColor: 'transparent',
-                          color: 'hsl(var(--muted-foreground))',
-                          fontWeight: 400,
-                          fontSize: '0.65rem',
-                          height: 22,
-                          cursor: 'pointer',
-                          '& .MuiChip-icon': { color: 'hsl(var(--muted-foreground))', ml: 0.5 },
-                          '&:hover': { backgroundColor: 'hsl(var(--muted) / 0.5)' },
-                        }}
-                      />
-                    </>
-                  )}
+                  {/* Tenant chip intentionally hidden from the incidents list — too noisy. */}
                   {incident.sharedOrgs && incident.sharedOrgs.length > 1 && (
                     <>
                       <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
