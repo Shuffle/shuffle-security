@@ -1425,6 +1425,30 @@ interface IntegrationItem {
   active: boolean;
 }
 
+// Module-level shared cache so the multiple IntegrationStatusLite instances
+// rendered per page (Source + Destination per usecase, plus sidebars) reuse
+// a single in-flight fetch for /api/v1/apps and /api/v1/apps/authentication
+// instead of each firing their own. TTL is short so a manual refresh
+// (integrationsRefreshKey bump) still gets fresh data within ~5s, but a
+// burst of mounts within that window collapses to one network request.
+const APPS_TTL_MS = 5000;
+type CacheEntry = { ts: number; promise: Promise<Response> };
+const _appsFetchCache = new Map<string, CacheEntry>();
+function fetchAppsCached(url: string, init: RequestInit): Promise<Response> {
+  const now = Date.now();
+  const cached = _appsFetchCache.get(url);
+  if (cached && now - cached.ts < APPS_TTL_MS) {
+    // Clone so multiple consumers can each read the body.
+    return cached.promise.then((res) => res.clone());
+  }
+  const promise = fetch(url, init);
+  _appsFetchCache.set(url, { ts: now, promise });
+  return promise.then((res) => res.clone());
+}
+export function invalidateAppsCache() {
+  _appsFetchCache.clear();
+}
+
 function IntegrationStatusLite({
   filterApps,
   singleLine = false,
@@ -1479,11 +1503,11 @@ function IntegrationStatusLite({
     (async () => {
       try {
         const [authRes, appsRes] = await Promise.all([
-          fetch(apiUrl('/api/v1/apps/authentication'), {
+          fetchAppsCached(apiUrl('/api/v1/apps/authentication'), {
             credentials: 'include',
             headers: { ...authHeader() },
           }),
-          fetch(apiUrl('/api/v1/apps'), {
+          fetchAppsCached(apiUrl('/api/v1/apps'), {
             credentials: 'include',
             headers: { ...authHeader() },
           }).catch(() => null),
@@ -2759,7 +2783,7 @@ function UsecaseDetailContent({
               toast.success(enabled
                 ? `${appName} enabled for ${flow.label}`
                 : `${appName} disabled for ${flow.label}`);
-              setIntegrationsRefreshKey((k2) => k2 + 1);
+              invalidateAppsCache(); setIntegrationsRefreshKey((k2) => k2 + 1);
               onToggled?.(flow.automationLabel, activeNames.length > 0);
             } catch (err: any) {
               toast.error(`Failed to ${enabled ? 'enable' : 'disable'} ${appName}`, {
@@ -2955,7 +2979,7 @@ function UsecaseDetailContent({
           setAddToolFor(null);
           // Force IntegrationStatusLite to re-fetch so a newly authenticated
           // app shows up immediately under Your Tools.
-          setIntegrationsRefreshKey((k) => k + 1);
+          invalidateAppsCache(); setIntegrationsRefreshKey((k) => k + 1);
         }}
         title={`Add ${addToolFor ? categoryLabel(addToolFor.categoryId) : ''} Tool`}
         subtitle="Search and authenticate an integration"
@@ -3005,7 +3029,7 @@ function UsecaseDetailContent({
               return;
             }
             toast.success(`${app.name} added to ${flow.label}`);
-            setIntegrationsRefreshKey((k) => k + 1);
+            invalidateAppsCache(); setIntegrationsRefreshKey((k) => k + 1);
             onToggled?.(flow.automationLabel!, true);
           }).catch((err) => {
             toast.error(`Failed to add ${app.name}`, {
