@@ -7200,6 +7200,7 @@ const IncidentDetailPage = () => {
                 rawOCSF: incident?.rawOCSF,
               })}
             />
+            </Box>
 
           </Box>
         </Box>
