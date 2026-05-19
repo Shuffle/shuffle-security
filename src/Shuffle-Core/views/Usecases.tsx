@@ -2611,27 +2611,14 @@ function UsecaseDetailContent({
               </Typography>
               <Box sx={{ p: 1.5, borderRadius: 1.5, bgcolor: accentBg(endpoint.meta?.color, 0.06), border: `1px solid ${accentBg(endpoint.meta?.color, 0.15)}`, mb: 1.25, minHeight: 84 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                  <Box sx={{ width: 32, height: 32, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: activeTool ? '#ffffff' : accentBg(endpoint.meta?.color, 0.12), color: accent(endpoint.meta?.color), flexShrink: 0 }}>
-                    {activeTool && activeTool.icon ? (
-                      <Box component="img" src={activeTool.icon} alt={activeTool.name} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      endpoint.meta?.icon
-                    )}
+                  <Box sx={{ width: 32, height: 32, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: accentBg(endpoint.meta?.color, 0.12), color: accent(endpoint.meta?.color), flexShrink: 0 }}>
+                    {endpoint.meta?.icon}
                   </Box>
                   <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                       <Typography sx={{ fontSize: '0.9rem', fontWeight: 700, color: accent(endpoint.meta?.color) }}>
-                        {activeTool ? activeTool.name : (endpoint.meta?.label || 'Unknown')}
+                        {endpoint.meta?.label || 'Unknown'}
                       </Typography>
-                      {activeTool && (
-                        <Typography sx={{ fontSize: '0.62rem', fontWeight: 700, px: 0.75, py: 0.2, borderRadius: 0.75, textTransform: 'uppercase', letterSpacing: '0.04em',
-                          color: activeTool.validated ? '#22c55e' : activeTool.active ? '#f59e0b' : MUTED,
-                          bgcolor: activeTool.validated ? 'rgba(34,197,94,0.12)' : activeTool.active ? 'rgba(245,158,11,0.12)' : 'hsla(0,0%,60%,0.1)',
-                          border: `1px solid ${activeTool.validated ? 'rgba(34,197,94,0.35)' : activeTool.active ? 'rgba(245,158,11,0.35)' : 'hsla(0,0%,60%,0.25)'}`,
-                        }}>
-                          {activeTool.validated ? 'Validated' : activeTool.active ? 'Configured' : 'Not configured'}
-                        </Typography>
-                      )}
                     </Box>
                     <Typography sx={{
                       fontSize: '0.72rem',
@@ -2644,13 +2631,12 @@ function UsecaseDetailContent({
                       textOverflow: 'ellipsis',
                       minHeight: 'calc(0.72rem * 1.5 * 2)',
                     }}>
-                      {activeTool
-                        ? `${endpoint.meta?.label || endpoint.title} tool · ${activeTool.validated ? 'Authentication tested and working' : activeTool.active ? 'Authentication added, not yet validated' : 'Not connected yet'}`
-                        : (endpoint.details ? endpoint.details.description.split('—')[0].trim() : '')}
+                      {endpoint.details ? endpoint.details.description.split('—')[0].trim() : ''}
                     </Typography>
                   </Box>
                 </Box>
               </Box>
+
 
               <IntegrationStatusLite
                 key={`${endpoint.categoryId}-${integrationsRefreshKey}`}
