@@ -570,6 +570,19 @@ export const DEFAULT_USECASES: Usecase[] = [
     },
   },
   {
+    id: 'asset_management_case_management_vuln_response_1', phase: 'response', source: 'asset_management', target: 'case_management',
+    label: 'Vulnerability Response',
+    tags: ['Response', 'Vulnerability', 'Remediation'],
+    description: 'Automatically open remediation tasks, patch tickets, or compensating-control workflows for vulnerabilities discovered during incident investigation — closing the loop between detection and fix.',
+    agenticDescription: 'An agent triages each confirmed exploitable CVE on an affected host, opens a remediation ticket with owner and SLA, applies a compensating control where possible, and tracks the fix back to the originating incident.',
+    automationArea: 'response',
+    customAction: {
+      label: 'Configure Vulnerabilities',
+      href: '/vulnerabilities',
+      description: 'Open the vulnerability inventory to wire up remediation workflows.',
+    },
+  },
+  {
     id: 'email_threat_intel_1', phase: 'correlation', source: 'email', target: 'threat_intel',
     label: 'Phishing IOCs',
     tags: ['Intel', 'Correlation', 'Logs'],
@@ -1828,7 +1841,6 @@ const ACTIVE_USECASE_IDS = [
   'edr_case_management_1',
   'email_case_management_1',
   'threat_intel_case_management_1',
-  'asset_management_case_management_vuln_1',
   'case_management_cases_forward_1',
   'case_management_asset_management_monitors_1',
   'case_management_assign_escalate_1',
