@@ -2515,6 +2515,8 @@ function UsecasesPageInner() {
   // We still accept legacy URL-encoded labels ("SIEM%20alerts") for back-compat.
   const drawerLabel = routeParams.flowId ? decodeURIComponent(routeParams.flowId) : null;
   const [drawerFlowId, setDrawerFlowIdState] = useState<string | null>(null);
+  // When set, the drawer auto-fires Enable for this flow id once it mounts.
+  const [autoEnableFlowId, setAutoEnableFlowId] = useState<string | null>(null);
 
   // Resolve a slug/label from the URL to a flow id once usecases load (and
   // whenever the URL segment changes). Match is permissive so deep-links keep
