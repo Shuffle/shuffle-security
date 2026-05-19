@@ -1436,6 +1436,8 @@ function IntegrationStatusLite({
   usecaseEnabledNames,
   onUsecaseAppToggle,
   usecaseLabel,
+  onAddApp,
+  addAppLabel,
 }: {
   filterApps?: string[];
   singleLine?: boolean;
@@ -1460,6 +1462,10 @@ function IntegrationStatusLite({
   onUsecaseAppToggle?: (appName: string, enabled: boolean) => Promise<void> | void;
   /** Short label for the parent usecase, shown in the popover (e.g. "Email reports"). */
   usecaseLabel?: string;
+  /** When provided, renders a trailing "+" tile at the end of the list. */
+  onAddApp?: () => void;
+  /** Tooltip / aria label for the add button. */
+  addAppLabel?: string;
 }) {
   const { apiUrl, authHeader } = useApi();
   const appDetail = useAppDetailOptional();
@@ -1568,7 +1574,7 @@ function IntegrationStatusLite({
     return <CircularProgress size={20} sx={{ color: 'hsl(var(--muted-foreground))' }} />;
   }
 
-  if (visible.length === 0) {
+  if (visible.length === 0 && !onAddApp) {
     return (
       <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', px: 1, py: 0.75 }}>
         No apps selected
@@ -1855,6 +1861,67 @@ function IntegrationStatusLite({
     );
   };
 
+  const renderAddTile = () => {
+    if (!onAddApp) return null;
+    return (
+      <Tooltip key="__add" title={addAppLabel || 'Add tool'} placement="top" arrow>
+        <Box
+          onClick={() => onAddApp()}
+          role="button"
+          aria-label={addAppLabel || 'Add tool'}
+          sx={{
+            width: 32,
+            height: 32,
+            flexShrink: 0,
+            borderRadius: '50% !important',
+            border: '1px dashed hsla(var(--muted-foreground) / 0.5)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'hsl(var(--muted-foreground))',
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+            '&:hover': {
+              borderColor: 'hsl(var(--primary))',
+              color: 'hsl(var(--primary))',
+              bgcolor: 'hsla(var(--primary) / 0.08)',
+              transform: 'scale(1.1)',
+            },
+          }}
+        >
+          <Plus size={14} />
+        </Box>
+      </Tooltip>
+    );
+  };
+
+  // When the parent passes per-usecase context, split into Enabled vs Available
+  // so it's obvious which apps are actually wired into the workflow and which
+  // are just authenticated and ready to add.
+  const useGroups = !!usecaseEnabledNames && !!onUsecaseAppToggle;
+  const normalize = (n: string) => n.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
+  const enabledList = useGroups
+    ? visible.filter((i) => usecaseEnabledNames!.has(normalize(i.name)))
+    : [];
+  const availableList = useGroups
+    ? visible.filter((i) => !usecaseEnabledNames!.has(normalize(i.name)))
+    : visible;
+
+  const GroupLabel = ({ children }: { children: React.ReactNode }) => (
+    <Typography
+      sx={{
+        fontSize: '0.6rem',
+        fontWeight: 700,
+        color: 'hsl(var(--muted-foreground))',
+        textTransform: 'uppercase',
+        letterSpacing: '0.06em',
+        mb: 0.5,
+      }}
+    >
+      {children}
+    </Typography>
+  );
+
   if (singleLine) {
     return (
       <Box
@@ -1874,6 +1941,38 @@ function IntegrationStatusLite({
         }}
       >
         {visible.map(renderIcon)}
+        {renderAddTile()}
+        {renderPopover()}
+      </Box>
+    );
+  }
+
+  if (useGroups) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, px: 0.5, py: 0.5 }}>
+        <Box>
+          <GroupLabel>
+            Enabled{enabledList.length > 0 ? ` · ${enabledList.length}` : ''}
+          </GroupLabel>
+          {enabledList.length > 0 ? (
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {enabledList.map(renderIcon)}
+            </Box>
+          ) : (
+            <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', fontStyle: 'italic' }}>
+              None yet — pick one from Available below.
+            </Typography>
+          )}
+        </Box>
+        <Box>
+          <GroupLabel>
+            Available{availableList.length > 0 ? ` · ${availableList.length}` : ''}
+          </GroupLabel>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            {availableList.map(renderIcon)}
+            {renderAddTile()}
+          </Box>
+        </Box>
         {renderPopover()}
       </Box>
     );
@@ -1882,6 +1981,7 @@ function IntegrationStatusLite({
   return (
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, px: 0.5, py: 0.5 }}>
       {visible.map(renderIcon)}
+      {renderAddTile()}
       {renderPopover()}
     </Box>
   );
@@ -2540,30 +2640,6 @@ function UsecaseDetailContent({
                 <Typography sx={{ fontSize: '0.64rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                   Your Tools
                 </Typography>
-                <Tooltip title={`Add ${endpoint.meta?.label || endpoint.title} tool`} placement="top" arrow>
-                  <IconButton
-                    size="small"
-                    onClick={() => setAddToolFor({
-                      side,
-                      categoryId: endpoint.categoryId,
-                    })}
-                    sx={{
-                      width: 18,
-                      height: 18,
-                      p: 0,
-                      border: '1px dashed hsla(var(--muted-foreground) / 0.4)',
-                      color: 'hsl(var(--muted-foreground))',
-                      transition: 'all 0.15s ease',
-                      '&:hover': {
-                        borderColor: 'hsl(var(--primary))',
-                        color: 'hsl(var(--primary))',
-                        bgcolor: 'hsla(var(--primary) / 0.08)',
-                      },
-                    }}
-                  >
-                    <Plus size={11} />
-                  </IconButton>
-                </Tooltip>
               </Box>
               <IntegrationStatusLite
                 key={`${endpoint.categoryId}-${integrationsRefreshKey}`}
@@ -2576,6 +2652,8 @@ function UsecaseDetailContent({
                 usecaseEnabledNames={enabledNamesSet}
                 onUsecaseAppToggle={flow.automationLabel ? handleUsecaseAppToggle : undefined}
                 usecaseLabel={flow.label}
+                onAddApp={() => setAddToolFor({ side, categoryId: endpoint.categoryId })}
+                addAppLabel={`Add ${endpoint.meta?.label || endpoint.title} tool`}
               />
             </Box>
             );
