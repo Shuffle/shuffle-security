@@ -1864,6 +1864,33 @@ function UsecaseDetailContent({
     }
   };
 
+  // Auto-enable bridge: when the list view opens the detail drawer with the
+  // `autoEnable` flag set, fire Enable exactly once as soon as we have a
+  // toggleable flow that is not already on. This is what lets a user click
+  // Enable on a card and immediately watch the workflow materialize inside the
+  // detail view (linked workflow appearing, Enabled chip, etc.).
+  const autoEnableFiredRef = React.useRef(false);
+  useEffect(() => {
+    if (!autoEnable) {
+      autoEnableFiredRef.current = false;
+      return;
+    }
+    if (autoEnableFiredRef.current) return;
+    if (!flow || !canToggle || toggling) return;
+    if (effectiveEnabled) {
+      // Already on — nothing to do; just consume the flag.
+      autoEnableFiredRef.current = true;
+      onAutoEnableConsumed?.();
+      return;
+    }
+    autoEnableFiredRef.current = true;
+    onAutoEnableConsumed?.();
+    handleToggle();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoEnable, flow?.id, canToggle, effectiveEnabled, toggling]);
+
+
+
 
   useEffect(() => {
     let cancelled = false;
