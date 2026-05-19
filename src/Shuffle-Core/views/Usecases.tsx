@@ -2688,6 +2688,8 @@ function UsecaseDetailContent({
 
       <FlowOutcomeBlock flow={flow} sourceCategoryLabel={sourceCat?.label} />
 
+      {flow.automationArea === 'notifications' && <NotificationsUsecaseList />}
+
       {showConnectionPath && (
       <Box sx={{ p: 3, borderRadius: 2, border: CARD_BORDER, bgcolor: CARD_BG, mb: 3 }}>
         {useAlluvialDiagram && ['siem_case_management_1', 'edr_case_management_1', 'email_case_management_1'].includes(flow.id) ? (
