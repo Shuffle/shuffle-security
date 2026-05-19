@@ -1819,12 +1819,23 @@ function UsecaseDetailContent({
     if (!flow?.automationLabel || toggling) return;
     const willBeEnabled = !effectiveEnabled;
     if (willBeEnabled && !hasValidatedSource) {
+      // Hard-block the enable. The /workflows/generate endpoint may return
+      // success: true and then quietly skip creating the workflow when no
+      // source tool is authenticated, which makes the UI look like it worked
+      // until the next /workflows refresh reveals the truth. Refuse up front
+      // and point the user at the fix instead.
       const sourceName = flow.source ? categoryLabel(flow.source) : 'source';
-      toast.warning(`No active ${sourceName} integration`, {
-        description: `Enabling ${flow.label} will not do anything until you connect and validate a ${sourceName} tool. The workflow has no input to react to and may be disabled again automatically.`,
-        duration: 9000,
+      toast.error(`Authenticate a ${sourceName} tool first`, {
+        description: `${flow.label} needs a validated ${sourceName} integration as input. Without one, the workflow has nothing to react to and will not be created.`,
+        duration: 10000,
+        action: flow.source
+          ? {
+              label: `Connect ${sourceName}`,
+              onClick: () => setAddToolFor({ side: 'source', categoryId: flow.source! }),
+            }
+          : undefined,
       });
-      // Continue and let the user enable it anyway — the backend will reflect reality.
+      return;
     }
     setToggling(true);
     setOptimisticEnabled(willBeEnabled);
