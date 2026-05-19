@@ -1436,6 +1436,8 @@ function IntegrationStatusLite({
   usecaseEnabledNames,
   onUsecaseAppToggle,
   usecaseLabel,
+  onAddApp,
+  addAppLabel,
 }: {
   filterApps?: string[];
   singleLine?: boolean;
@@ -1460,6 +1462,10 @@ function IntegrationStatusLite({
   onUsecaseAppToggle?: (appName: string, enabled: boolean) => Promise<void> | void;
   /** Short label for the parent usecase, shown in the popover (e.g. "Email reports"). */
   usecaseLabel?: string;
+  /** When provided, renders a trailing "+" tile at the end of the list. */
+  onAddApp?: () => void;
+  /** Tooltip / aria label for the add button. */
+  addAppLabel?: string;
 }) {
   const { apiUrl, authHeader } = useApi();
   const appDetail = useAppDetailOptional();
