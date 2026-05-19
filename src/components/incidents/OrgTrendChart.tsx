@@ -97,6 +97,38 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
+const OrgChartContent = ({ buckets, orgNames, height = 100 }: { buckets: Record<string, any>[]; orgNames: string[]; height?: number }) => (
+  <ResponsiveContainer width="100%" height={height}>
+    <AreaChart data={buckets} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+      <defs>
+        {orgNames.map((name, i) => (
+          <linearGradient key={name} id={`org-gradient-${i}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={ORG_PALETTE[i % ORG_PALETTE.length]} stopOpacity={0.3} />
+            <stop offset="100%" stopColor={ORG_PALETTE[i % ORG_PALETTE.length]} stopOpacity={0.02} />
+          </linearGradient>
+        ))}
+      </defs>
+      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+      <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
+      <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} allowDecimals={false} />
+      <RechartsTooltip content={<CustomTooltip />} />
+      {orgNames.map((name, i) => (
+        <Area
+          key={name}
+          type="monotone"
+          dataKey={name}
+          stroke={ORG_PALETTE[i % ORG_PALETTE.length]}
+          strokeWidth={2}
+          fill={`url(#org-gradient-${i})`}
+          dot={false}
+          activeDot={{ r: 4, strokeWidth: 2, stroke: ORG_PALETTE[i % ORG_PALETTE.length], fill: 'hsl(var(--card))' }}
+          isAnimationActive={false}
+        />
+      ))}
+    </AreaChart>
+  </ResponsiveContainer>
+);
+
 export const OrgTrendChart = ({ incidents, dateFrom, dateTo }: OrgTrendChartProps) => {
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -107,38 +139,6 @@ export const OrgTrendChart = ({ incidents, dateFrom, dateTo }: OrgTrendChartProp
   }, [incidents, dateFrom, dateTo]);
 
   const hasData = buckets.some(b => orgNames.some(n => b[n] > 0));
-
-  const ChartContent = ({ height = 100 }: { height?: number }) => (
-    <ResponsiveContainer width="100%" height={height}>
-      <AreaChart data={buckets} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-        <defs>
-          {orgNames.map((name, i) => (
-            <linearGradient key={name} id={`org-gradient-${i}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={ORG_PALETTE[i % ORG_PALETTE.length]} stopOpacity={0.3} />
-              <stop offset="100%" stopColor={ORG_PALETTE[i % ORG_PALETTE.length]} stopOpacity={0.02} />
-            </linearGradient>
-          ))}
-        </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
-        <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} interval="preserveStartEnd" />
-        <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} axisLine={false} allowDecimals={false} />
-        <RechartsTooltip content={<CustomTooltip />} />
-        {orgNames.map((name, i) => (
-          <Area
-            key={name}
-            type="monotone"
-            dataKey={name}
-            stroke={ORG_PALETTE[i % ORG_PALETTE.length]}
-            strokeWidth={2}
-            fill={`url(#org-gradient-${i})`}
-            dot={false}
-            activeDot={{ r: 4, strokeWidth: 2, stroke: ORG_PALETTE[i % ORG_PALETTE.length], fill: 'hsl(var(--card))' }}
-            isAnimationActive={false}
-          />
-        ))}
-      </AreaChart>
-    </ResponsiveContainer>
-  );
 
   return (
     <>
@@ -178,7 +178,7 @@ export const OrgTrendChart = ({ incidents, dateFrom, dateTo }: OrgTrendChartProp
           </Box>
         </Box>
         {hasData ? (
-          <ChartContent height={100} />
+          <OrgChartContent buckets={buckets} orgNames={orgNames} height={100} />
         ) : (
           <Box sx={{ height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem' }}>No data in range</Typography>
@@ -229,7 +229,7 @@ export const OrgTrendChart = ({ incidents, dateFrom, dateTo }: OrgTrendChartProp
             </Box>
           </Box>
           {hasData ? (
-            <ChartContent height={350} />
+            <OrgChartContent buckets={buckets} orgNames={orgNames} height={350} />
           ) : (
             <Box sx={{ height: 350, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Typography sx={{ color: 'hsl(var(--muted-foreground))' }}>No data in range</Typography>
