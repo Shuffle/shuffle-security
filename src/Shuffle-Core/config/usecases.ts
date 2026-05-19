@@ -522,6 +522,19 @@ export const DEFAULT_USECASES: Usecase[] = [
     automationArea: 'notifications',
   },
   {
+    id: 'case_management_agent_response_1', phase: 'response', source: 'case_management', target: 'case_management',
+    label: 'Agent Response',
+    tags: ['Response', 'AI'],
+    description: 'The AI agent triages incoming incidents, gathers context, and executes the next-best response action — assigning, enriching, escalating, or running tools automatically.',
+    agenticDescription: 'An agent picks up every new incident, reasons over its observables and merge candidates, and either resolves it autonomously or hands it off with a fully prepared brief.',
+    automationArea: 'response',
+    customAction: {
+      label: 'Configure AI Agent',
+      href: '/incidents',
+      description: 'Open Incidents to manage the Run AI Agent automation on the incidents category.',
+    },
+  },
+  {
     id: 'case_management_iam_1', phase: 'response', source: 'case_management', target: 'iam',
     label: 'Disable accounts',
     tags: ['Response', 'Containment'],
