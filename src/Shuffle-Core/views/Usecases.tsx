@@ -1063,16 +1063,17 @@ function useApi() {
 // Real sonner toast — visible UI feedback for success/error.
 import { toast as sonnerToast } from '../toast';
 import { usePageMeta } from '../usePageMeta';
+type ToastOpts = { duration?: number; description?: string; action?: { label: string; onClick: () => void } };
 const toast = {
-  success: (msg: string, opts?: { duration?: number; description?: string }) => {
+  success: (msg: string, opts?: ToastOpts) => {
     if (typeof window !== 'undefined') console.info('[toast]', msg);
     sonnerToast.success(msg, opts);
   },
-  error: (msg: string, opts?: { duration?: number; description?: string }) => {
+  error: (msg: string, opts?: ToastOpts) => {
     if (typeof window !== 'undefined') console.error('[toast]', msg);
     sonnerToast.error(msg, opts);
   },
-  warning: (msg: string, opts?: { duration?: number; description?: string }) => {
+  warning: (msg: string, opts?: ToastOpts) => {
     if (typeof window !== 'undefined') console.warn('[toast]', msg);
     sonnerToast.warning(msg, opts);
   },
@@ -1819,12 +1820,23 @@ function UsecaseDetailContent({
     if (!flow?.automationLabel || toggling) return;
     const willBeEnabled = !effectiveEnabled;
     if (willBeEnabled && !hasValidatedSource) {
+      // Hard-block the enable. The /workflows/generate endpoint may return
+      // success: true and then quietly skip creating the workflow when no
+      // source tool is authenticated, which makes the UI look like it worked
+      // until the next /workflows refresh reveals the truth. Refuse up front
+      // and point the user at the fix instead.
       const sourceName = flow.source ? categoryLabel(flow.source) : 'source';
-      toast.warning(`No active ${sourceName} integration`, {
-        description: `Enabling ${flow.label} will not do anything until you connect and validate a ${sourceName} tool. The workflow has no input to react to and may be disabled again automatically.`,
-        duration: 9000,
+      toast.error(`Authenticate a ${sourceName} tool first`, {
+        description: `${flow.label} needs a validated ${sourceName} integration as input. Without one, the workflow has nothing to react to and will not be created.`,
+        duration: 10000,
+        action: flow.source
+          ? {
+              label: `Connect ${sourceName}`,
+              onClick: () => setAddToolFor({ side: 'source', categoryId: flow.source! }),
+            }
+          : undefined,
       });
-      // Continue and let the user enable it anyway — the backend will reflect reality.
+      return;
     }
     setToggling(true);
     setOptimisticEnabled(willBeEnabled);
@@ -3227,11 +3239,12 @@ function UsecaseCard({
       return;
     }
     if (willBeEnabled && !hasValidatedSource) {
-      toast.warning(`No active ${sourceCat} integration`, {
-        description: `Enabling ${flow.label} will not do anything until you connect and validate a ${sourceCat} tool. The workflow has no input to react to and may be disabled again automatically.`,
-        duration: 9000,
+      // Hard-block — see UsecaseDetailContent.handleToggle for rationale.
+      toast.error(`Authenticate a ${sourceCat} tool first`, {
+        description: `${flow.label} needs a validated ${sourceCat} integration as input. Without one, the workflow has nothing to react to and will not be created.`,
+        duration: 10000,
       });
-      // Continue and let the user enable it anyway — the backend will reflect reality.
+      return;
     }
     setToggling(true);
     setOptimisticEnabled(willBeEnabled);
