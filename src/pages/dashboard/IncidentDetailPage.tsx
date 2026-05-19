@@ -4320,6 +4320,9 @@ const IncidentDetailPage = () => {
           detail: `${actionLabel}${more}`,
         });
       });
+    }
+
+
 
     if (isFilterActive('manual')) {
       activity.forEach((item) => {
