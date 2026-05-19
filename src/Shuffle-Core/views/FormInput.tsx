@@ -2355,14 +2355,13 @@ const FormInput = (defaultprops: any) => {
 
 	const formSidebar = explorerUi === true || !isLoaded || overlap || !(forms !== undefined && forms !== null && forms.length > 1) ? null :
 		<div style={{
-			minWidth: 240,
-			maxWidth: 240,
+			width: 240,
 			overflowX: "hidden",
 			overflowY: "auto",
-			maxHeight: 500,
-			position: "absolute",
-			left: 150,
-			top: 75,
+			maxHeight: "calc(100vh - 140px)",
+			position: "fixed",
+			right: `calc(50% + ${boxWidth / 2}px + 24px)`,
+			top: 100,
 			border: "1px solid hsl(var(--border))",
 			borderRadius: 12,
 			padding: 12,
