@@ -113,21 +113,6 @@ export const DemoModeCard = ({ compact = false }: { compact?: boolean } = {}) =>
           textAlign: 'left',
         }}
       >
-        {/* Icon */}
-        <Box
-          sx={{
-            width: compact ? 34 : 44,
-            height: compact ? 34 : 44,
-            borderRadius: compact ? 1.5 : 2,
-            display: 'grid',
-            placeItems: 'center',
-            backgroundColor: 'hsl(var(--primary) / 0.15)',
-            color: 'hsl(var(--primary))',
-            flexShrink: 0,
-          }}
-        >
-          <Sparkles size={compact ? 17 : 22} />
-        </Box>
 
         {/* Body */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
