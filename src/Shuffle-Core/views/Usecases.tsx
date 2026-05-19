@@ -3116,10 +3116,27 @@ function UsecasesPageInner() {
     (flow: Usecase): boolean => {
       if (!flow.automationLabel) return false;
       if (!enabledLabels.has(flow.automationLabel)) return false;
-      return validatedCategories.has(flow.source);
+      if (!validatedCategories.has(flow.source)) return false;
+      // Ingestion usecases (email/edr/siem) share a workflow but each one
+      // only counts as "enabled" when an app of its own source category is
+      // actually wired into that workflow. Otherwise "Email reports" would
+      // still look enabled when only a CrowdStrike (EDR) tool is present.
+      const sourceToIngest: Record<string, 'email' | 'edr' | 'siem' | 'cases'> = {
+        email: 'email', edr: 'edr', siem: 'siem', case_management: 'cases',
+      };
+      const required = sourceToIngest[flow.source];
+      if (!required || required === 'cases') return true;
+      const linked = findWorkflowsForUsecase(flow, workflows);
+      for (const wf of linked) {
+        for (const name of extractWorkflowAppNames(wf)) {
+          if (getIngestionCategory(name) === required) return true;
+        }
+      }
+      return false;
     },
-    [enabledLabels, validatedCategories],
+    [enabledLabels, validatedCategories, workflows],
   );
+
 
   const handleUsecaseWorkflowGenerated = React.useCallback((label: string, enabled: boolean) => {
     setTrustedWorkflowStates((prev) => ({ ...prev, [label]: enabled }));
