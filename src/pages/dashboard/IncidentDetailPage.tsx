@@ -1063,6 +1063,7 @@ const IncidentDetailPage = () => {
   const [revisions, setRevisions] = useState<any[]>([]);
   const [revisionsLoading, setRevisionsLoading] = useState(false);
   const [revisionsLoaded, setRevisionsLoaded] = useState(false);
+  const [selectedRevisionIdx, setSelectedRevisionIdx] = useState<number | null>(null);
 
   // Tracks an OCSF-recovery fallback: when the live incident is not OCSF-shaped,
   // we look back through revisions for the most recent valid OCSF snapshot and
@@ -8608,7 +8609,7 @@ const IncidentDetailPage = () => {
               {revisions.length > 0 && (
                 <Select
                   size="small"
-                  value=""
+                  value={selectedRevisionIdx ?? ''}
                   displayEmpty
                   onChange={(e) => {
                     const idx = Number(e.target.value);
@@ -8617,15 +8618,21 @@ const IncidentDetailPage = () => {
                       try {
                         const payload = typeof rev.value === 'string' ? JSON.parse(rev.value) : rev.value;
                         setRawJsonText(JSON.stringify(payload, null, 2));
+                        setSelectedRevisionIdx(idx);
                         toast.success('Revision loaded — hit Save to persist');
                       } catch {
                         setRawJsonText(typeof rev.value === 'string' ? rev.value : JSON.stringify(rev.value, null, 2));
+                        setSelectedRevisionIdx(idx);
                       }
                     }
                   }}
                   renderValue={() => (
                     <Typography variant="caption" sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>
-                      {revisionsLoading ? 'Loading revisions…' : `Load revision (${revisions.length})`}
+                      {revisionsLoading
+                        ? 'Loading revisions…'
+                        : selectedRevisionIdx !== null
+                          ? `Viewing revision #${revisions.length - selectedRevisionIdx}`
+                          : `Load revision (${revisions.length})`}
                     </Typography>
                   )}
                   sx={{
@@ -8682,9 +8689,18 @@ const IncidentDetailPage = () => {
                       // Compare against the previous (older) revision: index i+1
                       const prev = revisions[i + 1];
                       const counts = prev ? diffCount(prev?.value, rev?.value) : null;
+                      const isSelected = selectedRevisionIdx === i;
                       return (
                         <MenuItem key={i} value={i} sx={{ fontSize: '0.75rem', display: 'flex', justifyContent: 'space-between', gap: 2 }}>
-                          <span>{i === 0 ? `${label} · latest` : label}</span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                            <span style={{ width: 14, display: 'inline-flex', justifyContent: 'center', color: 'hsl(var(--primary))' }}>
+                              {isSelected ? '✓' : ''}
+                            </span>
+                            <span style={{ fontWeight: isSelected ? 600 : 400 }}>
+                              {i === 0 ? `${label} · latest` : label}
+                              {isSelected ? ' · current' : ''}
+                            </span>
+                          </span>
                           {counts && counts.total > 0 ? (
                             <span style={{ fontFamily: 'monospace', fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>
                               {counts.added > 0 && <span style={{ color: 'hsl(142 70% 45%)' }}>+{counts.added} </span>}
