@@ -189,7 +189,7 @@ export const DemoSpotlight = () => {
           inset: 0,
           width: '100vw',
           height: '100vh',
-          zIndex: Z_BASE,
+          zIndex: targetZ,
           pointerEvents: 'none',
           transition: 'all 120ms ease-out',
         }}
@@ -221,7 +221,7 @@ export const DemoSpotlight = () => {
           width: w,
           height: h,
           borderRadius: radius,
-          zIndex: Z_BASE + 1,
+          zIndex: targetZ + 1,
           pointerEvents: 'none',
           boxShadow: '0 0 0 3px hsl(var(--primary)), 0 0 0 8px hsl(var(--primary) / 0.25)',
           animation: `${animationName} 1.6s ease-in-out infinite`,
