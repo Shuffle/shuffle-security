@@ -1616,6 +1616,13 @@ function IntegrationStatusLite({
           onMouseEnter={() => onHover?.(integration)}
           onMouseLeave={() => onHover?.(null)}
           onClick={(e) => {
+            // Hardcoded: Shuffle Security is the platform itself — clicking
+            // its icon jumps straight to /incidents instead of opening the
+            // per-app popover (no auth/enable affordances apply to it).
+            if (integration.id === 'shuffle-security') {
+              if (typeof window !== 'undefined') window.location.href = '/incidents';
+              return;
+            }
             setPopoverFor({ el: e.currentTarget as HTMLElement, item: integration });
             onSelect?.(integration);
           }}
