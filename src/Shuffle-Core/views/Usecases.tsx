@@ -2007,6 +2007,138 @@ function FlowOutcomeBlock({ flow, sourceCategoryLabel }: { flow: Usecase; source
   return <UsecaseOutcomeSection outcome={getOutcome(flow.id)} sourceCategoryLabel={sourceCategoryLabel} />;
 }
 
+// Notifications usecase — pulls live notifications from the API and shows
+// both open and read entries so users can see what actually went out.
+function NotificationsUsecaseList() {
+  const { apiUrl, authHeader } = useApi();
+  const [open, setOpen] = useState<any[]>([]);
+  const [read, setRead] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchOne = async (status: 'open' | 'read'): Promise<any[]> => {
+      const res = await fetch(apiUrl(`/api/v1/notifications?status=${status}`), {
+        credentials: 'include',
+        headers: { ...authHeader() },
+      });
+      if (!res.ok) throw new Error(`Request failed (${res.status})`);
+      const data = await res.json();
+      return Array.isArray(data?.notifications) ? data.notifications : [];
+    };
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [openList, readList] = await Promise.all([fetchOne('open'), fetchOne('read')]);
+        if (cancelled) return;
+        setOpen(openList);
+        setRead(readList);
+      } catch (err: any) {
+        if (cancelled) return;
+        setError(err?.message || 'Failed to load notifications');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [apiUrl, authHeader]);
+
+  const CARD_BG = 'hsl(var(--card, 0 0% 13%))';
+  const CARD_BORDER = '1px solid hsl(var(--border, 0 0% 20%))';
+  const FG = 'hsl(var(--foreground, 0 0% 100%))';
+  const MUTED = 'hsl(var(--muted-foreground, 0 0% 60%))';
+
+  const renderGroup = (title: string, items: any[], isRead: boolean) => (
+    <Box sx={{ mb: 2.5 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+        <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: FG, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+          {title}
+        </Typography>
+        <Typography sx={{ fontSize: '0.72rem', color: MUTED }}>({items.length})</Typography>
+      </Box>
+      {items.length === 0 ? (
+        <Typography sx={{ fontSize: '0.8rem', color: MUTED, fontStyle: 'italic' }}>
+          No {title.toLowerCase()} notifications.
+        </Typography>
+      ) : (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          {items.map((n) => {
+            const created = n.created_at ? new Date(n.created_at * 1000).toLocaleString() : '';
+            return (
+              <Box
+                key={n.id}
+                sx={{
+                  p: 1.5,
+                  borderRadius: 1.5,
+                  border: CARD_BORDER,
+                  bgcolor: 'hsla(0, 0%, 100%, 0.02)',
+                  opacity: isRead ? 0.7 : 1,
+                }}
+              >
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, mb: 0.5 }}>
+                  <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: FG }}>
+                    {n.title || 'Untitled notification'}
+                  </Typography>
+                  {created && (
+                    <Typography sx={{ fontSize: '0.7rem', color: MUTED, whiteSpace: 'nowrap' }}>
+                      {created}
+                    </Typography>
+                  )}
+                </Box>
+                {n.description && (
+                  <Typography sx={{ fontSize: '0.78rem', color: MUTED, lineHeight: 1.55 }}>
+                    {n.description}
+                  </Typography>
+                )}
+                {n.reference_url && (
+                  <Box sx={{ mt: 0.75 }}>
+                    <a
+                      href={n.reference_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ fontSize: '0.72rem', color: 'hsl(var(--primary, 24 100% 50%))', textDecoration: 'none' }}
+                    >
+                      Open reference ↗
+                    </a>
+                  </Box>
+                )}
+              </Box>
+            );
+          })}
+        </Box>
+      )}
+    </Box>
+  );
+
+  return (
+    <Box sx={{ p: 3, borderRadius: 2, border: CARD_BORDER, bgcolor: CARD_BG, mb: 3 }}>
+      <Typography sx={{ fontSize: '0.95rem', fontWeight: 700, color: FG, mb: 0.5 }}>
+        Notifications
+      </Typography>
+      <Typography sx={{ fontSize: '0.78rem', color: MUTED, mb: 2 }}>
+        Live notifications from your organization — both unread and previously read.
+      </Typography>
+      {loading ? (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: MUTED }}>
+          <CircularProgress size={14} sx={{ color: MUTED }} />
+          <Typography sx={{ fontSize: '0.8rem' }}>Loading notifications…</Typography>
+        </Box>
+      ) : error ? (
+        <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--destructive, 0 70% 55%))' }}>
+          {error}
+        </Typography>
+      ) : (
+        <>
+          {renderGroup('Open', open, false)}
+          {renderGroup('Read', read, true)}
+        </>
+      )}
+    </Box>
+  );
+}
+
 function UsecaseDetailContent({
   flowId,
   hideBackNav = false,
