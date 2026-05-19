@@ -736,10 +736,15 @@ const IncidentsPage = () => {
     init();
   }, [fetchItems]);
 
-  // Update category automations when categoryConfig changes
+  // Initialize category automations once from categoryConfig — subsequent
+  // side-loaded refreshes of the config would otherwise clobber in-flight
+  // user edits in the dialog.
+  const categoryAutomationsInitedRef = useRef(false);
   useEffect(() => {
+    if (categoryAutomationsInitedRef.current) return;
     if (categoryConfig?.automations) {
       setCategoryAutomations(categoryConfig.automations);
+      categoryAutomationsInitedRef.current = true;
     }
   }, [categoryConfig]);
 
