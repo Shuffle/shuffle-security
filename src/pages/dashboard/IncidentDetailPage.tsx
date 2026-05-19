@@ -6564,8 +6564,13 @@ const IncidentDetailPage = () => {
             </Box>
           </Box>
 
-          {/* Right side actions */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0, flexWrap: 'wrap' }}>
+          {/* Right side actions — split into two rows so the title gets more
+              breathing room. Top row: Refresh + actions menu. Bottom row:
+              loaders + Ask agent. */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.75, flexShrink: 0 }}>
+            {/* Bottom row group (loaders + Ask agent) — `order: 2` pushes it
+                below the top row even though it appears first in the DOM. */}
+            <Box sx={{ order: 2, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {isSaving && <CircularProgress size={18} />}
             {isResyncing && (
               <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75, px: 1.5, py: 0.5, borderRadius: 1, backgroundColor: 'rgba(255, 102, 0, 0.08)', border: '1px solid rgba(255, 102, 0, 0.2)' }}>
