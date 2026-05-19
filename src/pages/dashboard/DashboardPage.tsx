@@ -19,6 +19,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Collapse,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { AlertTriangle, CheckCircle, Loader2, HelpCircle, Clock, MessageSquare, ChevronRight, Plug, KeyRound, ArrowDownToLine, Send, Radar, Monitor, Shield, Sparkles, Check, ArrowRight, ExternalLink, EyeOff, Undo2, ExternalLink as OpenInNewIcon, RefreshCw as RefreshIcon } from 'lucide-react';
@@ -536,6 +537,16 @@ const DashboardPage = () => {
   const [hostMonitorCount, setHostMonitorCount] = useState<number>(0);
   const [overviewCollapsed, setOverviewCollapsed] = useState(false);
   const [setupCollapsed, setSetupCollapsed] = useState(false);
+  const [agentNotificationsCollapsed, setAgentNotificationsCollapsed] = useState<boolean>(() => {
+    try {
+      const stored = localStorage.getItem('dashboard-agent-notifications-collapsed');
+      // Default to collapsed when no preference is stored.
+      return stored === null ? true : stored === '1';
+    } catch { return true; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('dashboard-agent-notifications-collapsed', agentNotificationsCollapsed ? '1' : '0'); } catch { /* ignore */ }
+  }, [agentNotificationsCollapsed]);
   const setupAutoCollapsedRef = useRef(false);
   const [dashboardTab, setDashboardTab] = useState<'security' | 'automation'>(() => {
     try { return (localStorage.getItem('shuffle_dashboard_tab') as 'security' | 'automation') || 'security'; } catch { return 'security'; }
@@ -1206,7 +1217,14 @@ const DashboardPage = () => {
         </Box>
       )}
       <Box id="agent-notifications" sx={{ order: 3, scrollMarginTop: 80 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+        <Box
+          onClick={() => setAgentNotificationsCollapsed(c => !c)}
+          sx={{
+            display: 'flex', alignItems: 'center', gap: 1,
+            mb: agentNotificationsCollapsed ? 0 : 2,
+            cursor: 'pointer', userSelect: 'none',
+          }}
+        >
           <AlertTriangle size={18} style={{ color: 'hsl(var(--severity-high))' }} />
           <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: 'hsl(var(--foreground))' }}>
             Agent Notifications
@@ -1224,7 +1242,19 @@ const DashboardPage = () => {
               }}
             />
           )}
+          <Box sx={{ flex: 1 }} />
+          <IconButton
+            size="small"
+            onClick={(e) => { e.stopPropagation(); setAgentNotificationsCollapsed(c => !c); }}
+            sx={{ color: 'hsl(var(--muted-foreground))' }}
+            aria-label={agentNotificationsCollapsed ? 'Expand agent notifications' : 'Collapse agent notifications'}
+          >
+            {agentNotificationsCollapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
+          </IconButton>
         </Box>
+
+        <Collapse in={!agentNotificationsCollapsed} timeout="auto" unmountOnExit>
+
 
         {/* Filter chips */}
         <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
@@ -1334,6 +1364,7 @@ const DashboardPage = () => {
           )}
           </>
         )}
+        </Collapse>
       </Box>
 
       {/* ── Setup Checklist ──────────────────────────────────────────────────── */}
