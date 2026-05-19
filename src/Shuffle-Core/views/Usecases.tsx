@@ -3254,7 +3254,7 @@ function UsecasesPageInner() {
       }
       return false;
     },
-    [enabledLabels, validatedCategories, workflows],
+    [enabledLabels, validatedCategories, workflows, aiAgentAutomationActive],
   );
 
 
