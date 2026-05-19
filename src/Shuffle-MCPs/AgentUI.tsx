@@ -58,7 +58,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import type { SxProps, Theme } from '@mui/material/styles';
+import type { SxProps, Theme } from '@mui/material';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
