@@ -904,6 +904,58 @@ const IncidentDetailPage = () => {
     });
   };
   const isFilterActive = (key: TimelineFilterKey) => activeTimelineFilters.has(key);
+
+  // ── Routing rule matches (for both the preview banner AND timeline pills) ──
+  // Rules live on the PARENT org's `shuffle-security_routing` datastore. If
+  // we are on a parent org `parentOrg` is undefined, so we fall back to the
+  // active org id. The result is fed into a synthetic "routing-matched" step
+  // in the unified timeline so the user can see at a glance which rules
+  // would fire — without scrolling up to the banner.
+  const routingRulesOrgId = parentOrg?.id || userInfo?.active_org?.id;
+  const { items: routingRuleItems, fetchItems: fetchRoutingRules } = useDatastore({
+    category: ROUTING_DATASTORE_CATEGORY,
+    orgId: routingRulesOrgId,
+  });
+  useEffect(() => {
+    if (routingRulesOrgId) fetchRoutingRules();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routingRulesOrgId]);
+  const routingRules: RoutingRule[] = useMemo(() => {
+    const out: RoutingRule[] = [];
+    for (const it of routingRuleItems) {
+      try {
+        const v = typeof it.value === 'string' ? JSON.parse(it.value) : it.value;
+        if (v && typeof v === 'object') {
+          const actions = Array.isArray(v.actions) ? v.actions : (v.action ? [v.action] : []);
+          out.push({
+            id: v.id || it.key,
+            name: v.name || 'Untitled rule',
+            enabled: v.enabled !== false,
+            priority: Number.isFinite(v.priority) ? v.priority : 100,
+            matchMode: v.matchMode === 'any' ? 'any' : 'all',
+            conditions: Array.isArray(v.conditions) ? v.conditions : [],
+            actions,
+          });
+        }
+      } catch { /* skip malformed */ }
+    }
+    return out;
+  }, [routingRuleItems]);
+  const routingContext: IncidentEvaluationContext = useMemo(() => ({
+    title: editedTitle || incident?.title,
+    description: editedMessage,
+    source: incident?.source,
+    severity: editedSeverity,
+    status: editedStatus,
+    labels: editedLabels,
+    observables: editedObservables,
+    stakeholders: editedStakeholders,
+    rawOCSF: incident?.rawOCSF,
+  }), [editedTitle, editedMessage, editedSeverity, editedStatus, editedLabels, editedObservables, editedStakeholders, incident]);
+  const routingMatches = useMemo(
+    () => evaluateRoutingRules(routingContext, routingRules),
+    [routingContext, routingRules]
+  );
   // Legacy compatibility shim — a few render branches used to special-case
   // the single-select "revisions" tab to relabel the oldest revision as
   // "Incident created". The equivalent in the new multi-select model is
