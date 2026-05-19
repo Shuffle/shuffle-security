@@ -70,8 +70,9 @@ import {
 import {
 	DatePicker,
 	LocalizationProvider,
-	AdapterDayjs,
 } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+
 
 import { SegmentedControl } from "./ui/segmented-control";
 
