@@ -10,7 +10,7 @@ import path from 'node:path';
  */
 export default defineConfig({
   entry: ['index.tsx'],
-  format: ['esm', 'cjs'],
+  format: ['cjs'],
   tsconfig: 'tsconfig.build.json',
   dts: {
     resolve: true,
