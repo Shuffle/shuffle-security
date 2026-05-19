@@ -3171,6 +3171,7 @@ function UsecaseCard({
   hasValidatedSource = true,
   onToggled,
   onClick,
+  onEnable,
 }: {
   flow: Usecase;
   drift?: UsecaseDrift;
@@ -3182,6 +3183,12 @@ function UsecaseCard({
   hasValidatedSource?: boolean;
   onToggled?: (label: string, enabled: boolean) => void;
   onClick: () => void;
+  /** Optional parent handler — when provided, clicking the card's Enable
+   *  button delegates to this instead of toggling inline. The list view uses
+   *  this to open the detail drawer first and then auto-fire Enable inside
+   *  it, so the user can watch the workflow appear in realtime. Disable
+   *  still happens inline (no need for context). */
+  onEnable?: () => void;
 }) {
   const sourceCat = categoryLabel(flow.source);
   const isComingSoon = !ACTIVE_USECASE_IDS.includes(flow.id);
