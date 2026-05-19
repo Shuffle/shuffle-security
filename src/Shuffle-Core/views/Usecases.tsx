@@ -2633,9 +2633,10 @@ function UsecaseDetailContent({
         </Box>
       </Box>
 
-      <FlowOutcomeBlock flow={flow} sourceCategoryLabel={sourceCat?.label} />
+      {flow.automationArea === 'notifications'
+        ? <NotificationsOutcomeBlock />
+        : <FlowOutcomeBlock flow={flow} sourceCategoryLabel={sourceCat?.label} />}
 
-      {flow.automationArea === 'notifications' && <NotificationsUsecaseList />}
 
       {showConnectionPath && (
       <Box sx={{ p: 3, borderRadius: 2, border: CARD_BORDER, bgcolor: CARD_BG, mb: 3 }}>
