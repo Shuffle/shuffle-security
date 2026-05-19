@@ -2271,7 +2271,12 @@ function UsecaseDetailContent({
 
     fetchApps();
     return () => { cancelled = true; };
-  }, []);
+    // Refetch when integrationsRefreshKey bumps so a newly authenticated app
+    // (e.g. one the user just added from "Add Email tool") shows up in the
+    // Source/Destination strip without needing a full page reload.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [integrationsRefreshKey]);
+
 
   if (!flow) {
     return (
