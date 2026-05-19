@@ -7,7 +7,7 @@
  */
 
 import { Box, Typography, Button, Chip, CircularProgress, Tooltip } from '@mui/material';
-import { Sparkles, Play, Trash2, ArrowRight } from 'lucide-react';
+import { Play, Trash2, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { useDemo } from '@/context/DemoContext';
@@ -113,21 +113,6 @@ export const DemoModeCard = ({ compact = false }: { compact?: boolean } = {}) =>
           textAlign: 'left',
         }}
       >
-        {/* Icon */}
-        <Box
-          sx={{
-            width: compact ? 34 : 44,
-            height: compact ? 34 : 44,
-            borderRadius: compact ? 1.5 : 2,
-            display: 'grid',
-            placeItems: 'center',
-            backgroundColor: 'hsl(var(--primary) / 0.15)',
-            color: 'hsl(var(--primary))',
-            flexShrink: 0,
-          }}
-        >
-          <Sparkles size={compact ? 17 : 22} />
-        </Box>
 
         {/* Body */}
         <Box sx={{ flex: 1, minWidth: 0 }}>
