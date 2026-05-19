@@ -2601,9 +2601,8 @@ function UsecaseDetailContent({
                 }]
               : undefined;
             const side: 'source' | 'destination' = endpoint.title === 'Source' ? 'source' : 'destination';
-            const hovered = hoveredTool[side];
             const pinned = pinnedTool[side];
-            const activeTool = hovered || pinned;
+
             return (
             <Box key={endpoint.title} sx={{ flex: 1, minWidth: 0 }}>
               <Typography sx={{ fontSize: '0.66rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1 }}>
