@@ -299,8 +299,8 @@ export const IntegrationStatus = ({ collapsed, filterApps, onAddClick, iconSize 
                 key={integration.id} 
                 title={onDisable && isHovered ? '' : (
                   <Box sx={{ textAlign: 'left', minWidth: 160, maxWidth: 320, p: 0.5 }}>
-                    <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: 'hsl(var(--foreground))' }}>
-                      {integration.name}
+                    <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', color: 'hsl(var(--foreground))', textTransform: 'capitalize' }}>
+                      {integration.name.replace(/_/g, ' ')}
                       {isDisabled && <Typography component="span" sx={{ ml: 1, fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))' }}>(disabled)</Typography>}
                     </Typography>
                     <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', mb: 1, textTransform: 'capitalize' }}>
