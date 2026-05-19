@@ -4947,6 +4947,7 @@ const IncidentDetailPage = () => {
           'observable-added':     { color: '#06b6d4', icon: <VisibilityIcon size={12} /> },
           'correlation-found':    { color: '#f59e0b', icon: <LinkIcon size={12} /> },
           'incident-created':     { color: '#6495ed', icon: <HistoryIcon size={12} /> },
+          'routing-matched':      { color: 'hsl(var(--primary))', icon: <CallSplitIcon size={12} /> },
         };
         const cfg = stepStyle[item.kind];
         // Highlight observable-added pills when the underlying observable
