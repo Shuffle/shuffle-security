@@ -30,6 +30,8 @@ export { default as AgentActivityList } from './AgentActivityList';
 export type { AgentActivityListProps } from './AgentActivityList';
 export { default as AgentExecutionDrawer } from './AgentExecutionDrawer';
 export type { AgentExecutionDrawerProps } from './AgentExecutionDrawer';
+export { default as AgentsView } from './AgentsView';
+export type { AgentsViewProps } from './AgentsView';
 export { default as AgentRunDiagnosisBanner } from './AgentRunDiagnosisBanner';
 export {
   parseRunResult,
