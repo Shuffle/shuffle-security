@@ -1063,6 +1063,7 @@ const IncidentDetailPage = () => {
   const [revisions, setRevisions] = useState<any[]>([]);
   const [revisionsLoading, setRevisionsLoading] = useState(false);
   const [revisionsLoaded, setRevisionsLoaded] = useState(false);
+  const [selectedRevisionIdx, setSelectedRevisionIdx] = useState<number | null>(null);
 
   // Tracks an OCSF-recovery fallback: when the live incident is not OCSF-shaped,
   // we look back through revisions for the most recent valid OCSF snapshot and
