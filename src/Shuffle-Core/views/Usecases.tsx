@@ -3428,12 +3428,14 @@ function UsecasesPageInner() {
                 isAuthenticated={isAuthenticated}
                 hasValidatedSource={validatedCategories.has(flow.source)}
                 onToggled={handleUsecaseWorkflowGenerated}
+                workflows={workflows}
                 onClick={() => setDrawerFlowId(flow.id)}
                 onEnable={() => {
                   setAutoEnableFlowId(flow.id);
                   setDrawerFlowId(flow.id);
                 }}
               />
+
             ))}
           </Box>
         </Box>
