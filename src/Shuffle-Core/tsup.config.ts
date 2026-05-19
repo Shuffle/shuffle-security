@@ -22,14 +22,7 @@ export default defineConfig({
     'react',
     'react-dom',
     'react/jsx-runtime',
-    // Host-app provided peers — never bundle. Use explicit strings (not a
-    // regex) so esbuild keeps them as bare specifiers that the consumer's
-    // bundler resolves via @mui's `exports` map. A `/^@mui\//` regex caused
-    // some emitted ESM imports to be rewritten in a way that tripped
-    // webpack 5's strict-ESM fullySpecified check on `@mui/material/styles`.
-    '@mui/material',
-    '@mui/material/styles',
-    '@mui/system',
+    /^@mui\//,
     /^@emotion\//,
     'lucide-react',
     'react-router-dom',
