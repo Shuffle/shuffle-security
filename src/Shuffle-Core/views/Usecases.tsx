@@ -2812,7 +2812,62 @@ function UsecaseDetailContent({
         title={`Add ${addToolFor ? categoryLabel(addToolFor.categoryId) : ''} Tool`}
         subtitle="Search and authenticate an integration"
         priorityCategory={addToolFor?.categoryId}
+        onSelectOverride={(app) => {
+          // Two-step UX: (1) immediately wire the picked app into this
+          // usecase's workflow so it appears in the Tools strip right away,
+          // and (2) return false so AppSearchDrawer still opens the app's
+          // detail drawer (which surfaces the auth page when no validated
+          // auth exists yet).
+          if (!flow?.automationLabel) return false;
+          const linkedForApps = findWorkflowsForUsecase(flow, workflows);
+          const enabledNames = new Set<string>();
+          for (const wf of linkedForApps) {
+            extractWorkflowAppNames(wf).forEach((n) => enabledNames.add(n));
+          }
+          const newKey = normalizeAppName(app.name);
+          if (enabledNames.has(newKey)) return false; // already wired in
+          enabledNames.add(newKey);
+          const catalog: string[] = [
+            ...((categoryAppNames[flow.source] || []) as string[]),
+            ...((categoryAppNames[flow.target] || []) as string[]),
+          ];
+          const activeNames: string[] = [];
+          const seen = new Set<string>();
+          for (const n of catalog) {
+            const k = normalizeAppName(n);
+            if (enabledNames.has(k) && !seen.has(k)) { activeNames.push(n); seen.add(k); }
+          }
+          if (!seen.has(newKey)) activeNames.push(app.name);
+          const body: Record<string, string> = { label: flow.automationLabel, app_name: activeNames.join(',') };
+          if (flow.automationCategory) body.category = flow.automationCategory;
+          // Fire-and-forget — the optimistic refresh handles the UI update.
+          fetch(apiUrl('/api/v2/workflows/generate'), {
+            method: 'POST',
+            credentials: 'include',
+            headers: { ...authHeader(), 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          }).then(async (res) => {
+            let parsed: any = null;
+            try { parsed = await res.json(); } catch { /* ignore */ }
+            const ok = res.ok && parsed?.success !== false;
+            if (!ok) {
+              toast.error(`Failed to add ${app.name}`, {
+                description: parsed?.reason || `Request failed (${res.status})`,
+              });
+              return;
+            }
+            toast.success(`${app.name} added to ${flow.label}`);
+            setIntegrationsRefreshKey((k) => k + 1);
+            onToggled?.(flow.automationLabel!, true);
+          }).catch((err) => {
+            toast.error(`Failed to add ${app.name}`, {
+              description: err?.message || 'The backend rejected the request.',
+            });
+          });
+          return false; // continue to detail/auth drawer
+        }}
       />
+
     </Box>
   );
 }
