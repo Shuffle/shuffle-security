@@ -26,6 +26,7 @@ import {
   CircularProgress,
   Drawer,
   IconButton,
+  Popover,
 } from '@mui/material';
 import { Search, ArrowRight, ArrowLeft, Download, Zap, Activity, CheckCircle2, Circle, AlertTriangle, Network, Clock, Power, PowerOff, FileJson, X, ExternalLink, Flame, PlayCircle, BookOpen, LayoutGrid, Server, Shield, MessageSquare, Mail, Crosshair, HardDrive, KeyRound, Cloud, Sparkles, Plus } from 'lucide-react';
 import ReactGA from 'react-ga4';
@@ -1440,6 +1441,7 @@ function IntegrationStatusLite({
   const appDetail = useAppDetailOptional();
   const [integrations, setIntegrations] = useState<IntegrationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [popoverFor, setPopoverFor] = useState<{ el: HTMLElement; item: IntegrationItem } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -1582,8 +1584,8 @@ function IntegrationStatusLite({
         <Box
           onMouseEnter={() => onHover?.(integration)}
           onMouseLeave={() => onHover?.(null)}
-          onClick={() => {
-            if (appDetail && integration.name) appDetail.openApp(integration.name);
+          onClick={(e) => {
+            setPopoverFor({ el: e.currentTarget as HTMLElement, item: integration });
             onSelect?.(integration);
           }}
           sx={{
@@ -1681,6 +1683,110 @@ function IntegrationStatusLite({
     );
   };
 
+  const renderPopover = () => {
+    const item = popoverFor?.item;
+    const statusLabel = !item
+      ? ''
+      : item.validated
+        ? 'Validated'
+        : item.active
+          ? 'Configured'
+          : 'Not configured';
+    const statusColor = !item
+      ? 'hsl(var(--muted-foreground))'
+      : item.validated
+        ? 'hsl(var(--severity-low))'
+        : item.active
+          ? 'hsl(var(--severity-medium))'
+          : 'hsl(var(--muted-foreground))';
+    return (
+      <Popover
+        open={Boolean(popoverFor)}
+        anchorEl={popoverFor?.el || null}
+        onClose={() => setPopoverFor(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+        slotProps={{
+          paper: {
+            sx: {
+              mt: 0.5,
+              bgcolor: 'hsl(var(--card))',
+              border: '1px solid hsl(var(--border))',
+              borderRadius: 1.5,
+              p: 1.5,
+              minWidth: 200,
+            },
+          },
+        }}
+      >
+        {item && (
+          <>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.5 }}>
+              <Typography variant="caption" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', textTransform: 'capitalize', fontSize: '0.8rem' }}>
+                {item.name.replace(/_/g, ' ')}
+              </Typography>
+              <Chip
+                label={statusLabel}
+                size="small"
+                sx={{
+                  height: 18,
+                  fontSize: '0.65rem',
+                  bgcolor: 'hsl(var(--muted))',
+                  color: statusColor,
+                  fontWeight: 500,
+                }}
+              />
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 1 }}>
+              <Button
+                size="small"
+                startIcon={<ExternalLink size={14} />}
+                onClick={() => {
+                  const name = item.name;
+                  setPopoverFor(null);
+                  if (appDetail && name) appDetail.openApp(name);
+                }}
+                sx={{
+                  justifyContent: 'flex-start',
+                  textTransform: 'none',
+                  fontSize: '0.75rem',
+                  color: 'hsl(var(--foreground))',
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: 1,
+                  '&:hover': { bgcolor: 'hsl(var(--muted))' },
+                }}
+              >
+                Visit app
+              </Button>
+              <Button
+                size="small"
+                startIcon={<CheckCircle2 size={14} />}
+                onClick={() => {
+                  const name = item.name;
+                  setPopoverFor(null);
+                  if (appDetail && name) appDetail.openApp(name);
+                }}
+                sx={{
+                  justifyContent: 'flex-start',
+                  textTransform: 'none',
+                  fontSize: '0.75rem',
+                  color: item.validated ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: 1,
+                  '&:hover': { bgcolor: 'hsl(var(--muted))' },
+                }}
+              >
+                {item.validated ? 'Manage authentication' : 'Configure authentication'}
+              </Button>
+            </Box>
+          </>
+        )}
+      </Popover>
+    );
+  };
+
   if (singleLine) {
     return (
       <Box
@@ -1700,6 +1806,7 @@ function IntegrationStatusLite({
         }}
       >
         {visible.map(renderIcon)}
+        {renderPopover()}
       </Box>
     );
   }
@@ -1707,6 +1814,7 @@ function IntegrationStatusLite({
   return (
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, px: 0.5, py: 0.5 }}>
       {visible.map(renderIcon)}
+      {renderPopover()}
     </Box>
   );
 }
