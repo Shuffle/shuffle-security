@@ -1749,6 +1749,8 @@ function UsecaseDetailContent({
   hasValidatedSource = true,
   onToggled,
   workflows = [],
+  autoEnable = false,
+  onAutoEnableConsumed,
 }: {
   flowId: string | undefined;
   hideBackNav?: boolean;
@@ -1769,6 +1771,13 @@ function UsecaseDetailContent({
   onToggled?: (label: string, enabled: boolean) => void;
   /** Org workflows from /api/v1/workflows — used to render the "Linked Workflows" section */
   workflows?: WorkflowSummary[];
+  /** When true and this flow is not yet enabled, automatically trigger Enable
+   *  on mount. Used by the list view so clicking Enable on a card opens the
+   *  detail drawer AND fires the enable action, letting the user watch the
+   *  workflow appear in realtime. */
+  autoEnable?: boolean;
+  /** Called once after autoEnable has been honored so the parent can clear its flag. */
+  onAutoEnableConsumed?: () => void;
 }) {
   const navigate = useNavigate();
   const { apiUrl, authHeader } = useApi();
