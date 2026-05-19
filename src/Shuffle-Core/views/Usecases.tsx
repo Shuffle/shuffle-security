@@ -2783,8 +2783,10 @@ function UsecaseDetailContent({
                   id: 'shuffle-security',
                   name: 'Shuffle Security',
                   icon: shuffleSecurityIcon,
-                  validated: true,
-                  active: true,
+                  // Reflect the parent flow's live enabled state so the right
+                  // side lights up green only when this usecase is actually on.
+                  validated: !!effectiveEnabled,
+                  active: !!effectiveEnabled,
                 }]
               : undefined;
             const side: 'source' | 'destination' = endpoint.title === 'Source' ? 'source' : 'destination';
