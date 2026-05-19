@@ -1104,7 +1104,7 @@ const OnboardingFlow = ({
         {steps[activeStep]?.key !== 'product' && (
           <Box
             sx={{
-              position: 'fixed',
+              position: 'absolute',
               top: 64,
               left: 0,
               right: 0,
