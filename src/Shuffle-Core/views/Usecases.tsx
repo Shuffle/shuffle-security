@@ -2125,35 +2125,39 @@ function UsecaseDetailContent({
       if (willBeEnabled) {
         // no extra fields — generate as usual
       } else {
+        // The workflow only deserves to stay alive if a SIBLING source
+        // category (SIEM / EDR / Email) is still wired in. Destination /
+        // Cases apps (Shuffle Security, ServiceNow, Jira…) are shared by
+        // every ingestion usecase, so leaving them behind would falsely
+        // keep "Email reports" looking enabled with zero email tools.
+        const sourceToIngest: Record<string, string> = {
+          email: 'email', edr: 'edr', siem: 'siem', case_management: 'cases',
+        };
+        const thisCat = sourceToIngest[flow.source];
         const linkedForApps = findWorkflowsForUsecase(flow, workflows);
-        const currentNames = new Set<string>();
+        const currentNames: string[] = [];
+        const seenAll = new Set<string>();
         for (const wf of linkedForApps) {
-          extractWorkflowAppNames(wf).forEach((n) => currentNames.add(n));
-        }
-        const stripKeys = new Set(
-          (categoryAppNames[flow.source] || []).map((n) => normalizeAppName(n)),
-        );
-        const remainingKeys = new Set(
-          Array.from(currentNames).filter((k) => !stripKeys.has(k)),
-        );
-        // Preserve original casing from the catalog where possible.
-        const catalog: string[] = [
-          ...((categoryAppNames[flow.source] || []) as string[]),
-          ...((categoryAppNames[flow.target] || []) as string[]),
-        ];
-        const remainingNames: string[] = [];
-        const seen = new Set<string>();
-        for (const n of catalog) {
-          const k = normalizeAppName(n);
-          if (remainingKeys.has(k) && !seen.has(k)) {
-            remainingNames.push(n);
-            seen.add(k);
+          for (const action of (wf.actions || [])) {
+            const cand: string[] = [];
+            if (action.app_name) cand.push(action.app_name);
+            if (Array.isArray(action.parameters)) {
+              for (const p of action.parameters) {
+                if (p?.name === 'app_name' && p.value) cand.push(p.value);
+              }
+            }
+            for (const n of cand) {
+              const k = normalizeAppName(n);
+              if (!seenAll.has(k)) { currentNames.push(n); seenAll.add(k); }
+            }
           }
         }
-        // Add any leftover names that weren't in the local catalog snapshot.
-        for (const k of remainingKeys) {
-          if (!seen.has(k)) { remainingNames.push(k); seen.add(k); }
-        }
+        // Keep only apps belonging to a DIFFERENT ingestion source category.
+        const remainingNames = currentNames.filter((n) => {
+          const cat = getIngestionCategory(n);
+          if (!cat || cat === 'other' || cat === 'cases') return false;
+          return cat !== thisCat;
+        });
         if (remainingNames.length > 0) {
           requestBody.app_name = remainingNames.join(',');
         } else {
