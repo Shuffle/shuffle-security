@@ -8604,7 +8604,49 @@ const IncidentDetailPage = () => {
                 </a>
               </Typography>
             </Box>
-            <Box sx={{ display: 'flex', gap: 1 }}>
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+              {revisions.length > 0 && (
+                <Select
+                  size="small"
+                  value=""
+                  displayEmpty
+                  onChange={(e) => {
+                    const idx = Number(e.target.value);
+                    const rev = revisions[idx];
+                    if (rev?.value !== undefined) {
+                      try {
+                        const payload = typeof rev.value === 'string' ? JSON.parse(rev.value) : rev.value;
+                        setRawJsonText(JSON.stringify(payload, null, 2));
+                        toast.success('Revision loaded — hit Save to persist');
+                      } catch {
+                        setRawJsonText(typeof rev.value === 'string' ? rev.value : JSON.stringify(rev.value, null, 2));
+                      }
+                    }
+                  }}
+                  renderValue={() => (
+                    <Typography variant="caption" sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>
+                      {revisionsLoading ? 'Loading revisions…' : `Load revision (${revisions.length})`}
+                    </Typography>
+                  )}
+                  sx={{
+                    height: 28,
+                    fontSize: '0.75rem',
+                    minWidth: 180,
+                    '& .MuiSelect-select': { py: 0.5 },
+                  }}
+                  MenuProps={{ PaperProps: { sx: { maxHeight: 360 } } }}
+                >
+                  {revisions.map((rev: any, i: number) => {
+                    const ts = normalizeToMs(rev?.edited ?? rev?.created);
+                    const label = ts ? new Date(ts).toLocaleString() : `Revision ${i + 1}`;
+                    return (
+                      <MenuItem key={i} value={i} sx={{ fontSize: '0.75rem' }}>
+                        {i === 0 ? `${label} · latest` : label}
+                      </MenuItem>
+                    );
+                  })}
+                </Select>
+              )}
               <Button
                 size="small"
                 variant="outlined"
