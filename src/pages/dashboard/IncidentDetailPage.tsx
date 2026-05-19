@@ -6141,6 +6141,7 @@ const IncidentDetailPage = () => {
             );
           }}
         />
+        </div>
       )}
 
       {/* Agent action required banner — shown when navigating from dashboard */}
