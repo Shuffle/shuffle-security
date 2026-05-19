@@ -4709,19 +4709,17 @@ const IncidentDetailPage = () => {
           <Box
             key={itemKey}
             onClick={showAsCreation ? () => {
-              // The "Incident created" entry points to the email evidence
-              // when this incident is an email-sourced one. Scroll to the
-              // EmailThreadPanel and expand it if it's currently collapsed.
-              const el = document.querySelector('[data-tour="incident-email-thread"]') as HTMLElement | null;
+              // The "Incident created" entry opens the source evidence:
+              // Email Thread panel for email-sourced incidents, otherwise
+              // the Description panel. Scroll into view and expand it if
+              // currently collapsed.
+              const el =
+                (document.querySelector('[data-tour="incident-email-thread"]') as HTMLElement | null)
+                || (document.querySelector('[data-tour="incident-description"]') as HTMLElement | null);
               if (!el) return;
               el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              // The header is the first interactive child — click it to
-              // toggle expansion if the panel is currently collapsed. We
-              // detect collapsed state by absence of the inner border on
-              // the header (matches the panel's existing logic).
               const header = el.querySelector(':scope > div') as HTMLElement | null;
               if (header && header.getBoundingClientRect().height > 0) {
-                // Only auto-expand if collapsed (no sibling content rendered yet).
                 const expanded = el.children.length > 1;
                 if (!expanded) header.click();
               }
