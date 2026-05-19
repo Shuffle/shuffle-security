@@ -866,6 +866,9 @@ const IncidentDetailPage = () => {
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [showMergeDialog, setShowMergeDialog] = useState(false);
   const [mergePreselectedId, setMergePreselectedId] = useState<string | undefined>(undefined);
+  const [showMoveDialog, setShowMoveDialog] = useState(false);
+  const [moveTargetOrgId, setMoveTargetOrgId] = useState<string>('');
+  const [isMoving, setIsMoving] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [publicAuthorization, setPublicAuthorization] = useState<string>('');
   const TAB_NAMES = ['details', 'tasks', 'observables', 'correlations', 'raw', 'file', 'original'] as const;
