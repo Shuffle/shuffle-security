@@ -2353,7 +2353,7 @@ const FormInput = (defaultprops: any) => {
 	// Check width
 	const overlap = window !== undefined && window.innerWidth !== undefined && window.innerWidth < 1300 
 
-	const formSidebar = explorerUi === true || !isLoaded || overlap || !(forms !== undefined && forms !== null && forms.length > 1) ? null :
+	const formSidebar = !isLoaded || overlap || !(forms !== undefined && forms !== null && forms.length > 0) ? null :
 		<div style={{
 			width: 240,
 			overflowX: "hidden",
