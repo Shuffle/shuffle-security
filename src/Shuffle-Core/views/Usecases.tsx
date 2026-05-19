@@ -33,6 +33,7 @@ import ReactGA from 'react-ga4';
 import shuffleSecurityIcon from '../assets/shuffle-icon.png';
 import UsecaseAlluvialDiagram from './UsecaseAlluvialDiagram';
 import { AppSearchDrawer, useAppDetailOptional } from '@shuffleio/shuffle-mcps';
+import { extractWorkflowAppNames, normalizeAppName } from '@/Shuffle-MCPs/ingestionDetection';
 import { useUsecaseOutcomes } from '../hooks/useUsecaseOutcomes';
 import { UsecaseOutcomeSection } from '../components/UsecaseOutcome';
 // ── Flow phases ────────────────────────────────────────────────────────────────
@@ -1432,6 +1433,9 @@ function IntegrationStatusLite({
   onHover,
   onSelect,
   selectedId,
+  usecaseEnabledNames,
+  onUsecaseAppToggle,
+  usecaseLabel,
 }: {
   filterApps?: string[];
   singleLine?: boolean;
@@ -1449,12 +1453,20 @@ function IntegrationStatusLite({
   onSelect?: (item: IntegrationItem) => void;
   /** Item id currently pinned by the parent (renders a stronger outline). */
   selectedId?: string;
+  /** Normalized app names currently active in the parent usecase workflow.
+   *  When provided, the popover shows Enable/Disable for the current usecase. */
+  usecaseEnabledNames?: Set<string>;
+  /** Toggle handler invoked when the user enables/disables an app for this usecase. */
+  onUsecaseAppToggle?: (appName: string, enabled: boolean) => Promise<void> | void;
+  /** Short label for the parent usecase, shown in the popover (e.g. "Email reports"). */
+  usecaseLabel?: string;
 }) {
   const { apiUrl, authHeader } = useApi();
   const appDetail = useAppDetailOptional();
   const [integrations, setIntegrations] = useState<IntegrationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [popoverFor, setPopoverFor] = useState<{ el: HTMLElement; item: IntegrationItem } | null>(null);
+  const [togglingName, setTogglingName] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -1698,20 +1710,42 @@ function IntegrationStatusLite({
 
   const renderPopover = () => {
     const item = popoverFor?.item;
+    const itemKey = item ? item.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_') : '';
+    const inUsecase = !!item && !!usecaseEnabledNames && usecaseEnabledNames.has(itemKey);
+    const showUsecaseToggle = !!item && !!onUsecaseAppToggle;
+    const isToggling = !!item && togglingName === item.name;
+
     const statusLabel = !item
       ? ''
-      : item.validated
-        ? 'Validated'
-        : item.active
-          ? 'Configured'
-          : 'Not configured';
+      : showUsecaseToggle
+        ? (inUsecase ? 'In use' : 'Not in use')
+        : item.validated
+          ? 'Validated'
+          : item.active
+            ? 'Configured'
+            : 'Not configured';
     const statusColor = !item
       ? 'hsl(var(--muted-foreground))'
-      : item.validated
-        ? 'hsl(var(--severity-low))'
-        : item.active
-          ? 'hsl(var(--severity-medium))'
-          : 'hsl(var(--muted-foreground))';
+      : showUsecaseToggle
+        ? (inUsecase ? 'hsl(var(--severity-low))' : 'hsl(var(--muted-foreground))')
+        : item.validated
+          ? 'hsl(var(--severity-low))'
+          : item.active
+            ? 'hsl(var(--severity-medium))'
+            : 'hsl(var(--muted-foreground))';
+
+    const handleUsecaseToggle = async () => {
+      if (!item || !onUsecaseAppToggle) return;
+      const willBeEnabled = !inUsecase;
+      setTogglingName(item.name);
+      try {
+        await onUsecaseAppToggle(item.name, willBeEnabled);
+        setPopoverFor(null);
+      } finally {
+        setTogglingName(null);
+      }
+    };
+
     return (
       <Popover
         open={Boolean(popoverFor)}
@@ -1727,14 +1761,14 @@ function IntegrationStatusLite({
               border: '1px solid hsl(var(--border))',
               borderRadius: 1.5,
               p: 1.5,
-              minWidth: 200,
+              minWidth: 220,
             },
           },
         }}
       >
         {item && (
           <>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.5, flexWrap: 'wrap' }}>
               <Typography variant="caption" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', textTransform: 'capitalize', fontSize: '0.8rem' }}>
                 {item.name.replace(/_/g, ' ')}
               </Typography>
@@ -1750,7 +1784,47 @@ function IntegrationStatusLite({
                 }}
               />
             </Box>
+            {showUsecaseToggle && usecaseLabel && (
+              <Typography variant="caption" sx={{ display: 'block', color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem', mb: 1 }}>
+                {inUsecase
+                  ? `Active in ${usecaseLabel}`
+                  : `Not part of ${usecaseLabel}`}
+              </Typography>
+            )}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mt: 1 }}>
+              {showUsecaseToggle && (
+                <Button
+                  size="small"
+                  disabled={isToggling || (!inUsecase && !item.validated && !item.active)}
+                  startIcon={
+                    isToggling
+                      ? <CircularProgress size={12} sx={{ color: 'inherit' }} />
+                      : (inUsecase ? <PowerOff size={14} /> : <Power size={14} />)
+                  }
+                  onClick={handleUsecaseToggle}
+                  sx={{
+                    justifyContent: 'flex-start',
+                    textTransform: 'none',
+                    fontSize: '0.75rem',
+                    color: inUsecase ? 'hsl(var(--destructive))' : 'hsl(var(--severity-low))',
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 1,
+                    '&:hover': {
+                      bgcolor: inUsecase ? 'hsla(var(--destructive) / 0.1)' : 'hsla(var(--severity-low) / 0.1)',
+                    },
+                    '&.Mui-disabled': { color: 'hsl(var(--muted-foreground))', opacity: 0.5 },
+                  }}
+                >
+                  {isToggling
+                    ? (inUsecase ? 'Disabling…' : 'Enabling…')
+                    : (inUsecase
+                        ? `Disable for ${usecaseLabel || 'this usecase'}`
+                        : (!item.validated && !item.active
+                            ? 'Authenticate first to enable'
+                            : `Enable for ${usecaseLabel || 'this usecase'}`))}
+                </Button>
+              )}
               <Button
                 size="small"
                 startIcon={<ExternalLink size={14} />}
@@ -1770,28 +1844,9 @@ function IntegrationStatusLite({
                   '&:hover': { bgcolor: 'hsl(var(--muted))' },
                 }}
               >
-                Visit app
-              </Button>
-              <Button
-                size="small"
-                startIcon={<CheckCircle2 size={14} />}
-                onClick={() => {
-                  const name = item.name;
-                  setPopoverFor(null);
-                  if (appDetail && name) appDetail.openApp(name);
-                }}
-                sx={{
-                  justifyContent: 'flex-start',
-                  textTransform: 'none',
-                  fontSize: '0.75rem',
-                  color: item.validated ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
-                  px: 1,
-                  py: 0.5,
-                  borderRadius: 1,
-                  '&:hover': { bgcolor: 'hsl(var(--muted))' },
-                }}
-              >
-                {item.validated ? 'Manage authentication' : 'Configure authentication'}
+                {showUsecaseToggle
+                  ? 'Open app'
+                  : (item.validated ? 'Manage authentication' : 'Configure authentication')}
               </Button>
             </Box>
           </>
@@ -2342,6 +2397,67 @@ function UsecaseDetailContent({
             isLoggedIn={isAuthenticated}
           />
         ) : (
+        (() => {
+          // Per-usecase per-app enable/disable: read which apps the linked
+          // workflow currently uses, and provide a toggle that re-posts the
+          // full app_name list to /workflows/generate (same contract as the
+          // /incidents Ingest popover so the two stay in sync).
+          const linkedForApps = findWorkflowsForUsecase(flow, workflows);
+          const enabledNamesSet = new Set<string>();
+          for (const wf of linkedForApps) {
+            const names = extractWorkflowAppNames(wf);
+            names.forEach((n) => enabledNamesSet.add(n));
+          }
+          const handleUsecaseAppToggle = async (appName: string, enabled: boolean) => {
+            if (!flow.automationLabel) {
+              toast.error('This usecase is not toggleable yet');
+              return;
+            }
+            const next = new Set(Array.from(enabledNamesSet));
+            const key = normalizeAppName(appName);
+            if (enabled) next.add(key); else next.delete(key);
+            const activeNames: string[] = [];
+            const seen = new Set<string>();
+            // Preserve original casing from auth/apps catalog where possible
+            // by walking the integrations list visible in the strip.
+            const catalog: string[] = [
+              ...((categoryAppNames[flow.source] || []) as string[]),
+              ...((categoryAppNames[flow.target] || []) as string[]),
+            ];
+            for (const n of catalog) {
+              const k = normalizeAppName(n);
+              if (next.has(k) && !seen.has(k)) { activeNames.push(n); seen.add(k); }
+            }
+            // Make sure the just-enabled app is in the list even if it isn't
+            // in the local catalog snapshot.
+            if (enabled && !seen.has(key)) activeNames.push(appName);
+            try {
+              const body: Record<string, string> = { label: flow.automationLabel };
+              if (flow.automationCategory) body.category = flow.automationCategory;
+              if (activeNames.length > 0) body.app_name = activeNames.join(',');
+              else body.action_name = 'remove';
+              const res = await fetch(apiUrl('/api/v2/workflows/generate'), {
+                method: 'POST',
+                credentials: 'include',
+                headers: { ...authHeader(), 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+              });
+              let parsed: any = null;
+              try { parsed = await res.json(); } catch { /* ignore */ }
+              const ok = res.ok && parsed?.success !== false;
+              if (!ok) throw new Error(parsed?.reason || `Request failed (${res.status})`);
+              toast.success(enabled
+                ? `${appName} enabled for ${flow.label}`
+                : `${appName} disabled for ${flow.label}`);
+              setIntegrationsRefreshKey((k2) => k2 + 1);
+              onToggled?.(flow.automationLabel, activeNames.length > 0);
+            } catch (err: any) {
+              toast.error(`Failed to ${enabled ? 'enable' : 'disable'} ${appName}`, {
+                description: err?.message || 'The backend rejected the request.',
+              });
+            }
+          };
+          return (
         <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
           {[
             { title: 'Source', meta: sourceCat, details: sourceDetails, categoryId: flow.source, appNames: categoryAppNames[flow.source] || [] },
@@ -2457,11 +2573,16 @@ function UsecaseDetailContent({
                 onHover={(item) => setHoveredTool((prev) => ({ ...prev, [side]: item }))}
                 onSelect={(item) => setPinnedTool((prev) => ({ ...prev, [side]: prev[side]?.id === item.id ? null : item }))}
                 selectedId={pinned?.id}
+                usecaseEnabledNames={enabledNamesSet}
+                onUsecaseAppToggle={flow.automationLabel ? handleUsecaseAppToggle : undefined}
+                usecaseLabel={flow.label}
               />
             </Box>
             );
           })}
         </Box>
+          );
+        })()
         )}
       </Box>
       )}
