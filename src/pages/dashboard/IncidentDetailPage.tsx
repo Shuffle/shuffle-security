@@ -939,7 +939,16 @@ const IncidentDetailPage = () => {
   })();
    const [activeTab, setActiveTabState] = useState(initialTab);
    const setActiveTab = (tab: number) => {
-     setActiveTabState(tab);
+     // Leaving the Raw OCSF tab (index 4) while previewing an older revision:
+     // revert the editor back to the live incident OCSF so unsaved revision
+     // previews do not persist across tab switches.
+     setActiveTabState((prev) => {
+       if (prev === 4 && tab !== 4 && selectedRevisionIdx !== null) {
+         setRawJsonText(JSON.stringify((incident as any)?.rawOCSF || {}, null, 2));
+         setSelectedRevisionIdx(null);
+       }
+       return tab;
+     });
      const newParams = new URLSearchParams(searchParams);
      if (tab === 0) { newParams.delete('tab'); } else { newParams.set('tab', TAB_NAMES[tab] || ''); }
      const paramStr = newParams.toString();
