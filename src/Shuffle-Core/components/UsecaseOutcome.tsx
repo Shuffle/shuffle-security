@@ -10,7 +10,38 @@
 import React from 'react';
 import { Box, Typography, Tooltip, CircularProgress } from '@mui/material';
 import { TrendingUp, TrendingDown, Activity } from 'lucide-react';
+import { useIsSupport } from '@/hooks/useIsSupport';
 import type { UsecaseOutcome } from '../lib/outcomes';
+
+/** Frontend routes we know exist in src/App.tsx — used by the support-only
+ *  CTA diagnostic chip to flag broken outcome links before users hit them. */
+const KNOWN_INTERNAL_ROUTES: ReadonlyArray<string | RegExp> = [
+  '/incidents', '/alerts', '/tickets', '/cases', '/jobs',
+  '/vulnerabilities', '/monitors', '/infrastructure',
+  '/agent', '/agents', '/dashboard', '/usecases', '/apps',
+  '/admin', '/users', '/organizations', '/settings', '/preferences',
+  '/templates', '/detection', '/detection/sigma', '/detection/pipelines',
+  '/incidents/observables', '/incidents/threat-feeds',
+  '/incidents/custom-fields', '/monitors/response',
+  '/assets', '/forms', '/software', '/packages',
+];
+
+/** Audit a CTA href against the known frontend routes. Returns a status the
+ *  support diagnostic chip can render. Only the path part of the URL is
+ *  inspected; query/hash are ignored. */
+function auditCtaPath(href: string): 'ok' | 'broken' | 'external' {
+  if (/^https?:/i.test(href) || /^mailto:/i.test(href)) return 'external';
+  const path = href.split(/[?#]/)[0];
+  if (!path.startsWith('/')) return 'broken';
+  for (const route of KNOWN_INTERNAL_ROUTES) {
+    if (typeof route === 'string') {
+      if (path === route || path.startsWith(route + '/')) return 'ok';
+    } else if (route.test(path)) {
+      return 'ok';
+    }
+  }
+  return 'broken';
+}
 
 const FG = 'hsl(var(--foreground, 0 0% 100%))';
 const MUTED = 'hsl(var(--muted-foreground, 0 0% 60%))';
@@ -158,14 +189,14 @@ function deriveCta(
   const isDisabled = outcome.emptyReason === 'not_enabled';
   switch (outcome.kind) {
     case 'incidents_ingested': {
-      const q = sourceId ? `?filter=${encodeURIComponent(sourceId)}` : '';
+      const q = sourceId ? `?source=${encodeURIComponent(sourceId)}` : '';
       return {
         href: `/incidents${q}`,
         label: isDisabled ? 'Preview where these incidents will appear' : 'View incidents',
       };
     }
     case 'enrichments_run': {
-      const q = sourceId ? `?filter=${encodeURIComponent(sourceId)}` : '';
+      const q = sourceId ? `?source=${encodeURIComponent(sourceId)}` : '';
       return {
         href: `/incidents${q}`,
         label: isDisabled ? 'See where enrichments will show up' : 'View enriched incidents',
@@ -184,13 +215,17 @@ function deriveCta(
       };
     case 'responses_executed':
       return {
-        href: '/automations',
-        label: isDisabled ? 'Configure response actions' : 'View response automations',
+        // /monitors/response is the Response Actions page (support-gated, but
+        // the route exists). There is no /automations page in this app.
+        href: '/monitors/response',
+        label: isDisabled ? 'Configure response actions' : 'View response actions',
       };
     case 'comms_sent':
       return {
-        href: '/notifications',
-        label: isDisabled ? 'See where notifications will appear' : 'View notifications',
+        // No notifications page exists; point at the incidents list which is
+        // where outbound notification activity is logged today.
+        href: '/incidents',
+        label: isDisabled ? 'See where notifications will appear' : 'View incidents with notifications',
       };
     default:
       return null;
@@ -207,6 +242,7 @@ export function UsecaseOutcomeSection({
   iocCategoryByKey,
   loading,
 }: UsecaseOutcomeSectionProps) {
+  const isSupport = useIsSupport();
   if (!outcome || outcome.kind === 'none') return null;
 
   const windowDays = outcome.windowDays;
@@ -380,6 +416,12 @@ export function UsecaseOutcomeSection({
               ? 'Enable this automation to start populating data here. In the meantime:'
               : 'Nothing here yet — once data arrives it will show up. In the meantime:')
           : 'What to do next';
+        const audit = auditCtaPath(cta.href);
+        const auditMeta = {
+          ok: { label: 'Route OK', color: 'hsl(142 70% 45%)', bg: 'hsl(142 70% 45% / 0.12)', desc: 'Resolves to a real frontend route in this app.' },
+          broken: { label: 'BROKEN — no such route', color: 'hsl(0 75% 60%)', bg: 'hsl(0 75% 60% / 0.12)', desc: 'This path is not registered in src/App.tsx. The link will land on the NotFound page.' },
+          external: { label: 'External link', color: 'hsl(210 80% 60%)', bg: 'hsl(210 80% 60% / 0.12)', desc: 'Opens an absolute URL outside this app — not audited.' },
+        }[audit];
         return (
           <Box sx={{ mt: 2.5, pt: 2, borderTop: `1px solid ${BORDER}` }}>
             <Typography sx={{ fontSize: '0.78rem', color: MUTED, mb: 0.5 }}>
@@ -399,6 +441,33 @@ export function UsecaseOutcomeSection({
             >
               {cta.label} →
             </Box>
+            {isSupport && (
+              <Tooltip title={`${auditMeta.desc} (${cta.href})`} arrow>
+                <Box sx={{
+                  mt: 0.75,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  px: 1,
+                  py: 0.25,
+                  borderRadius: 1,
+                  bgcolor: auditMeta.bg,
+                  border: `1px solid ${auditMeta.color}`,
+                  fontSize: '0.68rem',
+                  fontWeight: 700,
+                  color: auditMeta.color,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                  cursor: 'help',
+                }}>
+                  <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: auditMeta.color }} />
+                  Support · {auditMeta.label}
+                  <Typography component="span" sx={{ ml: 0.5, fontSize: '0.65rem', fontWeight: 500, color: MUTED, textTransform: 'none', letterSpacing: 0 }}>
+                    {cta.href}
+                  </Typography>
+                </Box>
+              </Tooltip>
+            )}
           </Box>
         );
       })()}
