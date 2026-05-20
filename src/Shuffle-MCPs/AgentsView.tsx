@@ -89,8 +89,8 @@ const AgentsView = ({ onSchedule, maxWidth = 820, onChooseLLM, hideChooseLLM, gl
   );
 
   return (
-    <Box sx={{ minHeight: '100vh', width: '100%', px: { xs: 2, md: 4 }, pt: '5vh', pb: 6 }}>
-      <Stack spacing={6} sx={{ maxWidth, mx: 'auto' }}>
+    <Box sx={{ minHeight: '100%', width: '100%', px: { xs: 2, md: 4 }, pt: { xs: 3, md: '5vh' }, pb: 6, boxSizing: 'border-box' }}>
+      <Stack spacing={6} sx={{ maxWidth, mx: 'auto', width: '100%' }}>
         {editing && (
           <Box
             sx={{
@@ -122,6 +122,8 @@ const AgentsView = ({ onSchedule, maxWidth = 820, onChooseLLM, hideChooseLLM, gl
           apiBaseUrl={globalUrl}
           onViewChange={setAgentView}
           onSchedule={onSchedule}
+          onChooseLLM={onChooseLLM}
+          hideChooseLLM={hideChooseLLM}
           defaultInput={prefill.input}
           defaultApps={prefill.apps.length > 0 ? prefill.apps : undefined}
           submitOverride={editing ? handleSaveEdit : undefined}
@@ -131,7 +133,7 @@ const AgentsView = ({ onSchedule, maxWidth = 820, onChooseLLM, hideChooseLLM, gl
           disableScheduleTooltip={editing ? 'Scheduling is disabled while editing an existing schedule' : undefined}
         />
         {agentView === 'start' && (
-          <Box sx={{ pt: '12vh' }}>
+          <Box sx={{ pt: { xs: 4, md: '8vh' } }}>
             <AgentActivityList
               apiBaseUrl={globalUrl}
               onRunClick={setSelectedRun}
