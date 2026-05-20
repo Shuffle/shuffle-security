@@ -28,13 +28,15 @@ import DashboardOverviewRaw from './components/dashboard/DashboardOverview';
 
 /**
  * Wrap a Shuffle-Core surface in the theme provider and forward an optional
- * `mode` prop ('light' | 'dark' | 'auto'). When `mode` is omitted the surface
- * inherits the host page's `.dark` class on `<html>` (auto).
+ * `colorMode` prop ('light' | 'dark' | 'auto'). When omitted the surface
+ * inherits the host page's `.dark` class on `<html>` (auto). We use
+ * `colorMode` (not `mode`) to avoid colliding with component-specific `mode`
+ * props (e.g. AutomationDashboard's 'apps' | 'workflows').
  */
-type WithMode<P> = P & { mode?: ShuffleColorMode };
+type WithColorMode<P> = P & { colorMode?: ShuffleColorMode };
 const withTheme = <P extends object>(Inner: React.ComponentType<P>, displayName: string) => {
-  const Wrapped: React.FC<WithMode<P>> = ({ mode, ...rest }) => (
-    <ShuffleCoreThemeProvider mode={mode}>
+  const Wrapped: React.FC<WithColorMode<P>> = ({ colorMode, ...rest }) => (
+    <ShuffleCoreThemeProvider mode={colorMode}>
       <Inner {...(rest as P)} />
     </ShuffleCoreThemeProvider>
   );
