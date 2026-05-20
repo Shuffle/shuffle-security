@@ -970,6 +970,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
   appPickerLabel = 'Select Apps',
   appPickerTitle = 'Select Apps',
   appPickerSubtitle = 'Pick the tools the agent is allowed to use for this run',
+  onChooseLLM,
+  hideChooseLLM = false,
   submitTooltip = '⌘+Enter to send',
   submitIcon,
   submitOverride,
