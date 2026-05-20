@@ -10,7 +10,10 @@
 import React from 'react';
 import { Box, Typography, Tooltip, CircularProgress } from '@mui/material';
 import { TrendingUp, TrendingDown, Activity } from 'lucide-react';
-import { useIsSupport } from '@/hooks/useIsSupport';
+// In the standalone library build, support diagnostics are always off.
+// The host app overrides this internally via its own AuthContext, but the
+// published package has no access to that, so we stub it locally.
+const useIsSupport = (): boolean => false;
 import type { UsecaseOutcome } from '../lib/outcomes';
 
 /** Frontend routes we know exist in src/App.tsx — used by the support-only
