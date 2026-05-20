@@ -270,6 +270,7 @@ const AgentRunDrawer = ({
               hideHeroIcon
               title=""
               subtitle={null}
+              apiBaseUrl={globalUrl}
               {...agentUIProps}
             />
           </Box>
