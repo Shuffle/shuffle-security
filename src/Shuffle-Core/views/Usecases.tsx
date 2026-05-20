@@ -2734,6 +2734,7 @@ function UsecaseDetailContent({
   workflows = [],
   autoEnable = false,
   onAutoEnableConsumed,
+  showImage = false,
 }: {
   flowId: string | undefined;
   hideBackNav?: boolean;
@@ -2761,6 +2762,8 @@ function UsecaseDetailContent({
   autoEnable?: boolean;
   /** Called once after autoEnable has been honored so the parent can clear its flag. */
   onAutoEnableConsumed?: () => void;
+  /** Support-only: render the usecase's reference image at the top of the detail view. */
+  showImage?: boolean;
 }) {
   const navigate = useNavigate();
   const { apiUrl, authHeader } = useApi();
@@ -3167,6 +3170,24 @@ function UsecaseDetailContent({
         <Button onClick={() => navigate('/usecases')} startIcon={<ArrowLeft size={14} />} sx={{ mb: 2, textTransform: 'none', color: MUTED }}>
           Automations
         </Button>
+      )}
+
+      {showImage && flow.referenceImage && (
+        <Box
+          component="img"
+          src={flow.referenceImage}
+          alt={`${flow.label} reference`}
+          loading="lazy"
+          sx={{
+            display: 'block',
+            width: '100%',
+            maxHeight: 280,
+            objectFit: 'cover',
+            borderRadius: 2,
+            border: CARD_BORDER,
+            mb: 3,
+          }}
+        />
       )}
 
       {!isAuthenticated && (
@@ -3707,12 +3728,12 @@ function UsecaseDetailContent({
         );
       })()}
 
-      {(flow.referenceImage || flow.video || flow.blogpost) && (
+      {((showImage && flow.referenceImage) || flow.video || flow.blogpost) && (
         <Box sx={{ p: 3, borderRadius: 2, border: CARD_BORDER, bgcolor: CARD_BG, mb: 3 }}>
           <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1.5 }}>
             Resources
           </Typography>
-          {flow.referenceImage && (
+          {showImage && flow.referenceImage && (
             <Box component="a" href={flow.referenceImage} target="_blank" rel="noopener noreferrer" sx={{ display: 'block', mb: (flow.video || flow.blogpost) ? 2 : 0, borderRadius: 1.5, overflow: 'hidden', border: CARD_BORDER }}>
               <Box component="img" src={flow.referenceImage} alt={`${flow.label} reference`} loading="lazy" sx={{ display: 'block', width: '100%', height: 'auto', maxHeight: 420, objectFit: 'contain' }} />
             </Box>
@@ -3894,6 +3915,18 @@ function UsecasesPageInner() {
   const { data: workflows = [], refetch: refetchWorkflows } = useWorkflowsLite();
   const isSupport = userInfo?.support === true;
   const [showAllAsSupport, setShowAllAsSupport] = useState(false);
+  // Support-only toggle: render `referenceImage` previews on cards and at the
+  // top of the detail view. Persisted so support users can hide them once and
+  // forget. Default on so a freshly-authored image surfaces immediately.
+  const [showUsecaseImages, setShowUsecaseImages] = useState<boolean>(() => {
+    try { return localStorage.getItem('shuffle-usecase-images') !== 'false'; }
+    catch { return true; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('shuffle-usecase-images', showUsecaseImages ? 'true' : 'false'); }
+    catch { /* ignore */ }
+  }, [showUsecaseImages]);
+  const imagesVisible = isSupport && showUsecaseImages;
   const [searchParams, setSearchParams] = useSearchParams();
   const routeParams = useParams<{ flowId?: string }>();
   const [trustedWorkflowStates, setTrustedWorkflowStates] = useState<Record<string, boolean>>({});
@@ -4345,10 +4378,12 @@ function UsecasesPageInner() {
           hasValidatedSource={detailHasValidatedSource}
           onToggled={handleUsecaseWorkflowGenerated}
           workflows={workflows}
+          showImage={imagesVisible}
         />
       </Box>
     );
   }
+
 
   return (
     <Box sx={{ px: { xs: 2, md: 4 }, py: 4, maxWidth: 1200, width: '100%', mx: 'auto' }}>
@@ -4518,19 +4553,34 @@ function UsecasesPageInner() {
               }
             </Typography>
           </Box>
-          <Chip
-            label={showAllAsSupport ? 'View as user' : 'View as support'}
-            size="small"
-            onClick={() => setShowAllAsSupport(!showAllAsSupport)}
-            sx={{
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: '0.7rem',
-              bgcolor: showAllAsSupport ? 'hsl(var(--primary) / 0.15)' : 'hsl(45 93% 47% / 0.2)',
-              color: showAllAsSupport ? 'hsl(var(--primary))' : 'hsl(45 93% 47%)',
-              '&:hover': { bgcolor: showAllAsSupport ? 'hsl(var(--primary) / 0.25)' : 'hsl(45 93% 47% / 0.3)' },
-            }}
-          />
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Chip
+              label={showUsecaseImages ? 'Images: on' : 'Images: off'}
+              size="small"
+              onClick={() => setShowUsecaseImages((v) => !v)}
+              sx={{
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontSize: '0.7rem',
+                bgcolor: showUsecaseImages ? 'hsl(var(--primary) / 0.15)' : 'hsl(0 0% 50% / 0.18)',
+                color: showUsecaseImages ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                '&:hover': { bgcolor: showUsecaseImages ? 'hsl(var(--primary) / 0.25)' : 'hsl(0 0% 50% / 0.28)' },
+              }}
+            />
+            <Chip
+              label={showAllAsSupport ? 'View as user' : 'View as support'}
+              size="small"
+              onClick={() => setShowAllAsSupport(!showAllAsSupport)}
+              sx={{
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontSize: '0.7rem',
+                bgcolor: showAllAsSupport ? 'hsl(var(--primary) / 0.15)' : 'hsl(45 93% 47% / 0.2)',
+                color: showAllAsSupport ? 'hsl(var(--primary))' : 'hsl(45 93% 47%)',
+                '&:hover': { bgcolor: showAllAsSupport ? 'hsl(var(--primary) / 0.25)' : 'hsl(45 93% 47% / 0.3)' },
+              }}
+            />
+          </Box>
         </Box>
       ) : (
         <Box sx={{
@@ -4590,6 +4640,7 @@ function UsecasesPageInner() {
                 isEnabled={isFlowVisuallyEnabled(flow)}
                 hasInterest={isSupport && interestNames.has(flow.label)}
                 isSupport={isSupport}
+                showImage={imagesVisible}
                 canToggle={isAuthenticated && !!flow.automationLabel}
                 isAuthenticated={isAuthenticated}
                 hasValidatedSource={validatedCategories.has(flow.source)}
@@ -4697,6 +4748,7 @@ function UsecasesPageInner() {
                 workflows={workflows}
                 autoEnable={autoEnableFlowId !== null && autoEnableFlowId === drawerFlowId}
                 onAutoEnableConsumed={() => setAutoEnableFlowId(null)}
+                showImage={imagesVisible}
               />
             );
           })()}
@@ -4714,6 +4766,7 @@ function UsecaseCard({
   isEnabled,
   hasInterest = false,
   isSupport = false,
+  showImage = false,
   canToggle,
   isAuthenticated = true,
   hasValidatedSource = true,
@@ -4728,6 +4781,8 @@ function UsecaseCard({
   isEnabled: boolean;
   hasInterest?: boolean;
   isSupport?: boolean;
+  /** Support-only: render the usecase's reference image as a top banner. */
+  showImage?: boolean;
   canToggle: boolean;
   isAuthenticated?: boolean;
   hasValidatedSource?: boolean;
@@ -4893,6 +4948,24 @@ function UsecaseCard({
       }}
     >
       <CardActionArea onClick={onClick} sx={{ px: 2, py: '14.5px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+        {showImage && flow.referenceImage && (
+          <Box
+            component="img"
+            src={flow.referenceImage}
+            alt=""
+            loading="lazy"
+            sx={{
+              display: 'block',
+              width: 'calc(100% + 32px)',
+              mx: -2,
+              mt: '-14.5px',
+              mb: 1.25,
+              height: 96,
+              objectFit: 'cover',
+              borderBottom: '1px solid hsl(var(--border))',
+            }}
+          />
+        )}
         {/* Label + sync icon */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, width: '100%' }}>
           <Typography variant="body2" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', flexGrow: 1, fontSize: '0.82rem' }}>
