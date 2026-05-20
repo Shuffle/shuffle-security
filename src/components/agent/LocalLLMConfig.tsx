@@ -18,6 +18,8 @@ import type { AlgoliaSearchApp } from '@/Shuffle-MCPs';
 import { useAppAuth } from '@/Shuffle-MCPs/useAppAuth';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { refreshAllIntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
+import { UsageBar } from '@/Shuffle-MCPs/UsageBar';
+import { useAuth } from '@/context/AuthContext';
 import singulAgentIcon from '@/assets/singul-agent-icon.png';
 
 const OPENAI_APP_NAME = 'OpenAI';
@@ -231,9 +233,33 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
   };
 
   const isShuffleAI = effectivePreset === SHUFFLE_AI_PRESET;
+  const { userInfo } = useAuth();
+  const appRunLimit = userInfo?.app_execution_limit || 0;
+  const appRunUsage = (userInfo?.app_execution_usage || 0) + (userInfo?.app_executions_suborgs || 0);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+      {/* Usage / limits — reusable component so we can drop it anywhere */}
+      {(appRunLimit > 0) && (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <UsageBar
+            label="App runs"
+            usage={appRunUsage}
+            limit={appRunLimit}
+            unit="runs"
+            actionLabel="Upgrade"
+            actionHref="https://shuffler.io/pricing"
+          />
+          {/* Agent tokens — wire usage/limit once the API exposes them. */}
+          <UsageBar
+            label="Agent tokens"
+            usage={0}
+            limit={0}
+            unit="tokens"
+            hint="Token usage tracking coming soon."
+          />
+        </Box>
+      )}
       {/* Description */}
       {!compact && (
         <Box sx={{
