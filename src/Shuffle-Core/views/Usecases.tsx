@@ -3136,7 +3136,7 @@ function UsecaseDetailContent({
                     {endpoint.meta?.icon}
                   </Box>
                   <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: accent(endpoint.meta?.color), textTransform: 'uppercase', letterSpacing: '0.02em', flexShrink: 0 }}>
-                    {endpoint.meta?.label || 'Unknown'}
+                    {endpoint.title === 'Source' && endpoint.categoryId === 'case_management' ? 'Shuffle' : (endpoint.meta?.label || 'Unknown')}
                   </Typography>
                   {endpoint.details ? (
                     <Typography sx={{
