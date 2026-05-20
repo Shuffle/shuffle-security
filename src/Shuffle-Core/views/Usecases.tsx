@@ -3966,6 +3966,11 @@ function UsecasesPageInner() {
     (flow: Usecase): boolean => {
       // Agent Response is driven by the category automation, not a workflow.
       if (flow.id === 'case_management_agent_response_1') return aiAgentAutomationActive;
+      // Add Host-Monitors is presence-driven: as soon as ≥2 host monitors are
+      // deployed, treat it as enabled — there is no separate workflow to gate.
+      if (flow.id === 'case_management_asset_management_monitors_1') {
+        return monitorsDeployedCount >= 2;
+      }
       if (!flow.automationLabel) return false;
       if (!enabledLabels.has(flow.automationLabel)) return false;
       if (!validatedCategories.has(flow.source)) return false;
