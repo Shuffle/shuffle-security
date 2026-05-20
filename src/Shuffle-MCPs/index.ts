@@ -15,7 +15,18 @@ import { ShuffleMcpThemeProvider, type ShuffleMcpColorMode } from './ShuffleMcpT
 type WithColorMode<P> = P & { colorMode?: ShuffleMcpColorMode };
 
 const withMcpTheme = <P extends object>(Inner: React.ComponentType<P>, displayName: string) => {
-  const Wrapped = React.forwardRef<unknown, WithColorMode<P>>(({ colorMode, ...rest }, ref) =>
+  const Wrapped: React.FC<WithColorMode<P>> = ({ colorMode, ...rest }) =>
+    React.createElement(
+      ShuffleMcpThemeProvider,
+      { mode: colorMode },
+      React.createElement(Inner as React.ComponentType<any>, { ...(rest as P) }),
+    );
+  Wrapped.displayName = `ShuffleMCPs(${displayName})`;
+  return Wrapped as React.ComponentType<WithColorMode<P>>;
+};
+
+const withMcpThemeRef = <P extends object, R>(Inner: React.ForwardRefExoticComponent<P & React.RefAttributes<R>>, displayName: string) => {
+  const Wrapped = React.forwardRef<R, WithColorMode<P>>(({ colorMode, ...rest }, ref) =>
     React.createElement(
       ShuffleMcpThemeProvider,
       { mode: colorMode },
@@ -23,7 +34,7 @@ const withMcpTheme = <P extends object>(Inner: React.ComponentType<P>, displayNa
     ),
   );
   Wrapped.displayName = `ShuffleMCPs(${displayName})`;
-  return Wrapped as React.ComponentType<WithColorMode<P>>;
+  return Wrapped as React.ForwardRefExoticComponent<WithColorMode<P> & React.RefAttributes<R>>;
 };
 
 import { ShuffleMCP as ShuffleMCPRaw } from './ShuffleMCP';
@@ -47,7 +58,7 @@ export type { ShuffleMcpColorMode, ShuffleMcpThemeProviderProps } from './Shuffl
 
 export type { ShuffleHostProps } from './host-props';
 
-export const ShuffleMCP = withMcpTheme(ShuffleMCPRaw as React.ComponentType<any>, 'ShuffleMCP');
+export const ShuffleMCP = withMcpThemeRef(ShuffleMCPRaw as React.ForwardRefExoticComponent<any>, 'ShuffleMCP');
 export default ShuffleMCP;
 export type { ShuffleMCPHandle } from './ShuffleMCP';
 export const AppDetailDrawer = withMcpTheme(AppDetailDrawerRaw as React.ComponentType<any>, 'AppDetailDrawer');
