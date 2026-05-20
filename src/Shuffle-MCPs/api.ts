@@ -81,6 +81,10 @@ const getDefaultBaseUrl = (): string => {
 // Dynamic region URL state (only applies in production, not dev)
 let _regionUrl: string | null = null;
 let _trackedOrgId: string | null = null;
+// Host-injected base URL (set via setHostBaseUrl from a host that passes
+// `globalUrl` through ShuffleHostProps). Highest priority — overrides region
+// URL and the auto-detected default. Use this for self-hosted backends.
+let _hostBaseUrl: string | null = null;
 
 /** Check if a URL is a valid shuffler.io subdomain */
 const isShufflerSubdomain = (url: string): boolean => {
@@ -128,6 +132,26 @@ export const resetRegionUrl = () => {
   }
   _regionUrl = null;
 };
+
+/**
+ * Host override — call from a top-level component (or `useSyncHostBaseUrl`)
+ * with the `globalUrl` injected via `ShuffleHostProps`. When set, this beats
+ * region URL and the env-based default for ALL fetches that go through
+ * `getApiUrl()` / `API_CONFIG.baseUrl` / `shuffleFetch`.
+ *
+ * Pass `null` / `undefined` / empty string to clear the override.
+ */
+export const setHostBaseUrl = (url: string | undefined | null) => {
+  const next = url ? url.replace(/\/+$/, '') : null;
+  if (next === _hostBaseUrl) return;
+  _hostBaseUrl = next;
+  if (next) {
+    try { registerProtectedOrigin(next); } catch { /* noop */ }
+  }
+};
+
+/** Get the currently active host override, if any. */
+export const getHostBaseUrl = (): string | null => _hostBaseUrl;
 
 /** Get the currently tracked org ID */
 export const getTrackedOrgId = (): string | null => _trackedOrgId;
