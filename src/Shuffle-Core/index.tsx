@@ -64,5 +64,7 @@ export { toast, setToastImpl } from './toast';
 export { API_CONFIG, getApiUrl, getAuthHeader, shuffleFetch, setRegionUrl, resetRegionUrl } from './api';
 
 // Onboarding flow — shared between Shuffle Core and Shuffle Security.
-export { OnboardingFlow, ProductChoiceStep } from './onboarding';
+import { OnboardingFlow as OnboardingFlowRaw, ProductChoiceStep as ProductChoiceStepRaw } from './onboarding';
+export const OnboardingFlow = withTheme(OnboardingFlowRaw, 'OnboardingFlow');
+export const ProductChoiceStep = withTheme(ProductChoiceStepRaw, 'ProductChoiceStep');
 export type { OnboardingFlowProps, OnboardingProduct } from './onboarding';
