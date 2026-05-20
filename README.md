@@ -4,7 +4,7 @@
 
 # Shuffle Security
 
-[Shuffle Security](https://security.shuffler.io) is the open source incident response and security operations frontend for [Shuffle Core](https://shuffler.io) — built for and by security professionals. It brings incidents, host monitoring, vulnerabilities and AI-driven response into a single workspace, designed to work well for SOC teams, MSSPs and service providers. Built to be rebuilt and rebranded.
+[Shuffle Security (beta!)](https://security.shuffler.io) is the open source incident response and security operations frontend for [Shuffle Core](https://shuffler.io) — built for and by security professionals. It brings incidents, host monitoring, vulnerabilities and AI-driven response into a single workspace, designed to work well for SOC teams, MSSPs and service providers. Built to be rebuilt and rebranded.
 
 [_Key Features_](https://security.shuffler.io/#features) — [_Community & Support_](https://discord.gg/B2CBzUm) — [_Documentation_](https://security.shuffler.io/docs) — [_Getting Started_](https://security.shuffler.io/docs/getting-started) — [_Set up a demo call_](https://shuffler.io/contact)
 
