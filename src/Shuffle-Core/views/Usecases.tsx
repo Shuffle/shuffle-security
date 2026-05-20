@@ -3728,12 +3728,12 @@ function UsecaseDetailContent({
         );
       })()}
 
-      {(flow.referenceImage || flow.video || flow.blogpost) && (
+      {((showImage && flow.referenceImage) || flow.video || flow.blogpost) && (
         <Box sx={{ p: 3, borderRadius: 2, border: CARD_BORDER, bgcolor: CARD_BG, mb: 3 }}>
           <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1.5 }}>
             Resources
           </Typography>
-          {flow.referenceImage && (
+          {showImage && flow.referenceImage && (
             <Box component="a" href={flow.referenceImage} target="_blank" rel="noopener noreferrer" sx={{ display: 'block', mb: (flow.video || flow.blogpost) ? 2 : 0, borderRadius: 1.5, overflow: 'hidden', border: CARD_BORDER }}>
               <Box component="img" src={flow.referenceImage} alt={`${flow.label} reference`} loading="lazy" sx={{ display: 'block', width: '100%', height: 'auto', maxHeight: 420, objectFit: 'contain' }} />
             </Box>
