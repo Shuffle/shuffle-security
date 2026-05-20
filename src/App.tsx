@@ -71,6 +71,7 @@ const UsecasesPage = () => {
     <UsecasesPageRaw
       isLoaded={!isLoading}
       isLoggedIn={isAuthenticated}
+      globalUrl={API_CONFIG.baseUrl}
       userdata={userInfo ? {
         id: userInfo.id,
         username: userInfo.username,
