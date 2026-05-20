@@ -2092,7 +2092,6 @@ function IntegrationStatusLite({
         fontSize: '0.6rem',
         fontWeight: 700,
         color: 'hsl(var(--muted-foreground))',
-        textTransform: 'uppercase',
         letterSpacing: '0.06em',
         mb: 0.5,
       }}
