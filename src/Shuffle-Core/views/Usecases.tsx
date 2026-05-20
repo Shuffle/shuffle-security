@@ -5025,7 +5025,7 @@ function UsecaseCard({
           </Typography>
           <ArrowRight size={10} style={{ color: 'hsl(var(--muted-foreground))' }} />
           <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem' }}>
-            {targetCat}
+            {MULTI_DEST_FLOW_IDS.has(flow.id) ? 'Communication & Cases' : targetCat}
           </Typography>
         </Box>
       </CardActionArea>
