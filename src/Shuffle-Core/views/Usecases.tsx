@@ -2411,6 +2411,7 @@ function UsecaseDetailContent({
 }) {
   const navigate = useNavigate();
   const { apiUrl, authHeader } = useApi();
+  const { renderEndpointSlot } = useUsecasesConfig();
   const flow = usecases.find((item) => item.id === flowId);
   const [categoryAppNames, setCategoryAppNames] = useState<Record<string, string[]>>({});
   // Tracks whether the apps→category resolution has completed at least once.
