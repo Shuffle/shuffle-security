@@ -2059,9 +2059,10 @@ function IntegrationStatusLite({
   }
 
   return (
-    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, px: 0.5, py: 0.5 }}>
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, px: 0.5, py: 0.5, alignItems: 'center' }}>
       {visible.map(renderIcon)}
       {renderAddTile()}
+      {extraTile}
       {renderPopover()}
     </Box>
   );
