@@ -34,6 +34,7 @@ import shuffleSecurityIcon from '../assets/shuffle-icon.png';
 import UsecaseAlluvialDiagram from './UsecaseAlluvialDiagram';
 import { AppSearchDrawer, useAppDetailOptional } from '@shuffleio/shuffle-mcps';
 import { extractWorkflowAppNames, normalizeAppName, getIngestionCategory } from '@/Shuffle-MCPs/ingestionDetection';
+import { shuffleFetch, getApiUrl } from '@/Shuffle-MCPs/api';
 import { useUsecaseOutcomes } from '../hooks/useUsecaseOutcomes';
 import { UsecaseOutcomeSection } from '../components/UsecaseOutcome';
 import { resolveOutcomeKind } from '../lib/outcomes';
@@ -2209,18 +2210,20 @@ function EnrichmentsOutcomeBlock({ flow }: { flow: Usecase }) {
 // Notifications usecase — fetches open/read counts from the API and renders
 // them as a synthetic outcome inside the standard Outcome block.
 function NotificationsOutcomeBlock() {
-  const { apiUrl, authHeader } = useApi();
   const [openCount, setOpenCount] = useState<number | null>(null);
   const [readCount, setReadCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
+    // Use shuffleFetch so the request includes the active Org-Id header —
+    // otherwise notifications from the user's currently-selected sub-org are
+    // not returned and the block shows "No data yet" even when the org has
+    // hundreds of notifications.
     const fetchOne = async (status: 'open' | 'read'): Promise<number> => {
-      const res = await fetch(apiUrl(`/api/v1/notifications?status=${status}`), {
-        credentials: 'include',
-        headers: { ...authHeader() },
-      });
+      const res = await shuffleFetch(
+        getApiUrl(`/api/v1/notifications?status=${status}`),
+      );
       if (!res.ok) return 0;
       const data = await res.json();
       const list = Array.isArray(data?.notifications) ? data.notifications : [];
@@ -2243,7 +2246,7 @@ function NotificationsOutcomeBlock() {
       }
     })();
     return () => { cancelled = true; };
-  }, [apiUrl, authHeader]);
+  }, []);
 
   const total = (openCount ?? 0) + (readCount ?? 0);
   const outcome = {
@@ -3252,8 +3255,8 @@ function UsecaseDetailContent({
                 usecaseEnabledNames={enabledNamesSet}
                 onUsecaseAppToggle={flow.automationLabel ? handleUsecaseAppToggle : undefined}
                 usecaseLabel={flow.label}
-                onAddApp={() => setAddToolFor({ side, categoryId: endpoint.categoryId })}
-                addAppLabel={`Add ${endpoint.meta?.label || endpoint.title} tool`}
+                onAddApp={isCases ? undefined : () => setAddToolFor({ side, categoryId: endpoint.categoryId })}
+                addAppLabel={isCases ? undefined : `Add ${endpoint.meta?.label || endpoint.title} tool`}
                 extraTile={renderEndpointSlot && flow ? renderEndpointSlot({ flowId: flow.id, flowLabel: flow.label, side }) : undefined}
               />
             </Box>
