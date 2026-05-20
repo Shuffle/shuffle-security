@@ -201,8 +201,10 @@ function deriveCta(
 export function UsecaseOutcomeSection({
   outcome,
   sourceCategoryLabel,
+  sourceId,
   nextActionHref,
   nextActionLabel,
+  iocCategoryByKey,
   loading,
 }: UsecaseOutcomeSectionProps) {
   if (!outcome || outcome.kind === 'none') return null;
