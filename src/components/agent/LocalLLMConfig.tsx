@@ -237,9 +237,10 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
   const appRunLimit = userInfo?.app_execution_limit || 0;
   const appRunUsage = (userInfo?.app_execution_usage || 0) + (userInfo?.app_executions_suborgs || 0);
   const agentTokens = userInfo?.sync_features?.agent_tokens;
+  const hasAgentTokens = agentTokens !== undefined && agentTokens !== null;
   const agentTokenLimit = Number(agentTokens?.limit) || 0;
   const agentTokenUsage = Number(agentTokens?.usage) || 0;
-  const hasAnyUsage = appRunLimit > 0 || agentTokenLimit > 0;
+  const hasAnyUsage = appRunLimit > 0 || hasAgentTokens;
 
   const usageBars = hasAnyUsage ? (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
@@ -253,7 +254,7 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
           actionHref="https://shuffler.io/pricing"
         />
       )}
-      {agentTokenLimit > 0 && (
+      {hasAgentTokens && (
         <UsageBar
           label="Agent tokens"
           usage={agentTokenUsage}
