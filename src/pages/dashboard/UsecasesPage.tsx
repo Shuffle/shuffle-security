@@ -9,6 +9,7 @@ import { Usecases } from '@/Shuffle-Core';
 import { WebhookIngestionButton, type WebhookIngestionInfo } from '@/components/incidents/WebhookIngestionButton';
 import { useWebhookStatus } from '@/hooks/useWebhookStatus';
 import { useWorkflows } from '@/hooks/useWorkflows';
+import { IncidentRoutingEditor } from '@/components/settings/IncidentRoutingEditor';
 
 const WEBHOOK_FLOW_IDS = new Set(['siem_case_management_1', 'edr_case_management_1']);
 
@@ -40,6 +41,12 @@ const UsecasesPage = (props: UsecasesPageProps = {}) => {
           node: <WebhookIngestionButton webhook={info} onToggled={() => refetch()} />,
           enabled: !!webhook.enabled,
         } as any;
+      }}
+      renderUsecaseDetailSlot={({ flowId }) => {
+        if (flowId !== 'case_management_incident_routing_1') return null;
+        // Same component used on /preferences — single source of truth so
+        // changes apply in both places.
+        return <IncidentRoutingEditor forceShow />;
       }}
     />
   );

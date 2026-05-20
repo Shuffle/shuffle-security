@@ -561,6 +561,19 @@ export const DEFAULT_USECASES: Usecase[] = [
     automationArea: 'correlation',
   },
   {
+    id: 'case_management_incident_routing_1', phase: 'correlation', source: 'case_management', target: 'case_management',
+    label: 'Incident Routing', animated: true,
+    tags: ['Context', 'Correlation', 'Routing'],
+    description: 'Route incoming incidents to the right sub-organization based on tenant, source, severity, observables, or any field in the incident payload. Keeps multi-tenant environments tidy and ensures the right team owns each incident from the start.',
+    agenticDescription: 'An agent evaluates each new incident against your routing rules, decides which sub-organization should own it, and either suggests or executes the move with full audit trail.',
+    automationArea: 'correlation',
+    customAction: {
+      label: 'Configure Routing',
+      href: '/preferences?tab=routing',
+      description: 'Open Organization Preferences to manage incident routing rules.',
+    },
+  },
+  {
     id: 'asset_management_case_management_vuln_1', phase: 'ingest', source: 'asset_management', target: 'case_management',
     label: 'Vulnerability Correlation',
     tags: ['Context', 'Correlation', 'Vulnerability'],
@@ -976,6 +989,11 @@ interface UsecasesPageConfig {
    *  (e.g. the Webhook ingestion button on SIEM/EDR alert sources) using
    *  the exact same component already mounted elsewhere in the app. */
   renderEndpointSlot?: (params: { flowId: string; flowLabel: string; side: 'source' | 'destination' }) => React.ReactNode;
+  /** Optional host slot rendered above the Outcome block in the usecase
+   *  detail view. Lets the host inject a full configuration component for
+   *  a usecase (e.g. the Incident Routing editor) instead of bundling it
+   *  into Shuffle-Core. */
+  renderUsecaseDetailSlot?: (params: { flowId: string; flowLabel: string }) => React.ReactNode;
 }
 
 const DEFAULT_CONFIG: UsecasesPageConfig = {
@@ -989,6 +1007,7 @@ const DEFAULT_CONFIG: UsecasesPageConfig = {
   externalIsAuthenticated: false,
   isLoaded: true,
   renderEndpointSlot: undefined,
+  renderUsecaseDetailSlot: undefined,
 };
 
 const UsecasesPageConfigContext = React.createContext<UsecasesPageConfig>(DEFAULT_CONFIG);
@@ -2690,7 +2709,7 @@ function UsecaseDetailContent({
 }) {
   const navigate = useNavigate();
   const { apiUrl, authHeader } = useApi();
-  const { renderEndpointSlot } = useUsecasesConfig();
+  const { renderEndpointSlot, renderUsecaseDetailSlot } = useUsecasesConfig();
   const flow = usecases.find((item) => item.id === flowId);
   const [categoryAppNames, setCategoryAppNames] = useState<Record<string, string[]>>({});
   // Tracks whether the apps→category resolution has completed at least once.
@@ -3247,6 +3266,17 @@ function UsecaseDetailContent({
         <AiIncidentHandlingPromptsBlock />
       )}
 
+      {(() => {
+        const slot = renderUsecaseDetailSlot
+          ? renderUsecaseDetailSlot({ flowId: flow.id, flowLabel: flow.label })
+          : null;
+        return slot ? (
+          <Box sx={{ p: 2.5, borderRadius: 2, border: CARD_BORDER, bgcolor: CARD_BG, mb: 3 }}>
+            {slot}
+          </Box>
+        ) : null;
+      })()}
+
       {flow.automationArea === 'notifications'
         ? <NotificationsOutcomeBlock />
         : flow.label === 'IOC feeds'
@@ -3634,6 +3664,11 @@ export interface UsecasesPageProps {
    * the Webhook ingestion button without duplicating its implementation.
    */
   renderEndpointSlot?: (params: { flowId: string; flowLabel: string; side: 'source' | 'destination' }) => React.ReactNode;
+  /**
+   * Optional host slot rendered above the Outcome block in the detail view.
+   * Use it to inject a full configuration UI (e.g. Incident Routing editor).
+   */
+  renderUsecaseDetailSlot?: (params: { flowId: string; flowLabel: string }) => React.ReactNode;
 }
 
 function UsecasesPageInner() {
@@ -4822,7 +4857,7 @@ export default function UsecasesPage(props: UsecasesPageProps = {}) {
     url: '/usecases',
   });
   useInjectScopedStyles();
-  const { globalUrl, userdata, isLoaded, isLoggedIn, theme = 'system', renderEndpointSlot } = props;
+  const { globalUrl, userdata, isLoaded, isLoggedIn, theme = 'system', renderEndpointSlot, renderUsecaseDetailSlot } = props;
 
   // Resolve the theme class applied directly on the scope wrapper. 'system'
   // means "do nothing" — let the host app's `.dark` ancestor (or none) decide.
@@ -4866,8 +4901,9 @@ export default function UsecasesPage(props: UsecasesPageProps = {}) {
       externalIsAuthenticated,
       isLoaded: loaded,
       renderEndpointSlot,
+      renderUsecaseDetailSlot,
     };
-  }, [globalUrl, userdata, isLoaded, isLoggedIn, hostManaged, renderEndpointSlot]);
+  }, [globalUrl, userdata, isLoaded, isLoggedIn, hostManaged, renderEndpointSlot, renderUsecaseDetailSlot]);
 
   return (
     <UsecasesPageConfigContext.Provider value={config}>
