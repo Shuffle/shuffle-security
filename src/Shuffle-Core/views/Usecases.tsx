@@ -3882,6 +3882,16 @@ function UsecasesPageInner() {
     return set;
   }, [trustedWorkflowStates, workflowEnabledLabels]);
 
+  // Page-level outcomes bundle — used to drive presence-based enable signals
+  // (e.g. "Add Host-Monitors" lights up as Enabled when ≥2 host monitors are
+  // actually deployed, regardless of whether a workflow exists).
+  const { getOutcome: getPageOutcome } = useUsecaseOutcomes(usecases);
+  const monitorsDeployedCount = (() => {
+    const o = getPageOutcome('case_management_asset_management_monitors_1');
+    const v = o?.extraMetrics?.[0]?.value;
+    return typeof v === 'number' ? v : 0;
+  })();
+
   // Categories (e.g. 'siem', 'edr', 'email') for which the user has at least
   // one *authenticated* / validated source-tool installed. We use this to gate
   // the visual "Enabled" state on cards: a workflow can be generated server-
