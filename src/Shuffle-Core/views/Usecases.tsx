@@ -3959,6 +3959,7 @@ function UsecaseCard({
   apiLoaded,
   isEnabled,
   hasInterest = false,
+  isSupport = false,
   canToggle,
   isAuthenticated = true,
   hasValidatedSource = true,
@@ -3972,6 +3973,7 @@ function UsecaseCard({
   apiLoaded: boolean;
   isEnabled: boolean;
   hasInterest?: boolean;
+  isSupport?: boolean;
   canToggle: boolean;
   isAuthenticated?: boolean;
   hasValidatedSource?: boolean;
