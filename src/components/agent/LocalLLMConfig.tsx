@@ -237,35 +237,29 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
   const appRunLimit = userInfo?.app_execution_limit || 0;
   const appRunUsage = (userInfo?.app_execution_usage || 0) + (userInfo?.app_executions_suborgs || 0);
   const agentTokens = userInfo?.sync_features?.agent_tokens;
-  const hasAgentTokens = agentTokens !== undefined && agentTokens !== null;
   const agentTokenLimit = Number(agentTokens?.limit) || 0;
   const agentTokenUsage = Number(agentTokens?.usage) || 0;
-  const hasAnyUsage = appRunLimit > 0 || hasAgentTokens;
 
-  const usageBars = hasAnyUsage ? (
+  const usageBars = (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
-      {appRunLimit > 0 && (
-        <UsageBar
-          label="App runs"
-          usage={appRunUsage}
-          limit={appRunLimit}
-          unit="runs"
-          actionLabel="Upgrade"
-          actionHref="https://shuffler.io/pricing"
-        />
-      )}
-      {hasAgentTokens && (
-        <UsageBar
-          label="Agent tokens"
-          usage={agentTokenUsage}
-          limit={agentTokenLimit}
-          unit="tokens"
-          actionLabel="Upgrade"
-          actionHref="https://shuffler.io/pricing"
-        />
-      )}
+      <UsageBar
+        label="App runs"
+        usage={appRunUsage}
+        limit={appRunLimit}
+        unit="runs"
+        actionLabel="Upgrade"
+        actionHref="https://shuffler.io/pricing"
+      />
+      <UsageBar
+        label="Agent tokens"
+        usage={agentTokenUsage}
+        limit={agentTokenLimit}
+        unit="tokens"
+        actionLabel="Upgrade"
+        actionHref="https://shuffler.io/pricing"
+      />
     </Box>
-  ) : null;
+  );
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
