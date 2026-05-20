@@ -6,6 +6,7 @@ import {
   Select,
   MenuItem,
   TextField,
+  Autocomplete,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -297,7 +298,72 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
 
-      {/* Description */}
+      {/* Vendor selector — primary control, at the top */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Typography
+          sx={{
+            fontSize: '0.85rem',
+            fontWeight: 600,
+            color: 'hsl(var(--foreground))',
+          }}
+        >
+          AI Provider
+        </Typography>
+        <Autocomplete
+          size="small"
+          fullWidth
+          disableClearable
+          options={ENDPOINT_PRESETS.map((p) => p.label)}
+          value={effectivePreset || null}
+          onChange={(_e, val) => val && handlePresetChange(val)}
+          isOptionEqualToValue={(opt, val) => opt === val}
+          renderOption={(props, option) => {
+            const preset = ENDPOINT_PRESETS.find((p) => p.label === option);
+            return (
+              <li {...props} key={option}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                  <Typography sx={{ fontSize: '0.85rem' }}>{option}</Typography>
+                  {preset?.url && (
+                    <Typography
+                      component="span"
+                      sx={{ ml: 'auto', color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem' }}
+                    >
+                      {preset.url}
+                    </Typography>
+                  )}
+                </Box>
+              </li>
+            );
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              placeholder="Search a provider…"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  bgcolor: 'hsl(var(--card))',
+                  color: 'hsl(var(--foreground))',
+                  '& fieldset': { borderColor: 'hsl(var(--border))' },
+                  '&:hover fieldset': { borderColor: 'hsl(var(--muted-foreground) / 0.4)' },
+                  '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
+                },
+                '& .MuiSvgIcon-root': { color: 'hsl(var(--muted-foreground))' },
+              }}
+            />
+          )}
+          componentsProps={{
+            paper: {
+              sx: {
+                bgcolor: 'hsl(var(--popover))',
+                color: 'hsl(var(--popover-foreground))',
+                border: '1px solid hsl(var(--border))',
+              },
+            },
+          }}
+        />
+      </Box>
+
+      {/* Single merged description — adapts copy to Shuffle AI vs custom provider */}
       {!compact && (
         <Box sx={{
           px: 2.5,
@@ -307,7 +373,10 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
           bgcolor: 'hsla(var(--muted) / 0.3)',
         }}>
           <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
-            Configure an AI provider endpoint for agent operations. Pick a common provider below, or choose "Custom / self-hosted" to enter your own URL. Credentials are saved securely via the app authentication system.{' '}
+            {isShuffleAI
+              ? 'Using Shuffle\u2019s hosted AI \u2014 no configuration required. Your agent runs use Shuffle\u2019s default model. To use your own provider, pick one above or choose "Custom / self-hosted".'
+              : 'Configure an AI provider endpoint for agent operations. Pick a common provider above, or choose "Custom / self-hosted" to enter your own URL. Credentials are saved securely via the app authentication system.'}
+            {' '}
             <Box
               component="a"
               href="https://shuffler.io/docs/AI#using-self-hosted-ai-models"
@@ -322,95 +391,30 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
         </Box>
       )}
 
-      {/* Endpoint preset selector */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-        <FormControl size="small" fullWidth>
-          <Select
-            value={effectivePreset}
-            onChange={(e) => handlePresetChange(e.target.value as string)}
-            displayEmpty
-            renderValue={(val) => {
-              if (!val) {
-                return (
-                  <Typography component="span" sx={{ color: 'hsl(var(--muted-foreground))', fontStyle: 'italic' }}>
-                    Select a provider…
-                  </Typography>
-                );
-              }
-              return val as string;
-            }}
-            sx={{
+      {isShuffleAI && (
+        <Box sx={{ mt: 0.5, width: '100%' }}>{usageBars}</Box>
+      )}
+
+      {effectivePreset === CUSTOM_PRESET && (
+        <TextField
+          size="small"
+          fullWidth
+          placeholder="https://your-self-hosted-endpoint.example.com"
+          value={customUrl || currentUrl}
+          onChange={(e) => handleCustomUrlChange(e.target.value)}
+          helperText="Enter the base URL of your OpenAI-compatible endpoint"
+          sx={{
+            '& .MuiOutlinedInput-root': {
               bgcolor: 'hsl(var(--card))',
               color: 'hsl(var(--foreground))',
-              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--border))' },
-              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--muted-foreground) / 0.4)' },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'hsl(var(--primary))' },
-              '& .MuiSvgIcon-root': { color: 'hsl(var(--muted-foreground))' },
-            }}
-            MenuProps={{
-              PaperProps: {
-                sx: {
-                  bgcolor: 'hsl(var(--popover))',
-                  color: 'hsl(var(--popover-foreground))',
-                  border: '1px solid hsl(var(--border))',
-                },
-              },
-            }}
-          >
-            {ENDPOINT_PRESETS.map((p) => (
-              <MenuItem key={p.label} value={p.label}>
-                {p.label}
-                {p.url && (
-                  <Typography
-                    component="span"
-                    sx={{ ml: 1, color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem' }}
-                  >
-                    {p.url}
-                  </Typography>
-                )}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-
-        {isShuffleAI && (
-          <>
-            <Box sx={{
-              px: 2,
-              py: 1.5,
-              borderRadius: 1.5,
-              border: '1px solid hsl(var(--border))',
-              bgcolor: 'hsla(var(--muted) / 0.25)',
-            }}>
-              <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
-                Using Shuffle's hosted AI. No configuration required — your agent runs use Shuffle's default model.
-              </Typography>
-            </Box>
-            {usageBars && <Box sx={{ mt: 1.5, mx: 'auto', maxWidth: 280, width: '100%' }}>{usageBars}</Box>}
-          </>
-        )}
-
-        {effectivePreset === CUSTOM_PRESET && (
-          <TextField
-            size="small"
-            fullWidth
-            placeholder="https://your-self-hosted-endpoint.example.com"
-            value={customUrl || currentUrl}
-            onChange={(e) => handleCustomUrlChange(e.target.value)}
-            helperText="Enter the base URL of your OpenAI-compatible endpoint"
-            sx={{
-              '& .MuiOutlinedInput-root': {
-                bgcolor: 'hsl(var(--card))',
-                color: 'hsl(var(--foreground))',
-                '& fieldset': { borderColor: 'hsl(var(--border))' },
-                '&:hover fieldset': { borderColor: 'hsl(var(--muted-foreground) / 0.4)' },
-                '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
-              },
-              '& .MuiFormHelperText-root': { color: 'hsl(var(--muted-foreground))' },
-            }}
-          />
-        )}
-      </Box>
+              '& fieldset': { borderColor: 'hsl(var(--border))' },
+              '&:hover fieldset': { borderColor: 'hsl(var(--muted-foreground) / 0.4)' },
+              '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
+            },
+            '& .MuiFormHelperText-root': { color: 'hsl(var(--muted-foreground))' },
+          }}
+        />
+      )}
 
       {/* Reuse the standard AppAuthCard — URL prefill disabled so OpenAI's
           default URL doesn't get auto-filled when nothing is configured.
