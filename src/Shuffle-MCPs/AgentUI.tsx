@@ -171,13 +171,13 @@ export interface AgentUIProps {
   maxWidth?: number;
   /** Compact mode: hides the hero icon, shrinks padding. */
   compact?: boolean;
-  /** Hide the "Select Apps / MCPs" chip row entirely. */
+  /** Hide the "Select Apps" chip row entirely. */
   hideAppPicker?: boolean;
   /** Hide the paperclip image-attachment button. */
   hideAttach?: boolean;
   /** Disable the "Start" tab in the run switcher (e.g. when viewing a fixed execution). */
   disableStartTab?: boolean;
-  /** Label on the "Select Apps / MCPs" chip. */
+  /** Label on the "Select Apps" chip. */
   appPickerLabel?: string;
   /** Title on the AppSearchDrawer. */
   appPickerTitle?: string;
@@ -956,8 +956,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
   hideAppPicker = false,
   hideAttach = false,
   disableStartTab = false,
-  appPickerLabel = 'Select Apps / MCPs',
-  appPickerTitle = 'Select Apps / MCPs',
+  appPickerLabel = 'Select Apps',
+  appPickerTitle = 'Select Apps',
   appPickerSubtitle = 'Pick the tools the agent is allowed to use for this run',
   submitTooltip = '⌘+Enter to send',
   submitIcon,
