@@ -2570,13 +2570,14 @@ function UsecaseDetailContent({
   const handleToggle = async () => {
     if (!flow?.automationLabel || toggling) return;
     const willBeEnabled = !effectiveEnabled;
+    const sourceName = flow.source ? categoryLabel(flow.source) : 'source';
+
     if (willBeEnabled && !hasValidatedSource) {
       // Hard-block the enable. The /workflows/generate endpoint may return
       // success: true and then quietly skip creating the workflow when no
       // source tool is authenticated, which makes the UI look like it worked
       // until the next /workflows refresh reveals the truth. Refuse up front
       // and point the user at the fix instead.
-      const sourceName = flow.source ? categoryLabel(flow.source) : 'source';
       toast.error(`Authenticate a ${sourceName} tool first`, {
         description: `${flow.label} needs a validated ${sourceName} integration as input. Without one, the workflow has nothing to react to and will not be created.`,
         duration: 10000,
@@ -2591,28 +2592,71 @@ function UsecaseDetailContent({
     }
     setToggling(true);
     setOptimisticEnabled(willBeEnabled);
+
+    const sourceToIngest: Record<string, string> = {
+      email: 'email', edr: 'edr', siem: 'siem', case_management: 'cases',
+    };
+    const requiredCat = sourceToIngest[flow.source];
+
     try {
-      // When disabling, the same workflow (e.g. "Ingest Tickets") may also be
-      // powering sibling usecases that share a category (SIEM / EDR / Email
-      // all generate the same ingestion workflow). A blind action_name=remove
-      // would nuke the workflow for those siblings too. Instead, strip only
-      // the apps belonging to THIS usecase's source category and re-post the
-      // remaining list. If nothing is left, fall back to remove.
       const requestBody: Record<string, string> = {
         label: flow.automationLabel,
       };
       if (flow.automationCategory) requestBody.category = flow.automationCategory;
+
+      let validatedSourceAppNames: string[] = [];
+
       if (willBeEnabled) {
-        // no extra fields — generate as usual
+        // Step 1+2: re-check live which source tools are VALIDATED right now,
+        // and forward them explicitly to /workflows/generate. Without this
+        // the backend may generate a shell workflow with no source app wired
+        // in, which the UI then correctly flips back to "Disabled".
+        try {
+          const authRes = await fetch(apiUrl('/api/v1/apps/authentication'), {
+            credentials: 'include',
+            headers: { ...authHeader() },
+          });
+          if (authRes.ok) {
+            const authData = await authRes.json();
+            const authList = Array.isArray(authData) ? authData : (authData?.data || []);
+            const seen = new Set<string>();
+            for (const entry of Array.isArray(authList) ? authList : []) {
+              if (entry?.validation?.valid !== true) continue;
+              const app = entry?.app;
+              if (!app?.name) continue;
+              const cat = matchAppToCategory(app.name, app.categories || []);
+              if (cat !== flow.source) continue;
+              const k = normalizeAppName(app.name);
+              if (seen.has(k)) continue;
+              seen.add(k);
+              validatedSourceAppNames.push(app.name);
+            }
+          }
+        } catch { /* fall through — handled below */ }
+
+        if (validatedSourceAppNames.length === 0) {
+          setOptimisticEnabled(null);
+          setToggling(false);
+          toast.error(`No validated ${sourceName} tool found`, {
+            description: `${flow.label} needs at least one ${sourceName} integration with a validated authentication. Connect one and try again.`,
+            duration: 10000,
+            action: flow.source
+              ? {
+                  label: `Connect ${sourceName}`,
+                  onClick: () => setAddToolFor({ side: 'source', categoryId: flow.source! }),
+                }
+              : undefined,
+          });
+          return;
+        }
+        requestBody.app_name = validatedSourceAppNames.join(',');
       } else {
-        // The workflow only deserves to stay alive if a SIBLING source
-        // category (SIEM / EDR / Email) is still wired in. Destination /
-        // Cases apps (Shuffle Security, ServiceNow, Jira…) are shared by
-        // every ingestion usecase, so leaving them behind would falsely
-        // keep "Email reports" looking enabled with zero email tools.
-        const sourceToIngest: Record<string, string> = {
-          email: 'email', edr: 'edr', siem: 'siem', case_management: 'cases',
-        };
+        // When disabling, the same workflow (e.g. "Ingest Tickets") may also be
+        // powering sibling usecases that share a category (SIEM / EDR / Email
+        // all generate the same ingestion workflow). A blind action_name=remove
+        // would nuke the workflow for those siblings too. Instead, strip only
+        // the apps belonging to THIS usecase's source category and re-post the
+        // remaining list. If nothing is left, fall back to remove.
         const thisCat = sourceToIngest[flow.source];
         const linkedForApps = findWorkflowsForUsecase(flow, workflows);
         const currentNames: string[] = [];
@@ -2632,7 +2676,6 @@ function UsecaseDetailContent({
             }
           }
         }
-        // Keep only apps belonging to a DIFFERENT ingestion source category.
         const remainingNames = currentNames.filter((n) => {
           const cat = getIngestionCategory(n);
           if (!cat || cat === 'other' || cat === 'cases') return false;
@@ -2644,6 +2687,7 @@ function UsecaseDetailContent({
           requestBody.action_name = 'remove';
         }
       }
+
       const res = await fetch(apiUrl('/api/v2/workflows/generate'), {
         method: 'POST',
         credentials: 'include',
@@ -2655,7 +2699,51 @@ function UsecaseDetailContent({
       const reason = typeof body?.reason === 'string' ? body.reason : '';
       const ok = res.ok && body?.success !== false;
       if (!ok) throw new Error(reason || `Request failed (${res.status})`);
-      toast.success(willBeEnabled ? `${flow.label} enabled` : `${flow.label} disabled`);
+
+      // Step 3: verify by refetching workflows and confirming a source app of
+      // the required category is now wired into the generated workflow. The
+      // backend sometimes returns success: true even when nothing was wired
+      // (missing translation, unsupported app, etc.), so trust but verify.
+      if (willBeEnabled && requiredCat && requiredCat !== 'cases') {
+        let wiredApps: string[] = [];
+        try {
+          const wfRes = await fetch(apiUrl('/api/v1/workflows'), {
+            credentials: 'include',
+            headers: { ...authHeader() },
+          });
+          if (wfRes.ok) {
+            const wfList = await wfRes.json();
+            const linked = findWorkflowsForUsecase(flow, Array.isArray(wfList) ? wfList : []);
+            const wiredSet = new Set<string>();
+            for (const wf of linked) {
+              for (const n of extractWorkflowAppNames(wf)) {
+                if (getIngestionCategory(n) === requiredCat) wiredSet.add(n);
+              }
+            }
+            wiredApps = Array.from(wiredSet);
+          }
+        } catch { /* fall through to warning */ }
+
+        if (wiredApps.length === 0) {
+          // Step 4: VERY clear failure path. The workflow exists but no
+          // source-category app made it in, so the usecase will not run.
+          setOptimisticEnabled(null);
+          toast.error(`${flow.label} could not be enabled`, {
+            description: `The workflow was created but no ${sourceName} app was wired in. Tried: ${validatedSourceAppNames.join(', ') || 'none'}. Try connecting a different ${sourceName} tool or contact support.`,
+            duration: 12000,
+          });
+          onToggled?.(flow.automationLabel, false);
+          return;
+        }
+
+        toast.success(`${flow.label} enabled`, {
+          description: `Wired in ${wiredApps.length === 1 ? wiredApps[0] : `${wiredApps.length} ${sourceName} tools: ${wiredApps.join(', ')}`}.`,
+          duration: 6000,
+        });
+      } else {
+        toast.success(willBeEnabled ? `${flow.label} enabled` : `${flow.label} disabled`);
+      }
+
       onToggled?.(flow.automationLabel, willBeEnabled);
       // Hard safety net in case the server never reflects the change.
       setTimeout(() => setOptimisticEnabled(null), 8000);
@@ -2674,6 +2762,7 @@ function UsecaseDetailContent({
       setToggling(false);
     }
   };
+
 
   // Auto-enable bridge: when the list view opens the detail drawer with the
   // `autoEnable` flag set, fire Enable exactly once as soon as we have a
