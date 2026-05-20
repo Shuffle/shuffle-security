@@ -23,6 +23,7 @@ import {
 import { AppSearchDrawer } from '@shuffleio/shuffle-mcps';
 import { useAppDetailOptional } from '@shuffleio/shuffle-mcps';
 import { getApiUrl, getAuthHeader } from '@shuffleio/shuffle-mcps';
+import type { ShuffleCoreHostProps } from '../types/host-props';
 import { deduplicateAuthApps, backfillAppImages, type AuthAppEntry } from '../auth-utils';
 import {
   SIEM_PATTERNS,
