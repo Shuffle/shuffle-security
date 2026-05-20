@@ -3708,7 +3708,7 @@ function UsecaseDetailContent({
         return (
           <Box sx={{ p: 3, borderRadius: 2, border: CARD_BORDER, bgcolor: CARD_BG, mb: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, gap: 2, flexWrap: 'wrap' }}>
-              <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, letterSpacing: '0.06em' }}>
                 Linked Workflows ({allLinked.length})
               </Typography>
               <Typography sx={{ fontSize: '0.72rem', color: MUTED }}>
@@ -3762,7 +3762,7 @@ function UsecaseDetailContent({
 
       {((showImage && flow.referenceImage) || flow.video || flow.blogpost) && (
         <Box sx={{ p: 3, borderRadius: 2, border: CARD_BORDER, bgcolor: CARD_BG, mb: 3 }}>
-          <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1.5 }}>
+          <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, letterSpacing: '0.06em', mb: 1.5 }}>
             Resources
           </Typography>
           {showImage && flow.referenceImage && (
@@ -4724,7 +4724,7 @@ function UsecasesPageInner() {
           backgroundColor: '#1a1a1a',
           bgcolor: 'hsl(var(--background, 0 0% 10%))',
         }}>
-          <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', letterSpacing: '0.06em' }}>
             Automation
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
