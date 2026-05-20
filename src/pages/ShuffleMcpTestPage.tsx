@@ -960,6 +960,88 @@ const [run, setRun] = useState<AgentRun | null>(null);
             <AgentActivityList onRunClick={setSelectedRun} />
           </DemoSection>
         </Box>
+
+        <DemoSection
+          title="9. Agents view (full page)"
+          description={<><code>&lt;AgentsView /&gt;</code> — drop-in <code>/agents</code> page: hero AgentUI, edit-existing toggle, prefill from URL, and an embedded activity list. Requires an <code>onSchedule</code> callback so the host can create the underlying scheduled workflow.</>}
+          code={`import { AgentsView } from '@shuffleio/shuffle-mcps';
+
+<AgentsView
+  onSchedule={async ({ cron, prompt, apps }) => {
+    // Host creates the scheduled workflow here.
+    await createScheduledAgent({ cron, prompt, apps });
+  }}
+/>`}
+          apis={[
+            { method: 'POST', path: '/api/v1/agent', description: 'Run the embedded AgentUI prompt' },
+            { method: 'POST', path: '/api/v1/workflows/search', description: 'Past agent runs listed below the hero' },
+            { method: 'POST', path: '/api/v1/workflows', description: 'Host writes the scheduled workflow on submit' },
+          ]}
+        >
+          <Box sx={{ border: '1px solid hsl(var(--border))', borderRadius: 1.5, p: 2 }}>
+            <AgentsView onSchedule={async () => { /* demo no-op */ }} maxWidth={720} />
+          </Box>
+        </DemoSection>
+
+        <DemoSection
+          title="10. App title header"
+          description={<><code>&lt;AppTitleHeader /&gt;</code> — the standard app banner (icon, name, categories, Verified/Pending chip, Activate / + Add button) used at the top of any app detail surface.</>}
+          code={`import { AppTitleHeader } from '@shuffleio/shuffle-mcps';
+
+<AppTitleHeader
+  name="Slack"
+  image="https://shuffler.io/api/v1/apps/Slack/icon"
+  categories={['Communication', 'Cases']}
+  hasValidAuth
+  isActivated
+  onActivateToggle={() => console.log('toggle')}
+/>`}
+        >
+          <Box sx={{ border: '1px solid hsl(var(--border))', borderRadius: 1.5, p: 2 }}>
+            <AppTitleHeader
+              name="Slack"
+              categories={['Communication', 'Cases']}
+              hasValidAuth
+              hasAnyAuth
+              isActivated
+              onActivateToggle={() => console.log('toggle')}
+            />
+          </Box>
+        </DemoSection>
+
+        <DemoSection
+          title="11. Pipelines banner"
+          description={<><code>&lt;ShufflePipelinesBanner /&gt;</code> — small promo banner pointing users at Shuffle Pipelines / Tenzir. No props.</>}
+          code={`import { ShufflePipelinesBanner } from '@shuffleio/shuffle-mcps';
+
+<ShufflePipelinesBanner />`}
+        >
+          <Box sx={{ border: '1px solid hsl(var(--border))', borderRadius: 1.5, p: 2 }}>
+            <ShufflePipelinesBanner />
+          </Box>
+        </DemoSection>
+
+        <DemoSection
+          title="12. Usage bar"
+          description={<><code>&lt;UsageBar /&gt;</code> — compact reusable quota indicator (app runs, agent tokens, storage). Neutral by default, turns amber at 65% and red at 100%.</>}
+          code={`import { UsageBar } from '@shuffleio/shuffle-mcps';
+
+<UsageBar label="App runs" usage={1240} limit={2000} unit="runs" />
+<UsageBar label="Agent tokens" usage={185000} limit={200000} unit="tokens"
+  actionLabel="Upgrade" actionHref="https://shuffler.io/pricing" />`}
+        >
+          <Box sx={{ border: '1px solid hsl(var(--border))', borderRadius: 1.5, p: 2, display: 'flex', flexDirection: 'column', gap: 1, maxWidth: 320 }}>
+            <UsageBar label="App runs" usage={1240} limit={2000} unit="runs" />
+            <UsageBar
+              label="Agent tokens"
+              usage={185000}
+              limit={200000}
+              unit="tokens"
+              actionLabel="Upgrade"
+              actionHref="https://shuffler.io/pricing"
+            />
+          </Box>
+        </DemoSection>
       </Stack>
 
       <AppSearchDrawer
