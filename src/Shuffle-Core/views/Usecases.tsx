@@ -3576,6 +3576,19 @@ function UsecasesPageInner() {
       list = list.filter((u) => u.animated === true);
     }
 
+    // Guests have no org-level activation state, so the API's `disabled`
+    // flag can't distinguish "live for this org" from "exists in catalog".
+    // Restrict guests to the curated default-visible set (animated=true in
+    // DEFAULT_USECASES) so the public view matches the regular-user view.
+    if (!isAuthenticated && !(isSupport && showAllAsSupport)) {
+      const allowedLabels = new Set(
+        DEFAULT_USECASES
+          .filter((u) => u.animated === true)
+          .map((u) => u.label.toLowerCase())
+      );
+      list = list.filter((u) => allowedLabels.has(u.label.toLowerCase()));
+    }
+
     // Always hide "Logs" usecases (even for guests) — not a primary entry point.
     if (!(isSupport && showAllAsSupport)) {
       list = list.filter((u) => !/log/i.test(u.label));
