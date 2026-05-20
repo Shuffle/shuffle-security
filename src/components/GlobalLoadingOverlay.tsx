@@ -22,8 +22,23 @@ const isPublicRoute = (pathname: string): boolean => {
 
 const GlobalLoadingOverlay = () => {
   const { isLoading } = useAuth();
-  const location = useLocation();
-  const suppressed = isPublicRoute(location.pathname);
+  const [pathname, setPathname] = useState<string>(() =>
+    typeof window !== 'undefined' ? window.location.pathname : '/'
+  );
+  useEffect(() => {
+    const update = () => setPathname(window.location.pathname);
+    window.addEventListener('popstate', update);
+    window.addEventListener('pushstate', update as any);
+    window.addEventListener('replacestate', update as any);
+    const id = window.setInterval(update, 500);
+    return () => {
+      window.removeEventListener('popstate', update);
+      window.removeEventListener('pushstate', update as any);
+      window.removeEventListener('replacestate', update as any);
+      window.clearInterval(id);
+    };
+  }, []);
+  const suppressed = isPublicRoute(pathname);
   const [show, setShow] = useState(false);
   const [elapsedTier, setElapsedTier] = useState(0); // 0=initial, 1=>4s, 2=>10s
 
