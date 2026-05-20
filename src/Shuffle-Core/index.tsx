@@ -58,6 +58,7 @@ export type { ShuffleCoreHostProps } from './types/host-props';
 export default Usecases;
 
 export { ShuffleCoreThemeProvider };
+export type { ShuffleColorMode };
 export { usePageMeta } from './usePageMeta';
 export { toast, setToastImpl } from './toast';
 export { API_CONFIG, getApiUrl, getAuthHeader, shuffleFetch, setRegionUrl, resetRegionUrl } from './api';
