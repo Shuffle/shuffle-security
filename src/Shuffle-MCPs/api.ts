@@ -163,9 +163,13 @@ export const getHostBaseUrl = (): string | null => _hostBaseUrl;
 export const getTrackedOrgId = (): string | null => _trackedOrgId;
 
 export const API_CONFIG = {
-  // Shuffle backend URL - uses region URL if set, otherwise default
+  // Shuffle backend URL — host override beats region URL beats default.
   get baseUrl(): string {
-    return _regionUrl || getDefaultBaseUrl();
+    const url = _hostBaseUrl || _regionUrl || getDefaultBaseUrl();
+    // Register origin once so the breaker watches it. registerProtectedOrigin
+    // is idempotent.
+    try { registerProtectedOrigin(url); } catch { /* noop */ }
+    return url;
   },
   
   // API version
