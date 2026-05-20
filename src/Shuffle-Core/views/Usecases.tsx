@@ -4748,6 +4748,7 @@ function UsecasesPageInner() {
                 workflows={workflows}
                 autoEnable={autoEnableFlowId !== null && autoEnableFlowId === drawerFlowId}
                 onAutoEnableConsumed={() => setAutoEnableFlowId(null)}
+                showImage={imagesVisible}
               />
             );
           })()}
