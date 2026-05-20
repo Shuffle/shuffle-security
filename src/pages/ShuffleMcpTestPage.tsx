@@ -24,6 +24,10 @@ import {
   AgentRunDrawer,
   AgentActivityList,
   AgentExecutionDrawer,
+  AgentsView,
+  AppTitleHeader,
+  ShufflePipelinesBanner,
+  UsageBar,
   useAppLookup,
 } from '@/Shuffle-MCPs';
 import type { AgentRun } from '@/Shuffle-MCPs';
