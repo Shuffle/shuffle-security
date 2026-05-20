@@ -968,6 +968,11 @@ interface UsecasesPageConfig {
   externalIsAuthenticated: boolean;
   /** Mirrors the host app's `isLoaded` flag — currently informational. */
   isLoaded: boolean;
+  /** Optional host-provided slot rendered next to the Source/Destination
+   *  header inside the detail view. Lets the host inject contextual chips
+   *  (e.g. the Webhook ingestion button on SIEM/EDR alert sources) using
+   *  the exact same component already mounted elsewhere in the app. */
+  renderEndpointSlot?: (params: { flowId: string; flowLabel: string; side: 'source' | 'destination' }) => React.ReactNode;
 }
 
 const DEFAULT_CONFIG: UsecasesPageConfig = {
@@ -980,6 +985,7 @@ const DEFAULT_CONFIG: UsecasesPageConfig = {
   externalUserInfo: null,
   externalIsAuthenticated: false,
   isLoaded: true,
+  renderEndpointSlot: undefined,
 };
 
 const UsecasesPageConfigContext = React.createContext<UsecasesPageConfig>(DEFAULT_CONFIG);
@@ -2405,6 +2411,7 @@ function UsecaseDetailContent({
 }) {
   const navigate = useNavigate();
   const { apiUrl, authHeader } = useApi();
+  const { renderEndpointSlot } = useUsecasesConfig();
   const flow = usecases.find((item) => item.id === flowId);
   const [categoryAppNames, setCategoryAppNames] = useState<Record<string, string[]>>({});
   // Tracks whether the apps→category resolution has completed at least once.
@@ -2985,9 +2992,16 @@ function UsecaseDetailContent({
 
             return (
             <Box key={endpoint.title} sx={{ flex: 1, minWidth: 0 }}>
-              <Typography sx={{ fontSize: '0.66rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1 }}>
-                {endpoint.title}
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, gap: 1, minHeight: 22 }}>
+                <Typography sx={{ fontSize: '0.66rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  {endpoint.title}
+                </Typography>
+                {renderEndpointSlot && flow ? (
+                  <Box sx={{ display: 'inline-flex', alignItems: 'center' }}>
+                    {renderEndpointSlot({ flowId: flow.id, flowLabel: flow.label, side })}
+                  </Box>
+                ) : null}
+              </Box>
               <Box sx={{ p: 1.5, borderRadius: 1.5, bgcolor: accentBg(endpoint.meta?.color, 0.06), border: `1px solid ${accentBg(endpoint.meta?.color, 0.15)}`, mb: 1.25, minHeight: 84 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
                   <Box sx={{ width: 32, height: 32, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: accentBg(endpoint.meta?.color, 0.12), color: accent(endpoint.meta?.color), flexShrink: 0 }}>
@@ -3236,6 +3250,12 @@ export interface UsecasesPageProps {
    * or `'light'` to lock it.
    */
   theme?: 'light' | 'dark' | 'system';
+  /**
+   * Optional host slot rendered next to the Source/Destination title in
+   * the usecase detail view. Use it to inject host-owned controls such as
+   * the Webhook ingestion button without duplicating its implementation.
+   */
+  renderEndpointSlot?: (params: { flowId: string; flowLabel: string; side: 'source' | 'destination' }) => React.ReactNode;
 }
 
 function UsecasesPageInner() {
@@ -4411,7 +4431,7 @@ export default function UsecasesPage(props: UsecasesPageProps = {}) {
     url: '/usecases',
   });
   useInjectScopedStyles();
-  const { globalUrl, userdata, isLoaded, isLoggedIn, theme = 'system' } = props;
+  const { globalUrl, userdata, isLoaded, isLoggedIn, theme = 'system', renderEndpointSlot } = props;
 
   // Resolve the theme class applied directly on the scope wrapper. 'system'
   // means "do nothing" — let the host app's `.dark` ancestor (or none) decide.
@@ -4454,8 +4474,9 @@ export default function UsecasesPage(props: UsecasesPageProps = {}) {
       externalUserInfo,
       externalIsAuthenticated,
       isLoaded: loaded,
+      renderEndpointSlot,
     };
-  }, [globalUrl, userdata, isLoaded, isLoggedIn, hostManaged]);
+  }, [globalUrl, userdata, isLoaded, isLoggedIn, hostManaged, renderEndpointSlot]);
 
   return (
     <UsecasesPageConfigContext.Provider value={config}>
