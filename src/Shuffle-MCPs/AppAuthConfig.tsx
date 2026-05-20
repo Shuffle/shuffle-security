@@ -1882,6 +1882,13 @@ export const AppAuthCard = ({
                       Loading configuration...
                     </Typography>
                   </Box>
+                ) : (saving || authState.status === 'testing') ? (
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 4 }}>
+                    <CircularProgress size={32} sx={{ color: 'hsl(var(--primary))' }} />
+                    <Typography sx={{ ml: 2, color: 'hsl(var(--muted-foreground))' }}>
+                      {saving ? 'Saving authentication...' : 'Testing connection...'}
+                    </Typography>
+                  </Box>
                 ) : error ? (
                   <Alert
                     severity="error"
