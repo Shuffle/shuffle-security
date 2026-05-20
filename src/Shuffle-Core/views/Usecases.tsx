@@ -3835,6 +3835,7 @@ function UsecasesPageInner() {
                 apiLoaded={apiLoaded}
                 isEnabled={isFlowVisuallyEnabled(flow)}
                 hasInterest={isSupport && interestNames.has(flow.label)}
+                isSupport={isSupport}
                 canToggle={isAuthenticated && !!flow.automationLabel}
                 isAuthenticated={isAuthenticated}
                 hasValidatedSource={validatedCategories.has(flow.source)}
