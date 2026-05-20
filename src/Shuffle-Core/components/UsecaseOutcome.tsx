@@ -278,7 +278,7 @@ export function UsecaseOutcomeSection({
       ) : (
         <>
           <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5, flexWrap: 'wrap' }}>
-            <Typography sx={{ fontSize: '1.6rem', fontWeight: 800, color: PRIMARY, lineHeight: 1 }}>
+            <Typography sx={{ fontSize: '1.6rem', fontWeight: 800, color: FG, lineHeight: 1 }}>
               {formatNumber(outcome.primary.value)}
             </Typography>
             <Typography sx={{ fontSize: '0.9rem', color: FG }}>
