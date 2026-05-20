@@ -3609,21 +3609,7 @@ function UsecaseDetailContent({
                   {endpoint.title}
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
-                  <Box sx={{
-                    width: 20,
-                    height: 20,
-                    borderRadius: 0.75,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    bgcolor: accentBg(endpoint.meta?.color, 0.1),
-                    border: `1px solid ${accentBg(endpoint.meta?.color, 0.25)}`,
-                    color: accent(endpoint.meta?.color),
-                    flexShrink: 0,
-                    '& > svg': { width: 12, height: 12 },
-                  }}>
-                    {endpoint.meta?.icon}
-                  </Box>
+
                   <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: FG, letterSpacing: '0.02em', flexShrink: 0 }}>
                     {endpoint.title === 'Source' && endpoint.categoryId === 'case_management' ? 'Shuffle' : (endpoint.meta?.label || 'Unknown')}
                   </Typography>
