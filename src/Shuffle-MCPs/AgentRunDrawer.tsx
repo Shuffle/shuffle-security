@@ -98,7 +98,10 @@ const AgentRunDrawer = ({
   headerSx,
   tabsSx,
   bodySx,
+  globalUrl,
 }: AgentRunDrawerProps) => {
+  // Sync host base URL into the runtime so all internal fetches honor it.
+  useSyncHostBaseUrl(globalUrl);
   const [activeTab, setActiveTab] = useState<AgentRunDrawerTab>(initialTab);
 
   // Reset tab whenever the drawer transitions from closed -> open so each
