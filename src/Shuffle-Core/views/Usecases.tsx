@@ -4742,6 +4742,7 @@ function UsecaseCard({
   isEnabled,
   hasInterest = false,
   isSupport = false,
+  showImage = false,
   canToggle,
   isAuthenticated = true,
   hasValidatedSource = true,
@@ -4756,6 +4757,8 @@ function UsecaseCard({
   isEnabled: boolean;
   hasInterest?: boolean;
   isSupport?: boolean;
+  /** Support-only: render the usecase's reference image as a top banner. */
+  showImage?: boolean;
   canToggle: boolean;
   isAuthenticated?: boolean;
   hasValidatedSource?: boolean;
