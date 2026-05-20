@@ -4877,8 +4877,9 @@ export default function UsecasesPage(props: UsecasesPageProps = {}) {
       externalIsAuthenticated,
       isLoaded: loaded,
       renderEndpointSlot,
+      renderUsecaseDetailSlot,
     };
-  }, [globalUrl, userdata, isLoaded, isLoggedIn, hostManaged, renderEndpointSlot]);
+  }, [globalUrl, userdata, isLoaded, isLoggedIn, hostManaged, renderEndpointSlot, renderUsecaseDetailSlot]);
 
   return (
     <UsecasesPageConfigContext.Provider value={config}>
