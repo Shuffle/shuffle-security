@@ -4048,7 +4048,8 @@ function UsecasesPageInner() {
         }
         const wf = await wfRes.json();
         const appNames = extractWorkflowAppNames(wf);
-        if (!cancelled) setNotificationWorkflowReady(appNames.length > 0);
+        const count = (appNames as any)?.size ?? (appNames as any)?.length ?? 0;
+        if (!cancelled) setNotificationWorkflowReady(count > 0);
       } catch {
         /* keep previous state */
       }
