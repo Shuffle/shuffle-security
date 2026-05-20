@@ -18,6 +18,8 @@ import type { AlgoliaSearchApp } from '@/Shuffle-MCPs';
 import { useAppAuth } from '@/Shuffle-MCPs/useAppAuth';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { refreshAllIntegrationStatus } from '@/Shuffle-MCPs/IntegrationStatus';
+import { UsageBar } from '@/Shuffle-MCPs/UsageBar';
+import { useAuth } from '@/context/AuthContext';
 import singulAgentIcon from '@/assets/singul-agent-icon.png';
 
 const OPENAI_APP_NAME = 'OpenAI';
