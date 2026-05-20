@@ -18,6 +18,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
+import type { ShuffleHostProps } from './host-props';
 import {
   THREAT_INTEL_PATTERNS,
   EMAIL_APP_PATTERNS,
@@ -27,7 +28,7 @@ import {
   COMMUNICATION_PATTERNS_NAMES,
 } from '@/Shuffle-MCPs/ingestionDetection';
 
-interface AppMcpChatProps {
+interface AppMcpChatProps extends ShuffleHostProps {
   appName: string;
   appIcon?: string;
   appId?: string;

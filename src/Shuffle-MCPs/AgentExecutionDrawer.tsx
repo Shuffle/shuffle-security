@@ -23,8 +23,9 @@ import {
   getTimeAgo,
 } from './AgentActivityList';
 import type { AgentRun } from './agentActivity';
+import type { ShuffleHostProps } from './host-props';
 
-export interface AgentExecutionDrawerProps {
+export interface AgentExecutionDrawerProps extends ShuffleHostProps {
   open: boolean;
   onClose: () => void;
   /** The run to display. When null and `open=true`, drawer renders empty. */

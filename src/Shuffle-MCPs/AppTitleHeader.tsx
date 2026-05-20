@@ -13,8 +13,9 @@ import {
   AlertCircle as ErrorOutlineIcon
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import type { ShuffleHostProps } from './host-props';
 
-export interface AppTitleHeaderProps {
+export interface AppTitleHeaderProps extends ShuffleHostProps {
   /** Display name of the app (will be capitalized via CSS). */
   name: string;
   /** Image URL for the app icon. */

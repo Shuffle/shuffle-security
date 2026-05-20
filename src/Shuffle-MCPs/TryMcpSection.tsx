@@ -7,8 +7,9 @@
 import { Box, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
 import AppMcpChat from '@/Shuffle-MCPs/AppMcpChat';
+import type { ShuffleHostProps } from './host-props';
 
-export interface TryMcpSectionProps {
+export interface TryMcpSectionProps extends ShuffleHostProps {
   appName: string;
   /** Image URL used as the chat avatar. */
   appIcon?: string;

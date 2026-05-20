@@ -13,6 +13,7 @@ import { ShuffleMCP, AppDetailDrawer } from '@/Shuffle-MCPs';
 import type { AppSelectedEvent } from '@/Shuffle-MCPs';
 import { API_CONFIG } from '@/Shuffle-MCPs/api';
 import { ShufflePipelinesBanner } from '@/Shuffle-MCPs/ShufflePipelinesBanner';
+import type { ShuffleHostProps } from './host-props';
 
 
 // Singul styles — compact dark theme
@@ -101,7 +102,7 @@ interface ConnectionPathApp {
   isActiveOnly?: boolean;
 }
 
-interface AppSearchDrawerProps {
+interface AppSearchDrawerProps extends ShuffleHostProps {
   open: boolean;
   onClose: () => void;
   initialQuery?: string;

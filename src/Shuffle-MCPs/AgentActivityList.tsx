@@ -50,6 +50,7 @@ import {
 import { diagnoseOutputWarning } from './agentDiagnosis';
 import { Pencil, StopCircle, AlertTriangle } from 'lucide-react';
 import { SegmentedControl } from './SegmentedControl';
+import type { ShuffleHostProps } from './host-props';
 
 // ── Status / icon helpers ────────────────────────────────────────────────────
 
@@ -338,7 +339,7 @@ const STATUS_FILTERS = [
   { label: 'Failed', value: 'ABORTED' },
 ];
 
-export interface AgentActivityListProps {
+export interface AgentActivityListProps extends ShuffleHostProps {
   /** Optional Shuffle API key. Falls back to the shared API_CONFIG. */
   apiKey?: string;
   /** Optional Shuffle backend base URL. Falls back to the shared API_CONFIG. */

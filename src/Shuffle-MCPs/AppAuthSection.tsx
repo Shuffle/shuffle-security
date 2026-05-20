@@ -9,8 +9,9 @@ import { Box, Typography } from '@mui/material';
 import { motion } from 'framer-motion';
 import { AppAuthCard } from '@/Shuffle-MCPs/AppAuthConfig';
 import type { AlgoliaSearchApp } from './shuffle-mcp.helpers';
+import type { ShuffleHostProps } from './host-props';
 
-export interface AppAuthSectionProps {
+export interface AppAuthSectionProps extends ShuffleHostProps {
   /** Display name (used in copy when no auth exists). */
   displayName: string;
   /** Algolia app object — required to render the AuthCard. */

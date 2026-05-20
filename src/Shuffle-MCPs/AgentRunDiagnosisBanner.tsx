@@ -14,6 +14,7 @@ import { Box, Button, IconButton, Tooltip, Typography } from '@mui/material';
 import { AlertTriangle, ArrowUpRight, ExternalLink, HelpCircle, Settings2, X } from 'lucide-react';
 import AgentDiagnosisCtas from './AgentDiagnosisCtas';
 import { useEffect, useMemo, useState } from 'react';
+import type { ShuffleHostProps } from './host-props';
 import {
   diagnoseOutputWarning,
   extractDecisionIndex,
@@ -22,7 +23,7 @@ import {
   type DiagnosableRun,
 } from './agentDiagnosis';
 
-interface Props {
+interface Props extends ShuffleHostProps {
   run: DiagnosableRun | null | undefined;
   /** Outer padding wrapper. Defaults to `{ px: 2.5, pb: 0.5 }`. */
   sx?: Record<string, unknown>;

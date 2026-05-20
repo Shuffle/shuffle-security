@@ -46,6 +46,7 @@ import AppTitleHeader from './AppTitleHeader';
 import AppAuthSection from './AppAuthSection';
 import TryMcpSection from './TryMcpSection';
 import SingulActionsPreview from './SingulActionsPreview';
+import type { ShuffleHostProps } from './host-props';
 // AuthContext detached — consumers can pass `isAuthenticated` as a prop. Defaults to true.
 
 interface AppInfo {
@@ -104,7 +105,7 @@ const CollapsibleDescription = ({ description }: { description: string }) => {
  * the Singul side and is editable in the curl preview below.
  */
 
-interface AppDetailDrawerProps {
+interface AppDetailDrawerProps extends ShuffleHostProps {
   open: boolean;
   onClose: () => void;
   /** App name to load */

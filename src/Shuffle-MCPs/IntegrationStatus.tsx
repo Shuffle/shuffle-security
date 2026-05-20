@@ -22,6 +22,7 @@ const SELECTED_TOOLS_KEY = 'selected_tools';
 import { deduplicateAuthApps, backfillAppImages, type AuthAppEntry } from '@/Shuffle-MCPs/auth-utils';
 import { useAppDetailOptional } from '@/Shuffle-MCPs/AppDetailContext';
 import { SIEM_PATTERNS, CASES_PATTERNS, EDR_PATTERNS, EMAIL_APP_PATTERNS } from '@/Shuffle-MCPs/ingestionDetection';
+import type { ShuffleHostProps } from './host-props';
 
 interface Integration {
   id: string;
@@ -33,7 +34,7 @@ interface Integration {
   isActiveOnly?: boolean;
 }
 
-interface IntegrationStatusProps {
+interface IntegrationStatusProps extends ShuffleHostProps {
   collapsed: boolean;
   /** When provided, only show integrations whose name is in this list */
   filterApps?: string[];

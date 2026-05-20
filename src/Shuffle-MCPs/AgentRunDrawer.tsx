@@ -37,10 +37,11 @@ import {
 
 import AgentIcon from './AgentIcon';
 import AgentUI, { type AgentUIProps } from './AgentUI';
+import type { ShuffleHostProps } from './host-props';
 
 export type AgentRunDrawerTab = 'run' | 'permissions' | 'localLLM';
 
-export interface AgentRunDrawerProps {
+export interface AgentRunDrawerProps extends ShuffleHostProps {
   open: boolean;
   onClose: () => void;
   /** Which tab to focus when the drawer opens. Default: 'run'. */

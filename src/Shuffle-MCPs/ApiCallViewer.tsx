@@ -4,6 +4,7 @@
  */
 import { useState } from 'react';
 import { Box, Typography, IconButton, Tooltip, Chip } from '@mui/material';
+import type { ShuffleHostProps } from './host-props';
 import {
   Code2,
   Terminal,
@@ -18,7 +19,7 @@ export interface ApiCallConfig {
   body?: unknown;
 }
 
-interface ApiCallViewerProps {
+interface ApiCallViewerProps extends ShuffleHostProps {
   config: ApiCallConfig;
   /** Whether to mask the Authorization header value */
   maskAuth?: boolean;

@@ -41,6 +41,7 @@ import { API_CONFIG, getApiUrl, getAuthHeader, isDevEnvironment, isCloudDomain }
 import { getIngestionCategory } from '@/Shuffle-MCPs/ingestionDetection';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import type { ShuffleHostProps } from './host-props';
 
 export type AuthStatus = 'pending' | 'testing' | 'connected' | 'error';
 
@@ -143,7 +144,7 @@ interface DecodedApp {
   large_image?: string;
 }
 
-interface AppAuthConfigProps {
+interface AppAuthConfigProps extends ShuffleHostProps {
   apps: AlgoliaSearchApp[];
   authStates: Record<string, AppAuthState>;
   authenticatedApps?: ApiAuthEntry[];
@@ -154,7 +155,7 @@ interface AppAuthConfigProps {
   onRefreshAuth?: () => Promise<void> | void;
 }
 
-export interface AppAuthCardProps {
+export interface AppAuthCardProps extends ShuffleHostProps {
   app: AlgoliaSearchApp;
   authState: AppAuthState;
   isExpanded: boolean;
