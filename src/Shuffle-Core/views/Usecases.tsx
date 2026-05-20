@@ -4423,7 +4423,7 @@ export default function UsecasesPage(props: UsecasesPageProps = {}) {
     url: '/usecases',
   });
   useInjectScopedStyles();
-  const { globalUrl, userdata, isLoaded, isLoggedIn, theme = 'system' } = props;
+  const { globalUrl, userdata, isLoaded, isLoggedIn, theme = 'system', renderEndpointSlot } = props;
 
   // Resolve the theme class applied directly on the scope wrapper. 'system'
   // means "do nothing" — let the host app's `.dark` ancestor (or none) decide.
