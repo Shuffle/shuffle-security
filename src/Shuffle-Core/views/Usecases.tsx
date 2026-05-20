@@ -2106,7 +2106,7 @@ const ACTIVE_USECASE_IDS = [
 // threading the outcomes map through every call site.
 function FlowOutcomeBlock({ flow, sourceCategoryLabel }: { flow: Usecase; sourceCategoryLabel?: string }) {
   const { getOutcome, isLoading } = useUsecaseOutcomes([flow]);
-  return <UsecaseOutcomeSection outcome={getOutcome(flow.id)} sourceCategoryLabel={sourceCategoryLabel} loading={isLoading} />;
+  return <UsecaseOutcomeSection outcome={getOutcome(flow.id)} sourceCategoryLabel={sourceCategoryLabel} sourceId={flow.source} loading={isLoading} />;
 }
 
 // Notifications usecase — fetches open/read counts from the API and renders
@@ -2251,7 +2251,8 @@ function IocFeedsOutcomeBlock() {
     emptyReason: 'no_data_yet' as const,
   };
 
-  return <UsecaseOutcomeSection outcome={outcome} loading={loading} />;
+  const iocCategoryByKey = Object.fromEntries(entries.map((e) => [e.name, `ioc_${e.name}`]));
+  return <UsecaseOutcomeSection outcome={outcome} loading={loading} iocCategoryByKey={iocCategoryByKey} />;
 }
 
 // Assign & Escalate usecase — graphs executions of the matched workflow over
