@@ -2133,7 +2133,7 @@ function NotificationsOutcomeBlock() {
     emptyReason: 'no_data_yet' as const,
   };
 
-  return <UsecaseOutcomeSection outcome={outcome} />;
+  return <UsecaseOutcomeSection outcome={outcome} loading={loading} />;
 }
 
 
