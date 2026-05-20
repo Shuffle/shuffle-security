@@ -3479,15 +3479,14 @@ function UsecaseDetailContent({
               const k = normalizeAppName(n);
               if (next.has(k) && !seen.has(k)) { activeNames.push(n); seen.add(k); }
             }
-            // Preserve any currently-enabled app that isn't in the local
-            // catalog snapshot (e.g. a Communication app already wired into
-            // Forward Tickets before the catalog was fetched).
-            for (const k of next) {
-              if (!seen.has(k)) { activeNames.push(k); seen.add(k); }
-            }
+            // Only send apps we actually surface in the local catalog. Any
+            // residual names from the workflow that are NOT visible here
+            // (internal Shuffle runtime apps, or apps from another category)
+            // are intentionally dropped from the save payload — the user
+            // can only toggle what they can see.
             // Make sure the just-enabled app is in the list even if it isn't
-            // in the local catalog snapshot.
-            if (enabled && !seen.has(key)) activeNames.push(appName);
+            // in the local catalog snapshot (the user explicitly clicked it).
+            if (enabled && !seen.has(key)) { activeNames.push(appName); seen.add(key); }
             try {
               const body: Record<string, string> = { label: flow.automationLabel };
               if (flow.automationCategory) body.category = flow.automationCategory;
@@ -3579,11 +3578,27 @@ function UsecaseDetailContent({
             // only the Shuffle Security platform itself.
             const destIsShuffleOnly = endpoint.title === 'Destination'
               && DESTINATION_SHUFFLE_ONLY_FLOW_IDS.has(flow.id);
-            const appNamesWithShuffle = sourceIsShuffleOnly || destIsShuffleOnly
+            const baseAppNames = sourceIsShuffleOnly || destIsShuffleOnly
               ? ['Shuffle Security']
               : showShuffle
                 ? ['Shuffle Security', ...endpoint.appNames.filter((n) => n.toLowerCase() !== 'shuffle security')]
                 : endpoint.appNames;
+            // Inject any workflow apps that are enabled but don't belong to
+            // this category's catalog so the user can still see — and
+            // toggle — them locally instead of having ghost apps stuck in
+            // the workflow with no UI representation. Only do this on the
+            // Destination tile (the togglable side); the Source tile is
+            // gated by category and shouldn't surface foreign apps.
+            const baseSeen = new Set(baseAppNames.map((n) => normalizeAppName(n)));
+            const injected: string[] = [];
+            if (endpoint.title === 'Destination' && !destIsShuffleOnly) {
+              for (const k of enabledNamesSet) {
+                if (!baseSeen.has(k)) { injected.push(k); baseSeen.add(k); }
+              }
+            }
+            const appNamesWithShuffle = injected.length
+              ? [...baseAppNames, ...injected]
+              : baseAppNames;
             const synthetic = (showShuffle || destIsShuffleOnly)
               ? [{
                   id: 'shuffle-security',

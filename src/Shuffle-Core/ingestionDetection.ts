@@ -41,6 +41,29 @@ export type IngestionCategory = 'email' | 'cases' | 'edr' | 'siem' | 'other';
 export const normalizeAppName = (name: string): string =>
   name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
 
+/**
+ * Internal/framework "apps" that are part of the Shuffle runtime itself rather
+ * than third-party integrations. These can appear inside workflow actions
+ * (e.g. Shuffle Tools, Singul, generic Integration wrapper, AI Agent) but must
+ * never be surfaced as user-facing usecase apps, nor sent back to
+ * `/api/v2/workflows/generate` as `app_name` entries.
+ *
+ * Matched against {@link normalizeAppName} so all casing / spacing / dash
+ * variations resolve to the same key.
+ */
+export const IGNORED_WORKFLOW_APP_NAMES: ReadonlySet<string> = new Set([
+  'shuffle_tools',
+  'singul',
+  'integration',
+  'ai_agent',
+  'shuffle_agent',
+]);
+
+/** True if the given (possibly raw) app name is an internal Shuffle runtime
+ *  app that should be hidden from usecase UI and excluded from save payloads. */
+export const isIgnoredWorkflowAppName = (name: string): boolean =>
+  IGNORED_WORKFLOW_APP_NAMES.has(normalizeAppName(name));
+
 export const getIngestionCategory = (appName: string, appCategories?: string[]): IngestionCategory | null => {
   const name = appName.toLowerCase();
   const categories = (appCategories || []).map(c => c.toLowerCase());
@@ -71,19 +94,20 @@ export function extractWorkflowAppNames(workflow: any): Set<string> {
   const names = new Set<string>();
   if (!workflow?.actions || !Array.isArray(workflow.actions)) return names;
 
+  const add = (raw: unknown) => {
+    if (typeof raw !== 'string' || !raw) return;
+    const n = normalizeAppName(raw);
+    if (!n || IGNORED_WORKFLOW_APP_NAMES.has(n)) return;
+    names.add(n);
+  };
+
   for (const action of workflow.actions) {
-    if (action.app_name) {
-      names.add(normalizeAppName(action.app_name));
-    }
-    if (action.app_id) {
-      names.add(normalizeAppName(action.app_id));
-    }
+    add(action?.app_name);
+    add(action?.app_id);
     // Handle Singul-type actions with nested app_name in parameters
-    if (action.parameters) {
+    if (action?.parameters && Array.isArray(action.parameters)) {
       for (const param of action.parameters) {
-        if (param.name === 'app_name' && param.value) {
-          names.add(normalizeAppName(param.value));
-        }
+        if (param?.name === 'app_name') add(param?.value);
       }
     }
   }
