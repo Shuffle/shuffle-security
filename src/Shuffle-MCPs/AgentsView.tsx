@@ -32,7 +32,7 @@ export interface AgentsViewProps extends ShuffleHostProps {
   maxWidth?: number;
 }
 
-const AgentsView = ({ onSchedule, maxWidth = 820 }: AgentsViewProps) => {
+const AgentsView = ({ onSchedule, maxWidth = 820, globalUrl, isLoaded, isLoggedIn, userdata, serverside }: AgentsViewProps) => {
   const [selectedRun, setSelectedRun] = useState<AgentRun | null>(null);
   const [agentView, setAgentView] = useState<'start' | 'simple' | 'detailed'>('start');
   const [prefill, setPrefill] = useState<{ input: string; apps: AgentUIApp[]; key: number }>({
@@ -107,6 +107,7 @@ const AgentsView = ({ onSchedule, maxWidth = 820 }: AgentsViewProps) => {
         <AgentUI
           key={prefill.key}
           maxWidth={maxWidth}
+          apiBaseUrl={globalUrl}
           onViewChange={setAgentView}
           onSchedule={onSchedule}
           defaultInput={prefill.input}
@@ -120,6 +121,7 @@ const AgentsView = ({ onSchedule, maxWidth = 820 }: AgentsViewProps) => {
         {agentView === 'start' && (
           <Box sx={{ pt: '12vh' }}>
             <AgentActivityList
+              apiBaseUrl={globalUrl}
               onRunClick={setSelectedRun}
               onEditWorkflow={handleEditWorkflow}
             />
@@ -131,6 +133,7 @@ const AgentsView = ({ onSchedule, maxWidth = 820 }: AgentsViewProps) => {
         open={selectedRun !== null}
         onClose={() => setSelectedRun(null)}
         run={selectedRun}
+        apiBaseUrl={globalUrl}
         onSchedule={onSchedule}
       />
     </Box>
