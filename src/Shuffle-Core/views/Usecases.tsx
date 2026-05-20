@@ -4378,10 +4378,7 @@ function UsecasesPageInner() {
           hasValidatedSource={detailHasValidatedSource}
           onToggled={handleUsecaseWorkflowGenerated}
           workflows={workflows}
-        />
-      </Box>
-    );
-  }
+          showImage={imagesVisible}
 
   return (
     <Box sx={{ px: { xs: 2, md: 4 }, py: 4, maxWidth: 1200, width: '100%', mx: 'auto' }}>
