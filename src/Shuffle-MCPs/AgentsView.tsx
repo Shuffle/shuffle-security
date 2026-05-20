@@ -31,9 +31,19 @@ export interface AgentsViewProps extends ShuffleHostProps {
   onSchedule: NonNullable<AgentUIProps['onSchedule']>;
   /** Override max content width of the inner stack. Defaults to 820. */
   maxWidth?: number;
+  /**
+   * Optional handler for the "Choose LLM" chip. Forwarded to the embedded
+   * AgentUI. When omitted, AgentUI dispatches its legacy window event
+   * (handled by the bundled AgentRunDrawer in Shuffle Security). On other
+   * hosts, pass this prop to wire your own LLM picker — or set
+   * `hideChooseLLM` to remove the chip entirely.
+   */
+  onChooseLLM?: () => void;
+  /** Hide the "Choose LLM" chip in the embedded AgentUI. */
+  hideChooseLLM?: boolean;
 }
 
-const AgentsView = ({ onSchedule, maxWidth = 820, globalUrl, isLoaded, isLoggedIn, userdata, serverside }: AgentsViewProps) => {
+const AgentsView = ({ onSchedule, maxWidth = 820, onChooseLLM, hideChooseLLM, globalUrl, isLoaded, isLoggedIn, userdata, serverside }: AgentsViewProps) => {
   useSyncHostBaseUrl(globalUrl);
   const [selectedRun, setSelectedRun] = useState<AgentRun | null>(null);
   const [agentView, setAgentView] = useState<'start' | 'simple' | 'detailed'>('start');
