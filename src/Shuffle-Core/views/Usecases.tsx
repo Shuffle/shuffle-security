@@ -1309,12 +1309,22 @@ function findWorkflowsForUsecase(
   const seen = new Set<string>();
   for (const wf of workflows) {
     const name = (wf?.name || '').toLowerCase();
-    if (!name) continue;
-    if (labels.some((label) => name.includes(label))) {
-      if (wf.id && seen.has(wf.id)) continue;
-      if (wf.id) seen.add(wf.id);
-      matched.push(wf);
-    }
+    const tags = ((wf as any)?.tags || []).map((t: any) => String(t).toLowerCase());
+    // Mirror `workflowEnabledLabels`: match on workflow name OR any tag
+    // containing the label. This ensures webhook-ingestion workflows (often
+    // named e.g. "Ingestion Webhook" but tagged "ingest tickets_webhook")
+    // surface in the Linked Workflows list, consistent with how the card's
+    // Enabled badge is computed.
+    const hits = labels.some(
+      (label) =>
+        (name && name.includes(label)) ||
+        tags.includes(label) ||
+        tags.some((t: string) => t.includes(label)),
+    );
+    if (!hits) continue;
+    if (wf.id && seen.has(wf.id)) continue;
+    if (wf.id) seen.add(wf.id);
+    matched.push(wf);
   }
   return matched;
 }
