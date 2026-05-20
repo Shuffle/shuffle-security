@@ -679,6 +679,19 @@ export const DEFAULT_USECASES: Usecase[] = [
     },
   },
   {
+    id: 'case_management_agent_ai_incident_handling_1', phase: 'response', source: 'case_management', target: 'case_management',
+    label: 'AI Incident Handling', animated: true,
+    tags: ['Response', 'AI', 'Agent', 'Triage'],
+    description: 'Hand off new incidents to an AI Agent that triages, enriches, and resolves them end-to-end — assigning owners, gathering observables, executing safe response actions, and escalating only the cases that need a human.',
+    agenticDescription: 'An AI Agent picks up every new incident, builds full context from connected tools, decides the next-best action (assign, enrich, contain, close), executes the safe ones automatically, and queues high-impact actions for analyst approval.',
+    automationArea: 'response',
+    customAction: {
+      label: 'Configure AI Agents',
+      href: '/agents',
+      description: 'Open the Agents page to enable AI incident handling and choose which tools the agent may use.',
+    },
+  },
+  {
     id: 'case_management_asset_management_monitors_1', phase: 'response', source: 'case_management', target: 'asset_management',
     label: 'Add Monitors', animated: true,
     tags: ['Response', 'Monitoring', 'Endpoint'],
