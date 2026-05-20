@@ -2222,7 +2222,7 @@ function IocFeedsOutcomeBlock() {
     emptyReason: 'no_data_yet' as const,
   };
 
-  return <UsecaseOutcomeSection outcome={outcome} />;
+  return <UsecaseOutcomeSection outcome={outcome} loading={loading} />;
 }
 
 // Assign & Escalate usecase — graphs executions of the matched workflow over
