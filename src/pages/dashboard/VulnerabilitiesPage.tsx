@@ -384,32 +384,6 @@ const AuthenticatedVulnerabilitiesView = () => {
         </div>
       )}
 
-      {/* AI Scan Dialog */}
-      <Dialog open={aiScanOpen} onOpenChange={setAiScanOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Sparkles size={18} className="text-primary" />
-              AI Vulnerability Scan
-            </DialogTitle>
-            <DialogDescription>
-              AI analyzes your connected apps and infrastructure for potential vulnerabilities.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="mt-4">
-            {aiScanLoading ? (
-              <div className="flex flex-col items-center py-12 gap-3">
-                <RefreshCw size={24} className="animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">Scanning your environment...</p>
-              </div>
-            ) : aiScanResult ? (
-              <div className="text-sm text-foreground whitespace-pre-wrap bg-muted/50 rounded-lg p-4 border border-border">
-                {aiScanResult}
-              </div>
-            ) : null}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
