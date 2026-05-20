@@ -436,6 +436,15 @@ export function normalizeCategory(apiCategory: string): string {
   return map[apiCategory.toLowerCase()] || apiCategory.toLowerCase();
 }
 
+// Flows that accept apps from EITHER Communication OR Cases as a destination.
+// The Add Tool drawer is unfiltered for these, the per-app toggle preserves
+// apps from both categories, and the workflow generate payload sends the
+// union under a single automationLabel.
+const MULTI_DEST_FLOW_IDS = new Set<string>([
+  'case_management_communication_1', // Notifications
+  'case_management_cases_forward_1', // Forward Tickets
+]);
+
 // ── Default usecases (migrated from InfrastructurePage DATA_FLOWS) ─────────────
 
 export const DEFAULT_USECASES: Usecase[] = [
