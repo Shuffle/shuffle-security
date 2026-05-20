@@ -337,17 +337,20 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
         </FormControl>
 
         {isShuffleAI && (
-          <Box sx={{
-            px: 2,
-            py: 1.5,
-            borderRadius: 1.5,
-            border: '1px solid hsl(var(--border))',
-            bgcolor: 'hsla(var(--muted) / 0.25)',
-          }}>
-            <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
-              Using Shuffle's hosted AI. No configuration required — your agent runs use Shuffle's default model.
-            </Typography>
-          </Box>
+          <>
+            <Box sx={{
+              px: 2,
+              py: 1.5,
+              borderRadius: 1.5,
+              border: '1px solid hsl(var(--border))',
+              bgcolor: 'hsla(var(--muted) / 0.25)',
+            }}>
+              <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
+                Using Shuffle's hosted AI. No configuration required — your agent runs use Shuffle's default model.
+              </Typography>
+            </Box>
+            {usageBars && <Box sx={{ mt: 0.5 }}>{usageBars}</Box>}
+          </>
         )}
 
         {effectivePreset === CUSTOM_PRESET && (
