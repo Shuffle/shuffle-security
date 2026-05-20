@@ -3253,6 +3253,17 @@ function UsecaseDetailContent({
         <AiIncidentHandlingPromptsBlock />
       )}
 
+      {(() => {
+        const slot = renderUsecaseDetailSlot
+          ? renderUsecaseDetailSlot({ flowId: flow.id, flowLabel: flow.label })
+          : null;
+        return slot ? (
+          <Box sx={{ p: 2.5, borderRadius: 2, border: `1px solid ${CARD_BORDER_RAW}`, bgcolor: CARD_BG, mb: 3 }}>
+            {slot}
+          </Box>
+        ) : null;
+      })()}
+
       {flow.automationArea === 'notifications'
         ? <NotificationsOutcomeBlock />
         : flow.label === 'IOC feeds'
