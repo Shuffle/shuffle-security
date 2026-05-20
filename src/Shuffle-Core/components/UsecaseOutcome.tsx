@@ -265,12 +265,34 @@ export function UsecaseOutcomeSection({
 
 
       {loading ? (
-        <Box sx={{ mt: 1.5, display: 'flex', alignItems: 'center', gap: 1.25 }}>
-          <CircularProgress size={14} thickness={5} sx={{ color: PRIMARY }} />
-          <Typography sx={{ fontSize: '0.85rem', color: MUTED }}>
-            Loading outcome…
-          </Typography>
-        </Box>
+        (() => {
+          // Outcome cards each fetch a different signal — surface what is
+          // actually being loaded so the wait is informative instead of
+          // generic ("Loading outcome…" tells the user nothing).
+          const LOADING_LABEL: Partial<Record<UsecaseOutcome['kind'], string>> = {
+            incidents_ingested: 'Loading incidents from the last 30 days…',
+            enrichments_run: 'Loading enrichment runs from the last 30 days…',
+            vulns_tracked: 'Loading vulnerabilities tracked in the last 30 days…',
+            iocs_managed: 'Loading observables datastore counts…',
+            responses_executed: 'Loading response action executions from the last 30 days…',
+            comms_sent: 'Loading notifications sent in the last 30 days…',
+          };
+          const label = LOADING_LABEL[outcome.kind];
+          const fallbackLabel = `Loading ${outcome.kind.replace(/_/g, ' ')}…`;
+          return (
+            <Box sx={{ mt: 1.5, display: 'flex', alignItems: 'center', gap: 1.25, flexWrap: 'wrap' }}>
+              <CircularProgress size={14} thickness={5} sx={{ color: PRIMARY }} />
+              <Typography sx={{ fontSize: '0.85rem', color: MUTED }}>
+                {label || fallbackLabel}
+              </Typography>
+              {!label && isSupport && (
+                <Typography sx={{ fontSize: '0.72rem', color: MUTED, fontStyle: 'italic' }}>
+                  (support) No outcome-specific loader registered for kind &quot;{outcome.kind}&quot; — falling back to generic copy.
+                </Typography>
+              )}
+            </Box>
+          );
+        })()
       ) : outcome.isEmpty ? (
         <Typography sx={{ fontSize: '0.85rem', color: MUTED }}>
           {emptyMessage(outcome, sourceCategoryLabel)}
