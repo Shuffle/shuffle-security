@@ -16,7 +16,7 @@
 
 import './shuffle-core.css';
 import React from 'react';
-import { ShuffleCoreThemeProvider } from './components/ShuffleCoreThemeProvider';
+import { ShuffleCoreThemeProvider, type ShuffleColorMode } from './components/ShuffleCoreThemeProvider';
 
 import UsecasesRaw from './views/Usecases';
 import UsecaseAlluvialDiagramRaw from './views/UsecaseAlluvialDiagram';
@@ -26,10 +26,16 @@ import RecentWorkflowRaw from './components/RecentWorkflow';
 import AutomationDashboardRaw from './components/dashboard/AutomationDashboard';
 import DashboardOverviewRaw from './components/dashboard/DashboardOverview';
 
+/**
+ * Wrap a Shuffle-Core surface in the theme provider and forward an optional
+ * `mode` prop ('light' | 'dark' | 'auto'). When `mode` is omitted the surface
+ * inherits the host page's `.dark` class on `<html>` (auto).
+ */
+type WithMode<P> = P & { mode?: ShuffleColorMode };
 const withTheme = <P extends object>(Inner: React.ComponentType<P>, displayName: string) => {
-  const Wrapped: React.FC<P> = (props) => (
-    <ShuffleCoreThemeProvider>
-      <Inner {...props} />
+  const Wrapped: React.FC<WithMode<P>> = ({ mode, ...rest }) => (
+    <ShuffleCoreThemeProvider mode={mode}>
+      <Inner {...(rest as P)} />
     </ShuffleCoreThemeProvider>
   );
   Wrapped.displayName = `ShuffleCore(${displayName})`;
