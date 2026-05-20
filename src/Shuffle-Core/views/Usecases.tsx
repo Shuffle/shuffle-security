@@ -3258,7 +3258,7 @@ function UsecaseDetailContent({
           ? renderUsecaseDetailSlot({ flowId: flow.id, flowLabel: flow.label })
           : null;
         return slot ? (
-          <Box sx={{ p: 2.5, borderRadius: 2, border: `1px solid ${CARD_BORDER_RAW}`, bgcolor: CARD_BG, mb: 3 }}>
+          <Box sx={{ p: 2.5, borderRadius: 2, border: CARD_BORDER, bgcolor: CARD_BG, mb: 3 }}>
             {slot}
           </Box>
         ) : null;
