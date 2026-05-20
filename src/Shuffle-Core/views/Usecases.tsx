@@ -3392,16 +3392,20 @@ function UsecaseDetailContent({
             const isCases = endpoint.categoryId === 'case_management';
             const skipShuffle = endpoint.title === 'Destination' && flow.source === 'case_management';
             const showShuffle = isCases && !skipShuffle;
-            const appNamesWithShuffle = showShuffle
-              ? ['Shuffle Security', ...endpoint.appNames.filter((n) => n.toLowerCase() !== 'shuffle security')]
-              : endpoint.appNames;
+            // When Shuffle itself is the Source, only surface the Shuffle Security
+            // tile — hiding other case-management apps that would otherwise clutter
+            // the source side of the flow.
+            const sourceIsShuffleOnly = endpoint.title === 'Source' && isCases;
+            const appNamesWithShuffle = sourceIsShuffleOnly
+              ? ['Shuffle Security']
+              : showShuffle
+                ? ['Shuffle Security', ...endpoint.appNames.filter((n) => n.toLowerCase() !== 'shuffle security')]
+                : endpoint.appNames;
             const synthetic = showShuffle
               ? [{
                   id: 'shuffle-security',
                   name: 'Shuffle Security',
                   icon: shuffleSecurityIcon,
-                  // Reflect the parent flow's live enabled state so the right
-                  // side lights up green only when this usecase is actually on.
                   validated: !!effectiveEnabled,
                   active: !!effectiveEnabled,
                 }]
