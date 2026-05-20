@@ -34,6 +34,7 @@ import shuffleSecurityIcon from '../assets/shuffle-icon.png';
 import UsecaseAlluvialDiagram from './UsecaseAlluvialDiagram';
 import { AppSearchDrawer, useAppDetailOptional } from '@shuffleio/shuffle-mcps';
 import { extractWorkflowAppNames, normalizeAppName, getIngestionCategory } from '@/Shuffle-MCPs/ingestionDetection';
+import { shuffleFetch, getApiUrl } from '@/Shuffle-MCPs/api';
 import { useUsecaseOutcomes } from '../hooks/useUsecaseOutcomes';
 import { UsecaseOutcomeSection } from '../components/UsecaseOutcome';
 import { resolveOutcomeKind } from '../lib/outcomes';
