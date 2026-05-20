@@ -2992,9 +2992,16 @@ function UsecaseDetailContent({
 
             return (
             <Box key={endpoint.title} sx={{ flex: 1, minWidth: 0 }}>
-              <Typography sx={{ fontSize: '0.66rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em', mb: 1 }}>
-                {endpoint.title}
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, gap: 1, minHeight: 22 }}>
+                <Typography sx={{ fontSize: '0.66rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  {endpoint.title}
+                </Typography>
+                {renderEndpointSlot && flow ? (
+                  <Box sx={{ display: 'inline-flex', alignItems: 'center' }}>
+                    {renderEndpointSlot({ flowId: flow.id, flowLabel: flow.label, side })}
+                  </Box>
+                ) : null}
+              </Box>
               <Box sx={{ p: 1.5, borderRadius: 1.5, bgcolor: accentBg(endpoint.meta?.color, 0.06), border: `1px solid ${accentBg(endpoint.meta?.color, 0.15)}`, mb: 1.25, minHeight: 84 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
                   <Box sx={{ width: 32, height: 32, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: accentBg(endpoint.meta?.color, 0.12), color: accent(endpoint.meta?.color), flexShrink: 0 }}>
