@@ -234,9 +234,42 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
 
   const isShuffleAI = effectivePreset === SHUFFLE_AI_PRESET;
   const { userInfo } = useAuth();
-  const appRunLimit = userInfo?.app_execution_limit || 0;
-  const appRunUsage = (userInfo?.app_execution_usage || 0) + (userInfo?.app_executions_suborgs || 0);
-  const agentTokens = userInfo?.sync_features?.agent_tokens;
+  const orgId = userInfo?.active_org?.id;
+
+  // Fetch fresh org data when the Local LLM panel mounts so usage bars
+  // reflect the latest sync_features for the active org.
+  const [orgData, setOrgData] = useState<{
+    sync_features?: Record<string, { usage?: number; limit?: number }>;
+    app_execution_limit?: number;
+    app_execution_usage?: number;
+    app_executions_suborgs?: number;
+  } | null>(null);
+  useEffect(() => {
+    if (!orgId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(getApiUrl(`/api/v1/orgs/${orgId}`), {
+          method: 'GET',
+          credentials: 'include',
+          headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) setOrgData(data);
+      } catch (err) {
+        console.error('[LocalLLMConfig] Failed to fetch org info:', err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [orgId]);
+
+  const appRunLimit = orgData?.app_execution_limit ?? userInfo?.app_execution_limit ?? 0;
+  const appRunUsage =
+    (orgData?.app_execution_usage ?? userInfo?.app_execution_usage ?? 0) +
+    (orgData?.app_executions_suborgs ?? userInfo?.app_executions_suborgs ?? 0);
+  const agentTokens =
+    orgData?.sync_features?.agent_tokens ?? userInfo?.sync_features?.agent_tokens;
   const agentTokenLimit = Number(agentTokens?.limit) || 0;
   const agentTokenUsage = Number(agentTokens?.usage) || 0;
 
