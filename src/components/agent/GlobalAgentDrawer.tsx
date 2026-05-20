@@ -55,6 +55,37 @@ const GlobalAgentDrawer = () => {
     }
   }, [location.search, location.pathname, navigate]);
 
+  // /agents?permissions=true — auto-open the Local LLM sidebar on /agents.
+  useEffect(() => {
+    if (location.pathname !== '/agents') return;
+    const params = new URLSearchParams(location.search);
+    if (params.get('permissions') === 'true') {
+      setInitialTab('localLLM');
+      setOpen(true);
+    }
+  }, [location.pathname, location.search]);
+
+  // When the drawer is open on /agents, mirror it as ?permissions=true.
+  // When it closes on /agents, strip the param.
+  useEffect(() => {
+    if (location.pathname !== '/agents') return;
+    const params = new URLSearchParams(location.search);
+    const has = params.get('permissions') === 'true';
+    if (open && !has) {
+      params.set('permissions', 'true');
+      navigate(
+        { pathname: location.pathname, search: `?${params}` },
+        { replace: true },
+      );
+    } else if (!open && has) {
+      params.delete('permissions');
+      navigate(
+        { pathname: location.pathname, search: params.toString() ? `?${params}` : '' },
+        { replace: true },
+      );
+    }
+  }, [open, location.pathname, location.search, navigate]);
+
   return (
     <AgentRunDrawer
       open={open}
