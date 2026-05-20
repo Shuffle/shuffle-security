@@ -3652,9 +3652,11 @@ function UsecaseDetailContent({
           // app shows up immediately under Your Tools.
           invalidateAppsCache(); setIntegrationsRefreshKey((k) => k + 1);
         }}
-        title={`Add ${addToolFor ? categoryLabel(addToolFor.categoryId) : ''} Tool`}
+        title={addToolFor?.multiDest
+          ? 'Add destination tool (Communication or Cases)'
+          : `Add ${addToolFor ? categoryLabel(addToolFor.categoryId) : ''} Tool`}
         subtitle="Search and authenticate an integration"
-        priorityCategory={addToolFor?.categoryId}
+        priorityCategory={addToolFor?.multiDest ? undefined : addToolFor?.categoryId}
         onSelectOverride={(app) => {
           // Two-step UX: (1) immediately wire the picked app into this
           // usecase's workflow so it appears in the Tools strip right away,
@@ -3670,15 +3672,27 @@ function UsecaseDetailContent({
           const newKey = normalizeAppName(app.name);
           if (enabledNames.has(newKey)) return false; // already wired in
           enabledNames.add(newKey);
-          const catalog: string[] = [
-            ...((categoryAppNames[flow.source] || []) as string[]),
-            ...((categoryAppNames[flow.target] || []) as string[]),
-          ];
+          const isMultiDest = MULTI_DEST_FLOW_IDS.has(flow.id);
+          const catalog: string[] = isMultiDest
+            ? [
+                ...((categoryAppNames['case_management'] || []) as string[]),
+                ...((categoryAppNames['communication'] || []) as string[]),
+              ]
+            : [
+                ...((categoryAppNames[flow.source] || []) as string[]),
+                ...((categoryAppNames[flow.target] || []) as string[]),
+              ];
           const activeNames: string[] = [];
           const seen = new Set<string>();
           for (const n of catalog) {
             const k = normalizeAppName(n);
             if (enabledNames.has(k) && !seen.has(k)) { activeNames.push(n); seen.add(k); }
+          }
+          // Preserve any previously-enabled app that isn't in the local
+          // catalog snapshot (e.g. a Communication app already wired into
+          // Forward Tickets before the Communication catalog was fetched).
+          for (const k of enabledNames) {
+            if (!seen.has(k)) { activeNames.push(k); seen.add(k); }
           }
           if (!seen.has(newKey)) activeNames.push(app.name);
           const body: Record<string, string> = { label: flow.automationLabel, app_name: activeNames.join(',') };
