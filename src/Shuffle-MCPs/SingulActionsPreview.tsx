@@ -11,6 +11,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { toast } from '@/Shuffle-MCPs/toast';
+import type { ShuffleHostProps } from './host-props';
 import {
   Box,
   Typography,
