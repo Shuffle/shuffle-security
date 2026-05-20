@@ -189,14 +189,14 @@ function deriveCta(
   const isDisabled = outcome.emptyReason === 'not_enabled';
   switch (outcome.kind) {
     case 'incidents_ingested': {
-      const q = sourceId ? `?filter=${encodeURIComponent(sourceId)}` : '';
+      const q = sourceId ? `?source=${encodeURIComponent(sourceId)}` : '';
       return {
         href: `/incidents${q}`,
         label: isDisabled ? 'Preview where these incidents will appear' : 'View incidents',
       };
     }
     case 'enrichments_run': {
-      const q = sourceId ? `?filter=${encodeURIComponent(sourceId)}` : '';
+      const q = sourceId ? `?source=${encodeURIComponent(sourceId)}` : '';
       return {
         href: `/incidents${q}`,
         label: isDisabled ? 'See where enrichments will show up' : 'View enriched incidents',
@@ -215,13 +215,17 @@ function deriveCta(
       };
     case 'responses_executed':
       return {
-        href: '/automations',
-        label: isDisabled ? 'Configure response actions' : 'View response automations',
+        // /monitors/response is the Response Actions page (support-gated, but
+        // the route exists). There is no /automations page in this app.
+        href: '/monitors/response',
+        label: isDisabled ? 'Configure response actions' : 'View response actions',
       };
     case 'comms_sent':
       return {
-        href: '/notifications',
-        label: isDisabled ? 'See where notifications will appear' : 'View notifications',
+        // No notifications page exists; point at the incidents list which is
+        // where outbound notification activity is logged today.
+        href: '/incidents',
+        label: isDisabled ? 'See where notifications will appear' : 'View incidents with notifications',
       };
     default:
       return null;
