@@ -3611,7 +3611,8 @@ function UsecaseDetailContent({
               />
             </Box>
             );
-          })}
+          });
+          })()}
         </Box>
           );
         })()
