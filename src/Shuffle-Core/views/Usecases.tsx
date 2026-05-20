@@ -2251,7 +2251,8 @@ function IocFeedsOutcomeBlock() {
     emptyReason: 'no_data_yet' as const,
   };
 
-  return <UsecaseOutcomeSection outcome={outcome} loading={loading} />;
+  const iocCategoryByKey = Object.fromEntries(entries.map((e) => [e.name, `ioc_${e.name}`]));
+  return <UsecaseOutcomeSection outcome={outcome} loading={loading} iocCategoryByKey={iocCategoryByKey} />;
 }
 
 // Assign & Escalate usecase — graphs executions of the matched workflow over
