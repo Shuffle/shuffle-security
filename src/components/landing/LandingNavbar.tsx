@@ -145,17 +145,25 @@ export const LandingNavbar = () => {
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               {!isMobile && (
-                <Button
+                <IconButton
                   component="a"
                   href="https://github.com/shuffle/shuffle-security"
                   target="_blank"
                   rel="noopener noreferrer"
-                  variant="text"
-                  startIcon={<GitHubIcon />}
-                  sx={{ color: 'text.secondary', textTransform: 'none' }}
+                  aria-label="Open Source on GitHub"
+                  title="Open Source on GitHub"
+                  sx={{
+                    color: 'text.secondary',
+                    borderRadius: 1.5,
+                    transition: 'background-color 0.15s, color 0.15s',
+                    '&:hover': {
+                      color: 'text.primary',
+                      backgroundColor: 'hsl(var(--accent))',
+                    },
+                  }}
                 >
-                  Open Source
-                </Button>
+                  <GitHubIcon />
+                </IconButton>
               )}
               {!isMobile && (
                 <>
