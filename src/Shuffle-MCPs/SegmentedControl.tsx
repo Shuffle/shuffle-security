@@ -197,7 +197,6 @@ export function SegmentedControl<V extends string = string>({
                 borderRadius: 9999,
                 fontWeight: 500,
                 fontSize: s.fontSize,
-                lineHeight: 1,
                 background: "transparent",
                 border: "none",
                 cursor: opt.disabled ? "not-allowed" : "pointer",
