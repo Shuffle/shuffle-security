@@ -1643,24 +1643,26 @@ function IntegrationStatusLite({
     // - otherwise  → muted, slightly faded
     const GREEN = '#22c55e';
     const AMBER = '#f59e0b';
-    const dotColor = integration.validated ? GREEN : integration.active ? AMBER : null;
-    const borderColor = integration.validated
+    const isShuffleSecurity = integration.id === 'shuffle-security';
+    const effectiveValidated = integration.validated || isShuffleSecurity;
+    const dotColor = effectiveValidated ? GREEN : integration.active ? AMBER : null;
+    const borderColor = effectiveValidated
       ? 'rgba(34, 197, 94, 0.45)'
       : integration.active
         ? 'rgba(245, 158, 11, 0.45)'
         : 'hsl(var(--border))';
-    const bgColor = integration.validated
+    const bgColor = effectiveValidated
       ? 'rgba(34, 197, 94, 0.10)'
       : integration.active
         ? 'rgba(245, 158, 11, 0.10)'
         : 'hsl(var(--card))';
-    const isReady = integration.validated || integration.active;
+    const isReady = effectiveValidated || integration.active;
 
     return (
       <Tooltip
         key={integration.id}
-        title={integration.id === 'shuffle-security'
-          ? `${integration.name}${integration.active ? ' (active)' : ''}`
+        title={isShuffleSecurity
+          ? `${integration.name} (always available)`
           : `${integration.name}${integration.validated ? ' (validated)' : integration.active ? ' (configured)' : ' (not configured)'}`}
         placement="top"
         arrow
