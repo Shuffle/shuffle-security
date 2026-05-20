@@ -891,7 +891,7 @@ export const AppAuthCard = ({
                   )}
                 </Box>
               }
-              type={isSecretField ? 'password' : 'text'}
+              type="text"
               placeholder={param.example || `Enter ${param.name}`}
               value={localCredentials[fieldKey] || ''}
               onChange={(e) => handleCredentialChange(fieldKey, e.target.value)}
@@ -899,15 +899,22 @@ export const AppAuthCard = ({
               helperText={fieldErrors[fieldKey] || param.description}
               fullWidth
               size="small"
-              autoComplete={isSecretField ? 'new-password' : 'off'}
+              autoComplete="off"
               inputProps={{
-                autoComplete: isSecretField ? 'new-password' : 'off',
+                autoComplete: 'off',
+                autoCorrect: 'off',
+                autoCapitalize: 'off',
                 'data-1p-ignore': true,
                 'data-lpignore': 'true',
+                'data-bwignore': 'true',
                 'data-form-type': 'other',
                 spellCheck: false,
+                readOnly: true,
+                onFocus: (e: React.FocusEvent<HTMLInputElement>) => {
+                  e.target.removeAttribute('readonly');
+                },
               }}
-              name={`auth-${fieldKey}-${app.objectID}`}
+              name={`auth-${fieldKey}-${app.objectID}-${Math.random().toString(36).slice(2, 8)}`}
               sx={{
                 '& .MuiOutlinedInput-root': {
                   backgroundColor: isSecretField ? 'hsl(var(--primary) / 0.06)' : 'hsl(var(--muted))',
@@ -929,7 +936,14 @@ export const AppAuthCard = ({
                   },
                   '&.Mui-focused fieldset': { borderColor: fieldErrors[fieldKey] ? 'hsl(var(--destructive))' : 'hsl(var(--primary))' },
                 },
-                '& .MuiInputBase-input': { color: 'hsl(var(--foreground))' },
+                '& .MuiInputBase-input': {
+                  color: 'hsl(var(--foreground))',
+                  ...(isSecretField && {
+                    WebkitTextSecurity: 'disc',
+                    textSecurity: 'disc',
+                    fontFamily: 'text-security-disc, monospace',
+                  } as React.CSSProperties),
+                },
                 '& .MuiInputLabel-root': { color: isSecretField ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' },
                 '& .MuiFormHelperText-root': { color: fieldErrors[fieldKey] ? 'hsl(var(--destructive))' : 'hsl(var(--muted-foreground))' },
               }}
