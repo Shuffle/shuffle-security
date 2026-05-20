@@ -31,6 +31,9 @@ interface CacheEntry {
 }
 
 const TTL_MS = 30_000;
+// When a request fails (network error, server unreachable), cache an empty
+// result for this long so we do not hammer the API on every component mount.
+const ERROR_TTL_MS = 30_000;
 const cache = new Map<string, CacheEntry>();
 
 const cacheKey = (o: FetchAppsOptions): string =>
@@ -69,9 +72,12 @@ export const fetchApps = (opts: FetchAppsOptions): Promise<any[]> => {
       cache.set(key, { data, fetchedAt: Date.now() });
       return data;
     })
-    .catch((err) => {
-      cache.delete(key);
-      throw err;
+    .catch(() => {
+      // Negative-cache the failure to avoid request floods when the API is
+      // unreachable. Returns [] so callers can render gracefully; the entry
+      // expires after ERROR_TTL_MS and will be retried on the next call.
+      cache.set(key, { data: [], fetchedAt: Date.now() - (TTL_MS - ERROR_TTL_MS) });
+      return [] as any[];
     });
 
   cache.set(key, { ...entry, promise });
