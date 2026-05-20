@@ -968,6 +968,11 @@ interface UsecasesPageConfig {
   externalIsAuthenticated: boolean;
   /** Mirrors the host app's `isLoaded` flag — currently informational. */
   isLoaded: boolean;
+  /** Optional host-provided slot rendered next to the Source/Destination
+   *  header inside the detail view. Lets the host inject contextual chips
+   *  (e.g. the Webhook ingestion button on SIEM/EDR alert sources) using
+   *  the exact same component already mounted elsewhere in the app. */
+  renderEndpointSlot?: (params: { flowId: string; flowLabel: string; side: 'source' | 'destination' }) => React.ReactNode;
 }
 
 const DEFAULT_CONFIG: UsecasesPageConfig = {
@@ -980,6 +985,7 @@ const DEFAULT_CONFIG: UsecasesPageConfig = {
   externalUserInfo: null,
   externalIsAuthenticated: false,
   isLoaded: true,
+  renderEndpointSlot: undefined,
 };
 
 const UsecasesPageConfigContext = React.createContext<UsecasesPageConfig>(DEFAULT_CONFIG);
