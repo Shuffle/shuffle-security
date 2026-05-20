@@ -36,6 +36,8 @@ import { AppSearchDrawer, useAppDetailOptional } from '@shuffleio/shuffle-mcps';
 import { extractWorkflowAppNames, normalizeAppName, getIngestionCategory } from '@/Shuffle-MCPs/ingestionDetection';
 import { useUsecaseOutcomes } from '../hooks/useUsecaseOutcomes';
 import { UsecaseOutcomeSection } from '../components/UsecaseOutcome';
+import { resolveOutcomeKind } from '../lib/outcomes';
+import { getDatastoreByCategory } from '@/Shuffle-MCPs/datastore';
 // ── Flow phases ────────────────────────────────────────────────────────────────
 
 export type FlowPhase = 'ingest' | 'response' | 'correlation';
