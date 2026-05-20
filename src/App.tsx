@@ -171,6 +171,7 @@ const ThemedApp = () => {
       <AuthProvider>
         <BrowserRouter>
           <ScrollToTop />
+          <GlobalAgentDrawer />
           <DemoProvider>
           <DemoTourDrawer />
           <DemoSpotlight />
