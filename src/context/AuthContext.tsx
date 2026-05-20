@@ -93,6 +93,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           support: data.support === true,
           app_execution_limit: data.app_execution_limit,
           app_execution_usage: data.app_execution_usage,
+          sync_features: data.sync_features,
         };
         setUserInfo(info);
         // Make org ID available to non-React modules (e.g. datastore service)
