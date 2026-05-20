@@ -1,30 +1,32 @@
 /**
- * ShuffleCoreThemeProvider
+ * ShuffleMcpThemeProvider
  *
- * Single source of truth for theming inside Shuffle-Core surfaces. Two jobs:
+ * Mirror of Shuffle-Core's theme provider, scoped for the Shuffle-MCPs lib.
+ * Two jobs:
  *
- * 1. Pin MUI component defaults so TextField / Button / Select / FormControl /
- *    Autocomplete render at `size="small"` (36px buttons, ~38px text fields)
- *    so individual call sites never need to thread `size="small"` through.
+ * 1. Pin MUI defaults (`size="small"`) so individual call sites never need to
+ *    thread sizing through.
  *
  * 2. Bridge the host app's light/dark scheme into MUI:
  *    - `mode="auto"` (default) — track the `.dark` class on `<html>` and flip
- *      MUI `palette.mode` accordingly. Tokens (`hsl(var(--…))`) flip automatically
- *      with the same class, so nothing else has to know about the theme.
- *    - `mode="light"` / `mode="dark"` — force a scheme on the wrapped subtree.
- *      We render a `<div className="dark">` (or remove it) so Tailwind's
- *      class-based dark variants and the CSS-variable overrides scope to this
- *      subtree only — useful when embedding Shuffle-Core inside a host that
- *      doesn't manage `.dark` on `<html>`.
+ *      MUI `palette.mode` accordingly. Tokens (`hsl(var(--…))`) flip with the
+ *      same class so nothing else needs to know about the theme.
+ *    - `mode="light" | "dark"` — pin the wrapped subtree to that scheme. We
+ *      render a `<div className="dark">` (or remove it) so Tailwind dark
+ *      variants and CSS-variable overrides scope to this subtree only —
+ *      useful when embedding MCPs inside a host that doesn't manage `.dark`
+ *      on `<html>`.
  *
- * This is the clean API: callers either let Shuffle-Core inherit the host's
- * theme (auto), or pin a mode at the top of their embed. They never need to
- * pass colors anywhere.
+ * Wrap your MCP usage at any level:
+ *
+ *     <ShuffleMcpThemeProvider mode="dark">
+ *       <ShuffleMCP ... />
+ *     </ShuffleMcpThemeProvider>
  */
 import React from "react";
 import { ThemeProvider, createTheme, useTheme as useMuiTheme } from "@mui/material";
 
-export type ShuffleColorMode = "light" | "dark" | "auto";
+export type ShuffleMcpColorMode = "light" | "dark" | "auto";
 
 const componentOverrides = {
   MuiTextField: { defaultProps: { size: "small" as const } },
@@ -42,43 +44,6 @@ const componentOverrides = {
       },
     },
   },
-  MuiInputLabel: {
-    styleOverrides: {
-      root: {
-        color: "hsl(var(--muted-foreground))",
-        "&.Mui-focused": { color: "hsl(var(--primary))" },
-      },
-    },
-  },
-  MuiFormLabel: {
-    styleOverrides: {
-      root: {
-        color: "hsl(var(--muted-foreground))",
-        "&.Mui-focused": { color: "hsl(var(--primary))" },
-      },
-    },
-  },
-  MuiTypography: {
-    styleOverrides: {
-      root: {
-        color: "inherit",
-        "&.MuiTypography-colorTextSecondary": { color: "hsl(var(--muted-foreground))" },
-      },
-    },
-  },
-  MuiDivider: {
-    styleOverrides: {
-      root: { borderColor: "hsl(var(--border))" },
-    },
-  },
-  MuiCheckbox: {
-    styleOverrides: {
-      root: {
-        color: "hsl(var(--muted-foreground))",
-        "&.Mui-checked": { color: "hsl(var(--primary))" },
-      },
-    },
-  },
   MuiOutlinedInput: {
     defaultProps: { size: "small" as const },
     styleOverrides: {
@@ -93,15 +58,6 @@ const componentOverrides = {
           backgroundColor: "hsl(var(--muted))",
           color: "hsl(var(--muted-foreground))",
         },
-      },
-    },
-  },
-  MuiDrawer: {
-    styleOverrides: {
-      paper: {
-        backgroundColor: "hsl(var(--sidebar-background))",
-        color: "hsl(var(--sidebar-foreground))",
-        borderColor: "hsl(var(--sidebar-border))",
       },
     },
   },
@@ -132,15 +88,16 @@ const componentOverrides = {
       },
     },
   },
+  MuiDivider: {
+    styleOverrides: { root: { borderColor: "hsl(var(--border))" } },
+  },
 };
 
-/** Read whether the host page is currently in dark mode. */
 const readHtmlDarkClass = (): boolean => {
   if (typeof document === "undefined") return false;
   return document.documentElement.classList.contains("dark");
 };
 
-/** Subscribe to changes on the html element's class list. */
 const useHtmlDarkClass = (enabled: boolean): boolean => {
   const [isDark, setIsDark] = React.useState<boolean>(() => (enabled ? readHtmlDarkClass() : false));
   React.useEffect(() => {
@@ -153,18 +110,17 @@ const useHtmlDarkClass = (enabled: boolean): boolean => {
   return isDark;
 };
 
-export interface ShuffleCoreThemeProviderProps {
+export interface ShuffleMcpThemeProviderProps {
   children: React.ReactNode;
   /**
    * Color mode for the wrapped subtree.
-   * - `"auto"` (default) — follow the host page (`.dark` class on `<html>`).
-   * - `"light"` / `"dark"` — pin the subtree to that scheme. Tailwind dark
-   *   variants and CSS variable overrides are scoped via a wrapping `<div>`.
+   * - `"auto"` (default) — follow the host page's `.dark` class on `<html>`.
+   * - `"light"` / `"dark"` — pin the subtree to that scheme via a wrapping div.
    */
-  mode?: ShuffleColorMode;
+  mode?: ShuffleMcpColorMode;
 }
 
-export const ShuffleCoreThemeProvider: React.FC<ShuffleCoreThemeProviderProps> = ({
+export const ShuffleMcpThemeProvider: React.FC<ShuffleMcpThemeProviderProps> = ({
   children,
   mode = "auto",
 }) => {
@@ -190,8 +146,6 @@ export const ShuffleCoreThemeProvider: React.FC<ShuffleCoreThemeProviderProps> =
 
   const tree = <ThemeProvider theme={merged}>{children}</ThemeProvider>;
 
-  // For explicit modes, wrap in a div that scopes the `.dark` class so
-  // Tailwind/CSS variable overrides apply to this subtree only.
   if (mode === "light" || mode === "dark") {
     return (
       <div className={mode === "dark" ? "dark" : ""} data-shuffle-mode={mode}>
@@ -201,3 +155,5 @@ export const ShuffleCoreThemeProvider: React.FC<ShuffleCoreThemeProviderProps> =
   }
   return tree;
 };
+
+export default ShuffleMcpThemeProvider;

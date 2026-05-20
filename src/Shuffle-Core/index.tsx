@@ -16,7 +16,7 @@
 
 import './shuffle-core.css';
 import React from 'react';
-import { ShuffleCoreThemeProvider } from './components/ShuffleCoreThemeProvider';
+import { ShuffleCoreThemeProvider, type ShuffleColorMode } from './components/ShuffleCoreThemeProvider';
 
 import UsecasesRaw from './views/Usecases';
 import UsecaseAlluvialDiagramRaw from './views/UsecaseAlluvialDiagram';
@@ -26,10 +26,18 @@ import RecentWorkflowRaw from './components/RecentWorkflow';
 import AutomationDashboardRaw from './components/dashboard/AutomationDashboard';
 import DashboardOverviewRaw from './components/dashboard/DashboardOverview';
 
+/**
+ * Wrap a Shuffle-Core surface in the theme provider and forward an optional
+ * `colorMode` prop ('light' | 'dark' | 'auto'). When omitted the surface
+ * inherits the host page's `.dark` class on `<html>` (auto). We use
+ * `colorMode` (not `mode`) to avoid colliding with component-specific `mode`
+ * props (e.g. AutomationDashboard's 'apps' | 'workflows').
+ */
+type WithColorMode<P> = P & { colorMode?: ShuffleColorMode };
 const withTheme = <P extends object>(Inner: React.ComponentType<P>, displayName: string) => {
-  const Wrapped: React.FC<P> = (props) => (
-    <ShuffleCoreThemeProvider>
-      <Inner {...props} />
+  const Wrapped: React.FC<WithColorMode<P>> = ({ colorMode, ...rest }) => (
+    <ShuffleCoreThemeProvider mode={colorMode}>
+      <Inner {...(rest as P)} />
     </ShuffleCoreThemeProvider>
   );
   Wrapped.displayName = `ShuffleCore(${displayName})`;
@@ -50,10 +58,13 @@ export type { ShuffleCoreHostProps } from './types/host-props';
 export default Usecases;
 
 export { ShuffleCoreThemeProvider };
+export type { ShuffleColorMode };
 export { usePageMeta } from './usePageMeta';
 export { toast, setToastImpl } from './toast';
 export { API_CONFIG, getApiUrl, getAuthHeader, shuffleFetch, setRegionUrl, resetRegionUrl } from './api';
 
 // Onboarding flow — shared between Shuffle Core and Shuffle Security.
-export { OnboardingFlow, ProductChoiceStep } from './onboarding';
+import { OnboardingFlow as OnboardingFlowRaw, ProductChoiceStep as ProductChoiceStepRaw } from './onboarding';
+export const OnboardingFlow = withTheme(OnboardingFlowRaw, 'OnboardingFlow');
+export const ProductChoiceStep = withTheme(ProductChoiceStepRaw, 'ProductChoiceStep');
 export type { OnboardingFlowProps, OnboardingProduct } from './onboarding';

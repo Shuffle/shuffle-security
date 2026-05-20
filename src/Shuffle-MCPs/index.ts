@@ -10,6 +10,9 @@
 // specificity 0).
 import './shuffle-mcp.css';
 
+export { ShuffleMcpThemeProvider } from './ShuffleMcpThemeProvider';
+export type { ShuffleMcpColorMode, ShuffleMcpThemeProviderProps } from './ShuffleMcpThemeProvider';
+
 export type { ShuffleHostProps } from './host-props';
 
 export { ShuffleMCP, default } from './ShuffleMCP';
