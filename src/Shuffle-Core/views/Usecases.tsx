@@ -3287,7 +3287,7 @@ function UsecasesPageInner() {
   const { userInfo, isAuthenticated, refetch: refetchAuth } = useAuthLite();
   const { data: workflows = [], refetch: refetchWorkflows } = useWorkflowsLite();
   const isSupport = userInfo?.support === true;
-  const [showAllAsSupport, setShowAllAsSupport] = useState(true);
+  const [showAllAsSupport, setShowAllAsSupport] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const routeParams = useParams<{ flowId?: string }>();
   const [trustedWorkflowStates, setTrustedWorkflowStates] = useState<Record<string, boolean>>({});
