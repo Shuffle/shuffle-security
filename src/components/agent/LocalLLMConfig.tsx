@@ -49,15 +49,15 @@ const OPENAI_ALGOLIA_APP: AlgoliaSearchApp = {
 const SHUFFLE_AI_PRESET = 'Shuffle AI';
 const ENDPOINT_PRESETS: Array<{ label: string; url: string }> = [
   { label: SHUFFLE_AI_PRESET, url: '' },
-  { label: 'OpenAI', url: 'https://api.openai.com' },
-  { label: 'Anthropic', url: 'https://api.anthropic.com' },
-  { label: 'Google Gemini', url: 'https://generativelanguage.googleapis.com' },
-  { label: 'Mistral', url: 'https://api.mistral.ai' },
-  { label: 'Groq', url: 'https://api.groq.com/openai' },
-  { label: 'Together AI', url: 'https://api.together.xyz' },
-  { label: 'OpenRouter', url: 'https://openrouter.ai/api' },
-  { label: 'Ollama (localhost)', url: 'http://localhost:11434' },
-  { label: 'LM Studio (localhost)', url: 'http://localhost:1234' },
+  { label: 'OpenAI', url: 'https://api.openai.com/v1' },
+  { label: 'Anthropic', url: 'https://api.anthropic.com/v1/' },
+  { label: 'Google Gemini', url: 'https://generativelanguage.googleapis.com/v1beta/openai/' },
+  { label: 'Mistral', url: 'https://api.mistral.ai/v1' },
+  { label: 'Groq', url: 'https://api.groq.com/openai/v1' },
+  { label: 'Together AI', url: 'https://api.together.xyz/v1' },
+  { label: 'OpenRouter', url: 'https://openrouter.ai/api/v1' },
+  { label: 'Ollama (localhost)', url: 'http://localhost:11434/v1' },
+  { label: 'LM Studio (localhost)', url: 'http://localhost:1234/v1' },
   { label: 'Custom / self-hosted', url: '' },
 ];
 
