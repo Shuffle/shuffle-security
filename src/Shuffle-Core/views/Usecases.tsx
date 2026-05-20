@@ -4013,7 +4013,7 @@ function UsecasesPageInner() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(apiUrl('/api/v1/apps/authentication'), {
+        const res = await fetchAppsCached(apiUrl('/api/v1/apps/authentication'), {
           credentials: 'include',
           headers: { ...authHeader() },
         });
