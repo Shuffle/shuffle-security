@@ -9,37 +9,70 @@
 // CSS custom properties. Host overrides still win (defaults use :where(:root),
 // specificity 0).
 import './shuffle-mcp.css';
+import React from 'react';
+import { ShuffleMcpThemeProvider, type ShuffleMcpColorMode } from './ShuffleMcpThemeProvider';
+
+type WithColorMode<P> = P & { colorMode?: ShuffleMcpColorMode };
+
+const withMcpTheme = <P extends object>(Inner: React.ComponentType<P>, displayName: string) => {
+  const Wrapped = React.forwardRef<unknown, WithColorMode<P>>(({ colorMode, ...rest }, ref) =>
+    React.createElement(
+      ShuffleMcpThemeProvider,
+      { mode: colorMode },
+      React.createElement(Inner as React.ComponentType<any>, { ...(rest as P), ref }),
+    ),
+  );
+  Wrapped.displayName = `ShuffleMCPs(${displayName})`;
+  return Wrapped as React.ComponentType<WithColorMode<P>>;
+};
+
+import { ShuffleMCP as ShuffleMCPRaw } from './ShuffleMCP';
+import AppDetailDrawerRaw from './AppDetailDrawer';
+import AppSearchDrawerRaw from './AppSearchDrawer';
+import AiAgentPromptsEditorRaw from './AiAgentPromptsEditor';
+import ShufflePipelinesBannerRaw from './ShufflePipelinesBanner';
+import AppTitleHeaderRaw from './AppTitleHeader';
+import AppAuthSectionRaw from './AppAuthSection';
+import TryMcpSectionRaw from './TryMcpSection';
+import SingulActionsPreviewRaw from './SingulActionsPreview';
+import AgentUIRaw from './AgentUI';
+import AgentRunDrawerRaw from './AgentRunDrawer';
+import AgentActivityListRaw from './AgentActivityList';
+import AgentExecutionDrawerRaw from './AgentExecutionDrawer';
+import AgentsViewRaw from './AgentsView';
+import AgentRunDiagnosisBannerRaw from './AgentRunDiagnosisBanner';
 
 export { ShuffleMcpThemeProvider } from './ShuffleMcpThemeProvider';
 export type { ShuffleMcpColorMode, ShuffleMcpThemeProviderProps } from './ShuffleMcpThemeProvider';
 
 export type { ShuffleHostProps } from './host-props';
 
-export { ShuffleMCP, default } from './ShuffleMCP';
+export const ShuffleMCP = withMcpTheme(ShuffleMCPRaw as React.ComponentType<any>, 'ShuffleMCP');
+export default ShuffleMCP;
 export type { ShuffleMCPHandle } from './ShuffleMCP';
-export { default as AppDetailDrawer } from './AppDetailDrawer';
-export { default as AppSearchDrawer } from './AppSearchDrawer';
-export { default as AiAgentPromptsEditor } from './AiAgentPromptsEditor';
+export const AppDetailDrawer = withMcpTheme(AppDetailDrawerRaw as React.ComponentType<any>, 'AppDetailDrawer');
+export const AppSearchDrawer = withMcpTheme(AppSearchDrawerRaw as React.ComponentType<any>, 'AppSearchDrawer');
+export const AiAgentPromptsEditor = withMcpTheme(AiAgentPromptsEditorRaw as React.ComponentType<any>, 'AiAgentPromptsEditor');
 export type { AiAgentPromptsEditorProps } from './AiAgentPromptsEditor';
-export { default as ShufflePipelinesBanner } from './ShufflePipelinesBanner';
-export { default as AppTitleHeader } from './AppTitleHeader';
+export const ShufflePipelinesBanner = withMcpTheme(ShufflePipelinesBannerRaw as React.ComponentType<any>, 'ShufflePipelinesBanner');
+export const AppTitleHeader = withMcpTheme(AppTitleHeaderRaw as React.ComponentType<any>, 'AppTitleHeader');
 export type { AppTitleHeaderProps } from './AppTitleHeader';
-export { default as AppAuthSection } from './AppAuthSection';
+export const AppAuthSection = withMcpTheme(AppAuthSectionRaw as React.ComponentType<any>, 'AppAuthSection');
 export type { AppAuthSectionProps } from './AppAuthSection';
-export { default as TryMcpSection } from './TryMcpSection';
+export const TryMcpSection = withMcpTheme(TryMcpSectionRaw as React.ComponentType<any>, 'TryMcpSection');
 export type { TryMcpSectionProps } from './TryMcpSection';
-export { default as SingulActionsPreview } from './SingulActionsPreview';
-export { default as AgentUI } from './AgentUI';
+export const SingulActionsPreview = withMcpTheme(SingulActionsPreviewRaw as React.ComponentType<any>, 'SingulActionsPreview');
+export const AgentUI = withMcpTheme(AgentUIRaw as React.ComponentType<any>, 'AgentUI');
 export type { AgentUIProps, AgentUIApp } from './AgentUI';
-export { default as AgentRunDrawer } from './AgentRunDrawer';
+export const AgentRunDrawer = withMcpTheme(AgentRunDrawerRaw as React.ComponentType<any>, 'AgentRunDrawer');
 export type { AgentRunDrawerProps, AgentRunDrawerTab } from './AgentRunDrawer';
-export { default as AgentActivityList } from './AgentActivityList';
+export const AgentActivityList = withMcpTheme(AgentActivityListRaw as React.ComponentType<any>, 'AgentActivityList');
 export type { AgentActivityListProps } from './AgentActivityList';
-export { default as AgentExecutionDrawer } from './AgentExecutionDrawer';
+export const AgentExecutionDrawer = withMcpTheme(AgentExecutionDrawerRaw as React.ComponentType<any>, 'AgentExecutionDrawer');
 export type { AgentExecutionDrawerProps } from './AgentExecutionDrawer';
-export { default as AgentsView } from './AgentsView';
+export const AgentsView = withMcpTheme(AgentsViewRaw as React.ComponentType<any>, 'AgentsView');
 export type { AgentsViewProps } from './AgentsView';
-export { default as AgentRunDiagnosisBanner } from './AgentRunDiagnosisBanner';
+export const AgentRunDiagnosisBanner = withMcpTheme(AgentRunDiagnosisBannerRaw as React.ComponentType<any>, 'AgentRunDiagnosisBanner');
 export {
   parseRunResult,
   getFailureInfo,
