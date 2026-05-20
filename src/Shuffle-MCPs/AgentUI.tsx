@@ -1634,15 +1634,6 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // ── Submit input ──
   const submitInput = useCallback(async (text: string) => {
     if (!text.trim()) return;
-    if (text.trim().length < 6) {
-      setError('Please enter at least 6 characters before starting the agent.');
-      toast({
-        title: 'Input too short',
-        description: 'The agent needs at least 6 characters to start.',
-        variant: 'destructive',
-      });
-      return;
-    }
     setError(null);
     setAgentRequestLoading(true);
 
@@ -2986,7 +2977,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
               />
               {(() => {
                 const allowWithoutExecution = showStarter;
-                const promptTooShort = showStarter && (actionInput || '').trim().length < 6;
+                const promptTooShort = showStarter && (actionInput || '').trim().length < 1;
                 const canSchedule = (hasExecution || allowWithoutExecution) && !scheduleDisabledReason && !promptTooShort && !disableSchedule;
                 const hintActive = Boolean(scheduleHint) && canSchedule;
                 const tip: React.ReactNode = disableSchedule
@@ -2994,7 +2985,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   : scheduleDisabledReason
                     ? scheduleDisabledTooltip
                     : promptTooShort
-                      ? 'Type at least 6 characters of prompt before scheduling.'
+                      ? 'Type a prompt before scheduling.'
                       : hintActive
                         ? `Detected schedule: ${scheduleHint!.label}. Click to review and save.`
                         : 'Schedule this prompt to run repeatedly on a cron schedule';
@@ -3068,7 +3059,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                         <IconButton
                           type="button"
                           onClick={() => submitInput(actionInput)}
-                          disabled={actionInput.trim().length < 6 || agentRequestLoading}
+                          disabled={actionInput.trim().length < 1 || agentRequestLoading}
                           sx={{
                             width: 36, height: 36,
                             bgcolor: 'transparent',
@@ -3084,7 +3075,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       <Button
                         type="submit"
                         variant="contained"
-                        disabled={actionInput.trim().length < 6 || agentRequestLoading}
+                        disabled={actionInput.trim().length < 1 || agentRequestLoading}
                         startIcon={agentRequestLoading ? <CircularProgress size={14} sx={{ color: 'inherit' }} /> : null}
                         sx={{
                           height: 36,
@@ -3105,12 +3096,12 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   ) : (
                     <IconButton
                       type="submit"
-                      disabled={actionInput.trim().length < 6 || agentRequestLoading}
+                      disabled={actionInput.trim().length < 1 || agentRequestLoading}
                       sx={{
                         width: 36, height: 36,
-                        bgcolor: actionInput.trim().length >= 3 ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
-                        color: actionInput.trim().length >= 3 ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))',
-                        '&:hover': actionInput.trim().length >= 3 ? { filter: 'brightness(1.1)', bgcolor: 'hsl(var(--primary))' } : {},
+                        bgcolor: actionInput.trim().length >= 1 ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
+                        color: actionInput.trim().length >= 1 ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))',
+                        '&:hover': actionInput.trim().length >= 1 ? { filter: 'brightness(1.1)', bgcolor: 'hsl(var(--primary))' } : {},
                         '&.Mui-disabled': { bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' },
                       }}
                     >
