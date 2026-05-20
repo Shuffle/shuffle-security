@@ -20,7 +20,7 @@ import type { AgentUIApp, AgentUIProps } from './AgentUI';
 import { updateAgentScheduleConfig } from './agentActivity';
 import { toast } from './toast';
 
-export interface AgentsViewProps {
+export interface AgentsViewProps extends ShuffleHostProps {
   /**
    * Required scheduler implementation. Receives the cron + prompt + apps
    * from AgentUI and is responsible for creating the underlying scheduled
