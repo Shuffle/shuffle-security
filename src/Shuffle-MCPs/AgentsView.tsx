@@ -121,6 +121,7 @@ const AgentsView = ({ onSchedule, maxWidth = 820, globalUrl, isLoaded, isLoggedI
         {agentView === 'start' && (
           <Box sx={{ pt: '12vh' }}>
             <AgentActivityList
+              apiBaseUrl={globalUrl}
               onRunClick={setSelectedRun}
               onEditWorkflow={handleEditWorkflow}
             />
