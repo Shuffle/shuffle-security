@@ -370,28 +370,42 @@ export function UsecaseOutcomeSection({
             </Box>
           )}
 
-          {nextActionHref && nextActionLabel && (
-            <Box sx={{ mt: 2.5, pt: 2, borderTop: `1px solid ${BORDER}` }}>
-              <Typography sx={{ fontSize: '0.78rem', color: MUTED, mb: 0.5 }}>
-                What to do next
-              </Typography>
-              <Box
-                component="a"
-                href={nextActionHref}
-                sx={{
-                  fontSize: '0.85rem',
-                  fontWeight: 600,
-                  color: PRIMARY,
-                  textDecoration: 'none',
-                  '&:hover': { textDecoration: 'underline' },
-                }}
-              >
-                {nextActionLabel} →
-              </Box>
-            </Box>
-          )}
         </>
       )}
+
+      {!loading && (() => {
+        const explicit = nextActionHref && nextActionLabel
+          ? { href: nextActionHref, label: nextActionLabel, external: /^https?:/i.test(nextActionHref) }
+          : null;
+        const cta = explicit || deriveCta(outcome, sourceId);
+        if (!cta) return null;
+        const helper = outcome.isEmpty
+          ? (outcome.emptyReason === 'not_enabled'
+              ? 'Enable this automation to start populating data here. In the meantime:'
+              : 'Nothing here yet — once data arrives it will show up. In the meantime:')
+          : 'What to do next';
+        return (
+          <Box sx={{ mt: 2.5, pt: 2, borderTop: `1px solid ${BORDER}` }}>
+            <Typography sx={{ fontSize: '0.78rem', color: MUTED, mb: 0.5 }}>
+              {helper}
+            </Typography>
+            <Box
+              component="a"
+              href={cta.href}
+              {...(cta.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+              sx={{
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                color: PRIMARY,
+                textDecoration: 'none',
+                '&:hover': { textDecoration: 'underline' },
+              }}
+            >
+              {cta.label} →
+            </Box>
+          </Box>
+        );
+      })()}
     </Box>
   );
 }
