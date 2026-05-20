@@ -175,6 +175,12 @@ export interface AppAuthCardProps extends ShuffleHostProps {
   hideStatusChips?: boolean;
   /** Hide the documentation (book icon) link. */
   hideDocsLink?: boolean;
+  /** Hide URL-like fields (name/id containing "url", "endpoint", or "host").
+   *  Use when the URL is supplied externally (e.g. via a provider preset). */
+  hideUrlFields?: boolean;
+  /** Render without the outer Card border so the component can be embedded
+   *  inside another bordered container without the nested "double border" look. */
+  borderless?: boolean;
 }
 
 const containerVariants = {
@@ -207,6 +213,8 @@ export const AppAuthCard = ({
   hideHeader,
   hideStatusChips,
   hideDocsLink,
+  hideUrlFields,
+  borderless,
 }: AppAuthCardProps) => {
   // Helper to get best default auth: prioritize validated, otherwise last entry
   const getBestDefaultAuth = (entries: ApiAuthEntry[]): string => {
@@ -861,7 +869,13 @@ export const AppAuthCard = ({
 
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {auth.parameters.map((param, index) => {
+        {auth.parameters
+          .filter((param) => {
+            if (!hideUrlFields) return true;
+            const n = (param.name || param.id || '').toLowerCase();
+            return !(n.includes('url') || n.includes('endpoint') || n.includes('host'));
+          })
+          .map((param, index) => {
           // Use param.id if available, otherwise fallback to name or index
           const fieldKey = param.id || param.name || `param_${index}`;
           return (
@@ -979,13 +993,15 @@ export const AppAuthCard = ({
       <Card
         sx={{
           background: 'transparent',
-          border: '1px solid',
-          borderColor: isTested
+          border: borderless ? 'none' : '1px solid',
+          borderColor: borderless
+            ? 'transparent'
+            : isTested
             ? 'hsl(var(--severity-low) / 0.5)'
             : authState.status === 'error'
             ? 'hsl(var(--destructive) / 0.3)'
             : 'hsl(var(--border))',
-          borderRadius: 3,
+          borderRadius: borderless ? 0 : 3,
           boxShadow: 'none',
           overflow: 'hidden',
           transition: 'all 0.3s ease',

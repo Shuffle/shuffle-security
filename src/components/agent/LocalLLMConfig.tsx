@@ -364,6 +364,8 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
           hideHeader
           hideStatusChips
           hideDocsLink
+          hideUrlFields
+          borderless
         />
       )}
 
