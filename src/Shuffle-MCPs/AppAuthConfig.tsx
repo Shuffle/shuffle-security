@@ -878,6 +878,8 @@ export const AppAuthCard = ({
           .map((param, index) => {
           // Use param.id if available, otherwise fallback to name or index
           const fieldKey = param.id || param.name || `param_${index}`;
+          const lowerName = (param.name || '').toLowerCase();
+          const isSecretField = lowerName.includes('password') || lowerName.includes('secret') || lowerName.includes('key') || lowerName.includes('token');
           return (
             <TextField
               key={fieldKey}
@@ -889,7 +891,7 @@ export const AppAuthCard = ({
                   )}
                 </Box>
               }
-              type={param.name.toLowerCase().includes('password') || param.name.toLowerCase().includes('secret') || param.name.toLowerCase().includes('key') ? 'password' : 'text'}
+              type={isSecretField ? 'password' : 'text'}
               placeholder={param.example || `Enter ${param.name}`}
               value={localCredentials[fieldKey] || ''}
               onChange={(e) => handleCredentialChange(fieldKey, e.target.value)}
@@ -899,14 +901,27 @@ export const AppAuthCard = ({
               size="small"
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'hsl(var(--muted))',
+                  backgroundColor: isSecretField ? 'hsl(var(--primary) / 0.06)' : 'hsl(var(--muted))',
                   borderRadius: 2,
-                  '& fieldset': { borderColor: fieldErrors[fieldKey] ? 'hsl(var(--destructive))' : 'hsl(var(--border))' },
-                  '&:hover fieldset': { borderColor: fieldErrors[fieldKey] ? 'hsl(var(--destructive))' : 'hsl(var(--border))' },
+                  '& fieldset': {
+                    borderColor: fieldErrors[fieldKey]
+                      ? 'hsl(var(--destructive))'
+                      : isSecretField
+                      ? 'hsl(var(--primary) / 0.5)'
+                      : 'hsl(var(--border))',
+                    borderWidth: isSecretField ? 2 : 1,
+                  },
+                  '&:hover fieldset': {
+                    borderColor: fieldErrors[fieldKey]
+                      ? 'hsl(var(--destructive))'
+                      : isSecretField
+                      ? 'hsl(var(--primary) / 0.7)'
+                      : 'hsl(var(--border))',
+                  },
                   '&.Mui-focused fieldset': { borderColor: fieldErrors[fieldKey] ? 'hsl(var(--destructive))' : 'hsl(var(--primary))' },
                 },
                 '& .MuiInputBase-input': { color: 'hsl(var(--foreground))' },
-                '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
+                '& .MuiInputLabel-root': { color: isSecretField ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' },
                 '& .MuiFormHelperText-root': { color: fieldErrors[fieldKey] ? 'hsl(var(--destructive))' : 'hsl(var(--muted-foreground))' },
               }}
             />
