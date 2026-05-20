@@ -44,8 +44,11 @@ const OPENAI_ALGOLIA_APP: AlgoliaSearchApp = {
   verified: true,
 };
 
-/** Common OpenAI-compatible LLM endpoints. Last entry is custom/self-hosted. */
+/** Common OpenAI-compatible LLM endpoints. First entry uses Shuffle's hosted
+ *  AI (no user auth). Last entry is custom/self-hosted. */
+const SHUFFLE_AI_PRESET = 'Shuffle AI';
 const ENDPOINT_PRESETS: Array<{ label: string; url: string }> = [
+  { label: SHUFFLE_AI_PRESET, url: '' },
   { label: 'OpenAI', url: 'https://api.openai.com' },
   { label: 'Anthropic', url: 'https://api.anthropic.com' },
   { label: 'Google Gemini', url: 'https://generativelanguage.googleapis.com' },
