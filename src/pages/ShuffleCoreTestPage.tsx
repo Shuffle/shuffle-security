@@ -18,6 +18,8 @@ import {
   RecentWorkflow,
   OnboardingFlow,
   ProductChoiceStep,
+  AutomationDashboard,
+  DashboardOverview,
 } from '@shuffleio/shuffle-core';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
