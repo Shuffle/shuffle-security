@@ -12,13 +12,17 @@ import { useWorkflows } from '@/hooks/useWorkflows';
 
 const WEBHOOK_FLOW_IDS = new Set(['siem_case_management_1', 'edr_case_management_1']);
 
-const UsecasesPage = () => {
+interface UsecasesPageProps {
+  isLoaded?: boolean;
+  isLoggedIn?: boolean;
+  userdata?: any;
+  globalUrl?: string;
+}
+
+const UsecasesPage = (props: UsecasesPageProps = {}) => {
   const webhook = useWebhookStatus();
   const { refetch } = useWorkflows();
 
-  // Adapt useWebhookStatus -> WebhookIngestionInfo shape consumed by the
-  // shared button. workflowId is not used by the button's toggle (it calls
-  // the generate API by label), so null is fine.
   const info: WebhookIngestionInfo = {
     url: webhook.url,
     exists: webhook.exists,
@@ -28,6 +32,7 @@ const UsecasesPage = () => {
 
   return (
     <Usecases
+      {...props}
       renderEndpointSlot={({ flowId, side }) => {
         if (side !== 'source') return null;
         if (!WEBHOOK_FLOW_IDS.has(flowId)) return null;
