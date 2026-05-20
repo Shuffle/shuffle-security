@@ -695,7 +695,7 @@ export const DEFAULT_USECASES: Usecase[] = [
   },
   {
     id: 'cloud_asset_management_1', phase: 'correlation', source: 'cloud', target: 'asset_management',
-    label: 'Resource inventory',
+    label: 'Resource inventory', animated: true,
     tags: ['Logs', 'Context'],
     manualVerification: true,
     description: 'Auto-syncing cloud resources into the asset inventory ensures the CMDB stays current, preventing blind spots in vulnerability management and incident response.',
