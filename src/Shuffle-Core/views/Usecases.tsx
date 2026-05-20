@@ -2106,7 +2106,7 @@ const ACTIVE_USECASE_IDS = [
 // threading the outcomes map through every call site.
 function FlowOutcomeBlock({ flow, sourceCategoryLabel }: { flow: Usecase; sourceCategoryLabel?: string }) {
   const { getOutcome, isLoading } = useUsecaseOutcomes([flow]);
-  return <UsecaseOutcomeSection outcome={getOutcome(flow.id)} sourceCategoryLabel={sourceCategoryLabel} loading={isLoading} />;
+  return <UsecaseOutcomeSection outcome={getOutcome(flow.id)} sourceCategoryLabel={sourceCategoryLabel} sourceId={flow.source} loading={isLoading} />;
 }
 
 // Notifications usecase — fetches open/read counts from the API and renders
