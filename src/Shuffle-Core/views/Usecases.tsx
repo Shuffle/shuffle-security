@@ -1513,9 +1513,10 @@ function IntegrationStatusLite({
   onAddApp?: () => void;
   /** Tooltip / aria label for the add button. */
   addAppLabel?: string;
-  /** Optional trailing node rendered inside the Available Tools row (e.g. the
-   *  Ingestion Webhook toggle). Sits alongside the app tiles. */
-  extraTile?: React.ReactNode;
+  /** Optional trailing node rendered alongside the app tiles. Pass a plain
+   *  ReactNode to render under Available, or `{ node, enabled }` to control
+   *  whether it appears under Enabled or Available. */
+  extraTile?: React.ReactNode | { node: React.ReactNode; enabled?: boolean };
 }) {
   const { apiUrl, authHeader } = useApi();
   const appDetail = useAppDetailOptional();
