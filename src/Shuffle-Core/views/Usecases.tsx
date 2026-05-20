@@ -2280,7 +2280,23 @@ function AssignEscalateOutcomeBlock({ flow, workflows }: { flow: Usecase; workfl
   const max = Math.max(1, ...points.map((p) => p.data));
   const windowDays = points.length || 30;
 
-  if (!matchedWorkflowId && !loading) {
+  if (loading) {
+    return (
+      <Box sx={{ p: 2.5, borderRadius: 2, border: `1px solid ${BORDER}`, bgcolor: CARD, mb: 3 }}>
+        <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: 0.6, mb: 1 }}>
+          Outcome · last 30 days
+        </Typography>
+        <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1.25 }}>
+          <CircularProgress size={14} thickness={5} sx={{ color: PRIMARY }} />
+          <Typography sx={{ fontSize: '0.85rem', color: MUTED }}>
+            Loading outcome…
+          </Typography>
+        </Box>
+      </Box>
+    );
+  }
+
+  if (!matchedWorkflowId) {
     return (
       <Box sx={{ p: 2.5, borderRadius: 2, border: `1px solid ${BORDER}`, bgcolor: CARD, mb: 3 }}>
         <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: 0.6, mb: 1 }}>
