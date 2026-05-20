@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { Box, Typography, Tooltip } from '@mui/material';
+import { Box, Typography, Tooltip, CircularProgress } from '@mui/material';
 import { TrendingUp, TrendingDown, Activity } from 'lucide-react';
 import type { UsecaseOutcome } from '../lib/outcomes';
 
