@@ -98,7 +98,11 @@ export const UsageBar: React.FC<UsageBarProps> = ({
             sx={{
               width: `${Math.min(Math.max(pct, 0), 100)}%`,
               height: '100%',
-              bgcolor: accent,
+              bgcolor: isOver
+                ? 'hsl(var(--destructive))'
+                : isWarn
+                  ? 'hsl(var(--severity-medium))'
+                  : 'hsl(var(--severity-low, 142 71% 45%))',
               transition: 'width 0.3s ease',
             }}
           />
