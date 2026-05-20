@@ -157,7 +157,8 @@ export interface ShuffleCoreThemeProviderProps {
   children: React.ReactNode;
   /**
    * Color mode for the wrapped subtree.
-   * - `"auto"` (default) — follow the host page (`.dark` class on `<html>`).
+   * - `"dark"` (default) — render exactly like Shuffle Security standalone.
+   * - `"auto"` — follow the host page (`.dark` class on `<html>`).
    * - `"light"` / `"dark"` — pin the subtree to that scheme. Tailwind dark
    *   variants and CSS variable overrides are scoped via a wrapping `<div>`.
    */
@@ -166,7 +167,7 @@ export interface ShuffleCoreThemeProviderProps {
 
 export const ShuffleCoreThemeProvider: React.FC<ShuffleCoreThemeProviderProps> = ({
   children,
-  mode = "auto",
+  mode = "dark",
 }) => {
   const parent = useMuiTheme();
   const htmlIsDark = useHtmlDarkClass(mode === "auto");
@@ -189,15 +190,16 @@ export const ShuffleCoreThemeProvider: React.FC<ShuffleCoreThemeProviderProps> =
   );
 
   const tree = <ThemeProvider theme={merged}>{children}</ThemeProvider>;
+  const scopeClassName = mode === "light" ? "shuffle-core-scope" : "shuffle-core-scope dark";
 
   // For explicit modes, wrap in a div that scopes the `.dark` class so
   // Tailwind/CSS variable overrides apply to this subtree only.
   if (mode === "light" || mode === "dark") {
     return (
-      <div className={mode === "dark" ? "dark" : ""} data-shuffle-mode={mode}>
+      <div className={scopeClassName} data-shuffle-mode={mode} data-shuffle-core-root>
         {tree}
       </div>
     );
   }
-  return tree;
+  return <div className="shuffle-core-scope" data-shuffle-mode="auto" data-shuffle-core-root>{tree}</div>;
 };

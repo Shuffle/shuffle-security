@@ -111,10 +111,11 @@ const useHtmlDarkClass = (enabled: boolean): boolean => {
 };
 
 export interface ShuffleMcpThemeProviderProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   /**
    * Color mode for the wrapped subtree.
-   * - `"auto"` (default) — follow the host page's `.dark` class on `<html>`.
+   * - `"dark"` (default) — render exactly like Shuffle Security standalone.
+   * - `"auto"` — follow the host page's `.dark` class on `<html>`.
    * - `"light"` / `"dark"` — pin the subtree to that scheme via a wrapping div.
    */
   mode?: ShuffleMcpColorMode;
@@ -122,7 +123,7 @@ export interface ShuffleMcpThemeProviderProps {
 
 export const ShuffleMcpThemeProvider: React.FC<ShuffleMcpThemeProviderProps> = ({
   children,
-  mode = "auto",
+  mode = "dark",
 }) => {
   const parent = useMuiTheme();
   const htmlIsDark = useHtmlDarkClass(mode === "auto");
@@ -145,15 +146,16 @@ export const ShuffleMcpThemeProvider: React.FC<ShuffleMcpThemeProviderProps> = (
   );
 
   const tree = <ThemeProvider theme={merged}>{children}</ThemeProvider>;
+  const scopeClassName = mode === "light" ? "shuffle-mcp-scope" : "shuffle-mcp-scope dark";
 
   if (mode === "light" || mode === "dark") {
     return (
-      <div className={mode === "dark" ? "dark" : ""} data-shuffle-mode={mode}>
+      <div className={scopeClassName} data-shuffle-mode={mode} data-shuffle-mcp-root>
         {tree}
       </div>
     );
   }
-  return tree;
+  return <div className="shuffle-mcp-scope" data-shuffle-mode="auto" data-shuffle-mcp-root>{tree}</div>;
 };
 
 export default ShuffleMcpThemeProvider;
