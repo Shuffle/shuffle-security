@@ -175,6 +175,12 @@ export interface AppAuthCardProps extends ShuffleHostProps {
   hideStatusChips?: boolean;
   /** Hide the documentation (book icon) link. */
   hideDocsLink?: boolean;
+  /** Hide URL-like fields (name/id containing "url", "endpoint", or "host").
+   *  Use when the URL is supplied externally (e.g. via a provider preset). */
+  hideUrlFields?: boolean;
+  /** Render without the outer Card border so the component can be embedded
+   *  inside another bordered container without the nested "double border" look. */
+  borderless?: boolean;
 }
 
 const containerVariants = {
