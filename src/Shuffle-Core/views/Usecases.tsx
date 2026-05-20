@@ -3605,7 +3605,7 @@ function UsecaseDetailContent({
             return (
             <Box key={endpoint.title} sx={{ flex: 1, minWidth: 0 }}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mb: 1.25 }}>
-                <Typography sx={{ fontSize: '0.62rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                <Typography sx={{ fontSize: '0.62rem', fontWeight: 700, color: MUTED, letterSpacing: '0.1em' }}>
                   {endpoint.title}
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
@@ -3624,7 +3624,7 @@ function UsecaseDetailContent({
                   }}>
                     {endpoint.meta?.icon}
                   </Box>
-                  <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: accent(endpoint.meta?.color), textTransform: 'uppercase', letterSpacing: '0.02em', flexShrink: 0 }}>
+                  <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: FG, letterSpacing: '0.02em', flexShrink: 0 }}>
                     {endpoint.title === 'Source' && endpoint.categoryId === 'case_management' ? 'Shuffle' : (endpoint.meta?.label || 'Unknown')}
                   </Typography>
                   {endpoint.details ? (
