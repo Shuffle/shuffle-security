@@ -3459,10 +3459,14 @@ function UsecaseDetailContent({
           };
           return (
         <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
-          {[
+          {([
             { title: 'Source', meta: sourceCat, details: sourceDetails, categoryId: flow.source, appNames: categoryAppNames[flow.source] || [] },
-            { title: 'Destination', meta: targetCat, details: targetDetails, categoryId: flow.target, appNames: categoryAppNames[flow.target] || [] },
-          ].map((endpoint) => {
+            // Self-contained usecases (e.g. Assign & Escalate) operate entirely
+            // within Cases and have no separate destination tool to wire up.
+            flow.id === 'case_management_assign_escalate_1'
+              ? null
+              : { title: 'Destination', meta: targetCat, details: targetDetails, categoryId: flow.target, appNames: categoryAppNames[flow.target] || [] },
+          ].filter(Boolean) as Array<{ title: string; meta: any; details: any; categoryId: string; appNames: string[] }>).map((endpoint) => {
             // The Shuffle platform itself owns the Cases category, so always
             // surface "Shuffle Security" alongside any installed case-management
             // apps. Pre-pend it so it sorts first and the user immediately sees
