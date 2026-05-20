@@ -2762,6 +2762,8 @@ function UsecaseDetailContent({
   autoEnable?: boolean;
   /** Called once after autoEnable has been honored so the parent can clear its flag. */
   onAutoEnableConsumed?: () => void;
+  /** Support-only: render the usecase's reference image at the top of the detail view. */
+  showImage?: boolean;
 }) {
   const navigate = useNavigate();
   const { apiUrl, authHeader } = useApi();
