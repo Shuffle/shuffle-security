@@ -2051,8 +2051,8 @@ function IntegrationStatusLite({
               Enabled Tools · {enabledList.length + (extraInEnabled ? 1 : 0)}
             </GroupLabel>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
-              {enabledList.map(renderIcon)}
               {extraInEnabled}
+              {enabledList.map(renderIcon)}
             </Box>
           </Box>
         )}
