@@ -73,6 +73,26 @@ const SNIPPET_RECENT_WORKFLOW = `import { RecentWorkflow } from '@shuffleio/shuf
 // Card used in the sidebar / dashboards to surface a recent workflow.
 <RecentWorkflow workflow={workflow} leftNavOpen />`;
 
+const SNIPPET_AUTOMATION_DASHBOARD = `import { AutomationDashboard } from '@shuffleio/shuffle-core';
+
+// Stats greeting + workflow/app activity charts. Reads counts from
+// /api/v1/stats and /api/v1/workflows/search.
+<AutomationDashboard
+  orgId={userInfo?.active_org?.id}
+  displayName={userInfo?.username}
+/>`;
+
+const SNIPPET_DASHBOARD_OVERVIEW = `import { DashboardOverview } from '@shuffleio/shuffle-core';
+
+// Security Operations Center overview: incidents, vulns, monitors.
+// Pure presentational — pass already-loaded host data in.
+<DashboardOverview
+  incidents={incidents}
+  vulnSeverityCounts={{ critical: 2, high: 5, medium: 12, low: 8, info: 3 }}
+  monitorHostCount={42}
+  runningSensorCount={3}
+/>`;
+
 const SNIPPET_EDIT_WORKFLOW = `import { useState } from 'react';
 import { Button } from '@mui/material';
 import { EditWorkflow } from '@shuffleio/shuffle-core';
