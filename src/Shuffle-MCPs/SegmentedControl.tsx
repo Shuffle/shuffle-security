@@ -143,7 +143,6 @@ export function SegmentedControl<V extends string = string>({
           borderRadius: 9999,
           padding: s.containerPadding,
           fontSize: s.fontSize,
-          lineHeight: 1,
           border:
             variant === "outline"
               ? "1px solid hsl(var(--border))"
