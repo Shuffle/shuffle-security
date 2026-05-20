@@ -416,6 +416,12 @@ export function UsecaseOutcomeSection({
               ? 'Enable this automation to start populating data here. In the meantime:'
               : 'Nothing here yet — once data arrives it will show up. In the meantime:')
           : 'What to do next';
+        const audit = auditCtaPath(cta.href);
+        const auditMeta = {
+          ok: { label: 'Route OK', color: 'hsl(142 70% 45%)', bg: 'hsl(142 70% 45% / 0.12)', desc: 'Resolves to a real frontend route in this app.' },
+          broken: { label: 'BROKEN — no such route', color: 'hsl(0 75% 60%)', bg: 'hsl(0 75% 60% / 0.12)', desc: 'This path is not registered in src/App.tsx. The link will land on the NotFound page.' },
+          external: { label: 'External link', color: 'hsl(210 80% 60%)', bg: 'hsl(210 80% 60% / 0.12)', desc: 'Opens an absolute URL outside this app — not audited.' },
+        }[audit];
         return (
           <Box sx={{ mt: 2.5, pt: 2, borderTop: `1px solid ${BORDER}` }}>
             <Typography sx={{ fontSize: '0.78rem', color: MUTED, mb: 0.5 }}>
@@ -435,6 +441,33 @@ export function UsecaseOutcomeSection({
             >
               {cta.label} →
             </Box>
+            {isSupport && (
+              <Tooltip title={`${auditMeta.desc} (${cta.href})`} arrow>
+                <Box sx={{
+                  mt: 0.75,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  px: 1,
+                  py: 0.25,
+                  borderRadius: 1,
+                  bgcolor: auditMeta.bg,
+                  border: `1px solid ${auditMeta.color}`,
+                  fontSize: '0.68rem',
+                  fontWeight: 700,
+                  color: auditMeta.color,
+                  textTransform: 'uppercase',
+                  letterSpacing: 0.5,
+                  cursor: 'help',
+                }}>
+                  <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: auditMeta.color }} />
+                  Support · {auditMeta.label}
+                  <Typography component="span" sx={{ ml: 0.5, fontSize: '0.65rem', fontWeight: 500, color: MUTED, textTransform: 'none', letterSpacing: 0 }}>
+                    {cta.href}
+                  </Typography>
+                </Box>
+              </Tooltip>
+            )}
           </Box>
         );
       })()}
