@@ -349,7 +349,7 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
                 Using Shuffle's hosted AI. No configuration required — your agent runs use Shuffle's default model.
               </Typography>
             </Box>
-            {usageBars && <Box sx={{ mt: 0.5 }}>{usageBars}</Box>}
+            {usageBars && <Box sx={{ mt: 0.5, maxWidth: 280 }}>{usageBars}</Box>}
           </>
         )}
 
