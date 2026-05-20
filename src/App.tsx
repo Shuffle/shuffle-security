@@ -104,6 +104,7 @@ import { DemoTourDrawer } from '@/components/demo/DemoTourDrawer';
 import { DemoSpotlight } from '@/components/demo/DemoSpotlight';
 import { DemoCompletionWatcher } from '@/components/demo/DemoCompletionWatcher';
 import { DemoResumePill } from '@/components/demo/DemoResumePill';
+import GlobalLoadingOverlay from '@/components/GlobalLoadingOverlay';
 
 /** Layout that conditionally shows sidebar for authenticated users, navbar + content for guests */
 const ConditionalDashboardLayout = () => {
