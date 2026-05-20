@@ -1167,10 +1167,10 @@ export const AppAuthCard = ({
         <Collapse in={isExpanded}>
           <Box
             sx={{
-              px: { xs: 2, sm: 3 },
-              pb: { xs: 2, sm: 3 },
-              pt: 2,
-              borderTop: '1px solid hsl(var(--border))',
+              px: borderless ? 0 : { xs: 2, sm: 3 },
+              pb: borderless ? 0 : { xs: 2, sm: 3 },
+              pt: borderless ? 0 : 2,
+              borderTop: borderless ? 'none' : '1px solid hsl(var(--border))',
             }}
           >
             {/* Auth Selection Dropdown - always at top */}
