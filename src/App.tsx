@@ -3,6 +3,7 @@ import { ThemeProvider as MuiThemeProvider, CssBaseline, Box } from '@mui/materi
 import { Navigate } from 'react-router-dom';
 import { AppDetailProvider } from '@/Shuffle-MCPs/AppDetailContext';
 import { setToastImpl } from '@/Shuffle-MCPs/toast';
+import { API_CONFIG } from '@/Shuffle-MCPs';
 import { toast as hostToast } from '@/lib/toast';
 setToastImpl((arg, opts) => {
   // Bridge MCP-lib toast shape ({ title, description, variant }) onto the
@@ -71,6 +72,7 @@ const UsecasesPage = () => {
     <UsecasesPageRaw
       isLoaded={!isLoading}
       isLoggedIn={isAuthenticated}
+      globalUrl={API_CONFIG.baseUrl}
       userdata={userInfo ? {
         id: userInfo.id,
         username: userInfo.username,

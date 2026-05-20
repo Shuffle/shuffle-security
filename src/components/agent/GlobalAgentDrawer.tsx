@@ -8,7 +8,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { AgentRunDrawer, type AgentRunDrawerTab, type AgentUIProps } from '@/Shuffle-MCPs';
+import { AgentRunDrawer, API_CONFIG, type AgentRunDrawerTab, type AgentUIProps } from '@/Shuffle-MCPs';
 import PermissionsPanel from '@/components/agent/PermissionsPanel';
 import LocalLLMConfig from '@/components/agent/LocalLLMConfig';
 import {
@@ -91,6 +91,7 @@ const GlobalAgentDrawer = () => {
       open={open}
       onClose={() => setOpen(false)}
       initialTab={initialTab}
+      globalUrl={API_CONFIG.baseUrl}
       permissionsSlot={<PermissionsPanel compact />}
       localLLMSlot={<LocalLLMConfig />}
       agentUIProps={{ onSchedule: handleSchedule }}

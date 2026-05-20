@@ -13,6 +13,7 @@ import './shuffle-mcp.css';
 import { fetchApps } from './appsCache';
 import { AppFallbackIcon } from './AppFallbackIcon';
 import { SegmentedControl } from './SegmentedControl';
+import { useSyncHostBaseUrl } from './useSyncHostBaseUrl';
 
 const DEFAULT_ALGOLIA_APP_ID = 'JNSS5CFDZZ';
 const DEFAULT_ALGOLIA_API_KEY = '33e4e3564f4f060e96e0531957bed552';
@@ -62,7 +63,11 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
   onAppSelected,
   onSelectionChange,
   onSearchChange,
+  globalUrl,
 }, ref) => {
+  // Forward host-injected globalUrl into the runtime so all internal fetches
+  // honor the host backend.
+  useSyncHostBaseUrl(globalUrl);
   const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<AlgoliaSearchApp[]>([]);
   const [privateApps, setPrivateApps] = useState<AlgoliaSearchApp[]>([]);

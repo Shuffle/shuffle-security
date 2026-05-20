@@ -71,7 +71,9 @@ export type { ResolvedApp } from './resolveApp';
 export { IntegrationStatus, refreshAllIntegrationStatus } from './IntegrationStatus';
 export { useAppAuth } from './useAppAuth';
 export { AppDetailProvider, useAppDetail, useAppDetailOptional } from './AppDetailContext';
-export { API_CONFIG, getApiUrl, getAuthHeader, isCloud, isOnprem, isCloudDomain, shuffleFetch } from './api';
+export { API_CONFIG, getApiUrl, getAuthHeader, isCloud, isOnprem, isCloudDomain, shuffleFetch, setHostBaseUrl, getHostBaseUrl, setRegionUrl, resetRegionUrl } from './api';
+export { useSyncHostBaseUrl } from './useSyncHostBaseUrl';
+export { installFetchBreaker, registerProtectedOrigin } from './fetchBreaker';
 export { setToastImpl, toast } from './toast';
 export type {
   AlgoliaSearchApp,

@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useMemo, useEffect } from 'react';
+import { useSyncHostBaseUrl } from '../useSyncHostBaseUrl';
 import { useNavigate, Link, useSearchParams, useParams, useLocation } from 'react-router-dom';
 
 import {
@@ -5206,6 +5207,10 @@ export default function UsecasesPage(props: UsecasesPageProps = {}) {
   });
   useInjectScopedStyles();
   const { globalUrl, userdata, isLoaded, isLoggedIn, theme = 'system', renderEndpointSlot, renderUsecaseDetailSlot } = props;
+  // Sync host-injected `globalUrl` into the Shuffle-Core api.ts runtime so
+  // every internal `getApiUrl()` call (hooks, helpers, etc.) targets the host
+  // backend instead of the bundled default.
+  useSyncHostBaseUrl(globalUrl);
 
   // Resolve the theme class applied directly on the scope wrapper. 'system'
   // means "do nothing" — let the host app's `.dark` ancestor (or none) decide.

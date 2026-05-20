@@ -38,6 +38,7 @@ import {
 import AgentIcon from './AgentIcon';
 import AgentUI, { type AgentUIProps } from './AgentUI';
 import type { ShuffleHostProps } from './host-props';
+import { useSyncHostBaseUrl } from './useSyncHostBaseUrl';
 
 export type AgentRunDrawerTab = 'run' | 'permissions' | 'localLLM';
 
@@ -98,7 +99,10 @@ const AgentRunDrawer = ({
   headerSx,
   tabsSx,
   bodySx,
+  globalUrl,
 }: AgentRunDrawerProps) => {
+  // Sync host base URL into the runtime so all internal fetches honor it.
+  useSyncHostBaseUrl(globalUrl);
   const [activeTab, setActiveTab] = useState<AgentRunDrawerTab>(initialTab);
 
   // Reset tab whenever the drawer transitions from closed -> open so each
@@ -266,6 +270,7 @@ const AgentRunDrawer = ({
               hideHeroIcon
               title=""
               subtitle={null}
+              apiBaseUrl={globalUrl}
               {...agentUIProps}
             />
           </Box>

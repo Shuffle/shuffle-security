@@ -4,7 +4,7 @@
  */
 
 import { useCallback } from 'react';
-import { AgentsView } from '@/Shuffle-MCPs';
+import { AgentsView, API_CONFIG } from '@/Shuffle-MCPs';
 import type { AgentsViewProps } from '@/Shuffle-MCPs';
 import { useScheduleAgentRun } from '@/hooks/useScheduleAgentRun';
 
@@ -18,7 +18,7 @@ const AgentsPage = () => {
     [scheduleAgentRun],
   );
 
-  return <AgentsView onSchedule={handleSchedule} />;
+  return <AgentsView onSchedule={handleSchedule} globalUrl={API_CONFIG.baseUrl} />;
 };
 
 export default AgentsPage;
