@@ -2753,7 +2753,7 @@ function UsecaseDetailContent({
   const effectiveEnabled = optimisticEnabled !== null ? optimisticEnabled : isEnabled;
   // App-search drawer state — mirrors the alluvial diagram's "+" buttons so
   // users can force-add a Source or Destination tool from this view too.
-  const [addToolFor, setAddToolFor] = useState<null | { side: 'source' | 'destination'; categoryId: string }>(null);
+  const [addToolFor, setAddToolFor] = useState<null | { side: 'source' | 'destination'; categoryId: string; multiDest?: boolean }>(null);
   const [integrationsRefreshKey, setIntegrationsRefreshKey] = useState(0);
   // Per-side tool detail state: `hoveredTool` is the transient preview shown
   // while the cursor is over an icon; `pinnedTool` is the sticky selection
