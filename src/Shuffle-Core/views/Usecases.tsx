@@ -2047,9 +2047,10 @@ function IntegrationStatusLite({
           <GroupLabel>
             Available Tools{availableList.length > 0 ? ` · ${availableList.length}` : ''}
           </GroupLabel>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
             {availableList.map(renderIcon)}
             {renderAddTile()}
+            {extraTile}
           </Box>
         </Box>
         {renderPopover()}
