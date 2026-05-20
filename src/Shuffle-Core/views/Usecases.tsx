@@ -445,6 +445,21 @@ const MULTI_DEST_FLOW_IDS = new Set<string>([
   'case_management_cases_forward_1', // Forward Tickets
 ]);
 
+// Usecases whose Source apps cannot be wired up yet — clicking the toggle
+// on any source app surfaces a "Coming soon" toast instead of mutating the
+// workflow. The Enrichment usecase runs entirely off Shuffle's built-in
+// "Realtime IOC extraction" workflow and does not (yet) accept external
+// threat-intel sources as triggers.
+const SOURCE_COMING_SOON_FLOW_IDS = new Set<string>([
+  'threat_intel_case_management_1', // Enrichment
+]);
+
+// Usecases whose Destination is exclusively Shuffle Security — hide all
+// third-party destination apps and the "Add tool" affordance.
+const DESTINATION_SHUFFLE_ONLY_FLOW_IDS = new Set<string>([
+  'threat_intel_case_management_1', // Enrichment
+]);
+
 // ── Default usecases (migrated from InfrastructurePage DATA_FLOWS) ─────────────
 
 export const DEFAULT_USECASES: Usecase[] = [
@@ -511,7 +526,7 @@ export const DEFAULT_USECASES: Usecase[] = [
     tags: ['Intel', 'Correlation', 'Context'],
     description: 'Threat intelligence enriches cases with reputation scores, malware families, threat actor attribution, and related IOCs — giving analysts immediate context.',
     agenticDescription: 'An agent autonomously enriches all observables in a case, maps findings to MITRE ATT&CK, identifies related campaigns, and updates case severity and recommended playbook based on findings.',
-    automationLabel: 'Enable Threat feeds_webhook',
+    automationLabel: 'Realtime IOC extraction',
     automationCategory: 'cases',
     automationArea: 'threat_intel',
   },
@@ -3552,12 +3567,17 @@ function UsecaseDetailContent({
             // tile — hiding other case-management apps that would otherwise clutter
             // the source side of the flow.
             const sourceIsShuffleOnly = endpoint.title === 'Source' && endpoint.categoryId === 'case_management';
-            const appNamesWithShuffle = sourceIsShuffleOnly
+            // Some usecases (e.g. Enrichment) run entirely on a built-in Shuffle
+            // workflow — the destination has no third-party apps to wire up,
+            // only the Shuffle Security platform itself.
+            const destIsShuffleOnly = endpoint.title === 'Destination'
+              && DESTINATION_SHUFFLE_ONLY_FLOW_IDS.has(flow.id);
+            const appNamesWithShuffle = sourceIsShuffleOnly || destIsShuffleOnly
               ? ['Shuffle Security']
               : showShuffle
                 ? ['Shuffle Security', ...endpoint.appNames.filter((n) => n.toLowerCase() !== 'shuffle security')]
                 : endpoint.appNames;
-            const synthetic = showShuffle
+            const synthetic = (showShuffle || destIsShuffleOnly)
               ? [{
                   id: 'shuffle-security',
                   name: 'Shuffle Security',
@@ -3571,6 +3591,17 @@ function UsecaseDetailContent({
             // `isCases` gates "Add tool" behaviour — for multi-dest we always
             // want the add button enabled regardless of underlying category id.
             const isCases = endpoint.categoryId === 'case_management';
+            // Source side of a "coming soon" usecase: intercept toggles so we
+            // surface a clear message instead of silently failing or wiring up
+            // an unsupported source app.
+            const sourceComingSoon = endpoint.title === 'Source'
+              && SOURCE_COMING_SOON_FLOW_IDS.has(flow.id);
+            const handleSourceComingSoon = (_appName: string) => {
+              toast.warning('Coming soon', {
+                description: `${flow.label} does not yet support wiring up ${endpoint.meta?.label || 'source'} tools as triggers. The workflow runs on Shuffle's built-in pipeline.`,
+                duration: 6000,
+              });
+            };
 
             return (
             <Box key={endpoint.title} sx={{ flex: 1, minWidth: 0 }}>
@@ -3623,11 +3654,13 @@ function UsecaseDetailContent({
                 onSelect={(item) => setPinnedTool((prev) => ({ ...prev, [side]: prev[side]?.id === item.id ? null : item }))}
                 selectedId={pinned?.id}
                 usecaseEnabledNames={enabledNamesSet}
-                onUsecaseAppToggle={(flow.automationLabel && !isComingSoon) ? handleUsecaseAppToggle : undefined}
+                onUsecaseAppToggle={sourceComingSoon
+                  ? handleSourceComingSoon
+                  : ((flow.automationLabel && !isComingSoon && !destIsShuffleOnly) ? handleUsecaseAppToggle : undefined)}
                 usecaseLabel={flow.label}
                 
-                onAddApp={(isComingSoon || (isCases && !MULTI_DEST_FLOW_IDS.has(flow.id))) ? undefined : () => setAddToolFor({ side, categoryId: endpoint.categoryId, multiDest: MULTI_DEST_FLOW_IDS.has(flow.id) })}
-                addAppLabel={(isComingSoon || (isCases && !MULTI_DEST_FLOW_IDS.has(flow.id))) ? undefined : (MULTI_DEST_FLOW_IDS.has(flow.id) ? 'Add destination tool (Communication or Cases)' : `Add ${endpoint.meta?.label || endpoint.title} tool`)}
+                onAddApp={(isComingSoon || destIsShuffleOnly || sourceComingSoon || (isCases && !MULTI_DEST_FLOW_IDS.has(flow.id))) ? undefined : () => setAddToolFor({ side, categoryId: endpoint.categoryId, multiDest: MULTI_DEST_FLOW_IDS.has(flow.id) })}
+                addAppLabel={(isComingSoon || destIsShuffleOnly || sourceComingSoon || (isCases && !MULTI_DEST_FLOW_IDS.has(flow.id))) ? undefined : (MULTI_DEST_FLOW_IDS.has(flow.id) ? 'Add destination tool (Communication or Cases)' : `Add ${endpoint.meta?.label || endpoint.title} tool`)}
                 extraTile={renderEndpointSlot && flow ? renderEndpointSlot({ flowId: flow.id, flowLabel: flow.label, side }) : undefined}
               />
             </Box>
