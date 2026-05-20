@@ -32,7 +32,7 @@ import { Search, ArrowRight, ArrowLeft, Download, Zap, Activity, CheckCircle2, C
 import ReactGA from 'react-ga4';
 import shuffleSecurityIcon from '../assets/shuffle-icon.png';
 import UsecaseAlluvialDiagram from './UsecaseAlluvialDiagram';
-import { AppSearchDrawer, useAppDetailOptional } from '@shuffleio/shuffle-mcps';
+import { AppSearchDrawer, useAppDetailOptional, AiAgentPromptsEditor } from '@shuffleio/shuffle-mcps';
 import { extractWorkflowAppNames, normalizeAppName, getIngestionCategory } from '@/Shuffle-MCPs/ingestionDetection';
 import { shuffleFetch, getApiUrl } from '@/Shuffle-MCPs/api';
 import { useUsecaseOutcomes } from '../hooks/useUsecaseOutcomes';
@@ -2112,6 +2112,161 @@ function FlowOutcomeBlock({ flow, sourceCategoryLabel }: { flow: Usecase; source
   return <UsecaseOutcomeSection outcome={getOutcome(flow.id)} sourceCategoryLabel={sourceCategoryLabel} sourceId={flow.source} loading={isLoading} />;
 }
 
+// AI Incident Handling block — shows the live "Run AI Agent" prompts
+// configured on the shuffle-security_incidents category, using the same
+// AiAgentPromptsEditor component as the /incidents Automations dialog so
+// both surfaces stay in sync. Read-only here; "Configure" jumps to the
+// dialog on /incidents.
+function AiIncidentHandlingPromptsBlock() {
+  const [loading, setLoading] = useState(true);
+  const [enabled, setEnabled] = useState(false);
+  const [prompts, setPrompts] = useState<string[]>([]);
+  const [apps, setApps] = useState<string[][]>([]);
+  const [appMeta, setAppMeta] = useState<Record<string, { name: string; image: string }>>({});
+
+  const FG = 'hsl(var(--foreground))';
+  const MUTED = 'hsl(var(--muted-foreground))';
+  const PRIMARY = 'hsl(var(--primary))';
+  const BORDER = 'hsl(var(--border))';
+  const CARD = 'hsl(var(--card))';
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const info = localStorage.getItem('shuffle_user_info');
+        const orgId = info ? JSON.parse(info)?.active_org?.id : null;
+        if (!orgId) { if (!cancelled) setLoading(false); return; }
+        const res = await fetch(
+          getApiUrl(`/api/v1/orgs/${orgId}/list_cache?category=shuffle-security_incidents&top=1`),
+          { credentials: 'include' },
+        );
+        if (!res.ok) { if (!cancelled) setLoading(false); return; }
+        const data = await res.json();
+        const automations: any[] = data?.category_config?.automations || [];
+        const ai = automations.find(
+          (a) => a?.enabled && (a?.type === 'ai_agent' || a?.name === 'Run AI Agent'),
+        );
+        if (!ai) {
+          if (!cancelled) { setEnabled(false); setLoading(false); }
+          return;
+        }
+        const opts: { key: string; value: string }[] = Array.isArray(ai.options) ? ai.options : [];
+        const actionOpts = opts
+          .filter((o) => o.key === 'action' || /^action-\d+$/.test(o.key))
+          .sort((a, b) => {
+            const na = a.key === 'action' ? 1 : parseInt(a.key.replace('action-', ''), 10);
+            const nb = b.key === 'action' ? 1 : parseInt(b.key.replace('action-', ''), 10);
+            return na - nb;
+          });
+        const promptList = actionOpts.map((o) => o.value || '');
+        const appList = promptList.map((_, i) => {
+          const k = i === 0 ? 'apps' : `apps-${i + 1}`;
+          const o = opts.find((x) => x.key === k);
+          return o?.value ? o.value.split(',').map((s) => s.trim()).filter(Boolean) : [];
+        });
+        if (cancelled) return;
+        setEnabled(true);
+        setPrompts(promptList);
+        setApps(appList);
+      } catch {
+        /* keep previous state */
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Resolve app metadata via Algolia for the IDs referenced by allowed apps.
+  useEffect(() => {
+    const ids = new Set<string>();
+    apps.forEach((arr) => arr.forEach((id) => { if (id && /^[a-f0-9]{16,}$/i.test(id) && !appMeta[id]) ids.add(id); }));
+    if (ids.size === 0) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { algoliasearch } = await import('algoliasearch');
+        const client = algoliasearch('JNSS5CFDZZ', '33e4e3564f4f060e96e0531957bed552');
+        const res: any = await (client as any).getObjects({
+          requests: [...ids].map((objectID) => ({ indexName: 'appsearch', objectID })),
+        });
+        if (cancelled) return;
+        const next: Record<string, { name: string; image: string }> = {};
+        (res?.results || []).forEach((hit: any) => {
+          if (hit?.objectID) next[hit.objectID] = { name: hit.name || hit.objectID, image: hit.image_url || '' };
+        });
+        if (Object.keys(next).length) setAppMeta((prev) => ({ ...prev, ...next }));
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, [apps]);
+
+  const resolveAppMeta = (key: string) => appMeta[key] || { name: key, image: '' };
+
+  if (loading) {
+    return (
+      <Box sx={{ p: 2.5, borderRadius: 2, border: `1px solid ${BORDER}`, bgcolor: CARD, mb: 3 }}>
+        <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: 0.6, mb: 1 }}>
+          AI Agent prompts
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+          <CircularProgress size={14} thickness={5} sx={{ color: PRIMARY }} />
+          <Typography sx={{ fontSize: '0.85rem', color: MUTED }}>Loading prompts…</Typography>
+        </Box>
+      </Box>
+    );
+  }
+
+  if (!enabled) {
+    return (
+      <Box sx={{ p: 2.5, borderRadius: 2, border: `1px solid ${BORDER}`, bgcolor: CARD, mb: 3 }}>
+        <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: 0.6, mb: 1 }}>
+          AI Agent prompts
+        </Typography>
+        <Typography sx={{ fontSize: '0.85rem', color: MUTED, mb: 1.5 }}>
+          "Run AI Agent" is not enabled on the Incidents category. Enable it from the Automations dialog to hand off new incidents to the agent.
+        </Typography>
+        <Button
+          component={Link}
+          to="/incidents"
+          size="small"
+          variant="outlined"
+          sx={{ textTransform: 'none' }}
+        >
+          Open Incidents automations
+        </Button>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ p: 2.5, borderRadius: 2, border: `1px solid ${BORDER}`, bgcolor: CARD, mb: 3 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, gap: 1, flexWrap: 'wrap' }}>
+        <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: 0.6 }}>
+          AI Agent prompts · {prompts.length} active
+        </Typography>
+        <Button
+          component={Link}
+          to="/incidents"
+          size="small"
+          sx={{ textTransform: 'none', fontSize: '0.75rem', color: PRIMARY }}
+        >
+          Configure
+        </Button>
+      </Box>
+      <AiAgentPromptsEditor
+        prompts={prompts}
+        apps={apps}
+        readOnly
+        resolveAppMeta={resolveAppMeta}
+      />
+    </Box>
+  );
+}
+
+
 // Enrichments usecase — paginates through the incidents datastore via cursor
 // and counts incidents whose payload contains an "enrichments" key (top-level
 // or nested). The /incidents page uses the same getDatastoreByCategory +
@@ -3088,15 +3243,24 @@ function UsecaseDetailContent({
         </Box>
       </Box>
 
+      {flow.id === 'case_management_agent_ai_incident_handling_1' && (
+        <AiIncidentHandlingPromptsBlock />
+      )}
+
       {flow.automationArea === 'notifications'
         ? <NotificationsOutcomeBlock />
         : flow.label === 'IOC feeds'
           ? <IocFeedsOutcomeBlock />
           : flow.id === 'case_management_assign_escalate_1'
             ? <AssignEscalateOutcomeBlock flow={flow} workflows={workflows} />
-            : resolveOutcomeKind(flow) === 'enrichments_run'
-              ? <EnrichmentsOutcomeBlock flow={flow} />
-              : <FlowOutcomeBlock flow={flow} sourceCategoryLabel={sourceCat?.label} />}
+            : flow.id === 'case_management_agent_ai_incident_handling_1'
+              ? <AssignEscalateOutcomeBlock
+                  flow={{ ...flow, automationLabel: 'Assign & Escalate', automationCategory: 'cases', automationArea: 'assign_escalate' }}
+                  workflows={workflows}
+                />
+              : resolveOutcomeKind(flow) === 'enrichments_run'
+                ? <EnrichmentsOutcomeBlock flow={flow} />
+                : <FlowOutcomeBlock flow={flow} sourceCategoryLabel={sourceCat?.label} />}
 
 
 

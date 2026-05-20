@@ -16,6 +16,8 @@ export { ShuffleMCP, default } from './ShuffleMCP';
 export type { ShuffleMCPHandle } from './ShuffleMCP';
 export { default as AppDetailDrawer } from './AppDetailDrawer';
 export { default as AppSearchDrawer } from './AppSearchDrawer';
+export { default as AiAgentPromptsEditor } from './AiAgentPromptsEditor';
+export type { AiAgentPromptsEditorProps } from './AiAgentPromptsEditor';
 export { default as ShufflePipelinesBanner } from './ShufflePipelinesBanner';
 export { default as AppTitleHeader } from './AppTitleHeader';
 export type { AppTitleHeaderProps } from './AppTitleHeader';
