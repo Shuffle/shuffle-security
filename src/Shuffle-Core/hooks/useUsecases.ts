@@ -160,6 +160,9 @@ function buildBackendUsecases(apiCategories: ApiUsecaseCategory[]): Pick<FetchRe
 
   for (const localUsecase of DEFAULT_USECASES) {
     if (matchedLocalIds.has(localUsecase.id)) continue;
+    // Merge local-only usecases into the rendered list so the UI shows the
+    // union of both sources. Support users see a "local only" drift badge.
+    usecases.push(localUsecase);
     drifts.push({
       usecaseId: localUsecase.id,
       drifts: ['local_only'],
