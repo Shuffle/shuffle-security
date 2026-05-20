@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { AgentIcon } from '@shuffleio/shuffle-mcps';
 import shuffleInfraLogo from '@/assets/shuffle-infrastructure-logo.png';
 
-interface ProductChoiceStepProps {
+export interface ProductChoiceStepProps {
   onSelectCore: () => void;
   onSelectSecurity: () => void;
   onStartDemo?: () => void;
