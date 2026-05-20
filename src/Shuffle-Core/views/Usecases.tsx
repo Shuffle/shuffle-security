@@ -2175,21 +2175,26 @@ function IocFeedsOutcomeBlock() {
         const orgId = getOrgId();
         if (!orgId) { if (!cancelled) setEntries([]); return; }
 
-        // Discover configured IOC type names from the ioc-config datastore.
+        // Discover IOC categories from the default list_cache response.
+        // The `categories` array enumerates every datastore category the
+        // org has — we pick the ones starting with `ioc_`.
         const cfgRes = await fetch(
-          apiUrl(`/api/v1/orgs/${orgId}/list_cache?category=shuffle-security_ioc-config&top=200`),
+          apiUrl(`/api/v1/orgs/${orgId}/list_cache?category=default&top=1`),
           { credentials: 'include', headers: { ...authHeader() } },
         );
         const cfgData = cfgRes.ok ? await cfgRes.json() : null;
-        const items: any[] = cfgData?.items || cfgData?.data || cfgData?.list_cache || [];
-        const names: string[] = Array.from(new Set(
-          (Array.isArray(items) ? items : [])
-            .map((it: any) => String(it?.key || it?.name || '').trim())
-            .filter(Boolean),
+        const rawCategories: any[] = Array.isArray(cfgData?.categories) ? cfgData.categories : [];
+        const iocCategories: string[] = Array.from(new Set(
+          rawCategories
+            .map((c: any) => String(typeof c === 'string' ? c : (c?.name || c?.category || '')).trim())
+            .filter((name) => name.startsWith('ioc_')),
         ));
 
         const totals = await Promise.all(
-          names.map(async (name) => ({ name, total: await fetchTotal(orgId, `ioc_${name}`) })),
+          iocCategories.map(async (category) => ({
+            name: category.replace(/^ioc_/, ''),
+            total: await fetchTotal(orgId, category),
+          })),
         );
         if (!cancelled) {
           setEntries(totals.filter((e) => e.total > 0).sort((a, b) => b.total - a.total));
