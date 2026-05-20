@@ -107,6 +107,7 @@ const AgentsView = ({ onSchedule, maxWidth = 820, globalUrl, isLoaded, isLoggedI
         <AgentUI
           key={prefill.key}
           maxWidth={maxWidth}
+          apiBaseUrl={globalUrl}
           onViewChange={setAgentView}
           onSchedule={onSchedule}
           defaultInput={prefill.input}
