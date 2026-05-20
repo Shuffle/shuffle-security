@@ -878,6 +878,8 @@ export const AppAuthCard = ({
           .map((param, index) => {
           // Use param.id if available, otherwise fallback to name or index
           const fieldKey = param.id || param.name || `param_${index}`;
+          const lowerName = (param.name || '').toLowerCase();
+          const isSecretField = lowerName.includes('password') || lowerName.includes('secret') || lowerName.includes('key') || lowerName.includes('token');
           return (
             <TextField
               key={fieldKey}
@@ -889,7 +891,7 @@ export const AppAuthCard = ({
                   )}
                 </Box>
               }
-              type={param.name.toLowerCase().includes('password') || param.name.toLowerCase().includes('secret') || param.name.toLowerCase().includes('key') ? 'password' : 'text'}
+              type={isSecretField ? 'password' : 'text'}
               placeholder={param.example || `Enter ${param.name}`}
               value={localCredentials[fieldKey] || ''}
               onChange={(e) => handleCredentialChange(fieldKey, e.target.value)}
@@ -899,14 +901,27 @@ export const AppAuthCard = ({
               size="small"
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'hsl(var(--muted))',
+                  backgroundColor: isSecretField ? 'hsl(var(--primary) / 0.06)' : 'hsl(var(--muted))',
                   borderRadius: 2,
-                  '& fieldset': { borderColor: fieldErrors[fieldKey] ? 'hsl(var(--destructive))' : 'hsl(var(--border))' },
-                  '&:hover fieldset': { borderColor: fieldErrors[fieldKey] ? 'hsl(var(--destructive))' : 'hsl(var(--border))' },
+                  '& fieldset': {
+                    borderColor: fieldErrors[fieldKey]
+                      ? 'hsl(var(--destructive))'
+                      : isSecretField
+                      ? 'hsl(var(--primary) / 0.5)'
+                      : 'hsl(var(--border))',
+                    borderWidth: isSecretField ? 2 : 1,
+                  },
+                  '&:hover fieldset': {
+                    borderColor: fieldErrors[fieldKey]
+                      ? 'hsl(var(--destructive))'
+                      : isSecretField
+                      ? 'hsl(var(--primary) / 0.7)'
+                      : 'hsl(var(--border))',
+                  },
                   '&.Mui-focused fieldset': { borderColor: fieldErrors[fieldKey] ? 'hsl(var(--destructive))' : 'hsl(var(--primary))' },
                 },
                 '& .MuiInputBase-input': { color: 'hsl(var(--foreground))' },
-                '& .MuiInputLabel-root': { color: 'hsl(var(--muted-foreground))' },
+                '& .MuiInputLabel-root': { color: isSecretField ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))' },
                 '& .MuiFormHelperText-root': { color: fieldErrors[fieldKey] ? 'hsl(var(--destructive))' : 'hsl(var(--muted-foreground))' },
               }}
             />
@@ -1167,10 +1182,10 @@ export const AppAuthCard = ({
         <Collapse in={isExpanded}>
           <Box
             sx={{
-              px: { xs: 2, sm: 3 },
-              pb: { xs: 2, sm: 3 },
-              pt: 2,
-              borderTop: '1px solid hsl(var(--border))',
+              px: borderless ? 0 : { xs: 2, sm: 3 },
+              pb: borderless ? 0 : { xs: 2, sm: 3 },
+              pt: borderless ? 0 : 2,
+              borderTop: borderless ? 'none' : '1px solid hsl(var(--border))',
             }}
           >
             {/* Auth Selection Dropdown - always at top */}
@@ -1833,7 +1848,7 @@ export const AppAuthCard = ({
                     </Typography>
                   </Alert>
                 )}
-                <Typography variant="subtitle2" sx={{ color: 'hsl(var(--primary))', fontWeight: 600, mb: 2 }}>
+                <Typography variant="subtitle2" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, mb: 2 }}>
                   {apiAuthEntries.length === 0 ? 'Configure Authentication' : 'Add New Authentication'}
                 </Typography>
                 
