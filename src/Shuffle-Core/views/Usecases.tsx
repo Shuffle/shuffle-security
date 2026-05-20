@@ -587,6 +587,19 @@ export const DEFAULT_USECASES: Usecase[] = [
     },
   },
   {
+    id: 'vulnerability_ingestion_1', phase: 'ingest', source: 'asset_management', target: 'case_management',
+    label: 'Vulnerability Ingestion',
+    tags: ['Ingest', 'Vulnerability', 'Logs'],
+    description: 'Ingest vulnerability findings (CVEs, misconfigurations, missing patches) from your scanners into a unified inventory so they can be correlated with assets and incidents.',
+    agenticDescription: 'An agent normalizes scanner output across vendors, deduplicates findings per asset, enriches each CVE with exploitability and threat intel, and keeps the vulnerability inventory continuously up to date.',
+    automationArea: 'automatic_ingestion',
+    customAction: {
+      label: 'Configure Vulnerabilities',
+      href: '/vulnerabilities',
+      description: 'Open the vulnerability inventory to ingest CVEs from your scanners.',
+    },
+  },
+  {
     id: 'asset_management_case_management_vuln_response_1', phase: 'response', source: 'asset_management', target: 'case_management',
     label: 'Vulnerability Response', animated: true,
     tags: ['Response', 'Vulnerability', 'Remediation'],
