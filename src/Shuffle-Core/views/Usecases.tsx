@@ -4014,6 +4014,49 @@ function UsecasesPageInner() {
     return () => { cancelled = true; };
   }, [apiUrl, authHeader]);
 
+  // Detect whether the Notifications usecase is wired up:
+  //   1. /api/v1/orgs/{orgId}.defaults.notification_workflow -> workflow UUID
+  //   2. Fetch that workflow and check that it has at least one app wired in.
+  // Presence-driven (mirrors Host-Monitors): the card shows Enabled as soon
+  // as the org has a notification workflow with apps, independent of tags.
+  const [notificationWorkflowReady, setNotificationWorkflowReady] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const info = localStorage.getItem('shuffle_user_info');
+        const orgId = info ? JSON.parse(info)?.active_org?.id : null;
+        if (!orgId) return;
+        const orgRes = await fetch(apiUrl(`/api/v1/orgs/${orgId}`), {
+          credentials: 'include',
+          headers: { ...authHeader() },
+        });
+        if (!orgRes.ok) return;
+        const orgData = await orgRes.json();
+        const wfId = orgData?.defaults?.notification_workflow;
+        if (!wfId || typeof wfId !== 'string') {
+          if (!cancelled) setNotificationWorkflowReady(false);
+          return;
+        }
+        const wfRes = await fetch(apiUrl(`/api/v1/workflows/${wfId}`), {
+          credentials: 'include',
+          headers: { ...authHeader() },
+        });
+        if (!wfRes.ok) {
+          if (!cancelled) setNotificationWorkflowReady(false);
+          return;
+        }
+        const wf = await wfRes.json();
+        const appNames = extractWorkflowAppNames(wf);
+        const count = (appNames as any)?.size ?? (appNames as any)?.length ?? 0;
+        if (!cancelled) setNotificationWorkflowReady(count > 0);
+      } catch {
+        /* keep previous state */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [apiUrl, authHeader]);
+
   // Compose the final per-flow "is enabled" predicate. A flow is shown as
   // enabled only when (a) a workflow exists for its automationLabel AND
   // (b) at least one validated source-tool covers `flow.source`. Without (b)
@@ -4027,6 +4070,11 @@ function UsecasesPageInner() {
       // deployed, treat it as enabled — there is no separate workflow to gate.
       if (flow.id === 'case_management_asset_management_monitors_1') {
         return monitorsDeployedCount >= 2;
+      }
+      // Notifications is driven by the org's `defaults.notification_workflow`
+      // pointing to a workflow that has at least one app wired in.
+      if (flow.id === 'case_management_communication_1') {
+        return notificationWorkflowReady;
       }
       if (!flow.automationLabel) return false;
       if (!enabledLabels.has(flow.automationLabel)) return false;
@@ -4049,7 +4097,7 @@ function UsecasesPageInner() {
       }
       return false;
     },
-    [enabledLabels, validatedCategories, workflows, aiAgentAutomationActive, monitorsDeployedCount],
+    [enabledLabels, validatedCategories, workflows, aiAgentAutomationActive, monitorsDeployedCount, notificationWorkflowReady],
   );
 
 
