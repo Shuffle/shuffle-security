@@ -4100,13 +4100,33 @@ function UsecaseCard({
   };
 
 
+  const driftTypes = drift?.drifts ?? [];
+  const showDrift = isSupport && apiLoaded && driftTypes.length > 0;
+  const driftColor =
+    driftTypes.includes('local_only')
+      ? 'hsl(45 93% 47%)' // amber — exists locally but not in API
+      : driftTypes.includes('api_only')
+        ? 'hsl(199 89% 48%)' // blue — exists in API but not local
+        : 'hsl(280 70% 60%)'; // purple — mismatch / description added
+  const driftLabel =
+    driftTypes.includes('local_only')
+      ? 'Local only'
+      : driftTypes.includes('api_only')
+        ? 'API only'
+        : driftTypes.includes('phase_mismatch')
+          ? 'Phase mismatch'
+          : 'Description drift';
+  const driftTooltip = `Drift (support only): ${driftTypes.join(', ')}`;
+
   return (
     <Card
       variant="outlined"
       sx={{
         position: 'relative',
         bgcolor: 'hsl(var(--card))',
-        borderColor: effectiveEnabled ? 'hsl(var(--severity-low) / 0.4)' : 'hsl(var(--border))',
+        borderColor: showDrift
+          ? `${driftColor.replace(')', ' / 0.5)')}`
+          : effectiveEnabled ? 'hsl(var(--severity-low) / 0.4)' : 'hsl(var(--border))',
         transition: 'border-color 0.15s, box-shadow 0.15s',
         '&:hover': {
           borderColor: 'hsl(var(--primary) / 0.4)',
@@ -4124,6 +4144,29 @@ function UsecaseCard({
           <Typography variant="body2" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', flexGrow: 1, fontSize: '0.82rem' }}>
             {flow.label}
           </Typography>
+          {showDrift && (
+            <Tooltip title={driftTooltip} placement="top" arrow>
+              <Box
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  px: 0.6,
+                  py: 0.1,
+                  borderRadius: 0.75,
+                  fontSize: '0.6rem',
+                  fontWeight: 700,
+                  letterSpacing: 0.2,
+                  textTransform: 'uppercase',
+                  color: driftColor,
+                  bgcolor: `${driftColor.replace(')', ' / 0.12)')}`,
+                  border: `1px solid ${driftColor.replace(')', ' / 0.35)')}`,
+                  lineHeight: 1.4,
+                }}
+              >
+                {driftLabel}
+              </Box>
+            </Tooltip>
+          )}
           {hasInterest && (
             <Tooltip title="Interest shown (support only)" placement="top" arrow>
               <Box sx={{ display: 'inline-flex' }}>
@@ -4146,6 +4189,7 @@ function UsecaseCard({
             </Tooltip>
           )}
         </Box>
+
 
         {/* Source → Target */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
