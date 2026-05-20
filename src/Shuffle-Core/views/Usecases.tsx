@@ -3358,13 +3358,28 @@ function UsecaseDetailContent({
             const seen = new Set<string>();
             // Preserve original casing from auth/apps catalog where possible
             // by walking the integrations list visible in the strip.
-            const catalog: string[] = [
-              ...((categoryAppNames[flow.source] || []) as string[]),
-              ...((categoryAppNames[flow.target] || []) as string[]),
-            ];
+            // For "multi-destination" flows (Notifications, Forward Tickets)
+            // we union the Communication and Cases catalogs so apps from
+            // either category can be chosen as a destination.
+            const isMultiDest = MULTI_DEST_FLOW_IDS.has(flow.id);
+            const catalog: string[] = isMultiDest
+              ? [
+                  ...((categoryAppNames['case_management'] || []) as string[]),
+                  ...((categoryAppNames['communication'] || []) as string[]),
+                ]
+              : [
+                  ...((categoryAppNames[flow.source] || []) as string[]),
+                  ...((categoryAppNames[flow.target] || []) as string[]),
+                ];
             for (const n of catalog) {
               const k = normalizeAppName(n);
               if (next.has(k) && !seen.has(k)) { activeNames.push(n); seen.add(k); }
+            }
+            // Preserve any currently-enabled app that isn't in the local
+            // catalog snapshot (e.g. a Communication app already wired into
+            // Forward Tickets before the catalog was fetched).
+            for (const k of next) {
+              if (!seen.has(k)) { activeNames.push(k); seen.add(k); }
             }
             // Make sure the just-enabled app is in the list even if it isn't
             // in the local catalog snapshot.
