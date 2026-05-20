@@ -2870,7 +2870,7 @@ function UsecaseDetailContent({
               )}
             </Box>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 1.25 }}>
-              <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, px: 1, py: 0.35, borderRadius: 1, bgcolor: accentBg(phaseInfo.color, 0.12), color: accent(phaseInfo.color), border: `1px solid ${accentBg(phaseInfo.color, 0.25)}` }}>
+              <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, px: 1, py: 0.35, borderRadius: 1, bgcolor: 'hsla(0, 0%, 60%, 0.08)', color: MUTED, border: '1px solid hsla(0, 0%, 60%, 0.18)' }}>
                 Step {phaseInfo.step}: {phaseInfo.label}
               </Typography>
               {flow.manualVerification && (
@@ -3117,7 +3117,7 @@ function UsecaseDetailContent({
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
-                    <Zap size={14} style={{ color: PRIMARY, flexShrink: 0 }} />
+                    <Zap size={14} style={{ color: MUTED, flexShrink: 0 }} />
                     <Typography sx={{ fontSize: '0.85rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {wf.name || 'Untitled workflow'}
                     </Typography>
