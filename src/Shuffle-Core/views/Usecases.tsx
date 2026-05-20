@@ -1484,6 +1484,7 @@ function IntegrationStatusLite({
   usecaseLabel,
   onAddApp,
   addAppLabel,
+  extraTile,
 }: {
   filterApps?: string[];
   singleLine?: boolean;
@@ -1512,6 +1513,9 @@ function IntegrationStatusLite({
   onAddApp?: () => void;
   /** Tooltip / aria label for the add button. */
   addAppLabel?: string;
+  /** Optional trailing node rendered inside the Available Tools row (e.g. the
+   *  Ingestion Webhook toggle). Sits alongside the app tiles. */
+  extraTile?: React.ReactNode;
 }) {
   const { apiUrl, authHeader } = useApi();
   const appDetail = useAppDetailOptional();
@@ -2043,9 +2047,10 @@ function IntegrationStatusLite({
           <GroupLabel>
             Available Tools{availableList.length > 0 ? ` · ${availableList.length}` : ''}
           </GroupLabel>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
             {availableList.map(renderIcon)}
             {renderAddTile()}
+            {extraTile}
           </Box>
         </Box>
         {renderPopover()}
@@ -2054,9 +2059,10 @@ function IntegrationStatusLite({
   }
 
   return (
-    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, px: 0.5, py: 0.5 }}>
+    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, px: 0.5, py: 0.5, alignItems: 'center' }}>
       {visible.map(renderIcon)}
       {renderAddTile()}
+      {extraTile}
       {renderPopover()}
     </Box>
   );
@@ -2996,11 +3002,6 @@ function UsecaseDetailContent({
                 <Typography sx={{ fontSize: '0.66rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                   {endpoint.title}
                 </Typography>
-                {renderEndpointSlot && flow ? (
-                  <Box sx={{ display: 'inline-flex', alignItems: 'center' }}>
-                    {renderEndpointSlot({ flowId: flow.id, flowLabel: flow.label, side })}
-                  </Box>
-                ) : null}
               </Box>
               <Box sx={{ p: 1.5, borderRadius: 1.5, bgcolor: accentBg(endpoint.meta?.color, 0.06), border: `1px solid ${accentBg(endpoint.meta?.color, 0.15)}`, mb: 1.25, minHeight: 84 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
@@ -3044,6 +3045,7 @@ function UsecaseDetailContent({
                 usecaseLabel={flow.label}
                 onAddApp={() => setAddToolFor({ side, categoryId: endpoint.categoryId })}
                 addAppLabel={`Add ${endpoint.meta?.label || endpoint.title} tool`}
+                extraTile={renderEndpointSlot && flow ? renderEndpointSlot({ flowId: flow.id, flowLabel: flow.label, side }) : undefined}
               />
             </Box>
             );
