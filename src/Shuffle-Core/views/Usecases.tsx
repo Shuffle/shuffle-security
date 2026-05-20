@@ -2157,6 +2157,7 @@ const ACTIVE_USECASE_IDS = [
   'email_case_management_1',
   'threat_intel_case_management_1',
   'case_management_cases_forward_1',
+  'case_management_communication_1',
   'case_management_asset_management_monitors_1',
   'case_management_assign_escalate_1',
   'threat_intel_network_1',
@@ -2783,6 +2784,43 @@ function UsecaseDetailContent({
       setOptimisticEnabled(null);
     }
   }, [isEnabled, optimisticEnabled]);
+
+  // For the Notifications usecase, the linked workflow is referenced by the
+  // org's `defaults.notification_workflow` UUID rather than by tag/name, so
+  // findWorkflowsForUsecase() never picks it up. Fetch it explicitly so we
+  // can surface it in the Linked Workflows list below.
+  const [notificationWorkflow, setNotificationWorkflow] = useState<WorkflowSummary | null>(null);
+  useEffect(() => {
+    if (flow?.id !== 'case_management_communication_1') {
+      setNotificationWorkflow(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const info = localStorage.getItem('shuffle_user_info');
+        const orgId = info ? JSON.parse(info)?.active_org?.id : null;
+        if (!orgId) return;
+        const orgRes = await fetch(apiUrl(`/api/v1/orgs/${orgId}`), {
+          credentials: 'include', headers: { ...authHeader() },
+        });
+        if (!orgRes.ok) return;
+        const orgData = await orgRes.json();
+        const wfId = orgData?.defaults?.notification_workflow;
+        if (!wfId || typeof wfId !== 'string') return;
+        const existing = workflows.find((w) => w.id === wfId);
+        if (existing) { if (!cancelled) setNotificationWorkflow(existing); return; }
+        const wfRes = await fetch(apiUrl(`/api/v1/workflows/${wfId}`), {
+          credentials: 'include', headers: { ...authHeader() },
+        });
+        if (!wfRes.ok) return;
+        const wf = await wfRes.json();
+        if (!cancelled && wf?.id) setNotificationWorkflow(wf as WorkflowSummary);
+      } catch { /* keep previous */ }
+    })();
+    return () => { cancelled = true; };
+  }, [flow?.id, apiUrl, authHeader, workflows]);
+
 
   const handleToggle = async () => {
     if (!flow?.automationLabel || toggling) return;
@@ -3541,13 +3579,20 @@ function UsecaseDetailContent({
               workflows,
             ).filter((wf) => !linkedWorkflows.some((lw) => lw.id === wf.id))
           : [];
-        const allLinked = [...linkedWorkflows, ...forwardTicketsWorkflows];
+        // Notifications: append the org's defaults.notification_workflow if not
+        // already covered by tag/name matching.
+        const notifWorkflows = notificationWorkflow && !linkedWorkflows.some((lw) => lw.id === notificationWorkflow.id)
+          ? [notificationWorkflow]
+          : [];
+        const allLinked = [...linkedWorkflows, ...forwardTicketsWorkflows, ...notifWorkflows];
         if (allLinked.length === 0) return null;
         const labelHint = forwardTicketsWorkflows.length > 0 && flow.automationLabel
           ? `Matched on "${flow.automationLabel}" and "Forward Tickets"`
-          : flow.automationLabel
-            ? `Matched on label "${flow.automationLabel}"`
-            : 'Matched on label "Forward Tickets"';
+          : notifWorkflows.length > 0
+            ? 'Matched on org default notification workflow'
+            : flow.automationLabel
+              ? `Matched on label "${flow.automationLabel}"`
+              : 'Matched on label "Forward Tickets"';
         return (
           <Box sx={{ p: 3, borderRadius: 2, border: CARD_BORDER, bgcolor: CARD_BG, mb: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, gap: 2, flexWrap: 'wrap' }}>
