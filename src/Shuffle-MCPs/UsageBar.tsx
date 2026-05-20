@@ -2,33 +2,25 @@ import React from 'react';
 import { Box, Typography, Tooltip } from '@mui/material';
 
 /**
- * Reusable usage bar showing `usage / limit` for any quota (app runs,
- * agent tokens, storage, etc.). Mirrors the visual treatment used in the
- * left sidebar's App-run warning, but always renders so it can be embedded
- * in detail panels (e.g. the Local LLM sidebar) regardless of the current
- * percentage.
+ * Compact, reusable usage bar showing `usage / limit`. Designed to stack
+ * tightly so multiple bars can sit anywhere (sidebars, footers, panels).
  *
- * Color thresholds:
- *   < 65%  → primary/neutral (ok)
- *   65-99% → severity-medium (warning)
- *   >=100% → destructive (over)
+ * Visual: neutral by default. Color only kicks in when approaching/over limit.
+ *   < 65%  → muted foreground
+ *   65-99% → severity-medium
+ *   >=100% → destructive
  */
 export interface UsageBarProps {
   label: string;
   usage: number;
   limit: number;
-  /** Suffix shown after numbers, e.g. "runs", "tokens". Optional. */
   unit?: string;
-  /** Optional sub-line shown under the label (e.g. "Resets Dec 1"). */
   hint?: string;
-  /** Optional upgrade / docs link rendered on the right side. */
   actionLabel?: string;
   actionHref?: string;
-  /** Forces a smaller variant suitable for sidebars. */
-  dense?: boolean;
 }
 
-const formatNumber = (n: number) => n.toLocaleString();
+const fmt = (n: number) => n.toLocaleString();
 
 export const UsageBar: React.FC<UsageBarProps> = ({
   label,
@@ -38,7 +30,6 @@ export const UsageBar: React.FC<UsageBarProps> = ({
   hint,
   actionLabel,
   actionHref,
-  dense = false,
 }) => {
   const safeLimit = Math.max(limit, 0);
   const pct = safeLimit > 0 ? (usage / safeLimit) * 100 : 0;
@@ -49,88 +40,60 @@ export const UsageBar: React.FC<UsageBarProps> = ({
     ? 'hsl(var(--destructive))'
     : isWarn
       ? 'hsl(var(--severity-medium))'
-      : 'hsl(var(--primary))';
-  const accentBg = isOver
-    ? 'hsl(var(--destructive) / 0.08)'
-    : isWarn
-      ? 'hsl(var(--severity-medium) / 0.08)'
-      : 'hsla(var(--muted) / 0.3)';
-  const accentBorder = isOver
-    ? 'hsl(var(--destructive) / 0.25)'
-    : isWarn
-      ? 'hsl(var(--severity-medium) / 0.25)'
-      : 'hsl(var(--border))';
+      : 'hsl(var(--muted-foreground))';
 
   const tooltipText = safeLimit > 0
-    ? `${pct.toFixed(0)}% used · ${formatNumber(usage)} / ${formatNumber(safeLimit)}${unit ? ' ' + unit : ''}`
-    : `${formatNumber(usage)}${unit ? ' ' + unit : ''}`;
+    ? `${pct.toFixed(0)}% used · ${fmt(usage)} / ${fmt(safeLimit)}${unit ? ' ' + unit : ''}${hint ? ' · ' + hint : ''}`
+    : `${fmt(usage)}${unit ? ' ' + unit : ''}${hint ? ' · ' + hint : ''}`;
 
   return (
     <Tooltip title={tooltipText} placement="top" arrow>
-      <Box
-        sx={{
-          borderRadius: 2,
-          overflow: 'hidden',
-          bgcolor: accentBg,
-          border: `1px solid ${accentBorder}`,
-        }}
-      >
-        <Box sx={{ p: dense ? 1.25 : 1.5, pb: dense ? 1 : 1.25 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 0.5 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, py: 0.25 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
+          <Typography
+            sx={{
+              fontSize: '0.7rem',
+              fontWeight: 500,
+              color: 'hsl(var(--muted-foreground))',
+              lineHeight: 1.2,
+            }}
+          >
+            {label}
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {actionLabel && actionHref && (isWarn || isOver) && (
+              <Box
+                component="a"
+                href={actionHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{
+                  fontSize: '0.65rem',
+                  fontWeight: 600,
+                  color: accent,
+                  textDecoration: 'none',
+                  '&:hover': { textDecoration: 'underline' },
+                }}
+              >
+                {actionLabel}
+              </Box>
+            )}
             <Typography
               sx={{
-                fontSize: dense ? '0.7rem' : '0.75rem',
-                fontWeight: 600,
-                color: 'hsl(var(--foreground))',
-              }}
-            >
-              {label}
-            </Typography>
-            <Typography
-              sx={{
-                fontSize: dense ? '0.65rem' : '0.7rem',
+                fontSize: '0.65rem',
                 fontWeight: 500,
                 color: accent,
                 whiteSpace: 'nowrap',
+                fontVariantNumeric: 'tabular-nums',
               }}
             >
               {safeLimit > 0
-                ? `${formatNumber(usage)} / ${formatNumber(safeLimit)}${unit ? ' ' + unit : ''}`
-                : `${formatNumber(usage)}${unit ? ' ' + unit : ''}`}
+                ? `${fmt(usage)} / ${fmt(safeLimit)}${unit ? ' ' + unit : ''}`
+                : `${fmt(usage)}${unit ? ' ' + unit : ''}`}
             </Typography>
           </Box>
-          {hint && (
-            <Typography
-              sx={{
-                fontSize: '0.65rem',
-                color: 'hsl(var(--muted-foreground))',
-                lineHeight: 1.4,
-                mb: actionLabel ? 0.75 : 0,
-              }}
-            >
-              {hint}
-            </Typography>
-          )}
-          {actionLabel && actionHref && (
-            <Box
-              component="a"
-              href={actionHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              sx={{
-                fontSize: '0.65rem',
-                fontWeight: 600,
-                color: accent,
-                textDecoration: 'none',
-                '&:hover': { textDecoration: 'underline' },
-              }}
-            >
-              {actionLabel} →
-            </Box>
-          )}
         </Box>
-        {/* Bottom progress bar */}
-        <Box sx={{ width: '100%', height: 3, bgcolor: 'hsl(var(--muted) / 0.5)' }}>
+        <Box sx={{ width: '100%', height: 2, bgcolor: 'hsl(var(--muted) / 0.5)', borderRadius: 1, overflow: 'hidden' }}>
           <Box
             sx={{
               width: `${Math.min(Math.max(pct, 0), 100)}%`,

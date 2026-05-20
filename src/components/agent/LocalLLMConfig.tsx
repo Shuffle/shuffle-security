@@ -237,29 +237,29 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
   const appRunLimit = userInfo?.app_execution_limit || 0;
   const appRunUsage = (userInfo?.app_execution_usage || 0) + (userInfo?.app_executions_suborgs || 0);
 
+  const usageBars = appRunLimit > 0 ? (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+      <UsageBar
+        label="App runs"
+        usage={appRunUsage}
+        limit={appRunLimit}
+        unit="runs"
+        actionLabel="Upgrade"
+        actionHref="https://shuffler.io/pricing"
+      />
+      <UsageBar
+        label="Agent tokens"
+        usage={0}
+        limit={0}
+        unit="tokens"
+        hint="Token usage tracking coming soon"
+      />
+    </Box>
+  ) : null;
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-      {/* Usage / limits — reusable component so we can drop it anywhere */}
-      {(appRunLimit > 0) && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <UsageBar
-            label="App runs"
-            usage={appRunUsage}
-            limit={appRunLimit}
-            unit="runs"
-            actionLabel="Upgrade"
-            actionHref="https://shuffler.io/pricing"
-          />
-          {/* Agent tokens — wire usage/limit once the API exposes them. */}
-          <UsageBar
-            label="Agent tokens"
-            usage={0}
-            limit={0}
-            unit="tokens"
-            hint="Token usage tracking coming soon."
-          />
-        </Box>
-      )}
+
       {/* Description */}
       {!compact && (
         <Box sx={{
@@ -337,17 +337,20 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
         </FormControl>
 
         {isShuffleAI && (
-          <Box sx={{
-            px: 2,
-            py: 1.5,
-            borderRadius: 1.5,
-            border: '1px solid hsl(var(--border))',
-            bgcolor: 'hsla(var(--muted) / 0.25)',
-          }}>
-            <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
-              Using Shuffle's hosted AI. No configuration required — your agent runs use Shuffle's default model.
-            </Typography>
-          </Box>
+          <>
+            <Box sx={{
+              px: 2,
+              py: 1.5,
+              borderRadius: 1.5,
+              border: '1px solid hsl(var(--border))',
+              bgcolor: 'hsla(var(--muted) / 0.25)',
+            }}>
+              <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
+                Using Shuffle's hosted AI. No configuration required — your agent runs use Shuffle's default model.
+              </Typography>
+            </Box>
+            {usageBars && <Box sx={{ mt: 0.5 }}>{usageBars}</Box>}
+          </>
         )}
 
         {effectivePreset === CUSTOM_PRESET && (
