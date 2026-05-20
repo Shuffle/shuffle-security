@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { Box, Typography, Tooltip } from '@mui/material';
+import { Box, Typography, Tooltip, CircularProgress } from '@mui/material';
 import { TrendingUp, TrendingDown, Activity } from 'lucide-react';
 import type { UsecaseOutcome } from '../lib/outcomes';
 
@@ -137,6 +137,10 @@ export interface UsecaseOutcomeSectionProps {
   /** Optional "What to do next" CTA link target. */
   nextActionHref?: string;
   nextActionLabel?: string;
+  /** When true, render a loader inside the Outcome card instead of the
+   *  empty-state / metric content. Used while async lookups are still
+   *  resolving so users see progress until the number is final. */
+  loading?: boolean;
 }
 
 export function UsecaseOutcomeSection({
@@ -144,8 +148,11 @@ export function UsecaseOutcomeSection({
   sourceCategoryLabel,
   nextActionHref,
   nextActionLabel,
+  loading,
 }: UsecaseOutcomeSectionProps) {
   if (!outcome || outcome.kind === 'none') return null;
+
+  const windowDays = outcome.windowDays;
 
   return (
     <Box
@@ -157,14 +164,21 @@ export function UsecaseOutcomeSection({
         mb: 3,
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: outcome.isEmpty ? 0 : 1.5 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: loading || outcome.isEmpty ? 0 : 1.5 }}>
         <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: 0.6 }}>
-          Outcome · last {outcome.windowDays} days
+          Outcome · last {windowDays} days
         </Typography>
       </Box>
 
 
-      {outcome.isEmpty ? (
+      {loading ? (
+        <Box sx={{ mt: 1.5, display: 'flex', alignItems: 'center', gap: 1.25 }}>
+          <CircularProgress size={14} thickness={5} sx={{ color: PRIMARY }} />
+          <Typography sx={{ fontSize: '0.85rem', color: MUTED }}>
+            Loading outcome…
+          </Typography>
+        </Box>
+      ) : outcome.isEmpty ? (
         <Typography sx={{ fontSize: '0.85rem', color: MUTED }}>
           {emptyMessage(outcome, sourceCategoryLabel)}
         </Typography>
