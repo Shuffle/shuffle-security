@@ -3499,8 +3499,8 @@ function UsecaseDetailContent({
                 usecaseEnabledNames={enabledNamesSet}
                 onUsecaseAppToggle={flow.automationLabel ? handleUsecaseAppToggle : undefined}
                 usecaseLabel={flow.label}
-                onAddApp={isCases ? undefined : () => setAddToolFor({ side, categoryId: endpoint.categoryId })}
-                addAppLabel={isCases ? undefined : `Add ${endpoint.meta?.label || endpoint.title} tool`}
+                onAddApp={(isCases && !MULTI_DEST_FLOW_IDS.has(flow.id)) ? undefined : () => setAddToolFor({ side, categoryId: endpoint.categoryId, multiDest: MULTI_DEST_FLOW_IDS.has(flow.id) })}
+                addAppLabel={(isCases && !MULTI_DEST_FLOW_IDS.has(flow.id)) ? undefined : (MULTI_DEST_FLOW_IDS.has(flow.id) ? 'Add destination tool (Communication or Cases)' : `Add ${endpoint.meta?.label || endpoint.title} tool`)}
                 extraTile={renderEndpointSlot && flow ? renderEndpointSlot({ flowId: flow.id, flowLabel: flow.label, side }) : undefined}
               />
             </Box>
