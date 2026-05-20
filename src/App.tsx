@@ -187,9 +187,12 @@ const ThemedApp = () => {
             <Route path="/register" element={<AuthPage mode="register" />} />
             <Route path="/docs" element={<DocsPage />} />
             <Route path="/docs/:slug" element={<DocsPage />} />
-            {/* Public library demo — works whether logged in or not */}
+            {/* Public library demo — works whether logged in or not.
+                Both -demo and bare library-name paths render the same page. */}
             <Route path="/shuffle-mcp-demo" element={<ShuffleMcpTestPage />} />
+            <Route path="/shuffle-mcps" element={<ShuffleMcpTestPage />} />
             <Route path="/shuffle-core-demo" element={<ShuffleCoreTestPage />} />
+            <Route path="/shuffle-core" element={<ShuffleCoreTestPage />} />
             <Route path="/pricing" element={<PricingPage />} />
 
             {/* Onboarding with sidebar (collapsed by default) */}

@@ -18,6 +18,8 @@ import {
   RecentWorkflow,
   OnboardingFlow,
   ProductChoiceStep,
+  AutomationDashboard,
+  DashboardOverview,
 } from '@shuffleio/shuffle-core';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -70,6 +72,26 @@ const SNIPPET_RECENT_WORKFLOW = `import { RecentWorkflow } from '@shuffleio/shuf
 
 // Card used in the sidebar / dashboards to surface a recent workflow.
 <RecentWorkflow workflow={workflow} leftNavOpen />`;
+
+const SNIPPET_AUTOMATION_DASHBOARD = `import { AutomationDashboard } from '@shuffleio/shuffle-core';
+
+// Stats greeting + workflow/app activity charts. Reads counts from
+// /api/v1/stats and /api/v1/workflows/search.
+<AutomationDashboard
+  orgId={userInfo?.active_org?.id}
+  displayName={userInfo?.username}
+/>`;
+
+const SNIPPET_DASHBOARD_OVERVIEW = `import { DashboardOverview } from '@shuffleio/shuffle-core';
+
+// Security Operations Center overview: incidents, vulns, monitors.
+// Pure presentational — pass already-loaded host data in.
+<DashboardOverview
+  incidents={incidents}
+  vulnSeverityCounts={{ critical: 2, high: 5, medium: 12, low: 8, info: 3 }}
+  monitorHostCount={42}
+  runningSensorCount={3}
+/>`;
 
 const SNIPPET_EDIT_WORKFLOW = `import { useState } from 'react';
 import { Button } from '@mui/material';
@@ -418,7 +440,7 @@ const SAMPLE_WORKFLOW = {
 
 const ShuffleCoreTestPage = () => {
   // Default to dark mode for unauthenticated visitors on this public demo page.
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, userInfo } = useAuth();
   const { setTheme } = useTheme();
   const forcedThemeRef = useRef(false);
   useEffect(() => {
@@ -676,7 +698,43 @@ const ShuffleCoreTestPage = () => {
           </DemoSection>
 
           <DemoSection
-            title="7. Edit workflow"
+            title="7. Automation dashboard"
+            description={<><code>&lt;AutomationDashboard /&gt;</code> — full greeting + activity charts for workflows and apps. All filters are uncontrolled by default; pass <code>days</code>/<code>mode</code>/<code>gran</code> to drive them from the host.</>}
+            code={SNIPPET_AUTOMATION_DASHBOARD}
+            apis={[
+              { method: 'GET', path: '/api/v1/stats/:orgId', description: 'Aggregate workflow + app execution stats' },
+              { method: 'POST', path: '/api/v1/workflows/search', description: 'Recent runs feeding the activity charts' },
+              { method: 'GET', path: '/api/v1/workflows', description: 'Workflow names mapped onto the chart series' },
+            ]}
+          >
+            <Box sx={{ border: '1px solid hsl(var(--border))', borderRadius: 1.5, overflow: 'hidden', maxHeight: 720, overflowY: 'auto' }}>
+              <AutomationDashboard
+                orgId={userInfo?.active_org?.id ?? undefined}
+                displayName={userInfo?.username}
+              />
+            </Box>
+          </DemoSection>
+
+          <DemoSection
+            title="8. Dashboard overview"
+            description={<><code>&lt;DashboardOverview /&gt;</code> — Security Operations Center overview: incidents trend, vulnerability severity counts, host monitor + sensor health. Pure presentational, host supplies the data.</>}
+            code={SNIPPET_DASHBOARD_OVERVIEW}
+          >
+            <Box sx={{ border: '1px solid hsl(var(--border))', borderRadius: 1.5, p: 2 }}>
+              <DashboardOverview
+                incidents={[]}
+                incidentsLoading={false}
+                vulnSeverityCounts={{ critical: 2, high: 5, medium: 12, low: 8, info: 3 }}
+                vulnLoading={false}
+                monitorHostCount={42}
+                runningSensorCount={3}
+                monitorsLoading={false}
+              />
+            </Box>
+          </DemoSection>
+
+          <DemoSection
+            title="9. Edit workflow"
             description={<><code>&lt;EditWorkflow /&gt;</code> — the create / edit workflow modal (name, description, tags, usecase mapping, form questions, due date, AI generation). Source-only here because it needs the host app's workflow + appFramework wiring.</>}
             code={SNIPPET_EDIT_WORKFLOW}
           />

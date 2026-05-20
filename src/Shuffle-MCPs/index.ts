@@ -148,3 +148,7 @@ export {
   invalidateAppsCache,
 } from './appsCache';
 export type { FetchAppsOptions } from './appsCache';
+
+// Usage bar — reusable quota indicator for app runs, agent tokens, etc.
+export { UsageBar } from './UsageBar';
+export type { UsageBarProps } from './UsageBar';
