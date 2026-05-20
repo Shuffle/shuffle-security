@@ -32,13 +32,20 @@ import { Search, ArrowRight, ArrowLeft, Download, Zap, Activity, CheckCircle2, C
 import ReactGA from 'react-ga4';
 import shuffleSecurityIcon from '../assets/shuffle-icon.png';
 import UsecaseAlluvialDiagram from './UsecaseAlluvialDiagram';
-import { AppSearchDrawer, useAppDetailOptional, AiAgentPromptsEditor } from '@shuffleio/shuffle-mcps';
-import { extractWorkflowAppNames, normalizeAppName, getIngestionCategory } from '@/Shuffle-MCPs/ingestionDetection';
-import { shuffleFetch, getApiUrl } from '@/Shuffle-MCPs/api';
+import {
+  AppSearchDrawer,
+  useAppDetailOptional,
+  AiAgentPromptsEditor,
+  extractWorkflowAppNames,
+  normalizeAppName,
+  getIngestionCategory,
+  shuffleFetch,
+  getApiUrl,
+  getDatastoreByCategory,
+} from '@shuffleio/shuffle-mcps';
 import { useUsecaseOutcomes } from '../hooks/useUsecaseOutcomes';
 import { UsecaseOutcomeSection } from '../components/UsecaseOutcome';
 import { resolveOutcomeKind } from '../lib/outcomes';
-import { getDatastoreByCategory } from '@/Shuffle-MCPs/datastore';
 // ── Flow phases ────────────────────────────────────────────────────────────────
 
 export type FlowPhase = 'ingest' | 'response' | 'correlation';
