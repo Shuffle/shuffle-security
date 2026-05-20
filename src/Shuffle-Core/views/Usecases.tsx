@@ -3473,27 +3473,64 @@ function UsecaseDetailContent({
           };
           return (
         <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
-          {([
-            { title: 'Source', meta: sourceCat, details: sourceDetails, categoryId: flow.source, appNames: categoryAppNames[flow.source] || [] },
-            // Self-contained usecases (e.g. Assign & Escalate) operate entirely
-            // within Cases and have no separate destination tool to wire up.
-            flow.id === 'case_management_assign_escalate_1'
-              ? null
-              : { title: 'Destination', meta: targetCat, details: targetDetails, categoryId: flow.target, appNames: categoryAppNames[flow.target] || [] },
-          ].filter(Boolean) as Array<{ title: string; meta: any; details: any; categoryId: string; appNames: string[] }>).map((endpoint) => {
+          {(() => {
+            const isMultiDest = MULTI_DEST_FLOW_IDS.has(flow.id);
+            // For multi-destination flows (Notifications, Forward Tickets)
+            // the destination spans BOTH Communication and Cases catalogs —
+            // surface the union of apps and label both categories so users
+            // see the full picture instead of just one side.
+            const destAppNames = isMultiDest
+              ? Array.from(new Set([
+                  ...(categoryAppNames['communication'] || []),
+                  ...(categoryAppNames['case_management'] || []),
+                ])).sort()
+              : (categoryAppNames[flow.target] || []);
+            const commMeta = getToolCategoryMeta('communication');
+            const casesMeta = getToolCategoryMeta('case_management');
+            const destMeta = isMultiDest
+              ? {
+                  ...targetCat,
+                  label: 'Communication & Cases',
+                  // Render both category icons side-by-side so the destination
+                  // tile visually reads as "both" rather than just one.
+                  icon: (
+                    <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
+                      <Box component="span" sx={{ display: 'inline-flex', '& > svg': { width: 12, height: 12 } }}>
+                        {commMeta?.icon}
+                      </Box>
+                      <Box component="span" sx={{ display: 'inline-flex', '& > svg': { width: 12, height: 12 } }}>
+                        {casesMeta?.icon}
+                      </Box>
+                    </Box>
+                  ),
+                }
+              : targetCat;
+            const destCategoryId = isMultiDest ? 'communication' : flow.target;
+            return ([
+              { title: 'Source', meta: sourceCat, details: sourceDetails, categoryId: flow.source, appNames: categoryAppNames[flow.source] || [] },
+              // Self-contained usecases (e.g. Assign & Escalate) operate entirely
+              // within Cases and have no separate destination tool to wire up.
+              flow.id === 'case_management_assign_escalate_1'
+                ? null
+                : { title: 'Destination', meta: destMeta, details: targetDetails, categoryId: destCategoryId, appNames: destAppNames },
+            ].filter(Boolean) as Array<{ title: string; meta: any; details: any; categoryId: string; appNames: string[] }>).map((endpoint) => {
             // The Shuffle platform itself owns the Cases category, so always
             // surface "Shuffle Security" alongside any installed case-management
             // apps. Pre-pend it so it sorts first and the user immediately sees
             // that Shuffle covers this leg of the flow.
             // Skip Shuffle Security on Destination when Source is also Cases —
             // avoids duplicating the platform on both sides of the flow.
-            const isCases = endpoint.categoryId === 'case_management';
-            const skipShuffle = endpoint.title === 'Destination' && flow.source === 'case_management';
-            const showShuffle = isCases && !skipShuffle;
+            // Multi-dest flows span Cases as a valid destination too, so show
+            // the Shuffle Security tile even when the category id we render the
+            // tile under is "communication".
+            const includesCases = endpoint.categoryId === 'case_management'
+              || (endpoint.title === 'Destination' && isMultiDest);
+            const skipShuffle = endpoint.title === 'Destination' && flow.source === 'case_management' && !isMultiDest;
+            const showShuffle = includesCases && !skipShuffle;
             // When Shuffle itself is the Source, only surface the Shuffle Security
             // tile — hiding other case-management apps that would otherwise clutter
             // the source side of the flow.
-            const sourceIsShuffleOnly = endpoint.title === 'Source' && isCases;
+            const sourceIsShuffleOnly = endpoint.title === 'Source' && endpoint.categoryId === 'case_management';
             const appNamesWithShuffle = sourceIsShuffleOnly
               ? ['Shuffle Security']
               : showShuffle
@@ -3510,6 +3547,9 @@ function UsecaseDetailContent({
               : undefined;
             const side: 'source' | 'destination' = endpoint.title === 'Source' ? 'source' : 'destination';
             const pinned = pinnedTool[side];
+            // `isCases` gates "Add tool" behaviour — for multi-dest we always
+            // want the add button enabled regardless of underlying category id.
+            const isCases = endpoint.categoryId === 'case_management';
 
             return (
             <Box key={endpoint.title} sx={{ flex: 1, minWidth: 0 }}>
