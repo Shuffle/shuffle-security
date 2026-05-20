@@ -987,13 +987,15 @@ export const AppAuthCard = ({
       <Card
         sx={{
           background: 'transparent',
-          border: '1px solid',
-          borderColor: isTested
+          border: borderless ? 'none' : '1px solid',
+          borderColor: borderless
+            ? 'transparent'
+            : isTested
             ? 'hsl(var(--severity-low) / 0.5)'
             : authState.status === 'error'
             ? 'hsl(var(--destructive) / 0.3)'
             : 'hsl(var(--border))',
-          borderRadius: 3,
+          borderRadius: borderless ? 0 : 3,
           boxShadow: 'none',
           overflow: 'hidden',
           transition: 'all 0.3s ease',
