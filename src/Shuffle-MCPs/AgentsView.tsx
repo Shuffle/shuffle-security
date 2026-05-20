@@ -20,6 +20,7 @@ import type { AgentUIApp, AgentUIProps } from './AgentUI';
 import { updateAgentScheduleConfig } from './agentActivity';
 import { toast } from './toast';
 import type { ShuffleHostProps } from './host-props';
+import { useSyncHostBaseUrl } from './useSyncHostBaseUrl';
 
 export interface AgentsViewProps extends ShuffleHostProps {
   /**
