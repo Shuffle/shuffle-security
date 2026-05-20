@@ -278,7 +278,7 @@ export function UsecaseOutcomeSection({
       ) : (
         <>
           <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5, flexWrap: 'wrap' }}>
-            <Typography sx={{ fontSize: '1.6rem', fontWeight: 800, color: PRIMARY, lineHeight: 1 }}>
+            <Typography sx={{ fontSize: '1.6rem', fontWeight: 800, color: FG, lineHeight: 1 }}>
               {formatNumber(outcome.primary.value)}
             </Typography>
             <Typography sx={{ fontSize: '0.9rem', color: FG }}>
@@ -496,11 +496,11 @@ export function UsecaseOutcomeBadge({ outcome }: UsecaseOutcomeBadgeProps) {
           px: 0.75,
           py: 0.25,
           borderRadius: 1,
-          bgcolor: 'hsla(24, 100%, 50%, 0.15)',
-          border: `1px solid ${PRIMARY}`,
+          bgcolor: 'hsl(var(--muted, 0 0% 20%))',
+          border: `1px solid ${BORDER}`,
           fontSize: '0.68rem',
           fontWeight: 700,
-          color: PRIMARY,
+          color: FG,
           lineHeight: 1.2,
         }}
       >

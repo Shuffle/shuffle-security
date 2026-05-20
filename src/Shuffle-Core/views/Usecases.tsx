@@ -2438,7 +2438,7 @@ function NotificationsOutcomeBlock() {
   const total = (openCount ?? 0) + (readCount ?? 0);
   const outcome = {
     kind: 'comms_sent' as const,
-    primary: { value: total, label: 'notifications sent' },
+    primary: { value: total, label: 'notifications created' },
     breakdown: [],
     extraMetrics: [
       { label: 'open', value: openCount ?? 0 },
