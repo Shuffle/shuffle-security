@@ -2638,7 +2638,7 @@ function AssignEscalateOutcomeBlock({ flow, workflows }: { flow: Usecase; workfl
         <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1.25 }}>
           <CircularProgress size={14} thickness={5} sx={{ color: PRIMARY }} />
           <Typography sx={{ fontSize: '0.85rem', color: MUTED }}>
-            Loading outcome…
+            Loading Assign &amp; Escalate workflow executions from the last 30 days…
           </Typography>
         </Box>
       </Box>
