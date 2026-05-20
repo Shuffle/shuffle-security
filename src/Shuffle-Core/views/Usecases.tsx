@@ -3013,36 +3013,42 @@ function UsecaseDetailContent({
 
             return (
             <Box key={endpoint.title} sx={{ flex: 1, minWidth: 0 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, gap: 1, minHeight: 22 }}>
-                <Typography sx={{ fontSize: '0.66rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mb: 1.25 }}>
+                <Typography sx={{ fontSize: '0.62rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                   {endpoint.title}
                 </Typography>
-              </Box>
-              <Box sx={{ p: 1.5, borderRadius: 1.5, bgcolor: accentBg(endpoint.meta?.color, 0.06), border: `1px solid ${accentBg(endpoint.meta?.color, 0.15)}`, mb: 1.25, minHeight: 84 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                  <Box sx={{ width: 32, height: 32, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: accentBg(endpoint.meta?.color, 0.12), color: accent(endpoint.meta?.color), flexShrink: 0 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+                  <Box sx={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: 0.75,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: accentBg(endpoint.meta?.color, 0.1),
+                    border: `1px solid ${accentBg(endpoint.meta?.color, 0.25)}`,
+                    color: accent(endpoint.meta?.color),
+                    flexShrink: 0,
+                    '& > svg': { width: 12, height: 12 },
+                  }}>
                     {endpoint.meta?.icon}
                   </Box>
-                  <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                      <Typography sx={{ fontSize: '0.9rem', fontWeight: 700, color: accent(endpoint.meta?.color) }}>
-                        {endpoint.meta?.label || 'Unknown'}
-                      </Typography>
-                    </Box>
+                  <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: accent(endpoint.meta?.color), textTransform: 'uppercase', letterSpacing: '0.02em', flexShrink: 0 }}>
+                    {endpoint.meta?.label || 'Unknown'}
+                  </Typography>
+                  {endpoint.details ? (
                     <Typography sx={{
-                      fontSize: '0.72rem',
+                      fontSize: '0.7rem',
                       color: MUTED,
-                      lineHeight: 1.5,
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
+                      lineHeight: 1.4,
+                      minWidth: 0,
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      minHeight: 'calc(0.72rem * 1.5 * 2)',
+                      whiteSpace: 'nowrap',
                     }}>
-                      {endpoint.details ? endpoint.details.description.split('—')[0].trim() : ''}
+                      · {endpoint.details.description.split('—')[0].trim()}
                     </Typography>
-                  </Box>
+                  ) : null}
                 </Box>
               </Box>
 
