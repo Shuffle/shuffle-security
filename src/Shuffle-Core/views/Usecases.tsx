@@ -3057,8 +3057,8 @@ function UsecaseDetailContent({
     const fetchApps = async () => {
       try {
         const [authRes, appsRes] = await Promise.all([
-          fetch(apiUrl('/api/v1/apps/authentication'), { credentials: 'include', headers: { ...authHeader() } }),
-          fetch(apiUrl('/api/v1/apps'), { credentials: 'include', headers: { ...authHeader() } }),
+          fetchAppsCached(apiUrl('/api/v1/apps/authentication'), { credentials: 'include', headers: { ...authHeader() } }),
+          fetchAppsCached(apiUrl('/api/v1/apps'), { credentials: 'include', headers: { ...authHeader() } }),
         ]);
 
         const mapped: Record<string, Set<string>> = {};
