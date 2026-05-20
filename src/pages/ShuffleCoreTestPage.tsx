@@ -440,7 +440,7 @@ const SAMPLE_WORKFLOW = {
 
 const ShuffleCoreTestPage = () => {
   // Default to dark mode for unauthenticated visitors on this public demo page.
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, userInfo } = useAuth();
   const { setTheme } = useTheme();
   const forcedThemeRef = useRef(false);
   useEffect(() => {
