@@ -36,7 +36,10 @@ const UsecasesPage = (props: UsecasesPageProps = {}) => {
       renderEndpointSlot={({ flowId, side }) => {
         if (side !== 'source') return null;
         if (!WEBHOOK_FLOW_IDS.has(flowId)) return null;
-        return <WebhookIngestionButton webhook={info} onToggled={() => refetch()} />;
+        return {
+          node: <WebhookIngestionButton webhook={info} onToggled={() => refetch()} />,
+          enabled: !!webhook.enabled,
+        } as any;
       }}
     />
   );

@@ -1513,9 +1513,10 @@ function IntegrationStatusLite({
   onAddApp?: () => void;
   /** Tooltip / aria label for the add button. */
   addAppLabel?: string;
-  /** Optional trailing node rendered inside the Available Tools row (e.g. the
-   *  Ingestion Webhook toggle). Sits alongside the app tiles. */
-  extraTile?: React.ReactNode;
+  /** Optional trailing node rendered alongside the app tiles. Pass a plain
+   *  ReactNode to render under Available, or `{ node, enabled }` to control
+   *  whether it appears under Enabled or Available. */
+  extraTile?: React.ReactNode | { node: React.ReactNode; enabled?: boolean };
 }) {
   const { apiUrl, authHeader } = useApi();
   const appDetail = useAppDetailOptional();
@@ -2030,27 +2031,39 @@ function IntegrationStatusLite({
     );
   }
 
+  // Allow extraTile to be either a raw node (always rendered under Available)
+  // or `{ node, enabled }` so it can be placed under Enabled when active.
+  const extraTileObj = (extraTile && typeof extraTile === 'object' && 'node' in (extraTile as any))
+    ? (extraTile as unknown as { node: React.ReactNode; enabled?: boolean })
+    : null;
+  const extraNode = extraTileObj ? extraTileObj.node : (extraTile as React.ReactNode);
+  const extraEnabled = !!extraTileObj?.enabled;
+  const extraInEnabled = extraTileObj && extraEnabled ? extraNode : null;
+  const extraInAvailable = extraTileObj ? (extraEnabled ? null : extraNode) : extraNode;
+  const extraCount = extraNode ? 1 : 0;
+
   if (useGroups) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, px: 0.5, py: 0.5 }}>
-        {enabledList.length > 0 && (
+        {(enabledList.length > 0 || extraInEnabled) && (
           <Box>
             <GroupLabel>
-              Enabled Tools · {enabledList.length}
+              Enabled Tools · {enabledList.length + (extraInEnabled ? 1 : 0)}
             </GroupLabel>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
               {enabledList.map(renderIcon)}
+              {extraInEnabled}
             </Box>
           </Box>
         )}
         <Box>
           <GroupLabel>
-            Available Tools{availableList.length > 0 ? ` · ${availableList.length}` : ''}
+            Available Tools{(availableList.length + (extraInAvailable ? 1 : 0)) > 0 ? ` · ${availableList.length + (extraInAvailable ? 1 : 0)}` : ''}
           </GroupLabel>
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
+            {extraInAvailable}
             {availableList.map(renderIcon)}
             {renderAddTile()}
-            {extraTile}
           </Box>
         </Box>
         {renderPopover()}
@@ -2062,7 +2075,7 @@ function IntegrationStatusLite({
     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, px: 0.5, py: 0.5, alignItems: 'center' }}>
       {visible.map(renderIcon)}
       {renderAddTile()}
-      {extraTile}
+      {extraNode}
       {renderPopover()}
     </Box>
   );
