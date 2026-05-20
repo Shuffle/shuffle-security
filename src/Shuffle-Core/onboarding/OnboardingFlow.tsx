@@ -108,10 +108,9 @@ const processAuthData = (authData: ApiAuthEntry[]): ApiAuthEntry[] => {
   });
 };
 
-// All possible steps. 'product' is conditional on showProductChoice; 'welcome' is hidden when already configured.
+// All possible steps. 'product' is conditional on showProductChoice. Welcome was removed.
 const ALL_STEPS = [
   { key: 'product', label: 'Product', icon: <SparklesIcon />, path: '/onboarding/product' },
-  { key: 'welcome', label: 'Welcome', icon: <WavingHandIcon />, path: '/onboarding/welcome' },
   { key: 'sources', label: 'Sources', icon: <LinkIcon />, path: '/onboarding/sources' },
   { key: 'authenticate', label: 'Authenticate', icon: <VpnKeyIcon />, path: '/onboarding/authenticate' },
   { key: 'automate', label: 'Automate', icon: <RocketLaunchIcon />, path: '/onboarding/automate' },
