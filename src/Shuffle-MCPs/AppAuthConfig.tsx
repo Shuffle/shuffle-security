@@ -869,7 +869,13 @@ export const AppAuthCard = ({
 
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {auth.parameters.map((param, index) => {
+        {auth.parameters
+          .filter((param) => {
+            if (!hideUrlFields) return true;
+            const n = (param.name || param.id || '').toLowerCase();
+            return !(n.includes('url') || n.includes('endpoint') || n.includes('host'));
+          })
+          .map((param, index) => {
           // Use param.id if available, otherwise fallback to name or index
           const fieldKey = param.id || param.name || `param_${index}`;
           return (
