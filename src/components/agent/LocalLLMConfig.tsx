@@ -310,6 +310,20 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
           </Select>
         </FormControl>
 
+        {isShuffleAI && (
+          <Box sx={{
+            px: 2,
+            py: 1.5,
+            borderRadius: 1.5,
+            border: '1px solid hsl(var(--border))',
+            bgcolor: 'hsla(var(--muted) / 0.25)',
+          }}>
+            <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
+              Using Shuffle's hosted AI. No configuration required — your agent runs use Shuffle's default model.
+            </Typography>
+          </Box>
+        )}
+
         {effectivePreset === CUSTOM_PRESET && (
           <TextField
             size="small"
@@ -333,22 +347,71 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
       </Box>
 
       {/* Reuse the standard AppAuthCard — URL prefill disabled so OpenAI's
-          default URL doesn't get auto-filled when nothing is configured. */}
-      <AppAuthCard
-        app={OPENAI_ALGOLIA_APP}
-        authState={authState}
-        isExpanded={expanded}
-        onToggle={() => setExpanded((prev) => !prev)}
-        onAuthChange={handleAuthChange}
-        onTestConnection={(appId, authId) => handleTestConnection(appId, authId)}
-        onSaveAuth={(appId, creds) => handleSaveAuth(appId, creds, OPENAI_APP_NAME)}
-        apiAuthEntries={openaiEntries}
-        onRefreshAuth={refreshAuth}
-        disableUrlPrefill
-        hideHeader
-        hideStatusChips
-        hideDocsLink
-      />
+          default URL doesn't get auto-filled when nothing is configured.
+          Hidden entirely when Shuffle AI is the active provider. */}
+      {!isShuffleAI && (
+        <AppAuthCard
+          app={OPENAI_ALGOLIA_APP}
+          authState={authState}
+          isExpanded={expanded}
+          onToggle={() => setExpanded((prev) => !prev)}
+          onAuthChange={handleAuthChange}
+          onTestConnection={(appId, authId) => handleTestConnection(appId, authId)}
+          onSaveAuth={(appId, creds) => handleSaveAuth(appId, creds, OPENAI_APP_NAME)}
+          apiAuthEntries={openaiEntries}
+          onRefreshAuth={refreshAuth}
+          disableUrlPrefill
+          hideHeader
+          hideStatusChips
+          hideDocsLink
+        />
+      )}
+
+      <Dialog
+        open={confirmShuffleAIOpen}
+        onClose={() => setConfirmShuffleAIOpen(false)}
+        PaperProps={{
+          sx: {
+            bgcolor: 'hsl(var(--popover))',
+            color: 'hsl(var(--popover-foreground))',
+            border: '1px solid hsl(var(--border))',
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontSize: '1rem', fontWeight: 600 }}>
+          Switch to Shuffle AI?
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.85rem' }}>
+            Switching to Shuffle AI will remove your existing OpenAI app authentication.
+            Any other workflow or app using this OpenAI auth will lose access.
+            Do you want to continue?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            onClick={() => setConfirmShuffleAIOpen(false)}
+            sx={{ color: 'hsl(var(--muted-foreground))', textTransform: 'none', height: 36 }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={async () => {
+              setConfirmShuffleAIOpen(false);
+              await applyShuffleAI();
+            }}
+            sx={{
+              bgcolor: 'hsl(var(--primary))',
+              color: 'hsl(var(--primary-foreground))',
+              textTransform: 'none',
+              height: 36,
+              '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' },
+            }}
+          >
+            Remove and use Shuffle AI
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
