@@ -4718,7 +4718,7 @@ function UsecaseCard({
         {/* Source → Target */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem' }}>
-            {sourceCat}
+            {flow.source === 'case_management' ? 'Shuffle' : sourceCat}
           </Typography>
           <ArrowRight size={10} style={{ color: 'hsl(var(--muted-foreground))' }} />
           <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.7rem' }}>
