@@ -3578,11 +3578,25 @@ function UsecaseDetailContent({
             // only the Shuffle Security platform itself.
             const destIsShuffleOnly = endpoint.title === 'Destination'
               && DESTINATION_SHUFFLE_ONLY_FLOW_IDS.has(flow.id);
-            const appNamesWithShuffle = sourceIsShuffleOnly || destIsShuffleOnly
+            const baseAppNames = sourceIsShuffleOnly || destIsShuffleOnly
               ? ['Shuffle Security']
               : showShuffle
                 ? ['Shuffle Security', ...endpoint.appNames.filter((n) => n.toLowerCase() !== 'shuffle security')]
                 : endpoint.appNames;
+            // Inject any workflow apps that are enabled but don't belong to
+            // this category's catalog so the user can still see — and
+            // toggle — them locally instead of having ghost apps stuck in
+            // the workflow with no UI representation.
+            const baseSeen = new Set(baseAppNames.map((n) => normalizeAppName(n)));
+            const injected: string[] = [];
+            if (endpoint.title === 'Destination' || sourceIsShuffleOnly === false) {
+              for (const k of enabledNamesSet) {
+                if (!baseSeen.has(k)) { injected.push(k); baseSeen.add(k); }
+              }
+            }
+            const appNamesWithShuffle = injected.length
+              ? [...baseAppNames, ...injected]
+              : baseAppNames;
             const synthetic = (showShuffle || destIsShuffleOnly)
               ? [{
                   id: 'shuffle-security',
