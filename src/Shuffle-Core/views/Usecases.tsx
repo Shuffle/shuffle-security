@@ -3579,13 +3579,20 @@ function UsecaseDetailContent({
               workflows,
             ).filter((wf) => !linkedWorkflows.some((lw) => lw.id === wf.id))
           : [];
-        const allLinked = [...linkedWorkflows, ...forwardTicketsWorkflows];
+        // Notifications: append the org's defaults.notification_workflow if not
+        // already covered by tag/name matching.
+        const notifWorkflows = notificationWorkflow && !linkedWorkflows.some((lw) => lw.id === notificationWorkflow.id)
+          ? [notificationWorkflow]
+          : [];
+        const allLinked = [...linkedWorkflows, ...forwardTicketsWorkflows, ...notifWorkflows];
         if (allLinked.length === 0) return null;
         const labelHint = forwardTicketsWorkflows.length > 0 && flow.automationLabel
           ? `Matched on "${flow.automationLabel}" and "Forward Tickets"`
-          : flow.automationLabel
-            ? `Matched on label "${flow.automationLabel}"`
-            : 'Matched on label "Forward Tickets"';
+          : notifWorkflows.length > 0
+            ? 'Matched on org default notification workflow'
+            : flow.automationLabel
+              ? `Matched on label "${flow.automationLabel}"`
+              : 'Matched on label "Forward Tickets"';
         return (
           <Box sx={{ p: 3, borderRadius: 2, border: CARD_BORDER, bgcolor: CARD_BG, mb: 3 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, gap: 2, flexWrap: 'wrap' }}>
