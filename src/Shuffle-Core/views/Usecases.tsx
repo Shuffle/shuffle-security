@@ -3586,10 +3586,12 @@ function UsecaseDetailContent({
             // Inject any workflow apps that are enabled but don't belong to
             // this category's catalog so the user can still see — and
             // toggle — them locally instead of having ghost apps stuck in
-            // the workflow with no UI representation.
+            // the workflow with no UI representation. Only do this on the
+            // Destination tile (the togglable side); the Source tile is
+            // gated by category and shouldn't surface foreign apps.
             const baseSeen = new Set(baseAppNames.map((n) => normalizeAppName(n)));
             const injected: string[] = [];
-            if (endpoint.title === 'Destination' || sourceIsShuffleOnly === false) {
+            if (endpoint.title === 'Destination' && !destIsShuffleOnly) {
               for (const k of enabledNamesSet) {
                 if (!baseSeen.has(k)) { injected.push(k); baseSeen.add(k); }
               }
