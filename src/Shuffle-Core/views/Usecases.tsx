@@ -1484,6 +1484,7 @@ function IntegrationStatusLite({
   usecaseLabel,
   onAddApp,
   addAppLabel,
+  extraTile,
 }: {
   filterApps?: string[];
   singleLine?: boolean;
@@ -1512,6 +1513,9 @@ function IntegrationStatusLite({
   onAddApp?: () => void;
   /** Tooltip / aria label for the add button. */
   addAppLabel?: string;
+  /** Optional trailing node rendered inside the Available Tools row (e.g. the
+   *  Ingestion Webhook toggle). Sits alongside the app tiles. */
+  extraTile?: React.ReactNode;
 }) {
   const { apiUrl, authHeader } = useApi();
   const appDetail = useAppDetailOptional();
