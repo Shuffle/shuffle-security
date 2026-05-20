@@ -2734,6 +2734,7 @@ function UsecaseDetailContent({
   workflows = [],
   autoEnable = false,
   onAutoEnableConsumed,
+  showImage = false,
 }: {
   flowId: string | undefined;
   hideBackNav?: boolean;
