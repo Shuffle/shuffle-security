@@ -2033,7 +2033,7 @@ function IntegrationStatusLite({
   // Allow extraTile to be either a raw node (always rendered under Available)
   // or `{ node, enabled }` so it can be placed under Enabled when active.
   const extraTileObj = (extraTile && typeof extraTile === 'object' && 'node' in (extraTile as any))
-    ? (extraTile as { node: React.ReactNode; enabled?: boolean })
+    ? (extraTile as unknown as { node: React.ReactNode; enabled?: boolean })
     : null;
   const extraNode = extraTileObj ? extraTileObj.node : (extraTile as React.ReactNode);
   const extraEnabled = !!extraTileObj?.enabled;
