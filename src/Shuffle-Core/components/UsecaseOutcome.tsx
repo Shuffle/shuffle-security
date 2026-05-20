@@ -294,21 +294,21 @@ export function UsecaseOutcomeSection({
                       const iocCategory = iocCategoryByKey?.[entry.key];
                       const label = (
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 160 }}>
-                          <Box
-                            sx={{
-                              width: 20,
-                              height: 20,
-                              borderRadius: '50%',
-                              overflow: 'hidden',
-                              flexShrink: 0,
-                              bgcolor: '#ffffff',
-                              border: `1px solid ${BORDER}`,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            {entry.iconUrl ? (
+                          {entry.iconUrl && (
+                            <Box
+                              sx={{
+                                width: 20,
+                                height: 20,
+                                borderRadius: '50%',
+                                overflow: 'hidden',
+                                flexShrink: 0,
+                                bgcolor: '#ffffff',
+                                border: `1px solid ${BORDER}`,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
                               <Box
                                 component="img"
                                 src={entry.iconUrl}
@@ -316,12 +316,8 @@ export function UsecaseOutcomeSection({
                                 loading="lazy"
                                 sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
                               />
-                            ) : (
-                              <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: '#333' }}>
-                                {pretty.slice(0, 1)}
-                              </Typography>
-                            )}
-                          </Box>
+                            </Box>
+                          )}
                           <Typography sx={{ fontSize: '0.82rem', color: FG }}>
                             {pretty}
                           </Typography>
