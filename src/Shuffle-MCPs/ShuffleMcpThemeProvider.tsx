@@ -111,7 +111,7 @@ const useHtmlDarkClass = (enabled: boolean): boolean => {
 };
 
 export interface ShuffleMcpThemeProviderProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   /**
    * Color mode for the wrapped subtree.
    * - `"dark"` (default) — render exactly like Shuffle Security standalone.
