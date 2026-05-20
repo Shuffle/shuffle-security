@@ -2296,7 +2296,7 @@ function AiIncidentHandlingPromptsBlock() {
   if (loading) {
     return (
       <Box sx={{ p: 2.5, borderRadius: 2, border: `1px solid ${BORDER}`, bgcolor: CARD, mb: 3 }}>
-        <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: 0.6, mb: 1 }}>
+        <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, letterSpacing: 0.6, mb: 1 }}>
           AI Agent prompts
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
@@ -2310,7 +2310,7 @@ function AiIncidentHandlingPromptsBlock() {
   if (!enabled) {
     return (
       <Box sx={{ p: 2.5, borderRadius: 2, border: `1px solid ${BORDER}`, bgcolor: CARD, mb: 3 }}>
-        <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: 0.6, mb: 1 }}>
+        <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, letterSpacing: 0.6, mb: 1 }}>
           AI Agent prompts
         </Typography>
         <Typography sx={{ fontSize: '0.85rem', color: MUTED, mb: 1.5 }}>
@@ -2332,7 +2332,7 @@ function AiIncidentHandlingPromptsBlock() {
   return (
     <Box sx={{ p: 2.5, borderRadius: 2, border: `1px solid ${BORDER}`, bgcolor: CARD, mb: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, gap: 1, flexWrap: 'wrap' }}>
-        <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: 0.6 }}>
+        <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: MUTED, letterSpacing: 0.6 }}>
           AI Agent prompts · {prompts.length} active
         </Typography>
         <Button
