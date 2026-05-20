@@ -3131,6 +3131,33 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 bgcolor: 'hsl(var(--card))',
                 maxWidth: '100%',
               }}>
+                <Tooltip title="Configure the local LLM used for this agent">
+                  <Box
+                    component="button"
+                    type="button"
+                    onClick={() => {
+                      if (typeof window !== 'undefined') {
+                        window.dispatchEvent(
+                          new CustomEvent('agent-drawer-open', { detail: { tab: 'localLLM' } }),
+                        );
+                      }
+                    }}
+                    sx={{
+                      all: 'unset', cursor: 'pointer',
+                      display: 'inline-flex', alignItems: 'center', gap: 0.5,
+                      px: 1.5, py: 0.5,
+                      borderRadius: 999,
+                      fontSize: '0.8rem', fontWeight: 500,
+                      color: 'hsl(var(--muted-foreground))',
+                      bgcolor: 'transparent',
+                      transition: 'color 0.12s ease, background-color 0.12s ease',
+                      '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted) / 0.5)' },
+                    }}
+                  >
+                    <SettingsIcon size={14} />
+                    Choose LLM
+                  </Box>
+                </Tooltip>
                 <Tooltip title={agentRequestLoading ? 'Locked while the agent is running' : ''}>
                   <Box
                     component="button"
