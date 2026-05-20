@@ -3059,7 +3059,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                         <IconButton
                           type="button"
                           onClick={() => submitInput(actionInput)}
-                          disabled={actionInput.trim().length < 6 || agentRequestLoading}
+                          disabled={actionInput.trim().length < 1 || agentRequestLoading}
                           sx={{
                             width: 36, height: 36,
                             bgcolor: 'transparent',
@@ -3075,7 +3075,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       <Button
                         type="submit"
                         variant="contained"
-                        disabled={actionInput.trim().length < 6 || agentRequestLoading}
+                        disabled={actionInput.trim().length < 1 || agentRequestLoading}
                         startIcon={agentRequestLoading ? <CircularProgress size={14} sx={{ color: 'inherit' }} /> : null}
                         sx={{
                           height: 36,
@@ -3096,12 +3096,12 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   ) : (
                     <IconButton
                       type="submit"
-                      disabled={actionInput.trim().length < 6 || agentRequestLoading}
+                      disabled={actionInput.trim().length < 1 || agentRequestLoading}
                       sx={{
                         width: 36, height: 36,
-                        bgcolor: actionInput.trim().length >= 3 ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
-                        color: actionInput.trim().length >= 3 ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))',
-                        '&:hover': actionInput.trim().length >= 3 ? { filter: 'brightness(1.1)', bgcolor: 'hsl(var(--primary))' } : {},
+                        bgcolor: actionInput.trim().length >= 1 ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
+                        color: actionInput.trim().length >= 1 ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))',
+                        '&:hover': actionInput.trim().length >= 1 ? { filter: 'brightness(1.1)', bgcolor: 'hsl(var(--primary))' } : {},
                         '&.Mui-disabled': { bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' },
                       }}
                     >
