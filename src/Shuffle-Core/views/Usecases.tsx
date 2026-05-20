@@ -3549,9 +3549,10 @@ function UsecasesPageInner() {
   const filtered = useMemo(() => {
     let list = usecases;
 
-    // Hide inactive (non-animated) usecases for authenticated non-support users.
-    // Guests see everything so the page doesn't look empty before sign-up.
-    if (isAuthenticated && !(isSupport && showAllAsSupport)) {
+    // Only Support users with the "show all" toggle see inactive usecases.
+    // Everyone else — guests and regular authenticated users — sees only
+    // the activated (animated) ones, so the catalog reflects what's live.
+    if (!(isSupport && showAllAsSupport)) {
       list = list.filter((u) => u.animated === true);
     }
 
