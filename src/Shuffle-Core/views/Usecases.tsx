@@ -4924,6 +4924,24 @@ function UsecaseCard({
       }}
     >
       <CardActionArea onClick={onClick} sx={{ px: 2, py: '14.5px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+        {showImage && flow.referenceImage && (
+          <Box
+            component="img"
+            src={flow.referenceImage}
+            alt=""
+            loading="lazy"
+            sx={{
+              display: 'block',
+              width: 'calc(100% + 32px)',
+              mx: -2,
+              mt: '-14.5px',
+              mb: 1.25,
+              height: 96,
+              objectFit: 'cover',
+              borderBottom: '1px solid hsl(var(--border))',
+            }}
+          />
+        )}
         {/* Label + sync icon */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, width: '100%' }}>
           <Typography variant="body2" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', flexGrow: 1, fontSize: '0.82rem' }}>
