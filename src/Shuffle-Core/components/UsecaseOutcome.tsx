@@ -10,7 +10,38 @@
 import React from 'react';
 import { Box, Typography, Tooltip, CircularProgress } from '@mui/material';
 import { TrendingUp, TrendingDown, Activity } from 'lucide-react';
+import { useIsSupport } from '@/hooks/useIsSupport';
 import type { UsecaseOutcome } from '../lib/outcomes';
+
+/** Frontend routes we know exist in src/App.tsx — used by the support-only
+ *  CTA diagnostic chip to flag broken outcome links before users hit them. */
+const KNOWN_INTERNAL_ROUTES: ReadonlyArray<string | RegExp> = [
+  '/incidents', '/alerts', '/tickets', '/cases', '/jobs',
+  '/vulnerabilities', '/monitors', '/infrastructure',
+  '/agent', '/agents', '/dashboard', '/usecases', '/apps',
+  '/admin', '/users', '/organizations', '/settings', '/preferences',
+  '/templates', '/detection', '/detection/sigma', '/detection/pipelines',
+  '/incidents/observables', '/incidents/threat-feeds',
+  '/incidents/custom-fields', '/monitors/response',
+  '/assets', '/forms', '/software', '/packages',
+];
+
+/** Audit a CTA href against the known frontend routes. Returns a status the
+ *  support diagnostic chip can render. Only the path part of the URL is
+ *  inspected; query/hash are ignored. */
+function auditCtaPath(href: string): 'ok' | 'broken' | 'external' {
+  if (/^https?:/i.test(href) || /^mailto:/i.test(href)) return 'external';
+  const path = href.split(/[?#]/)[0];
+  if (!path.startsWith('/')) return 'broken';
+  for (const route of KNOWN_INTERNAL_ROUTES) {
+    if (typeof route === 'string') {
+      if (path === route || path.startsWith(route + '/')) return 'ok';
+    } else if (route.test(path)) {
+      return 'ok';
+    }
+  }
+  return 'broken';
+}
 
 const FG = 'hsl(var(--foreground, 0 0% 100%))';
 const MUTED = 'hsl(var(--muted-foreground, 0 0% 60%))';
