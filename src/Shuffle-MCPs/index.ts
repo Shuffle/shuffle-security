@@ -10,6 +10,8 @@
 // specificity 0).
 import './shuffle-mcp.css';
 
+export type { ShuffleHostProps } from './host-props';
+
 export { ShuffleMCP, default } from './ShuffleMCP';
 export type { ShuffleMCPHandle } from './ShuffleMCP';
 export { default as AppDetailDrawer } from './AppDetailDrawer';
