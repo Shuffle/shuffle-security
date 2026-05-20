@@ -3479,15 +3479,14 @@ function UsecaseDetailContent({
               const k = normalizeAppName(n);
               if (next.has(k) && !seen.has(k)) { activeNames.push(n); seen.add(k); }
             }
-            // Preserve any currently-enabled app that isn't in the local
-            // catalog snapshot (e.g. a Communication app already wired into
-            // Forward Tickets before the catalog was fetched).
-            for (const k of next) {
-              if (!seen.has(k)) { activeNames.push(k); seen.add(k); }
-            }
+            // Only send apps we actually surface in the local catalog. Any
+            // residual names from the workflow that are NOT visible here
+            // (internal Shuffle runtime apps, or apps from another category)
+            // are intentionally dropped from the save payload — the user
+            // can only toggle what they can see.
             // Make sure the just-enabled app is in the list even if it isn't
-            // in the local catalog snapshot.
-            if (enabled && !seen.has(key)) activeNames.push(appName);
+            // in the local catalog snapshot (the user explicitly clicked it).
+            if (enabled && !seen.has(key)) { activeNames.push(appName); seen.add(key); }
             try {
               const body: Record<string, string> = { label: flow.automationLabel };
               if (flow.automationCategory) body.category = flow.automationCategory;
