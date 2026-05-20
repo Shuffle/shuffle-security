@@ -4516,7 +4516,6 @@ function UsecasesPageInner() {
               color: 'hsl(var(--muted-foreground))',
               fontSize: '0.7rem',
               fontWeight: 600,
-              textTransform: 'uppercase',
               letterSpacing: '0.05em',
               mb: 1,
               px: 1,
