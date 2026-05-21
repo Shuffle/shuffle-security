@@ -157,8 +157,9 @@ export interface ShuffleCoreThemeProviderProps {
   children: React.ReactNode;
   /**
    * Color mode for the wrapped subtree.
-   * - `"dark"` (default) — render exactly like Shuffle Security standalone.
-   * - `"auto"` — follow the host page (`.dark` class on `<html>`).
+   * - `"auto"` (default) — follow the host page's `.dark` class on `<html>`.
+   *   Shuffle Security itself uses this so its in-app light/dark toggle
+   *   actually flips embedded components.
    * - `"light"` / `"dark"` — pin the subtree to that scheme. Tailwind dark
    *   variants and CSS variable overrides are scoped via a wrapping `<div>`.
    */
@@ -167,7 +168,7 @@ export interface ShuffleCoreThemeProviderProps {
 
 export const ShuffleCoreThemeProvider: React.FC<ShuffleCoreThemeProviderProps> = ({
   children,
-  mode = "dark",
+  mode = "auto",
 }) => {
   const parent = useMuiTheme();
   const htmlIsDark = useHtmlDarkClass(mode === "auto");
