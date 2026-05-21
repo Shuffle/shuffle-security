@@ -36,6 +36,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
   showCheckbox = false,
   multiSelect = false,
   selectedApps = EMPTY_SELECTED_APPS,
+  disableAutoSelectValidatedApps = false,
   preventDefault = false,
   inline = false,
   initialQuery = '',
@@ -158,6 +159,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
 
   // Auto-select validated apps when they're loaded (validated = tests ran successfully)
   useEffect(() => {
+    if (disableAutoSelectValidatedApps) return;
     if (authenticatedApps.length > 0 && results.length > 0) {
       const validatedApps = authenticatedApps.filter(auth => auth.validation?.valid);
       const appsToAutoSelect = results.filter(app => 
@@ -177,7 +179,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
         }
       }
     }
-  }, [authenticatedApps, results]);
+  }, [authenticatedApps, results, disableAutoSelectValidatedApps]);
 
   // Sync external authenticatedApps
   useEffect(() => {

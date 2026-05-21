@@ -65,6 +65,8 @@ const AgentsView = ({
   isLoggedIn,
   userdata,
   serverside,
+  theme,
+  colorMode,
 }: AgentsViewProps) => {
   useSyncHostBaseUrl(globalUrl);
   const [selectedRun, setSelectedRun] = useState<AgentRun | null>(null);
@@ -184,6 +186,8 @@ const AgentsView = ({
           submitTooltip={editing ? '⌘+Enter to save' : undefined}
           disableSchedule={Boolean(editing)}
           disableScheduleTooltip={editing ? 'Scheduling is disabled while editing an existing schedule' : undefined}
+          theme={theme}
+          colorMode={colorMode}
         />
         {agentView === 'start' && (
           <Box sx={{ pt: { xs: 4, md: '8vh' } }}>
@@ -202,6 +206,8 @@ const AgentsView = ({
         run={selectedRun}
         apiBaseUrl={globalUrl}
         onSchedule={onSchedule}
+        theme={theme}
+        colorMode={colorMode}
       />
 
       <AgentRunDrawer
@@ -211,7 +217,9 @@ const AgentsView = ({
         globalUrl={globalUrl}
         localLLMSlot={effectiveLocalLLMSlot}
         permissionsSlot={permissionsSlot}
-        agentUIProps={{ onSchedule, apiBaseUrl: globalUrl }}
+        theme={theme}
+        colorMode={colorMode}
+        agentUIProps={{ onSchedule, apiBaseUrl: globalUrl, theme, colorMode }}
       />
     </Box>
   );
