@@ -114,16 +114,19 @@ export interface ShuffleMcpThemeProviderProps {
   children?: React.ReactNode;
   /**
    * Color mode for the wrapped subtree.
-   * - `"dark"` (default) — render exactly like Shuffle Security standalone.
-   * - `"auto"` — follow the host page's `.dark` class on `<html>`.
-   * - `"light"` / `"dark"` — pin the subtree to that scheme via a wrapping div.
+   * - `"auto"` (default) — follow the host page's `.dark` class on `<html>`.
+   *   This is what Shuffle Security itself uses so the in-app light/dark
+   *   toggle actually flips embedded components.
+   * - `"light"` / `"dark"` — pin the subtree to that scheme via a wrapping
+   *   div. Useful when embedding in a host that doesn't manage `.dark` on
+   *   `<html>`.
    */
   mode?: ShuffleMcpColorMode;
 }
 
 export const ShuffleMcpThemeProvider: React.FC<ShuffleMcpThemeProviderProps> = ({
   children,
-  mode = "dark",
+  mode = "auto",
 }) => {
   const parent = useMuiTheme();
   const htmlIsDark = useHtmlDarkClass(mode === "auto");
