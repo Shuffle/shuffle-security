@@ -16,9 +16,10 @@ import AgentUI from '@/Shuffle-MCPs/components/AgentUI';
 import AgentActivityList from '@/Shuffle-MCPs/components/AgentActivityList';
 import AgentExecutionDrawer from '@/Shuffle-MCPs/components/AgentExecutionDrawer';
 import AgentRunDrawer, { type AgentRunDrawerTab } from '@/Shuffle-MCPs/components/AgentRunDrawer';
+import LocalLLMConfig from '@/Shuffle-MCPs/components/LocalLLMConfig';
 import type { AgentRun } from '@/Shuffle-MCPs/agentActivity';
 import type { AgentUIApp, AgentUIProps } from '@/Shuffle-MCPs/components/AgentUI';
-import { updateAgentScheduleConfig } from '@/Shuffle-MCPs/agentActivity';
+import { scheduleAgentRun, updateAgentScheduleConfig } from '@/Shuffle-MCPs/agentActivity';
 import { toast } from '@/Shuffle-MCPs/toast';
 import type { ShuffleHostProps } from '@/Shuffle-MCPs/host-props';
 import { useSyncHostBaseUrl } from '@/Shuffle-MCPs/useSyncHostBaseUrl';
@@ -29,7 +30,11 @@ export interface AgentsViewProps extends ShuffleHostProps {
    * from AgentUI and is responsible for creating the underlying scheduled
    * workflow on the host backend.
    */
-  onSchedule: NonNullable<AgentUIProps['onSchedule']>;
+  onSchedule?: NonNullable<AgentUIProps['onSchedule']>;
+  /** Optional Shuffle API key. Falls back to the shared API config/session. */
+  apiKey?: string;
+  /** Optional Shuffle Org ID — sent as the `Org-Id` header on library fetches. */
+  orgId?: string;
   /** Override max content width of the inner stack. Defaults to 820. */
   maxWidth?: number;
   /**
@@ -46,7 +51,7 @@ export interface AgentsViewProps extends ShuffleHostProps {
   /**
    * Content rendered inside the built-in AgentRunDrawer's Local LLM tab
    * when no `onChooseLLM` is provided. Use to plug in your own local LLM
-   * config form. When omitted, a minimal built-in placeholder is shown.
+   * config form. When omitted, the built-in Local LLM configuration UI is shown.
    */
   localLLMSlot?: React.ReactNode;
   /** Content for the built-in AgentRunDrawer's Permissions tab. Optional. */
@@ -67,6 +72,8 @@ const AgentsView = ({
   serverside,
   theme,
   colorMode,
+  apiKey,
+  orgId,
 }: AgentsViewProps) => {
   useSyncHostBaseUrl(globalUrl);
   const [selectedRun, setSelectedRun] = useState<AgentRun | null>(null);
@@ -85,20 +92,28 @@ const AgentsView = ({
     tab: 'localLLM',
   });
 
+  const effectiveSchedule = useCallback<NonNullable<AgentUIProps['onSchedule']>>(
+    async (info) => {
+      if (onSchedule) return onSchedule(info);
+      await scheduleAgentRun({ ...info, apiKey, apiBaseUrl: globalUrl, orgId });
+    },
+    [onSchedule, apiKey, globalUrl, orgId],
+  );
+
   const effectiveLocalLLMSlot = useMemo(
-    () =>
-      localLLMSlot ?? (
-        <Box sx={{ p: 3, color: 'hsl(var(--muted-foreground))', fontSize: '0.85rem', lineHeight: 1.6 }}>
-          <Typography sx={{ fontSize: '0.95rem', fontWeight: 600, color: 'hsl(var(--foreground))', mb: 1 }}>
-            Local LLM not configured
-          </Typography>
-          This host hasn't wired a Local LLM picker yet. Pass an{' '}
-          <code style={{ fontFamily: 'monospace' }}>onChooseLLM</code> handler or a{' '}
-          <code style={{ fontFamily: 'monospace' }}>localLLMSlot</code> to{' '}
-          <code style={{ fontFamily: 'monospace' }}>&lt;AgentsView /&gt;</code> to render your own configuration UI here.
-        </Box>
-      ),
-    [localLLMSlot],
+    () => localLLMSlot ?? (
+      <LocalLLMConfig
+        compact
+        globalUrl={globalUrl}
+        userdata={userdata}
+        isLoaded={isLoaded}
+        isLoggedIn={isLoggedIn}
+        serverside={serverside}
+        theme={theme}
+        colorMode={colorMode}
+      />
+    ),
+    [localLLMSlot, globalUrl, userdata, isLoaded, isLoggedIn, serverside, theme, colorMode],
   );
 
   const handleChooseLLM = useCallback(() => {
@@ -176,7 +191,9 @@ const AgentsView = ({
           maxWidth={maxWidth}
           apiBaseUrl={globalUrl}
           onViewChange={setAgentView}
-          onSchedule={onSchedule}
+          onSchedule={effectiveSchedule}
+          apiKey={apiKey}
+          orgId={orgId}
           onChooseLLM={handleChooseLLM}
           hideChooseLLM={hideChooseLLM}
           defaultInput={prefill.input}
@@ -193,6 +210,8 @@ const AgentsView = ({
           <Box sx={{ pt: { xs: 4, md: '8vh' } }}>
             <AgentActivityList
               apiBaseUrl={globalUrl}
+              apiKey={apiKey}
+              orgId={orgId}
               onRunClick={setSelectedRun}
               onEditWorkflow={handleEditWorkflow}
             />
@@ -205,7 +224,9 @@ const AgentsView = ({
         onClose={() => setSelectedRun(null)}
         run={selectedRun}
         apiBaseUrl={globalUrl}
-        onSchedule={onSchedule}
+        onSchedule={effectiveSchedule}
+        apiKey={apiKey}
+        orgId={orgId}
         theme={theme}
         colorMode={colorMode}
       />
@@ -219,7 +240,7 @@ const AgentsView = ({
         permissionsSlot={permissionsSlot}
         theme={theme}
         colorMode={colorMode}
-        agentUIProps={{ onSchedule, apiBaseUrl: globalUrl, theme, colorMode }}
+        agentUIProps={{ onSchedule: effectiveSchedule, apiBaseUrl: globalUrl, apiKey, orgId, theme, colorMode }}
       />
     </Box>
   );
