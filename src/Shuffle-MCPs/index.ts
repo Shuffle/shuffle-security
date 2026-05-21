@@ -66,6 +66,7 @@ import AgentActivityListRaw from '@/Shuffle-MCPs/components/AgentActivityList';
 import AgentExecutionDrawerRaw from '@/Shuffle-MCPs/components/AgentExecutionDrawer';
 import AgentsViewRaw from '@/Shuffle-MCPs/views/AgentsView';
 import AgentRunDiagnosisBannerRaw from '@/Shuffle-MCPs/components/AgentRunDiagnosisBanner';
+import LocalLLMConfigRaw from '@/Shuffle-MCPs/components/LocalLLMConfig';
 
 export { ShuffleMcpThemeProvider } from '@/Shuffle-MCPs/ShuffleMcpThemeProvider';
 export type { ShuffleMcpColorMode, ShuffleMcpThemeProviderProps } from '@/Shuffle-MCPs/ShuffleMcpThemeProvider';
@@ -98,6 +99,8 @@ export type { AgentExecutionDrawerProps } from '@/Shuffle-MCPs/components/AgentE
 export const AgentsView = withMcpTheme(AgentsViewRaw as React.ComponentType<any>, 'AgentsView');
 export type { AgentsViewProps } from '@/Shuffle-MCPs/views/AgentsView';
 export const AgentRunDiagnosisBanner = withMcpTheme(AgentRunDiagnosisBannerRaw as React.ComponentType<any>, 'AgentRunDiagnosisBanner');
+export const LocalLLMConfig = withMcpTheme(LocalLLMConfigRaw as React.ComponentType<any>, 'LocalLLMConfig');
+export type { LocalLLMConfigProps, AgentLocalModel, LocalLLMTestResult } from '@/Shuffle-MCPs/components/LocalLLMConfig';
 export {
   parseRunResult,
   getFailureInfo,
@@ -109,7 +112,7 @@ export type {
   DiagnosisEvidence,
   OutputDiagnosis,
 } from '@/Shuffle-MCPs/agentDiagnosis';
-export { searchAgentActivity } from '@/Shuffle-MCPs/agentActivity';
+export { searchAgentActivity, scheduleAgentRun } from '@/Shuffle-MCPs/agentActivity';
 export type {
   AgentRun,
   AgentRunResult,

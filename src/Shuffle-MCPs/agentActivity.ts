@@ -93,6 +93,49 @@ const resolveHeaders = (apiKey?: string, orgId?: string): Record<string, string>
   return h;
 };
 
+const uuid = (): string => {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return (crypto as Crypto).randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
+export type ScheduleStepId = 'name' | 'workflow' | 'schedule';
+export type ScheduleStepState = 'active' | 'done' | 'error';
+export interface ScheduleStepEvent {
+  id: ScheduleStepId;
+  state: ScheduleStepState;
+  detail?: string;
+}
+
+export interface ScheduleAgentRunArgs {
+  cron: string;
+  input: string;
+  apps?: Array<{ name: string; id?: string; icon?: string }>;
+  onStep?: (event: ScheduleStepEvent) => void;
+  apiKey?: string;
+  apiBaseUrl?: string;
+  orgId?: string;
+}
+
+const buildAppNameValue = (apps: Array<{ name: string }> = []): string =>
+  apps.filter((a) => !!a?.name).map((a) => a.name).join(',');
+
+const buildScheduleName = (input: string): { name: string; description: string } => {
+  const prompt = (input || '').trim();
+  const words = prompt
+    .replace(/[^a-zA-Z0-9\s-]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 6);
+  const title = words.length
+    ? words.map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
+    : 'Scheduled Agent Run';
+  return { name: title.slice(0, 80), description: (prompt || 'Scheduled Agent Run').slice(0, 240) };
+};
+
 /**
  * Search agent workflow executions (workflow_id = "AGENT" by default).
  */
@@ -171,6 +214,89 @@ export const listAgentScheduleWorkflows = async (
   return list
     .filter((w) => w && w.workflow_type === 'AGENT_SCHEDULE')
     .map((w) => ({ id: w.id || w._id, name: w.name || 'Untitled', description: w.description }));
+};
+
+/** Create a scheduled AI Agent workflow directly from the library. */
+export const scheduleAgentRun = async ({ cron, input, apps = [], onStep, apiKey, apiBaseUrl, orgId }: ScheduleAgentRunArgs) => {
+  const headers = { 'Content-Type': 'application/json', ...resolveHeaders(apiKey, orgId) };
+  const step = (id: ScheduleStepId, state: ScheduleStepState, detail?: string) => {
+    try { onStep?.({ id, state, detail }); } catch { /* ignore */ }
+  };
+
+  step('name', 'active');
+  const { name, description } = buildScheduleName(input);
+  step('name', 'done', name);
+
+  step('workflow', 'active');
+  const createRes = await fetch(resolveUrl('/api/v1/workflows', apiBaseUrl), {
+    method: 'POST',
+    credentials: 'include',
+    headers,
+    body: JSON.stringify({ name, description }),
+  });
+  if (!createRes.ok) {
+    step('workflow', 'error', `HTTP ${createRes.status}`);
+    throw new Error(`Create workflow failed (${createRes.status})`);
+  }
+  const created = await createRes.json();
+  const workflowId: string = created.id || created._id || created.workflow_id;
+  if (!workflowId) {
+    step('workflow', 'error', 'no id returned');
+    throw new Error('Workflow created but no id returned');
+  }
+
+  const triggerId = uuid();
+  const actionId = uuid();
+  const branchId = uuid();
+  const trigger = {
+    app_name: 'Schedule', app_version: '1.0.0', environment: 'cloud', id_: triggerId, _id_: triggerId, id: triggerId,
+    finished: true, label: name, type: 'TRIGGER', is_valid: true, trigger_type: 'SCHEDULE', status: 'running', name: 'Schedule',
+    parameters: [{ name: 'cron', example: '', value: cron }, { name: 'execution_argument', example: '', value: '' }],
+    position: { x: 254, y: 617 }, flowOrientation: 'horizontal',
+  };
+  const action = {
+    name: 'Run LLM', label: 'AI_Agent_1', app_name: 'AI Agent', app_version: '1.0.0', app_id: 'shuffle_agent',
+    description: 'Run an LLM query against any tool you want', environment: 'Cloud', errors: [], id_: actionId, _id_: actionId, id: actionId,
+    is_valid: true, type: 'ACTION', isStartNode: true, run_magic_output: false, authentication: [], example: '', category: '', authentication_id: '',
+    template: false, finished: true, flowOrientation: 'horizontal', position: { x: 517, y: 370 }, selectedAuthentication: {}, circleId: uuid(), execution_delay: 0,
+    parameters: [
+      { name: 'app_name', value: buildAppNameValue(apps), required: true, description: 'Comma-separated list of app names the agent is allowed to use.' },
+      { name: 'input', value: input, required: true, multiline: true, description: 'The input data for the LLM query' },
+    ],
+  };
+  const updated = { ...created, id: workflowId, name, description, start: actionId, workflow_type: 'AGENT_SCHEDULE', actions: [action], triggers: [trigger], branches: [{ source_id: triggerId, destination_id: actionId, id: branchId }] };
+
+  const putRes = await fetch(resolveUrl(`/api/v1/workflows/${workflowId}`, apiBaseUrl), {
+    method: 'PUT', credentials: 'include', headers, body: JSON.stringify(updated),
+  });
+  if (!putRes.ok) {
+    step('workflow', 'error', `HTTP ${putRes.status}`);
+    throw new Error(`Update workflow failed (${putRes.status})`);
+  }
+  step('workflow', 'done', name);
+
+  step('schedule', 'active');
+  const schedRes = await fetch(resolveUrl(`/api/v1/workflows/${workflowId}/schedule`, apiBaseUrl), {
+    method: 'POST',
+    credentials: 'include',
+    headers,
+    body: JSON.stringify({
+      name: 'Schedule', frequency: cron, cron, execution_argument: '', environment: 'cloud', id: triggerId, start: actionId,
+      parameters: [{ name: 'cron', value: cron }, { name: 'execution_argument', value: '' }],
+    }),
+  }).catch(async (err) => {
+    await fetch(resolveUrl(`/api/v1/workflows/${workflowId}`, apiBaseUrl), { method: 'DELETE', credentials: 'include', headers: resolveHeaders(apiKey, orgId) }).catch(() => undefined);
+    throw err;
+  });
+
+  if (!schedRes.ok) {
+    const errText = await schedRes.text().catch(() => '');
+    await fetch(resolveUrl(`/api/v1/workflows/${workflowId}`, apiBaseUrl), { method: 'DELETE', credentials: 'include', headers: resolveHeaders(apiKey, orgId) }).catch(() => undefined);
+    step('schedule', 'error', `HTTP ${schedRes.status}`);
+    throw new Error(`Scheduler rejected the cron \`${cron}\` (HTTP ${schedRes.status})${errText ? `: ${errText}` : ''}. The workflow has been deleted.`);
+  }
+  step('schedule', 'done', cron);
+  return { workflowId, name, cron };
 };
 
 /** Find the AI Agent action's `input` parameter inside a workflow. */

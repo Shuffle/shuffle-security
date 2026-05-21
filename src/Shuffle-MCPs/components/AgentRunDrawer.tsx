@@ -1,6 +1,6 @@
 /**
  * AgentRunDrawer — standalone right-side drawer that hosts the canonical
- * `AgentUI` "Run Agent" experience plus optional caller-provided slots for
+ * `AgentUI` "Run Agent" experience plus caller-provided or built-in slots for
  * Permissions and Local LLM tabs.
  *
  * Replaces the project-only `AgentPermissionsDrawer`. It has zero
@@ -11,8 +11,7 @@
  *
  * Design:
  *   - Tabs: Run (always), Permissions (if `permissionsSlot`), Local LLM
- *     (if `localLLMSlot`). When neither slot is provided, the tab strip is
- *     hidden and the drawer shows only the AgentUI.
+ *     (built in by default, overridable with `localLLMSlot`).
  *   - All colors use HSL tokens so themes flow through. Falls back to
  *     reasonable inline values when tokens are missing.
  */
@@ -37,6 +36,7 @@ import {
 
 import AgentIcon from '@/Shuffle-MCPs/components/AgentIcon';
 import AgentUI, { type AgentUIProps } from '@/Shuffle-MCPs/components/AgentUI';
+import LocalLLMConfig from '@/Shuffle-MCPs/components/LocalLLMConfig';
 import type { ShuffleHostProps } from '@/Shuffle-MCPs/host-props';
 import { useSyncHostBaseUrl } from '@/Shuffle-MCPs/useSyncHostBaseUrl';
 import { useShuffleMcpTheme } from '@/Shuffle-MCPs/ShuffleMcpThemeProvider';
@@ -50,7 +50,7 @@ export interface AgentRunDrawerProps extends ShuffleHostProps {
   initialTab?: AgentRunDrawerTab;
   /** Render content for the Permissions tab. Tab is hidden when omitted. */
   permissionsSlot?: React.ReactNode;
-  /** Render content for the Local LLM tab. Tab is hidden when omitted. */
+  /** Render content for the Local LLM tab. Defaults to the bundled Local LLM configuration UI. */
   localLLMSlot?: React.ReactNode;
   /**
    * Custom badge node next to the Local LLM tab label (e.g. a green check
@@ -103,6 +103,10 @@ const AgentRunDrawer = ({
   globalUrl,
   theme,
   colorMode,
+  userdata,
+  isLoaded,
+  isLoggedIn,
+  serverside,
 }: AgentRunDrawerProps) => {
   // Sync host base URL into the runtime so all internal fetches honor it.
   useSyncHostBaseUrl(globalUrl);
@@ -128,10 +132,36 @@ const AgentRunDrawer = ({
     };
   }, []);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onOpen = (event: Event) => {
+      const tab = (event as CustomEvent<{ tab?: AgentRunDrawerTab }>).detail?.tab;
+      if (tab === 'localLLM') {
+        event.preventDefault();
+        setActiveTab('localLLM');
+      }
+    };
+    window.addEventListener('agent-drawer-open', onOpen as EventListener);
+    return () => window.removeEventListener('agent-drawer-open', onOpen as EventListener);
+  }, []);
+
+  const effectiveLocalLLMSlot = localLLMSlot ?? (
+    <LocalLLMConfig
+      compact
+      globalUrl={globalUrl}
+      userdata={userdata}
+      isLoaded={isLoaded}
+      isLoggedIn={isLoggedIn}
+      serverside={serverside}
+      theme={theme}
+      colorMode={colorMode}
+    />
+  );
+
   const visibleTabs = TAB_ORDER.filter((t) => {
     if (t === 'run') return true;
     if (t === 'permissions') return !!permissionsSlot;
-    if (t === 'localLLM') return !!localLLMSlot;
+    if (t === 'localLLM') return !!effectiveLocalLLMSlot;
     return false;
   });
   const showTabs = visibleTabs.length > 1;
@@ -295,8 +325,8 @@ const AgentRunDrawer = ({
         {safeActiveTab === 'permissions' && permissionsSlot && (
           <Box sx={{ px: 3, py: 2.5 }}>{permissionsSlot}</Box>
         )}
-        {safeActiveTab === 'localLLM' && localLLMSlot && (
-          <Box sx={{ px: 3, py: 2.5 }}>{localLLMSlot}</Box>
+        {safeActiveTab === 'localLLM' && effectiveLocalLLMSlot && (
+          <Box sx={{ px: 3, py: 2.5 }}>{effectiveLocalLLMSlot}</Box>
         )}
       </Box>
     </Drawer>
