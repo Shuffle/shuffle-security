@@ -19,6 +19,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import type { ShuffleHostProps } from '@/Shuffle-MCPs/host-props';
+import { useSyncHostBaseUrl } from '@/Shuffle-MCPs/useSyncHostBaseUrl';
 import {
   THREAT_INTEL_PATTERNS,
   EMAIL_APP_PATTERNS,
