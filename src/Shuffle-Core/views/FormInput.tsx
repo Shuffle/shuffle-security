@@ -2089,7 +2089,7 @@ const FormInput = (defaultprops: any) => {
 									}
 
 									return (
-										<div style={{marginBottom: 10, borderBottom: "1px solid rgba(255,255,255,0.3)", paddingBottom: 5, }} key={index}>
+										<div style={{marginBottom: 10, borderBottom: "1px solid hsl(var(--border))", paddingBottom: 5, }} key={index}>
 											{foundresult?.action?.label?.replaceAll("_", " ")} - {foundresult.status}:
 											<br />
 
