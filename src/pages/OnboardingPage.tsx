@@ -1,4 +1,4 @@
-import { OnboardingFlow } from '@/Shuffle-Core/onboarding/OnboardingFlow';
+import { OnboardingFlow } from '@/Shuffle-Core/onboarding';
 import { useDemo } from '@/context/DemoContext';
 import { useAuth } from '@/context/AuthContext';
 import { API_CONFIG } from '@/Shuffle-MCPs/api';
@@ -13,6 +13,7 @@ const OnboardingPage = () => {
   const { isAuthenticated, isLoading, userInfo } = useAuth();
   return (
     <OnboardingFlow
+      theme="dark"
       product="security"
       isLoaded={!isLoading}
       isLoggedIn={isAuthenticated}
