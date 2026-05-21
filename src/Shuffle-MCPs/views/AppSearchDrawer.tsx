@@ -169,6 +169,7 @@ export default function AppSearchDrawer({
   colorMode,
 }: AppSearchDrawerProps) {
   const themeScope = useShuffleMcpTheme();
+  const scopeClassName = themeScope?.scopeClassName ?? (theme === 'dark' ? 'shuffle-mcp-scope dark' : theme === 'light' ? 'shuffle-mcp-scope' : undefined);
   const [detailAppName, setDetailAppName] = useState<string | null>(null);
   const [detailAppId, setDetailAppId] = useState<string | null>(null);
   const [highlightActive, setHighlightActive] = useState(false);
@@ -271,7 +272,7 @@ export default function AppSearchDrawer({
         onClose={handleClose}
         slotProps={{
           paper: {
-            className: themeScope?.scopeClassName,
+            className: scopeClassName,
             sx: {
               width: { xs: '100%', sm: width },
               maxWidth: '100vw',
