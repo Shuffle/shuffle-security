@@ -15,7 +15,10 @@ import { ShuffleMcpThemeProvider, type ShuffleMcpColorMode } from '@/Shuffle-MCP
 /**
  * Every exported component accepts an optional `theme` prop:
  *   - `"light"` / `"dark"` — pin the subtree to that scheme
- *   - `"system"` (default) — follow the host page's `.dark` class on `<html>`
+ *   - `"system"` — follow the host page's `.dark` class on `<html>`
+ *
+ * If `theme` is omitted, defaults to `"dark"` (Shuffle's primary surface).
+ * Callers can always override by passing `theme="light"` or `theme="system"`.
  *
  * `colorMode` is preserved as a legacy alias (`"auto"` == `"system"`).
  */
@@ -25,7 +28,8 @@ type WithTheme<P> = P & { theme?: ShuffleTheme; colorMode?: ShuffleMcpColorMode 
 const resolveMode = (theme?: ShuffleTheme, colorMode?: ShuffleMcpColorMode): ShuffleMcpColorMode => {
   if (theme === 'light' || theme === 'dark') return theme;
   if (theme === 'system') return 'auto';
-  return colorMode ?? 'auto';
+  if (colorMode) return colorMode;
+  return 'dark';
 };
 
 const withMcpTheme = <P extends object>(Inner: React.ComponentType<P>, displayName: string) => {
