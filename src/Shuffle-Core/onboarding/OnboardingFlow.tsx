@@ -1436,9 +1436,9 @@ const OnboardingFlow = ({
                 component={Link}
                 to="/dashboard"
                 sx={{
-                  color: 'text.secondary',
+                  color: 'hsl(var(--muted-foreground))',
                   textDecoration: 'none',
-                  '&:hover': { color: 'text.primary', backgroundColor: 'action.hover' },
+                  '&:hover': { color: 'hsl(var(--foreground))', backgroundColor: 'hsl(var(--muted))' },
                 }}
               >
                 Skip for now
@@ -1452,8 +1452,8 @@ const OnboardingFlow = ({
                   onClick={handleBack}
                   startIcon={<ArrowBackIcon />}
                   sx={{
-                    color: 'text.secondary',
-                    '&:hover': { color: 'text.primary', backgroundColor: 'action.hover' },
+                    color: 'hsl(var(--muted-foreground))',
+                    '&:hover': { color: 'hsl(var(--foreground))', backgroundColor: 'hsl(var(--muted))' },
                   }}
                 >
                   Back
