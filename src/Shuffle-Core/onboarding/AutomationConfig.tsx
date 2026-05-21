@@ -10,6 +10,7 @@ import type {
   AppAuthState,
   ApiAuthEntry as AppAuthApiEntry,
   AlgoliaSearchApp,
+  ShuffleHostProps,
 } from '@shuffleio/shuffle-mcps';
 import {
   Box,
@@ -167,7 +168,7 @@ interface SelectedApp {
 const isValidSelectedApp = (app: SelectedApp | null | undefined): app is SelectedApp =>
   !!app?.objectID && !!app?.name;
 
-interface AutomationConfigProps {
+interface AutomationConfigProps extends ShuffleHostProps {
   enrichmentState: EnrichmentState;
   onEnrichmentChange: (state: EnrichmentState) => void;
   onSave?: (state: EnrichmentState) => void;
@@ -293,6 +294,11 @@ export const AutomationConfig = ({
   onAuthChange,
   onTestConnection,
   onSaveAuth,
+  globalUrl,
+  userdata,
+  isLoaded,
+  isLoggedIn,
+  serverside,
 }: AutomationConfigProps) => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [configuringAppId, setConfiguringAppId] = useState<string | null>(null);
@@ -836,6 +842,11 @@ export const AutomationConfig = ({
     return (
       <Box sx={{ mt: 1 }}>
         <AppAuthCard
+          globalUrl={globalUrl}
+          userdata={userdata}
+          isLoaded={isLoaded}
+          isLoggedIn={isLoggedIn}
+          serverside={serverside}
           app={algoliaApp}
           authState={curAuthState}
           isExpanded={true}
@@ -1669,7 +1680,7 @@ export const AutomationConfig = ({
     <Box>
       {/* Connected Apps — reuse sidebar component */}
       <Box sx={{ mb: 3, ml: -2 }}>
-        <IntegrationStatus collapsed={false} iconSize={30} showAll hideAddButton />
+        <IntegrationStatus globalUrl={globalUrl} userdata={userdata} isLoaded={isLoaded} isLoggedIn={isLoggedIn} serverside={serverside} collapsed={false} iconSize={30} showAll hideAddButton />
       </Box>
 
       {/* Header */}
