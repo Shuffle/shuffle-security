@@ -34,17 +34,38 @@ export interface AgentsViewProps extends ShuffleHostProps {
   maxWidth?: number;
   /**
    * Optional handler for the "Choose LLM" chip. Forwarded to the embedded
-   * AgentUI. When omitted, AgentUI dispatches its legacy window event
-   * (handled by the bundled AgentRunDrawer in Shuffle Security). On other
-   * hosts, pass this prop to wire your own LLM picker — or set
+   * AgentUI. When omitted, AgentsView mounts its own internal
+   * `AgentRunDrawer` and opens it on the Local LLM tab — so the chip
+   * always does *something*, even on hosts that haven't wired a picker.
+   * Pass this prop to override with your own LLM picker, or set
    * `hideChooseLLM` to remove the chip entirely.
    */
   onChooseLLM?: () => void;
   /** Hide the "Choose LLM" chip in the embedded AgentUI. */
   hideChooseLLM?: boolean;
+  /**
+   * Content rendered inside the built-in AgentRunDrawer's Local LLM tab
+   * when no `onChooseLLM` is provided. Use to plug in your own local LLM
+   * config form. When omitted, a minimal built-in placeholder is shown.
+   */
+  localLLMSlot?: React.ReactNode;
+  /** Content for the built-in AgentRunDrawer's Permissions tab. Optional. */
+  permissionsSlot?: React.ReactNode;
 }
 
-const AgentsView = ({ onSchedule, maxWidth = 820, onChooseLLM, hideChooseLLM, globalUrl, isLoaded, isLoggedIn, userdata, serverside }: AgentsViewProps) => {
+const AgentsView = ({
+  onSchedule,
+  maxWidth = 820,
+  onChooseLLM,
+  hideChooseLLM,
+  localLLMSlot,
+  permissionsSlot,
+  globalUrl,
+  isLoaded,
+  isLoggedIn,
+  userdata,
+  serverside,
+}: AgentsViewProps) => {
   useSyncHostBaseUrl(globalUrl);
   const [selectedRun, setSelectedRun] = useState<AgentRun | null>(null);
   const [agentView, setAgentView] = useState<'start' | 'simple' | 'detailed'>('start');
