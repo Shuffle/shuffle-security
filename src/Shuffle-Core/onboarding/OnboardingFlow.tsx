@@ -21,6 +21,7 @@ import {
   extractWorkflowAppNames,
   IntegrationStatus,
   refreshAllIntegrationStatus,
+  useSyncHostBaseUrl,
 } from '@shuffleio/shuffle-mcps';
 import type {
   AlgoliaSearchApp,
@@ -131,25 +132,27 @@ const OnboardingFlow = ({
   onStartDemo,
   demoRedirectUrl = 'https://security.shuffler.io/onboarding/product?demo=true',
 }: OnboardingFlowProps = {}) => {
+  const resolvedGlobalUrl = globalUrl || apiBaseUrl;
+  useSyncHostBaseUrl(resolvedGlobalUrl);
 
   // Apply API base URL override before any requests fire
   useEffect(() => {
-    const hostBaseUrl = globalUrl || apiBaseUrl;
+    const hostBaseUrl = resolvedGlobalUrl;
     if (hostBaseUrl) {
       try {
         // Mutate the shared API_CONFIG so all Shuffle-MCPs helpers route to the right host
         (API_CONFIG as { baseUrl: string }).baseUrl = hostBaseUrl;
       } catch { /* ignore */ }
     }
-  }, [apiBaseUrl, globalUrl]);
+  }, [resolvedGlobalUrl]);
 
   const hostProps = useMemo(() => ({
-    globalUrl: globalUrl || apiBaseUrl,
+    globalUrl: resolvedGlobalUrl,
     userdata,
     isLoaded,
     isLoggedIn,
     serverside,
-  }), [globalUrl, apiBaseUrl, userdata, isLoaded, isLoggedIn, serverside]);
+  }), [resolvedGlobalUrl, userdata, isLoaded, isLoggedIn, serverside]);
 
   // Product picker state (Shuffle Core vs Shuffle Security)
   const readStoredProduct = (): OnboardingProduct | null => {
