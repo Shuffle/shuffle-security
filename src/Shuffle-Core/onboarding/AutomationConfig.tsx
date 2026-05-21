@@ -1243,7 +1243,7 @@ export const AutomationConfig = ({
                                         </Typography>
                                         {/* App icon preview when collapsed */}
                                         <Box sx={{ display: 'flex', alignItems: 'center', ml: 0.5, flex: 1 }}>
-                                          {source.apps.slice(0, 6).map((app, idx) => (
+                                          {safeConnectedApps(source.apps).slice(0, 6).map((app, idx) => (
                                             <Tooltip key={app.id} title={readableAppName(app.name)} arrow placement="top">
                                               <Avatar
                                                 src={app.image}
@@ -1264,12 +1264,12 @@ export const AutomationConfig = ({
                                               </Avatar>
                                             </Tooltip>
                                           ))}
-                                          {source.apps.length > 6 && (
+                                          {safeConnectedApps(source.apps).length > 6 && (
                                             <Typography
                                               variant="caption"
                                               sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.6rem', ml: 0.5 }}
                                             >
-                                              +{source.apps.length - 6}
+                                              +{safeConnectedApps(source.apps).length - 6}
                                             </Typography>
                                           )}
                                         </Box>
@@ -1279,7 +1279,7 @@ export const AutomationConfig = ({
                                       </Box>
                                       <Collapse in={otherExpanded[option.id] || false}>
                                         <Box sx={{ mt: 0.5 }}>
-                                          {source.apps.map((app) => renderToolRow(app, option.id, option.color))}
+                                          {safeConnectedApps(source.apps).map((app) => renderToolRow(app, option.id, option.color))}
                                         </Box>
                                       </Collapse>
                                     </Box>
@@ -1300,7 +1300,7 @@ export const AutomationConfig = ({
                                       >
                                         {source.label}
                                       </Typography>
-                                      {source.apps.map((app) => renderToolRow(app, option.id, option.color))}
+                                      {safeConnectedApps(source.apps).map((app) => renderToolRow(app, option.id, option.color))}
                                     </>
                                   )}
                                 </Box>
