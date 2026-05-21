@@ -16,6 +16,11 @@ import {
   ShuffleCoreThemeProvider,
   type ShuffleColorMode,
 } from '@/Shuffle-Core/components/ShuffleCoreThemeProvider';
+import {
+  QueryClient,
+  QueryClientProvider,
+  QueryClientContext,
+} from '@tanstack/react-query';
 
 import {
   OnboardingFlow as OnboardingFlowRaw,
@@ -35,14 +40,32 @@ const resolveMode = (
   return colorMode ?? 'auto';
 };
 
+let fallbackQueryClient: QueryClient | null = null;
+const getFallbackQueryClient = (): QueryClient => {
+  if (!fallbackQueryClient) {
+    fallbackQueryClient = new QueryClient({
+      defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
+    });
+  }
+  return fallbackQueryClient;
+};
+
+const EnsureQueryClient: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const hostClient = React.useContext(QueryClientContext);
+  if (hostClient) return <>{children}</>;
+  return <QueryClientProvider client={getFallbackQueryClient()}>{children}</QueryClientProvider>;
+};
+
 const withTheme = <P extends object>(
   Inner: React.ComponentType<P>,
   displayName: string,
 ) => {
   const Wrapped: React.FC<WithTheme<P>> = ({ theme, colorMode, ...rest }) => (
-    <ShuffleCoreThemeProvider mode={resolveMode(theme, colorMode)}>
-      <Inner {...(rest as P)} />
-    </ShuffleCoreThemeProvider>
+    <EnsureQueryClient>
+      <ShuffleCoreThemeProvider mode={resolveMode(theme, colorMode)}>
+        <Inner {...(rest as P)} />
+      </ShuffleCoreThemeProvider>
+    </EnsureQueryClient>
   );
   Wrapped.displayName = `ShuffleCoreOnboarding(${displayName})`;
   return Wrapped;
