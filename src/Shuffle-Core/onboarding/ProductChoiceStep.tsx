@@ -71,15 +71,15 @@ export const ProductChoiceStep = ({ onSelectCore, onSelectSecurity, onStartDemo,
         </div>
 
         {onStartDemo && (
-          <div className="mt-6 flex justify-center">
+          <div className="mt-8 flex justify-center">
             <motion.button
               layoutId="onboarding-demo-cta"
               type="button"
               onClick={onStartDemo}
-              className="group inline-flex h-9 items-center gap-2 rounded-md border border-border bg-transparent px-4 text-sm font-medium text-foreground transition-colors hover:border-primary hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="group inline-flex h-11 items-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:shadow-md hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <PlayCircle className="h-4 w-4" />
-              See it immediately — Try Demo Mode
+              Try it immediately — Start Demo Mode
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </motion.button>
           </div>
