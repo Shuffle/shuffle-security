@@ -229,6 +229,14 @@ interface ThreatIntelSource {
   isOther?: boolean;
 }
 
+type AutomationSource = IngestionSource | NotificationSource | ThreatIntelSource;
+
+const safeSources = (sources?: Array<AutomationSource | null | undefined>): AutomationSource[] =>
+  (sources || []).filter((source): source is AutomationSource => !!source).map(source => ({
+    ...source,
+    apps: safeConnectedApps(source.apps),
+  }));
+
 // Helper component for rendering source category chips
 interface SourceChipProps {
   label: string;
