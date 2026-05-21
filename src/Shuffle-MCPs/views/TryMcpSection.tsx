@@ -19,7 +19,7 @@ export interface TryMcpSectionProps extends ShuffleHostProps {
   categories?: string[];
 }
 
-export default function TryMcpSection({ appName, appIcon, appId, categories }: TryMcpSectionProps) {
+export default function TryMcpSection({ appName, appIcon, appId, categories, globalUrl, userdata, isLoaded, isLoggedIn, serverside, theme, colorMode }: TryMcpSectionProps) {
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.15 }}>
       <Box sx={{ mt: 5, mb: 3 }}>
@@ -31,6 +31,13 @@ export default function TryMcpSection({ appName, appIcon, appId, categories }: T
           appIcon={appIcon}
           appId={appId}
           categories={categories}
+          globalUrl={globalUrl}
+          userdata={userdata}
+          isLoaded={isLoaded}
+          isLoggedIn={isLoggedIn}
+          serverside={serverside}
+          theme={theme}
+          colorMode={colorMode}
         />
       </Box>
     </motion.div>

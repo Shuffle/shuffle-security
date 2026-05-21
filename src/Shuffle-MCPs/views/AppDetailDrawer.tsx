@@ -47,6 +47,7 @@ import AppAuthSection from '@/Shuffle-MCPs/components/AppAuthSection';
 import TryMcpSection from '@/Shuffle-MCPs/views/TryMcpSection';
 import SingulActionsPreview from '@/Shuffle-MCPs/components/SingulActionsPreview';
 import type { ShuffleHostProps } from '@/Shuffle-MCPs/host-props';
+import { useShuffleMcpTheme } from '@/Shuffle-MCPs/ShuffleMcpThemeProvider';
 // AuthContext detached — consumers can pass `isAuthenticated` as a prop. Defaults to true.
 
 interface AppInfo {
@@ -139,7 +140,16 @@ export default function AppDetailDrawer({
   onAddToCanvas,
   isAuthenticated = true,
   activeOrgId,
+  globalUrl,
+  userdata,
+  isLoaded,
+  isLoggedIn,
+  serverside,
+  theme,
+  colorMode,
 }: AppDetailDrawerProps) {
+  const themeScope = useShuffleMcpTheme();
+  const scopeClassName = themeScope?.scopeClassName ?? (theme === 'dark' ? 'shuffle-mcp-scope dark' : theme === 'light' ? 'shuffle-mcp-scope' : undefined);
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   // Start in loading state so the skeleton paints on the very first frame
   // after the drawer mounts/opens — avoids a flash of empty/partial content
@@ -419,14 +429,22 @@ export default function AppDetailDrawer({
       anchor={anchor}
       open={open}
       onClose={handleClose}
-      sx={{
-        '& .MuiDrawer-paper': {
-          width,
-          maxWidth: '100vw',
-          background: 'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)',
-          borderLeft: anchor === 'right' ? '1px solid hsl(var(--border))' : 'none',
-          borderRight: anchor === 'left' ? '1px solid hsl(var(--border))' : 'none',
+      slotProps={{
+        paper: {
+          className: scopeClassName,
+          sx: {
+            width: { xs: '100%', sm: width },
+            maxWidth: '100vw',
+            display: 'flex',
+            flexDirection: 'column',
+            background: 'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)',
+            borderLeft: anchor === 'right' ? '1px solid hsl(var(--border))' : 'none',
+            borderRight: anchor === 'left' ? '1px solid hsl(var(--border))' : 'none',
+          },
         },
+      }}
+      sx={{
+        '& .MuiDrawer-paper': { boxSizing: 'border-box' },
       }}
     >
       {/* Header bar */}
@@ -488,6 +506,13 @@ export default function AppDetailDrawer({
                 onAddToCanvas({ name: appName, icon: resolvedImage || '', algoliaId: resolvedAlgoliaId });
                 onClose();
               } : undefined}
+              globalUrl={globalUrl}
+              userdata={userdata}
+              isLoaded={isLoaded}
+              isLoggedIn={isLoggedIn}
+              serverside={serverside}
+              theme={theme}
+              colorMode={colorMode}
             />
 
             {/* Incident stats */}
@@ -546,6 +571,13 @@ export default function AppDetailDrawer({
                 onTestConnection={(appId, authId) => handleTestConnection(appName || appId, authId)}
                 onSaveAuth={(appId, creds) => handleSaveAuth(appId, creds, appName || undefined)}
                 onRefreshAuth={refreshAuth}
+                globalUrl={globalUrl}
+                userdata={userdata}
+                isLoaded={isLoaded}
+                isLoggedIn={isLoggedIn}
+                serverside={serverside}
+                theme={theme}
+                colorMode={colorMode}
               />
             </Box>
 
@@ -557,8 +589,27 @@ export default function AppDetailDrawer({
                   appIcon={resolvedImage}
                   appId={matchingEntries[0]?.app?.id || matchingEntries[0]?.id || appName || ''}
                   categories={appInfo?.categories}
+                  globalUrl={globalUrl}
+                  userdata={userdata}
+                  isLoaded={isLoaded}
+                  isLoggedIn={isLoggedIn}
+                  serverside={serverside}
+                  theme={theme}
+                  colorMode={colorMode}
                 />
-                <SingulActionsPreview appName={appName || ''} appIcon={resolvedImage} categories={appInfo?.categories} activeOrgId={activeOrgId} />
+                <SingulActionsPreview
+                  appName={appName || ''}
+                  appIcon={resolvedImage}
+                  categories={appInfo?.categories}
+                  activeOrgId={activeOrgId}
+                  globalUrl={globalUrl}
+                  userdata={userdata}
+                  isLoaded={isLoaded}
+                  isLoggedIn={isLoggedIn}
+                  serverside={serverside}
+                  theme={theme}
+                  colorMode={colorMode}
+                />
               </>
             )}
           </>

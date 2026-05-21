@@ -7,9 +7,11 @@ import { useCallback } from 'react';
 import { AgentsView, API_CONFIG } from '@/Shuffle-MCPs';
 import type { AgentsViewProps } from '@/Shuffle-MCPs';
 import { useScheduleAgentRun } from '@/hooks/useScheduleAgentRun';
+import { useTheme } from '@/context/ThemeContext';
 
 const AgentsPage = () => {
   const scheduleAgentRun = useScheduleAgentRun();
+  const { theme } = useTheme();
 
   const handleSchedule = useCallback<AgentsViewProps['onSchedule']>(
     async (info) => {
@@ -18,7 +20,7 @@ const AgentsPage = () => {
     [scheduleAgentRun],
   );
 
-  return <AgentsView onSchedule={handleSchedule} globalUrl={API_CONFIG.baseUrl} />;
+  return <AgentsView onSchedule={handleSchedule} globalUrl={API_CONFIG.baseUrl} theme={theme} />;
 };
 
 export default AgentsPage;

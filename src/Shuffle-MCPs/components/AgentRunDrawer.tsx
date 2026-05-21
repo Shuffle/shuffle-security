@@ -101,6 +101,8 @@ const AgentRunDrawer = ({
   tabsSx,
   bodySx,
   globalUrl,
+  theme,
+  colorMode,
 }: AgentRunDrawerProps) => {
   // Sync host base URL into the runtime so all internal fetches honor it.
   useSyncHostBaseUrl(globalUrl);
@@ -283,8 +285,10 @@ const AgentRunDrawer = ({
               hideHeroIcon
               title=""
               subtitle={null}
-              apiBaseUrl={globalUrl}
               {...agentUIProps}
+              apiBaseUrl={agentUIProps?.apiBaseUrl ?? globalUrl}
+              theme={agentUIProps?.theme ?? theme}
+              colorMode={agentUIProps?.colorMode ?? colorMode}
             />
           </Box>
         )}

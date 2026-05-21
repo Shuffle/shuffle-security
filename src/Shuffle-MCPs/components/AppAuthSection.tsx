@@ -49,6 +49,13 @@ export default function AppAuthSection({
   onTestConnection,
   onSaveAuth,
   onRefreshAuth,
+  globalUrl,
+  userdata,
+  isLoaded,
+  isLoggedIn,
+  serverside,
+  theme,
+  colorMode,
 }: AppAuthSectionProps) {
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }}>
@@ -74,6 +81,13 @@ export default function AppAuthSection({
             onSaveAuth={onSaveAuth}
             apiAuthEntries={matchingEntries}
             onRefreshAuth={onRefreshAuth}
+            globalUrl={globalUrl}
+            userdata={userdata}
+            isLoaded={isLoaded}
+            isLoggedIn={isLoggedIn}
+            serverside={serverside}
+            theme={theme}
+            colorMode={colorMode}
           />
         )}
       </Box>

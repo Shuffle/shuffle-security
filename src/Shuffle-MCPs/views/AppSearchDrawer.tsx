@@ -169,6 +169,7 @@ export default function AppSearchDrawer({
   colorMode,
 }: AppSearchDrawerProps) {
   const themeScope = useShuffleMcpTheme();
+  const scopeClassName = themeScope?.scopeClassName ?? (theme === 'dark' ? 'shuffle-mcp-scope dark' : theme === 'light' ? 'shuffle-mcp-scope' : undefined);
   const [detailAppName, setDetailAppName] = useState<string | null>(null);
   const [detailAppId, setDetailAppId] = useState<string | null>(null);
   const [highlightActive, setHighlightActive] = useState(false);
@@ -269,20 +270,25 @@ export default function AppSearchDrawer({
         anchor={anchor}
         open={open && detailAppName === null}
         onClose={handleClose}
-        slotProps={{ paper: { className: themeScope?.scopeClassName } }}
+        slotProps={{
+          paper: {
+            className: scopeClassName,
+            sx: {
+              width: { xs: '100%', sm: width },
+              maxWidth: '100vw',
+              height: '100vh',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              background: 'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)',
+              borderLeft: anchor === 'right' ? '1px solid hsl(var(--border))' : 'none',
+              borderRight: anchor === 'left' ? '1px solid hsl(var(--border))' : 'none',
+            },
+          },
+        }}
         sx={{
           zIndex: 9999,
-          '& .MuiDrawer-paper': {
-            width,
-            maxWidth: '100vw',
-            height: '100vh',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-            background: 'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)',
-            borderLeft: anchor === 'right' ? '1px solid hsl(var(--border))' : 'none',
-            borderRight: anchor === 'left' ? '1px solid hsl(var(--border))' : 'none',
-          },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box' },
         }}
       >
         {/* Header */}
@@ -381,14 +387,16 @@ export default function AppSearchDrawer({
                 overflowY: 'auto',
               },
               '& .singul-results-grid': {
-                gridAutoRows: '75px',
+                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                gridAutoRows: '88px',
                 gap: '12px',
               },
               '& .singul-results-grid .singul-dropdown-item': {
-                minHeight: 75,
-                maxHeight: 75,
-                height: 75,
-                padding: '14px 16px',
+                minWidth: 0,
+                minHeight: 88,
+                maxHeight: 88,
+                height: 88,
+                padding: '12px 14px',
                 alignItems: 'center',
                 overflow: 'hidden',
               },
@@ -397,11 +405,14 @@ export default function AppSearchDrawer({
                 gap: '12px',
               },
               '& .singul-results-grid .singul-app-icon': {
-                width: 40,
-                height: 40,
+                width: 36,
+                height: 36,
                 borderRadius: 8,
                 padding: 4,
               },
+              '& .singul-results-grid .singul-app-details': { minWidth: 0 },
+              '& .singul-results-grid .singul-app-name': { maxWidth: '100%' },
+              '& .singul-results-grid .singul-checkbox': { marginLeft: 'auto' },
               ...(highlightActive && highlightAppName ? {
                 [`& .singul-dropdown-item[data-app-name="${highlightAppName}"]`]: {
                   borderColor: 'hsl(var(--primary)) !important',

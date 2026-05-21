@@ -11,6 +11,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { AgentRunDrawer, API_CONFIG, type AgentRunDrawerTab, type AgentUIProps } from '@/Shuffle-MCPs';
 import PermissionsPanel from '@/components/agent/PermissionsPanel';
 import LocalLLMConfig from '@/components/agent/LocalLLMConfig';
+import { useTheme } from '@/context/ThemeContext';
 import {
   AGENT_DRAWER_OPEN_EVENT,
   type AgentDrawerOpenDetail,
@@ -23,6 +24,7 @@ const GlobalAgentDrawer = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const scheduleAgentRun = useScheduleAgentRun();
+  const { theme } = useTheme();
 
   const handleSchedule = useCallback<NonNullable<AgentUIProps['onSchedule']>>(
     async (info) => {
@@ -92,9 +94,10 @@ const GlobalAgentDrawer = () => {
       onClose={() => setOpen(false)}
       initialTab={initialTab}
       globalUrl={API_CONFIG.baseUrl}
+      theme={theme}
       permissionsSlot={<PermissionsPanel compact />}
       localLLMSlot={<LocalLLMConfig />}
-      agentUIProps={{ onSchedule: handleSchedule }}
+      agentUIProps={{ onSchedule: handleSchedule, apiBaseUrl: API_CONFIG.baseUrl, theme }}
     />
   );
 };

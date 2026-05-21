@@ -19,6 +19,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import type { ShuffleHostProps } from '@/Shuffle-MCPs/host-props';
+import { useSyncHostBaseUrl } from '@/Shuffle-MCPs/useSyncHostBaseUrl';
 import {
   THREAT_INTEL_PATTERNS,
   EMAIL_APP_PATTERNS,
@@ -180,7 +181,8 @@ function getPrimaryCategory(appName: string, categories?: string[]): string | nu
   return null;
 }
 
-const AppMcpChat = ({ appName, appIcon, appId, categories }: AppMcpChatProps) => {
+const AppMcpChat = ({ appName, appIcon, appId, categories, globalUrl }: AppMcpChatProps) => {
+  useSyncHostBaseUrl(globalUrl);
   const [input, setInput] = useState('');
   const [runState, setRunState] = useState<RunState>('idle');
   const [query, setQuery] = useState('');
