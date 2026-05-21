@@ -8,8 +8,11 @@
  * this index so theme/sizing is guaranteed.
  *
  * Accepts an optional `theme` prop on each component:
- *   - `"light"` / `"dark"` — pin the subtree
- *   - `"system"` (default) — follow the host page's `.dark` class on <html>
+ *   - `"light"` / `"dark"` — pin the subtree to that scheme
+ *   - `"system"` — follow the host page's `.dark` class on <html>
+ *
+ * If `theme` is omitted, defaults to `"dark"` (Shuffle's primary surface).
+ * Pass `theme="light"` or `theme="system"` to override.
  */
 import React from 'react';
 import {
