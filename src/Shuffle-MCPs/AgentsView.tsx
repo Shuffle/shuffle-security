@@ -203,6 +203,16 @@ const AgentsView = ({
         apiBaseUrl={globalUrl}
         onSchedule={onSchedule}
       />
+
+      <AgentRunDrawer
+        open={builtInDrawer.open}
+        onClose={() => setBuiltInDrawer((s) => ({ ...s, open: false }))}
+        initialTab={builtInDrawer.tab}
+        globalUrl={globalUrl}
+        localLLMSlot={effectiveLocalLLMSlot}
+        permissionsSlot={permissionsSlot}
+        agentUIProps={{ onSchedule, apiBaseUrl: globalUrl }}
+      />
     </Box>
   );
 };
