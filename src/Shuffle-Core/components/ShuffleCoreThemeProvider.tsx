@@ -73,12 +73,82 @@ interface ShuffleCoreThemeContextValue {
   scopeClassName: string;
 }
 
+type ShuffleTokenStyle = React.CSSProperties & Record<`--${string}`, string>;
+
+const lightTokenStyle: ShuffleTokenStyle = {
+  "--background": "0 0% 98%",
+  "--background-elevated": "0 0% 100%",
+  "--background-surface": "0 0% 96%",
+  "--foreground": "0 0% 9%",
+  "--foreground-muted": "0 0% 40%",
+  "--card": "0 0% 100%",
+  "--card-foreground": "0 0% 9%",
+  "--popover": "0 0% 100%",
+  "--popover-foreground": "0 0% 9%",
+  "--primary": "24 100% 50%",
+  "--primary-foreground": "0 0% 100%",
+  "--primary-glow": "24 100% 60%",
+  "--secondary": "0 0% 94%",
+  "--secondary-foreground": "0 0% 9%",
+  "--muted": "0 0% 94%",
+  "--muted-foreground": "0 0% 45%",
+  "--accent": "24 100% 50%",
+  "--accent-foreground": "0 0% 100%",
+  "--destructive": "0 84% 60%",
+  "--destructive-foreground": "0 0% 100%",
+  "--border": "0 0% 80%",
+  "--border-subtle": "0 0% 86%",
+  "--input": "0 0% 94%",
+  "--ring": "24 100% 50%",
+  "--severity-critical": "0 84% 60%",
+  "--severity-high": "25 95% 53%",
+  "--severity-medium": "45 93% 47%",
+  "--severity-low": "142 71% 45%",
+  "--severity-info": "210 100% 56%",
+  "--sidebar-background": "0 0% 97%",
+  "--sidebar-foreground": "0 0% 9%",
+  "--sidebar-primary": "24 100% 50%",
+  "--sidebar-primary-foreground": "0 0% 100%",
+  "--sidebar-accent": "0 0% 94%",
+  "--sidebar-accent-foreground": "0 0% 9%",
+  "--sidebar-border": "0 0% 80%",
+  "--sidebar-ring": "24 100% 50%",
+  "--gradient-card": "linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(0 0% 98%) 100%)",
+  "--gradient-accent": "linear-gradient(135deg, hsl(24 100% 50%) 0%, hsl(24 100% 60%) 100%)",
+};
+
+const darkTokenStyle: ShuffleTokenStyle = {
+  ...lightTokenStyle,
+  "--background": "0 0% 10%",
+  "--background-elevated": "0 0% 13%",
+  "--background-surface": "0 0% 16%",
+  "--foreground": "0 0% 100%",
+  "--foreground-muted": "0 0% 60%",
+  "--card": "0 0% 13%",
+  "--card-foreground": "0 0% 100%",
+  "--popover": "0 0% 12%",
+  "--popover-foreground": "0 0% 100%",
+  "--secondary": "0 0% 18%",
+  "--secondary-foreground": "0 0% 100%",
+  "--muted": "0 0% 16%",
+  "--muted-foreground": "0 0% 50%",
+  "--border": "0 0% 20%",
+  "--border-subtle": "0 0% 16%",
+  "--input": "0 0% 18%",
+  "--sidebar-background": "0 0% 9%",
+  "--sidebar-foreground": "0 0% 100%",
+  "--sidebar-accent": "0 0% 16%",
+  "--sidebar-accent-foreground": "0 0% 100%",
+  "--sidebar-border": "0 0% 16%",
+  "--gradient-card": "linear-gradient(145deg, hsl(0 0% 14%) 0%, hsl(0 0% 12%) 100%)",
+};
+
 export const ShuffleCoreThemeContext = React.createContext<ShuffleCoreThemeContextValue | null>(null);
 
 export const useShuffleCoreTheme = (): ShuffleCoreThemeContextValue | null =>
   React.useContext(ShuffleCoreThemeContext);
 
-const buildComponentOverrides = (scopeClassName: string) => ({
+const buildComponentOverrides = (scopeClassName: string, scopeStyle: ShuffleTokenStyle) => ({
   MuiTextField: { defaultProps: { size: "small" as const } },
   MuiButton: { defaultProps: { size: "small" as const } },
   MuiFormControl: { defaultProps: { size: "small" as const } },
@@ -147,7 +217,7 @@ const buildComponentOverrides = (scopeClassName: string) => ({
     },
   },
   MuiDrawer: {
-    defaultProps: { slotProps: { paper: { className: scopeClassName } } },
+    defaultProps: { slotProps: { paper: { className: scopeClassName, style: scopeStyle } } },
     styleOverrides: {
       paper: {
         backgroundColor: "hsl(var(--sidebar-background))",
@@ -157,7 +227,7 @@ const buildComponentOverrides = (scopeClassName: string) => ({
     },
   },
   MuiDialog: {
-    defaultProps: { slotProps: { paper: { className: scopeClassName } } },
+    defaultProps: { slotProps: { paper: { className: scopeClassName, style: scopeStyle } } },
   },
   MuiPaper: {
     styleOverrides: {
@@ -169,7 +239,7 @@ const buildComponentOverrides = (scopeClassName: string) => ({
     },
   },
   MuiMenu: {
-    defaultProps: { slotProps: { paper: { className: scopeClassName } } },
+    defaultProps: { slotProps: { paper: { className: scopeClassName, style: scopeStyle } } },
     styleOverrides: {
       paper: {
         backgroundColor: "hsl(var(--popover))",
@@ -179,7 +249,7 @@ const buildComponentOverrides = (scopeClassName: string) => ({
     },
   },
   MuiPopover: {
-    defaultProps: { slotProps: { paper: { className: scopeClassName } } },
+    defaultProps: { slotProps: { paper: { className: scopeClassName, style: scopeStyle } } },
     styleOverrides: {
       paper: {
         backgroundColor: "hsl(var(--popover))",
@@ -189,7 +259,7 @@ const buildComponentOverrides = (scopeClassName: string) => ({
     },
   },
   MuiTooltip: {
-    defaultProps: { slotProps: { tooltip: { className: scopeClassName } } },
+    defaultProps: { slotProps: { tooltip: { className: scopeClassName, style: scopeStyle } } },
   },
 });
 
@@ -217,6 +287,7 @@ export const ShuffleCoreThemeProvider: React.FC<ShuffleCoreThemeProviderProps> =
 
   const scopeClassName = effectiveDark ? "shuffle-core-scope dark" : "shuffle-core-scope";
   const resolvedModeAttr = effectiveDark ? "dark" : "light";
+  const scopeStyle = effectiveDark ? darkTokenStyle : lightTokenStyle;
 
   const merged = React.useMemo(
     () =>
@@ -228,10 +299,10 @@ export const ShuffleCoreThemeProvider: React.FC<ShuffleCoreThemeProviderProps> =
         },
         components: {
           ...(parent as any).components,
-          ...buildComponentOverrides(scopeClassName),
+          ...buildComponentOverrides(scopeClassName, scopeStyle),
         },
       }),
-    [parent, effectiveDark, scopeClassName],
+    [parent, effectiveDark, scopeClassName, scopeStyle],
   );
 
   const ctxValue = React.useMemo<ShuffleCoreThemeContextValue>(
@@ -251,7 +322,7 @@ export const ShuffleCoreThemeProvider: React.FC<ShuffleCoreThemeProviderProps> =
   return (
     <ShuffleCoreThemeContext.Provider value={ctxValue}>
       <ThemeProvider theme={merged}>
-        <div className={scopeClassName} data-shuffle-mode={resolvedModeAttr} data-shuffle-core-root>
+        <div className={scopeClassName} style={scopeStyle} data-shuffle-mode={resolvedModeAttr} data-shuffle-core-root>
           <span ref={anchorRef} style={{ display: "none" }} aria-hidden />
           {children}
         </div>
