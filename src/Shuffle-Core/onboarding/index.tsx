@@ -40,7 +40,8 @@ const resolveMode = (
 ): ShuffleColorMode => {
   if (theme === 'light' || theme === 'dark') return theme;
   if (theme === 'system') return 'auto';
-  return colorMode ?? 'auto';
+  if (colorMode) return colorMode;
+  return 'dark';
 };
 
 let fallbackQueryClient: QueryClient | null = null;
