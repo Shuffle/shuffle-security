@@ -194,9 +194,6 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
   const orgId = userdata?.active_org?.id;
   const [orgData, setOrgData] = useState<{
     sync_features?: Record<string, { usage?: number; limit?: number }>;
-    app_execution_limit?: number;
-    app_execution_usage?: number;
-    app_executions_suborgs?: number;
   } | null>(null);
 
   useEffect(() => {
@@ -219,13 +216,17 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
     return () => { cancelled = true; };
   }, [orgId]);
 
-  const appRunLimit = orgData?.app_execution_limit ?? userdata?.app_execution_limit ?? 0;
-  const appRunUsage =
-    (orgData?.app_execution_usage ?? userdata?.app_execution_usage ?? 0) +
-    (orgData?.app_executions_suborgs ?? userdata?.app_executions_suborgs ?? 0);
-  const agentTokens = orgData?.sync_features?.agent_tokens ?? userdata?.sync_features?.agent_tokens;
-  const agentTokenLimit = Number(agentTokens?.limit) || 0;
-  const agentTokenUsage = Number(agentTokens?.usage) || 0;
+  // Quotas live under sync_features in the org payload. App runs are at
+  // sync_features.app_executions, tokens at sync_features.agent_tokens.
+  // The root-level app_execution_* fields are unreliable / empty.
+  const sync = orgData?.sync_features ?? (userdata as any)?.sync_features ?? {};
+  const appExec = sync.app_executions ?? {};
+  const appRunLimit = Number(appExec.limit) || 0;
+  const appRunUsage = Number(appExec.usage) || 0;
+  const agentTokens = sync.agent_tokens ?? {};
+  const agentTokenLimit = Number(agentTokens.limit) || 0;
+  const agentTokenUsage = Number(agentTokens.usage) || 0;
+
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
