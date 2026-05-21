@@ -1,6 +1,5 @@
 import * as React from "react";
 import { motion, LayoutGroup } from "framer-motion";
-import { cn } from "@/Shuffle-Core/lib/utils";
 
 /**
  * SegmentedControl
@@ -61,16 +60,16 @@ export interface SegmentedControlProps<V extends string = string> {
 
 const sizeClasses = {
   sm: {
-    container: "p-0.5 text-[11px]",
-    item: "px-2.5 py-1 gap-1.5",
-    count: "min-w-[16px] h-[16px] px-1 text-[10px]",
-    divider: "h-4 mx-0.5",
+    container: { padding: 2, fontSize: 11 },
+    item: { padding: "4px 10px", gap: 6 },
+    count: { minWidth: 16, height: 16, padding: "0 4px", fontSize: 10 },
+    divider: { height: 16, margin: "0 2px" },
   },
   md: {
-    container: "p-1 text-xs",
-    item: "px-3 py-1.5 gap-1.5",
-    count: "min-w-[18px] h-[18px] px-1.5 text-[10px]",
-    divider: "h-5 mx-1",
+    container: { padding: 4, fontSize: 12 },
+    item: { padding: "6px 12px", gap: 6 },
+    count: { minWidth: 18, height: 18, padding: "0 6px", fontSize: 10 },
+    divider: { height: 20, margin: "0 4px" },
   },
 };
 
@@ -98,19 +97,24 @@ export function SegmentedControl<V extends string = string>({
   const groupId = layoutId ?? autoId;
   const s = sizeClasses[size];
 
+  const trackStyle: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 2,
+    borderRadius: 999,
+    border: variant === "outline" ? "1px solid hsl(var(--border))" : "1px solid transparent",
+    backgroundColor: variant === "outline" ? "transparent" : "hsl(var(--muted) / 0.4)",
+    color: "hsl(var(--muted-foreground))",
+    ...s.container,
+  };
+
   return (
     <LayoutGroup id={groupId}>
       <div
         role="tablist"
         aria-label={ariaLabel}
-        className={cn(
-          "inline-flex items-center gap-0.5 rounded-full",
-          variant === "outline"
-            ? "border border-border bg-transparent"
-            : "border border-transparent bg-muted/40",
-          s.container,
-          className,
-        )}
+        className={className}
+        style={trackStyle}
       >
         {options.map((opt, i) => {
           if (opt.type === "divider") {
