@@ -200,13 +200,15 @@ export const ShuffleCoreThemeProvider: React.FC<ShuffleCoreThemeProviderProps> =
 }) => {
   const parent = useMuiTheme();
   const parentCtx = useShuffleCoreTheme();
-  const htmlIsDark = useHtmlDarkClass(mode === "auto");
-  const effectiveDark = mode === "auto" ? htmlIsDark : mode === "dark";
+  const anchorRef = React.useRef<HTMLSpanElement>(null);
+  const autoIsDark = useAutoDarkClass(mode === "auto", anchorRef);
+  const effectiveDark = mode === "auto" ? autoIsDark : mode === "dark";
 
   const sameAsParent =
     parentCtx !== null && parentCtx.isDark === effectiveDark;
 
   const scopeClassName = effectiveDark ? "shuffle-core-scope dark" : "shuffle-core-scope";
+  const resolvedModeAttr = effectiveDark ? "dark" : "light";
 
   const merged = React.useMemo(
     () =>
@@ -232,6 +234,7 @@ export const ShuffleCoreThemeProvider: React.FC<ShuffleCoreThemeProviderProps> =
   if (sameAsParent) {
     return (
       <ShuffleCoreThemeContext.Provider value={ctxValue}>
+        <span ref={anchorRef} style={{ display: "none" }} aria-hidden />
         {children}
       </ShuffleCoreThemeContext.Provider>
     );
@@ -240,7 +243,8 @@ export const ShuffleCoreThemeProvider: React.FC<ShuffleCoreThemeProviderProps> =
   return (
     <ShuffleCoreThemeContext.Provider value={ctxValue}>
       <ThemeProvider theme={merged}>
-        <div className={scopeClassName} data-shuffle-mode={mode} data-shuffle-core-root>
+        <div className={scopeClassName} data-shuffle-mode={resolvedModeAttr} data-shuffle-core-root>
+          <span ref={anchorRef} style={{ display: "none" }} aria-hidden />
           {children}
         </div>
       </ThemeProvider>
