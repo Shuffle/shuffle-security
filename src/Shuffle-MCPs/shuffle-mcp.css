@@ -49,6 +49,68 @@
   --infra-email: 210 90% 60%;
 }
 
+/* ============================================================================
+ * Scoped theme overrides for <ShuffleMcpThemeProvider mode="light|dark">.
+ *
+ * The provider stamps `shuffle-mcp-scope` (and `.dark` when applicable) on
+ * the wrapper div AND on portaled MUI paper (Drawer/Dialog/Menu/Popover/
+ * Tooltip). These rules redefine the HSL tokens locally so a pinned light
+ * subtree actually renders light, regardless of the host's <html> class.
+ *
+ * Light values mirror Shuffle Security's :root (src/index.css). Dark values
+ * mirror the :where(:root) defaults above and are repeated here so they win
+ * over any host-defined light tokens when a subtree is pinned to dark.
+ * ============================================================================ */
+.shuffle-mcp-scope:not(.dark) {
+  --background: 0 0% 98%;
+  --background-elevated: 0 0% 100%;
+  --background-surface: 0 0% 96%;
+  --foreground: 0 0% 9%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 9%;
+  --primary: 24 100% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 94%;
+  --secondary-foreground: 0 0% 9%;
+  --muted: 0 0% 94%;
+  --muted-foreground: 0 0% 45%;
+  --accent: 24 100% 50%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 80%;
+  --input: 0 0% 94%;
+  --ring: 24 100% 50%;
+}
+
+.shuffle-mcp-scope.dark {
+  --background: 0 0% 10%;
+  --background-elevated: 0 0% 13%;
+  --background-surface: 0 0% 16%;
+  --foreground: 0 0% 100%;
+  --card: 0 0% 13%;
+  --card-foreground: 0 0% 100%;
+  --popover: 0 0% 12%;
+  --popover-foreground: 0 0% 100%;
+  --primary: 24 100% 50%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 0 0% 18%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 0 0% 16%;
+  --muted-foreground: 0 0% 50%;
+  --accent: 24 100% 50%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 0 0% 20%;
+  --input: 0 0% 18%;
+  --ring: 24 100% 50%;
+}
+
+
+
 .singul-container {
   /* ============================================================
    * Default theme: Shuffle-style dark (matches the rest of the app).
