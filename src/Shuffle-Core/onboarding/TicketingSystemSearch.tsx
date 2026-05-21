@@ -6,9 +6,9 @@ import {
 } from '@mui/material';
 import { Mail, Radar, Search, Globe, Ticket } from 'lucide-react';
 import { ShuffleMCP, API_CONFIG } from '@shuffleio/shuffle-mcps';
-import type { AlgoliaSearchApp, ShuffleMCPHandle } from '@shuffleio/shuffle-mcps';
+import type { AlgoliaSearchApp, ShuffleHostProps, ShuffleMCPHandle } from '@shuffleio/shuffle-mcps';
 
-interface TicketingSystemSearchProps {
+interface TicketingSystemSearchProps extends ShuffleHostProps {
   selectedApps: AlgoliaSearchApp[];
   onAppsChange: (apps: AlgoliaSearchApp[]) => void;
   searchQuery: string;
@@ -20,6 +20,13 @@ export const TicketingSystemSearch = ({
   onAppsChange,
   searchQuery,
   onSearchQueryChange,
+  globalUrl,
+  theme,
+  colorMode,
+  userdata,
+  isLoaded,
+  isLoggedIn,
+  serverside,
 }: TicketingSystemSearchProps) => {
   const singulRef = useRef<ShuffleMCPHandle>(null);
 
@@ -173,6 +180,13 @@ export const TicketingSystemSearch = ({
 
       <ShuffleMCP
         ref={singulRef}
+        globalUrl={globalUrl}
+        theme={theme}
+        colorMode={colorMode}
+        userdata={userdata}
+        isLoaded={isLoaded}
+        isLoggedIn={isLoggedIn}
+        serverside={serverside}
         apiKey={API_CONFIG.apiKey || undefined}
         apiBaseUrl={API_CONFIG.baseUrl}
         placeholder="Search all available integrations..."

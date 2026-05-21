@@ -18,4 +18,8 @@ export interface ShuffleCoreHostProps {
   globalUrl?: string;
   /** Userdata returned by `GET /api/v1/getinfo` (active_org, support, etc.). */
   userdata?: any;
+  /** Optional theme mode forwarded through composed Shuffle surfaces. */
+  theme?: 'light' | 'dark' | 'system';
+  /** Legacy theme alias forwarded through composed Shuffle surfaces. */
+  colorMode?: 'light' | 'dark' | 'auto';
 }

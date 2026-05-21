@@ -8,7 +8,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { ShuffleMCP, API_CONFIG } from '@shuffleio/shuffle-mcps';
-import type { AlgoliaSearchApp, ShuffleMCPHandle } from '@shuffleio/shuffle-mcps';
+import type { AlgoliaSearchApp, ShuffleHostProps, ShuffleMCPHandle } from '@shuffleio/shuffle-mcps';
 
 // Top integration options based on popularity
 const popularTools = [
@@ -56,7 +56,7 @@ const popularTools = [
   },
 ];
 
-interface PrimaryToolStepProps {
+interface PrimaryToolStepProps extends ShuffleHostProps {
   selectedApps: AlgoliaSearchApp[];
   onAppsChange: (apps: AlgoliaSearchApp[]) => void;
   challenge: string | null;
@@ -65,7 +65,14 @@ interface PrimaryToolStepProps {
 export const PrimaryToolStep = ({ 
   selectedApps, 
   onAppsChange,
-  challenge 
+  challenge,
+  globalUrl,
+  theme,
+  colorMode,
+  userdata,
+  isLoaded,
+  isLoggedIn,
+  serverside,
 }: PrimaryToolStepProps) => {
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -307,6 +314,13 @@ export const PrimaryToolStep = ({
             >
               <ShuffleMCP
                 ref={singulRef}
+                globalUrl={globalUrl}
+                theme={theme}
+                colorMode={colorMode}
+                userdata={userdata}
+                isLoaded={isLoaded}
+                isLoggedIn={isLoggedIn}
+                serverside={serverside}
                 apiKey={API_CONFIG.apiKey || undefined}
                 apiBaseUrl={API_CONFIG.baseUrl}
                 placeholder="Search all integrations..."
