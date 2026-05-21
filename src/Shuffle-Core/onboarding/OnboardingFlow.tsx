@@ -124,6 +124,8 @@ const OnboardingFlow = ({
   securityRedirectUrl = 'https://security.shuffler.io/onboarding',
   apiBaseUrl,
   globalUrl,
+  theme,
+  colorMode,
   userdata,
   isLoaded,
   isLoggedIn,
@@ -148,11 +150,13 @@ const OnboardingFlow = ({
 
   const hostProps = useMemo(() => ({
     globalUrl: resolvedGlobalUrl,
+    theme,
+    colorMode,
     userdata,
     isLoaded,
     isLoggedIn,
     serverside,
-  }), [resolvedGlobalUrl, userdata, isLoaded, isLoggedIn, serverside]);
+  }), [resolvedGlobalUrl, theme, colorMode, userdata, isLoaded, isLoggedIn, serverside]);
 
   // Product picker state (Shuffle Core vs Shuffle Security)
   const readStoredProduct = (): OnboardingProduct | null => {
