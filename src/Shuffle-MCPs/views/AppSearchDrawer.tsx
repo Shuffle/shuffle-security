@@ -518,7 +518,7 @@ export default function AppSearchDrawer({
                     }}>
                       {Array.from({ length: 8 }).map((_, i) => (
                         <Box key={i} sx={{
-                          height: 88,
+                          height: 78,
                           borderRadius: '12px',
                           backgroundColor: 'hsl(var(--input))',
                           border: '1px solid hsl(var(--border))',
