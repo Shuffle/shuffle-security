@@ -83,6 +83,12 @@ interface ConnectedApp {
   hasAuthConfig?: boolean;
 }
 
+const isValidConnectedApp = (app: ConnectedApp | null | undefined): app is ConnectedApp =>
+  !!app?.id && !!app?.name;
+
+const safeConnectedApps = (apps?: Array<ConnectedApp | null | undefined>): ConnectedApp[] =>
+  (apps || []).filter(isValidConnectedApp);
+
 // Base static options - automatic_ingestion will be built dynamically
 const baseEnrichmentOptions: (Omit<EnrichmentOption, 'connectedApps'> & { isDynamic?: boolean })[] = [
   {
