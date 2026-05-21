@@ -348,13 +348,13 @@ export const AutomationConfig = ({
   const selectedAppNames = useMemo(() => {
     const names = new Set<string>();
     safeSelectedApps.forEach(app => {
-      names.add(app.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_'));
+      names.add(normalizeAppName(app.name));
     });
     return names;
   }, [safeSelectedApps]);
 
   const isAppSelected = (appName: string) => {
-    const normalized = appName.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
+    const normalized = normalizeAppName(appName);
     return selectedAppNames.has(normalized);
   };
 
@@ -557,7 +557,7 @@ export const AutomationConfig = ({
           }
         });
         safeSelectedApps.forEach(selApp => {
-          const normalizedName = selApp.name.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
+          const normalizedName = normalizeAppName(selApp.name);
           if (!appValidationMap.has(normalizedName) && isThreatIntelApp(selApp.name)) {
             threatIntelApps.push({
               id: selApp.objectID,
