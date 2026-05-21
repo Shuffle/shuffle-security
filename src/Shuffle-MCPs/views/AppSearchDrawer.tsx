@@ -402,18 +402,19 @@ export default function AppSearchDrawer({
               },
               '& .singul-results-grid': {
                 gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                gridAutoRows: '88px',
+                gridAutoRows: '78px',
                 gap: '12px',
               },
               '& .singul-results-grid .singul-dropdown-item': {
                 minWidth: 0,
-                minHeight: 88,
-                maxHeight: 88,
-                height: 88,
-                padding: '12px 14px',
+                minHeight: 78,
+                maxHeight: 78,
+                height: 78,
+                padding: '10px 14px',
                 alignItems: 'center',
                 overflow: 'hidden',
               },
+
               '& .singul-results-grid .singul-app-info': {
                 alignItems: 'center',
                 gap: '12px',
