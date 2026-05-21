@@ -1183,7 +1183,7 @@ export const AutomationConfig = ({
                           </Typography>
                           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                             {(option.ingestionSources || option.notificationSources || option.threatIntelSources) ? (
-                              (option.ingestionSources || option.notificationSources || option.threatIntelSources)!.filter(s => s.apps.length > 0).map((source) => (
+                              (option.ingestionSources || option.notificationSources || option.threatIntelSources)!.map(s => ({ ...s, apps: (s.apps || []).filter((a: any) => a && a.name) })).filter(s => s.apps.length > 0).map((source) => (
                                 <Box key={source.category}>
                                   {source.isOther ? (
                                     // "Other" section: collapsed by default with icon preview
