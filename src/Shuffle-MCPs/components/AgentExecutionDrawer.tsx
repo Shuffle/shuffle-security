@@ -24,6 +24,7 @@ import {
 } from '@/Shuffle-MCPs/components/AgentActivityList';
 import type { AgentRun } from '@/Shuffle-MCPs/agentActivity';
 import type { ShuffleHostProps } from '@/Shuffle-MCPs/host-props';
+import { useShuffleMcpTheme } from '@/Shuffle-MCPs/ShuffleMcpThemeProvider';
 
 export interface AgentExecutionDrawerProps extends ShuffleHostProps {
   open: boolean;
@@ -68,7 +69,10 @@ const AgentExecutionDrawer = ({
   bodySx,
   topBanner,
   onSchedule,
+  theme,
+  colorMode,
 }: AgentExecutionDrawerProps) => {
+  const themeScope = useShuffleMcpTheme();
   const statusKey = (run?.status || '').toUpperCase();
   const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.WAITING;
   const duration = run ? formatDuration(run) : '';
@@ -80,7 +84,7 @@ const AgentExecutionDrawer = ({
       onClose={onClose}
       slotProps={{
         paper: {
-          className,
+          className: [themeScope?.scopeClassName, className].filter(Boolean).join(' ') || undefined,
           sx: [
             {
               width: { xs: '100%', sm: width },
@@ -234,6 +238,8 @@ const AgentExecutionDrawer = ({
             apiBaseUrl={apiBaseUrl}
             orgId={orgId}
             onSchedule={onSchedule}
+            theme={theme}
+            colorMode={colorMode}
           />
         ) : null}
       </Box>
