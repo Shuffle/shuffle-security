@@ -268,6 +268,10 @@ export interface AgentUIProps {
   apiBaseUrl?: string;
   /** Optional Shuffle Org ID — sent as the `Org-Id` header on every call. */
   orgId?: string;
+  /** Optional theme mode forwarded to nested Shuffle drawers. */
+  theme?: 'light' | 'dark' | 'system';
+  /** Legacy theme alias forwarded to nested Shuffle drawers. */
+  colorMode?: 'light' | 'dark' | 'auto';
   /** Optional className forwarded to the root container. */
   className?: string;
   /** Style overrides merged into the root container sx. */
@@ -989,6 +993,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
   apiKey,
   apiBaseUrl,
   orgId,
+  theme,
+  colorMode,
   className,
   sx,
   contentSx,
@@ -3897,6 +3903,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
           subtitle={appPickerSubtitle}
           multiSelect
           selectedApps={chosenApps.map((a) => ({ name: a.name, id: a.id || null, icon: a.icon }))}
+          globalUrl={apiBaseUrl}
+          theme={theme}
+          colorMode={colorMode}
           onSelectionChange={(next) => {
             setChosenApps(
               next.map((app) => {
@@ -3919,6 +3928,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
           appName={authDrawerApp?.name || null}
           appId={authDrawerApp?.id || null}
           activeOrgId={orgId || null}
+          globalUrl={apiBaseUrl}
+          theme={theme}
+          colorMode={colorMode}
         />
       </Box>
     </Box>
