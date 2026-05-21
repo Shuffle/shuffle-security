@@ -1316,6 +1316,7 @@ const OnboardingFlow = ({
 
                   {steps[activeStep]?.key === 'tools' && (
                     <TicketingSystemSearch
+                      {...hostProps}
                       selectedApps={selectedApps}
                       onAppsChange={setSelectedApps}
                       searchQuery={searchQuery}
