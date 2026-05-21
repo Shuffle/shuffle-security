@@ -149,6 +149,7 @@ export default function AppDetailDrawer({
   colorMode,
 }: AppDetailDrawerProps) {
   const themeScope = useShuffleMcpTheme();
+  const scopeClassName = themeScope?.scopeClassName ?? (theme === 'dark' ? 'shuffle-mcp-scope dark' : theme === 'light' ? 'shuffle-mcp-scope' : undefined);
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   // Start in loading state so the skeleton paints on the very first frame
   // after the drawer mounts/opens — avoids a flash of empty/partial content
@@ -430,7 +431,7 @@ export default function AppDetailDrawer({
       onClose={handleClose}
       slotProps={{
         paper: {
-          className: themeScope?.scopeClassName,
+          className: scopeClassName,
           sx: {
             width: { xs: '100%', sm: width },
             maxWidth: '100vw',
