@@ -316,7 +316,7 @@ export const ToolAuthentication = ({
                           sx={{
                             alignSelf: 'flex-start',
                             background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 100%)',
-                            boxShadow: '0 4px 14px rgba(255, 102, 0, 0.25)',
+                            boxShadow: '0 4px 14px hsl(var(--primary) / 0.25)',
                             fontWeight: 600,
                             '&:hover': {
                               background: 'linear-gradient(135deg, hsl(var(--primary-glow)) 0%, hsl(var(--primary-glow)) 100%)',
