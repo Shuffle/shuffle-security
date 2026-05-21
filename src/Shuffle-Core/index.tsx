@@ -17,7 +17,7 @@
 import './shuffle-core.css';
 import React from 'react';
 import { ShuffleCoreThemeProvider, type ShuffleColorMode } from './components/ShuffleCoreThemeProvider';
-import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, QueryClientContext } from '@tanstack/react-query';
 
 import UsecasesRaw from './views/Usecases';
 import UsecaseAlluvialDiagramRaw from './views/UsecaseAlluvialDiagram';
