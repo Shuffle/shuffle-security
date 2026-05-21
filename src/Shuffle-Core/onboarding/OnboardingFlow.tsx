@@ -1228,6 +1228,7 @@ const OnboardingFlow = ({
                         <Box sx={{ mb: 3, ml: -2 }}>
                           {/* extraApps is not yet typed in the published shuffle-mcps; cast to bypass. */}
                           {React.createElement(IntegrationStatus as any, {
+                            ...hostProps,
                             collapsed: false,
                             iconSize: 30,
                             showAll: true,
@@ -1237,6 +1238,7 @@ const OnboardingFlow = ({
                         </Box>
                       )}
                       <UnifiedSourceSetup
+                        {...hostProps}
                         selectedApps={selectedApps}
                         onAppsChange={setSelectedApps}
                       />
@@ -1292,6 +1294,7 @@ const OnboardingFlow = ({
                         {appsForAuth.length > 0 && (
                           <Box sx={{ mb: 3, ml: -2 }}>
                             {React.createElement(IntegrationStatus as any, {
+                              ...hostProps,
                               collapsed: false,
                               iconSize: 30,
                               showAll: true,
@@ -1301,6 +1304,7 @@ const OnboardingFlow = ({
                           </Box>
                         )}
                         <AppAuthConfig
+                          {...hostProps}
                           apps={appsForAuth}
                           authStates={authStates}
                           authenticatedApps={authenticatedApps}
@@ -1315,6 +1319,7 @@ const OnboardingFlow = ({
 
                   {steps[activeStep]?.key === 'automate' && (
                     <AutomationConfig
+                      {...hostProps}
                       enrichmentState={enrichmentState}
                       onEnrichmentChange={setEnrichmentState}
                       onSave={(state) => {
