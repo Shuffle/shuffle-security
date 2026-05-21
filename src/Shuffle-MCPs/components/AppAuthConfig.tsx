@@ -38,6 +38,7 @@ import { motion } from 'framer-motion';
 import type { AlgoliaSearchApp } from '@/Shuffle-MCPs';
 import { AppFallbackIcon } from '@/Shuffle-MCPs/components/AppFallbackIcon';
 import { API_CONFIG, getApiUrl, getAuthHeader, isDevEnvironment, isCloudDomain } from '@/Shuffle-MCPs/api';
+import { useSyncHostBaseUrl } from '@/Shuffle-MCPs/useSyncHostBaseUrl';
 import { getIngestionCategory } from '@/Shuffle-MCPs/ingestionDetection';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -215,7 +216,13 @@ export const AppAuthCard = ({
   hideDocsLink,
   hideUrlFields,
   borderless,
+  globalUrl,
+  userdata,
+  isLoaded,
+  isLoggedIn,
+  serverside,
 }: AppAuthCardProps) => {
+  useSyncHostBaseUrl(globalUrl);
   // Helper to get best default auth: prioritize validated, otherwise last entry
   const getBestDefaultAuth = (entries: ApiAuthEntry[]): string => {
     if (entries.length === 0) return ADD_NEW_AUTH;
@@ -2243,7 +2250,13 @@ export const AppAuthConfig = ({
   onSaveAuth,
   onSelectAuth,
   onRefreshAuth,
+  globalUrl,
+  userdata,
+  isLoaded,
+  isLoggedIn,
+  serverside,
 }: AppAuthConfigProps) => {
+  useSyncHostBaseUrl(globalUrl);
   // Helper to find ALL API auth entries for an app
   const getApiAuthEntries = (app: AlgoliaSearchApp): ApiAuthEntry[] => {
     const normalize = (n: string) => n.toLowerCase().replace(/[\s_\-]+/g, '_');
