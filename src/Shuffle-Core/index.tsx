@@ -65,14 +65,8 @@ const getFallbackQueryClient = (): QueryClient => {
 const EnsureQueryClient: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // If a host QueryClientProvider already exists, reuse it; otherwise install
   // our own fallback so hooks like useQuery don't blow up.
-  let hasHostClient = false;
-  try {
-    useQueryClient();
-    hasHostClient = true;
-  } catch {
-    hasHostClient = false;
-  }
-  if (hasHostClient) return <>{children}</>;
+  const hostClient = React.useContext(QueryClientContext);
+  if (hostClient) return <>{children}</>;
   return <QueryClientProvider client={getFallbackQueryClient()}>{children}</QueryClientProvider>;
 };
 
