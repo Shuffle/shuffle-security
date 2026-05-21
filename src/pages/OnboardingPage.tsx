@@ -13,7 +13,6 @@ const OnboardingPage = () => {
   const { isAuthenticated, isLoading, userInfo } = useAuth();
   return (
     <OnboardingFlow
-      theme="dark"
       product="security"
       isLoaded={!isLoading}
       isLoggedIn={isAuthenticated}
