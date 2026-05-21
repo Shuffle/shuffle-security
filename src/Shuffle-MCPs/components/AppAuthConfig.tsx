@@ -2387,6 +2387,11 @@ export const AppAuthConfig = ({
 
             return (
               <AppAuthCard
+                globalUrl={globalUrl}
+                userdata={userdata}
+                isLoaded={isLoaded}
+                isLoggedIn={isLoggedIn}
+                serverside={serverside}
                 key={app.objectID}
                 app={app}
                 authState={authState}
