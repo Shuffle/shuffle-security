@@ -135,6 +135,8 @@ export interface ShuffleMCPProps extends ShuffleHostProps {
   // Selection
   multiSelect?: boolean;
   selectedApps?: AlgoliaSearchApp[];
+  /** Disable automatic selection of already validated apps. Useful for explicit user pickers. */
+  disableAutoSelectValidatedApps?: boolean;
   preventDefault?: boolean;
   
   // Display Mode
