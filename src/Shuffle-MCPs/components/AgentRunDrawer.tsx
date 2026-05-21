@@ -39,6 +39,7 @@ import AgentIcon from '@/Shuffle-MCPs/components/AgentIcon';
 import AgentUI, { type AgentUIProps } from '@/Shuffle-MCPs/components/AgentUI';
 import type { ShuffleHostProps } from '@/Shuffle-MCPs/host-props';
 import { useSyncHostBaseUrl } from '@/Shuffle-MCPs/useSyncHostBaseUrl';
+import { useShuffleMcpTheme } from '@/Shuffle-MCPs/ShuffleMcpThemeProvider';
 
 export type AgentRunDrawerTab = 'run' | 'permissions' | 'localLLM';
 
@@ -103,6 +104,7 @@ const AgentRunDrawer = ({
 }: AgentRunDrawerProps) => {
   // Sync host base URL into the runtime so all internal fetches honor it.
   useSyncHostBaseUrl(globalUrl);
+  const themeScope = useShuffleMcpTheme();
   const [activeTab, setActiveTab] = useState<AgentRunDrawerTab>(initialTab);
 
   // Reset tab whenever the drawer transitions from closed -> open so each
@@ -144,7 +146,7 @@ const AgentRunDrawer = ({
       onClose={onClose}
       slotProps={{
         paper: {
-          className,
+          className: [themeScope?.scopeClassName, className].filter(Boolean).join(' ') || undefined,
           sx: [
             {
               width: { xs: '100%', sm: width },
