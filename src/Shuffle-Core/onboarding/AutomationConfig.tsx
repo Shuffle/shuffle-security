@@ -295,6 +295,8 @@ export const AutomationConfig = ({
   onTestConnection,
   onSaveAuth,
   globalUrl,
+  theme,
+  colorMode,
   userdata,
   isLoaded,
   isLoggedIn,
@@ -843,6 +845,8 @@ export const AutomationConfig = ({
       <Box sx={{ mt: 1 }}>
         <AppAuthCard
           globalUrl={globalUrl}
+          theme={theme}
+          colorMode={colorMode}
           userdata={userdata}
           isLoaded={isLoaded}
           isLoggedIn={isLoggedIn}
@@ -1680,7 +1684,7 @@ export const AutomationConfig = ({
     <Box>
       {/* Connected Apps — reuse sidebar component */}
       <Box sx={{ mb: 3, ml: -2 }}>
-        <IntegrationStatus globalUrl={globalUrl} userdata={userdata} isLoaded={isLoaded} isLoggedIn={isLoggedIn} serverside={serverside} collapsed={false} iconSize={30} showAll hideAddButton />
+        <IntegrationStatus globalUrl={globalUrl} theme={theme} colorMode={colorMode} userdata={userdata} isLoaded={isLoaded} isLoggedIn={isLoggedIn} serverside={serverside} collapsed={false} iconSize={30} showAll hideAddButton />
       </Box>
 
       {/* Header */}
