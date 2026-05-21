@@ -241,9 +241,6 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
   // reflect the latest sync_features for the active org.
   const [orgData, setOrgData] = useState<{
     sync_features?: Record<string, { usage?: number; limit?: number }>;
-    app_execution_limit?: number;
-    app_execution_usage?: number;
-    app_executions_suborgs?: number;
   } | null>(null);
   useEffect(() => {
     if (!orgId) return;
@@ -265,14 +262,17 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
     return () => { cancelled = true; };
   }, [orgId]);
 
-  const appRunLimit = orgData?.app_execution_limit ?? userInfo?.app_execution_limit ?? 0;
-  const appRunUsage =
-    (orgData?.app_execution_usage ?? userInfo?.app_execution_usage ?? 0) +
-    (orgData?.app_executions_suborgs ?? userInfo?.app_executions_suborgs ?? 0);
-  const agentTokens =
-    orgData?.sync_features?.agent_tokens ?? userInfo?.sync_features?.agent_tokens;
-  const agentTokenLimit = Number(agentTokens?.limit) || 0;
-  const agentTokenUsage = Number(agentTokens?.usage) || 0;
+  // The org payload exposes quota counters under sync_features. App runs live
+  // in sync_features.app_executions (NOT on the org root — those root-level
+  // fields are empty), and tokens under sync_features.agent_tokens.
+  const sync = orgData?.sync_features ?? (userInfo as any)?.sync_features ?? {};
+  const appExec = sync.app_executions ?? {};
+  const appRunLimit = Number(appExec.limit) || 0;
+  const appRunUsage = Number(appExec.usage) || 0;
+  const agentTokens = sync.agent_tokens ?? {};
+  const agentTokenLimit = Number(agentTokens.limit) || 0;
+  const agentTokenUsage = Number(agentTokens.usage) || 0;
+
 
   const usageBars = (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
