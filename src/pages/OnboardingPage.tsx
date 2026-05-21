@@ -1,4 +1,4 @@
-import { OnboardingFlow } from '@/Shuffle-Core/onboarding/OnboardingFlow';
+import { OnboardingFlow } from '@/Shuffle-Core/onboarding';
 import { useDemo } from '@/context/DemoContext';
 import { useAuth } from '@/context/AuthContext';
 import { API_CONFIG } from '@/Shuffle-MCPs/api';
