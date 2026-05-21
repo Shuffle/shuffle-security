@@ -1396,28 +1396,32 @@ const OnboardingFlow = ({
                 </Button>
               )}
               <Button
-                variant="contained"
+                variant="outlined"
                 onClick={handleNext}
                 disabled={!canProceed()}
                 endIcon={<ArrowForwardIcon />}
                 sx={{
-                  background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 100%)',
-                  boxShadow: '0 4px 14px hsl(var(--primary) / 0.25)',
+                  borderColor: 'hsl(var(--primary))',
+                  borderWidth: 2,
+                  color: 'hsl(var(--primary))',
+                  background: 'transparent',
                   px: 4,
                   py: 1.5,
                   fontWeight: 600,
                   '&:hover': {
-                    background: 'linear-gradient(135deg, hsl(var(--primary-glow)) 0%, hsl(var(--primary-glow)) 100%)',
-                    boxShadow: '0 6px 20px hsl(var(--primary) / 0.35)',
+                    borderWidth: 2,
+                    borderColor: 'hsl(var(--primary))',
+                    background: 'hsl(var(--primary) / 0.08)',
                   },
                   '&.Mui-disabled': {
-                    background: 'hsl(var(--muted))',
+                    borderColor: 'hsl(var(--border))',
                     color: 'hsl(var(--muted-foreground))',
                   },
                 }}
               >
                 {activeStep === steps.length - 1 ? 'Finish Setup' : 'Continue'}
               </Button>
+
             </Stack>
           </Box>
         </Container>
