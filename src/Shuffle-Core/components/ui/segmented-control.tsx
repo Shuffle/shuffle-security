@@ -122,7 +122,7 @@ export function SegmentedControl<V extends string = string>({
               <span
                 key={opt.key ?? `divider-${i}`}
                 aria-hidden
-                className={cn("w-px bg-border self-center", s.divider)}
+                style={{ width: 1, alignSelf: "center", backgroundColor: "hsl(var(--border))", ...s.divider }}
               />
             );
           }
@@ -145,21 +145,38 @@ export function SegmentedControl<V extends string = string>({
                 if (isAction) opt.onClick();
                 else onChange(opt.value);
               }}
-              className={cn(
-                "relative inline-flex items-center rounded-full font-medium",
-                "transition-colors duration-300",
-                "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                s.item,
-                active
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground",
-                opt.disabled && "opacity-50 cursor-not-allowed",
-              )}
+              style={{
+                position: "relative",
+                display: "inline-flex",
+                alignItems: "center",
+                border: 0,
+                borderRadius: 999,
+                background: "transparent",
+                color: active ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                font: "inherit",
+                fontWeight: 500,
+                cursor: opt.disabled ? "not-allowed" : "pointer",
+                opacity: opt.disabled ? 0.5 : 1,
+                transition: "color 300ms ease",
+                ...s.item,
+              }}
+              onMouseEnter={(event) => {
+                if (!active && !opt.disabled) event.currentTarget.style.color = "hsl(var(--foreground))";
+              }}
+              onMouseLeave={(event) => {
+                if (!active) event.currentTarget.style.color = "hsl(var(--muted-foreground))";
+              }}
             >
               {active && (
                 <motion.span
                   layoutId={`${groupId}-pill`}
-                  className="absolute inset-0 rounded-full bg-muted border border-border"
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    borderRadius: 999,
+                    backgroundColor: "hsl(var(--muted))",
+                    border: "1px solid hsl(var(--border))",
+                  }}
                   initial={false}
                   transition={{
                     type: "spring",
@@ -168,18 +185,25 @@ export function SegmentedControl<V extends string = string>({
                   }}
                 />
               )}
-              <span className="relative z-10 inline-flex items-center gap-1.5">
+              <span style={{ position: "relative", zIndex: 1, display: "inline-flex", alignItems: "center", gap: 6 }}>
                 {opt.label}
               </span>
               {!isAction && typeof opt.count === "number" && (
                 <span
-                  className={cn(
-                    "relative z-10 inline-flex items-center justify-center rounded-md font-semibold tabular-nums border border-border/60",
-                    s.count,
-                    active
-                      ? "bg-transparent text-foreground"
-                      : "bg-transparent text-muted-foreground",
-                  )}
+                  style={{
+                    position: "relative",
+                    zIndex: 1,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 6,
+                    border: "1px solid hsl(var(--border) / 0.6)",
+                    background: "transparent",
+                    color: active ? "hsl(var(--foreground))" : "hsl(var(--muted-foreground))",
+                    fontWeight: 600,
+                    fontVariantNumeric: "tabular-nums",
+                    ...s.count,
+                  }}
                 >
                   {opt.count}
                 </span>
