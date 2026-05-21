@@ -1075,86 +1075,89 @@ const OnboardingFlow = ({
         }}
       />
 
-      {/* Floating Step Indicator pill */}
-      <Box
-        sx={{
-          position: 'fixed',
-          top: 16,
-          left: 0,
-          right: 0,
-          zIndex: 100,
-          display: 'flex',
-          justifyContent: 'center',
-          pointerEvents: 'none',
-        }}
-      >
-        <Box sx={{ pointerEvents: 'auto' }}>
-          <SegmentedControl
-            size="md"
-            variant="outline"
-            ariaLabel="Onboarding steps"
-            layoutId="onboarding-steps"
-            value={steps[activeStep]?.key ?? steps[0].key}
-            onChange={(key) => setActiveStepKey(key)}
-            options={steps.map((step, index): SegmentedItem => ({
-              value: step.key,
-              label: (
-                <span className="inline-flex items-center gap-1.5">
-                  {index < activeStep
-                    ? <CheckCircleOutlineIcon size={14} />
-                    : React.isValidElement(step.icon)
-                      ? React.cloneElement(step.icon as React.ReactElement, { size: 14 })
-                      : step.icon}
-                  <span className="hidden md:inline">{step.label}</span>
-                </span>
-              ),
-            }))}
-          />
-        </Box>
-      </Box>
-
-      {/* Floating Demo Mode CTA — visible on every onboarding step except
-          the product picker (ProductChoiceStep renders the inline version).
-          Shares `layoutId` with that inline button so framer-motion animates
-          the transition when navigating off the product step. */}
-      <AnimatePresence>
-        {steps[activeStep]?.key !== 'product' && (
-          <Box
-            sx={{
-              position: 'fixed',
-              top: 64,
-              left: 0,
-              right: 0,
-              zIndex: 99,
-              display: 'flex',
-              justifyContent: 'center',
-              pointerEvents: 'none',
-            }}
-          >
-            <motion.button
-              layoutId="onboarding-demo-cta"
-              type="button"
-              onClick={() => {
-                if (product === 'security' && onStartDemo) {
-                  onStartDemo();
-                } else {
-                  window.location.href = demoRedirectUrl;
-                }
-              }}
-              className="group inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background/80 backdrop-blur px-4 text-sm font-medium text-foreground transition-colors hover:border-primary hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              style={{ pointerEvents: 'auto' }}
-            >
-              <PlayCircle className="h-4 w-4" />
-              <span className="hidden sm:inline">See it immediately — Try Demo Mode</span>
-              <span className="sm:hidden">Try Demo Mode</span>
-              <ArrowForwardIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </motion.button>
-          </Box>
-        )}
-      </AnimatePresence>
-
       {/* Scrollable Content Area */}
       <Box sx={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', zIndex: 1, pt: { xs: 8, sm: 9 }, pb: 10, width: '100%' }}>
+        {/* Floating Step Indicator pill — sticky inside the scroll
+            container so it shares the same horizontal centering basis as
+            the content below (otherwise the inner scrollbar shifts the
+            content and the pill appears off-center). */}
+        <Box
+          sx={{
+            position: 'sticky',
+            top: 16,
+            zIndex: 100,
+            display: 'flex',
+            justifyContent: 'center',
+            pointerEvents: 'none',
+            width: '100%',
+            mt: { xs: -7, sm: -8 },
+            mb: 2,
+          }}
+        >
+          <Box sx={{ pointerEvents: 'auto' }}>
+            <SegmentedControl
+              size="md"
+              variant="outline"
+              ariaLabel="Onboarding steps"
+              layoutId="onboarding-steps"
+              value={steps[activeStep]?.key ?? steps[0].key}
+              onChange={(key) => setActiveStepKey(key)}
+              options={steps.map((step, index): SegmentedItem => ({
+                value: step.key,
+                label: (
+                  <span className="inline-flex items-center gap-1.5">
+                    {index < activeStep
+                      ? <CheckCircleOutlineIcon size={14} />
+                      : React.isValidElement(step.icon)
+                        ? React.cloneElement(step.icon as React.ReactElement, { size: 14 })
+                        : step.icon}
+                    <span className="hidden md:inline">{step.label}</span>
+                  </span>
+                ),
+              }))}
+            />
+          </Box>
+        </Box>
+
+        {/* Floating Demo Mode CTA — sticky, same centering basis as pill. */}
+        <AnimatePresence>
+          {steps[activeStep]?.key !== 'product' && (
+            <Box
+              sx={{
+                position: 'sticky',
+                top: 64,
+                zIndex: 99,
+                display: 'flex',
+                justifyContent: 'center',
+                pointerEvents: 'none',
+                width: '100%',
+                mt: -4,
+                mb: 2,
+              }}
+            >
+              <motion.button
+                layoutId="onboarding-demo-cta"
+                type="button"
+                onClick={() => {
+                  if (product === 'security' && onStartDemo) {
+                    onStartDemo();
+                  } else {
+                    window.location.href = demoRedirectUrl;
+                  }
+                }}
+                className="group inline-flex h-9 items-center gap-2 rounded-md border border-border bg-background/80 backdrop-blur px-4 text-sm font-medium text-foreground transition-colors hover:border-primary hover:text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                style={{ pointerEvents: 'auto' }}
+              >
+                <PlayCircle className="h-4 w-4" />
+                <span className="hidden sm:inline">See it immediately — Try Demo Mode</span>
+                <span className="sm:hidden">Try Demo Mode</span>
+                <ArrowForwardIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </motion.button>
+            </Box>
+          )}
+        </AnimatePresence>
+
+
         <Container maxWidth="lg" sx={{ py: { xs: 1, sm: 2 }, px: { xs: 2, sm: 3 }, width: '100%', maxWidth: '100%' }}>
           {/* Content Card */}
           <motion.div
