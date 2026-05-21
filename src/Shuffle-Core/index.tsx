@@ -31,7 +31,10 @@ import DashboardOverviewRaw from './components/dashboard/DashboardOverview';
  * Wrap a Shuffle-Core surface in the theme provider. Every exported
  * component accepts an optional `theme` prop:
  *   - `"light"` / `"dark"` — pin the subtree to that scheme
- *   - `"system"` (default) — follow the host page's `.dark` class on `<html>`
+ *   - `"system"` — follow the host page's `.dark` class on `<html>`
+ *
+ * If `theme` is omitted, defaults to `"dark"` (Shuffle's primary surface).
+ * Callers can always override by passing `theme="light"` or `theme="system"`.
  *
  * `colorMode` is kept as a legacy alias (`"auto"` == `"system"`). We avoid
  * the name `mode` so we don't collide with component-specific props
@@ -43,7 +46,8 @@ type WithTheme<P> = P & { theme?: ShuffleTheme; colorMode?: ShuffleColorMode };
 const resolveMode = (theme?: ShuffleTheme, colorMode?: ShuffleColorMode): ShuffleColorMode => {
   if (theme === 'light' || theme === 'dark') return theme;
   if (theme === 'system') return 'auto';
-  return colorMode ?? 'auto';
+  if (colorMode) return colorMode;
+  return 'dark';
 };
 
 /**
