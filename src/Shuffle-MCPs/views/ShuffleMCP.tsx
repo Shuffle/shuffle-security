@@ -7,7 +7,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo, useImperativeHandle } from 'react';
 import { algoliasearch, SearchClient } from 'algoliasearch';
 import { Tooltip } from '@mui/material';
-import type { AlgoliaSearchApp, AppSelectedEvent, ShuffleMCPProps, AppAuthentication } from '@/Shuffle-MCPs/shuffle-mcp';
+import type { AlgoliaSearchApp, AppSelectedEvent, ShuffleMCPProps, AppAuthentication } from '@/Shuffle-MCPs/shuffle-mcp.helpers';
 import AppDetailDrawer from '@/Shuffle-MCPs/views/AppDetailDrawer';
 import './shuffle-mcp.css';
 import { fetchApps } from '@/Shuffle-MCPs/appsCache';

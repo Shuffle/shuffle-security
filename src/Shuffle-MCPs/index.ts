@@ -139,7 +139,7 @@ export type {
   AppAuthentication,
   CustomStyles,
   ShuffleMCPProps,
-} from '@/Shuffle-MCPs/shuffle-mcp';
+} from '@/Shuffle-MCPs/shuffle-mcp.helpers';
 
 // ---------------------------------------------------------------------------
 // Re-exports consumed by @shuffleio/shuffle-core (and other downstream apps).

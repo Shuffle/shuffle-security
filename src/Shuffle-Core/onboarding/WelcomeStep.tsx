@@ -67,7 +67,7 @@ export const WelcomeStep = ({ onSelect, selectedChallenge }: WelcomeStepProps) =
             py: 0.75,
             mb: 3,
             backgroundColor: 'hsl(var(--primary) / 0.1)',
-            border: '1px solid rgba(255, 102, 0, 0.3)',
+            border: '1px solid hsl(var(--primary) / 0.3)',
             borderRadius: '100px',
           }}
         >
@@ -279,8 +279,8 @@ export const WelcomeStep = ({ onSelect, selectedChallenge }: WelcomeStepProps) =
             sx={{
               mt: 2,
               p: 3,
-              backgroundColor: 'rgba(34, 197, 94, 0.08)',
-              border: '1px solid rgba(34, 197, 94, 0.2)',
+              backgroundColor: 'hsl(var(--severity-low) / 0.08)',
+              border: '1px solid hsl(var(--severity-low) / 0.2)',
               borderRadius: 3,
               maxWidth: 600,
               mx: 'auto',
@@ -289,7 +289,7 @@ export const WelcomeStep = ({ onSelect, selectedChallenge }: WelcomeStepProps) =
             <Typography
               variant="body1"
               sx={{
-                color: '#22c55e',
+                color: 'hsl(var(--severity-low))',
                 fontWeight: 500,
                 display: 'flex',
                 alignItems: 'center',

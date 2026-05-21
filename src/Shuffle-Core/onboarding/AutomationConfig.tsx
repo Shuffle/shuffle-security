@@ -1383,7 +1383,7 @@ export const AutomationConfig = ({
                                 onClick={() => initThreatFeeds()}
                                 sx={{ 
                                   color: 'hsl(var(--muted-foreground))',
-                                  '&:hover': { color: '#ff6600' },
+                                  '&:hover': { color: 'hsl(var(--primary))' },
                                 }}
                               >
                                 <RestoreIcon size={16} />

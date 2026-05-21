@@ -410,7 +410,7 @@ export const PrimaryToolStep = ({
             sx={{ 
               mt: 4, 
               p: 3, 
-              backgroundColor: 'rgba(34, 197, 94, 0.08)',
+              backgroundColor: 'hsl(var(--severity-low) / 0.08)',
               border: '1px solid hsl(var(--severity-low) / 0.2)',
               borderRadius: 3,
               maxWidth: 600,

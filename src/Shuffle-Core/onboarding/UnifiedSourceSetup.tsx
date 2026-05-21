@@ -98,7 +98,7 @@ const singulStyles = {
     transition: 'all 0.2s ease',
   },
   dropdownItemHover: {
-    borderColor: 'rgba(255, 102, 0, 0.5)',
+    borderColor: 'hsl(var(--primary) / 0.5)',
     backgroundColor: 'hsl(var(--accent) / 0.08)',
   },
   selectedItem: {

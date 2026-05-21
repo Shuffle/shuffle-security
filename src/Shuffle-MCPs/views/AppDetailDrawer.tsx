@@ -38,7 +38,7 @@ import { motion } from 'framer-motion';
 import { AppAuthCard } from '@/Shuffle-MCPs/components/AppAuthConfig';
 import AppMcpChat from '@/Shuffle-MCPs/views/AppMcpChat';
 import ApiCallViewer from '@/Shuffle-MCPs/components/ApiCallViewer';
-import type { AlgoliaSearchApp } from '@/Shuffle-MCPs/shuffle-mcp';
+import type { AlgoliaSearchApp } from '@/Shuffle-MCPs/shuffle-mcp.helpers';
 import { useAppAuth } from '@/Shuffle-MCPs/useAppAuth';
 import { API_CONFIG, getApiUrl, getAuthHeader, getTrackedOrgId } from '@/Shuffle-MCPs/api';
 import { fetchAppsViaApiConfig } from '@/Shuffle-MCPs/appsCache';
