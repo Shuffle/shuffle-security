@@ -1097,14 +1097,15 @@ const OnboardingFlow = ({
         }}
       />
 
-      {/* Floating Step Indicator pill — fixed to viewport so it stays
-          pinned at the top while the content area scrolls. */}
+      {/* Floating Step Indicator pill — fixed but aligned to THIS
+          component's bounding box (excludes the app sidebar) so it is
+          centered relative to the onboarding content, not the viewport. */}
       <Box
         sx={{
           position: 'fixed',
           top: 16,
-          left: 0,
-          right: 0,
+          left: `${rootRect.left}px`,
+          width: `${rootRect.width}px`,
           zIndex: 100,
           display: 'flex',
           justifyContent: 'center',
@@ -1136,21 +1137,22 @@ const OnboardingFlow = ({
         </Box>
       </Box>
 
-      {/* Floating Demo Mode CTA */}
+      {/* Floating Demo Mode CTA — same component-relative centering. */}
       <AnimatePresence>
         {steps[activeStep]?.key !== 'product' && (
           <Box
             sx={{
               position: 'fixed',
               top: 64,
-              left: 0,
-              right: 0,
+              left: `${rootRect.left}px`,
+              width: `${rootRect.width}px`,
               zIndex: 99,
               display: 'flex',
               justifyContent: 'center',
               pointerEvents: 'none',
             }}
           >
+
             <motion.button
               layoutId="onboarding-demo-cta"
               type="button"
