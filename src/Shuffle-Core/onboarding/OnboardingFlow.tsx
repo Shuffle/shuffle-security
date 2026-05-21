@@ -239,6 +239,26 @@ const OnboardingFlow = ({
   const stepEnteredAtRef = useRef<number>(Date.now());
   const onboardingCompletedRef = useRef(false);
 
+  // Track the OnboardingFlow root rect so the fixed-position pill + demo
+  // CTA can be centered relative to THIS component's box (excluding the
+  // app sidebar) rather than the viewport.
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const [rootRect, setRootRect] = useState<{ left: number; width: number }>({ left: 0, width: 0 });
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    const update = () => {
+      const r = el.getBoundingClientRect();
+      setRootRect({ left: r.left, width: r.width });
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    window.addEventListener('resize', update);
+    return () => { ro.disconnect(); window.removeEventListener('resize', update); };
+  }, []);
+
+
 
   const [selectedChallenge, setSelectedChallenge] = useState<string | null>(null);
   const [selectedApps, setSelectedApps] = useState<AlgoliaSearchApp[]>([]);
@@ -1035,6 +1055,7 @@ const OnboardingFlow = ({
 
   return (
     <Box
+      ref={rootRef}
       sx={{
         minHeight: '100vh',
         position: 'relative',
@@ -1044,6 +1065,7 @@ const OnboardingFlow = ({
         flexDirection: 'column',
       }}
     >
+
       {/* Background effects - matching landing page */}
       <Box
         sx={{
@@ -1075,14 +1097,15 @@ const OnboardingFlow = ({
         }}
       />
 
-      {/* Floating Step Indicator pill — fixed to viewport so it stays
-          pinned at the top while the content area scrolls. */}
+      {/* Floating Step Indicator pill — fixed but aligned to THIS
+          component's bounding box (excludes the app sidebar) so it is
+          centered relative to the onboarding content, not the viewport. */}
       <Box
         sx={{
           position: 'fixed',
           top: 16,
-          left: 0,
-          right: 0,
+          left: `${rootRect.left}px`,
+          width: `${rootRect.width}px`,
           zIndex: 100,
           display: 'flex',
           justifyContent: 'center',
@@ -1114,21 +1137,22 @@ const OnboardingFlow = ({
         </Box>
       </Box>
 
-      {/* Floating Demo Mode CTA */}
+      {/* Floating Demo Mode CTA — same component-relative centering. */}
       <AnimatePresence>
         {steps[activeStep]?.key !== 'product' && (
           <Box
             sx={{
               position: 'fixed',
               top: 64,
-              left: 0,
-              right: 0,
+              left: `${rootRect.left}px`,
+              width: `${rootRect.width}px`,
               zIndex: 99,
               display: 'flex',
               justifyContent: 'center',
               pointerEvents: 'none',
             }}
           >
+
             <motion.button
               layoutId="onboarding-demo-cta"
               type="button"
