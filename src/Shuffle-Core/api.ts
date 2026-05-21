@@ -88,6 +88,8 @@ export const getTrackedOrgId = (): string | null => _trackedOrgId;
  * `useSyncHostBaseUrl`) with `globalUrl` from `ShuffleHostProps`. Beats region
  * URL and default for ALL fetches that go through `getApiUrl()`.
  */
+const SHUFFLE_HOST_BASE_URL_EVENT = 'shuffle:set-host-base-url';
+
 export const setHostBaseUrl = (url: string | undefined | null) => {
   const next = url ? url.replace(/\/+$/, '') : null;
   if (next === _hostBaseUrl) return;
@@ -95,9 +97,27 @@ export const setHostBaseUrl = (url: string | undefined | null) => {
   if (next) {
     try { registerProtectedOrigin(next); } catch { /* noop */ }
   }
+  // Cross-broadcast so sibling Shuffle packages (e.g. Shuffle-MCPs) that hold
+  // their own copy of api.ts pick up the same host override. Guarded by the
+  // `next === _hostBaseUrl` early-return above so the loop terminates.
+  if (typeof window !== 'undefined') {
+    try {
+      window.dispatchEvent(new CustomEvent(SHUFFLE_HOST_BASE_URL_EVENT, { detail: next }));
+    } catch { /* noop */ }
+  }
 };
 
+if (typeof window !== 'undefined') {
+  try {
+    window.addEventListener(SHUFFLE_HOST_BASE_URL_EVENT, (e: Event) => {
+      const detail = (e as CustomEvent).detail as string | null | undefined;
+      setHostBaseUrl(detail ?? null);
+    });
+  } catch { /* noop */ }
+}
+
 export const getHostBaseUrl = (): string | null => _hostBaseUrl;
+
 
 export const API_CONFIG = {
   get baseUrl(): string {
