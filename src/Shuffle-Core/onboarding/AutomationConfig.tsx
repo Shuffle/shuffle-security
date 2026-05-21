@@ -241,7 +241,7 @@ interface SourceChipProps {
 }
 
 const SourceChip = ({ label, apps, activeCount, totalCount, hasAnyActive, optionId, isToolEnabled }: SourceChipProps) => {
-  const safeApps = (apps || []).filter((a): a is NonNullable<typeof a> => !!a && !!a.name);
+  const safeApps = safeConnectedApps(apps);
   const hasAny = safeApps.length > 0;
   const activeApps = safeApps.filter(app => isToolEnabled(optionId, app.id));
   
@@ -647,16 +647,16 @@ export const AutomationConfig = ({
 
   const getAllToolsForOption = (option: EnrichmentOption): ConnectedApp[] => {
     if (option.ingestionSources) {
-      return option.ingestionSources.flatMap(s => s.apps);
+      return option.ingestionSources.flatMap(s => safeConnectedApps(s.apps));
     }
     if (option.notificationSources) {
-      return option.notificationSources.flatMap(s => s.apps);
+      return option.notificationSources.flatMap(s => safeConnectedApps(s.apps));
     }
     if (option.threatIntelSources) {
-      return option.threatIntelSources.flatMap(s => s.apps);
+      return option.threatIntelSources.flatMap(s => safeConnectedApps(s.apps));
     }
     if (option.connectedApps) {
-      return option.connectedApps;
+      return safeConnectedApps(option.connectedApps);
     }
     return [];
   };
@@ -665,16 +665,16 @@ export const AutomationConfig = ({
     const option = enrichmentOptions.find(o => o.id === optionId);
     if (!option) return undefined;
     if (option.ingestionSources) {
-      return option.ingestionSources.flatMap(s => s.apps).find(a => a.id === appId);
+      return option.ingestionSources.flatMap(s => safeConnectedApps(s.apps)).find(a => a.id === appId);
     }
     if (option.notificationSources) {
-      return option.notificationSources.flatMap(s => s.apps).find(a => a.id === appId);
+      return option.notificationSources.flatMap(s => safeConnectedApps(s.apps)).find(a => a.id === appId);
     }
     if (option.threatIntelSources) {
-      return option.threatIntelSources.flatMap(s => s.apps).find(a => a.id === appId);
+      return option.threatIntelSources.flatMap(s => safeConnectedApps(s.apps)).find(a => a.id === appId);
     }
     if (option.connectedApps) {
-      return option.connectedApps.find(a => a.id === appId);
+      return safeConnectedApps(option.connectedApps).find(a => a.id === appId);
     }
     return undefined;
   };
