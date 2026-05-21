@@ -21,15 +21,41 @@ const readHtmlDarkClass = (): boolean => {
   return document.documentElement.classList.contains("dark");
 };
 
-const useHtmlDarkClass = (enabled: boolean): boolean => {
+/**
+ * Resolve "auto" theme by inspecting the nearest ancestor that already
+ * declares a Shuffle theme scope. Makes a pinned scope cascade across the
+ * Shuffle-Core / Shuffle-MCPs package boundary (React context can't, since
+ * each package ships its own copy).
+ */
+const readAncestorDark = (anchor: Element | null): boolean | null => {
+  if (!anchor || typeof document === "undefined") return null;
+  const start = anchor.parentElement;
+  if (!start) return null;
+  const scoped = start.closest('[data-shuffle-mode="dark"], [data-shuffle-mode="light"]');
+  if (scoped) return scoped.getAttribute("data-shuffle-mode") === "dark";
+  const darkAncestor = start.closest(".dark");
+  if (darkAncestor) return true;
+  return null;
+};
+
+const useAutoDarkClass = (enabled: boolean, anchorRef: React.RefObject<HTMLElement>): boolean => {
   const [isDark, setIsDark] = React.useState<boolean>(() => (enabled ? readHtmlDarkClass() : false));
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     if (!enabled || typeof document === "undefined") return;
-    setIsDark(readHtmlDarkClass());
-    const observer = new MutationObserver(() => setIsDark(readHtmlDarkClass()));
+    const recompute = () => {
+      const ancestor = readAncestorDark(anchorRef.current);
+      setIsDark(ancestor !== null ? ancestor : readHtmlDarkClass());
+    };
+    recompute();
+    const observer = new MutationObserver(recompute);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    let node: HTMLElement | null = anchorRef.current?.parentElement ?? null;
+    while (node) {
+      observer.observe(node, { attributes: true, attributeFilter: ["class", "data-shuffle-mode"] });
+      node = node.parentElement;
+    }
     return () => observer.disconnect();
-  }, [enabled]);
+  }, [enabled, anchorRef]);
   return isDark;
 };
 
