@@ -109,7 +109,7 @@ export const ToolAuthentication = ({
         sx={{
           backgroundColor: 'hsl(var(--primary) / 0.1)',
           color: 'hsl(var(--primary))',
-          border: '1px solid rgba(255, 102, 0, 0.3)',
+          border: '1px solid hsl(var(--primary) / 0.3)',
           borderRadius: 2,
         }}
       >
