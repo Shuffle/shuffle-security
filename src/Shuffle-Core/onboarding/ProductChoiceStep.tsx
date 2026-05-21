@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, FocusEvent, MouseEvent, ReactNode } from 'react';
 import { ArrowRight, PlayCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { AgentIcon } from '@shuffleio/shuffle-mcps';
@@ -134,24 +134,24 @@ const styles = {
   regionWrap: {
     marginTop: 24,
   },
-};
+} satisfies Record<string, CSSProperties>;
 
 const hoverHandlers = {
-  onMouseEnter: (event: React.MouseEvent<HTMLButtonElement>) => {
+  onMouseEnter: (event: MouseEvent<HTMLButtonElement>) => {
     event.currentTarget.style.borderColor = 'hsl(var(--primary))';
     event.currentTarget.style.backgroundColor = 'hsl(var(--card) / 0.4)';
     event.currentTarget.style.transform = 'translateY(-1px)';
   },
-  onMouseLeave: (event: React.MouseEvent<HTMLButtonElement>) => {
+  onMouseLeave: (event: MouseEvent<HTMLButtonElement>) => {
     event.currentTarget.style.borderColor = 'hsl(var(--border))';
     event.currentTarget.style.backgroundColor = 'transparent';
     event.currentTarget.style.transform = 'translateY(0)';
   },
-  onFocus: (event: React.FocusEvent<HTMLButtonElement>) => {
+  onFocus: (event: FocusEvent<HTMLButtonElement>) => {
     event.currentTarget.style.outline = '2px solid hsl(var(--primary))';
     event.currentTarget.style.outlineOffset = '2px';
   },
-  onBlur: (event: React.FocusEvent<HTMLButtonElement>) => {
+  onBlur: (event: FocusEvent<HTMLButtonElement>) => {
     event.currentTarget.style.outline = 'none';
   },
 };
