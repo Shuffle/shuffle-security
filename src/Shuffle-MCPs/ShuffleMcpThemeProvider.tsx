@@ -176,15 +176,15 @@ export const ShuffleMcpThemeProvider: React.FC<ShuffleMcpThemeProviderProps> = (
 }) => {
   const parent = useMuiTheme();
   const parentCtx = useShuffleMcpTheme();
-  const htmlIsDark = useHtmlDarkClass(mode === "auto");
-  const effectiveDark = mode === "auto" ? htmlIsDark : mode === "dark";
+  const anchorRef = React.useRef<HTMLSpanElement>(null);
+  const autoIsDark = useAutoDarkClass(mode === "auto", anchorRef);
+  const effectiveDark = mode === "auto" ? autoIsDark : mode === "dark";
 
-  // If we're already inside a Shuffle scope that resolved to the same
-  // theme, don't re-wrap — keeps DOM flat when wrapped exports nest.
   const sameAsParent =
     parentCtx !== null && parentCtx.isDark === effectiveDark;
 
   const scopeClassName = effectiveDark ? "shuffle-mcp-scope dark" : "shuffle-mcp-scope";
+  const resolvedModeAttr = effectiveDark ? "dark" : "light";
 
   const merged = React.useMemo(
     () =>
@@ -210,6 +210,7 @@ export const ShuffleMcpThemeProvider: React.FC<ShuffleMcpThemeProviderProps> = (
   if (sameAsParent) {
     return (
       <ShuffleMcpThemeContext.Provider value={ctxValue}>
+        <span ref={anchorRef} style={{ display: "none" }} aria-hidden />
         {children}
       </ShuffleMcpThemeContext.Provider>
     );
@@ -218,7 +219,8 @@ export const ShuffleMcpThemeProvider: React.FC<ShuffleMcpThemeProviderProps> = (
   return (
     <ShuffleMcpThemeContext.Provider value={ctxValue}>
       <ThemeProvider theme={merged}>
-        <div className={scopeClassName} data-shuffle-mode={mode} data-shuffle-mcp-root>
+        <div className={scopeClassName} data-shuffle-mode={resolvedModeAttr} data-shuffle-mcp-root>
+          <span ref={anchorRef} style={{ display: "none" }} aria-hidden />
           {children}
         </div>
       </ThemeProvider>
