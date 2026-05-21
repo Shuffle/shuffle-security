@@ -1,32 +1,50 @@
 /**
  * ShuffleCoreThemeProvider
  *
- * Single source of truth for theming inside Shuffle-Core surfaces. Two jobs:
- *
- * 1. Pin MUI component defaults so TextField / Button / Select / FormControl /
- *    Autocomplete render at `size="small"` (36px buttons, ~38px text fields)
- *    so individual call sites never need to thread `size="small"` through.
- *
- * 2. Bridge the host app's light/dark scheme into MUI:
- *    - `mode="auto"` (default) — track the `.dark` class on `<html>` and flip
- *      MUI `palette.mode` accordingly. Tokens (`hsl(var(--…))`) flip automatically
- *      with the same class, so nothing else has to know about the theme.
- *    - `mode="light"` / `mode="dark"` — force a scheme on the wrapped subtree.
- *      We render a `<div className="dark">` (or remove it) so Tailwind's
- *      class-based dark variants and the CSS-variable overrides scope to this
- *      subtree only — useful when embedding Shuffle-Core inside a host that
- *      doesn't manage `.dark` on `<html>`.
- *
- * This is the clean API: callers either let Shuffle-Core inherit the host's
- * theme (auto), or pin a mode at the top of their embed. They never need to
- * pass colors anywhere.
+ * - Pins MUI component defaults (`size="small"`).
+ * - Bridges the host app's light/dark scheme into MUI (`palette.mode`) and
+ *   into our HSL token system (scoped `.dark` class).
+ * - Exposes `ShuffleCoreThemeContext` so internal raw components — and
+ *   views that compose other Shuffle-Core components without going through
+ *   the public wrapped exports — see the resolved mode.
+ * - Stamps the scope className onto MUI portaled paper (Drawer, Dialog,
+ *   Menu, Popover, Tooltip), so portals rendered into <body> still resolve
+ *   our `hsl(var(--…))` tokens against the pinned theme.
  */
 import React from "react";
 import { ThemeProvider, createTheme, useTheme as useMuiTheme } from "@mui/material";
 
 export type ShuffleColorMode = "light" | "dark" | "auto";
 
-const componentOverrides = {
+const readHtmlDarkClass = (): boolean => {
+  if (typeof document === "undefined") return false;
+  return document.documentElement.classList.contains("dark");
+};
+
+const useHtmlDarkClass = (enabled: boolean): boolean => {
+  const [isDark, setIsDark] = React.useState<boolean>(() => (enabled ? readHtmlDarkClass() : false));
+  React.useEffect(() => {
+    if (!enabled || typeof document === "undefined") return;
+    setIsDark(readHtmlDarkClass());
+    const observer = new MutationObserver(() => setIsDark(readHtmlDarkClass()));
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, [enabled]);
+  return isDark;
+};
+
+interface ShuffleCoreThemeContextValue {
+  mode: ShuffleColorMode;
+  isDark: boolean;
+  scopeClassName: string;
+}
+
+export const ShuffleCoreThemeContext = React.createContext<ShuffleCoreThemeContextValue | null>(null);
+
+export const useShuffleCoreTheme = (): ShuffleCoreThemeContextValue | null =>
+  React.useContext(ShuffleCoreThemeContext);
+
+const buildComponentOverrides = (scopeClassName: string) => ({
   MuiTextField: { defaultProps: { size: "small" as const } },
   MuiButton: { defaultProps: { size: "small" as const } },
   MuiFormControl: { defaultProps: { size: "small" as const } },
@@ -67,9 +85,7 @@ const componentOverrides = {
     },
   },
   MuiDivider: {
-    styleOverrides: {
-      root: { borderColor: "hsl(var(--border))" },
-    },
+    styleOverrides: { root: { borderColor: "hsl(var(--border))" } },
   },
   MuiCheckbox: {
     styleOverrides: {
@@ -97,6 +113,7 @@ const componentOverrides = {
     },
   },
   MuiDrawer: {
+    defaultProps: { slotProps: { paper: { className: scopeClassName } } },
     styleOverrides: {
       paper: {
         backgroundColor: "hsl(var(--sidebar-background))",
@@ -104,6 +121,9 @@ const componentOverrides = {
         borderColor: "hsl(var(--sidebar-border))",
       },
     },
+  },
+  MuiDialog: {
+    defaultProps: { slotProps: { paper: { className: scopeClassName } } },
   },
   MuiPaper: {
     styleOverrides: {
@@ -115,6 +135,7 @@ const componentOverrides = {
     },
   },
   MuiMenu: {
+    defaultProps: { slotProps: { paper: { className: scopeClassName } } },
     styleOverrides: {
       paper: {
         backgroundColor: "hsl(var(--popover))",
@@ -124,6 +145,7 @@ const componentOverrides = {
     },
   },
   MuiPopover: {
+    defaultProps: { slotProps: { paper: { className: scopeClassName } } },
     styleOverrides: {
       paper: {
         backgroundColor: "hsl(var(--popover))",
@@ -132,36 +154,16 @@ const componentOverrides = {
       },
     },
   },
-};
-
-/** Read whether the host page is currently in dark mode. */
-const readHtmlDarkClass = (): boolean => {
-  if (typeof document === "undefined") return false;
-  return document.documentElement.classList.contains("dark");
-};
-
-/** Subscribe to changes on the html element's class list. */
-const useHtmlDarkClass = (enabled: boolean): boolean => {
-  const [isDark, setIsDark] = React.useState<boolean>(() => (enabled ? readHtmlDarkClass() : false));
-  React.useEffect(() => {
-    if (!enabled || typeof document === "undefined") return;
-    setIsDark(readHtmlDarkClass());
-    const observer = new MutationObserver(() => setIsDark(readHtmlDarkClass()));
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
-  }, [enabled]);
-  return isDark;
-};
+  MuiTooltip: {
+    defaultProps: { slotProps: { tooltip: { className: scopeClassName } } },
+  },
+});
 
 export interface ShuffleCoreThemeProviderProps {
   children: React.ReactNode;
   /**
-   * Color mode for the wrapped subtree.
    * - `"auto"` (default) — follow the host page's `.dark` class on `<html>`.
-   *   Shuffle Security itself uses this so its in-app light/dark toggle
-   *   actually flips embedded components.
-   * - `"light"` / `"dark"` — pin the subtree to that scheme. Tailwind dark
-   *   variants and CSS variable overrides are scoped via a wrapping `<div>`.
+   * - `"light"` / `"dark"` — pin the subtree (and portals from within it).
    */
   mode?: ShuffleColorMode;
 }
@@ -171,8 +173,14 @@ export const ShuffleCoreThemeProvider: React.FC<ShuffleCoreThemeProviderProps> =
   mode = "auto",
 }) => {
   const parent = useMuiTheme();
+  const parentCtx = useShuffleCoreTheme();
   const htmlIsDark = useHtmlDarkClass(mode === "auto");
   const effectiveDark = mode === "auto" ? htmlIsDark : mode === "dark";
+
+  const sameAsParent =
+    parentCtx !== null && parentCtx.isDark === effectiveDark;
+
+  const scopeClassName = effectiveDark ? "shuffle-core-scope dark" : "shuffle-core-scope";
 
   const merged = React.useMemo(
     () =>
@@ -184,23 +192,32 @@ export const ShuffleCoreThemeProvider: React.FC<ShuffleCoreThemeProviderProps> =
         },
         components: {
           ...(parent as any).components,
-          ...componentOverrides,
+          ...buildComponentOverrides(scopeClassName),
         },
       }),
-    [parent, effectiveDark],
+    [parent, effectiveDark, scopeClassName],
   );
 
-  const tree = <ThemeProvider theme={merged}>{children}</ThemeProvider>;
-  const scopeClassName = mode === "light" ? "shuffle-core-scope" : "shuffle-core-scope dark";
+  const ctxValue = React.useMemo<ShuffleCoreThemeContextValue>(
+    () => ({ mode, isDark: effectiveDark, scopeClassName }),
+    [mode, effectiveDark, scopeClassName],
+  );
 
-  // For explicit modes, wrap in a div that scopes the `.dark` class so
-  // Tailwind/CSS variable overrides apply to this subtree only.
-  if (mode === "light" || mode === "dark") {
+  if (sameAsParent) {
     return (
-      <div className={scopeClassName} data-shuffle-mode={mode} data-shuffle-core-root>
-        {tree}
-      </div>
+      <ShuffleCoreThemeContext.Provider value={ctxValue}>
+        {children}
+      </ShuffleCoreThemeContext.Provider>
     );
   }
-  return <div className="shuffle-core-scope" data-shuffle-mode="auto" data-shuffle-core-root>{tree}</div>;
+
+  return (
+    <ShuffleCoreThemeContext.Provider value={ctxValue}>
+      <ThemeProvider theme={merged}>
+        <div className={scopeClassName} data-shuffle-mode={mode} data-shuffle-core-root>
+          {children}
+        </div>
+      </ThemeProvider>
+    </ShuffleCoreThemeContext.Provider>
+  );
 };

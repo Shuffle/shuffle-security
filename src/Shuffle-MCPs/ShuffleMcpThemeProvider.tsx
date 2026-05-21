@@ -1,21 +1,16 @@
 /**
  * ShuffleMcpThemeProvider
  *
- * Mirror of Shuffle-Core's theme provider, scoped for the Shuffle-MCPs lib.
- * Two jobs:
- *
- * 1. Pin MUI defaults (`size="small"`) so individual call sites never need to
- *    thread sizing through.
- *
- * 2. Bridge the host app's light/dark scheme into MUI:
- *    - `mode="auto"` (default) — track the `.dark` class on `<html>` and flip
- *      MUI `palette.mode` accordingly. Tokens (`hsl(var(--…))`) flip with the
- *      same class so nothing else needs to know about the theme.
- *    - `mode="light" | "dark"` — pin the wrapped subtree to that scheme. We
- *      render a `<div className="dark">` (or remove it) so Tailwind dark
- *      variants and CSS-variable overrides scope to this subtree only —
- *      useful when embedding MCPs inside a host that doesn't manage `.dark`
- *      on `<html>`.
+ * - Pins MUI defaults (`size="small"`) so call sites never thread sizing.
+ * - Bridges the host app's light/dark scheme into MUI (`palette.mode`) and
+ *   into our HSL token system (the scoped `.dark` class).
+ * - Exposes a React Context (`ShuffleMcpThemeContext`) so internal raw
+ *   components — and views that compose other library components without
+ *   going through the public wrapped exports — see the resolved mode.
+ * - Stamps the scope className onto MUI portaled paper (Drawer, Dialog,
+ *   Menu, Popover, Tooltip), so portals rendered into <body> still resolve
+ *   our `hsl(var(--…))` tokens against the pinned theme instead of the
+ *   host's `<html>`.
  *
  * Wrap your MCP usage at any level:
  *
@@ -28,7 +23,39 @@ import { ThemeProvider, createTheme, useTheme as useMuiTheme } from "@mui/materi
 
 export type ShuffleMcpColorMode = "light" | "dark" | "auto";
 
-const componentOverrides = {
+const readHtmlDarkClass = (): boolean => {
+  if (typeof document === "undefined") return false;
+  return document.documentElement.classList.contains("dark");
+};
+
+const useHtmlDarkClass = (enabled: boolean): boolean => {
+  const [isDark, setIsDark] = React.useState<boolean>(() => (enabled ? readHtmlDarkClass() : false));
+  React.useEffect(() => {
+    if (!enabled || typeof document === "undefined") return;
+    setIsDark(readHtmlDarkClass());
+    const observer = new MutationObserver(() => setIsDark(readHtmlDarkClass()));
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, [enabled]);
+  return isDark;
+};
+
+interface ShuffleMcpThemeContextValue {
+  /** Mode requested by the caller. */
+  mode: ShuffleMcpColorMode;
+  /** Resolved boolean (auto → reflects current html.dark). */
+  isDark: boolean;
+  /** className to stamp on portaled MUI paper so HSL tokens resolve correctly. */
+  scopeClassName: string;
+}
+
+export const ShuffleMcpThemeContext = React.createContext<ShuffleMcpThemeContextValue | null>(null);
+
+/** Hook for internal components to read the resolved theme. */
+export const useShuffleMcpTheme = (): ShuffleMcpThemeContextValue | null =>
+  React.useContext(ShuffleMcpThemeContext);
+
+const buildComponentOverrides = (scopeClassName: string) => ({
   MuiTextField: { defaultProps: { size: "small" as const } },
   MuiButton: { defaultProps: { size: "small" as const } },
   MuiFormControl: { defaultProps: { size: "small" as const } },
@@ -70,7 +97,15 @@ const componentOverrides = {
       },
     },
   },
+  // ---- Portaled surfaces: stamp scopeClassName so HSL tokens resolve ----
+  MuiDrawer: {
+    defaultProps: { slotProps: { paper: { className: scopeClassName } } },
+  },
+  MuiDialog: {
+    defaultProps: { slotProps: { paper: { className: scopeClassName } } },
+  },
   MuiMenu: {
+    defaultProps: { slotProps: { paper: { className: scopeClassName } } },
     styleOverrides: {
       paper: {
         backgroundColor: "hsl(var(--popover))",
@@ -80,6 +115,7 @@ const componentOverrides = {
     },
   },
   MuiPopover: {
+    defaultProps: { slotProps: { paper: { className: scopeClassName } } },
     styleOverrides: {
       paper: {
         backgroundColor: "hsl(var(--popover))",
@@ -88,38 +124,21 @@ const componentOverrides = {
       },
     },
   },
+  MuiTooltip: {
+    defaultProps: { slotProps: { tooltip: { className: scopeClassName } } },
+  },
   MuiDivider: {
     styleOverrides: { root: { borderColor: "hsl(var(--border))" } },
   },
-};
-
-const readHtmlDarkClass = (): boolean => {
-  if (typeof document === "undefined") return false;
-  return document.documentElement.classList.contains("dark");
-};
-
-const useHtmlDarkClass = (enabled: boolean): boolean => {
-  const [isDark, setIsDark] = React.useState<boolean>(() => (enabled ? readHtmlDarkClass() : false));
-  React.useEffect(() => {
-    if (!enabled || typeof document === "undefined") return;
-    setIsDark(readHtmlDarkClass());
-    const observer = new MutationObserver(() => setIsDark(readHtmlDarkClass()));
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
-  }, [enabled]);
-  return isDark;
-};
+});
 
 export interface ShuffleMcpThemeProviderProps {
   children?: React.ReactNode;
   /**
    * Color mode for the wrapped subtree.
    * - `"auto"` (default) — follow the host page's `.dark` class on `<html>`.
-   *   This is what Shuffle Security itself uses so the in-app light/dark
-   *   toggle actually flips embedded components.
-   * - `"light"` / `"dark"` — pin the subtree to that scheme via a wrapping
-   *   div. Useful when embedding in a host that doesn't manage `.dark` on
-   *   `<html>`.
+   * - `"light"` / `"dark"` — pin the subtree (and any portals rendered from
+   *   within it) to that scheme.
    */
   mode?: ShuffleMcpColorMode;
 }
@@ -129,8 +148,16 @@ export const ShuffleMcpThemeProvider: React.FC<ShuffleMcpThemeProviderProps> = (
   mode = "auto",
 }) => {
   const parent = useMuiTheme();
+  const parentCtx = useShuffleMcpTheme();
   const htmlIsDark = useHtmlDarkClass(mode === "auto");
   const effectiveDark = mode === "auto" ? htmlIsDark : mode === "dark";
+
+  // If we're already inside a Shuffle scope that resolved to the same
+  // theme, don't re-wrap — keeps DOM flat when wrapped exports nest.
+  const sameAsParent =
+    parentCtx !== null && parentCtx.isDark === effectiveDark;
+
+  const scopeClassName = effectiveDark ? "shuffle-mcp-scope dark" : "shuffle-mcp-scope";
 
   const merged = React.useMemo(
     () =>
@@ -142,23 +169,34 @@ export const ShuffleMcpThemeProvider: React.FC<ShuffleMcpThemeProviderProps> = (
         },
         components: {
           ...(parent as any).components,
-          ...componentOverrides,
+          ...buildComponentOverrides(scopeClassName),
         },
       }),
-    [parent, effectiveDark],
+    [parent, effectiveDark, scopeClassName],
   );
 
-  const tree = <ThemeProvider theme={merged}>{children}</ThemeProvider>;
-  const scopeClassName = mode === "light" ? "shuffle-mcp-scope" : "shuffle-mcp-scope dark";
+  const ctxValue = React.useMemo<ShuffleMcpThemeContextValue>(
+    () => ({ mode, isDark: effectiveDark, scopeClassName }),
+    [mode, effectiveDark, scopeClassName],
+  );
 
-  if (mode === "light" || mode === "dark") {
+  if (sameAsParent) {
     return (
-      <div className={scopeClassName} data-shuffle-mode={mode} data-shuffle-mcp-root>
-        {tree}
-      </div>
+      <ShuffleMcpThemeContext.Provider value={ctxValue}>
+        {children}
+      </ShuffleMcpThemeContext.Provider>
     );
   }
-  return <div className="shuffle-mcp-scope" data-shuffle-mode="auto" data-shuffle-mcp-root>{tree}</div>;
+
+  return (
+    <ShuffleMcpThemeContext.Provider value={ctxValue}>
+      <ThemeProvider theme={merged}>
+        <div className={scopeClassName} data-shuffle-mode={mode} data-shuffle-mcp-root>
+          {children}
+        </div>
+      </ThemeProvider>
+    </ShuffleMcpThemeContext.Provider>
+  );
 };
 
 export default ShuffleMcpThemeProvider;
