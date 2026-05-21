@@ -33,7 +33,7 @@ const GlobalAppDetailDrawer = () => {
 export const DashboardLayout = ({ children, defaultCollapsed }: DashboardLayoutProps) => {
   const location = useLocation();
   const { orgMismatchWarning, dismissOrgMismatch, setActiveOrg, userInfo } = useAuth();
-  const isOnboarding = location.pathname === '/onboarding';
+  const isOnboarding = location.pathname === '/onboarding' || location.pathname.startsWith('/onboarding/');
   
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     // Always collapse on onboarding page regardless of saved state
