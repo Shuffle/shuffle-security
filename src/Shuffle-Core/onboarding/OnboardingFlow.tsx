@@ -26,6 +26,7 @@ import type {
   AlgoliaSearchApp,
   AppAuthState,
 } from '@shuffleio/shuffle-mcps';
+import type { ShuffleCoreHostProps } from '@/Shuffle-Core/types/host-props';
 // AuthStatus is locally defined — the published @shuffleio/shuffle-mcps may
 // lag behind and not re-export it yet, so import from the colocated source.
 import type { AuthStatus } from './ToolAuthentication';
@@ -37,14 +38,14 @@ import { SegmentedControl, type SegmentedItem } from '@/Shuffle-Core/components/
 
 export type OnboardingProduct = 'core' | 'security';
 
-export interface OnboardingFlowProps {
+export interface OnboardingFlowProps extends ShuffleCoreHostProps {
   /** Which product this app is. Default 'security'. */
   product?: OnboardingProduct;
   /** URL to send users to when they pick "Shuffle Core" from a non-Core app. */
   coreRedirectUrl?: string;
   /** URL to send users to when they pick "Shuffle Security" from a non-Security app. */
   securityRedirectUrl?: string;
-  /** Optional override for the Shuffle API base URL (mirrors Shuffle-MCPs API_CONFIG.baseUrl). */
+  /** Optional legacy override for the Shuffle API base URL. Prefer `globalUrl` from ShuffleCoreHostProps. */
   apiBaseUrl?: string;
   /** When false, skips the Core vs Security picker entirely. Default true. */
   showProductChoice?: boolean;
@@ -121,6 +122,11 @@ const OnboardingFlow = ({
   coreRedirectUrl = 'https://shuffler.io/welcome',
   securityRedirectUrl = 'https://security.shuffler.io/onboarding',
   apiBaseUrl,
+  globalUrl,
+  userdata,
+  isLoaded,
+  isLoggedIn,
+  serverside,
   showProductChoice = true,
   onStartDemo,
   demoRedirectUrl = 'https://security.shuffler.io/onboarding/product?demo=true',
@@ -128,13 +134,22 @@ const OnboardingFlow = ({
 
   // Apply API base URL override before any requests fire
   useEffect(() => {
-    if (apiBaseUrl) {
+    const hostBaseUrl = globalUrl || apiBaseUrl;
+    if (hostBaseUrl) {
       try {
         // Mutate the shared API_CONFIG so all Shuffle-MCPs helpers route to the right host
-        (API_CONFIG as { baseUrl: string }).baseUrl = apiBaseUrl;
+        (API_CONFIG as { baseUrl: string }).baseUrl = hostBaseUrl;
       } catch { /* ignore */ }
     }
-  }, [apiBaseUrl]);
+  }, [apiBaseUrl, globalUrl]);
+
+  const hostProps = useMemo(() => ({
+    globalUrl: globalUrl || apiBaseUrl,
+    userdata,
+    isLoaded,
+    isLoggedIn,
+    serverside,
+  }), [globalUrl, apiBaseUrl, userdata, isLoaded, isLoggedIn, serverside]);
 
   // Product picker state (Shuffle Core vs Shuffle Security)
   const readStoredProduct = (): OnboardingProduct | null => {
