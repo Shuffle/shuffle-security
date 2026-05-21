@@ -13,6 +13,14 @@
  */
 import React from "react";
 import { ThemeProvider, createTheme, useTheme as useMuiTheme } from "@mui/material";
+// Pull in the Shuffle-Core HSL token stylesheet so ANY consumer that wraps
+// itself in this provider (or imports anything that does — e.g.
+// `@/Shuffle-Core/onboarding`) automatically gets `.shuffle-core-scope[.dark]`
+// tokens. Previously only `src/Shuffle-Core/index.tsx` imported the CSS, so
+// sub-entry points like `onboarding/index.tsx` rendered unstyled when the
+// host hadn't separately loaded it. Bundlers de-dupe the import.
+import "../shuffle-core.css";
+
 
 export type ShuffleColorMode = "light" | "dark" | "auto";
 

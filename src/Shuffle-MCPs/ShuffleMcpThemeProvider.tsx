@@ -20,6 +20,13 @@
  */
 import React from "react";
 import { ThemeProvider, createTheme, useTheme as useMuiTheme } from "@mui/material";
+// Pull in the Shuffle-MCPs HSL token stylesheet so ANY consumer that wraps
+// itself in this provider (or imports anything that does) automatically gets
+// `.shuffle-mcp-scope[.dark]` tokens — even when entering through a sub-entry
+// point that doesn't import the top-level `src/Shuffle-MCPs/index.ts`.
+// Bundlers de-dupe the import.
+import "./shuffle-mcp.css";
+
 
 export type ShuffleMcpColorMode = "light" | "dark" | "auto";
 
