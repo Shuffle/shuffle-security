@@ -33,7 +33,7 @@ const withMcpTheme = <P extends object>(Inner: React.ComponentType<P>, displayNa
     React.createElement(
       ShuffleMcpThemeProvider,
       { mode: resolveMode(theme, colorMode) },
-      React.createElement(Inner as React.ComponentType<any>, { ...(rest as P) }),
+      React.createElement(Inner as React.ComponentType<any>, { ...(rest as P), theme, colorMode }),
     );
   Wrapped.displayName = `ShuffleMCPs(${displayName})`;
   return Wrapped as React.ComponentType<WithTheme<P>>;
@@ -44,7 +44,7 @@ const withMcpThemeRef = <P extends object, R>(Inner: React.ForwardRefExoticCompo
     React.createElement(
       ShuffleMcpThemeProvider,
       { mode: resolveMode(theme, colorMode) },
-      React.createElement(Inner as React.ComponentType<any>, { ...(rest as P), ref }),
+      React.createElement(Inner as React.ComponentType<any>, { ...(rest as P), theme, colorMode, ref }),
     ),
   );
   Wrapped.displayName = `ShuffleMCPs(${displayName})`;
