@@ -12,29 +12,43 @@ import './shuffle-mcp.css';
 import React from 'react';
 import { ShuffleMcpThemeProvider, type ShuffleMcpColorMode } from './ShuffleMcpThemeProvider';
 
-type WithColorMode<P> = P & { colorMode?: ShuffleMcpColorMode };
+/**
+ * Every exported component accepts an optional `theme` prop:
+ *   - `"light"` / `"dark"` — pin the subtree to that scheme
+ *   - `"system"` (default) — follow the host page's `.dark` class on `<html>`
+ *
+ * `colorMode` is preserved as a legacy alias (`"auto"` == `"system"`).
+ */
+export type ShuffleTheme = 'light' | 'dark' | 'system';
+type WithTheme<P> = P & { theme?: ShuffleTheme; colorMode?: ShuffleMcpColorMode };
+
+const resolveMode = (theme?: ShuffleTheme, colorMode?: ShuffleMcpColorMode): ShuffleMcpColorMode => {
+  if (theme === 'light' || theme === 'dark') return theme;
+  if (theme === 'system') return 'auto';
+  return colorMode ?? 'auto';
+};
 
 const withMcpTheme = <P extends object>(Inner: React.ComponentType<P>, displayName: string) => {
-  const Wrapped: React.FC<WithColorMode<P>> = ({ colorMode, ...rest }) =>
+  const Wrapped: React.FC<WithTheme<P>> = ({ theme, colorMode, ...rest }) =>
     React.createElement(
       ShuffleMcpThemeProvider,
-      { mode: colorMode },
+      { mode: resolveMode(theme, colorMode) },
       React.createElement(Inner as React.ComponentType<any>, { ...(rest as P) }),
     );
   Wrapped.displayName = `ShuffleMCPs(${displayName})`;
-  return Wrapped as React.ComponentType<WithColorMode<P>>;
+  return Wrapped as React.ComponentType<WithTheme<P>>;
 };
 
 const withMcpThemeRef = <P extends object, R>(Inner: React.ForwardRefExoticComponent<P & React.RefAttributes<R>>, displayName: string) => {
-  const Wrapped = React.forwardRef<R, WithColorMode<P>>(({ colorMode, ...rest }, ref) =>
+  const Wrapped = React.forwardRef<R, WithTheme<P>>(({ theme, colorMode, ...rest }, ref) =>
     React.createElement(
       ShuffleMcpThemeProvider,
-      { mode: colorMode },
+      { mode: resolveMode(theme, colorMode) },
       React.createElement(Inner as React.ComponentType<any>, { ...(rest as P), ref }),
     ),
   );
   Wrapped.displayName = `ShuffleMCPs(${displayName})`;
-  return Wrapped as React.ForwardRefExoticComponent<WithColorMode<P> & React.RefAttributes<R>>;
+  return Wrapped as React.ForwardRefExoticComponent<WithTheme<P> & React.RefAttributes<R>>;
 };
 
 import { ShuffleMCP as ShuffleMCPRaw } from './ShuffleMCP';
