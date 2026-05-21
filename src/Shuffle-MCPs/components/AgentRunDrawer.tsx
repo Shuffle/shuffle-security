@@ -147,7 +147,6 @@ const AgentRunDrawer = ({
 
   const effectiveLocalLLMSlot = localLLMSlot ?? (
     <LocalLLMConfig
-      compact
       globalUrl={globalUrl}
       userdata={userdata}
       isLoaded={isLoaded}
@@ -157,6 +156,7 @@ const AgentRunDrawer = ({
       colorMode={colorMode}
     />
   );
+
 
   const visibleTabs = TAB_ORDER.filter((t) => {
     if (t === 'run') return true;
