@@ -17,6 +17,7 @@
 import './shuffle-core.css';
 import React from 'react';
 import { ShuffleCoreThemeProvider, type ShuffleColorMode } from './components/ShuffleCoreThemeProvider';
+import { QueryClient, QueryClientProvider, QueryClientContext } from '@tanstack/react-query';
 
 import UsecasesRaw from './views/Usecases';
 import UsecaseAlluvialDiagramRaw from './views/UsecaseAlluvialDiagram';
@@ -45,11 +46,37 @@ const resolveMode = (theme?: ShuffleTheme, colorMode?: ShuffleColorMode): Shuffl
   return colorMode ?? 'auto';
 };
 
+/**
+ * Lazily-created fallback QueryClient. Shuffle-Core hooks use
+ * @tanstack/react-query, so standalone consumers (host apps that don't ship
+ * their own QueryClientProvider) need one provided by the library itself.
+ * We create exactly one and reuse it across all wrapped surfaces.
+ */
+let fallbackQueryClient: QueryClient | null = null;
+const getFallbackQueryClient = (): QueryClient => {
+  if (!fallbackQueryClient) {
+    fallbackQueryClient = new QueryClient({
+      defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } },
+    });
+  }
+  return fallbackQueryClient;
+};
+
+const EnsureQueryClient: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // If a host QueryClientProvider already exists, reuse it; otherwise install
+  // our own fallback so hooks like useQuery don't blow up.
+  const hostClient = React.useContext(QueryClientContext);
+  if (hostClient) return <>{children}</>;
+  return <QueryClientProvider client={getFallbackQueryClient()}>{children}</QueryClientProvider>;
+};
+
 const withTheme = <P extends object>(Inner: React.ComponentType<P>, displayName: string) => {
   const Wrapped: React.FC<WithTheme<P>> = ({ theme, colorMode, ...rest }) => (
-    <ShuffleCoreThemeProvider mode={resolveMode(theme, colorMode)}>
-      <Inner {...(rest as P)} />
-    </ShuffleCoreThemeProvider>
+    <EnsureQueryClient>
+      <ShuffleCoreThemeProvider mode={resolveMode(theme, colorMode)}>
+        <Inner {...(rest as P)} />
+      </ShuffleCoreThemeProvider>
+    </EnsureQueryClient>
   );
   Wrapped.displayName = `ShuffleCore(${displayName})`;
   return Wrapped;
