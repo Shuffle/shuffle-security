@@ -1416,7 +1416,7 @@ export const AutomationConfig = ({
                           
                           {/* Existing feeds */}
                           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mb: 1.5 }}>
-                            {threatFeeds.map((feed) => (
+                            {threatFeeds.filter((feed): feed is ThreatFeed => !!feed?.id).map((feed) => (
                               <Box
                                 key={feed.id}
                                 sx={{
@@ -1437,13 +1437,13 @@ export const AutomationConfig = ({
                                   transition: 'all 0.2s ease',
                                 }}
                               >
-                                {editingFeed?.id === feed.id ? (
+                                {editingFeed && editingFeed.id === feed.id ? (
                                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, flex: 1, mr: 1 }}>
                                     <TextField
                                       size="small"
                                       placeholder="Feed name"
-                                      value={editingFeed.name}
-                                      onChange={(e) => setEditingFeed({ ...editingFeed, name: e.target.value })}
+                                      value={editingFeed?.name || ''}
+                                      onChange={(e) => setEditingFeed((current) => current?.id === feed.id ? { ...current, name: e.target.value } : current)}
                                       sx={{
                                         '& .MuiOutlinedInput-root': {
                                           bgcolor: 'hsl(var(--muted))',
@@ -1454,8 +1454,8 @@ export const AutomationConfig = ({
                                     <TextField
                                       size="small"
                                       placeholder="Feed URL"
-                                      value={editingFeed.url}
-                                      onChange={(e) => setEditingFeed({ ...editingFeed, url: e.target.value })}
+                                      value={editingFeed?.url || ''}
+                                      onChange={(e) => setEditingFeed((current) => current?.id === feed.id ? { ...current, url: e.target.value } : current)}
                                       sx={{
                                         '& .MuiOutlinedInput-root': {
                                           bgcolor: 'hsl(var(--muted))',
@@ -1469,8 +1469,10 @@ export const AutomationConfig = ({
                                         size="small"
                                         variant="contained"
                                         onClick={async () => {
-                                          await saveFeed(editingFeed);
-                                          setEditingFeed(null);
+                                          if (editingFeed) {
+                                            await saveFeed(editingFeed);
+                                            setEditingFeed(null);
+                                          }
                                         }}
                                         sx={{ fontSize: '0.7rem', py: 0.25, bgcolor: option.color }}
                                       >
