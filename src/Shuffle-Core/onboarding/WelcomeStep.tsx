@@ -289,7 +289,7 @@ export const WelcomeStep = ({ onSelect, selectedChallenge }: WelcomeStepProps) =
             <Typography
               variant="body1"
               sx={{
-                color: '#22c55e',
+                color: 'hsl(var(--severity-low))',
                 fontWeight: 500,
                 display: 'flex',
                 alignItems: 'center',
