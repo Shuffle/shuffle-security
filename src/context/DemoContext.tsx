@@ -212,63 +212,6 @@ export const TOUR_STEPS: TourStep[] = [
       },
     ],
   },
-  {
-    id: 'cve-host-pivot',
-    title: 'Pivot from CVE to host',
-    body: 'The Sliver implant landed because Sarah\'s Chrome was outdated and vulnerable to CVE-2024-5274. Open the Observables tab to pivot from the CVE to the affected host.',
-    bullets: [
-      'Open the Observables tab',
-      'Find the CVE-2024-5274 observable — that is the exploited vulnerability',
-      'Find the FIN-LAPTOP-04 host observable — the affected asset',
-    ],
-    requirement: {
-      label: 'Open the Observables tab and find the CVE + host pivot',
-      targetSelector: '[data-tour="incident-tab-observables"]',
-    },
-    subGoals: [
-      {
-        id: 'cve-host-pivot:open-tab',
-        label: 'Open the Observables tab',
-        targetSelector: '[data-tour="incident-tab-observables"]',
-      },
-      {
-        id: 'cve-host-pivot:cve',
-        label: 'Find the CVE-2024-5274 observable',
-        targetSelector: '[data-tour="incident-tab-observables"]',
-        optional: true,
-      },
-      {
-        id: 'cve-host-pivot:host',
-        label: 'Find the FIN-LAPTOP-04 host observable',
-        targetSelector: '[data-tour="incident-tab-observables"]',
-        optional: true,
-      },
-    ],
-  },
-  {
-    id: 'agent',
-    title: 'Approve an AI agent action',
-    body: 'High-stakes actions wait for you.',
-    bullets: [
-      'Find a pending notification on the dashboard',
-      'Click Approve — the spotlight will point at it',
-    ],
-    route: '/dashboard',
-    requirement: {
-      label: 'Approve a pending agent action',
-      targetSelector: '[data-tour="agent-approve-button"]',
-    },
-  },
-  {
-    id: 'wrap',
-    title: 'You are all set',
-    body: 'That is demo mode.',
-    bullets: [
-      'Click "Clean up demo data" on the dashboard when done',
-      'Every sample item we added gets removed',
-    ],
-    route: '/dashboard',
-  },
 ];
 
 export type DemoDock = 'right' | 'bottom';
