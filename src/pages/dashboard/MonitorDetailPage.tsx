@@ -77,8 +77,22 @@ const MonitorDetailPage = () => {
       const stripDomain = (h: string) => h.toLowerCase().trim().replace(/\.(local|lan|home|internal|corp)$/i, '');
       const idStripped = stripDomain(parsed.hostname);
       const archHint = parsed.arch;
+      const groupHint = parsed.group.toLowerCase();
 
-      for (const env of envs) {
+      // Prefer the env that matches the URL's `@group` hint when supplied.
+      const orderedEnvs = groupHint
+        ? [...envs].sort((a: any, b: any) => {
+            const an = String(a.Name || '').toLowerCase() === groupHint ? 0 : 1;
+            const bn = String(b.Name || '').toLowerCase() === groupHint ? 0 : 1;
+            return an - bn;
+          })
+        : envs;
+
+      for (const env of orderedEnvs) {
+        // If we have a group hint, skip envs whose Name doesn't match — this
+        // prevents the wrong group from being picked when the same hostname
+        // exists in multiple sensor groups.
+        if (groupHint && String(env.Name || '').toLowerCase() !== groupHint) continue;
         const hosts: SensorHost[] = Array.isArray(env.sensor_hosts) ? env.sensor_hosts : [];
         const matchHostname = (h: SensorHost) => {
           const hn = (h.hostname || '').toLowerCase().trim();
@@ -92,6 +106,27 @@ const MonitorDetailPage = () => {
           envHost = found;
           envGroupName = env.Name || '';
           break;
+        }
+      }
+
+      // If a group hint was set but produced no hit, retry without the hint
+      // so we still resolve the host (e.g. after the host was moved groups).
+      if (!envHost && groupHint) {
+        for (const env of envs) {
+          const hosts: SensorHost[] = Array.isArray(env.sensor_hosts) ? env.sensor_hosts : [];
+          const matchHostname = (h: SensorHost) => {
+            const hn = (h.hostname || '').toLowerCase().trim();
+            return hn === idLower || stripDomain(hn) === idStripped;
+          };
+          const found =
+            hosts.find(h => h.uuid === decodedId) ||
+            (archHint ? hosts.find(h => matchHostname(h) && String(h.arch || '').toLowerCase() === archHint) : undefined) ||
+            hosts.find(matchHostname);
+          if (found) {
+            envHost = found;
+            envGroupName = env.Name || '';
+            break;
+          }
         }
       }
 
