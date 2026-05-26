@@ -55,6 +55,10 @@ export interface AgentsViewProps extends ShuffleHostProps {
   localLLMSlot?: React.ReactNode;
   /** Content for the built-in AgentRunDrawer's Permissions tab. Optional. */
   permissionsSlot?: React.ReactNode;
+  /** Pre-fill the starter chip row on mount (e.g. from persisted host state). */
+  initialApps?: AgentUIApp[];
+  /** Called whenever the chip row under the prompt changes. */
+  onAppsChange?: (apps: AgentUIApp[]) => void;
 }
 
 const AgentsView = ({
