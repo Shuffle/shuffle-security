@@ -2237,6 +2237,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
   useEffect(() => {
     onViewChange?.(activeTab);
   }, [activeTab, onViewChange]);
+  useEffect(() => {
+    onAppsChange?.(chosenApps);
+  }, [chosenApps, onAppsChange]);
   const goToTab = (t: TabKey) => {
     if (t === 'start') {
       // Seed the starter form with the current run's prompt + tools so the
