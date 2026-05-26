@@ -46,12 +46,22 @@ const HostTerminalPage = () => {
   const idLower = parsedSegment.hostname.toLowerCase().trim();
   const idStripped = stripDomain(parsedSegment.hostname);
   const archHint = parsedSegment.arch;
+  const groupHint = parsedSegment.group.toLowerCase();
   const matchHost = (h: HostOption) => {
     const hn = (h.hostname || '').toLowerCase().trim();
     return hn === idLower || stripDomain(h.hostname || '') === idStripped;
   };
+  const matchGroup = (h: HostOption) =>
+    !groupHint || (h.groupName || '').toLowerCase() === groupHint;
+  // Resolution order: uuid → (group + arch + hostname) → (group + hostname) →
+  // (arch + hostname) → (hostname). The group hint disambiguates when the
+  // same hostname is registered in multiple sensor groups.
   const resolvedHost =
     allHosts.find(h => h.uuid === parsedSegment.raw) ||
+    (groupHint && archHint
+      ? allHosts.find(h => matchHost(h) && matchGroup(h) && String(h.arch || '').toLowerCase() === archHint)
+      : undefined) ||
+    (groupHint ? allHosts.find(h => matchHost(h) && matchGroup(h)) : undefined) ||
     (archHint
       ? allHosts.find(h => matchHost(h) && String(h.arch || '').toLowerCase() === archHint)
       : undefined) ||
@@ -62,7 +72,7 @@ const HostTerminalPage = () => {
     resolvedHost?.hostname ||
     datastoreResolvedHostname ||
     (hostsLoaded ? (parsedSegment.hostname || 'Unknown Host') : '');
-  const groupName = hostState?.groupName || resolvedHost?.groupName || singleEnvFallback || '';
+  const groupName = hostState?.groupName || resolvedHost?.groupName || parsedSegment.group || singleEnvFallback || '';
   const mode = hostState?.mode || resolvedHost?.mode || 'full';
   const isFull = mode === 'full';
   const needsLoading = !hostState?.hostname && !hostsLoaded;
