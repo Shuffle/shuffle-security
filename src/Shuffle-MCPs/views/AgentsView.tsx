@@ -219,6 +219,7 @@ const AgentsView = ({
           disableScheduleTooltip={editing ? 'Scheduling is disabled while editing an existing schedule' : undefined}
           theme={theme}
           colorMode={colorMode}
+          onAppsChange={onAppsChange}
         />
         {agentView === 'start' && (
           <Box sx={{ pt: { xs: 4, md: '8vh' } }}>
