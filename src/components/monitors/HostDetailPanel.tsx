@@ -120,7 +120,7 @@ export const HostDetailPanel = ({ host, variant = 'inline', collapsibleSections 
   const canRunCbom = !!resolvedUuid && !!resolvedHostname;
   const runCbomScan = (path: string) => {
     if (!resolvedHostname) return;
-    const segment = hostUrlSegment({ hostname: resolvedHostname, arch: host.arch as string | undefined, uuid: resolvedUuid });
+    const segment = hostUrlSegment({ hostname: resolvedHostname, arch: host.arch as string | undefined, uuid: resolvedUuid, groupName: groupName || (host.groupName as string | undefined) });
     navigate(`/monitors/${encodeURIComponent(segment)}/terminal`, {
       state: {
         hostname: resolvedHostname,
