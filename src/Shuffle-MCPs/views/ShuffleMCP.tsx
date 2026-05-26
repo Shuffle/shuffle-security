@@ -388,14 +388,18 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
 
 
   // Filter the user's private apps client-side by the current query.
+  // Normalize whitespace, underscores and dashes on both sides so that
+  // "host monitors", "host_monitors" and "host-monitors" all match an app
+  // literally named "shuffle_host_monitors".
   const filteredPrivateApps = useMemo(() => {
     if (privateApps.length === 0) return [];
-    const q = query.trim().toLowerCase();
+    const normalize = (s: string) => (s || '').toLowerCase().replace(/[\s_\-]+/g, '');
+    const q = normalize(query.trim());
     if (!q) return privateApps;
     return privateApps.filter(a =>
-      a.name.toLowerCase().includes(q) ||
-      (a.description || '').toLowerCase().includes(q) ||
-      (a.categories || []).some(c => c.toLowerCase().includes(q))
+      normalize(a.name).includes(q) ||
+      normalize(a.description || '').includes(q) ||
+      (a.categories || []).some(c => normalize(c).includes(q))
     );
   }, [privateApps, query]);
 
