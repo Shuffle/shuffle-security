@@ -68,6 +68,8 @@ const AgentsView = ({
   hideChooseLLM,
   localLLMSlot,
   permissionsSlot,
+  initialApps,
+  onAppsChange,
   globalUrl,
   isLoaded,
   isLoggedIn,
@@ -83,7 +85,7 @@ const AgentsView = ({
   const [agentView, setAgentView] = useState<'start' | 'simple' | 'detailed'>('start');
   const [prefill, setPrefill] = useState<{ input: string; apps: AgentUIApp[]; key: number }>({
     input: '',
-    apps: [],
+    apps: initialApps && initialApps.length > 0 ? initialApps : [],
     key: 0,
   });
   const [editing, setEditing] = useState<{ workflowId: string; name: string } | null>(null);
