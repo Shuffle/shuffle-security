@@ -308,20 +308,6 @@ export const diagnoseOutputWarning = (run: DiagnosableRun): OutputDiagnosis | nu
   const findEvidenceByKeywords = (needles: string[], max = 3): DiagnosisEvidence[] =>
     findEvidence((l) => needles.some((n) => l.includes(n.toLowerCase())), max);
 
-  /** Test a keyword regex with status-aware scoping: when there is no
-   *  labelled HTTP failure status, only match if the keyword appears inside
-   *  an error-like field path. Prevents body content from triggering
-   *  category banners. `statusForBranch` is the status that would activate
-   *  this branch (e.g. 403 for permission). */
-  const keywordHit = (re: RegExp, statusForBranch?: number): boolean => {
-    if (typeof status === 'number' && (statusForBranch === undefined || status === statusForBranch || status >= 400)) {
-      // We already have a labelled failure status — keyword-based confirmation
-      // can look at the full payload.
-      return re.test(lower);
-    }
-    return re.test(errorHaystackLower);
-  };
-
   let status: number | undefined;
   let statusEvidence: DiagnosisEvidence | null = null;
   // Only match status codes that are explicitly labelled as HTTP / status /
