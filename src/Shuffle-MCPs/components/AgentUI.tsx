@@ -931,9 +931,10 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
       {(() => {
         const req = extractAuthRequest(details);
         if (!req) return null;
+        if (authAppsLoading) return null;
         if (isAppAuthenticated?.(req.appName)) return null;
         const pretty = req.appName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-        const slug = req.appName.toLowerCase().replace(/[\s-]+/g, '_');
+        const slug = normalizeAgentAppName(req.appName);
         const appId = req.appId || appsById[req.appName]?.id || appsById[slug]?.id || null;
         const icon = appsById[req.appName]?.icon || appsById[slug]?.icon || (appId ? appsById[appId]?.icon : '') || '';
         return (
@@ -978,6 +979,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
                 disabled={!onAuthenticateApp}
                 onClick={(e) => {
                   e.stopPropagation();
+                  loadAuthenticatedApps();
                   onAuthenticateApp?.(req.appName, appId);
                 }}
                 sx={{
