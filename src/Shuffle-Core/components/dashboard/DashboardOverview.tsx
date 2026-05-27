@@ -80,6 +80,7 @@ export const DashboardOverview = ({
   gran = 'daily',
   customRange,
   onRangeSelect,
+  onOpenUsecase,
   // Standard Shuffle-Core host props — accepted for API consistency across
   // components mounted in multiple places. Not currently consumed because this
   // surface is purely presentational over host-supplied data.
