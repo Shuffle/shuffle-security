@@ -85,6 +85,7 @@ import AppDetailPage from '@/pages/dashboard/AppDetailPage';
 import DocsPage from '@/pages/docs/DocsPage';
 import PipelinesPage from '@/pages/dashboard/PipelinesPage';
 import DashboardPage from '@/pages/dashboard/DashboardPage';
+import DashboardViewPage from '@/pages/dashboard/DashboardViewPage';
 import VulnerabilitiesPage from '@/pages/dashboard/VulnerabilitiesPage';
 import VulnAssetsPage from '@/pages/dashboard/VulnAssetsPage';
 import AssetsPage from '@/pages/dashboard/AssetsPage';
@@ -223,6 +224,7 @@ const ThemedApp = () => {
               }
             >
               <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/dashboard-view" element={<DashboardViewPage />} />
               <Route path="/incidents" element={<IncidentsPage />} />
               {/* Simple incident view was removed — redirect any old links to the full view. */}
               <Route path="/incidents-simple" element={<Navigate to="/incidents" replace />} />
