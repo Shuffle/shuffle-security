@@ -3933,6 +3933,7 @@ function UsecasesPageInner() {
   const [search, setSearch] = useState('');
   const [phaseFilter, setPhaseFilter] = useState<FlowPhase | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [areaFilter, setAreaFilter] = useState<string>('all');
   const [tagFilter, setTagFilter] = useState<string>('all');
 
   const navigate = useNavigate();
@@ -3957,6 +3958,17 @@ function UsecasesPageInner() {
   const [searchParams, setSearchParams] = useSearchParams();
   const routeParams = useParams<{ flowId?: string }>();
   const [trustedWorkflowStates, setTrustedWorkflowStates] = useState<Record<string, boolean>>({});
+
+  // Allow deep-links like /usecases?area=automatic_ingestion&category=asset_management
+  // to pre-filter the grid. Read once on mount so the user can still change
+  // the filters afterwards.
+  useEffect(() => {
+    const area = searchParams.get('area');
+    const category = searchParams.get('category');
+    if (area) setAreaFilter(area);
+    if (category) setCategoryFilter(category);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Locally-remembered usecase interests — survive the not-logged-in →
   // logged-in transition (and pre-fill before the first /getinfo lands).
@@ -4349,6 +4361,9 @@ function UsecasesPageInner() {
     }
     if (categoryFilter !== 'all') {
       list = list.filter((u) => u.source === categoryFilter || u.target === categoryFilter);
+    }
+    if (areaFilter !== 'all') {
+      list = list.filter((u) => u.automationArea === areaFilter);
     }
     if (tagFilter !== 'all') {
       list = list.filter((u) => u.tags.includes(tagFilter));

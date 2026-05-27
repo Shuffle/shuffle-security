@@ -85,26 +85,39 @@ export const DashboardOverview = ({
   userdata: _userdata,
 }: OverviewProps) => {
   const rrNavigate = useNavigate();
-  const navigate = (path: string) => {
+  const isShuffleSecurityHost = () => {
     try {
       const host = typeof window !== 'undefined' ? window.location.hostname : '';
-      // When this surface is embedded outside Shuffle Security (e.g. on
-      // shuffler.io / Shuffle Core), Security Operations links should open
-      // on the Shuffle Security app instead of trying to route locally.
-      const isShuffleSecurityHost =
+      return (
         host === 'security.shuffler.io' ||
         host === 'localhost' ||
         host === '127.0.0.1' ||
         host.endsWith('.lovable.app') ||
         host.endsWith('.lovableproject.com') ||
         host === 'shutdown.no' ||
-        host === 'www.shutdown.no';
-      if (!isShuffleSecurityHost) {
-        window.open(`https://security.shuffler.io${path.startsWith('/') ? '' : '/'}${path}`, '_blank', 'noopener,noreferrer');
-        return;
-      }
-    } catch { /* fall through to local nav */ }
+        host === 'www.shutdown.no'
+      );
+    } catch { return true; }
+  };
+  const navigate = (path: string) => {
+    // When this surface is embedded outside Shuffle Security (e.g. on
+    // shuffler.io / Shuffle Core), Security Operations links should open
+    // on the Shuffle Security app instead of trying to route locally.
+    if (!isShuffleSecurityHost()) {
+      window.open(`https://security.shuffler.io${path.startsWith('/') ? '' : '/'}${path}`, '_blank', 'noopener,noreferrer');
+      return;
+    }
     rrNavigate(path);
+  };
+  // For "set up X" CTAs: stay local when on Shuffle Security (deep-link to
+  // the relevant page), otherwise open the Usecases drawer here in Shuffle
+  // Core pre-filtered to the matching automation area / category.
+  const navigateSetup = (securityPath: string, usecasesQuery: string) => {
+    if (isShuffleSecurityHost()) {
+      rrNavigate(securityPath);
+      return;
+    }
+    rrNavigate(`/usecases${usecasesQuery ? `?${usecasesQuery}` : ''}`);
   };
 
   const incidentStats = useMemo(() => {
@@ -295,7 +308,7 @@ export const DashboardOverview = ({
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <EmptyState text={`No incident activity in the last ${days} days`} ctaLabel="Set up incident ingestion" onCta={() => navigate('/incidents?highlight=ingest')} />
+              <EmptyState text={`No incident activity in the last ${days} days`} ctaLabel="Set up incident ingestion" onCta={() => navigateSetup('/incidents?highlight=ingest', 'area=automatic_ingestion&category=case_management')} />
             )}
           </Box>
         </Panel>
@@ -426,7 +439,7 @@ export const DashboardOverview = ({
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <EmptyState text="No vulnerabilities ingested yet" ctaLabel="Set up vulnerability ingestion" onCta={() => navigate('/vulnerabilities')} />
+            <EmptyState text="No vulnerabilities ingested yet" ctaLabel="Set up vulnerability ingestion" onCta={() => navigateSetup('/vulnerabilities', 'area=automatic_ingestion&category=asset_management')} />
           )}
         </Box>
       </Panel>
