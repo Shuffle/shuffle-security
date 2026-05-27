@@ -19,7 +19,7 @@ import React from 'react';
 import { ShuffleCoreThemeProvider, type ShuffleColorMode } from './components/ShuffleCoreThemeProvider';
 import { QueryClient, QueryClientProvider, QueryClientContext } from '@tanstack/react-query';
 
-import UsecasesRaw from './views/Usecases';
+import UsecasesRaw, { UsecaseDrawer as UsecaseDrawerRaw, type UsecaseDrawerProps } from './views/Usecases';
 import UsecaseAlluvialDiagramRaw from './views/UsecaseAlluvialDiagram';
 import FormInputRaw from './views/FormInput';
 import EditWorkflowRaw from './components/EditWorkflow';
