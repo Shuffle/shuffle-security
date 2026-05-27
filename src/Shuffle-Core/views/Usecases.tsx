@@ -2863,6 +2863,37 @@ function UsecaseDetailContent({
     const willBeEnabled = !effectiveEnabled;
     const sourceName = flow.source ? categoryLabel(flow.source) : 'source';
 
+    // Self-contained usecases (e.g. IOC / threat feeds) do not need a
+    // validated source-category tool — they seed their own defaults and
+    // generate background workflows directly. Run that path instead of the
+    // generic /workflows/generate flow below.
+    const selfContained = flow ? SELF_CONTAINED_ENABLE[flow.id] : undefined;
+    if (selfContained) {
+      setToggling(true);
+      setOptimisticEnabled(willBeEnabled);
+      try {
+        const ok = willBeEnabled ? await selfContained.enable() : await selfContained.disable();
+        if (!ok) throw new Error('Backend rejected the request');
+        toast.success(willBeEnabled ? `${flow.label} enabled` : `${flow.label} disabled`, {
+          description: willBeEnabled
+            ? 'Seeded default threat feeds and started background ingestion.'
+            : undefined,
+          duration: 6000,
+        });
+        onToggled?.(flow.automationLabel, willBeEnabled);
+        setTimeout(() => setOptimisticEnabled(null), 8000);
+      } catch (err: any) {
+        setOptimisticEnabled(null);
+        toast.error(`Failed to ${willBeEnabled ? 'enable' : 'disable'} ${flow.label}`, {
+          description: err?.message || 'The backend rejected the request.',
+          duration: 8000,
+        });
+      } finally {
+        setToggling(false);
+      }
+      return;
+    }
+
     if (willBeEnabled && !hasValidatedSource) {
       // Hard-block the enable. The /workflows/generate endpoint may return
       // success: true and then quietly skip creating the workflow when no
