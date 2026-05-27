@@ -2,7 +2,7 @@
  * Dashboard Page — CTA-focused setup guide + AI Agent notifications.
  */
 
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -552,6 +552,30 @@ const DashboardPage = () => {
     try { return (localStorage.getItem('shuffle_dashboard_tab') as 'security' | 'automation') || 'security'; } catch { return 'security'; }
   });
   useEffect(() => { try { localStorage.setItem('shuffle_dashboard_tab', dashboardTab); } catch {} }, [dashboardTab]);
+  // Preserve the visual position of the dashboard tab bar across tab swaps.
+  // Each branch mounts a completely different subtree (AutomationDashboard vs
+  // DashboardOverview) with very different heights, so the browser's scroll
+  // offset gets clamped against the new (often shorter) document — which the
+  // user perceives as "jumping to the top". We record where the tab bar sat
+  // in the viewport before the swap, and after the new subtree commits, we
+  // scrollBy the delta so the tab bar stays exactly where it was.
+  const dashboardTabsRef = useRef<HTMLDivElement | null>(null);
+  const pendingTabsTopRef = useRef<number | null>(null);
+  const handleDashboardTabChange = useCallback((next: 'security' | 'automation') => {
+    if (next === dashboardTab) return;
+    if (dashboardTabsRef.current) {
+      pendingTabsTopRef.current = dashboardTabsRef.current.getBoundingClientRect().top;
+    }
+    setDashboardTab(next);
+  }, [dashboardTab]);
+  useLayoutEffect(() => {
+    if (pendingTabsTopRef.current === null || !dashboardTabsRef.current) return;
+    const before = pendingTabsTopRef.current;
+    pendingTabsTopRef.current = null;
+    const after = dashboardTabsRef.current.getBoundingClientRect().top;
+    const delta = after - before;
+    if (delta !== 0) window.scrollBy({ top: delta, left: 0, behavior: 'instant' as ScrollBehavior });
+  }, [dashboardTab]);
   // Shared time-range filter for both dashboard tabs (Security Operations + Automation).
   const [dashboardDays, setDashboardDays] = useState<string>(() => {
     try { return localStorage.getItem('shuffle_dashboard_days') || '30'; } catch { return '30'; }
@@ -1084,7 +1108,7 @@ const DashboardPage = () => {
               <SegmentedControl
                 ariaLabel="Dashboard view"
                 value={dashboardTab}
-                onChange={(v) => setDashboardTab(v as 'security' | 'automation')}
+                onChange={(v) => handleDashboardTabChange(v as 'security' | 'automation')}
                 options={[
                   { value: 'security', label: 'Security Operations' },
                   { value: 'automation', label: 'Automation' },
@@ -1170,7 +1194,7 @@ const DashboardPage = () => {
               </>
             );
             const sharedHeader = (
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
+              <Box ref={dashboardTabsRef} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', minHeight: 36 }}>
                   {dashboardTabs}
                 </Box>
