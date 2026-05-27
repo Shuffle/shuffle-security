@@ -526,7 +526,7 @@ interface TimelineRowProps {
   runFinished?: boolean;
   onAuthenticateApp?: (appName: string, appId?: string | null) => void;
   onRefreshAuthenticatedApps?: () => void;
-  isAppAuthenticated?: (appName: string) => boolean;
+  isAppAuthenticated?: (appName: string, appId?: string | null) => boolean;
   authAppsLoading?: boolean;
   /** When true, briefly draw attention to this row + its output. Used after
    *  a "jump to evidence" click from the diagnosis banner. */
@@ -934,7 +934,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
         const req = extractAuthRequest(details);
         if (!req) return null;
         if (authAppsLoading) return null;
-        if (isAppAuthenticated?.(req.appName)) return null;
+        if (isAppAuthenticated?.(req.appName, req.appId)) return null;
         const pretty = req.appName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
         const slug = normalizeAgentAppName(req.appName);
         const appId = req.appId || appsById[req.appName]?.id || appsById[slug]?.id || null;
