@@ -348,7 +348,7 @@ export const DashboardOverview = ({
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <Box sx={{ pt: '50px' }}>
+              <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <EmptyState text={`No incident activity in the last ${days} days`} ctaLabel="Set up incident ingestion" onCta={() => navigateSetup('siem_case_management_1', '/incidents?highlight=ingest', 'area=automatic_ingestion&category=case_management')} />
               </Box>
             )}
