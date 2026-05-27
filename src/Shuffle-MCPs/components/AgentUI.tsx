@@ -3587,7 +3587,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                             },
                           }}
                         >
-                          <Search size={14} style={{ marginRight: 10, color: 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
+                          <SearchIcon size={14} style={{ marginRight: 10, color: 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
                           <Box component="span" sx={{ whiteSpace: 'normal', lineHeight: 1.4 }}>
                             {before}
                             <Box component="span" sx={{ fontWeight: 700, color: 'hsl(var(--foreground))' }}>{match}</Box>
