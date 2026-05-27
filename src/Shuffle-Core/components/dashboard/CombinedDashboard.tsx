@@ -107,6 +107,9 @@ const CombinedDashboard = ({
   const [mode, setMode] = useState<'workflows' | 'apps'>('workflows');
   const [customRange, setCustomRange] = useState<{ fromMs: number; toMs: number } | null>(null);
   const [internalRefreshKey, setInternalRefreshKey] = useState(0);
+  // Inline usecase drawer — opened by DashboardOverview's "Set up X" CTAs so
+  // the user configures ingestion right here without leaving /dashboard.
+  const [openUsecaseId, setOpenUsecaseId] = useState<string | null>(null);
 
   // ── Incidents ─────────────────────────────────────────────────────────────
   const { items: incidentItems, isLoading: incidentsFetching, fetchItems, hasFetched } = useDatastore({
