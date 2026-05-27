@@ -3,7 +3,7 @@
  * glow effects, vivid bar/area gradients. Reference: Vicarius / cyberpunk
  * dashboards with magenta→violet→cyan palette over dark surfaces.
  */
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Box, Typography, Skeleton } from '@mui/material';
 import {
   ResponsiveContainer,
