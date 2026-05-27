@@ -300,24 +300,34 @@ export const diagnoseOutputWarning = (run: DiagnosableRun): OutputDiagnosis | nu
 
   let status: number | undefined;
   let statusEvidence: DiagnosisEvidence | null = null;
+  // Only match status codes that are explicitly labelled as HTTP / status /
+  // status_code / response_code. Bare 3-digit numbers inside body text
+  // (CVE-2024-515, port 503, ticket #404, "515" appearing in an error message
+  // string) are NOT reliable signals and produced false-positive "Upstream
+  // error" banners.
   const statusPatterns = [
     /\bhttp[\s/]?(\d{3})\b/i,
-    /\bstatus[\s:_-]+(\d{3})\b/i,
-    /\bstatus[_\s-]?code["\s:]+(\d{3})\b/i,
-    /\bcode["\s:]+(\d{3})\b/i,
-    /\[(\d{3})\]/,
-    /\((\d{3})\)/,
-    /\b(4\d{2}|5\d{2})\b/,
+    /\b(?:response[_\s-]?status|status[_\s-]?code|response[_\s-]?code)["'\s:=]+(\d{3})\b/i,
+    /\bstatus["'\s:=]+(\d{3})\b/i,
   ];
-  outer: for (const re of statusPatterns) {
-    for (const e of entries) {
-      const m = e.value.match(re);
-      if (m) {
-        const n = Number(m[1]);
-        if (n >= 400 && n < 600) {
-          status = n;
-          statusEvidence = { path: e.path || '(root)', value: trimEvidenceValue(e.value) };
-          break outer;
+
+  // If the result clearly contains a successful HTTP status (2xx) labelled
+  // the same way, treat the upstream call as successful and do NOT extract a
+  // failure status from incidental digits elsewhere in the payload.
+  const successStatusRe = /\b(?:http[\s/]?|response[_\s-]?status["'\s:=]+|status[_\s-]?code["'\s:=]+|response[_\s-]?code["'\s:=]+|status["'\s:=]+)(2\d{2})\b/i;
+  const hasSuccessStatus = entries.some((e) => successStatusRe.test(e.value));
+
+  if (!hasSuccessStatus) {
+    outer: for (const re of statusPatterns) {
+      for (const e of entries) {
+        const m = e.value.match(re);
+        if (m) {
+          const n = Number(m[1]);
+          if (n >= 400 && n < 600) {
+            status = n;
+            statusEvidence = { path: e.path || '(root)', value: trimEvidenceValue(e.value) };
+            break outer;
+          }
         }
       }
     }
