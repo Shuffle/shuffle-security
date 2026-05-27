@@ -5,7 +5,7 @@
  * through any additional props (e.g. `headerLeft`).
  */
 import type { ComponentProps } from 'react';
-import { AutomationDashboard as CoreAutomationDashboard } from '@/Shuffle-Core';
+import { API_CONFIG, AutomationDashboard as CoreAutomationDashboard } from '@/Shuffle-Core';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -21,6 +21,7 @@ export const AutomationDashboard = (props: Props) => {
     <CoreAutomationDashboard
       orgId={userInfo?.active_org?.id}
       displayName={userInfo?.username}
+      globalUrl={API_CONFIG.baseUrl}
       theme={resolvedTheme}
       {...props}
     />
