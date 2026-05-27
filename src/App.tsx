@@ -85,6 +85,7 @@ import AppDetailPage from '@/pages/dashboard/AppDetailPage';
 import DocsPage from '@/pages/docs/DocsPage';
 import PipelinesPage from '@/pages/dashboard/PipelinesPage';
 import DashboardPage from '@/pages/dashboard/DashboardPage';
+import DashboardViewPage from '@/pages/dashboard/DashboardViewPage';
 import VulnerabilitiesPage from '@/pages/dashboard/VulnerabilitiesPage';
 import VulnAssetsPage from '@/pages/dashboard/VulnAssetsPage';
 import AssetsPage from '@/pages/dashboard/AssetsPage';
