@@ -115,6 +115,68 @@ const deepParseJsonStrings = (obj: any, depth = 0): any => {
   return obj;
 };
 
+/** Try to parse a string as JSON object/array; returns null otherwise. */
+const tryParseJsonObject = (raw: string): any => {
+  if (!raw) return null;
+  const trimmed = raw.trim();
+  if (!((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']')))) return null;
+  try {
+    const parsed = JSON.parse(trimmed);
+    if (parsed && typeof parsed === 'object') return deepParseJsonStrings(parsed);
+  } catch { /* ignore */ }
+  return null;
+};
+
+/** Strip a single surrounding ```json ... ``` (or generic ```) fence if the whole text is one. */
+const stripSingleCodeFence = (raw: string): string => {
+  const m = raw.match(/^\s*```(?:json)?\s*\n([\s\S]*?)\n```\s*$/i);
+  return m ? m[1] : raw;
+};
+
+/**
+ * Render the agent's "Run finished" answer:
+ *  - If the whole text (or its sole code fence) is a JSON object/array → JsonView
+ *  - Otherwise render Markdown, but route fenced code blocks that contain JSON
+ *    through JsonView so they get the collapsible tree UI inline.
+ */
+const FinishAnswerMarkdown: React.FC<{ text: string }> = ({ text }) => {
+  const wholeJson = useMemo(() => tryParseJsonObject(stripSingleCodeFence(text)), [text]);
+  if (wholeJson !== null) {
+    return (
+      <Box sx={{ '& .json-view': { backgroundColor: 'transparent !important', fontSize: '0.82rem' } }}>
+        <JsonView src={wholeJson} collapsed={2} enableClipboard displaySize theme="default" />
+      </Box>
+    );
+  }
+  return (
+    <Markdown
+      remarkPlugins={[remarkGfm, remarkBreaks]}
+      components={{
+        code({ inline, className, children, ...props }: any) {
+          const content = String(children ?? '').replace(/\n$/, '');
+          // Only treat block-level code (not inline) as a JSON candidate.
+          const isBlock = !inline && (content.includes('\n') || /language-/.test(className || ''));
+          if (isBlock) {
+            const parsed = tryParseJsonObject(content);
+            if (parsed !== null) {
+              return (
+                <Box sx={{ my: 1, p: 1.5, borderRadius: 1, bgcolor: 'hsl(var(--muted))', '& .json-view': { backgroundColor: 'transparent !important', fontSize: '0.82rem' } }}>
+                  <JsonView src={parsed} collapsed={2} enableClipboard displaySize theme="default" />
+                </Box>
+              );
+            }
+          }
+          return <code className={className} {...props}>{children}</code>;
+        },
+      }}
+    >
+      {text}
+    </Markdown>
+  );
+};
+
+
+
 
 import { SegmentedControl } from '@/Shuffle-MCPs/components/SegmentedControl';
 import AgentIcon from '@/Shuffle-MCPs/components/AgentIcon';
@@ -3649,7 +3711,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                           '& th, & td': { border: '1px solid hsl(var(--border))', px: 1, py: 0.5 },
                           '& hr': { border: 0, borderTop: '1px solid hsl(var(--border))', my: 1.5 },
                         }}>
-                          <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>{normalizeMarkdown(finishAnswer)}</Markdown>
+                          <FinishAnswerMarkdown text={normalizeMarkdown(finishAnswer)} />
                         </Box>
                       ) : pendingAsk && pendingQuestions.length > 0 ? (
                         (() => {
@@ -3848,7 +3910,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                           },
                           '& pre code': { p: 0, bgcolor: 'transparent' },
                         }}>
-                          <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>{normalizeMarkdown(finishAnswer)}</Markdown>
+                          <FinishAnswerMarkdown text={normalizeMarkdown(finishAnswer)} />
                         </Box>
                       )}
                     </Box>
