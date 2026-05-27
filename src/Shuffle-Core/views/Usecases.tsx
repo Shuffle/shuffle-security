@@ -5296,3 +5296,225 @@ export default function UsecasesPage(props: UsecasesPageProps = {}) {
     </UsecasesPageConfigContext.Provider>
   );
 }
+
+// ============================================================================
+// UsecaseDrawer — standalone, embeddable version of the right-hand usecase
+// detail drawer that lives inside the Usecases page. Hosts (e.g. the
+// Security Operations dashboard) mount this to open a specific usecase in
+// place instead of navigating away to /usecases.
+//
+// Accepts the SAME host props as <UsecasesPage> (globalUrl, userdata,
+// isLoaded, isLoggedIn, theme, renderEndpointSlot, renderUsecaseDetailSlot)
+// so wiring is identical everywhere.
+// ============================================================================
+export interface UsecaseDrawerProps extends UsecasesPageProps {
+  /** Controls visibility. */
+  open: boolean;
+  /** Close handler — fired by the X button and outside-click. */
+  onClose: () => void;
+  /** Which usecase to render. Use the canonical flow id (e.g.
+   *  'siem_case_management_1'). When null/undefined the drawer renders empty. */
+  flowId?: string | null;
+  /** Optional width override. Defaults match the inline drawer in /usecases. */
+  width?: number | { xs?: string | number; sm?: number; md?: number };
+}
+
+function UsecaseDrawerInner({ open, onClose, flowId }: { open: boolean; onClose: () => void; flowId: string | null }) {
+  const navigate = useNavigate();
+  const { apiUrl, authHeader } = useApi();
+  const { usecases } = useUsecasesLite();
+  const { isAuthenticated } = useAuthLite();
+  const { data: workflows = [], refetch: refetchWorkflows } = useWorkflowsLite();
+
+  // Simplified mirror of UsecasesPageInner.workflowEnabledLabels — good enough
+  // for the standalone drawer (presence-based gates like agent-response /
+  // monitor count are out of scope here; opening the drawer is the user's
+  // entry point into the full Usecases page if they want richer state).
+  const enabledLabels = useMemo(() => {
+    const set = new Set<string>();
+    for (const wf of workflows) {
+      const name = (wf.name || '').toLowerCase();
+      const tags = (wf.tags || []).map(t => String(t).toLowerCase());
+      for (const uc of usecases) {
+        if (!uc.automationLabel) continue;
+        const lbl = uc.automationLabel.toLowerCase();
+        if (name === lbl || name.includes(lbl) || tags.includes(lbl) || tags.some(t => t.includes(lbl))) {
+          set.add(uc.automationLabel);
+        }
+      }
+    }
+    return set;
+  }, [workflows, usecases]);
+
+  // Fetch validated source categories (same call as UsecasesPageInner). Skips
+  // out gracefully if the user is not authenticated.
+  const [validatedCategories, setValidatedCategories] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetchAppsCached(apiUrl('/api/v1/apps/authentication'), {
+          credentials: 'include',
+          headers: { ...authHeader() },
+        });
+        if (!res.ok) return;
+        const body = await res.json();
+        const list = Array.isArray(body) ? body : (body?.data || []);
+        const cats = new Set<string>();
+        for (const entry of Array.isArray(list) ? list : []) {
+          if (entry?.validation?.valid !== true) continue;
+          const app = entry?.app;
+          if (!app?.name) continue;
+          const categoryId = matchAppToCategory(app.name, app.categories || []);
+          if (categoryId) cats.add(categoryId);
+        }
+        if (!cancelled) setValidatedCategories(cats);
+      } catch { /* keep previous */ }
+    })();
+    return () => { cancelled = true; };
+  }, [isAuthenticated, apiUrl, authHeader]);
+
+  const [activeFlowId, setActiveFlowId] = useState<string | null>(flowId);
+  useEffect(() => { setActiveFlowId(flowId); }, [flowId]);
+
+  const flow = activeFlowId ? usecases.find(u => u.id === activeFlowId) : null;
+  const isEnabled = !!flow?.automationLabel && enabledLabels.has(flow.automationLabel);
+  const canToggle = isAuthenticated && !!flow?.automationLabel;
+  const hasValidatedSource = flow ? validatedCategories.has(flow.source) : true;
+
+  const handleToggled = React.useCallback(() => {
+    // Mirror handleUsecaseWorkflowGenerated: nudge workflows refetch so the
+    // drawer reflects the new state without requiring a page refresh.
+    window.setTimeout(() => { refetchWorkflows(); }, 3000);
+    window.setTimeout(() => { refetchWorkflows(); }, 8000);
+  }, [refetchWorkflows]);
+
+  return (
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={onClose}
+      PaperProps={{
+        sx: {
+          width: { xs: '100%', sm: 720, md: 900 },
+          maxWidth: '100vw',
+          backgroundColor: '#1a1a1a',
+          bgcolor: 'hsl(var(--background, 0 0% 10%))',
+          color: 'hsl(var(--foreground, 0 0% 100%))',
+          backgroundImage: 'none',
+        },
+      }}
+    >
+      <Box sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        px: 3, py: 2,
+        borderBottom: '1px solid hsl(var(--border, 0 0% 20%))',
+        position: 'sticky', top: 0, zIndex: 2,
+        backgroundColor: '#1a1a1a',
+        bgcolor: 'hsl(var(--background, 0 0% 10%))',
+      }}>
+        <Box />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {activeFlowId && (
+            <Tooltip title="Open full page" placement="top" arrow>
+              <IconButton
+                onClick={() => {
+                  const id = activeFlowId;
+                  const name = usecases.find(u => u.id === id)?.label || id || '';
+                  const slug = slugify(name);
+                  navigate(`/usecases/${slug}/details`);
+                  onClose();
+                }}
+                size="small"
+                sx={{ color: 'hsl(var(--muted-foreground))' }}
+              >
+                <ExternalLink size={16} />
+              </IconButton>
+            </Tooltip>
+          )}
+          <IconButton onClick={onClose} size="small" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+            <X size={18} />
+          </IconButton>
+        </Box>
+      </Box>
+      <Box sx={{ p: { xs: 2, md: 3 } }}>
+        <UsecaseDetailContent
+          flowId={activeFlowId ?? undefined}
+          hideBackNav
+          showConnectionPath
+          onNavigateUsecase={(id) => setActiveFlowId(id || null)}
+          usecases={usecases}
+          isEnabled={isEnabled}
+          canToggle={canToggle}
+          isAuthenticated={isAuthenticated}
+          hasValidatedSource={hasValidatedSource}
+          onToggled={handleToggled}
+          workflows={workflows}
+        />
+      </Box>
+    </Drawer>
+  );
+}
+
+/**
+ * Standalone usecase drawer. Wraps `UsecaseDetailContent` in the same
+ * scoped style + auth/config provider as the Usecases page so it renders
+ * identically when mounted anywhere (dashboards, deep-link triggers, etc.).
+ */
+export function UsecaseDrawer(props: UsecaseDrawerProps) {
+  useInjectScopedStyles();
+  const {
+    open,
+    onClose,
+    flowId = null,
+    globalUrl,
+    userdata,
+    isLoaded,
+    isLoggedIn,
+    theme = 'system',
+    renderEndpointSlot,
+    renderUsecaseDetailSlot,
+  } = props;
+  useSyncHostBaseUrl(globalUrl);
+
+  const themeClass = theme === 'dark' ? 'dark' : theme === 'light' ? 'light' : '';
+
+  const hostManaged =
+    globalUrl !== undefined ||
+    userdata !== undefined ||
+    isLoaded !== undefined ||
+    isLoggedIn !== undefined;
+
+  const config = React.useMemo<UsecasesPageConfig>(() => {
+    const baseUrl = (globalUrl && globalUrl.replace(/\/+$/, '')) || DEFAULT_API_BASE_URL;
+    const externalUserInfo = userdata ?? null;
+    const externalApiKey = userdata?.api_key || userdata?.apikey || null;
+    const loaded = isLoaded !== false;
+    const loggedIn = typeof isLoggedIn === 'boolean' ? isLoggedIn : !!userdata;
+    const externalIsAuthenticated = hostManaged ? loaded && loggedIn : false;
+    return {
+      baseUrl,
+      authHeader: () => {
+        const key = externalApiKey || getStoredApiKey();
+        return key ? { Authorization: `Bearer ${key}` } : {};
+      },
+      hasExternalAuth: hostManaged,
+      externalUserInfo,
+      externalIsAuthenticated,
+      isLoaded: loaded,
+      renderEndpointSlot,
+      renderUsecaseDetailSlot,
+    };
+  }, [globalUrl, userdata, isLoaded, isLoggedIn, hostManaged, renderEndpointSlot, renderUsecaseDetailSlot]);
+
+  return (
+    <UsecasesPageConfigContext.Provider value={config}>
+      <div className={themeClass ? `${SCOPE_CLASS} ${themeClass}` : SCOPE_CLASS}>
+        <UsecaseDrawerInner open={open} onClose={onClose} flowId={flowId} />
+      </div>
+    </UsecasesPageConfigContext.Provider>
+  );
+}
