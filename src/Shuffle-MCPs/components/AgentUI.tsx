@@ -320,7 +320,7 @@ import { SegmentedControl } from '@/Shuffle-MCPs/components/SegmentedControl';
 import AgentIcon from '@/Shuffle-MCPs/components/AgentIcon';
 import AppSearchDrawer from '@/Shuffle-MCPs/views/AppSearchDrawer';
 import AppDetailDrawer from '@/Shuffle-MCPs/views/AppDetailDrawer';
-import { getApiUrl, getAuthHeader, API_CONFIG } from '@/Shuffle-MCPs/api';
+import { getApiUrl, getAuthHeader, API_CONFIG, getShuffleCoreFormUrl } from '@/Shuffle-MCPs/api';
 import { fetchApps } from '@/Shuffle-MCPs/appsCache';
 import { resolveApps } from '@/Shuffle-MCPs/resolveApp';
 import { toast } from '@/Shuffle-MCPs/toast';
@@ -944,7 +944,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
               <span>
                 <IconButton
                   size="small"
-                  onClick={() => window.open((details!.run_details as any).debug_url, '_blank', 'noopener,noreferrer')}
+                  onClick={() => window.open(getShuffleCoreFormUrl((details!.run_details as any).debug_url), '_blank', 'noopener,noreferrer')}
                   sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
                 >
                   <OpenInNewIcon size={16} />
