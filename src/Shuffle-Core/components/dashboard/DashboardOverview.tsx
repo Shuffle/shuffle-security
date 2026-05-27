@@ -250,9 +250,7 @@ export const DashboardOverview = ({
           value={monitorHostCount ?? 0}
           label={runningSensorCount ? `Hosts • ${runningSensorCount} sensors` : 'Host Monitors'}
           isLoading={monitorsLoading}
-          onClick={() => (monitorHostCount ?? 0) === 0
-            ? navigateSetup('case_management_asset_management_monitors_1', '/monitors?add_host=true', 'area=detection&category=endpoint_detection')
-            : navigate('/monitors')}
+          onClick={() => navigateSetup('case_management_asset_management_monitors_1', '/monitors?add_host=true', 'area=detection&category=endpoint_detection')}
           delay={0.1}
         />
         <KpiTile
