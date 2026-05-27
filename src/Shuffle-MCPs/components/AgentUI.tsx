@@ -3543,6 +3543,62 @@ const AgentUI: React.FC<AgentUIProps> = ({
               </Tooltip>
               </Box>
             </Box>
+            <Popper
+              open={suggestionsOpen}
+              anchorEl={promptAnchorRef.current}
+              placement="bottom-start"
+              style={{ zIndex: 1300, width: promptAnchorRef.current?.offsetWidth }}
+              modifiers={[{ name: 'offset', options: { offset: [0, 6] } }]}
+            >
+              <ClickAwayListener onClickAway={() => setSuggestionsDismissed(true)}>
+                <Paper
+                  elevation={6}
+                  sx={{
+                    bgcolor: 'hsl(var(--card))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                    maxHeight: 320,
+                    overflowY: 'auto',
+                  }}
+                >
+                  <MenuList dense disablePadding>
+                    {promptSuggestions.map((s, i) => {
+                      const q = actionInput.trim();
+                      const lower = s.toLowerCase();
+                      const idx = q ? lower.indexOf(q.toLowerCase()) : -1;
+                      const before = idx >= 0 ? s.slice(0, idx) : s;
+                      const match = idx >= 0 ? s.slice(idx, idx + q.length) : '';
+                      const after = idx >= 0 ? s.slice(idx + q.length) : '';
+                      return (
+                        <MenuItem
+                          key={s}
+                          selected={i === suggestionIndex}
+                          onMouseEnter={() => setSuggestionIndex(i)}
+                          onMouseDown={(e) => { e.preventDefault(); acceptSuggestion(s); }}
+                          sx={{
+                            fontSize: '0.88rem',
+                            color: 'hsl(var(--foreground))',
+                            py: 0.75,
+                            px: 2,
+                            '&.Mui-selected, &.Mui-selected:hover': {
+                              bgcolor: 'hsl(var(--muted) / 0.6)',
+                            },
+                          }}
+                        >
+                          <Search size={14} style={{ marginRight: 10, color: 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
+                          <Box component="span" sx={{ whiteSpace: 'normal', lineHeight: 1.4 }}>
+                            {before}
+                            <Box component="span" sx={{ fontWeight: 700, color: 'hsl(var(--foreground))' }}>{match}</Box>
+                            {after}
+                          </Box>
+                        </MenuItem>
+                      );
+                    })}
+                  </MenuList>
+                </Paper>
+              </ClickAwayListener>
+            </Popper>
 
             {!hideAppPicker && (
             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
