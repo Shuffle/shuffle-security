@@ -282,12 +282,20 @@ export const diagnoseOutputWarning = (run: DiagnosableRun): OutputDiagnosis | nu
 
   // Error-like field paths: error, reason, message, msg, detail, failure,
   // fault, exception, warning, status_text, status_message, status_reason.
-  // Keyword matches inside non-error fields (body content, success payloads,
-  // HTML pages, descriptions) are NOT reliable signals on their own — a
-  // response body legitimately containing the word "permission" or
-  // "forbidden" should not produce a "Permission denied" banner.
-  const ERROR_PATH_RE = /(^|[._\[])(error|errors|err|reason|message|messages|msg|detail|details|failure|fault|exception|exceptions|warning|warnings|status_text|status_message|status_reason|errorMessage|error_description)(\b|[._\[\]])/i;
-  const errorEntries = entries.filter((e) => ERROR_PATH_RE.test(e.path));
+  // Match exact path segments only. In particular, `run_details` is just the
+  // execution container and must NOT make every nested response body an error
+  // field; WHOIS/legal text can contain phrases like "not authorized" while
+  // the actual integration response is successful.
+  const ERROR_FIELD_NAMES = new Set([
+    'error', 'errors', 'err', 'reason', 'message', 'messages', 'msg', 'detail', 'details',
+    'failure', 'fault', 'exception', 'exceptions', 'warning', 'warnings',
+    'status_text', 'status_message', 'status_reason', 'errormessage', 'error_description',
+  ]);
+  const getPathSegments = (path: string): string[] =>
+    path.split(/[.\[\]]+/).filter(Boolean).map((segment) => segment.toLowerCase());
+  const isErrorPath = (path: string): boolean =>
+    getPathSegments(path).some((segment) => ERROR_FIELD_NAMES.has(segment));
+  const errorEntries = entries.filter((e) => isErrorPath(e.path));
   const errorHaystackLower = errorEntries.map((e) => e.value).join('\n').toLowerCase();
 
   const findEvidence = (
@@ -320,24 +328,40 @@ export const diagnoseOutputWarning = (run: DiagnosableRun): OutputDiagnosis | nu
     /\b(?:response[_\s-]?status|status[_\s-]?code|response[_\s-]?code)["'\s:=]+(\d{3})\b/i,
     /\bstatus["'\s:=]+(\d{3})\b/i,
   ];
+  const isStatusPath = (path: string): boolean => {
+    const segments = getPathSegments(path);
+    const last = segments[segments.length - 1];
+    return ['status', 'status_code', 'response_status', 'response_code', 'http_status'].includes(last || '');
+  };
+  const statusFromEntry = (entry: ResultEntry): number | null => {
+    if (isStatusPath(entry.path) && /^\d{3}$/.test(entry.value.trim())) {
+      return Number(entry.value.trim());
+    }
+    for (const re of statusPatterns) {
+      const m = entry.value.match(re);
+      if (m) return Number(m[1]);
+    }
+    return null;
+  };
 
   // If the result clearly contains a successful HTTP status (2xx) labelled
   // the same way, treat the upstream call as successful and do NOT extract a
   // failure status from incidental digits elsewhere in the payload.
-  const successStatusRe = /\b(?:http[\s/]?|response[_\s-]?status["'\s:=]+|status[_\s-]?code["'\s:=]+|response[_\s-]?code["'\s:=]+|status["'\s:=]+)(2\d{2})\b/i;
-  const hasSuccessStatus = entries.some((e) => successStatusRe.test(e.value));
+  const hasSuccessStatus = entries.some((e) => {
+    const n = statusFromEntry(e);
+    return typeof n === 'number' && n >= 200 && n < 300;
+  });
 
   if (!hasSuccessStatus) {
-    outer: for (const re of statusPatterns) {
-      for (const e of entries) {
-        const m = e.value.match(re);
-        if (m) {
-          const n = Number(m[1]);
-          if (n >= 400 && n < 600) {
-            status = n;
-            statusEvidence = { path: e.path || '(root)', value: trimEvidenceValue(e.value) };
-            break outer;
-          }
+    for (const e of entries) {
+      const n = statusFromEntry(e);
+      if (typeof n === 'number' && n >= 400 && n < 600) {
+        status = n;
+        statusEvidence = { path: e.path || '(root)', value: trimEvidenceValue(e.value) };
+        break;
+      }
+    }
+  }
         }
       }
     }
