@@ -459,6 +459,7 @@ const AgentActivityList = ({
   const [workflowFilter, setWorkflowFilter] = useState('');
   const [stopOpen, setStopOpen] = useState(false);
   const [stopLoading, setStopLoading] = useState(false);
+  const [appIcons, setAppIcons] = useState<Record<string, string>>({});
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   const selectedAgentWorkflow = agentWorkflows.find((w) => w.id === workflowFilter) || null;
