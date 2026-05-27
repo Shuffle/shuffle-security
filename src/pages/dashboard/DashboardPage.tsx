@@ -1108,7 +1108,7 @@ const DashboardPage = () => {
               <SegmentedControl
                 ariaLabel="Dashboard view"
                 value={dashboardTab}
-                onChange={(v) => setDashboardTab(v as 'security' | 'automation')}
+                onChange={(v) => handleDashboardTabChange(v as 'security' | 'automation')}
                 options={[
                   { value: 'security', label: 'Security Operations' },
                   { value: 'automation', label: 'Automation' },
