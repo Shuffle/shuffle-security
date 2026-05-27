@@ -561,10 +561,27 @@ const DashboardPage = () => {
   // scrollBy the delta so the tab bar stays exactly where it was.
   const dashboardTabsRef = useRef<HTMLDivElement | null>(null);
   const pendingTabsTopRef = useRef<number | null>(null);
+  const scrollParentRef = useRef<HTMLElement | Window | null>(null);
+  // Find the nearest scrollable ancestor. The dashboard sits inside the
+  // DashboardLayout <main> which has its own overflowY: auto, so the window
+  // itself does not scroll — we need to scroll that container instead.
+  const findScrollParent = (el: HTMLElement | null): HTMLElement | Window => {
+    let node: HTMLElement | null = el?.parentElement ?? null;
+    while (node) {
+      const style = getComputedStyle(node);
+      const overflowY = style.overflowY;
+      if ((overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay') && node.scrollHeight > node.clientHeight) {
+        return node;
+      }
+      node = node.parentElement;
+    }
+    return window;
+  };
   const handleDashboardTabChange = useCallback((next: 'security' | 'automation') => {
     if (next === dashboardTab) return;
     if (dashboardTabsRef.current) {
       pendingTabsTopRef.current = dashboardTabsRef.current.getBoundingClientRect().top;
+      scrollParentRef.current = findScrollParent(dashboardTabsRef.current);
     }
     setDashboardTab(next);
   }, [dashboardTab]);
@@ -574,7 +591,13 @@ const DashboardPage = () => {
     pendingTabsTopRef.current = null;
     const after = dashboardTabsRef.current.getBoundingClientRect().top;
     const delta = after - before;
-    if (delta !== 0) window.scrollBy({ top: delta, left: 0, behavior: 'instant' as ScrollBehavior });
+    if (delta === 0) return;
+    const parent = scrollParentRef.current;
+    if (parent && parent !== window) {
+      (parent as HTMLElement).scrollTop += delta;
+    } else {
+      window.scrollBy({ top: delta, left: 0, behavior: 'instant' as ScrollBehavior });
+    }
   }, [dashboardTab]);
   // Shared time-range filter for both dashboard tabs (Security Operations + Automation).
   const [dashboardDays, setDashboardDays] = useState<string>(() => {
