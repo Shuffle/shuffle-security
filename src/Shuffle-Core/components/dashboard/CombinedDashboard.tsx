@@ -16,9 +16,9 @@
  * fetched value, so this stays a drop-in replacement for the single-org
  * branch of the host `/dashboard` page.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, FormControl, IconButton, InputLabel, MenuItem, Select, Tooltip as MuiTooltip } from '@mui/material';
-import { RefreshCw as RefreshIcon, X as CloseIcon } from 'lucide-react';
+import { RefreshCw as RefreshIcon, X as CloseIcon, Download as DownloadIcon } from 'lucide-react';
 import { useDatastore } from '../../hooks/useDatastore';
 import { DATASTORE_CATEGORIES } from '@shuffleio/shuffle-mcps';
 import { getApiUrl, getAuthHeader } from '../../api';
@@ -28,6 +28,8 @@ import { SegmentedControl } from '../ui/segmented-control';
 import type { ShuffleCoreHostProps } from '../../types/host-props';
 import { useSyncHostBaseUrl } from '../../useSyncHostBaseUrl';
 import { UsecaseDrawer } from '../../views/Usecases';
+import { buildDashboardPdf, captureNode, type DashboardStatsSummary } from './exportDashboardPdf';
+
 
 type VulnCounts = { critical: number; high: number; medium: number; low: number; info: number };
 const EMPTY_VULNS: VulnCounts = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
