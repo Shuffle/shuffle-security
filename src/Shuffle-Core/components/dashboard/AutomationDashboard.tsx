@@ -525,60 +525,85 @@ export const AutomationDashboard = ({
         accent={NEON.violet}
         delay={0.3}
         action={
-          <FormControl size="small" sx={{ minWidth: 260 }}>
-            <Autocomplete
-              size="small"
-              options={statKeys}
-              value={selectedStat || null}
-              onChange={(_, v) => { if (v) pickSelectedStat(v); }}
-              disableClearable
-              getOptionLabel={(k) => prettyStatLabel(k)}
-              isOptionEqualToValue={(a, b) => a === b}
-              noOptionsText={statKeys.length === 0 ? 'No stats available' : 'No matches'}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Find your stat"
-                  placeholder="Type to search..."
-                  InputLabelProps={{ sx: { color: NEON.violet } }}
-                />
-              )}
-              componentsProps={{
-                paper: {
-                  sx: {
-                    bgcolor: 'hsl(var(--popover))',
-                    border: '1px solid hsl(var(--border))',
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <FormControl size="small" sx={{ minWidth: 260 }}>
+              <Autocomplete
+                size="small"
+                options={statKeys}
+                value={selectedStat || null}
+                onChange={(_, v) => { if (v) pickSelectedStat(v); }}
+                disableClearable
+                getOptionLabel={(k) => prettyStatLabel(k)}
+                isOptionEqualToValue={(a, b) => a === b}
+                noOptionsText={statKeys.length === 0 ? 'No stats available' : 'No matches'}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Find your stat"
+                    placeholder="Type to search..."
+                    InputLabelProps={{ sx: { color: NEON.violet } }}
+                  />
+                )}
+                componentsProps={{
+                  paper: {
+                    sx: {
+                      bgcolor: 'hsl(var(--popover))',
+                      border: '1px solid hsl(var(--border))',
+                    },
                   },
-                },
-              }}
-              ListboxProps={{ sx: { maxHeight: 420 } }}
-              renderOption={(props, k) => {
-                const total = statTotals[k] || 0;
-                return (
-                  <li {...props} key={k}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: '100%' }}>
-                      <Typography
-                        sx={{
-                          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: statColor(total),
-                          minWidth: 56,
-                          textAlign: 'left',
-                        }}
-                      >
-                        {formatCompact(total)}
-                      </Typography>
-                      <Typography sx={{ fontSize: 13, color: 'hsl(var(--foreground))' }}>
-                        {prettyStatLabel(k)}
-                      </Typography>
-                    </Box>
-                  </li>
-                );
-              }}
-            />
-          </FormControl>
+                }}
+                ListboxProps={{ sx: { maxHeight: 420 } }}
+                renderOption={(props, k) => {
+                  const total = statTotals[k] || 0;
+                  return (
+                    <li {...props} key={k}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, width: '100%' }}>
+                        <Typography
+                          sx={{
+                            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                            fontSize: 13,
+                            fontWeight: 600,
+                            color: statColor(total),
+                            minWidth: 56,
+                            textAlign: 'left',
+                          }}
+                        >
+                          {formatCompact(total)}
+                        </Typography>
+                        <Typography sx={{ fontSize: 13, color: 'hsl(var(--foreground))' }}>
+                          {prettyStatLabel(k)}
+                        </Typography>
+                      </Box>
+                    </li>
+                  );
+                }}
+              />
+            </FormControl>
+            <MuiTooltip title="Increment any custom key from a workflow (Shuffle Tools → Repeat back / Stats actions, or the API) and it shows up here. Opens the Stats & Timelines API docs.">
+              <Box
+                component="a"
+                href="https://shuffler.io/docs/API#stats-and-timelines"
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  fontSize: '0.72rem',
+                  fontWeight: 500,
+                  color: NEON.violet,
+                  textDecoration: 'none',
+                  whiteSpace: 'nowrap',
+                  '&:hover': { textDecoration: 'underline' },
+                }}
+              >
+                Add custom stats
+                <ExternalLink size={12} />
+              </Box>
+            </MuiTooltip>
+          </Box>
         }
+
       >
         <Box sx={{ height: 260 }}>
           {statKeys.length === 0 ? (
