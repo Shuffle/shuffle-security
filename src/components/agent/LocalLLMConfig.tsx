@@ -443,11 +443,17 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
         <Box sx={{ mt: 0.5, width: '100%' }}>{usageBars}</Box>
       )}
 
-      {effectivePreset === CUSTOM_PRESET && (
+      {!isShuffleAI && selectedProviderDocs && !selectedProviderDocs.url && (
         <TextField
           size="small"
           fullWidth
-          placeholder="https://your-self-hosted-endpoint.example.com"
+          placeholder={
+            effectivePreset === 'Ollama'
+              ? 'http://your-ollama-host:11434/v1'
+              : effectivePreset === 'LM Studio'
+                ? 'http://your-lmstudio-host:1234/v1'
+                : 'https://your-self-hosted-endpoint.example.com'
+          }
           value={customUrl || currentUrl}
           onChange={(e) => handleCustomUrlChange(e.target.value)}
           helperText="Enter the base URL of your OpenAI-compatible endpoint"
