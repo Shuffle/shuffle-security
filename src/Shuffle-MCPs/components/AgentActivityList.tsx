@@ -993,6 +993,17 @@ const AgentActivityList = ({
           </Button>
         </DialogActions>
       </Dialog>
+
+      <AppDetailDrawer
+        open={!!appDrawer}
+        onClose={() => setAppDrawer(null)}
+        appName={appDrawer?.name || null}
+        appId={appDrawer?.id || null}
+        activeOrgId={orgId || null}
+        globalUrl={globalUrl || apiBaseUrl}
+        theme={theme}
+        colorMode={colorMode}
+      />
     </Box>
   );
 };
