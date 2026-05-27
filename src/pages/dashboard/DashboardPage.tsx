@@ -2,7 +2,7 @@
  * Dashboard Page — CTA-focused setup guide + AI Agent notifications.
  */
 
-import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useState, useMemo, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import {
   Box,
   Typography,
