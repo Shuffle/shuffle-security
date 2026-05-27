@@ -1907,21 +1907,21 @@ const AgentUI: React.FC<AgentUIProps> = ({
     if (executionApps.length > 0) {
       setChosenApps(executionApps);
     }
-    // When the Start tab is hidden (e.g. embedded in the execution drawer),
-    // there is no Start view to bounce to — just resubmit immediately with
-    // the previous prompt + tools.
-    if (disableStartTab) {
-      if (input && typeof input === 'string' && input.trim().length >= 6) {
-        submitInput(input);
-      }
-      return;
+    // Auto-submit immediately with the previous prompt + tools so the user
+    // does not have to click play again. When the Start tab is visible we
+    // still bounce back to it first so the prompt + chip row are visible
+    // while the new run kicks off.
+    if (!disableStartTab) {
+      setShowStarter(true);
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete('agentView');
+        return next;
+      }, { replace: true });
     }
-    setShowStarter(true);
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      next.delete('agentView');
-      return next;
-    }, { replace: true });
+    if (input && typeof input === 'string' && input.trim().length >= 6) {
+      submitInput(input);
+    }
   }, [agentData, actionInput, executionApps, setSearchParams, disableStartTab, submitInput]);
 
   // ── Abort the currently running agent execution ──
