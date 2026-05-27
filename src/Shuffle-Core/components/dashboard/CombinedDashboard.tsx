@@ -377,40 +377,43 @@ const CombinedDashboard = ({
   return (
     <Box sx={{ maxWidth: 1100, width: '100%', mx: 'auto', pt: '25px', display: 'flex', flexDirection: 'column', gap: 3 }}>
       {sharedHeader}
-      {tab === 'automation' ? (
-        <AutomationDashboard
-          {...host}
-          orgId={orgId}
-          displayName={displayName}
-          headerLeft={headerLeft}
-          days={days}
-          onDaysChange={setDays}
-          gran={gran}
-          onGranChange={setGran}
-          mode={mode}
-          onModeChange={setMode}
-          refreshKey={(refreshKeyProp ?? 0) + internalRefreshKey}
-          hideRefresh
-          customRange={customRange}
-          onRangeSelect={(fromMs, toMs) => setCustomRange({ fromMs, toMs })}
-        />
-      ) : (
-        <DashboardOverview
-          {...host}
-          incidents={eIncidents}
-          incidentsLoading={eIncidentsLoading}
-          vulnSeverityCounts={eVulns}
-          vulnLoading={eVulnLoading}
-          monitorHostCount={eHostCount}
-          runningSensorCount={eSensorCount}
-          monitorsLoading={eMonitorsLoading}
-          days={parseInt(days, 10) || 30}
-          gran={gran}
-          customRange={customRange}
-          onRangeSelect={(fromMs, toMs) => setCustomRange({ fromMs, toMs })}
-          onOpenUsecase={(flowId) => setOpenUsecaseId(flowId)}
-        />
-      )}
+      <Box ref={dashboardRef}>
+        {tab === 'automation' ? (
+          <AutomationDashboard
+            {...host}
+            orgId={orgId}
+            displayName={displayName}
+            headerLeft={headerLeft}
+            days={days}
+            onDaysChange={setDays}
+            gran={gran}
+            onGranChange={setGran}
+            mode={mode}
+            onModeChange={setMode}
+            refreshKey={(refreshKeyProp ?? 0) + internalRefreshKey}
+            hideRefresh
+            customRange={customRange}
+            onRangeSelect={(fromMs, toMs) => setCustomRange({ fromMs, toMs })}
+          />
+        ) : (
+          <DashboardOverview
+            {...host}
+            incidents={eIncidents}
+            incidentsLoading={eIncidentsLoading}
+            vulnSeverityCounts={eVulns}
+            vulnLoading={eVulnLoading}
+            monitorHostCount={eHostCount}
+            runningSensorCount={eSensorCount}
+            monitorsLoading={eMonitorsLoading}
+            days={parseInt(days, 10) || 30}
+            gran={gran}
+            customRange={customRange}
+            onRangeSelect={(fromMs, toMs) => setCustomRange({ fromMs, toMs })}
+            onOpenUsecase={(flowId) => setOpenUsecaseId(flowId)}
+          />
+        )}
+      </Box>
+
       {/* Inline usecase drawer — opens in-place from the Security Operations
        *  setup CTAs instead of redirecting to /usecases. Receives the SAME
        *  host props (globalUrl, userdata, isLoaded, isLoggedIn, theme) we
