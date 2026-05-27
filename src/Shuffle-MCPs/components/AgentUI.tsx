@@ -1975,15 +1975,35 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // same screen wondering if anything happened), bounce them back to the
   // Start tab with the prompt + tools pre-filled so they can review and
   // hit Start themselves.
+  // Resolve the prompt for the currently-loaded run from every place the
+  // backend may stash it. New runs set `agentData.original_input` directly,
+  // but runs loaded by execution_id rarely have that — fall back to the AI
+  // Agent action's `input` parameter and the execution_argument.
+  const resolveRunInput = useCallback((): string => {
+    const fromData = agentData?.original_input;
+    if (fromData && typeof fromData === 'string') return fromData;
+    if (actionInput && typeof actionInput === 'string' && actionInput.trim()) return actionInput;
+    const params: any[] = (agentActionResult as any)?.action?.parameters || [];
+    const inputParam = params.find((p) => p?.name === 'input');
+    if (inputParam?.value && typeof inputParam.value === 'string') return inputParam.value;
+    const msgs = (agentData as any)?.input?.messages || [];
+    const userMsg = msgs.find((mm: any) => mm?.role === 'user');
+    if (userMsg?.content && typeof userMsg.content === 'string') return userMsg.content;
+    const execArg = (execution as any)?.execution_argument;
+    if (execArg && typeof execArg === 'string') {
+      try {
+        const parsed = JSON.parse(execArg);
+        if (parsed?.input && typeof parsed.input === 'string') return parsed.input;
+        if (parsed?.prompt && typeof parsed.prompt === 'string') return parsed.prompt;
+      } catch {
+        if (execArg.length < 4000) return execArg;
+      }
+    }
+    return '';
+  }, [agentData, actionInput, agentActionResult, execution]);
+
   const rerunAgent = useCallback(() => {
-    const input =
-      agentData?.original_input ||
-      actionInput ||
-      (() => {
-        const msgs = (agentData as any)?.input?.messages || [];
-        const m = msgs.find((m: any) => m?.role === 'user' && !String(m?.role).includes('USER CONTEXT'));
-        return m?.content || '';
-      })();
+    const input = resolveRunInput();
     if (input && typeof input === 'string') {
       setActionInput(input);
     }
@@ -2005,7 +2025,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
     if (input && typeof input === 'string' && input.trim().length >= 6) {
       submitInput(input);
     }
-  }, [agentData, actionInput, executionApps, setSearchParams, disableStartTab, submitInput]);
+  }, [resolveRunInput, executionApps, setSearchParams, disableStartTab, submitInput]);
 
   // ── Abort the currently running agent execution ──
   // If the agent has not produced an execution_id yet (i.e. the initial
@@ -2327,13 +2347,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
     if (t === 'start') {
       // Seed the starter form with the current run's prompt + tools so the
       // user can tweak and resubmit instead of starting from a blank slate.
-      const runInput =
-        agentData?.original_input ||
-        (() => {
-          const msgs = (agentData as any)?.input?.messages || [];
-          const m = msgs.find((m: any) => m?.role === 'user');
-          return m?.content || '';
-        })();
+      const runInput = resolveRunInput();
       if (runInput && typeof runInput === 'string') {
         setActionInput(runInput);
       }
