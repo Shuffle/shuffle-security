@@ -223,6 +223,7 @@ const ThemedApp = () => {
               }
             >
               <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/dashboard-view" element={<DashboardViewPage />} />
               <Route path="/incidents" element={<IncidentsPage />} />
               {/* Simple incident view was removed — redirect any old links to the full view. */}
               <Route path="/incidents-simple" element={<Navigate to="/incidents" replace />} />
