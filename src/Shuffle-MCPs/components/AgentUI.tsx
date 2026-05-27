@@ -1458,9 +1458,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
     return () => { cancelled = true; };
   }, [chosenApps, availableApps, resolveUrl, resolveHeaders]);
 
-  // Auto-load the caller's authenticated apps when nothing was passed in
-  // and an API token is configured. Skipped when controlled or `defaultApps`
-  // were provided explicitly.
+  // Auto-load the caller's authenticated apps whenever an API token is
+  // configured. This stays independent from selected/default apps because
+  // the auth banners need the live credential list for revalidation.
   const loadAuthenticatedApps = useCallback(async (signal?: { cancelled: boolean }) => {
     setAuthAppsLoading(true);
     try {
