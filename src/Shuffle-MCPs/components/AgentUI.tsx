@@ -65,6 +65,10 @@ import {
 } from '@mui/material';
 import type { SxProps, Theme } from '@mui/material';
 import Markdown from 'react-markdown';
+import {
+  DEFAULT_AGENT_PROMPT_PLACEHOLDER,
+  matchAgentPromptSuggestions,
+} from './agentPromptSuggestions';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 
