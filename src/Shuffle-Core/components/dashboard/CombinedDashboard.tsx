@@ -20,11 +20,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { Box, FormControl, IconButton, InputLabel, MenuItem, Select, Tooltip as MuiTooltip } from '@mui/material';
 import { RefreshCw as RefreshIcon, X as CloseIcon } from 'lucide-react';
 import { useDatastore } from '../../hooks/useDatastore';
-import { DATASTORE_CATEGORIES, getApiUrl, getAuthHeader } from '@shuffleio/shuffle-mcps';
+import { DATASTORE_CATEGORIES } from '@shuffleio/shuffle-mcps';
+import { getApiUrl, getAuthHeader } from '../../api';
 import DashboardOverview, { type OverviewProps } from './DashboardOverview';
 import AutomationDashboard, { type AutomationDashboardProps, AUTOMATION_RANGE_OPTIONS } from './AutomationDashboard';
 import { SegmentedControl } from '../ui/segmented-control';
 import type { ShuffleCoreHostProps } from '../../types/host-props';
+import { useSyncHostBaseUrl } from '../../useSyncHostBaseUrl';
 
 type VulnCounts = { critical: number; high: number; medium: number; low: number; info: number };
 const EMPTY_VULNS: VulnCounts = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
@@ -87,6 +89,8 @@ const CombinedDashboard = ({
   // Host props — forwarded to both inner dashboards
   ...host
 }: CombinedDashboardProps) => {
+  useSyncHostBaseUrl(host.globalUrl);
+
   // ── Shared filter state (mirrors DashboardPage) ──────────────────────────
   const [tab, setTab] = useState<'security' | 'automation'>(() => {
     try {
