@@ -232,6 +232,8 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
   };
 
   const isShuffleAI = effectivePreset === SHUFFLE_AI_PRESET;
+  const selectedProviderDocs = ENDPOINT_PRESETS.find((p) => p.label === effectivePreset);
+  const hasProviderDocs = !!selectedProviderDocs?.apiKeyHint || !!selectedProviderDocs?.apiKeyUrl;
   const { userInfo } = useAuth();
   const orgId = userInfo?.active_org?.id;
 
@@ -361,30 +363,42 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
         />
       </Box>
 
-      {/* Single merged description — adapts copy to Shuffle AI vs custom provider */}
+      {/* Provider-specific docs */}
       {!compact && (
         <Box sx={{
           px: 2.5,
           py: 2,
           borderRadius: 2,
           border: '1px solid hsl(var(--border))',
-          bgcolor: 'hsla(var(--muted) / 0.3)',
+          bgcolor: 'hsl(var(--muted) / 0.3)',
         }}>
           <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
-            {isShuffleAI
-              ? 'Using Shuffle\u2019s hosted AI \u2014 no configuration required. Your agent runs use Shuffle\u2019s default model. To use your own provider, pick one above or choose "Custom / self-hosted".'
-              : 'Configure an AI provider endpoint for agent operations. Pick a common provider above, or choose "Custom / self-hosted" to enter your own URL. Credentials are saved securely via the app authentication system.'}
-            {' '}
-            <Box
-              component="a"
-              href="https://shuffler.io/docs/AI#using-self-hosted-ai-models"
-              target="_blank"
-              rel="noopener noreferrer"
-              sx={{ color: 'hsl(var(--primary))', textDecoration: 'underline' }}
-            >
-              Read the docs
-            </Box>
-            .
+            {isShuffleAI ? (
+              <>
+                Using Shuffle AI. No configuration is required. Pick another provider above to use your own endpoint.{' '}
+                <Box component="a" href="https://shuffler.io/docs/AI#using-self-hosted-ai-models" target="_blank" rel="noopener noreferrer" sx={{ color: 'hsl(var(--primary))', textDecoration: 'underline' }}>
+                  Read the docs
+                </Box>
+                .
+              </>
+            ) : hasProviderDocs ? (
+              <>
+                {selectedProviderDocs?.apiKeyHint}{' '}
+                {selectedProviderDocs?.apiKeyUrl && (
+                  <Box component="a" href={selectedProviderDocs.apiKeyUrl} target="_blank" rel="noopener noreferrer" sx={{ color: 'hsl(var(--primary))', textDecoration: 'underline' }}>
+                    Get your {selectedProviderDocs.label} API key →
+                  </Box>
+                )}
+              </>
+            ) : (
+              <>
+                Configure a custom OpenAI-compatible endpoint for agent operations.{' '}
+                <Box component="a" href="https://shuffler.io/docs/AI#using-self-hosted-ai-models" target="_blank" rel="noopener noreferrer" sx={{ color: 'hsl(var(--primary))', textDecoration: 'underline' }}>
+                  Read the docs
+                </Box>
+                .
+              </>
+            )}
           </Typography>
         </Box>
       )}
