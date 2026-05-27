@@ -7,7 +7,7 @@
  * consumer decides what happens next (typically: open AgentExecutionDrawer).
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Avatar,
