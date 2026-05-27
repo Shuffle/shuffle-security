@@ -288,7 +288,11 @@ export default function AppSearchDrawer({
           paper: {
             className: scopeClassName,
             sx: {
-              width: { xs: '100%', sm: width },
+              // Strict, environment-independent sizing so the drawer
+              // looks identical on every host (Shuffle Security, /agents,
+              // test page, embedded library, etc.). No breakpoint variance.
+              width: `min(${width}px, 100vw)`,
+              minWidth: `min(${width}px, 100vw)`,
               maxWidth: '100vw',
               height: '100vh',
               display: 'flex',
@@ -304,6 +308,7 @@ export default function AppSearchDrawer({
           zIndex: 9999,
           '& .MuiDrawer-paper': { boxSizing: 'border-box' },
         }}
+
       >
         {/* Header */}
         <Box
