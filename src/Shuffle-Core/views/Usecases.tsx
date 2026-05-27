@@ -4957,7 +4957,7 @@ function UsecaseCard({
         )}
         {/* Label + sync icon */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, width: '100%' }}>
-          <Typography variant="body2" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', flexGrow: 1, fontSize: '0.82rem' }}>
+          <Typography variant="body2" title={flow.label} sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', flexGrow: 1, fontSize: '0.82rem', minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {flow.label}
           </Typography>
           {showDrift && (
