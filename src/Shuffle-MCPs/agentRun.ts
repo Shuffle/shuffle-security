@@ -289,7 +289,7 @@ export const runAgent = async (request: AgentRunRequest): Promise<AgentRunRespon
 
   const payload = {
     jsonrpc: '2.0',
-    id: crypto.randomUUID(),
+    id: Date.now(),
     method: 'tools/call',
     params,
   };
