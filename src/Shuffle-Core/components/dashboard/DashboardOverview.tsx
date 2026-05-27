@@ -348,7 +348,9 @@ export const DashboardOverview = ({
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <EmptyState text={`No incident activity in the last ${days} days`} ctaLabel="Set up incident ingestion" onCta={() => navigateSetup('siem_case_management_1', '/incidents?highlight=ingest', 'area=automatic_ingestion&category=case_management')} />
+              <Box sx={{ pt: '50px' }}>
+                <EmptyState text={`No incident activity in the last ${days} days`} ctaLabel="Set up incident ingestion" onCta={() => navigateSetup('siem_case_management_1', '/incidents?highlight=ingest', 'area=automatic_ingestion&category=case_management')} />
+              </Box>
             )}
           </Box>
         </Panel>
@@ -485,7 +487,9 @@ export const DashboardOverview = ({
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <EmptyState text="No vulnerabilities ingested yet" ctaLabel="Set up vulnerability ingestion" onCta={() => navigateSetup('vulnerability_ingestion_1', '/vulnerabilities', 'area=automatic_ingestion&category=asset_management')} />
+            <Box sx={{ pt: '15px' }}>
+              <EmptyState text="No vulnerabilities ingested yet" ctaLabel="Set up vulnerability ingestion" onCta={() => navigateSetup('vulnerability_ingestion_1', '/vulnerabilities', 'area=automatic_ingestion&category=asset_management')} />
+            </Box>
           )}
         </Box>
       </Panel>
