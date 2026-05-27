@@ -357,6 +357,19 @@ const CombinedDashboard = ({
             <RefreshIcon size={16} />
           </IconButton>
         </MuiTooltip>
+        <MuiTooltip title={exporting ? 'Generating PDF…' : 'Download dashboard as PDF'}>
+          <span>
+            <IconButton
+              size="small"
+              onClick={handleExportPdf}
+              disabled={exporting}
+              sx={{ color: 'hsl(var(--muted-foreground))', alignSelf: 'flex-end', width: 36, height: 36, borderRadius: '8px' }}
+            >
+              <DownloadIcon size={16} />
+            </IconButton>
+          </span>
+        </MuiTooltip>
+
       </Box>
     </Box>
   );
