@@ -30,6 +30,7 @@ import { format, subDays, startOfDay } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { NEON, TooltipContent, KpiTile, Panel, EmptyState, buildBuckets, buildBucketsBetween, bucketIndexOf, useChartRangeDrag, ReferenceArea, type Granularity } from './_shared';
 import { ChartShimmer } from './ChartShimmer';
+import { useSyncHostBaseUrl } from '../../useSyncHostBaseUrl';
 
 import type { ShuffleCoreHostProps } from '../../types/host-props';
 
@@ -81,9 +82,10 @@ export const DashboardOverview = ({
   serverside: _serverside,
   isLoaded: _isLoaded,
   isLoggedIn: _isLoggedIn,
-  globalUrl: _globalUrl,
+  globalUrl,
   userdata: _userdata,
 }: OverviewProps) => {
+  useSyncHostBaseUrl(globalUrl);
   const rrNavigate = useNavigate();
   const isShuffleSecurityHost = () => {
     try {
