@@ -33,6 +33,7 @@ import { ChartShimmer } from './ChartShimmer';
 import { useSyncHostBaseUrl } from '../../useSyncHostBaseUrl';
 
 import type { ShuffleCoreHostProps } from '../../types/host-props';
+import { fetchIocEntries, sumIocEntries } from '../../utils/iocFeedTotals';
 
 interface OverviewIncident {
   status: string;
