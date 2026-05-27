@@ -293,11 +293,12 @@ interface RunRowProps {
   onClick: () => void;
   sx?: SxProps<Theme>;
   appIcons?: Record<string, string>;
+  onAppClick?: (app: { id?: string; name: string }) => void;
 }
 
 const normToolKey = (s: string) => s.toLowerCase().replace(/[\s_\-]+/g, '_');
 
-const AgentRunRow = ({ run, onClick, sx, appIcons }: RunRowProps) => {
+const AgentRunRow = ({ run, onClick, sx, appIcons, onAppClick }: RunRowProps) => {
   const navigate = useNavigate();
   const statusKey = getEffectiveStatus(run);
   const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.WAITING;
