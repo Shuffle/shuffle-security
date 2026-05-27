@@ -22,7 +22,7 @@ import {
 } from 'recharts';
 import {
   AlertTriangle,
-  MonitorCheck,
+  Radar,
   Bug,
   Flame,
 } from 'lucide-react';
