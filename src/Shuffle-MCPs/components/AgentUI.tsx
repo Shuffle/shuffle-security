@@ -1206,6 +1206,10 @@ const AgentUI: React.FC<AgentUIProps> = ({
     if (!appName) return false;
     const norm = (s: string) => s.toLowerCase().replace(/[\s-]+/g, '_');
     const target = norm(appName);
+    // Shuffle's own built-in apps don't require auth inside the Agent area
+    // (they piggyback on the user's existing Shuffle session). They DO need
+    // auth elsewhere — this short-circuit is scoped to AgentUI only.
+    if (AGENT_NO_AUTH_APPS.has(target)) return true;
     return availableApps.some((a) => norm(a.name || '') === target);
   }, [availableApps]);
 
