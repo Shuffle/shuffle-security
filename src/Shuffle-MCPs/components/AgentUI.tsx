@@ -39,7 +39,8 @@ import {
   CircleStop as StopCircleIcon,
   ThumbsDown as ThumbDownIcon,
   ThumbsUp as ThumbUpIcon,
-  AlertTriangle as WarningIcon
+  AlertTriangle as WarningIcon,
+  Search as SearchIcon,
 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
