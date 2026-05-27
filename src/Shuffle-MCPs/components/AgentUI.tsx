@@ -2588,6 +2588,36 @@ const AgentUI: React.FC<AgentUIProps> = ({
   }, [submitOverride, actionInput, chosenApps, submitInput]);
 
   const onKeyDown = (e: React.KeyboardEvent) => {
+    // Autocomplete navigation takes priority over the normal submit shortcut
+    // — but only when the suggestion list is actually open with matches.
+    if (suggestionsOpen && promptSuggestions.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSuggestionIndex((i) => (i + 1) % promptSuggestions.length);
+        return;
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSuggestionIndex((i) => (i <= 0 ? promptSuggestions.length - 1 : i - 1));
+        return;
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setSuggestionsDismissed(true);
+        setSuggestionIndex(-1);
+        return;
+      }
+      if (e.key === 'Tab' && suggestionIndex >= 0) {
+        e.preventDefault();
+        acceptSuggestion(promptSuggestions[suggestionIndex]);
+        return;
+      }
+      if (e.key === 'Enter' && suggestionIndex >= 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
+        e.preventDefault();
+        acceptSuggestion(promptSuggestions[suggestionIndex]);
+        return;
+      }
+    }
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       e.preventDefault();
       handlePrimarySubmit();
