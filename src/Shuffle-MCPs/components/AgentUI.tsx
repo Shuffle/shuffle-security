@@ -958,18 +958,52 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
                   {authed
-                    ? `It most likely works now! Please try again`
+                    ? `${pretty} is now connected — rerun this action`
                     : `${pretty} requires authentication`}
                 </Typography>
                 <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
                   {authed
-                    ? `${pretty} is now authenticated. Rerun this action to continue.`
+                    ? `This step failed because ${pretty} was not authenticated. Credentials are saved, so rerunning should succeed.`
                     : `Connect your ${pretty} account so the agent can complete this step, then rerun the decision.`}
                 </Typography>
               </Box>
+              {authed && (
+                <Button
+                  variant="text"
+                  size="small"
+                  startIcon={
+                    <Avatar
+                      src={icon || undefined}
+                      alt=""
+                      variant="rounded"
+                      sx={{
+                        width: 18, height: 18, borderRadius: 0.5,
+                        bgcolor: 'hsl(var(--background) / 0.4)',
+                        color: 'hsl(var(--background))',
+                        fontSize: '0.7rem', fontWeight: 700,
+                        '& img': { objectFit: 'contain' },
+                      }}
+                    >
+                      {pretty.charAt(0)}
+                    </Avatar>
+                  }
+                  disabled={!onAuthenticateApp}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRefreshAuthenticatedApps?.();
+                    onAuthenticateApp?.(req.appName, appId);
+                  }}
+                  sx={{
+                    height: 36, textTransform: 'none', fontWeight: 500,
+                    color: 'hsl(var(--muted-foreground))',
+                  }}
+                >
+                  Review authentication
+                </Button>
+              )}
               {authed ? (
                 <Button
-                  variant="outlined"
+                  variant="contained"
                   size="small"
                   startIcon={<RestartAltIcon size={16} />}
                   disabled={agentRequestLoading || !details?.run_details?.id}
