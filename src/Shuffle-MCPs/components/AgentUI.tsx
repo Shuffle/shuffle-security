@@ -944,7 +944,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
               <span>
                 <IconButton
                   size="small"
-                  onClick={() => window.open((details!.run_details as any).debug_url, '_blank', 'noopener,noreferrer')}
+                  onClick={() => window.open(getShuffleCoreFormUrl((details!.run_details as any).debug_url), '_blank', 'noopener,noreferrer')}
                   sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
                 >
                   <OpenInNewIcon size={16} />
