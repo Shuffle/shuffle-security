@@ -1152,6 +1152,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const [questionAnswers, setQuestionAnswers] = useState<Record<string, { index: number; value: string }>>({});
   const [simpleSubmitAttempted, setSimpleSubmitAttempted] = useState(false);
+  const [finishAnswerRaw, setFinishAnswerRaw] = useState(false);
   const [continuationText, setContinuationText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -3629,7 +3630,23 @@ const AgentUI: React.FC<AgentUIProps> = ({
                           {durationSec != null ? ` · ${Math.round(durationSec)}s` : ''}
                         </Typography>
                         <Box sx={{ flexGrow: 1 }} />
+                        {finishAnswer && (
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={() => setFinishAnswerRaw((v) => !v)}
+                            sx={{
+                              height: 28, textTransform: 'none', fontWeight: 500,
+                              fontSize: '0.72rem', px: 1, minWidth: 0,
+                              color: 'hsl(var(--muted-foreground))',
+                              borderColor: 'hsl(var(--border))',
+                            }}
+                          >
+                            {finishAnswerRaw ? 'Rendered' : 'Raw'}
+                          </Button>
+                        )}
                       </Box>
+
                       {pendingAuthApps.map(({ appName, appId, icon }) => {
                         const pretty = appName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
                         return (
@@ -3725,9 +3742,27 @@ const AgentUI: React.FC<AgentUIProps> = ({
                           '& th, & td': { border: '1px solid hsl(var(--border))', px: 1, py: 0.5 },
                           '& hr': { border: 0, borderTop: '1px solid hsl(var(--border))', my: 1.5 },
                         }}>
-                          <FinishAnswerMarkdown text={normalizeMarkdown(finishAnswer)} />
+                          {finishAnswerRaw ? (
+                            <Box
+                              component="pre"
+                              sx={{
+                                m: 0,
+                                fontSize: '0.78rem',
+                                fontFamily: '"JetBrains Mono", ui-monospace, monospace',
+                                color: 'hsl(var(--foreground))',
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word',
+                                lineHeight: 1.55,
+                              }}
+                            >
+                              {finishAnswer}
+                            </Box>
+                          ) : (
+                            <FinishAnswerMarkdown text={normalizeMarkdown(finishAnswer)} />
+                          )}
                         </Box>
                       ) : pendingAsk && pendingQuestions.length > 0 ? (
+
                         (() => {
                           const trySimpleSubmit = () => {
                             if (agentRequestLoading) return;
