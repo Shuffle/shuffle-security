@@ -144,8 +144,9 @@ const FormInput = (defaultprops: any) => {
 	const bodyDivStyle = {
 		margin: "auto",
 		width: isMobile? "100%" : boxWidth,
-		position: "relative", 
-
+		minWidth: isMobile ? "100%" : boxWidth,
+		position: "relative",
+		overflow: "hidden",
 		paddingBottom: 250,
 	}
 
@@ -1577,7 +1578,7 @@ const FormInput = (defaultprops: any) => {
 										? workflow.form_control.input_markdown
 										: ""
 						return md.length > 0 ? (
-							<div style={{marginBottom: 20, }}>
+							<div className="prose prose-invert max-w-none" style={{marginBottom: 20, overflowWrap: "break-word", wordBreak: "break-word", }}>
 								<Markdown
 								  components={{
 									iframe: IframeWrapper,
