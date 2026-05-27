@@ -789,6 +789,7 @@ const AgentActivityList = ({
               run={run}
               onClick={() => onRunClick?.(run)}
               sx={rowSx}
+              appIcons={appIcons}
             />
           ))}
           {hasMore && (
