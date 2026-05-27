@@ -4936,7 +4936,7 @@ function UsecaseCard({
         },
       }}
     >
-      <CardActionArea onClick={onClick} sx={{ px: 2, py: '14.5px', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center' }}>
+      <CardActionArea onClick={onClick} sx={{ px: 2, py: '14.5px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
         {showImage && flow.referenceImage && (
           <Box
             component="img"
