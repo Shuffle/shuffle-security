@@ -271,9 +271,7 @@ export const DashboardOverview = ({
           value={iocTotal ?? 0}
           label="IOCs Tracked"
           isLoading={iocLoading}
-          onClick={() => (iocTotal ?? 0) === 0
-            ? navigateSetup('threat_intel_network_1', '/threat-intel', 'area=threat_intel&category=threat_intel')
-            : navigate('/threat-intel')}
+          onClick={() => navigateSetup('threat_intel_network_1', '/threat-intel', 'area=threat_intel&category=threat_intel')}
           delay={0.1}
         />
         <KpiTile
