@@ -2752,11 +2752,13 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // parent re-render — the live duration ticker would otherwise reset hover
   // state every second and swallow clicks.
   const tabBarRef = useRef<HTMLDivElement | null>(null);
+  const runStatusUpper = (execution?.status || agentData?.status || '').toUpperCase();
+  const runIsActive = hasExecution && !['FINISHED', 'FAILURE', 'ABORTED', 'CANCELLED', 'CANCELED'].includes(runStatusUpper);
   const tabBar = (
     <Box
       ref={tabBarRef}
       sx={{
-        display: 'flex', alignItems: 'center',
+        display: 'flex', alignItems: 'center', gap: 1,
         width: 'fit-content',
         alignSelf: 'center',
         position: 'sticky',
@@ -2802,8 +2804,18 @@ const AgentUI: React.FC<AgentUIProps> = ({
           },
         ]}
       />
+      {runIsActive && activeTab === 'start' && (
+        <Tooltip title="Current agent run is still in progress">
+          <CircularProgress
+            size={16}
+            thickness={5}
+            sx={{ color: 'hsl(var(--muted-foreground))' }}
+          />
+        </Tooltip>
+      )}
     </Box>
   );
+
 
   // Popover is rendered outside `tabBar` so it still mounts when the tab bar
   // is hidden (e.g. on the Start view where `showRunSwitcher` is false). The
