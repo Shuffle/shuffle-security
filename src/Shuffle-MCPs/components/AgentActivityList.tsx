@@ -223,15 +223,17 @@ const normalizeResultStatus = (s?: string): ToolStatus => {
  *  (e.g. very old runs). Per-app status is derived from matching results. */
 const getRunTools = (run: AgentRun): RunTool[] => {
   const map = new Map<string, ToolStatus>();
+  const ids = new Map<string, string>();
   const skip = (s: string) => /^(ai\s*agent|shuffle\s*agent|shuffle_agent)$/i.test(s);
   const rank: Record<ToolStatus, number> = { failure: 3, waiting: 2, success: 1, unknown: 0 };
-  const merge = (name?: string, status?: ToolStatus) => {
+  const merge = (name?: string, status?: ToolStatus, id?: string) => {
     if (!name) return;
     const s = String(name).trim();
     if (!s || skip(s)) return;
     const next = status || 'unknown';
     const prev = map.get(s);
     if (!prev || rank[next] > rank[prev]) map.set(s, next);
+    if (id && !ids.has(s)) ids.set(s, id);
   };
 
   const allowed: string[] | undefined = (run as any).allowed_actions;
@@ -241,8 +243,9 @@ const getRunTools = (run: AgentRun): RunTool[] => {
       if (typeof entry !== 'string') continue;
       const parts = entry.split(':');
       if (parts.length < 3 || parts[0] !== 'app') continue;
+      const id = parts[1];
       const name = parts.slice(2).join(':');
-      merge(name, 'unknown');
+      merge(name, 'unknown', id);
     }
     // 2) Upgrade statuses from any results/decisions that match by name.
     const normalize = (s: string) => s.toLowerCase().replace(/[\s_-]+/g, '_');
@@ -268,7 +271,7 @@ const getRunTools = (run: AgentRun): RunTool[] => {
       if (typeof d?.tool === 'string') merge(d.tool, normalizeResultStatus(d?.status as string));
     });
   }
-  return Array.from(map.entries()).slice(0, 6).map(([name, status]) => ({ name, status }));
+  return Array.from(map.entries()).slice(0, 6).map(([name, status]) => ({ name, status, id: ids.get(name) }));
 };
 
 const TOOL_STATUS_RING: Record<ToolStatus, string> = {
