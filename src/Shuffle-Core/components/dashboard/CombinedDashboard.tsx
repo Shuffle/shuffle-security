@@ -27,6 +27,7 @@ import AutomationDashboard, { type AutomationDashboardProps, AUTOMATION_RANGE_OP
 import { SegmentedControl } from '../ui/segmented-control';
 import type { ShuffleCoreHostProps } from '../../types/host-props';
 import { useSyncHostBaseUrl } from '../../useSyncHostBaseUrl';
+import { UsecaseDrawer } from '../../views/Usecases';
 
 type VulnCounts = { critical: number; high: number; medium: number; low: number; info: number };
 const EMPTY_VULNS: VulnCounts = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
