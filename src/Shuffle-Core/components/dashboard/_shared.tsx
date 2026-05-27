@@ -414,7 +414,7 @@ export const Panel = ({ title, action, children, delay = 0 }: {
 );
 
 export const EmptyState = ({ text, ctaLabel, onCta }: { text: string; ctaLabel?: string; onCta?: () => void }) => (
-  <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 120, gap: 1.25, textAlign: 'center', px: 2 }}>
+  <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 120, gap: 1.25, textAlign: 'center', px: 2, pt: '25px' }}>
     <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.78rem' }}>{text}</Typography>
     {ctaLabel && onCta && (
       <Box
@@ -423,22 +423,22 @@ export const EmptyState = ({ text, ctaLabel, onCta }: { text: string; ctaLabel?:
         sx={{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 0.5,
-          height: 28,
-          px: 1.5,
+          gap: 0.75,
+          height: 36,
+          px: 2,
           borderRadius: 1,
-          border: '1px solid hsl(var(--primary) / 0.4)',
-          bgcolor: 'hsl(var(--primary) / 0.1)',
-          color: 'hsl(var(--primary))',
-          fontSize: '0.72rem',
+          border: 'none',
+          bgcolor: 'hsl(var(--primary))',
+          color: 'hsl(var(--primary-foreground))',
+          fontSize: '0.8rem',
           fontWeight: 600,
           cursor: 'pointer',
           transition: 'all 0.15s ease',
-          '&:hover': { bgcolor: 'hsl(var(--primary) / 0.18)', borderColor: 'hsl(var(--primary))' },
+          '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' },
         }}
       >
         {ctaLabel}
-        <ArrowUpRight size={12} />
+        <ArrowUpRight size={14} />
       </Box>
     )}
   </Box>
