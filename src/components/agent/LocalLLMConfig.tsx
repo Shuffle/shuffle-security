@@ -17,6 +17,8 @@ import { useAppAuth } from '@/Shuffle-MCPs/useAppAuth';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { refreshAllIntegrationStatus } from '@/Shuffle-MCPs/components/IntegrationStatus';
 import { UsageBar } from '@/Shuffle-MCPs/components/UsageBar';
+import { useSyncHostBaseUrl } from '@/Shuffle-MCPs/useSyncHostBaseUrl';
+import type { ShuffleHostProps } from '@/Shuffle-MCPs/host-props';
 import { useAuth } from '@/context/AuthContext';
 import singulAgentIcon from '@/assets/singul-agent-icon.png';
 
@@ -90,14 +92,15 @@ export const testLocalLLM = async (_config: AgentLocalModel): Promise<LocalLLMTe
   message: 'Use the app auth system test instead',
 });
 
-interface LocalLLMConfigProps {
+interface LocalLLMConfigProps extends ShuffleHostProps {
   compact?: boolean;
   hasOpenAIAuth?: boolean;
   onSave?: (model: AgentLocalModel) => void;
   onTestResult?: (result: LocalLLMTestResult) => void;
 }
 
-const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
+const LocalLLMConfig = ({ compact, hasOpenAIAuth, globalUrl }: LocalLLMConfigProps) => {
+  useSyncHostBaseUrl(globalUrl);
   const {
     authStates,
     authenticatedApps,
