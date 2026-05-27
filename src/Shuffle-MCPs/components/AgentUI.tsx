@@ -3846,154 +3846,71 @@ const AgentUI: React.FC<AgentUIProps> = ({
 
                   return (
                     <>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                        {isRunning ? (
-                          <CircularProgress size={16} sx={{ color: 'hsl(var(--primary))' }} />
-                        ) : status === 'FINISHED' ? (
-                          <CheckCircleIcon size={18} color={'hsl(142 70% 45%)'} />
-                        ) : (
-                          <ErrorIcon size={18} color={'hsl(var(--destructive))'} />
-                        )}
-                        <Typography sx={{ fontSize: '0.9rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-                          {isRunning ? 'Agent is working…' : status === 'FINISHED' ? 'Run finished' : `Run ${status.toLowerCase()}`}
-                        </Typography>
-                        <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
-                          {decisionCount} step{decisionCount === 1 ? '' : 's'}
-                          {durationSec != null ? ` · ${Math.round(durationSec)}s` : ''}
-                        </Typography>
-                        <Box sx={{ flexGrow: 1 }} />
-                        {finishAnswer && (
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={() => setFinishAnswerRaw((v) => !v)}
-                            sx={{
-                              height: 28, textTransform: 'none', fontWeight: 500,
-                              fontSize: '0.72rem', px: 1, minWidth: 0,
-                              color: 'hsl(var(--muted-foreground))',
-                              borderColor: 'hsl(var(--border))',
-                            }}
-                          >
-                            {finishAnswerRaw ? 'Rendered' : 'Raw'}
-                          </Button>
-                        )}
-                      </Box>
-
-                      {pendingAuthApps.map(({ appName, appId, icon }) => {
-                        const pretty = appName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-                        return (
-                          <Box
-                            key={`auth-${appName}`}
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 1.5,
-                              p: 1.5,
-                              borderRadius: 1.5,
-                              border: '1px solid hsla(var(--severity-medium) / 0.3)',
-                              bgcolor: 'hsla(var(--severity-medium) / 0.08)',
-                            }}
-                          >
-                            <LockIcon size={22} color={'hsl(var(--severity-medium))'} />
-                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                              <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-                                {pretty} requires authentication
-                              </Typography>
-                              <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
-                                Connect your {pretty} account so the agent can complete this step, then rerun.
-                              </Typography>
-                            </Box>
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              startIcon={
-                                <Avatar
-                                  src={icon || undefined}
-                                  alt=""
-                                  variant="rounded"
-                                  sx={{
-                                    width: 18, height: 18, borderRadius: 0.5,
-                                    bgcolor: 'hsl(var(--background) / 0.4)',
-                                    color: 'hsl(var(--background))',
-                                    fontSize: '0.7rem', fontWeight: 700,
-                                    '& img': { objectFit: 'contain' },
-                                  }}
-                                >
-                                  {pretty.charAt(0)}
-                                </Avatar>
-                              }
-                              onClick={() => setAuthDrawerApp({ name: appName, id: appId })}
-                              sx={{
-                                height: 36, textTransform: 'none', fontWeight: 600,
-                              }}
-                            >
-                              Authenticate {pretty}
-                            </Button>
-                          </Box>
-                        );
-                      })}
-                      {finishAnswer ? (
-                        <Box sx={{
-                          p: 2, borderRadius: 1.5,
-                          border: '1px solid hsl(var(--border))',
-                          bgcolor: 'hsl(var(--background))',
-                          fontSize: '0.9rem',
-                          color: 'hsl(var(--foreground))',
-                          '& > *:first-of-type': { mt: 0 },
-                          '& > *:last-child': { mb: 0 },
-                          '& p': { my: 1, lineHeight: 1.55 },
-                          '& h1, & h2, & h3, & h4': { mt: 2, mb: 1, fontWeight: 600, lineHeight: 1.3 },
-                          '& h1': { fontSize: '1.15rem' },
-                          '& h2': { fontSize: '1.05rem' },
-                          '& h3, & h4': { fontSize: '0.95rem' },
-                          '& ul': { my: 1, pl: 3, listStyleType: 'disc', listStylePosition: 'outside' },
-                          '& ol': { my: 1, pl: 3, listStyleType: 'decimal', listStylePosition: 'outside' },
-                          '& ul ul': { listStyleType: 'circle' },
-                          '& ul ul ul': { listStyleType: 'square' },
-                          '& li': { my: 0.25, display: 'list-item' },
-                          '& li::marker': { color: 'hsl(var(--muted-foreground))' },
-                          '& a': { color: 'hsl(var(--primary))', textDecoration: 'underline' },
-                          '& code': {
-                            px: 0.5, py: 0.125, borderRadius: 0.5,
-                            bgcolor: 'hsl(var(--muted))',
-                            fontFamily: '"JetBrains Mono", ui-monospace, monospace',
-                            fontSize: '0.82em',
-                          },
-                          '& pre': {
-                            p: 1.5, my: 1, borderRadius: 1,
-                            bgcolor: 'hsl(var(--muted))',
-                            overflowX: 'auto',
-                            fontSize: '0.82rem',
-                          },
-                          '& pre code': { p: 0, bgcolor: 'transparent' },
-                          '& blockquote': {
-                            borderLeft: '3px solid hsl(var(--border))',
-                            pl: 1.5, my: 1, color: 'hsl(var(--muted-foreground))',
-                          },
-                          '& table': { borderCollapse: 'collapse', my: 1, fontSize: '0.85rem' },
-                          '& th, & td': { border: '1px solid hsl(var(--border))', px: 1, py: 0.5 },
-                          '& hr': { border: 0, borderTop: '1px solid hsl(var(--border))', my: 1.5 },
-                        }}>
-                          {finishAnswerRaw ? (
+                      <RunFinishedSummary
+                        status={status}
+                        isRunning={isRunning}
+                        finishAnswer={finishAnswer}
+                        raw={finishAnswerRaw}
+                        onToggleRaw={() => setFinishAnswerRaw((v) => !v)}
+                        decisionCount={decisionCount}
+                        durationSec={durationSec}
+                        showMeta
+                      >
+                        {pendingAuthApps.map(({ appName, appId, icon }) => {
+                          const pretty = appName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+                          return (
                             <Box
-                              component="pre"
+                              key={`auth-${appName}`}
                               sx={{
-                                m: 0,
-                                fontSize: '0.78rem',
-                                fontFamily: '"JetBrains Mono", ui-monospace, monospace',
-                                color: 'hsl(var(--foreground))',
-                                whiteSpace: 'pre-wrap',
-                                wordBreak: 'break-word',
-                                lineHeight: 1.55,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1.5,
+                                p: 1.5,
+                                borderRadius: 1.5,
+                                border: '1px solid hsla(var(--severity-medium) / 0.3)',
+                                bgcolor: 'hsla(var(--severity-medium) / 0.08)',
                               }}
                             >
-                              {finishAnswer}
+                              <LockIcon size={22} color={'hsl(var(--severity-medium))'} />
+                              <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                                  {pretty} requires authentication
+                                </Typography>
+                                <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
+                                  Connect your {pretty} account so the agent can complete this step, then rerun.
+                                </Typography>
+                              </Box>
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                startIcon={
+                                  <Avatar
+                                    src={icon || undefined}
+                                    alt=""
+                                    variant="rounded"
+                                    sx={{
+                                      width: 18, height: 18, borderRadius: 0.5,
+                                      bgcolor: 'hsl(var(--background) / 0.4)',
+                                      color: 'hsl(var(--background))',
+                                      fontSize: '0.7rem', fontWeight: 700,
+                                      '& img': { objectFit: 'contain' },
+                                    }}
+                                  >
+                                    {pretty.charAt(0)}
+                                  </Avatar>
+                                }
+                                onClick={() => setAuthDrawerApp({ name: appName, id: appId })}
+                                sx={{
+                                  height: 36, textTransform: 'none', fontWeight: 600,
+                                }}
+                              >
+                                Authenticate {pretty}
+                              </Button>
                             </Box>
-                          ) : (
-                            <FinishAnswerMarkdown text={normalizeMarkdown(finishAnswer)} />
-                          )}
-                        </Box>
-                      ) : pendingAsk && pendingQuestions.length > 0 ? (
+                          );
+                        })}
+                      </RunFinishedSummary>
+                      {!finishAnswer && pendingAsk && pendingQuestions.length > 0 ? (
 
                         (() => {
                           const trySimpleSubmit = () => {
