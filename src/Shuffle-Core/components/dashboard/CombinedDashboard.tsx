@@ -16,9 +16,9 @@
  * fetched value, so this stays a drop-in replacement for the single-org
  * branch of the host `/dashboard` page.
  */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, FormControl, IconButton, InputLabel, MenuItem, Select, Tooltip as MuiTooltip } from '@mui/material';
-import { RefreshCw as RefreshIcon, X as CloseIcon } from 'lucide-react';
+import { RefreshCw as RefreshIcon, X as CloseIcon, Download as DownloadIcon } from 'lucide-react';
 import { useDatastore } from '../../hooks/useDatastore';
 import { DATASTORE_CATEGORIES } from '@shuffleio/shuffle-mcps';
 import { getApiUrl, getAuthHeader } from '../../api';
@@ -28,6 +28,8 @@ import { SegmentedControl } from '../ui/segmented-control';
 import type { ShuffleCoreHostProps } from '../../types/host-props';
 import { useSyncHostBaseUrl } from '../../useSyncHostBaseUrl';
 import { UsecaseDrawer } from '../../views/Usecases';
+import { buildDashboardPdf, captureNode, type DashboardStatsSummary } from './exportDashboardPdf';
+
 
 type VulnCounts = { critical: number; high: number; medium: number; low: number; info: number };
 const EMPTY_VULNS: VulnCounts = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
@@ -226,9 +228,60 @@ const CombinedDashboard = ({
     try { fetchItems(); } catch { /* noop */ }
   };
 
+  // ── PDF export ────────────────────────────────────────────────────────────
+  const dashboardRef = useRef<HTMLDivElement | null>(null);
+  const [exporting, setExporting] = useState(false);
+
   const customRangeLabel = customRange
     ? `${fmtShort(customRange.fromMs)} → ${fmtShort(customRange.toMs)}`
     : null;
+
+  const handleExportPdf = async () => {
+    if (exporting) return;
+    setExporting(true);
+    const originalTab = tab;
+    try {
+      // Capture whichever tab is mounted first, then flip, wait, capture again.
+      const captureCurrent = async (): Promise<string | null> => {
+        if (!dashboardRef.current) return null;
+        try { return await captureNode(dashboardRef.current); } catch { return null; }
+      };
+
+      let securityImage: string | null = null;
+      let automationImage: string | null = null;
+
+      setTab('security');
+      await new Promise((r) => setTimeout(r, 400));
+      securityImage = await captureCurrent();
+
+      setTab('automation');
+      await new Promise((r) => setTimeout(r, 600));
+      automationImage = await captureCurrent();
+
+      setTab(originalTab);
+
+      // Stats summary derived from the same data the dashboards render.
+      const byStatus: Record<string, number> = {};
+      const bySeverity: Record<string, number> = {};
+      eIncidents.forEach((i) => {
+        byStatus[i.status] = (byStatus[i.status] || 0) + 1;
+        bySeverity[i.severity] = (bySeverity[i.severity] || 0) + 1;
+      });
+
+      const stats: DashboardStatsSummary = {
+        orgName: displayName || (host.userdata as { active_org?: { name?: string } } | undefined)?.active_org?.name || 'Unknown org',
+        rangeLabel: customRangeLabel ?? `Last ${days} days`,
+        incidents: { total: eIncidents.length, byStatus, bySeverity },
+        vulnerabilities: eVulns,
+        monitors: { hostCount: eHostCount, runningSensors: eSensorCount },
+      };
+
+      await buildDashboardPdf({ securityImage, automationImage, stats });
+    } finally {
+      setExporting(false);
+    }
+  };
+
 
   const sharedHeader = (
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
@@ -304,6 +357,19 @@ const CombinedDashboard = ({
             <RefreshIcon size={16} />
           </IconButton>
         </MuiTooltip>
+        <MuiTooltip title={exporting ? 'Generating PDF…' : 'Download dashboard as PDF'}>
+          <span>
+            <IconButton
+              size="small"
+              onClick={handleExportPdf}
+              disabled={exporting}
+              sx={{ color: 'hsl(var(--muted-foreground))', alignSelf: 'flex-end', width: 36, height: 36, borderRadius: '8px' }}
+            >
+              <DownloadIcon size={16} />
+            </IconButton>
+          </span>
+        </MuiTooltip>
+
       </Box>
     </Box>
   );
@@ -311,40 +377,43 @@ const CombinedDashboard = ({
   return (
     <Box sx={{ maxWidth: 1100, width: '100%', mx: 'auto', pt: '25px', display: 'flex', flexDirection: 'column', gap: 3 }}>
       {sharedHeader}
-      {tab === 'automation' ? (
-        <AutomationDashboard
-          {...host}
-          orgId={orgId}
-          displayName={displayName}
-          headerLeft={headerLeft}
-          days={days}
-          onDaysChange={setDays}
-          gran={gran}
-          onGranChange={setGran}
-          mode={mode}
-          onModeChange={setMode}
-          refreshKey={(refreshKeyProp ?? 0) + internalRefreshKey}
-          hideRefresh
-          customRange={customRange}
-          onRangeSelect={(fromMs, toMs) => setCustomRange({ fromMs, toMs })}
-        />
-      ) : (
-        <DashboardOverview
-          {...host}
-          incidents={eIncidents}
-          incidentsLoading={eIncidentsLoading}
-          vulnSeverityCounts={eVulns}
-          vulnLoading={eVulnLoading}
-          monitorHostCount={eHostCount}
-          runningSensorCount={eSensorCount}
-          monitorsLoading={eMonitorsLoading}
-          days={parseInt(days, 10) || 30}
-          gran={gran}
-          customRange={customRange}
-          onRangeSelect={(fromMs, toMs) => setCustomRange({ fromMs, toMs })}
-          onOpenUsecase={(flowId) => setOpenUsecaseId(flowId)}
-        />
-      )}
+      <Box ref={dashboardRef}>
+        {tab === 'automation' ? (
+          <AutomationDashboard
+            {...host}
+            orgId={orgId}
+            displayName={displayName}
+            headerLeft={headerLeft}
+            days={days}
+            onDaysChange={setDays}
+            gran={gran}
+            onGranChange={setGran}
+            mode={mode}
+            onModeChange={setMode}
+            refreshKey={(refreshKeyProp ?? 0) + internalRefreshKey}
+            hideRefresh
+            customRange={customRange}
+            onRangeSelect={(fromMs, toMs) => setCustomRange({ fromMs, toMs })}
+          />
+        ) : (
+          <DashboardOverview
+            {...host}
+            incidents={eIncidents}
+            incidentsLoading={eIncidentsLoading}
+            vulnSeverityCounts={eVulns}
+            vulnLoading={eVulnLoading}
+            monitorHostCount={eHostCount}
+            runningSensorCount={eSensorCount}
+            monitorsLoading={eMonitorsLoading}
+            days={parseInt(days, 10) || 30}
+            gran={gran}
+            customRange={customRange}
+            onRangeSelect={(fromMs, toMs) => setCustomRange({ fromMs, toMs })}
+            onOpenUsecase={(flowId) => setOpenUsecaseId(flowId)}
+          />
+        )}
+      </Box>
+
       {/* Inline usecase drawer — opens in-place from the Security Operations
        *  setup CTAs instead of redirecting to /usecases. Receives the SAME
        *  host props (globalUrl, userdata, isLoaded, isLoggedIn, theme) we
