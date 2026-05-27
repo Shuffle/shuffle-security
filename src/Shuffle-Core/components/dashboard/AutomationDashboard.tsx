@@ -20,7 +20,7 @@ import {
   Tooltip as RechartsTooltip, BarChart, Bar, RadialBarChart, RadialBar,
   PolarAngleAxis, Cell,
 } from 'recharts';
-import { AlertCircle, RefreshCw, Zap, Workflow, Activity } from 'lucide-react';
+import { AlertCircle, RefreshCw, Zap, Workflow, Activity, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useWorkflows } from '../../hooks/useWorkflows';
 import { SegmentedControl } from '../ui/segmented-control';
