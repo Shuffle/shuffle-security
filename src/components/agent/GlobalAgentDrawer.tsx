@@ -24,7 +24,11 @@ const GlobalAgentDrawer = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const scheduleAgentRun = useScheduleAgentRun();
-  const { theme } = useTheme();
+  // Pass the already-resolved theme ('light' | 'dark') rather than 'system'.
+  // The MCP library's 'auto' mode re-detects via DOM ancestors and can pick
+  // up an unrelated scope, which made the Choose LLM drawer render light.
+  const { resolvedTheme } = useTheme();
+  const theme = resolvedTheme;
 
   const handleSchedule = useCallback<NonNullable<AgentUIProps['onSchedule']>>(
     async (info) => {
