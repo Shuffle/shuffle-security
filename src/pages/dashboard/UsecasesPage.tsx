@@ -5,11 +5,13 @@
  * /usecases/siem_alerts and /usecases/edr_alerts expose the exact same
  * enable/disable control next to "Source".
  */
-import { Usecases } from '@/Shuffle-Core';
+import { Usecases, API_CONFIG } from '@/Shuffle-Core';
 import { WebhookIngestionButton, type WebhookIngestionInfo } from '@/components/incidents/WebhookIngestionButton';
 import { useWebhookStatus } from '@/hooks/useWebhookStatus';
 import { useWorkflows } from '@/hooks/useWorkflows';
 import { IncidentRoutingEditor } from '@/components/settings/IncidentRoutingEditor';
+import { useTheme } from '@/context/ThemeContext';
+import { useAuth } from '@/context/AuthContext';
 
 const WEBHOOK_FLOW_IDS = new Set(['siem_case_management_1', 'edr_case_management_1']);
 
@@ -23,6 +25,8 @@ interface UsecasesPageProps {
 const UsecasesPage = (props: UsecasesPageProps = {}) => {
   const webhook = useWebhookStatus();
   const { refetch } = useWorkflows();
+  const { resolvedTheme } = useTheme();
+  const { userInfo } = useAuth();
 
   const info: WebhookIngestionInfo = {
     url: webhook.url,
@@ -33,6 +37,11 @@ const UsecasesPage = (props: UsecasesPageProps = {}) => {
 
   return (
     <Usecases
+      globalUrl={API_CONFIG.baseUrl}
+      theme={resolvedTheme}
+      userdata={userInfo as any}
+      isLoaded={true}
+      isLoggedIn={!!userInfo}
       {...props}
       renderEndpointSlot={({ flowId, side }) => {
         if (side !== 'source') return null;
