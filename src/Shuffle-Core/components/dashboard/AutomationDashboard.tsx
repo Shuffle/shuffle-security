@@ -449,11 +449,11 @@ export const AutomationDashboard = ({
         <KpiTile
           icon={Activity}
           glow={NEON.cyan}
-          value={`${successRate}%`}
-          label="Success rate"
-          isLoading={loading}
+          value={workflowCount}
+          label="Workflows"
+          isLoading={loading || workflowsLoading}
           delay={0.15}
-          onClick={() => window.open('https://shuffler.io/workflows/debug', '_blank', 'noopener,noreferrer')}
+          onClick={() => window.open('https://shuffler.io/workflows', '_blank', 'noopener,noreferrer')}
         />
       </Box>
 
