@@ -266,6 +266,21 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
         />
       </Box>
 
+      {(() => {
+        const preset = ENDPOINT_PRESETS.find((p) => p.label === effectivePreset);
+        if (!preset || (!preset.apiKeyUrl && !preset.apiKeyHint)) return null;
+        return (
+          <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', mt: -1.5, lineHeight: 1.5 }}>
+            {preset.apiKeyHint}{' '}
+            {preset.apiKeyUrl && (
+              <Box component="a" href={preset.apiKeyUrl} target="_blank" rel="noopener noreferrer" sx={{ color: 'hsl(var(--primary))', textDecoration: 'underline' }}>
+                Get your {preset.label} API key →
+              </Box>
+            )}
+          </Typography>
+        );
+      })()}
+
       {!compact && (
         <Box sx={{ px: 2.5, py: 2, borderRadius: 2, border: '1px solid hsl(var(--border))', bgcolor: 'hsl(var(--muted) / 0.3)' }}>
           <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
