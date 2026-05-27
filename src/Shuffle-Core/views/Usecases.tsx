@@ -3959,6 +3959,17 @@ function UsecasesPageInner() {
   const routeParams = useParams<{ flowId?: string }>();
   const [trustedWorkflowStates, setTrustedWorkflowStates] = useState<Record<string, boolean>>({});
 
+  // Allow deep-links like /usecases?area=automatic_ingestion&category=asset_management
+  // to pre-filter the grid. Read once on mount so the user can still change
+  // the filters afterwards.
+  useEffect(() => {
+    const area = searchParams.get('area');
+    const category = searchParams.get('category');
+    if (area) setAreaFilter(area);
+    if (category) setCategoryFilter(category);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Locally-remembered usecase interests — survive the not-logged-in →
   // logged-in transition (and pre-fill before the first /getinfo lands).
   const [localInterests, setLocalInterests] = useState<Set<string>>(() => {
