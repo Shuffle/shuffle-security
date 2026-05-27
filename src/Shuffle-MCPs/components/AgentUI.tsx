@@ -4075,44 +4075,13 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       gap: 1.5,
                       bgcolor: 'hsl(var(--muted) / 0.2)',
                     }}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                        {detailedStatus === 'FINISHED' ? (
-                          <CheckCircleIcon size={18} color={'hsl(142 70% 45%)'} />
-                        ) : (
-                          <ErrorIcon size={18} color={'hsl(var(--destructive))'} />
-                        )}
-                        <Typography sx={{ fontSize: '0.9rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-                          {detailedStatus === 'FINISHED' ? 'Run finished' : `Run ${detailedStatus.toLowerCase()}`}
-                        </Typography>
-                      </Box>
-                      {finishAnswer && (
-                        <Box sx={{
-                          p: 2, borderRadius: 1.5,
-                          border: '1px solid hsl(var(--border))',
-                          bgcolor: 'hsl(var(--background))',
-                          fontSize: '0.9rem',
-                          color: 'hsl(var(--foreground))',
-                          '& > *:first-of-type': { mt: 0 },
-                          '& > *:last-child': { mb: 0 },
-                          '& p': { my: 1, lineHeight: 1.55 },
-                          '& a': { color: 'hsl(var(--primary))', textDecoration: 'underline' },
-                          '& code': {
-                            px: 0.5, py: 0.125, borderRadius: 0.5,
-                            bgcolor: 'hsl(var(--muted))',
-                            fontFamily: '"JetBrains Mono", ui-monospace, monospace',
-                            fontSize: '0.82em',
-                          },
-                          '& pre': {
-                            p: 1.5, my: 1, borderRadius: 1,
-                            bgcolor: 'hsl(var(--muted))',
-                            overflowX: 'auto',
-                            fontSize: '0.82rem',
-                          },
-                          '& pre code': { p: 0, bgcolor: 'transparent' },
-                        }}>
-                          <FinishAnswerMarkdown text={normalizeMarkdown(finishAnswer)} />
-                        </Box>
-                      )}
+                      <RunFinishedSummary
+                        status={detailedStatus}
+                        isRunning={false}
+                        finishAnswer={finishAnswer}
+                        raw={finishAnswerRaw}
+                        onToggleRaw={() => setFinishAnswerRaw((v) => !v)}
+                      />
                     </Box>
                   )}
                 </>
