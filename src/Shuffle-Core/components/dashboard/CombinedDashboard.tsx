@@ -15,10 +15,12 @@ import type { ShuffleCoreHostProps } from '../../types/host-props';
 
 export interface CombinedDashboardProps
   extends ShuffleCoreHostProps,
-    Partial<Omit<OverviewProps, keyof ShuffleCoreHostProps>>,
-    Partial<Omit<AutomationDashboardProps, keyof ShuffleCoreHostProps | 'gran' | 'customRange' | 'onRangeSelect'>> {
+    Partial<Omit<OverviewProps, keyof ShuffleCoreHostProps | 'days'>>,
+    Partial<Omit<AutomationDashboardProps, keyof ShuffleCoreHostProps | 'gran' | 'customRange' | 'onRangeSelect' | 'days'>> {
   /** Gap (in MUI spacing units) between the two dashboards. Defaults to 4. */
   gap?: number;
+  /** Time range — number (overview days) or string (automation days). */
+  days?: number | string;
 }
 
 const EMPTY_VULNS = { critical: 0, high: 0, medium: 0, low: 0, info: 0 };
