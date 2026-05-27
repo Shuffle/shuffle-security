@@ -4351,6 +4351,9 @@ function UsecasesPageInner() {
     if (categoryFilter !== 'all') {
       list = list.filter((u) => u.source === categoryFilter || u.target === categoryFilter);
     }
+    if (areaFilter !== 'all') {
+      list = list.filter((u) => u.automationArea === areaFilter);
+    }
     if (tagFilter !== 'all') {
       list = list.filter((u) => u.tags.includes(tagFilter));
     }
