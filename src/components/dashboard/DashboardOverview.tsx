@@ -20,10 +20,10 @@ export const DashboardOverview = (props: Props) => {
   return (
     <>
       <CoreDashboardOverview
+        {...props}
         globalUrl={API_CONFIG.baseUrl}
         theme={resolvedTheme}
         onOpenUsecase={(flowId) => setOpenUsecaseId(flowId)}
-        {...props}
       />
       <UsecaseDrawer
         open={openUsecaseId !== null}
