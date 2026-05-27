@@ -487,7 +487,9 @@ export const DashboardOverview = ({
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <EmptyState text="No vulnerabilities ingested yet" ctaLabel="Set up vulnerability ingestion" onCta={() => navigateSetup('vulnerability_ingestion_1', '/vulnerabilities', 'area=automatic_ingestion&category=asset_management')} />
+            <Box sx={{ pt: '15px' }}>
+              <EmptyState text="No vulnerabilities ingested yet" ctaLabel="Set up vulnerability ingestion" onCta={() => navigateSetup('vulnerability_ingestion_1', '/vulnerabilities', 'area=automatic_ingestion&category=asset_management')} />
+            </Box>
           )}
         </Box>
       </Panel>
