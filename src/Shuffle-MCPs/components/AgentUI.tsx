@@ -338,6 +338,23 @@ const validateJson = (raw: unknown): { valid: boolean; result: any } => {
  * "app:<id>:<name>") so the caller can render an inline "Authenticate X"
  * banner. Returns null when the decision did not request auth.
  */
+/**
+ * Built-in Shuffle apps that never require auth inside the Agent area —
+ * they ride on the user's existing Shuffle session. Names are normalised
+ * to lowercase with underscores so "Shuffle Host Monitors",
+ * "shuffle-host-monitors" and "shuffle_host_monitors" all match.
+ */
+const AGENT_NO_AUTH_APPS = new Set<string>([
+  'shuffle_host_monitors',
+  'shuffle_monitors',
+  'shuffle_sensors',
+  'shuffle_workflows',
+  'shuffle_datastore',
+  'shuffle_apps',
+  'shuffle_detection',
+  'shuffle_files',
+]);
+
 const extractAuthRequest = (decision: any): { appName: string; appId: string | null } | null => {
   if (!decision || typeof decision !== 'object') return null;
   const raw = decision?.run_details?.raw_response;
