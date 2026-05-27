@@ -1112,6 +1112,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // Apps the caller has authenticated — used to resolve icons by name and as
   // suggestions in the picker. NOT auto-selected as `chosenApps`.
   const [availableApps, setAvailableApps] = useState<AgentUIApp[]>([]);
+  const [authAppsLoading, setAuthAppsLoading] = useState(false);
   // Apps actually allowed for the current execution, derived from the agent's
   // `allowed_actions` field (format: "app:<id>:<name>"). Falls back to
   // `chosenApps` when the field is missing (legacy runs).
@@ -1290,25 +1291,25 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // from /api/v1/apps/authentication and only includes valid entries).
   const isAppAuthenticated = useCallback((appName: string) => {
     if (!appName) return false;
-    const norm = (s: string) => s.toLowerCase().replace(/[\s-]+/g, '_');
-    const target = norm(appName);
+    const target = normalizeAgentAppName(appName);
     // Shuffle's own built-in apps don't require auth inside the Agent area
     // (they piggyback on the user's existing Shuffle session). They DO need
     // auth elsewhere — this short-circuit is scoped to AgentUI only.
     if (AGENT_NO_AUTH_APPS.has(target)) return true;
-    return availableApps.some((a) => norm(a.name || '') === target);
+    return availableApps.some((a) => normalizeAgentAppName(a.name || '') === target);
   }, [availableApps]);
 
   // Unique apps (across all decisions) that returned `app_authentication`
   // and are not yet authenticated. Powers the Simple-view banners.
   const pendingAuthApps = useMemo(() => {
+    if (authAppsLoading) return [];
     const decisions: any[] = (agentData?.decisions as any[]) || [];
     const seen = new Set<string>();
     const out: { appName: string; appId: string | null; icon: string }[] = [];
     for (const d of decisions) {
       const req = extractAuthRequest(d);
       if (!req) continue;
-      const slug = req.appName.toLowerCase().replace(/[\s-]+/g, '_');
+      const slug = normalizeAgentAppName(req.appName);
       if (seen.has(slug)) continue;
       if (isAppAuthenticated(req.appName)) continue;
       seen.add(slug);
@@ -1317,7 +1318,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
       out.push({ appName: req.appName, appId, icon });
     }
     return out;
-  }, [agentData, appsById, isAppAuthenticated]);
+  }, [agentData, appsById, authAppsLoading, isAppAuthenticated]);
 
   // Sync controlled `apps` prop into local state.
   useEffect(() => {
