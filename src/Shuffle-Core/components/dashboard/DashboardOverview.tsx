@@ -297,13 +297,15 @@ export const DashboardOverview = ({
           delay={0.05}
         />
         <KpiTile
-          icon={MonitorCheck}
+          icon={Radar}
           glow={NEON.cyan}
 
-          value={monitorHostCount ?? 0}
-          label={runningSensorCount ? `Hosts • ${runningSensorCount} sensors` : 'Host Monitors'}
-          isLoading={monitorsLoading}
-          onClick={() => navigateSetup('case_management_asset_management_monitors_1', '/monitors?add_host=true', 'area=detection&category=endpoint_detection')}
+          value={iocTotal ?? 0}
+          label="IOCs Tracked"
+          isLoading={iocLoading}
+          onClick={() => (iocTotal ?? 0) === 0
+            ? navigateSetup('threat_intel_network_1', '/threat-intel', 'area=threat_intel&category=threat_intel')
+            : navigate('/threat-intel')}
           delay={0.1}
         />
         <KpiTile
