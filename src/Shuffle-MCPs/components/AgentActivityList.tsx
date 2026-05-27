@@ -640,7 +640,9 @@ const AgentActivityList = ({
         if (!json || cancelled) return;
         let decisions: AgentDecision[] | undefined;
         let originalInput: string | undefined;
-        // Decisions / original_input live inside the AI Agent action result.
+        let allowedActions: string[] | undefined;
+        // Decisions / original_input / allowed_actions live inside the AI
+        // Agent action result.
         const agentResult = Array.isArray(json.results)
           ? json.results.find((r: any) => r?.action?.app_name === 'AI Agent')
           : null;
@@ -649,13 +651,15 @@ const AgentActivityList = ({
             const parsed = JSON.parse(agentResult.result);
             if (Array.isArray(parsed?.decisions)) decisions = parsed.decisions;
             if (typeof parsed?.original_input === 'string') originalInput = parsed.original_input;
+            if (Array.isArray(parsed?.allowed_actions)) allowedActions = parsed.allowed_actions;
           } catch { /* ignore */ }
         }
-        const patch: Partial<AgentRun> = {
+        const patch: Partial<AgentRun> & { allowed_actions?: string[] } = {
           results: json.results,
           execution_argument: json.execution_argument,
           result: agentResult?.result,
           decisions,
+          allowed_actions: allowedActions,
         };
         if (originalInput && !patch.execution_argument) {
           patch.execution_argument = JSON.stringify({ original_input: originalInput });
