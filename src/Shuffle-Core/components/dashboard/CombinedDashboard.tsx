@@ -269,7 +269,7 @@ const CombinedDashboard = ({
       });
 
       const stats: DashboardStatsSummary = {
-        orgName: displayName || userdataOrgName(host) || 'Unknown org',
+        orgName: displayName || (host.userdata as { active_org?: { name?: string } } | undefined)?.active_org?.name || 'Unknown org',
         rangeLabel: customRangeLabel ?? `Last ${days} days`,
         incidents: { total: eIncidents.length, byStatus, bySeverity },
         vulnerabilities: eVulns,
