@@ -56,6 +56,10 @@ export interface OverviewProps extends ShuffleCoreHostProps {
   customRange?: { fromMs: number; toMs: number } | null;
   /** Called when the user click-drags on a chart to pick a range. */
   onRangeSelect?: (fromMs: number, toMs: number) => void;
+  /** When provided, the "Set up X" empty-state CTAs open the matching
+   *  usecase in-place via the host (typically by rendering <UsecaseDrawer>)
+   *  instead of redirecting to /usecases or to security.shuffler.io. */
+  onOpenUsecase?: (flowId: string) => void;
 }
 
 const STATUS_COLORS = {
