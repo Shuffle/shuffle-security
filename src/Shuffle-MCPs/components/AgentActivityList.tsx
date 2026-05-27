@@ -666,21 +666,15 @@ const AgentActivityList = ({
     if (!runs.length) return;
     let cancelled = false;
     const hasNativeData = (r: AgentRun): boolean => {
-      // We need: results array, a prompt source (execution_argument or
-      // original_input embedded in the AI Agent result), and either decisions
-      // already on the row or extractable from results.
-      const results = Array.isArray((r as any).results) ? (r as any).results : null;
-      if (!results || results.length === 0) return false;
-      const agentResult = results.find((x: any) => x?.action?.app_name === 'AI Agent');
-      let parsed: any = null;
-      if (agentResult?.result) {
-        try { parsed = JSON.parse(agentResult.result); } catch { /* ignore */ }
-      }
-      const hasDecisions = Array.isArray(r.decisions)
-        || (parsed && Array.isArray(parsed.decisions));
-      const hasPrompt = !!r.execution_argument
-        || (parsed && typeof parsed.original_input === 'string' && parsed.original_input.trim());
-      return Boolean(hasDecisions && hasPrompt);
+      // The row renderers (getRunPrompt / getRunSubtitle / getDecisionCount /
+      // getRunTools) read these fields directly off the top-level run. If any
+      // of them is missing we MUST sideload via /streams/results — otherwise
+      // the row keeps showing its default "Execution <id>" title.
+      const hasPrompt = (typeof r.execution_argument === 'string' && r.execution_argument.length > 0)
+        || (typeof (r as any).result === 'string' && (r as any).result.length > 0);
+      const hasDecisions = Array.isArray(r.decisions) && r.decisions.length > 0;
+      const hasResults = Array.isArray((r as any).results) && (r as any).results.length > 0;
+      return hasPrompt && hasDecisions && hasResults;
     };
     const targets = runs
       .filter((r) => !!r.execution_id && !enrichedRuns[r.execution_id!] && !hasNativeData(r))
