@@ -49,8 +49,8 @@ const OPENAI_ALGOLIA_APP: AlgoliaSearchApp = {
 const SHUFFLE_AI_PRESET = 'Shuffle AI';
 const ENDPOINT_PRESETS: Array<{ label: string; url: string; apiKeyUrl?: string; apiKeyHint?: string; logoUrl?: string }> = [
   { label: SHUFFLE_AI_PRESET, url: '', logoUrl: singulAgentIcon },
-  { label: 'OpenAI', url: 'https://api.openai.com/v1', apiKeyUrl: 'https://platform.openai.com/api-keys', apiKeyHint: 'Create a key under API keys in the OpenAI platform dashboard.', logoUrl: 'https://logo.clearbit.com/openai.com' },
-  { label: 'Anthropic', url: 'https://api.anthropic.com/v1/', apiKeyUrl: 'https://console.anthropic.com/settings/keys', apiKeyHint: 'Generate a key under Settings → API Keys in the Anthropic Console.', logoUrl: 'https://logo.clearbit.com/anthropic.com' },
+  { label: 'OpenAI', url: 'https://api.openai.com/v1', apiKeyUrl: 'https://platform.openai.com/api-keys', apiKeyHint: 'Create a key under API keys in the OpenAI platform dashboard.', logoUrl: 'https://www.google.com/s2/favicons?domain=openai.com&sz=64' },
+  { label: 'Anthropic', url: 'https://api.anthropic.com/v1/', apiKeyUrl: 'https://console.anthropic.com/settings/keys', apiKeyHint: 'Generate a key under Settings → API Keys in the Anthropic Console.', logoUrl: 'https://www.google.com/s2/favicons?domain=anthropic.com&sz=64' },
   { label: 'Google Gemini', url: 'https://generativelanguage.googleapis.com/v1beta/openai/', apiKeyUrl: 'https://aistudio.google.com/app/apikey', apiKeyHint: 'Create a key in Google AI Studio under Get API key.', logoUrl: 'https://cdn.simpleicons.org/googlegemini' },
   { label: 'Mistral', url: 'https://api.mistral.ai/v1', apiKeyUrl: 'https://console.mistral.ai/api-keys/', apiKeyHint: 'Create a key under API Keys in the Mistral Console.', logoUrl: 'https://cdn.simpleicons.org/mistralai' },
   { label: 'Groq', url: 'https://api.groq.com/openai/v1', apiKeyUrl: 'https://console.groq.com/keys', apiKeyHint: 'Create a key under API Keys in the Groq Console.', logoUrl: 'https://logo.clearbit.com/groq.com' },
