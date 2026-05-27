@@ -3933,6 +3933,7 @@ function UsecasesPageInner() {
   const [search, setSearch] = useState('');
   const [phaseFilter, setPhaseFilter] = useState<FlowPhase | 'all'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [areaFilter, setAreaFilter] = useState<string>('all');
   const [tagFilter, setTagFilter] = useState<string>('all');
 
   const navigate = useNavigate();
