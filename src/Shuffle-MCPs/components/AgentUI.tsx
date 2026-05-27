@@ -3357,7 +3357,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 {chosenApps.map((app, i) => {
                   const slug = normalizeAgentAppName(app.name || '');
                   const NO_AUTH = new Set(['http', 'shuffle_tools', 'shuffle-tools', 'tools', 'singul', 'core', 'webhook', 'email']);
-                  const needsAuth = !authAppsLoading && !NO_AUTH.has(slug) && !isAppAuthenticated(app.name || '');
+                  const needsAuth = !authAppsLoading && !NO_AUTH.has(slug) && !isAppAuthenticated(app.name || '', app.id || null);
                   return (
                   <Tooltip
                     key={`${app.name}-${i}`}
@@ -3416,7 +3416,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
               if (authAppsLoading) return null;
               const unauthed = chosenApps.filter((a) => {
                 const slug = normalizeAgentAppName(a.name || '');
-                return !NO_AUTH.has(slug) && !isAppAuthenticated(a.name || '');
+                return !NO_AUTH.has(slug) && !isAppAuthenticated(a.name || '', a.id || null);
               });
               if (unauthed.length === 0) return null;
               return (
