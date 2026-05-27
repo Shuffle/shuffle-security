@@ -1455,12 +1455,16 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // and an API token is configured. Skipped when controlled or `defaultApps`
   // were provided explicitly.
   const loadAuthenticatedApps = useCallback(async (signal?: { cancelled: boolean }) => {
+    setAuthAppsLoading(true);
     try {
       const resp = await fetch(resolveUrl('/api/v1/apps/authentication'), {
         credentials: 'include',
         headers: { ...resolveHeaders() },
       });
-      if (!resp.ok) return;
+      if (!resp.ok) {
+        if (!signal?.cancelled) setAvailableApps([]);
+        return;
+      }
       const result = await resp.json();
       const list = Array.isArray(result) ? result : (result?.data || []);
       const seen = new Set<string>();
@@ -1469,9 +1473,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
         const app = entry?.app || entry;
         const name: string | undefined = app?.name;
         if (!name) continue;
-        const valid = entry?.active || entry?.validation?.valid || entry?.hasValidAuth;
+        const valid = entry?.active || entry?.validation?.valid || entry?.hasValidAuth || app?.is_valid || app?.tested;
         if (valid === false) continue;
-        const key = name.toLowerCase();
+        const key = normalizeAgentAppName(name);
         if (seen.has(key)) continue;
         seen.add(key);
         loaded.push({
@@ -1486,6 +1490,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
       setAvailableApps(loaded);
     } catch {
       // silent — caller can still pick apps manually
+    } finally {
+      if (!signal?.cancelled) setAuthAppsLoading(false);
     }
   }, [resolveUrl, resolveHeaders]);
 
