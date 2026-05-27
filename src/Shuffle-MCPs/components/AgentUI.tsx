@@ -1251,7 +1251,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   autoLoadApps = true,
   title = 'What do you want to do?',
   subtitle,
-  placeholder = 'Describe a task, e.g. "Get my emails for today and summarise them"',
+  placeholder = DEFAULT_AGENT_PROMPT_PLACEHOLDER,
   defaultInput = '',
   autoSubmit = false,
   hideHeroIcon = false,
