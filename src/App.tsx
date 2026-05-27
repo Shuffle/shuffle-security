@@ -58,6 +58,7 @@ import SettingsPage from '@/pages/dashboard/SettingsPage';
 import OrgPreferencesPage from '@/pages/dashboard/OrgPreferencesPage';
 import AgentActivityPage from '@/pages/dashboard/AgentActivityPage';
 import { AgentsView } from '@/Shuffle-MCPs';
+import PermissionsPanel from '@/components/agent/PermissionsPanel';
 import InfrastructurePage from '@/pages/dashboard/InfrastructurePage';
 import DataFlowDetailPage from '@/pages/dashboard/DataFlowDetailPage';
 import UsecasesPageRaw from '@/pages/dashboard/UsecasesPage';
@@ -253,8 +254,9 @@ const ThemedApp = () => {
               <Route path="/monitors/response" element={<SupportOnly><ResponseActionsPage /></SupportOnly>} />
               <Route path="/incidents/response-actions" element={<Navigate to="/monitors/response" replace />} />
               <Route path="/agent" element={<AgentActivityPage />} />
-              <Route path="/agents" element={<AgentsView globalUrl={API_CONFIG.baseUrl} theme={resolvedTheme} />} />
-              <Route path="/agents/:executionId" element={<AgentsView globalUrl={API_CONFIG.baseUrl} theme={resolvedTheme} />} />
+              <Route path="/agents" element={<AgentsView globalUrl={API_CONFIG.baseUrl} theme={resolvedTheme} permissionsSlot={<PermissionsPanel compact />} />} />
+              <Route path="/agents/:executionId" element={<AgentsView globalUrl={API_CONFIG.baseUrl} theme={resolvedTheme} permissionsSlot={<PermissionsPanel compact />} />} />
+
               <Route path="/infrastructure" element={<InfrastructurePage />} />
               <Route path="/infrastructure/flows/:flowId" element={<DataFlowDetailPage />} />
               <Route path="/users" element={<UsersPage />} />
