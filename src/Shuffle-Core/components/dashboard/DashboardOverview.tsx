@@ -401,14 +401,20 @@ export const DashboardOverview = ({
           </Box>
           {monitorTotal > 0 && (
             <Box sx={{ display: 'flex', justifyContent: 'space-around', pt: 1.5, borderTop: '1px solid hsl(var(--border))' }}>
-              <Box sx={{ textAlign: 'center' }}>
+              <Box
+                onClick={() => navigateSetup('case_management_asset_management_monitors_1', '/monitors?add_host=true', 'area=detection&category=endpoint_detection')}
+                sx={{ textAlign: 'center', cursor: 'pointer', borderRadius: 1, px: 1.5, py: 0.5, transition: 'background 0.15s', '&:hover': { bgcolor: 'hsl(var(--muted) / 0.4)' } }}
+              >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, justifyContent: 'center' }}>
                   <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: NEON.violet }} />
                   <Typography sx={{ fontSize: '0.95rem', fontWeight: 700, color: 'hsl(var(--foreground))', fontFamily: 'ui-monospace, monospace' }}>{monitorHostCount ?? 0}</Typography>
                 </Box>
                 <Typography sx={{ fontSize: '0.62rem', color: 'hsl(var(--muted-foreground))', mt: 0.25, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Host Monitors</Typography>
               </Box>
-              <Box sx={{ textAlign: 'center' }}>
+              <Box
+                onClick={() => navigateSetup('case_management_asset_management_monitors_1', '/monitors?add_host=true', 'area=detection&category=endpoint_detection')}
+                sx={{ textAlign: 'center', cursor: 'pointer', borderRadius: 1, px: 1.5, py: 0.5, transition: 'background 0.15s', '&:hover': { bgcolor: 'hsl(var(--muted) / 0.4)' } }}
+              >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, justifyContent: 'center' }}>
                   <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: NEON.cyan }} />
                   <Typography sx={{ fontSize: '0.95rem', fontWeight: 700, color: 'hsl(var(--foreground))', fontFamily: 'ui-monospace, monospace' }}>{runningSensorCount ?? 0}</Typography>
