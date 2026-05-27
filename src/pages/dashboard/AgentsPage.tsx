@@ -74,7 +74,7 @@ const AgentsPage = () => {
     <AgentsView
       onSchedule={handleSchedule}
       globalUrl={API_CONFIG.baseUrl}
-      theme={theme}
+      theme={resolvedTheme}
       initialApps={initialApps}
       onAppsChange={handleAppsChange}
     />
