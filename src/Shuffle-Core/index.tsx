@@ -79,7 +79,12 @@ const withTheme = <P extends object>(Inner: React.ComponentType<P>, displayName:
   const Wrapped: React.FC<WithTheme<P>> = ({ theme, colorMode, ...rest }) => (
     <EnsureQueryClient>
       <ShuffleCoreThemeProvider mode={resolveMode(theme, colorMode)}>
-        <Inner {...(rest as P)} />
+        {/* Forward `theme` to the inner component too — internal scoped
+         *  surfaces (e.g. Usecases, UsecaseDrawer) need it for their own
+         *  `.dark` / `.light` class on the scope wrapper, AND composed
+         *  surfaces (CombinedDashboard → UsecaseDrawer) need to pass it
+         *  through. Stripping it broke that chain. */}
+        <Inner {...(rest as P)} theme={theme} colorMode={colorMode} />
       </ShuffleCoreThemeProvider>
     </EnsureQueryClient>
   );
