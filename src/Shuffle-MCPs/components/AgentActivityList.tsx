@@ -525,7 +525,11 @@ const AgentActivityList = ({
   sx,
   toolbarSx,
   rowSx,
+  globalUrl,
+  theme,
+  colorMode,
 }: AgentActivityListProps) => {
+  const [appDrawer, setAppDrawer] = useState<{ id?: string; name: string } | null>(null);
   const [runs, setRuns] = useState<AgentRun[]>([]);
   const [cursor, setCursor] = useState('');
   const [hasMore, setHasMore] = useState(false);
