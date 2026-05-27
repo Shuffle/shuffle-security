@@ -525,7 +525,9 @@ interface TimelineRowProps {
   getFormUrl?: (decisionId: string) => string | null;
   runFinished?: boolean;
   onAuthenticateApp?: (appName: string, appId?: string | null) => void;
+  onRefreshAuthenticatedApps?: () => void;
   isAppAuthenticated?: (appName: string) => boolean;
+  authAppsLoading?: boolean;
   /** When true, briefly draw attention to this row + its output. Used after
    *  a "jump to evidence" click from the diagnosis banner. */
   highlight?: boolean;
@@ -535,7 +537,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
   item, index, open, onToggle, appsById, totalDuration, originalStartTime,
   maxWidth, questionAnswers, setQuestionAnswers, onSubmitQuestions,
   onRerunAgent, onRerunDecision, agentRequestLoading, getFormUrl, runFinished,
-  onAuthenticateApp, isAppAuthenticated, highlight = false,
+  onAuthenticateApp, onRefreshAuthenticatedApps, isAppAuthenticated, authAppsLoading = false, highlight = false,
 }) => {
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const validate = validateJson(item.details);
@@ -979,7 +981,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
                 disabled={!onAuthenticateApp}
                 onClick={(e) => {
                   e.stopPropagation();
-                  loadAuthenticatedApps();
+                  onRefreshAuthenticatedApps?.();
                   onAuthenticateApp?.(req.appName, appId);
                 }}
                 sx={{
