@@ -1447,44 +1447,60 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // Auto-load the caller's authenticated apps when nothing was passed in
   // and an API token is configured. Skipped when controlled or `defaultApps`
   // were provided explicitly.
+  const loadAuthenticatedApps = useCallback(async (signal?: { cancelled: boolean }) => {
+    try {
+      const resp = await fetch(resolveUrl('/api/v1/apps/authentication'), {
+        credentials: 'include',
+        headers: { ...resolveHeaders() },
+      });
+      if (!resp.ok) return;
+      const result = await resp.json();
+      const list = Array.isArray(result) ? result : (result?.data || []);
+      const seen = new Set<string>();
+      const loaded: AgentUIApp[] = [];
+      for (const entry of list) {
+        const app = entry?.app || entry;
+        const name: string | undefined = app?.name;
+        if (!name) continue;
+        const valid = entry?.active || entry?.validation?.valid || entry?.hasValidAuth;
+        if (valid === false) continue;
+        const key = name.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        loaded.push({
+          name,
+          id: app?.id || entry?.id,
+          icon: app?.large_image || app?.image_url || app?.image || entry?.bestImage || '',
+        });
+      }
+      if (signal?.cancelled) return;
+      // Always update — even an empty list — so revoked auth re-enables the
+      // "requires authentication" banner instead of being stuck on stale state.
+      setAvailableApps(loaded);
+    } catch {
+      // silent — caller can still pick apps manually
+    }
+  }, [resolveUrl, resolveHeaders]);
+
   useEffect(() => {
     if (!autoLoadApps) return;
     if (apps || defaultApps) return;
     if (!hasApiKey) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const resp = await fetch(resolveUrl('/api/v1/apps/authentication'), {
-          credentials: 'include',
-          headers: { ...resolveHeaders() },
-        });
-        if (!resp.ok) return;
-        const result = await resp.json();
-        const list = Array.isArray(result) ? result : (result?.data || []);
-        const seen = new Set<string>();
-        const loaded: AgentUIApp[] = [];
-        for (const entry of list) {
-          const app = entry?.app || entry;
-          const name: string | undefined = app?.name;
-          if (!name) continue;
-          const valid = entry?.active || entry?.validation?.valid || entry?.hasValidAuth;
-          if (valid === false) continue;
-          const key = name.toLowerCase();
-          if (seen.has(key)) continue;
-          seen.add(key);
-          loaded.push({
-            name,
-            id: app?.id || entry?.id,
-            icon: app?.large_image || app?.image_url || app?.image || entry?.bestImage || '',
-          });
-        }
-        if (!cancelled && loaded.length) setAvailableApps(loaded);
-      } catch {
-        // silent — caller can still pick apps manually
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [autoLoadApps, apps, defaultApps, hasApiKey, resolveUrl, resolveHeaders]);
+    const signal = { cancelled: false };
+    loadAuthenticatedApps(signal);
+    return () => { signal.cancelled = true; };
+  }, [autoLoadApps, apps, defaultApps, hasApiKey, loadAuthenticatedApps]);
+
+  // Re-fetch authenticated apps whenever auth state changes anywhere
+  // (e.g. the user just saved/validated credentials via the auth drawer or
+  // any other AppAuthCard on the page). Keeps the "X requires authentication"
+  // banner reactive without a page reload.
+  useEffect(() => {
+    if (!hasApiKey) return;
+    const handler = () => { loadAuthenticatedApps(); };
+    window.addEventListener('integrations-changed', handler);
+    return () => window.removeEventListener('integrations-changed', handler);
+  }, [hasApiKey, loadAuthenticatedApps]);
 
 
   // Derive the apps actually allowed for the current execution from the
