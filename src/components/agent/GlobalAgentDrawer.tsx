@@ -100,7 +100,7 @@ const GlobalAgentDrawer = () => {
       globalUrl={API_CONFIG.baseUrl}
       theme={theme}
       permissionsSlot={<PermissionsPanel compact />}
-      localLLMSlot={<LocalLLMConfig />}
+      localLLMSlot={<LocalLLMConfig globalUrl={API_CONFIG.baseUrl} />}
       agentUIProps={{ onSchedule: handleSchedule, apiBaseUrl: API_CONFIG.baseUrl, theme }}
     />
   );
