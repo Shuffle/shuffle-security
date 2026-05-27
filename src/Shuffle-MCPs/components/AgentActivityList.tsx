@@ -142,27 +142,94 @@ const getTimeAgo = (dateStr: string): string => {
   }
 };
 
-/** Extract the original user prompt from a run, when available. */
-const getRunPrompt = (run: AgentRun): string | null => {
-  if (run.result) {
-    try {
-      const p = JSON.parse(run.result);
-      if (typeof p?.original_input === 'string' && p.original_input.trim()) return p.original_input.trim();
-    } catch { /* ignore */ }
+/** Recursively walk a parsed JSON value and return the first non-empty string
+ *  found under any of the given keys. Stops at MAX_DEPTH to avoid runaway
+ *  traversal on huge result blobs. Keys are matched case-insensitively. */
+const PROMPT_KEYS = [
+  'original_input', 'originalinput',
+  'input', 'prompt', 'user_input', 'userinput', 'user_prompt', 'userprompt',
+  'question', 'query', 'message', 'text', 'content', 'task', 'instruction', 'instructions',
+];
+const deepFindPrompt = (value: unknown, depth = 0): string | null => {
+  if (value == null || depth > 6) return null;
+  if (typeof value === 'string') {
+    // Try to parse nested JSON strings transparently.
+    const s = value.trim();
+    if ((s.startsWith('{') && s.endsWith('}')) || (s.startsWith('[') && s.endsWith(']'))) {
+      try { return deepFindPrompt(JSON.parse(s), depth + 1); } catch { /* not JSON */ }
+    }
+    return null;
   }
-  if (run.execution_argument) {
-    try {
-      const p = JSON.parse(run.execution_argument);
-      if (typeof p?.input === 'string' && p.input.trim()) return p.input.trim();
-      if (typeof p?.prompt === 'string' && p.prompt.trim()) return p.prompt.trim();
-      if (typeof p?.original_input === 'string' && p.original_input.trim()) return p.original_input.trim();
-    } catch {
-      const clean = run.execution_argument.replace(/[{}"]/g, '').trim();
-      if (clean && clean.length < 240) return clean;
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const hit = deepFindPrompt(item, depth + 1);
+      if (hit) return hit;
+    }
+    return null;
+  }
+  if (typeof value === 'object') {
+    const obj = value as Record<string, unknown>;
+    // First pass: direct hits on known prompt keys at this level.
+    for (const key of Object.keys(obj)) {
+      if (PROMPT_KEYS.includes(key.toLowerCase())) {
+        const v = obj[key];
+        if (typeof v === 'string' && v.trim()) return v.trim();
+        // Some payloads wrap the prompt in another object/array — recurse into it.
+        const nested = deepFindPrompt(v, depth + 1);
+        if (nested) return nested;
+      }
+    }
+    // Second pass: descend into other fields.
+    for (const key of Object.keys(obj)) {
+      if (PROMPT_KEYS.includes(key.toLowerCase())) continue;
+      const hit = deepFindPrompt(obj[key], depth + 1);
+      if (hit) return hit;
     }
   }
   return null;
 };
+
+const tryParseJson = (s: unknown): unknown => {
+  if (typeof s !== 'string') return s;
+  const trimmed = s.trim();
+  if (!trimmed) return null;
+  try { return JSON.parse(trimmed); } catch { return trimmed; }
+};
+
+/** Extract the original user prompt from a run, when available. */
+const getRunPrompt = (run: AgentRun): string | null => {
+  // 1) AI Agent node result inside results[] (deepest source of truth).
+  const results = Array.isArray((run as any).results) ? (run as any).results : null;
+  if (results) {
+    const agentResult = results.find((r: any) => r?.action?.app_name === 'AI Agent');
+    if (agentResult?.result) {
+      const hit = deepFindPrompt(tryParseJson(agentResult.result));
+      if (hit) return hit;
+    }
+    // Also scan every other result row — some flows place the user input in
+    // a Webhook / Trigger / Form node upstream of the AI Agent.
+    for (const r of results) {
+      if (r === agentResult) continue;
+      const hit = deepFindPrompt(tryParseJson(r?.result));
+      if (hit) return hit;
+    }
+  }
+  // 2) Top-level `result` blob (search rows hydrated via buildPatchFromRun).
+  if (run.result) {
+    const hit = deepFindPrompt(tryParseJson(run.result));
+    if (hit) return hit;
+  }
+  // 3) Top-level `execution_argument` (sometimes raw text, sometimes JSON).
+  if (run.execution_argument) {
+    const parsed = tryParseJson(run.execution_argument);
+    const hit = deepFindPrompt(parsed);
+    if (hit) return hit;
+    // Last resort: treat the whole thing as the prompt if it's short plain text.
+    if (typeof parsed === 'string' && parsed.length < 240) return parsed;
+  }
+  return null;
+};
+
 
 const getRunTitle = (run: AgentRun): string => {
   const prompt = getRunPrompt(run);
