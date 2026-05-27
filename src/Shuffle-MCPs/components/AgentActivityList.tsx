@@ -139,20 +139,42 @@ const getTimeAgo = (dateStr: string): string => {
   }
 };
 
-const getRunTitle = (run: AgentRun): string => {
-  if (run.workflow?.name) return run.workflow.name;
+/** Extract the original user prompt from a run, when available. */
+const getRunPrompt = (run: AgentRun): string | null => {
+  if (run.result) {
+    try {
+      const p = JSON.parse(run.result);
+      if (typeof p?.original_input === 'string' && p.original_input.trim()) return p.original_input.trim();
+    } catch { /* ignore */ }
+  }
   if (run.execution_argument) {
     try {
-      const parsed = JSON.parse(run.execution_argument);
-      if (parsed.title) return parsed.title;
-      if (parsed.action) return parsed.action;
-      if (parsed.name) return parsed.name;
+      const p = JSON.parse(run.execution_argument);
+      if (typeof p?.input === 'string' && p.input.trim()) return p.input.trim();
+      if (typeof p?.prompt === 'string' && p.prompt.trim()) return p.prompt.trim();
+      if (typeof p?.original_input === 'string' && p.original_input.trim()) return p.original_input.trim();
     } catch {
       const clean = run.execution_argument.replace(/[{}"]/g, '').trim();
-      if (clean.length > 0 && clean.length < 80) return clean;
+      if (clean && clean.length < 240) return clean;
     }
   }
+  return null;
+};
+
+const getRunTitle = (run: AgentRun): string => {
+  const prompt = getRunPrompt(run);
+  if (prompt) {
+    const oneLine = prompt.replace(/\s+/g, ' ').trim();
+    return oneLine.length > 80 ? oneLine.slice(0, 80) + '…' : oneLine;
+  }
+  if (run.workflow?.name) return run.workflow.name;
   return `Execution ${run.execution_id?.slice(0, 8) || '—'}`;
+};
+
+/** Count the number of decisions the agent made during this run. */
+const getDecisionCount = (run: AgentRun): number => {
+  if (Array.isArray(run.decisions)) return run.decisions.length;
+  return 0;
 };
 
 const getRunSubtitle = (run: AgentRun): string => {
