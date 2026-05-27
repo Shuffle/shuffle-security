@@ -55,10 +55,14 @@ export interface AgentsViewProps extends ShuffleHostProps {
   localLLMSlot?: React.ReactNode;
   /** Content for the built-in AgentRunDrawer's Permissions tab. Optional. */
   permissionsSlot?: React.ReactNode;
-  /** Pre-fill the starter chip row on mount (e.g. from persisted host state). */
+  /** Pre-fill the starter chip row on mount (e.g. from persisted host state). When omitted, AgentsView restores its own persisted selection from localStorage (24h TTL). */
   initialApps?: AgentUIApp[];
-  /** Called whenever the chip row under the prompt changes. */
+  /** Called whenever the chip row under the prompt changes. When omitted, AgentsView still persists internally. */
   onAppsChange?: (apps: AgentUIApp[]) => void;
+  /** Disable AgentsView's internal localStorage persistence of the chip row. */
+  disableAppsPersistence?: boolean;
+  /** Storage key for internal chip-row persistence. Defaults to `shuffle-agents-selected-apps`. */
+  appsStorageKey?: string;
 }
 
 const AgentsView = ({
