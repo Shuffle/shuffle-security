@@ -1152,6 +1152,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const [highlightedIndex, setHighlightedIndex] = useState<number | null>(null);
   const [questionAnswers, setQuestionAnswers] = useState<Record<string, { index: number; value: string }>>({});
   const [simpleSubmitAttempted, setSimpleSubmitAttempted] = useState(false);
+  const [finishAnswerRaw, setFinishAnswerRaw] = useState(false);
   const [continuationText, setContinuationText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
