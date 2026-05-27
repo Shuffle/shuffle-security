@@ -84,7 +84,28 @@ export const DashboardOverview = ({
   globalUrl: _globalUrl,
   userdata: _userdata,
 }: OverviewProps) => {
-  const navigate = useNavigate();
+  const rrNavigate = useNavigate();
+  const navigate = (path: string) => {
+    try {
+      const host = typeof window !== 'undefined' ? window.location.hostname : '';
+      // When this surface is embedded outside Shuffle Security (e.g. on
+      // shuffler.io / Shuffle Core), Security Operations links should open
+      // on the Shuffle Security app instead of trying to route locally.
+      const isShuffleSecurityHost =
+        host === 'security.shuffler.io' ||
+        host === 'localhost' ||
+        host === '127.0.0.1' ||
+        host.endsWith('.lovable.app') ||
+        host.endsWith('.lovableproject.com') ||
+        host === 'shutdown.no' ||
+        host === 'www.shutdown.no';
+      if (!isShuffleSecurityHost) {
+        window.open(`https://security.shuffler.io${path.startsWith('/') ? '' : '/'}${path}`, '_blank', 'noopener,noreferrer');
+        return;
+      }
+    } catch { /* fall through to local nav */ }
+    rrNavigate(path);
+  };
 
   const incidentStats = useMemo(() => {
     const open = incidents.filter(i => i.status !== 'resolved' && i.status !== 'closed');
