@@ -45,17 +45,18 @@ const OPENAI_ALGOLIA_APP: AlgoliaSearchApp = {
   verified: true,
 };
 
-const ENDPOINT_PRESETS: Array<{ label: string; url: string }> = [
+const ENDPOINT_PRESETS: Array<{ label: string; url: string; apiKeyUrl?: string; apiKeyHint?: string }> = [
   { label: SHUFFLE_AI_PRESET, url: '' },
-  { label: 'OpenAI', url: 'https://api.openai.com/v1' },
-  { label: 'Anthropic', url: 'https://api.anthropic.com/v1/' },
-  { label: 'Google Gemini', url: 'https://generativelanguage.googleapis.com/v1beta/openai/' },
-  { label: 'Mistral', url: 'https://api.mistral.ai/v1' },
-  { label: 'Groq', url: 'https://api.groq.com/openai/v1' },
-  { label: 'Together AI', url: 'https://api.together.xyz/v1' },
-  { label: 'OpenRouter', url: 'https://openrouter.ai/api/v1' },
-  { label: 'Ollama (localhost)', url: 'http://localhost:11434/v1' },
-  { label: 'LM Studio (localhost)', url: 'http://localhost:1234/v1' },
+  { label: 'OpenAI', url: 'https://api.openai.com/v1', apiKeyUrl: 'https://platform.openai.com/api-keys', apiKeyHint: 'Create a key under API keys in the OpenAI platform dashboard.' },
+  { label: 'Anthropic', url: 'https://api.anthropic.com/v1/', apiKeyUrl: 'https://console.anthropic.com/settings/keys', apiKeyHint: 'Generate a key under Settings → API Keys in the Anthropic Console.' },
+  { label: 'Google Gemini', url: 'https://generativelanguage.googleapis.com/v1beta/openai/', apiKeyUrl: 'https://aistudio.google.com/app/apikey', apiKeyHint: 'Create a key in Google AI Studio under Get API key.' },
+  { label: 'Mistral', url: 'https://api.mistral.ai/v1', apiKeyUrl: 'https://console.mistral.ai/api-keys/', apiKeyHint: 'Create a key under API Keys in the Mistral Console.' },
+  { label: 'Groq', url: 'https://api.groq.com/openai/v1', apiKeyUrl: 'https://console.groq.com/keys', apiKeyHint: 'Create a key under API Keys in the Groq Console.' },
+  { label: 'DeepSeek', url: 'https://api.deepseek.com/v1', apiKeyUrl: 'https://platform.deepseek.com/api_keys', apiKeyHint: 'Create a key under API Keys in the DeepSeek platform.' },
+  { label: 'Together AI', url: 'https://api.together.xyz/v1', apiKeyUrl: 'https://api.together.ai/settings/api-keys', apiKeyHint: 'Create a key under Settings → API Keys in Together AI.' },
+  { label: 'OpenRouter', url: 'https://openrouter.ai/api/v1', apiKeyUrl: 'https://openrouter.ai/keys', apiKeyHint: 'Create a key under Keys in your OpenRouter dashboard.' },
+  { label: 'Ollama (localhost)', url: 'http://localhost:11434/v1', apiKeyHint: 'Local Ollama does not require an API key — any non-empty value works.' },
+  { label: 'LM Studio (localhost)', url: 'http://localhost:1234/v1', apiKeyHint: 'Local LM Studio does not require an API key — any non-empty value works.' },
   { label: CUSTOM_PRESET, url: '' },
 ];
 
