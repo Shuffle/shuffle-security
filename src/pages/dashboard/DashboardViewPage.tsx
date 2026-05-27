@@ -14,7 +14,7 @@ const DashboardViewPage = () => {
   const { resolvedTheme } = useTheme();
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ maxWidth: 1100, width: '100%', mx: 'auto', p: { xs: 2, sm: 3, md: 4 } }}>
       <CombinedDashboard
         serverside={false}
         isLoaded={!isLoading}
