@@ -1293,14 +1293,17 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // Predicate used by the auth banners — an app is considered authenticated
   // when it appears in the caller's `availableApps` list (which is populated
   // from /api/v1/apps/authentication and only includes valid entries).
-  const isAppAuthenticated = useCallback((appName: string) => {
-    if (!appName) return false;
+  const isAppAuthenticated = useCallback((appName: string, appId?: string | null) => {
+    if (!appName && !appId) return false;
     const target = normalizeAgentAppName(appName);
     // Shuffle's own built-in apps don't require auth inside the Agent area
     // (they piggyback on the user's existing Shuffle session). They DO need
     // auth elsewhere — this short-circuit is scoped to AgentUI only.
     if (AGENT_NO_AUTH_APPS.has(target)) return true;
-    return availableApps.some((a) => normalizeAgentAppName(a.name || '') === target);
+    return availableApps.some((a) => {
+      if (appId && a.id && String(a.id) === String(appId)) return true;
+      return !!appName && normalizeAgentAppName(a.name || '') === target;
+    });
   }, [availableApps]);
 
   // Unique apps (across all decisions) that returned `app_authentication`
@@ -1315,7 +1318,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
       if (!req) continue;
       const slug = normalizeAgentAppName(req.appName);
       if (seen.has(slug)) continue;
-      if (isAppAuthenticated(req.appName)) continue;
+      if (isAppAuthenticated(req.appName, req.appId)) continue;
       seen.add(slug);
       const appId = req.appId || appsById[req.appName]?.id || appsById[slug]?.id || null;
       const icon = appsById[req.appName]?.icon || appsById[slug]?.icon || (appId ? appsById[appId]?.icon : '') || '';
