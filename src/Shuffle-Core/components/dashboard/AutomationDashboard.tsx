@@ -26,6 +26,7 @@ import { useWorkflows } from '../../hooks/useWorkflows';
 import { SegmentedControl } from '../ui/segmented-control';
 import { getApiUrl, getAuthHeader } from '../../api';
 import { NEON, TooltipContent, KpiTile, Panel, EmptyState, buildBuckets, buildBucketsBetween, bucketIndexOf, useChartRangeDrag, ReferenceArea } from './_shared';
+import { useSyncHostBaseUrl } from '../../useSyncHostBaseUrl';
 
 import type { ShuffleCoreHostProps } from '../../types/host-props';
 
@@ -144,6 +145,7 @@ export const AutomationDashboard = ({
   customRange,
   onRangeSelect,
 }: AutomationDashboardProps) => {
+  useSyncHostBaseUrl(globalUrl);
   const orgId = orgIdProp ?? userdata?.active_org?.id ?? null;
   const _name = (displayName || userdata?.username || '').split('@')[0] || 'there';
   const navigate = useNavigate();
