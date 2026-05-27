@@ -386,6 +386,7 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth }: LocalLLMConfigProps) => {
               />
             );
           }}
+          ListboxProps={{ sx: { maxHeight: 420 } }}
           componentsProps={{
             paper: {
               sx: {
