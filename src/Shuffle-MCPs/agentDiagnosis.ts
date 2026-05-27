@@ -155,10 +155,12 @@ const getDiagnosableScope = (parsed: any): unknown => {
       const action = String(d.action || d.details?.action || '').toLowerCase();
       const category = String(d.category || '').toLowerCase();
       if (!['finish', 'finalise'].includes(action) && !['finish', 'finalise'].includes(category)) return null;
-      return {
-        reason: d.reason,
-        fields: Array.isArray(d.fields) ? d.fields.map((f: any) => f?.value).filter(Boolean) : undefined,
-      };
+      // Intentionally exclude `fields` — those are the agent's final output
+      // payload (titles, descriptions, status codes from observed data) and
+      // routinely contain incidental tokens like "401" or "unauthorized"
+      // that are NOT errors. Only the agent's own stated `reason` is
+      // diagnostically meaningful here.
+      return { reason: d.reason };
     });
     if (finalDecisions.some((d: unknown) => d !== null)) scope.decisions = finalDecisions;
   }
