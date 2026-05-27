@@ -81,21 +81,6 @@ const UsecasesPage = () => {
     />
   );
 };
-
-const AgentsPage = () => {
-  const { isAuthenticated, isLoading, userInfo } = useAppAuth();
-  const { resolvedTheme } = useTheme();
-  return (
-    <AgentsView
-      isLoaded={!isLoading}
-      isLoggedIn={isAuthenticated}
-      globalUrl={API_CONFIG.baseUrl}
-      userdata={userInfo as any}
-      serverside={false}
-      theme={resolvedTheme}
-    />
-  );
-};
 import AppDetailPage from '@/pages/dashboard/AppDetailPage';
 import DocsPage from '@/pages/docs/DocsPage';
 import PipelinesPage from '@/pages/dashboard/PipelinesPage';
@@ -268,8 +253,8 @@ const ThemedApp = () => {
               <Route path="/monitors/response" element={<SupportOnly><ResponseActionsPage /></SupportOnly>} />
               <Route path="/incidents/response-actions" element={<Navigate to="/monitors/response" replace />} />
               <Route path="/agent" element={<AgentActivityPage />} />
-              <Route path="/agents" element={<AgentsPage />} />
-              <Route path="/agents/:executionId" element={<AgentsPage />} />
+              <Route path="/agents" element={<AgentsView globalUrl={API_CONFIG.baseUrl} theme={resolvedTheme} />} />
+              <Route path="/agents/:executionId" element={<AgentsView globalUrl={API_CONFIG.baseUrl} theme={resolvedTheme} />} />
               <Route path="/infrastructure" element={<InfrastructurePage />} />
               <Route path="/infrastructure/flows/:flowId" element={<DataFlowDetailPage />} />
               <Route path="/users" element={<UsersPage />} />
