@@ -3910,7 +3910,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                           },
                           '& pre code': { p: 0, bgcolor: 'transparent' },
                         }}>
-                          <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>{normalizeMarkdown(finishAnswer)}</Markdown>
+                          <FinishAnswerMarkdown text={normalizeMarkdown(finishAnswer)} />
                         </Box>
                       )}
                     </Box>
