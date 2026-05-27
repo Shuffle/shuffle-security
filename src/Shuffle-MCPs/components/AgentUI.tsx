@@ -3681,7 +3681,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       src={app.icon || undefined}
                       alt={app.name}
                       variant="rounded"
-                      onClick={() => navigate(`/apps/${encodeURIComponent((app.name || '').toLowerCase().replace(/\s+/g, '_'))}`)}
+                      onClick={() => setAuthDrawerApp({ name: app.name, id: (app as any).id || null })}
                       sx={{
                         bgcolor: 'hsl(var(--muted))',
                         cursor: 'pointer',
