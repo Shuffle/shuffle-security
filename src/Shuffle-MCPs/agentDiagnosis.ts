@@ -362,10 +362,6 @@ export const diagnoseOutputWarning = (run: DiagnosableRun): OutputDiagnosis | nu
       }
     }
   }
-        }
-      }
-    }
-  }
 
   const findSnippet = (needles: string[]): string | undefined => {
     for (const needle of needles) {
