@@ -4921,6 +4921,8 @@ function UsecaseCard({
       variant="outlined"
       sx={{
         position: 'relative',
+        minHeight: 88,
+        maxHeight: 88,
         bgcolor: 'hsl(var(--card))',
         borderColor: showDrift
           ? `${driftColor.replace(')', ' / 0.5)')}`
@@ -4936,7 +4938,7 @@ function UsecaseCard({
         },
       }}
     >
-      <CardActionArea onClick={onClick} sx={{ px: 2, py: '14.5px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+      <CardActionArea onClick={onClick} sx={{ px: 2, py: '14.5px', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center' }}>
         {showImage && flow.referenceImage && (
           <Box
             component="img"
