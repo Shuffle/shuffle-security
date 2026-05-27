@@ -410,7 +410,7 @@ export const DashboardOverview = ({
                 <Typography sx={{ fontSize: '0.62rem', color: 'hsl(var(--muted-foreground))', mt: 0.25, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Host Monitors</Typography>
               </Box>
               <Box
-                onClick={() => navigateSetup('case_management_asset_management_monitors_1', '/monitors?add_host=true', 'area=detection&category=endpoint_detection')}
+                onClick={() => navigate('/detection')}
                 sx={{ textAlign: 'center', cursor: 'pointer', borderRadius: 1, px: 1.5, py: 0.5, transition: 'background 0.15s', '&:hover': { bgcolor: 'hsl(var(--muted) / 0.4)' } }}
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, justifyContent: 'center' }}>
