@@ -657,15 +657,34 @@ const AgentActivityList = ({
   }, []);
 
   // Enrich each visible run with full execution details (results, decisions,
-  // execution_argument). The search endpoint returns a lightweight summary, so
-  // we hydrate each row via /api/v1/streams/results to render real prompts,
-  // app icons, decision counts, and per-tool status.
+  // execution_argument). The search endpoint sometimes already returns the
+  // full payload — in that case we skip the /api/v1/streams/results sideload
+  // and only fetch it as a fallback when the row is missing the fields we
+  // need to render real prompts, app icons, decision counts, and per-tool
+  // status.
   useEffect(() => {
     if (!runs.length) return;
     let cancelled = false;
+    const hasNativeData = (r: AgentRun): boolean => {
+      // We need: results array, a prompt source (execution_argument or
+      // original_input embedded in the AI Agent result), and either decisions
+      // already on the row or extractable from results.
+      const results = Array.isArray((r as any).results) ? (r as any).results : null;
+      if (!results || results.length === 0) return false;
+      const agentResult = results.find((x: any) => x?.action?.app_name === 'AI Agent');
+      let parsed: any = null;
+      if (agentResult?.result) {
+        try { parsed = JSON.parse(agentResult.result); } catch { /* ignore */ }
+      }
+      const hasDecisions = Array.isArray(r.decisions)
+        || (parsed && Array.isArray(parsed.decisions));
+      const hasPrompt = !!r.execution_argument
+        || (parsed && typeof parsed.original_input === 'string' && parsed.original_input.trim());
+      return Boolean(hasDecisions && hasPrompt);
+    };
     const targets = runs
-      .map((r) => r.execution_id)
-      .filter((id) => !!id && !enrichedRuns[id]);
+      .filter((r) => !!r.execution_id && !enrichedRuns[r.execution_id!] && !hasNativeData(r))
+      .map((r) => r.execution_id!) as string[];
     if (!targets.length) return;
 
     const CONCURRENCY = 4;
