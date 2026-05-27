@@ -1312,6 +1312,33 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const hasApiKey = !!apiKey || !!API_CONFIG.apiKey;
   const navigate = useNavigate();
   const [actionInput, setActionInput] = useState(defaultInput);
+  // ── Prompt autocomplete ─────────────────────────────────────────
+  // Google-style suggestion list under the starter input. Only shows when
+  // the user has typed something AND there are substring matches in the
+  // curated AGENT_PROMPT_SUGGESTIONS list.
+  const promptAnchorRef = React.useRef<HTMLDivElement | null>(null);
+  const [suggestionsDismissed, setSuggestionsDismissed] = useState(false);
+  const [suggestionIndex, setSuggestionIndex] = useState(-1);
+  const promptSuggestions = useMemo(
+    () => matchAgentPromptSuggestions(actionInput, 8),
+    [actionInput],
+  );
+  // Reset the highlighted item / dismiss flag whenever the input changes
+  // (typing should always reopen the list if matches exist).
+  useEffect(() => {
+    setSuggestionIndex(-1);
+    setSuggestionsDismissed(false);
+  }, [actionInput]);
+  const suggestionsOpen = promptSuggestions.length > 0 && !suggestionsDismissed;
+  const acceptSuggestion = useCallback((s: string) => {
+    setActionInput(s);
+    setSuggestionsDismissed(true);
+    setSuggestionIndex(-1);
+    // Refocus the textarea so the user can keep editing / press ⌘+Enter.
+    requestAnimationFrame(() => {
+      try { inputRef.current?.focus(); } catch { /* ignore */ }
+    });
+  }, []);
   const BUILTIN_DEFAULT_APPS: AgentUIApp[] = [
     { name: 'http' },
     { name: 'shuffle_tools' },
