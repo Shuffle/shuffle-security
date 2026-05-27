@@ -133,6 +133,28 @@ const SupportOnly = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+/** /agents route wrapper — injects userdata so AgentsView's Local LLM panel can fetch sync_features. */
+const AgentsRoute = ({ theme }: { theme: 'light' | 'dark' }) => {
+  const { userInfo, isAuthenticated, isLoading } = useAuth();
+  const userdata = userInfo ? {
+    id: userInfo.id,
+    username: userInfo.username,
+    support: userInfo.support,
+    active_org: userInfo.active_org,
+    sync_features: (userInfo as any).sync_features,
+  } : undefined;
+  return (
+    <AgentsView
+      globalUrl={API_CONFIG.baseUrl}
+      theme={theme}
+      userdata={userdata as any}
+      isLoaded={!isLoading}
+      isLoggedIn={isAuthenticated}
+      permissionsSlot={<PermissionsPanel compact />}
+    />
+  );
+};
+
 /** Legacy /incidents-simple/:id → /incidents/:id redirect (preserves the id and query string). */
 const RedirectIncidentsSimple = () => {
   const { pathname, search } = window.location;
@@ -254,8 +276,9 @@ const ThemedApp = () => {
               <Route path="/monitors/response" element={<SupportOnly><ResponseActionsPage /></SupportOnly>} />
               <Route path="/incidents/response-actions" element={<Navigate to="/monitors/response" replace />} />
               <Route path="/agent" element={<AgentActivityPage />} />
-              <Route path="/agents" element={<AgentsView globalUrl={API_CONFIG.baseUrl} theme={resolvedTheme} permissionsSlot={<PermissionsPanel compact />} />} />
-              <Route path="/agents/:executionId" element={<AgentsView globalUrl={API_CONFIG.baseUrl} theme={resolvedTheme} permissionsSlot={<PermissionsPanel compact />} />} />
+              <Route path="/agents" element={<AgentsRoute theme={resolvedTheme} />} />
+              <Route path="/agents/:executionId" element={<AgentsRoute theme={resolvedTheme} />} />
+
 
               <Route path="/infrastructure" element={<InfrastructurePage />} />
               <Route path="/infrastructure/flows/:flowId" element={<DataFlowDetailPage />} />
