@@ -2772,7 +2772,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
         value={activeTab}
         onChange={(v) => goToTab(v as TabKey)}
         options={[
-          { value: 'start', label: 'Start', disabled: disableStartTab },
+          { value: 'start', label: 'Start', disabled: disableStartTab, title: disableStartTab ? 'Open a new agent run from the /agents page to start a new prompt' : undefined },
           { value: 'simple', label: 'Simple', disabled: !hasExecution },
           { value: 'detailed', label: 'Detailed', disabled: !hasExecution },
           { type: 'divider', key: 'div' },
