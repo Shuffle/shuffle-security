@@ -301,7 +301,7 @@ const CombinedDashboard = ({
   );
 
   return (
-    <Box sx={{ maxWidth: 1100, width: '100%', mx: 'auto', mt: '25px', display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <Box sx={{ maxWidth: 1100, width: '100%', mx: 'auto', pt: '25px', display: 'flex', flexDirection: 'column', gap: 3 }}>
       {sharedHeader}
       {tab === 'automation' ? (
         <AutomationDashboard
