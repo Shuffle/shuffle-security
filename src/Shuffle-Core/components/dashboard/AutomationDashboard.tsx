@@ -22,6 +22,7 @@ import {
 } from 'recharts';
 import { AlertCircle, RefreshCw, Zap, Workflow, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useWorkflows } from '../../hooks/useWorkflows';
 import { SegmentedControl } from '../ui/segmented-control';
 import { getApiUrl, getAuthHeader } from '../../api';
 import { NEON, TooltipContent, KpiTile, Panel, EmptyState, buildBuckets, buildBucketsBetween, bucketIndexOf, useChartRangeDrag, ReferenceArea } from './_shared';
