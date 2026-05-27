@@ -88,6 +88,8 @@ const withTheme = <P extends object>(Inner: React.ComponentType<P>, displayName:
 };
 
 export const Usecases = withTheme(UsecasesRaw, 'Usecases');
+export const UsecaseDrawer = withTheme(UsecaseDrawerRaw, 'UsecaseDrawer');
+export type { UsecaseDrawerProps };
 export const UsecaseAlluvialDiagram = withTheme(UsecaseAlluvialDiagramRaw, 'UsecaseAlluvialDiagram');
 export const FormInput = withTheme(FormInputRaw, 'FormInput');
 export const EditWorkflow = withTheme(EditWorkflowRaw, 'EditWorkflow');
