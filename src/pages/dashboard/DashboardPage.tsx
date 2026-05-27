@@ -1194,7 +1194,7 @@ const DashboardPage = () => {
               </>
             );
             const sharedHeader = (
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
+              <Box ref={dashboardTabsRef} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', minHeight: 36 }}>
                   {dashboardTabs}
                 </Box>
