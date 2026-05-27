@@ -226,7 +226,9 @@ export const DashboardOverview = ({
           label="Open Incidents"
           delta={incidentStats.delta}
           isLoading={incidentsLoading}
-          onClick={() => navigate('/incidents')}
+          onClick={() => incidentStats.openCount === 0
+            ? navigateSetup('siem_case_management_1', '/incidents?highlight=ingest', 'area=automatic_ingestion&category=case_management')
+            : navigate('/incidents')}
           delay={0}
         />
         <KpiTile
@@ -236,7 +238,9 @@ export const DashboardOverview = ({
           value={incidentStats.criticalCount}
           label="Critical / High"
           isLoading={incidentsLoading}
-          onClick={() => navigate('/incidents?severity=critical,high')}
+          onClick={() => incidentStats.criticalCount === 0
+            ? navigateSetup('siem_case_management_1', '/incidents?highlight=ingest', 'area=automatic_ingestion&category=case_management')
+            : navigate('/incidents?severity=critical,high')}
           delay={0.05}
         />
         <KpiTile
@@ -246,7 +250,9 @@ export const DashboardOverview = ({
           value={monitorHostCount ?? 0}
           label={runningSensorCount ? `Hosts • ${runningSensorCount} sensors` : 'Host Monitors'}
           isLoading={monitorsLoading}
-          onClick={() => navigate('/monitors')}
+          onClick={() => (monitorHostCount ?? 0) === 0
+            ? navigateSetup('case_management_asset_management_monitors_1', '/monitors?add_host=true', 'area=detection&category=endpoint_detection')
+            : navigate('/monitors')}
           delay={0.1}
         />
         <KpiTile
@@ -256,7 +262,9 @@ export const DashboardOverview = ({
           value={vulnTotal}
           label="Vulnerabilities"
           isLoading={vulnLoading}
-          onClick={() => navigate('/vulnerabilities')}
+          onClick={() => vulnTotal === 0
+            ? navigateSetup('vulnerability_ingestion_1', '/vulnerabilities', 'area=automatic_ingestion&category=asset_management')
+            : navigate('/vulnerabilities')}
           delay={0.15}
         />
       </Box>
