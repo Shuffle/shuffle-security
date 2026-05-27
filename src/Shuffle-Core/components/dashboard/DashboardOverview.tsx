@@ -90,16 +90,16 @@ export const DashboardOverview = ({
   const isShuffleSecurityHost = () => {
     try {
       const host = typeof window !== 'undefined' ? window.location.hostname : '';
+      // Only the real production Shuffle Security hosts route to local
+      // pages like /incidents and /vulnerabilities. Every other host
+      // (including Lovable previews and shuffler.io) opens the matching
+      // Usecase so the user can configure ingestion from there.
       return (
         host === 'security.shuffler.io' ||
-        host === 'localhost' ||
-        host === '127.0.0.1' ||
-        host.endsWith('.lovable.app') ||
-        host.endsWith('.lovableproject.com') ||
         host === 'shutdown.no' ||
         host === 'www.shutdown.no'
       );
-    } catch { return true; }
+    } catch { return false; }
   };
   const navigate = (path: string) => {
     // When this surface is embedded outside Shuffle Security (e.g. on
@@ -377,7 +377,7 @@ export const DashboardOverview = ({
                 </Box>
               </>
             ) : (
-              <EmptyState text="No host monitors or pipeline sensors deployed yet" ctaLabel="Deploy a monitor" onCta={() => navigate('/monitors?add_host=true')} />
+              <EmptyState text="No host monitors or pipeline sensors deployed yet" ctaLabel="Deploy a monitor" onCta={() => navigateSetup('/monitors?add_host=true', 'area=detection&category=endpoint_detection')} />
             )}
           </Box>
           {monitorTotal > 0 && (
