@@ -1,10 +1,8 @@
 /**
  * Test page for the Shuffle-Core CombinedDashboard surface.
- * Mounts CombinedDashboard with the exact same host-prop contract used
- * everywhere else (serverside, isLoaded, isLoggedIn, userdata, globalUrl,
- * theme) so we can validate it in isolation at /dashboard-view.
+ * Renders CombinedDashboard directly with no wrapper so its own
+ * spacing/max-width/padding is exactly what you see.
  */
-import { Box } from '@mui/material';
 import { CombinedDashboard } from '@/Shuffle-Core';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -14,16 +12,14 @@ const DashboardViewPage = () => {
   const { resolvedTheme } = useTheme();
 
   return (
-    <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
-      <CombinedDashboard
-        serverside={false}
-        isLoaded={!isLoading}
-        isLoggedIn={isAuthenticated}
-        userdata={userInfo}
-        globalUrl={window.location.origin}
-        theme={resolvedTheme}
-      />
-    </Box>
+    <CombinedDashboard
+      serverside={false}
+      isLoaded={!isLoading}
+      isLoggedIn={isAuthenticated}
+      userdata={userInfo}
+      globalUrl={window.location.origin}
+      theme={resolvedTheme}
+    />
   );
 };
 
