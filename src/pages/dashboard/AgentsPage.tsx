@@ -34,7 +34,10 @@ const readPersistedApps = (): StoredApp[] | undefined => {
 
 const AgentsPage = () => {
   const scheduleAgentRun = useScheduleAgentRun();
-  const { theme } = useTheme();
+  // Pass the already-resolved theme ('light' | 'dark') rather than 'system'.
+  // The MCP library's 'auto' mode re-detects via DOM ancestors and can pick
+  // up an unrelated Shuffle scope, which made /agents look randomly light.
+  const { resolvedTheme } = useTheme();
 
   const handleSchedule = useCallback<AgentsViewProps['onSchedule']>(
     async (info) => {
@@ -71,7 +74,7 @@ const AgentsPage = () => {
     <AgentsView
       onSchedule={handleSchedule}
       globalUrl={API_CONFIG.baseUrl}
-      theme={theme}
+      theme={resolvedTheme}
       initialApps={initialApps}
       onAppsChange={handleAppsChange}
     />
