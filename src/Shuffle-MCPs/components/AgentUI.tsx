@@ -934,7 +934,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
         const req = extractAuthRequest(details);
         if (!req) return null;
         if (authAppsLoading) return null;
-        if (isAppAuthenticated?.(req.appName, req.appId)) return null;
+        const authed = !!isAppAuthenticated?.(req.appName, req.appId);
         const pretty = req.appName.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
         const slug = normalizeAgentAppName(req.appName);
         const appId = req.appId || appsById[req.appName]?.id || appsById[slug]?.id || null;
@@ -947,49 +947,73 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
               gap: 1.5,
               p: 1.5,
               borderRadius: 1.5,
-              border: '1px solid hsla(var(--severity-medium) / 0.3)',
-              bgcolor: 'hsla(var(--severity-medium) / 0.08)',
+              border: authed
+                ? '1px solid hsla(var(--severity-low) / 0.35)'
+                : '1px solid hsla(var(--severity-medium) / 0.3)',
+              bgcolor: authed
+                ? 'hsla(var(--severity-low) / 0.08)'
+                : 'hsla(var(--severity-medium) / 0.08)',
             }}>
-              <LockIcon size={22} color={'hsl(var(--severity-medium))'} />
+              <LockIcon size={22} color={authed ? 'hsl(var(--severity-low))' : 'hsl(var(--severity-medium))'} />
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-                  {pretty} requires authentication
+                  {authed
+                    ? `It most likely works now! Please try again`
+                    : `${pretty} requires authentication`}
                 </Typography>
                 <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
-                  Connect your {pretty} account so the agent can complete this step, then rerun the decision.
+                  {authed
+                    ? `${pretty} is now authenticated. Rerun this action to continue.`
+                    : `Connect your ${pretty} account so the agent can complete this step, then rerun the decision.`}
                 </Typography>
               </Box>
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={
-                  <Avatar
-                    src={icon || undefined}
-                    alt=""
-                    variant="rounded"
-                    sx={{
-                      width: 18, height: 18, borderRadius: 0.5,
-                      bgcolor: 'hsl(var(--background) / 0.4)',
-                      color: 'hsl(var(--background))',
-                      fontSize: '0.7rem', fontWeight: 700,
-                      '& img': { objectFit: 'contain' },
-                    }}
-                  >
-                    {pretty.charAt(0)}
-                  </Avatar>
-                }
-                disabled={!onAuthenticateApp}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRefreshAuthenticatedApps?.();
-                  onAuthenticateApp?.(req.appName, appId);
-                }}
-                sx={{
-                  height: 36, textTransform: 'none', fontWeight: 600,
-                }}
-              >
-                Authenticate {pretty}
-              </Button>
+              {authed ? (
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<RestartAltIcon size={16} />}
+                  disabled={agentRequestLoading || !details?.run_details?.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (details) onRerunDecision(details);
+                  }}
+                  sx={{ height: 36, textTransform: 'none', fontWeight: 600 }}
+                >
+                  Rerun action
+                </Button>
+              ) : (
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={
+                    <Avatar
+                      src={icon || undefined}
+                      alt=""
+                      variant="rounded"
+                      sx={{
+                        width: 18, height: 18, borderRadius: 0.5,
+                        bgcolor: 'hsl(var(--background) / 0.4)',
+                        color: 'hsl(var(--background))',
+                        fontSize: '0.7rem', fontWeight: 700,
+                        '& img': { objectFit: 'contain' },
+                      }}
+                    >
+                      {pretty.charAt(0)}
+                    </Avatar>
+                  }
+                  disabled={!onAuthenticateApp}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRefreshAuthenticatedApps?.();
+                    onAuthenticateApp?.(req.appName, appId);
+                  }}
+                  sx={{
+                    height: 36, textTransform: 'none', fontWeight: 600,
+                  }}
+                >
+                  Authenticate {pretty}
+                </Button>
+              )}
             </Box>
           </Box>
         );
