@@ -222,14 +222,19 @@ interface RunRowProps {
   run: AgentRun;
   onClick: () => void;
   sx?: SxProps<Theme>;
+  appIcons?: Record<string, string>;
 }
 
-const AgentRunRow = ({ run, onClick, sx }: RunRowProps) => {
+const normToolKey = (s: string) => s.toLowerCase().replace(/[\s_\-]+/g, '_');
+
+const AgentRunRow = ({ run, onClick, sx, appIcons }: RunRowProps) => {
+  const navigate = useNavigate();
   const statusKey = getEffectiveStatus(run);
   const cfg = STATUS_CONFIG[statusKey] || STATUS_CONFIG.WAITING;
   const iconColor = getRunIconColor(run);
   const duration = formatDuration(run);
   const tools = getRunTools(run);
+  const decisionCount = getDecisionCount(run);
 
   return (
     <Box
@@ -313,43 +318,72 @@ const AgentRunRow = ({ run, onClick, sx }: RunRowProps) => {
               </Typography>
             </>
           )}
+          {decisionCount > 0 && (
+            <>
+              <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', opacity: 0.4 }}>·</Typography>
+              <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, color: 'hsl(var(--muted-foreground))', opacity: 0.7 }}>
+                <GitBranch size={11} />
+                <Typography sx={{ fontSize: '0.72rem', color: 'inherit' }}>
+                  {decisionCount} {decisionCount === 1 ? 'decision' : 'decisions'}
+                </Typography>
+              </Box>
+            </>
+          )}
         </Box>
       </Box>
 
       {tools.length > 0 && (
         <Box
+          onClick={(e) => e.stopPropagation()}
           sx={{
             display: { xs: 'none', sm: 'flex' },
             alignItems: 'center',
-            gap: 0.5,
-            flexWrap: 'wrap',
-            justifyContent: 'flex-end',
-            maxWidth: 220,
             flexShrink: 0,
+            ml: 1,
           }}
         >
-          {tools.map((t) => (
-            <Tooltip key={t} title={t} arrow>
-              <Chip
-                label={t}
-                size="small"
-                sx={{
-                  height: 20,
-                  fontSize: '0.68rem',
-                  maxWidth: 120,
-                  bgcolor: 'hsla(var(--muted) / 0.5)',
-                  color: 'hsl(var(--muted-foreground))',
-                  border: '1px solid hsl(var(--border))',
-                  '& .MuiChip-label': {
-                    px: 0.75,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  },
-                }}
-              />
-            </Tooltip>
-          ))}
+          <AvatarGroup
+            max={5}
+            sx={{
+              '& .MuiAvatar-root': {
+                width: 28,
+                height: 28,
+                fontSize: '0.7rem',
+                borderColor: 'hsl(var(--border))',
+                bgcolor: 'hsl(var(--muted))',
+                color: 'hsl(var(--muted-foreground))',
+              },
+            }}
+          >
+            {tools.map((t) => {
+              const icon = appIcons?.[normToolKey(t)];
+              const label = t.replace(/_/g, ' ');
+              const slug = t.toLowerCase().replace(/\s+/g, '_');
+              return (
+                <Tooltip key={t} title={label} arrow>
+                  <Avatar
+                    src={icon || undefined}
+                    alt={label}
+                    variant="rounded"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/apps/${encodeURIComponent(slug)}`);
+                    }}
+                    sx={{
+                      cursor: 'pointer',
+                      transition: 'transform 0.15s ease, border-color 0.15s ease',
+                      '&:hover': {
+                        transform: 'scale(1.08)',
+                        borderColor: 'hsl(var(--primary)) !important',
+                      },
+                    }}
+                  >
+                    {label.charAt(0).toUpperCase()}
+                  </Avatar>
+                </Tooltip>
+              );
+            })}
+          </AvatarGroup>
         </Box>
       )}
     </Box>
