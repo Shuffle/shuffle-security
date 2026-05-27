@@ -482,11 +482,14 @@ export const AutomationDashboard = ({
             {loading ? (
               <Skeleton variant="rounded" height={260} sx={{ bgcolor: 'hsl(var(--muted) / 0.3)' }} />
             ) : (totalSuccess + totalFailed) <= 2 ? (
-              <EmptyState
-                text={`Not enough ${isApps ? 'app' : 'workflow'} runs in this range to chart trends yet`}
-                ctaLabel="Build a workflow"
-                onCta={() => navigate('/workflows')}
-              />
+              <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <EmptyState
+                  text={`Not enough ${isApps ? 'app' : 'workflow'} runs in this range to chart trends yet`}
+                  ctaLabel="Build a workflow"
+                  onCta={() => navigate('/workflows')}
+                />
+              </Box>
+
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} {...activityDrag.chartProps}>
