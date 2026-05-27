@@ -607,12 +607,82 @@ const AgentActivityList = ({
     return () => { cancelled = true; };
   }, []);
 
+  // Enrich each visible run with full execution details (results, decisions,
+  // execution_argument). The search endpoint returns a lightweight summary, so
+  // we hydrate each row via /api/v1/streams/results to render real prompts,
+  // app icons, decision counts, and per-tool status.
+  useEffect(() => {
+    if (!runs.length) return;
+    let cancelled = false;
+    const targets = runs
+      .map((r) => r.execution_id)
+      .filter((id) => !!id && !enrichedRuns[id]);
+    if (!targets.length) return;
+
+    const CONCURRENCY = 4;
+    let i = 0;
+    const fetchOne = async (executionId: string) => {
+      try {
+        const resp = await fetch(getApiUrl('/api/v1/streams/results'), {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : getAuthHeader()),
+            ...(orgId ? { 'Org-Id': orgId } : {}),
+          },
+          body: JSON.stringify({ execution_id: executionId, authorization: executionId }),
+        });
+        if (!resp.ok || cancelled) return;
+        const json = await resp.json().catch(() => null);
+        if (!json || cancelled) return;
+        let decisions: AgentDecision[] | undefined;
+        let originalInput: string | undefined;
+        // Decisions / original_input live inside the AI Agent action result.
+        const agentResult = Array.isArray(json.results)
+          ? json.results.find((r: any) => r?.action?.app_name === 'AI Agent')
+          : null;
+        if (agentResult?.result) {
+          try {
+            const parsed = JSON.parse(agentResult.result);
+            if (Array.isArray(parsed?.decisions)) decisions = parsed.decisions;
+            if (typeof parsed?.original_input === 'string') originalInput = parsed.original_input;
+          } catch { /* ignore */ }
+        }
+        const patch: Partial<AgentRun> = {
+          results: json.results,
+          execution_argument: json.execution_argument,
+          result: agentResult?.result,
+          decisions,
+        };
+        if (originalInput && !patch.execution_argument) {
+          patch.execution_argument = JSON.stringify({ original_input: originalInput });
+        }
+        setEnrichedRuns((prev) => ({ ...prev, [executionId]: patch }));
+      } catch { /* non-critical */ }
+    };
+    const workers = Array.from({ length: Math.min(CONCURRENCY, targets.length) }, async () => {
+      while (!cancelled && i < targets.length) {
+        const id = targets[i++];
+        await fetchOne(id);
+      }
+    });
+    Promise.all(workers).catch(() => { /* ignore */ });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runs, apiKey, orgId]);
+
+  const mergedRuns = runs.map((r) => {
+    const patch = r.execution_id ? enrichedRuns[r.execution_id] : undefined;
+    return patch ? { ...r, ...patch } : r;
+  });
+
   const loadMore = useCallback(() => {
     if (cursor && !isLoading) fetchRuns(true, cursor);
   }, [cursor, isLoading, fetchRuns]);
 
   const filteredRuns = debouncedQuery
-    ? runs.filter((r) => {
+    ? mergedRuns.filter((r) => {
         const hay = [
           getRunTitle(r),
           getRunSubtitle(r),
@@ -625,7 +695,7 @@ const AgentActivityList = ({
           .toLowerCase();
         return hay.includes(debouncedQuery.toLowerCase());
       })
-    : runs;
+    : mergedRuns;
 
   return (
     <Box
