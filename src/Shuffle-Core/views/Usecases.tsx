@@ -1106,9 +1106,8 @@ const SCOPED_CSS = `
 
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: hsl(var(--foreground));
-  /* Intentionally no `background` here — inherit from the host page so the
-   * Usecases view blends into whichever app embeds it (Shuffle Security,
-   * Shuffle Core, standalone) instead of painting its own surface. */
+  /* Intentionally no background here so the scope inherits from the host page
+   * and blends into whichever app embeds it instead of painting its own surface. */
 }
 
 /* MUI Card / Paper border-radius fallback for hosts that don't provide our MUI theme.
