@@ -1163,6 +1163,7 @@ function useApi() {
 // ============================================================================
 // Real sonner toast — visible UI feedback for success/error.
 import { toast as sonnerToast } from '../toast';
+import { fetchIocEntries, sumIocEntries } from '../utils/iocFeedTotals';
 import { usePageMeta } from '../usePageMeta';
 type ToastOpts = { duration?: number; description?: string; action?: { label: string; onClick: () => void } };
 const toast = {
@@ -2527,55 +2528,13 @@ function IocFeedsOutcomeBlock() {
 
   useEffect(() => {
     let cancelled = false;
-    const getOrgId = (): string | null => {
-      try {
-        const info = localStorage.getItem('shuffle_user_info');
-        return info ? JSON.parse(info)?.active_org?.id ?? null : null;
-      } catch {
-        return null;
-      }
-    };
-    const fetchTotal = async (orgId: string, category: string): Promise<number> => {
-      try {
-        const res = await fetch(
-          apiUrl(`/api/v1/orgs/${orgId}/list_cache?category=${encodeURIComponent(category)}&top=1`),
-          { credentials: 'include', headers: { ...authHeader() } },
-        );
-        if (!res.ok) return 0;
-        const data = await res.json();
-        const n = data?.total_amount ?? data?.total ?? data?.amount ?? 0;
-        return typeof n === 'number' && Number.isFinite(n) ? n : 0;
-      } catch {
-        return 0;
-      }
-    };
     (async () => {
       setLoading(true);
       try {
-        const orgId = getOrgId();
-        if (!orgId) { if (!cancelled) setEntries([]); return; }
-
-        // Discover IOC categories from the default list_cache response.
-        // The `categories` array enumerates every datastore category the
-        // org has — we pick the ones starting with `ioc_`.
-        const cfgRes = await fetch(
-          apiUrl(`/api/v1/orgs/${orgId}/list_cache?category=default&top=1`),
-          { credentials: 'include', headers: { ...authHeader() } },
-        );
-        const cfgData = cfgRes.ok ? await cfgRes.json() : null;
-        const rawCategories: any[] = Array.isArray(cfgData?.categories) ? cfgData.categories : [];
-        const iocCategories: string[] = Array.from(new Set(
-          rawCategories
-            .map((c: any) => String(typeof c === 'string' ? c : (c?.name || c?.category || '')).trim())
-            .filter((name) => name.startsWith('ioc_')),
-        ));
-
-        const totals = await Promise.all(
-          iocCategories.map(async (category) => ({
-            name: category.replace(/^ioc_/, ''),
-            total: await fetchTotal(orgId, category),
-          })),
-        );
+        // Derive baseUrl from apiUrl helper so we share the exact same
+        // fetch logic with the dashboard's "IOCs Tracked" KPI tile.
+        const baseUrl = apiUrl('');
+        const totals = await fetchIocEntries({ baseUrl, authHeader });
         if (!cancelled) {
           setEntries(totals.filter((e) => e.total > 0).sort((a, b) => b.total - a.total));
         }
@@ -2588,10 +2547,10 @@ function IocFeedsOutcomeBlock() {
     return () => { cancelled = true; };
   }, [apiUrl, authHeader]);
 
-  const total = entries.reduce((s, e) => s + e.total, 0);
+  const total = sumIocEntries(entries);
   const outcome = {
     kind: 'iocs_managed' as const,
-    primary: { value: total, label: 'observables tracked' },
+    primary: { value: total, label: 'indicators tracked' },
     breakdown: entries.slice(0, 8).map((e) => ({
       key: e.name,
       label: e.name.replace(/_/g, ' '),

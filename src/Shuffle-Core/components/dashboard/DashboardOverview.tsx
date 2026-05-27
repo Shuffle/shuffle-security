@@ -33,6 +33,7 @@ import { ChartShimmer } from './ChartShimmer';
 import { useSyncHostBaseUrl } from '../../useSyncHostBaseUrl';
 
 import type { ShuffleCoreHostProps } from '../../types/host-props';
+import { fetchIocEntries, sumIocEntries } from '../../utils/iocFeedTotals';
 
 interface OverviewIncident {
   status: string;
@@ -133,50 +134,17 @@ export const DashboardOverview = ({
     rrNavigate(`/usecases${usecasesQuery ? `?${usecasesQuery}` : ''}`);
   };
 
-  // IOC feeds total — mirrors IocFeedsOutcomeBlock in views/Usecases.tsx:
-  // discover `ioc_<name>` datastore categories, sum each category's
-  // total_amount. Shown in the top KPI strip.
+  // IOC feeds total — shares the SAME fetchIocEntries helper with the
+  // IOC feeds usecase outcome block so the two counts always agree.
   const [iocTotal, setIocTotal] = useState<number | null>(null);
   const [iocLoading, setIocLoading] = useState(true);
   useEffect(() => {
     let cancelled = false;
-    const getOrgId = (): string | null => {
-      try {
-        const info = localStorage.getItem('shuffle_user_info');
-        return info ? JSON.parse(info)?.active_org?.id ?? null : null;
-      } catch { return null; }
-    };
-    const apiUrl = (endpoint: string) => `${globalUrl || ''}${endpoint}`;
-    const fetchTotal = async (orgId: string, category: string): Promise<number> => {
-      try {
-        const res = await fetch(
-          apiUrl(`/api/v1/orgs/${orgId}/list_cache?category=${encodeURIComponent(category)}&top=1`),
-          { credentials: 'include' },
-        );
-        if (!res.ok) return 0;
-        const data = await res.json();
-        const n = data?.total_amount ?? data?.total ?? data?.amount ?? 0;
-        return typeof n === 'number' && Number.isFinite(n) ? n : 0;
-      } catch { return 0; }
-    };
     (async () => {
       setIocLoading(true);
       try {
-        const orgId = getOrgId();
-        if (!orgId) { if (!cancelled) setIocTotal(0); return; }
-        const cfgRes = await fetch(
-          apiUrl(`/api/v1/orgs/${orgId}/list_cache?category=default&top=1`),
-          { credentials: 'include' },
-        );
-        const cfgData = cfgRes.ok ? await cfgRes.json() : null;
-        const rawCategories: any[] = Array.isArray(cfgData?.categories) ? cfgData.categories : [];
-        const iocCategories: string[] = Array.from(new Set(
-          rawCategories
-            .map((c: any) => String(typeof c === 'string' ? c : (c?.name || c?.category || '')).trim())
-            .filter((name) => name.startsWith('ioc_')),
-        ));
-        const totals = await Promise.all(iocCategories.map((cat) => fetchTotal(orgId, cat)));
-        if (!cancelled) setIocTotal(totals.reduce((s, n) => s + n, 0));
+        const entries = await fetchIocEntries({ baseUrl: globalUrl || '' });
+        if (!cancelled) setIocTotal(sumIocEntries(entries));
       } catch {
         if (!cancelled) setIocTotal(0);
       } finally {
