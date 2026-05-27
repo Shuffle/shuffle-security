@@ -342,8 +342,23 @@ const CombinedDashboard = ({
           gran={gran}
           customRange={customRange}
           onRangeSelect={(fromMs, toMs) => setCustomRange({ fromMs, toMs })}
+          onOpenUsecase={(flowId) => setOpenUsecaseId(flowId)}
         />
       )}
+      {/* Inline usecase drawer — opens in-place from the Security Operations
+       *  setup CTAs instead of redirecting to /usecases. Receives the SAME
+       *  host props (globalUrl, userdata, isLoaded, isLoggedIn, theme) we
+       *  thread through the rest of Shuffle-Core. */}
+      <UsecaseDrawer
+        open={openUsecaseId !== null}
+        onClose={() => setOpenUsecaseId(null)}
+        flowId={openUsecaseId}
+        globalUrl={host.globalUrl}
+        userdata={host.userdata}
+        isLoaded={host.isLoaded}
+        isLoggedIn={host.isLoggedIn}
+        theme={host.theme as 'light' | 'dark' | 'system' | undefined}
+      />
     </Box>
   );
 };
