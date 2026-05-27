@@ -8,20 +8,19 @@ import { Box } from '@mui/material';
 import { CombinedDashboard } from '@/Shuffle-Core';
 import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
-import { getApiBaseUrl } from '@/Shuffle-Core/api';
 
 const DashboardViewPage = () => {
-  const { userInfo, isLoaded, isLoggedIn } = useAuth();
+  const { userInfo, isAuthenticated, isLoading } = useAuth();
   const { resolvedTheme } = useTheme();
 
   return (
     <Box sx={{ p: 3 }}>
       <CombinedDashboard
         serverside={false}
-        isLoaded={isLoaded}
-        isLoggedIn={isLoggedIn}
+        isLoaded={!isLoading}
+        isLoggedIn={isAuthenticated}
         userdata={userInfo}
-        globalUrl={getApiBaseUrl()}
+        globalUrl={window.location.origin}
         theme={resolvedTheme}
       />
     </Box>
