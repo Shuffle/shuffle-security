@@ -472,16 +472,19 @@ const AgentRunRow = ({ run, onClick, sx, appIcons, onAppClick }: RunRowProps) =>
         </Box>
       </Box>
 
-      {tools.length > 0 && (
-        <Box
-          onClick={(e) => e.stopPropagation()}
-          sx={{
-            display: { xs: 'none', sm: 'flex' },
-            alignItems: 'center',
-            flexShrink: 0,
-            ml: 1,
-          }}
-        >
+      <Box
+        onClick={(e) => e.stopPropagation()}
+        sx={{
+          display: { xs: 'none', sm: 'flex' },
+          alignItems: 'center',
+          justifyContent: 'flex-end',
+          flexShrink: 0,
+          ml: 1,
+          width: 140,
+          minHeight: 28,
+        }}
+      >
+        {tools.length > 0 ? (
           <AvatarGroup
             max={5}
             sx={{
@@ -532,8 +535,20 @@ const AgentRunRow = ({ run, onClick, sx, appIcons, onAppClick }: RunRowProps) =>
               );
             })}
           </AvatarGroup>
-        </Box>
-      )}
+        ) : (
+          <Typography
+            sx={{
+              fontSize: '0.7rem',
+              color: 'hsl(var(--muted-foreground))',
+              opacity: 0.5,
+              fontStyle: 'italic',
+            }}
+          >
+            No apps
+          </Typography>
+        )}
+      </Box>
+
     </Box>
   );
 };
