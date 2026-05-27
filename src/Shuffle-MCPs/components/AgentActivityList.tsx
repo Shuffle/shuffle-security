@@ -197,25 +197,56 @@ const getRunSubtitle = (run: AgentRun): string => {
 
 // ── Run row ──────────────────────────────────────────────────────────────────
 
+export type ToolStatus = 'success' | 'failure' | 'waiting' | 'unknown';
+
+export interface RunTool {
+  name: string;
+  status: ToolStatus;
+}
+
+const normalizeResultStatus = (s?: string): ToolStatus => {
+  const v = (s || '').toUpperCase();
+  if (v === 'SUCCESS' || v === 'FINISHED') return 'success';
+  if (v === 'FAILURE' || v === 'FAILED' || v === 'ABORTED') return 'failure';
+  if (v === 'WAITING' || v === 'SKIPPED') return 'waiting';
+  return 'unknown';
+};
+
 /** Extract distinct tools/apps used in this run from results + decisions. */
-const getRunTools = (run: AgentRun): string[] => {
-  const out = new Set<string>();
-  const add = (v?: string) => {
-    if (!v) return;
-    const s = String(v).trim();
-    if (!s) return;
-    // Skip the agent itself.
-    if (/^(ai\s*agent|shuffle\s*agent|shuffle_agent)$/i.test(s)) return;
-    out.add(s);
+const getRunTools = (run: AgentRun): RunTool[] => {
+  const map = new Map<string, ToolStatus>();
+  const skip = (s: string) => /^(ai\s*agent|shuffle\s*agent|shuffle_agent)$/i.test(s);
+  const rank: Record<ToolStatus, number> = { failure: 3, waiting: 2, success: 1, unknown: 0 };
+  const merge = (name?: string, status?: ToolStatus) => {
+    if (!name) return;
+    const s = String(name).trim();
+    if (!s || skip(s)) return;
+    const next = status || 'unknown';
+    const prev = map.get(s);
+    if (!prev || rank[next] > rank[prev]) map.set(s, next);
   };
   (run.results || []).forEach((r) => {
-    add(r?.action?.app_name);
-    if (!r?.action?.app_name) add(r?.action?.label);
+    const name = r?.action?.app_name || r?.action?.label;
+    merge(name, normalizeResultStatus(r?.status));
   });
   (run.decisions || []).forEach((d) => {
-    add(typeof d?.tool === 'string' ? d.tool : undefined);
+    if (typeof d?.tool === 'string') merge(d.tool, normalizeResultStatus(d?.status as string));
   });
-  return Array.from(out).slice(0, 6);
+  return Array.from(map.entries()).slice(0, 6).map(([name, status]) => ({ name, status }));
+};
+
+const TOOL_STATUS_RING: Record<ToolStatus, string> = {
+  success: 'hsl(var(--severity-low, 142 71% 45%))',
+  failure: 'hsl(var(--severity-critical, 0 72% 55%))',
+  waiting: 'hsl(var(--severity-medium, 38 92% 50%))',
+  unknown: 'hsl(var(--border))',
+};
+
+const TOOL_STATUS_LABEL: Record<ToolStatus, string> = {
+  success: 'ran successfully',
+  failure: 'failed',
+  waiting: 'needs input',
+  unknown: 'used',
 };
 
 interface RunRowProps {
