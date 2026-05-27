@@ -919,6 +919,21 @@ const AgentActivityList = ({
                 {w.name}
               </MenuItem>
             ))}
+            <Divider sx={{ borderColor: 'hsl(var(--border))', my: 0.5 }} />
+            <Box
+              sx={{
+                px: 1.5,
+                py: 1,
+                fontSize: '0.72rem',
+                color: 'hsl(var(--muted-foreground))',
+                lineHeight: 1.45,
+                whiteSpace: 'normal',
+                maxWidth: 280,
+                pointerEvents: 'none',
+              }}
+            >
+              Scheduled agent runs will appear in this list once you set them up.
+            </Box>
           </Select>
           {showSearchBar && (
             <TextField
