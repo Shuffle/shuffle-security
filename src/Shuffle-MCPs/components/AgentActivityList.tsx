@@ -439,7 +439,11 @@ const AgentRunRow = ({ run, onClick, sx, appIcons, onAppClick }: RunRowProps) =>
                     variant="rounded"
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(`/apps/${encodeURIComponent(slug)}`);
+                      if (onAppClick) {
+                        onAppClick({ id: t.id, name: t.name });
+                      } else {
+                        navigate(`/apps/${encodeURIComponent(slug)}`);
+                      }
                     }}
                     sx={{
                       cursor: 'pointer',
