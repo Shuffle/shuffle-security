@@ -23,6 +23,7 @@ import { scheduleAgentRun, updateAgentScheduleConfig } from '@/Shuffle-MCPs/agen
 import { toast } from '@/Shuffle-MCPs/toast';
 import type { ShuffleHostProps } from '@/Shuffle-MCPs/host-props';
 import { useSyncHostBaseUrl } from '@/Shuffle-MCPs/useSyncHostBaseUrl';
+import { API_CONFIG } from '@/Shuffle-MCPs/api';
 
 export interface AgentsViewProps extends ShuffleHostProps {
   /**
@@ -109,7 +110,7 @@ const AgentsView = ({
   onAppsChange,
   disableAppsPersistence,
   appsStorageKey = DEFAULT_APPS_STORAGE_KEY,
-  globalUrl,
+  globalUrl = API_CONFIG.baseUrl,
   isLoaded,
   isLoggedIn,
   userdata,
