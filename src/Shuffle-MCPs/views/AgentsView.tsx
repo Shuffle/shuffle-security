@@ -65,6 +65,39 @@ export interface AgentsViewProps extends ShuffleHostProps {
   appsStorageKey?: string;
 }
 
+const APPS_TTL_MS = 24 * 60 * 60 * 1000; // 24h
+const DEFAULT_APPS_STORAGE_KEY = 'shuffle-agents-selected-apps';
+
+const readPersistedApps = (storageKey: string): AgentUIApp[] | undefined => {
+  try {
+    if (typeof window === 'undefined') return undefined;
+    const raw = window.localStorage.getItem(storageKey);
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw) as { savedAt?: number; apps?: AgentUIApp[] };
+    if (!parsed?.savedAt || !Array.isArray(parsed.apps) || parsed.apps.length === 0) return undefined;
+    if (Date.now() - parsed.savedAt > APPS_TTL_MS) {
+      window.localStorage.removeItem(storageKey);
+      return undefined;
+    }
+    return parsed.apps.filter((a) => a && typeof a.name === 'string');
+  } catch {
+    return undefined;
+  }
+};
+
+// Resolve a 'system'/'auto'/undefined theme to a concrete 'light' | 'dark'
+// so the embedded MCP library does not re-detect via DOM ancestors and pick
+// up an unrelated scope (which made /agents flicker between modes).
+const resolveTheme = (theme?: 'light' | 'dark' | 'system'): 'light' | 'dark' | undefined => {
+  if (theme === 'light' || theme === 'dark') return theme;
+  if (typeof window === 'undefined' || !window.matchMedia) return theme as undefined;
+  try {
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  } catch {
+    return undefined;
+  }
+};
+
 const AgentsView = ({
   onSchedule,
   maxWidth = 820,
@@ -74,6 +107,8 @@ const AgentsView = ({
   permissionsSlot,
   initialApps,
   onAppsChange,
+  disableAppsPersistence,
+  appsStorageKey = DEFAULT_APPS_STORAGE_KEY,
   globalUrl,
   isLoaded,
   isLoggedIn,
@@ -85,14 +120,53 @@ const AgentsView = ({
   orgId,
 }: AgentsViewProps) => {
   useSyncHostBaseUrl(globalUrl);
+
+  // Resolve once on mount; theme prop changes still flow through.
+  const resolvedTheme = useMemo(() => resolveTheme(theme), [theme]);
+
+  // Hydrate chip row from caller, else from our own localStorage.
+  const hydratedInitialApps = useMemo<AgentUIApp[]>(() => {
+    if (initialApps && initialApps.length > 0) return initialApps;
+    if (disableAppsPersistence) return [];
+    return readPersistedApps(appsStorageKey) ?? [];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [selectedRun, setSelectedRun] = useState<AgentRun | null>(null);
   const [agentView, setAgentView] = useState<'start' | 'simple' | 'detailed'>('start');
   const [prefill, setPrefill] = useState<{ input: string; apps: AgentUIApp[]; key: number }>({
     input: '',
-    apps: initialApps && initialApps.length > 0 ? initialApps : [],
+    apps: hydratedInitialApps,
     key: 0,
   });
   const [editing, setEditing] = useState<{ workflowId: string; name: string } | null>(null);
+
+  // Internal persistence of the chip row (24h TTL). Forwards to host onAppsChange.
+  const handleAppsChange = useCallback((apps: AgentUIApp[]) => {
+    if (onAppsChange) {
+      try { onAppsChange(apps); } catch { /* host handler error — ignore */ }
+    }
+    if (disableAppsPersistence) return;
+    try {
+      if (typeof window === 'undefined') return;
+      if (!apps || apps.length === 0) {
+        window.localStorage.removeItem(appsStorageKey);
+        return;
+      }
+      const slim: AgentUIApp[] = apps
+        .filter((a) => a && typeof a.name === 'string')
+        .map((a) => ({ name: a.name, id: a.id, icon: a.icon }));
+      window.localStorage.setItem(
+        appsStorageKey,
+        JSON.stringify({ savedAt: Date.now(), apps: slim }),
+      );
+    } catch {
+      /* localStorage unavailable — ignore */
+    }
+  }, [onAppsChange, disableAppsPersistence, appsStorageKey]);
+  // Reference to keep linter happy when persistence is disabled and no host handler.
+  useEffect(() => { /* no-op */ }, [handleAppsChange]);
+
 
   // Built-in fallback drawer for "Choose LLM" / Permissions when the host
   // didn't wire its own handler. Ensures the chip is never a dead click.
