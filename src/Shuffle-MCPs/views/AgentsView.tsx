@@ -195,7 +195,7 @@ const AgentsView = ({
         colorMode={colorMode}
       />
     ),
-    [localLLMSlot, globalUrl, userdata, isLoaded, isLoggedIn, serverside, theme, colorMode],
+    [localLLMSlot, globalUrl, userdata, isLoaded, isLoggedIn, serverside, resolvedTheme, colorMode],
   );
 
   const handleChooseLLM = useCallback(() => {
@@ -333,7 +333,7 @@ const AgentsView = ({
         permissionsSlot={permissionsSlot}
         theme={resolvedTheme}
         colorMode={colorMode}
-        agentUIProps={{ onSchedule: effectiveSchedule, apiBaseUrl: globalUrl, apiKey, orgId, theme, colorMode }}
+        agentUIProps={{ onSchedule: effectiveSchedule, apiBaseUrl: globalUrl, apiKey, orgId, theme: resolvedTheme, colorMode }}
       />
     </Box>
   );
