@@ -110,7 +110,7 @@ const AgentsView = ({
   onAppsChange,
   disableAppsPersistence,
   appsStorageKey = DEFAULT_APPS_STORAGE_KEY,
-  globalUrl,
+  globalUrl = API_CONFIG.baseUrl,
   isLoaded,
   isLoggedIn,
   userdata,
