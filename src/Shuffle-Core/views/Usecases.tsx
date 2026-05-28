@@ -3842,35 +3842,30 @@ function UsecaseDetailContent({
             // a disabled app as still-enabled in the Source/Destination strip.
             if (enabled) pushInjectedUsecaseApp(flow.id, appName);
             else removeInjectedUsecaseApp(flow.id, appName);
+            // Source of truth = the actual apps inside the linked workflow(s).
+            // Anything currently wired into the workflow stays wired unless it
+            // IS the app the user just toggled off. This prevents accidentally
+            // dropping apps that aren't in the per-category catalog (e.g. a
+            // Singul-wrapped Wazuh node, or a tool outside flow.source/target)
+            // and falling back to action_name=remove when there are clearly
+            // other apps still in the workflow.
             const activeNames: string[] = [];
             const seen = new Set<string>();
-            // Preserve original casing from auth/apps catalog where possible
-            // by walking the integrations list visible in the strip.
-            // For "multi-destination" flows (Notifications, Forward Tickets)
-            // we union the Communication and Cases catalogs so apps from
-            // either category can be chosen as a destination.
-            const isMultiDest = MULTI_DEST_FLOW_IDS.has(flow.id);
-            const catalog: string[] = isMultiDest
-              ? [
-                  ...((categoryAppNames['case_management'] || []) as string[]),
-                  ...((categoryAppNames['communication'] || []) as string[]),
-                ]
-              : [
-                  ...((categoryAppNames[flow.source] || []) as string[]),
-                  ...((categoryAppNames[flow.target] || []) as string[]),
-                ];
-            for (const n of catalog) {
-              const k = normalizeAppName(n);
-              if (next.has(k) && !seen.has(k)) { activeNames.push(n); seen.add(k); }
+            for (const wf of allLinkedForApps) {
+              for (const action of (wf.actions || [])) {
+                for (const n of extractActionAppNames(action)) {
+                  const k = normalizeAppName(n);
+                  if (!k || seen.has(k)) continue;
+                  if (!enabled && k === key) continue; // drop the one being disabled
+                  seen.add(k);
+                  activeNames.push(n);
+                }
+              }
             }
-            // Only send apps we actually surface in the local catalog. Any
-            // residual names from the workflow that are NOT visible here
-            // (internal Shuffle runtime apps, or apps from another category)
-            // are intentionally dropped from the save payload — the user
-            // can only toggle what they can see.
             // Make sure the just-enabled app is in the list even if it isn't
-            // in the local catalog snapshot (the user explicitly clicked it).
+            // already wired into the workflow (the user explicitly clicked it).
             if (enabled && !seen.has(key)) { activeNames.push(appName); seen.add(key); }
+
             try {
               const body: Record<string, string> = { label: flow.automationLabel };
               if (flow.automationCategory) body.category = flow.automationCategory;
