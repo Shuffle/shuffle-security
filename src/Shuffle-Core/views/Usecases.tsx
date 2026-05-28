@@ -36,8 +36,10 @@ import UsecaseAlluvialDiagram from './UsecaseAlluvialDiagram';
 import {
   AppSearchDrawer,
   useAppDetailOptional,
+  extractActionAppNames,
   AiAgentPromptsEditor,
   extractWorkflowAppNames,
+  extractWorkflowActionAppNames,
   normalizeAppName,
   getIngestionCategory,
   shuffleFetch,
