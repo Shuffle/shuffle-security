@@ -427,6 +427,26 @@ export default function AppDetailDrawer({
     }
   };
 
+  // Auto-activate when the drawer opens with autoActivate=true. Fires once per
+  // (open, appName) pair as soon as we know the app is not already activated
+  // and the Algolia ID has resolved (required by the activate endpoint).
+  const autoActivateFiredRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!open || !autoActivate || !appName) return;
+    const key = `${appName}`;
+    if (autoActivateFiredRef.current === key) return;
+    if (isActivated !== false) return; // null = loading, true = already done
+    if (!resolvedAlgoliaId) return;
+    if (activateLoading) return;
+    autoActivateFiredRef.current = key;
+    handleActivateToggle();
+  }, [open, autoActivate, appName, isActivated, resolvedAlgoliaId, activateLoading]);
+
+  // Reset auto-activate guard when drawer closes or app changes
+  useEffect(() => {
+    if (!open) autoActivateFiredRef.current = null;
+  }, [open, appName]);
+
   const isLoadingAll = appLoading || (isAuthenticated && appAuthLoading);
 
   return (
