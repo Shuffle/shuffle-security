@@ -2411,7 +2411,7 @@ function IntegrationStatusLite({
   if (useGroups) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, px: 0.5, py: 0.5 }}>
-        {(enabledList.length > 0 || extraInEnabled) && (
+        {(enabledList.length > 0 || extraInEnabled || hiddenEnabledList.length > 0) && (
           <Box>
             <GroupLabel>
               Enabled Tools · {enabledList.length + (extraInEnabled ? 1 : 0)}
@@ -2419,6 +2419,27 @@ function IntegrationStatusLite({
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
               {extraInEnabled}
               {enabledList.map(renderIcon)}
+              {hiddenEnabledList.length > 0 && (
+                <Button
+                  size="small"
+                  variant="text"
+                  onClick={() => setShowHiddenEnabled((s) => !s)}
+                  sx={{
+                    height: 36,
+                    minWidth: 0,
+                    px: 1.25,
+                    fontSize: '0.72rem',
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    color: 'hsl(var(--muted-foreground))',
+                    border: '1px dashed hsl(var(--border))',
+                    borderRadius: 1,
+                    '&:hover': { color: 'hsl(var(--foreground))', borderColor: 'hsl(var(--foreground) / 0.4)' },
+                  }}
+                >
+                  {showHiddenEnabled ? 'Hide extras' : `+${hiddenEnabledList.length} more`}
+                </Button>
+              )}
             </Box>
           </Box>
         )}
