@@ -5720,6 +5720,7 @@ function UsecaseDrawerInner({ open, onClose, flowId }: { open: boolean; onClose:
           flowId={activeFlowId ?? undefined}
           hideBackNav
           showConnectionPath
+          useAlluvialDiagram
           onNavigateUsecase={(id) => setActiveFlowId(id || null)}
           usecases={usecases}
           isEnabled={isEnabled}
