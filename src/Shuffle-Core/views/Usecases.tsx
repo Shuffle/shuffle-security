@@ -2811,6 +2811,10 @@ function UsecaseDetailContent({
   const { renderEndpointSlot, renderUsecaseDetailSlot } = useUsecasesConfig();
   const flow = usecases.find((item) => item.id === flowId);
   const [categoryAppNames, setCategoryAppNames] = useState<Record<string, string[]>>({});
+  // Apps with a *validated* authentication, grouped by category. Powers the
+  // "In this usecase" row inside the Add-Tool drawer so users immediately see
+  // what they have already connected (e.g. Wazuh under SIEM).
+  const [validatedAppsByCategory, setValidatedAppsByCategory] = useState<Record<string, Array<{ name: string; icon: string }>>>({});
   // Tracks whether the apps→category resolution has completed at least once.
   // While false, the popup's per-endpoint tools section shows a loader so the
   // user does not see a flash of "all apps" or "No apps selected" before the
