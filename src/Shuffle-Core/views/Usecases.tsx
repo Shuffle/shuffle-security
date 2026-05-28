@@ -4674,8 +4674,12 @@ function UsecasesPageInner() {
       const outcomeValue = getPageOutcome(flow.id)?.primary?.value;
       if (typeof outcomeValue === 'number' && outcomeValue > 0) return true;
 
-      // Agent Response is driven by the category automation, not a workflow.
-      if (flow.id === 'case_management_agent_response_1') return aiAgentAutomationActive;
+      // Agent Response / AI Incident Handling are driven by the category
+      // automation (Run AI Agent on shuffle-security_incidents), not a workflow.
+      if (
+        flow.id === 'case_management_agent_response_1' ||
+        flow.id === 'case_management_agent_ai_incident_handling_1'
+      ) return aiAgentAutomationActive;
       // Add Host-Monitors is presence-driven: as soon as ≥2 host monitors are
       // deployed, treat it as enabled — there is no separate workflow to gate.
       if (flow.id === 'case_management_asset_management_monitors_1') {
