@@ -1758,6 +1758,8 @@ function IntegrationStatusLite({
   addAppLabel,
   highlightAddApp = false,
   extraTile,
+  workflowsByAppName,
+
 
 }: {
   filterApps?: string[];
@@ -1797,6 +1799,10 @@ function IntegrationStatusLite({
    *  ReactNode to render under Available, or `{ node, enabled }` to control
    *  whether it appears under Enabled or Available. */
   extraTile?: React.ReactNode | { node: React.ReactNode; enabled?: boolean };
+  /** Optional map of normalized app name -> workflow names that reference it.
+   *  When provided, the tile tooltip lists the workflow(s) using the app so
+   *  users can trace where a weird-looking app came from. */
+  workflowsByAppName?: Map<string, string[]>;
 }) {
   const { apiUrl, authHeader } = useApi();
   const appDetail = useAppDetailOptional();
@@ -2007,7 +2013,13 @@ function IntegrationStatusLite({
         key={integration.id}
         title={isShuffleSecurity
           ? `${integration.name} (always available)`
-          : `${integration.name}${integration.validated ? ' (validated)' : integration.active ? ' (configured)' : ' (not configured)'}`}
+          : `${integration.name}${integration.validated ? ' (validated)' : integration.active ? ' (configured)' : ' (not configured)'}${(() => {
+              const wfs = workflowsByAppName?.get(normalizeAppName(integration.name));
+              if (!wfs || wfs.length === 0) return '';
+              const shown = wfs.slice(0, 3).join(', ');
+              const more = wfs.length > 3 ? ` (+${wfs.length - 3} more)` : '';
+              return ` — used in: ${shown}${more}`;
+            })()}`}
         placement="top"
         arrow
       >
@@ -5296,15 +5308,27 @@ function UsecasesPageInner() {
             }}
           >
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <IntegrationStatusLite
-                singleLine
-                workflowAppNames={Array.from(
-                  workflows.reduce((acc, wf) => {
-                    for (const n of extractWorkflowAppNames(wf)) acc.add(n);
-                    return acc;
-                  }, new Set<string>()),
-                )}
-              />
+              {(() => {
+                const appNameSet = new Set<string>();
+                const wfMap = new Map<string, string[]>();
+                for (const wf of workflows) {
+                  const wfLabel = wf.name || 'Untitled workflow';
+                  for (const n of extractWorkflowAppNames(wf)) {
+                    appNameSet.add(n);
+                    const key = normalizeAppName(n);
+                    const arr = wfMap.get(key) || [];
+                    if (!arr.includes(wfLabel)) arr.push(wfLabel);
+                    wfMap.set(key, arr);
+                  }
+                }
+                return (
+                  <IntegrationStatusLite
+                    singleLine
+                    workflowAppNames={Array.from(appNameSet)}
+                    workflowsByAppName={wfMap}
+                  />
+                );
+              })()}
             </Box>
             <Button
               component={Link}
