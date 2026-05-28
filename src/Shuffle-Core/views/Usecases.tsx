@@ -2841,6 +2841,21 @@ function UsecaseDetailContent({
   // tried to enable this usecase — never as a default banner.
   const [enableAttempted, setEnableAttempted] = useState(false);
 
+  // Connection-path view mode: 'source_destination' (alluvial) or 'line' (tools strip).
+  // Persisted per-user so the choice survives reloads. Defaults to source-destination.
+  const VIEW_MODE_STORAGE_KEY = 'shuffle-usecase-connection-view';
+  const [connectionViewMode, setConnectionViewModeState] = useState<'source_destination' | 'line'>(() => {
+    if (typeof window === 'undefined') return 'source_destination';
+    try {
+      const stored = window.localStorage.getItem(VIEW_MODE_STORAGE_KEY);
+      return stored === 'line' ? 'line' : 'source_destination';
+    } catch { return 'source_destination'; }
+  });
+  const setConnectionViewMode = (mode: 'source_destination' | 'line') => {
+    setConnectionViewModeState(mode);
+    try { window.localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode); } catch {}
+  };
+
   const effectiveEnabled = optimisticEnabled !== null ? optimisticEnabled : isEnabled;
   // App-search drawer state — mirrors the alluvial diagram's "+" buttons so
   // users can force-add a Source or Destination tool from this view too.
