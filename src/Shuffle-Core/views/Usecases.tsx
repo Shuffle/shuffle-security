@@ -3771,12 +3771,15 @@ function UsecaseDetailContent({
             // tile under is "communication".
             const includesCases = endpoint.categoryId === 'case_management'
               || (endpoint.title === 'Destination' && isMultiDest);
-            // Forward Tickets is Cases → Cases: the source IS Shuffle Security
-            // itself, and the destination is the external ticketing tool. Hide
-            // the duplicate Shuffle Security tile on the destination side.
+            // Forward Tickets and Notifications are Cases-sourced: the source
+            // IS Shuffle Security itself, and the destination is the external
+            // tool. Hide the duplicate Shuffle Security tile on the destination
+            // side and disable adding source tools.
             const isForwardTickets = flow.id === 'case_management_cases_forward_1';
+            const isNotifications = flow.id === 'case_management_communication_1';
+            const isCasesSourceOnly = isForwardTickets || isNotifications;
             const skipShuffle = endpoint.title === 'Destination'
-              && (isForwardTickets || (flow.source === 'case_management' && !isMultiDest));
+              && (isCasesSourceOnly || (flow.source === 'case_management' && !isMultiDest));
             const showShuffle = includesCases && !skipShuffle;
             // When Shuffle itself is the Source, only surface the Shuffle Security
             // tile — hiding other case-management apps that would otherwise clutter
