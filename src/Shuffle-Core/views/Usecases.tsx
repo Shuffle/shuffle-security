@@ -1748,6 +1748,7 @@ function IntegrationStatusLite({
   singleLine = false,
   isResolving = false,
   syntheticApps,
+  workflowAppNames,
   onHover,
   onSelect,
   selectedId,
@@ -1770,6 +1771,8 @@ function IntegrationStatusLite({
    * installed app. Used to surface the Shuffle platform itself under the
    * Cases category. */
   syntheticApps?: IntegrationItem[];
+  /** Workflow-derived app names that must appear even without auth/catalog data. */
+  workflowAppNames?: string[];
   /** Hover preview callback — called with the item on enter, null on leave. */
   onHover?: (item: IntegrationItem | null) => void;
   /** Click handler — receives the item that was clicked. */
@@ -1885,15 +1888,21 @@ function IntegrationStatusLite({
   // installed-app list so they participate in filtering and ordering. Real
   // API data wins on the icon/state if both exist with the same name.
   const merged = useMemo(() => {
-    if (!syntheticApps?.length) return integrations;
-    const existing = new Set(integrations.map((i) => i.name.toLowerCase()));
-    const extras = syntheticApps.filter((s) => !existing.has(s.name.toLowerCase()));
-    if (!extras.length) return integrations;
-    return [...extras, ...integrations];
-  }, [integrations, syntheticApps]);
+    const existing = new Set(integrations.map((i) => normalizeAppName(i.name)));
+    const extras = (syntheticApps || []).filter((s) => !existing.has(normalizeAppName(s.name)));
+    extras.forEach((s) => existing.add(normalizeAppName(s.name)));
+    const workflowExtras = (workflowAppNames || []).reduce<IntegrationItem[]>((acc, name) => {
+      const key = normalizeAppName(name);
+      if (!key || existing.has(key)) return acc;
+      existing.add(key);
+      acc.push({ id: `workflow-${key}`, name, icon: '', validated: true, active: true });
+      return acc;
+    }, []);
+    return [...extras, ...workflowExtras, ...integrations];
+  }, [integrations, syntheticApps, workflowAppNames]);
 
   const visible = filterApps?.length
-    ? merged.filter((item) => filterApps.some((name) => name.toLowerCase() === item.name.toLowerCase()))
+    ? merged.filter((item) => filterApps.some((name) => normalizeAppName(name) === normalizeAppName(item.name)))
     : merged;
 
   // Show the loader both while we are fetching the API and while the parent
