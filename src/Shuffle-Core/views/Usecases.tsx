@@ -3184,14 +3184,7 @@ function UsecaseDetailContent({
         const seenAll = new Set<string>();
         for (const wf of linkedForApps) {
           for (const action of (wf.actions || [])) {
-            const cand: string[] = [];
-            if (action.app_name) cand.push(action.app_name);
-            if (Array.isArray(action.parameters)) {
-              for (const p of action.parameters) {
-                if (p?.name === 'app_name' && p.value) cand.push(p.value);
-              }
-            }
-            for (const n of cand) {
+            for (const n of extractActionAppNames(action)) {
               const k = normalizeAppName(n);
               if (!seenAll.has(k)) { currentNames.push(n); seenAll.add(k); }
             }
@@ -4283,6 +4276,7 @@ function UsecaseDetailContent({
                         <IntegrationStatusLite
                           singleLine
                           filterApps={actionApps}
+                          workflowAppNames={actionApps}
                           usecaseEnabledNames={enabledNamesSetLW}
                           onUsecaseAppToggle={flow.automationLabel ? handleUsecaseAppToggleLW : undefined}
                           usecaseLabel={flow.label}
@@ -5459,14 +5453,7 @@ function UsecaseCard({
         const seen = new Set<string>();
         for (const wf of linked) {
           for (const action of (wf.actions || [])) {
-            const candidates: string[] = [];
-            if (action.app_name) candidates.push(action.app_name);
-            if (Array.isArray(action.parameters)) {
-              for (const p of action.parameters) {
-                if (p?.name === 'app_name' && p.value) candidates.push(p.value);
-              }
-            }
-            for (const n of candidates) {
+            for (const n of extractActionAppNames(action)) {
               const k = normalizeAppName(n);
               if (!seen.has(k)) { currentNames.push(n); seen.add(k); }
             }
