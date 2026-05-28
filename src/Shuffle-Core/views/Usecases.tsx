@@ -3850,8 +3850,16 @@ function UsecaseDetailContent({
           // workflow currently uses, and provide a toggle that re-posts the
           // full app_name list to /workflows/generate (same contract as the
           // /incidents Ingest popover so the two stay in sync).
-          const { workflows: allLinkedForApps } = getLinkedWorkflowsForUsecase(flow, workflows, notificationWorkflow);
-          const enabledNamesSet = getWorkflowEnabledAppNames(allLinkedForApps);
+          const {
+            workflows: allLinkedForApps,
+            usecaseWorkflows: usecaseLinkedForApps,
+            forwardTicketsWorkflows: forwardTicketsLinkedForApps,
+          } = getLinkedWorkflowsForUsecase(flow, workflows, notificationWorkflow);
+          const sourceEnabledNamesSet = getWorkflowEnabledAppNames(usecaseLinkedForApps);
+          const destinationEnabledNamesSet = USECASE_IDS_WITH_FORWARD_TICKETS_CONTEXT.has(flow.id)
+            ? getWorkflowEnabledAppNames(forwardTicketsLinkedForApps)
+            : getWorkflowEnabledAppNames(allLinkedForApps);
+          const enabledNamesSet = new Set([...sourceEnabledNamesSet, ...destinationEnabledNamesSet]);
           // Merge in any apps the user has chosen from the AppSearchDrawer in
           // a previous session — keeps the picked tool visible even if the
           // backend wiring is still in flight on the next reload.
@@ -3862,7 +3870,9 @@ function UsecaseDetailContent({
             clearInjectedUsecaseApps(flow.id);
           } else {
             for (const n of readInjectedUsecaseApps(flow.id)) {
-              enabledNamesSet.add(normalizeAppName(n));
+                const key = normalizeAppName(n);
+                enabledNamesSet.add(key);
+                destinationEnabledNamesSet.add(key);
             }
           }
           const handleUsecaseAppToggle = async (appName: string, enabled: boolean) => {
