@@ -3727,8 +3727,28 @@ function UsecaseDetailContent({
           // full app_name list to /workflows/generate (same contract as the
           // /incidents Ingest popover so the two stay in sync).
           const linkedForApps = findWorkflowsForUsecase(flow, workflows);
+          // The TRUTH about which tools are wired up lives in the workflows
+          // themselves — including the shared "Forward Tickets" workflow used
+          // by the three ingest-to-case_management flows, and the org's
+          // default notification workflow. Walk every workflow surfaced in
+          // Linked Workflows below so Enabled Tools matches it 1:1.
+          const SHOWS_FORWARD_TICKETS_INGEST = new Set([
+            'siem_case_management_1',
+            'edr_case_management_1',
+            'email_case_management_1',
+          ]);
+          const forwardTicketsForApps = SHOWS_FORWARD_TICKETS_INGEST.has(flow.id)
+            ? findWorkflowsForUsecase(
+                { automationLabel: 'Forward Tickets', automationArea: undefined as any },
+                workflows,
+              ).filter((wf) => !linkedForApps.some((lw) => lw.id === wf.id))
+            : [];
+          const notifForApps = notificationWorkflow && !linkedForApps.some((lw) => lw.id === notificationWorkflow.id)
+            ? [notificationWorkflow]
+            : [];
+          const allLinkedForApps = [...linkedForApps, ...forwardTicketsForApps, ...notifForApps];
           const enabledNamesSet = new Set<string>();
-          for (const wf of linkedForApps) {
+          for (const wf of allLinkedForApps) {
             const names = extractWorkflowAppNames(wf);
             names.forEach((n) => enabledNamesSet.add(n));
           }
