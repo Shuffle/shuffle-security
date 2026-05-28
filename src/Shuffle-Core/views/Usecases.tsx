@@ -1805,6 +1805,7 @@ function IntegrationStatusLite({
   const [isLoading, setIsLoading] = useState(true);
   const [popoverFor, setPopoverFor] = useState<{ el: HTMLElement; item: IntegrationItem } | null>(null);
   const [togglingName, setTogglingName] = useState<string | null>(null);
+  const [showHiddenEnabled, setShowHiddenEnabled] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -2336,7 +2337,6 @@ function IntegrationStatusLite({
   // are just authenticated and ready to add.
   const useGroups = !!usecaseEnabledNames && !!onUsecaseAppToggle;
   const normalize = (n: string) => n.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
-  const [showHiddenEnabled, setShowHiddenEnabled] = useState(false);
   // Enabled tools the category filter would otherwise hide. The workflow is the
   // truth: if an app is wired into this usecase but lives outside the category
   // filter, surface it via a "show hidden" affordance instead of silently
