@@ -144,6 +144,8 @@ interface AppSearchDrawerProps extends ShuffleHostProps {
   selectedApps?: Array<{ name: string; id?: string | null; icon?: string }>;
   /** Fires whenever the selection changes in multi-select mode. */
   onSelectionChange?: (apps: Array<{ name: string; id: string | null; icon: string; categories: string[] }>) => void;
+  /** When true, the AppDetailDrawer opened from this picker auto-fires Activate. */
+  autoActivate?: boolean;
 }
 
 
