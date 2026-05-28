@@ -131,6 +131,10 @@ interface AppSearchDrawerProps extends ShuffleHostProps {
   highlightAppName?: string;
   /** Delay before the highlight kicks in (default 5000ms) */
   highlightDelayMs?: number;
+  /** Highlight these app cards IMMEDIATELY (no delay). Used for hover-driven
+   *  real-time highlights, e.g. the demo tour pointing at multiple pinned
+   *  apps at once. */
+  realtimeHighlightAppNames?: string[];
   /** Enable multi-select: clicking apps toggles them in/out of the selection,
    *  drawer stays open, and the picker shows checkboxes + a primary-bordered
    *  highlight on already-chosen rows. */
