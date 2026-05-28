@@ -4511,6 +4511,7 @@ function UsecaseDetailContent({
           // We then return `false` so the AppSearchDrawer falls through to
           // opening the AppDetailDrawer (sidebar) for configuration, where
           // `autoActivate` fires the Activate button automatically.
+          if (!flow) return false;
           const addTargetsForwardTickets = addToolFor?.side === 'destination'
             && USECASE_IDS_WITH_FORWARD_TICKETS_CONTEXT.has(flow.id);
           const automationLabel = addTargetsForwardTickets ? 'Forward Tickets' : flow?.automationLabel;
