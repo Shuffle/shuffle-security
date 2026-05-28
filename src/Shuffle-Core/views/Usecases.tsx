@@ -3525,12 +3525,10 @@ function UsecaseDetailContent({
         const needsSource = !!flow.source && !selfContained;
         const sourceLabel = flow.source ? categoryLabel(flow.source) : 'source';
         let message: string | null = null;
-        let action: { label: string; onClick: () => void } | undefined;
         if (!isAuthenticated) {
           message = 'Sign in first. Enable will not do anything until you are signed in.';
         } else if (needsSource && !hasValidatedSource) {
           message = `To enable ${flow.label}, add a ${sourceLabel} tool using the highlighted "+" under Source below.`;
-          action = { label: `Connect ${sourceLabel}`, onClick: () => setAddToolFor({ side: 'source', categoryId: flow.source! }) };
         }
         if (!message) return null;
         return (
@@ -3538,16 +3536,6 @@ function UsecaseDetailContent({
             <Typography sx={{ fontSize: '0.8rem', color: FG, lineHeight: 1.5, flex: 1 }}>
               {message}
             </Typography>
-            {action && (
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={action.onClick}
-                sx={{ textTransform: 'none', fontSize: '0.72rem', fontWeight: 600, py: 0.4, px: 1, minHeight: 0, borderColor: 'hsl(var(--border))', color: FG, flexShrink: 0 }}
-              >
-                {action.label}
-              </Button>
-            )}
           </Box>
         );
       })()}
