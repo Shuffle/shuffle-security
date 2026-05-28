@@ -4034,6 +4034,8 @@ function UsecaseDetailContent({
           const next = new Set(Array.from(enabledNamesSetLW));
           const key = normalizeAppName(appName);
           if (enabled) next.add(key); else next.delete(key);
+          if (enabled) pushInjectedUsecaseApp(flow.id, appName);
+          else removeInjectedUsecaseApp(flow.id, appName);
           const activeNames: string[] = [];
           const seen = new Set<string>();
           const isMultiDest = MULTI_DEST_FLOW_IDS.has(flow.id);
