@@ -4166,6 +4166,9 @@ function UsecaseDetailContent({
                         <IntegrationStatusLite
                           singleLine
                           filterApps={actionApps}
+                          usecaseEnabledNames={enabledNamesSet}
+                          onUsecaseAppToggle={flow.automationLabel ? handleUsecaseAppToggle : undefined}
+                          usecaseLabel={flow.label}
                         />
                       </Box>
                     )}
