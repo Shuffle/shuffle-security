@@ -34,6 +34,9 @@ export interface AppTitleHeaderProps extends ShuffleHostProps {
   activateLoading?: boolean;
   /** Called when user clicks Activate/Deactivate. */
   onActivateToggle?: () => void;
+  /** When true, visually highlight the Activate button to signal an
+   *  automatic click is happening (e.g. from a usecase auto-activate flow). */
+  highlightActivate?: boolean;
   /** When provided, replaces the Activate button with "+ Add". */
   onAdd?: () => void;
 }
@@ -48,6 +51,7 @@ export default function AppTitleHeader({
   isActivated = null,
   activateLoading = false,
   onActivateToggle,
+  highlightActivate = false,
   onAdd,
 }: AppTitleHeaderProps) {
   return (
