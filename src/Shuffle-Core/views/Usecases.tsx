@@ -4151,35 +4151,22 @@ function UsecaseDetailContent({
                       </Typography>
                     )}
                   </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexShrink: 0 }}>
-                    {visibleActionApps.length > 0 && (
-                      <Box
-                        title={`Actions: ${actionApps.join(', ')}`}
-                        sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'nowrap' }}
-                      >
-                        {visibleActionApps.map((n) => {
-                          const icon = iconByName.get(normalizeAppName(n));
-                          return (
-                            <Box
-                              key={n}
-                              title={n}
-                              sx={{
-                                width: 22, height: 22, borderRadius: 0.75,
-                                border: CARD_BORDER, bgcolor: 'hsla(0, 0%, 60%, 0.04)',
-                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                                overflow: 'hidden', flexShrink: 0,
-                              }}
-                            >
-                              <WorkflowAppIcon name={n} seededIcon={icon} size={16} />
-
-                            </Box>
-                          );
-                        })}
-                        {extraActionCount > 0 && (
-                          <Typography sx={{ fontSize: '0.68rem', fontWeight: 600, color: MUTED, px: 0.75, py: 0.15, borderRadius: 0.75, border: CARD_BORDER, bgcolor: 'hsla(0, 0%, 60%, 0.04)' }}>
-                            +{extraActionCount}
-                          </Typography>
-                        )}
+                  <Box
+                    sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexShrink: 0 }}
+                    onClick={(e) => {
+                      // The card itself is a link to shuffler.io — clicks on
+                      // the app tiles should open the same popover used in
+                      // Source/Destination, not navigate away.
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                  >
+                    {actionApps.length > 0 && (
+                      <Box title={`Actions: ${actionApps.join(', ')}`} sx={{ display: 'flex', alignItems: 'center' }}>
+                        <IntegrationStatusLite
+                          singleLine
+                          filterApps={actionApps}
+                        />
                       </Box>
                     )}
                     <ExternalLink size={13} style={{ color: MUTED, flexShrink: 0 }} />
