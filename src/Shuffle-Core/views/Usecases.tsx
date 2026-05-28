@@ -5296,7 +5296,15 @@ function UsecasesPageInner() {
             }}
           >
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <IntegrationStatusLite singleLine />
+              <IntegrationStatusLite
+                singleLine
+                workflowAppNames={Array.from(
+                  workflows.reduce((acc, wf) => {
+                    for (const n of extractWorkflowAppNames(wf)) acc.add(n);
+                    return acc;
+                  }, new Set<string>()),
+                )}
+              />
             </Box>
             <Button
               component={Link}
