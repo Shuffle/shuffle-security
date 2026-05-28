@@ -509,6 +509,7 @@ export default function AppSearchDrawer({
                     layout="grid"
                     gridColumns={2}
                     inline={true}
+                    initialQuery={initialQuery}
                     initialFilterQuery={initialQuery}
                     hitsPerPage={12}
                     showDescription={false}
