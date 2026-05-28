@@ -3812,14 +3812,14 @@ function UsecaseDetailContent({
         }
         let message: string | null = null;
         if (!isAuthenticated) {
-          message = 'Sign in first. Enable will not do anything until you are signed in.';
+          message = 'Sign in to enable this usecase.';
         } else if (isShuffleSourcedFlow) {
-          message = `To enable ${flow.label}, add a destination tool with a validated authentication using the highlighted "+" under Destination below. The workflow will not turn on until at least one destination app shows a green (validated) status.`;
+          message = `Add a destination tool with a validated (green) authentication to enable ${flow.label}.`;
         } else if (needsSource && !hasValidatedSource && existingSourceAppName) {
           const displayName = existingSourceAppName.replace(/_/g, ' ');
-          message = `${flow.label} already has ${displayName} on the Source side, but its authentication is not validated yet. Open ${displayName} under Source below, fill in valid credentials and run Test — once the indicator turns green, ${flow.label} can be enabled. You do not need to add another ${sourceLabel} tool.`;
+          message = `Validate ${displayName} on the Source side (its indicator must turn green) to enable ${flow.label}.`;
         } else if (needsSource && !hasValidatedSource) {
-          message = `To enable ${flow.label}, you need at least one ${sourceLabel} tool with a validated authentication on the Source side. Add or authenticate one using the highlighted "+" under Source below — a configured but unvalidated app is not enough, the indicator must be green.`;
+          message = `Add a ${sourceLabel} tool with a validated (green) authentication on the Source side to enable ${flow.label}.`;
         }
         if (!message) return null;
         return (
