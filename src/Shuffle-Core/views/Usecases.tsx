@@ -3932,11 +3932,19 @@ function UsecaseDetailContent({
         <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
           {(() => {
             const isMultiDest = MULTI_DEST_FLOW_IDS.has(flow.id);
+            // Ingest-to-cases usecases (SIEM/EDR/Email alerts) inherit the
+            // Forward Tickets workflow on the destination side. That workflow
+            // can contain Communication apps (Gmail, Slack, ...) alongside
+            // Cases apps, so widen the destination catalog the same way as
+            // multi-dest flows — otherwise foreign-category apps from the
+            // linked workflow get silently filtered out below.
+            const inheritsForwardTickets = USECASE_IDS_WITH_FORWARD_TICKETS_CONTEXT.has(flow.id);
+            const destSpansCommAndCases = isMultiDest || inheritsForwardTickets;
             // For multi-destination flows (Notifications, Forward Tickets)
             // the destination spans BOTH Communication and Cases catalogs —
             // surface the union of apps and label both categories so users
             // see the full picture instead of just one side.
-            const destAppNames = isMultiDest
+            const destAppNames = destSpansCommAndCases
               ? Array.from(new Set([
                   ...(categoryAppNames['communication'] || []),
                   ...(categoryAppNames['case_management'] || []),
