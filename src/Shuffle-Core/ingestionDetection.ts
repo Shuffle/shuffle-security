@@ -64,6 +64,49 @@ export const IGNORED_WORKFLOW_APP_NAMES: ReadonlySet<string> = new Set([
 export const isIgnoredWorkflowAppName = (name: string): boolean =>
   IGNORED_WORKFLOW_APP_NAMES.has(normalizeAppName(name));
 
+const addWorkflowAppName = (names: string[], seen: Set<string>, raw: unknown) => {
+  if (typeof raw !== 'string' || !raw.trim()) return;
+  const key = normalizeAppName(raw);
+  if (!key || isIgnoredWorkflowAppName(raw) || seen.has(key)) return;
+  seen.add(key);
+  names.push(raw.trim());
+};
+
+const collectParameterAppNames = (input: unknown, names: string[], seen: Set<string>, depth = 0) => {
+  if (!input || depth > 4) return;
+  if (Array.isArray(input)) {
+    input.forEach((item) => collectParameterAppNames(item, names, seen, depth + 1));
+    return;
+  }
+  if (typeof input !== 'object') return;
+  const obj = input as Record<string, unknown>;
+  if (String(obj.name || '').toLowerCase() === 'app_name') addWorkflowAppName(names, seen, obj.value);
+  for (const [key, value] of Object.entries(obj)) {
+    const lower = key.toLowerCase();
+    if (lower === 'app_name') addWorkflowAppName(names, seen, value);
+    else if (lower === 'parameters' || lower === 'fields' || lower === 'value') collectParameterAppNames(value, names, seen, depth + 1);
+  }
+};
+
+export function extractActionAppNames(action: any): string[] {
+  const names: string[] = [];
+  const seen = new Set<string>();
+  collectParameterAppNames(action?.parameters, names, seen);
+  addWorkflowAppName(names, seen, action?.app_name);
+  addWorkflowAppName(names, seen, action?.app_id);
+  return names;
+}
+
+export function extractWorkflowActionAppNames(workflow: any): string[] {
+  const names: string[] = [];
+  const seen = new Set<string>();
+  if (!workflow?.actions || !Array.isArray(workflow.actions)) return names;
+  for (const action of workflow.actions) {
+    for (const name of extractActionAppNames(action)) addWorkflowAppName(names, seen, name);
+  }
+  return names;
+}
+
 export const getIngestionCategory = (appName: string, appCategories?: string[]): IngestionCategory | null => {
   const name = appName.toLowerCase();
   const categories = (appCategories || []).map(c => c.toLowerCase());
@@ -92,24 +135,8 @@ export const FORWARD_TICKETS_WORKFLOW_NAME = 'Forward Tickets';
  */
 export function extractWorkflowAppNames(workflow: any): Set<string> {
   const names = new Set<string>();
-  if (!workflow?.actions || !Array.isArray(workflow.actions)) return names;
-
-  const add = (raw: unknown) => {
-    if (typeof raw !== 'string' || !raw) return;
-    const n = normalizeAppName(raw);
-    if (!n || IGNORED_WORKFLOW_APP_NAMES.has(n)) return;
-    names.add(n);
-  };
-
-  for (const action of workflow.actions) {
-    add(action?.app_name);
-    add(action?.app_id);
-    // Handle Singul-type actions with nested app_name in parameters
-    if (action?.parameters && Array.isArray(action.parameters)) {
-      for (const param of action.parameters) {
-        if (param?.name === 'app_name') add(param?.value);
-      }
-    }
+  for (const name of extractWorkflowActionAppNames(workflow)) {
+    names.add(normalizeAppName(name));
   }
   return names;
 }

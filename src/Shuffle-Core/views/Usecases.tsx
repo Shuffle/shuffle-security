@@ -36,6 +36,7 @@ import UsecaseAlluvialDiagram from './UsecaseAlluvialDiagram';
 import {
   AppSearchDrawer,
   useAppDetailOptional,
+  extractActionAppNames,
   AiAgentPromptsEditor,
   extractWorkflowAppNames,
   normalizeAppName,
@@ -452,6 +453,12 @@ export function normalizeCategory(apiCategory: string): string {
 const MULTI_DEST_FLOW_IDS = new Set<string>([
   'case_management_communication_1', // Notifications
   'case_management_cases_forward_1', // Forward Tickets
+]);
+
+const USECASE_IDS_WITH_FORWARD_TICKETS_CONTEXT = new Set<string>([
+  'siem_case_management_1',
+  'edr_case_management_1',
+  'email_case_management_1',
 ]);
 
 // Usecases whose Source apps cannot be wired up yet — clicking the toggle
@@ -1491,6 +1498,32 @@ function findWorkflowsForUsecase(
   return matched;
 }
 
+function getLinkedWorkflowsForUsecase(
+  flow: Pick<Usecase, 'id' | 'automationLabel' | 'automationArea'>,
+  workflows: WorkflowSummary[],
+  notificationWorkflow?: WorkflowSummary | null,
+): { workflows: WorkflowSummary[]; forwardTicketsWorkflows: WorkflowSummary[]; notificationWorkflows: WorkflowSummary[] } {
+  const linked = findWorkflowsForUsecase(flow, workflows);
+  const seen = new Set(linked.map((wf) => wf.id).filter(Boolean));
+  const forwardTicketsWorkflows = USECASE_IDS_WITH_FORWARD_TICKETS_CONTEXT.has(flow.id)
+    ? findWorkflowsForUsecase({ automationLabel: 'Forward Tickets', automationArea: undefined as any }, workflows)
+        .filter((wf) => !seen.has(wf.id))
+    : [];
+  forwardTicketsWorkflows.forEach((wf) => { if (wf.id) seen.add(wf.id); });
+  const notificationWorkflows = notificationWorkflow?.id && !seen.has(notificationWorkflow.id)
+    ? [notificationWorkflow]
+    : [];
+  return { workflows: [...linked, ...forwardTicketsWorkflows, ...notificationWorkflows], forwardTicketsWorkflows, notificationWorkflows };
+}
+
+function getWorkflowEnabledAppNames(workflows: WorkflowSummary[]): Set<string> {
+  const names = new Set<string>();
+  for (const wf of workflows) {
+    for (const name of extractWorkflowAppNames(wf)) names.add(name);
+  }
+  return names;
+}
+
 // ============================================================================
 // Inlined: usecases query
 // ============================================================================
@@ -1714,6 +1747,7 @@ function IntegrationStatusLite({
   singleLine = false,
   isResolving = false,
   syntheticApps,
+  workflowAppNames,
   onHover,
   onSelect,
   selectedId,
@@ -1736,6 +1770,8 @@ function IntegrationStatusLite({
    * installed app. Used to surface the Shuffle platform itself under the
    * Cases category. */
   syntheticApps?: IntegrationItem[];
+  /** Workflow-derived app names that must appear even without auth/catalog data. */
+  workflowAppNames?: string[];
   /** Hover preview callback — called with the item on enter, null on leave. */
   onHover?: (item: IntegrationItem | null) => void;
   /** Click handler — receives the item that was clicked. */
@@ -1851,15 +1887,21 @@ function IntegrationStatusLite({
   // installed-app list so they participate in filtering and ordering. Real
   // API data wins on the icon/state if both exist with the same name.
   const merged = useMemo(() => {
-    if (!syntheticApps?.length) return integrations;
-    const existing = new Set(integrations.map((i) => i.name.toLowerCase()));
-    const extras = syntheticApps.filter((s) => !existing.has(s.name.toLowerCase()));
-    if (!extras.length) return integrations;
-    return [...extras, ...integrations];
-  }, [integrations, syntheticApps]);
+    const existing = new Set(integrations.map((i) => normalizeAppName(i.name)));
+    const extras = (syntheticApps || []).filter((s) => !existing.has(normalizeAppName(s.name)));
+    extras.forEach((s) => existing.add(normalizeAppName(s.name)));
+    const workflowExtras = (workflowAppNames || []).reduce<IntegrationItem[]>((acc, name) => {
+      const key = normalizeAppName(name);
+      if (!key || existing.has(key)) return acc;
+      existing.add(key);
+      acc.push({ id: `workflow-${key}`, name, icon: '', validated: true, active: true });
+      return acc;
+    }, []);
+    return [...extras, ...workflowExtras, ...integrations];
+  }, [integrations, syntheticApps, workflowAppNames]);
 
   const visible = filterApps?.length
-    ? merged.filter((item) => filterApps.some((name) => name.toLowerCase() === item.name.toLowerCase()))
+    ? merged.filter((item) => filterApps.some((name) => normalizeAppName(name) === normalizeAppName(item.name)))
     : merged;
 
   // Show the loader both while we are fetching the API and while the parent
@@ -3142,14 +3184,7 @@ function UsecaseDetailContent({
         const seenAll = new Set<string>();
         for (const wf of linkedForApps) {
           for (const action of (wf.actions || [])) {
-            const cand: string[] = [];
-            if (action.app_name) cand.push(action.app_name);
-            if (Array.isArray(action.parameters)) {
-              for (const p of action.parameters) {
-                if (p?.name === 'app_name' && p.value) cand.push(p.value);
-              }
-            }
-            for (const n of cand) {
+            for (const n of extractActionAppNames(action)) {
               const k = normalizeAppName(n);
               if (!seenAll.has(k)) { currentNames.push(n); seenAll.add(k); }
             }
@@ -3726,32 +3761,8 @@ function UsecaseDetailContent({
           // workflow currently uses, and provide a toggle that re-posts the
           // full app_name list to /workflows/generate (same contract as the
           // /incidents Ingest popover so the two stay in sync).
-          const linkedForApps = findWorkflowsForUsecase(flow, workflows);
-          // The TRUTH about which tools are wired up lives in the workflows
-          // themselves — including the shared "Forward Tickets" workflow used
-          // by the three ingest-to-case_management flows, and the org's
-          // default notification workflow. Walk every workflow surfaced in
-          // Linked Workflows below so Enabled Tools matches it 1:1.
-          const SHOWS_FORWARD_TICKETS_INGEST = new Set([
-            'siem_case_management_1',
-            'edr_case_management_1',
-            'email_case_management_1',
-          ]);
-          const forwardTicketsForApps = SHOWS_FORWARD_TICKETS_INGEST.has(flow.id)
-            ? findWorkflowsForUsecase(
-                { automationLabel: 'Forward Tickets', automationArea: undefined as any },
-                workflows,
-              ).filter((wf) => !linkedForApps.some((lw) => lw.id === wf.id))
-            : [];
-          const notifForApps = notificationWorkflow && !linkedForApps.some((lw) => lw.id === notificationWorkflow.id)
-            ? [notificationWorkflow]
-            : [];
-          const allLinkedForApps = [...linkedForApps, ...forwardTicketsForApps, ...notifForApps];
-          const enabledNamesSet = new Set<string>();
-          for (const wf of allLinkedForApps) {
-            const names = extractWorkflowAppNames(wf);
-            names.forEach((n) => enabledNamesSet.add(n));
-          }
+          const { workflows: allLinkedForApps } = getLinkedWorkflowsForUsecase(flow, workflows, notificationWorkflow);
+          const enabledNamesSet = getWorkflowEnabledAppNames(allLinkedForApps);
           // Merge in any apps the user has chosen from the AppSearchDrawer in
           // a previous session — keeps the picked tool visible even if the
           // backend wiring is still in flight on the next reload.
@@ -3938,7 +3949,7 @@ function UsecaseDetailContent({
               }
               for (const k of enabledNamesSet) {
                 if (baseSeen.has(k)) continue;
-                if (foreignCategorySeen.has(k) && !targetSeen.has(k)) continue;
+                if (!isMultiDest && foreignCategorySeen.has(k) && !targetSeen.has(k)) continue;
                 injected.push(k); baseSeen.add(k);
               }
             }
@@ -4004,6 +4015,7 @@ function UsecaseDetailContent({
                 filterApps={appNamesWithShuffle}
                 isResolving={!categoryAppsResolved}
                 syntheticApps={synthetic}
+                workflowAppNames={Array.from(enabledNamesSet)}
                 onHover={(item) => setHoveredTool((prev) => ({ ...prev, [side]: item }))}
                 onSelect={(item) => setPinnedTool((prev) => ({ ...prev, [side]: prev[side]?.id === item.id ? null : item }))}
                 selectedId={pinned?.id}
@@ -4049,35 +4061,20 @@ function UsecaseDetailContent({
 
 
       {(() => {
-        const linkedWorkflows = findWorkflowsForUsecase(flow, workflows);
         // Mirror the Source/Destination popover behavior — figure out which
         // apps the linked workflows currently use, and provide the same
         // enable/disable handler, so clicking an app chip in Linked Workflows
         // opens the same "Enable/Disable for {usecase}" popover as the
         // Enabled Tools area.
-        // Same TRUTH source as Source/Destination: include the Forward
-        // Tickets / notification fallbacks so a tool wired only in those
-        // shared workflows still shows here as enabled.
-        const SHOWS_FORWARD_TICKETS_LW = new Set([
-          'siem_case_management_1',
-          'edr_case_management_1',
-          'email_case_management_1',
-        ]);
-        const forwardTicketsForLW = SHOWS_FORWARD_TICKETS_LW.has(flow.id)
-          ? findWorkflowsForUsecase(
-              { automationLabel: 'Forward Tickets', automationArea: undefined as any },
-              workflows,
-            ).filter((wf) => !linkedWorkflows.some((lw) => lw.id === wf.id))
-          : [];
-        const notifForLW = notificationWorkflow && !linkedWorkflows.some((lw) => lw.id === notificationWorkflow.id)
-          ? [notificationWorkflow]
-          : [];
-        const allLinkedForSet = [...linkedWorkflows, ...forwardTicketsForLW, ...notifForLW];
-        const enabledNamesSetLW = new Set<string>();
-        for (const wf of allLinkedForSet) {
-          const names = extractWorkflowAppNames(wf);
-          names.forEach((n) => enabledNamesSetLW.add(n));
-        }
+        // Same TRUTH source as Source/Destination: one shared helper resolves
+        // every workflow that should count, then one extractor unwraps Singul
+        // nodes and returns only real tool names.
+        const {
+          workflows: allLinkedForSet,
+          forwardTicketsWorkflows: forwardTicketsForLW,
+          notificationWorkflows: notifForLW,
+        } = getLinkedWorkflowsForUsecase(flow, workflows, notificationWorkflow);
+        const enabledNamesSetLW = getWorkflowEnabledAppNames(allLinkedForSet);
         if (allLinkedForSet.length === 0) {
           clearInjectedUsecaseApps(flow.id);
         } else {
@@ -4143,64 +4140,12 @@ function UsecaseDetailContent({
         // context — enabling a destination tool on these usecases does NOT
         // toggle Forward Tickets, but it is the workflow that does the actual
         // forwarding, so showing it makes the wiring obvious.
-        const SHOWS_FORWARD_TICKETS = new Set([
-          'siem_case_management_1',
-          'edr_case_management_1',
-          'email_case_management_1',
-        ]);
-        const forwardTicketsWorkflows = SHOWS_FORWARD_TICKETS.has(flow.id)
-          ? findWorkflowsForUsecase(
-              { automationLabel: 'Forward Tickets', automationArea: undefined as any },
-              workflows,
-            ).filter((wf) => !linkedWorkflows.some((lw) => lw.id === wf.id))
-          : [];
+        const forwardTicketsWorkflows = forwardTicketsForLW;
         // Notifications: append the org's defaults.notification_workflow if not
         // already covered by tag/name matching.
-        const notifWorkflows = notificationWorkflow && !linkedWorkflows.some((lw) => lw.id === notificationWorkflow.id)
-          ? [notificationWorkflow]
-          : [];
-        const allLinked = [...linkedWorkflows, ...forwardTicketsWorkflows, ...notifWorkflows];
+        const notifWorkflows = notifForLW;
+        const allLinked = allLinkedForSet;
         if (allLinked.length === 0) return null;
-        // Build a name->icon lookup from every validated app we have on hand
-        // so action chips can render with the real app icon.
-        const iconByName = new Map<string, string>();
-        for (const apps of Object.values(validatedAppsByCategory)) {
-          for (const a of (apps || [])) {
-            const k = normalizeAppName(a.name);
-            if (a.icon && !iconByName.has(k)) iconByName.set(k, a.icon);
-          }
-        }
-        // Some actions are wrapped by Singul — the surface app_name is
-        // "Singul" but the real tool is in parameters[name=app_name].value.
-        // We always unwrap to the inner app so the chip shows the real tool
-        // (e.g. Wazuh) instead of "Singul". When unwrapping fails, fall back
-        // to app_id and finally to the raw app_name so we never silently drop
-        // a real tool the workflow is actually using.
-        const isSingulWrapper = (n: string) => /^singul$/i.test(String(n || '').trim());
-        const resolveActionApps = (action: any): string[] => {
-          const out: string[] = [];
-          const raw = action?.app_name ? String(action.app_name) : '';
-          const params = Array.isArray(action?.parameters) ? action.parameters : [];
-          if (raw && isSingulWrapper(raw)) {
-            for (const p of params) {
-              if (p?.name === 'app_name' && p.value) out.push(String(p.value));
-            }
-            // No inner Singul target found — surface the app_id (often the
-            // real backing app) so the user still sees something concrete.
-            if (out.length === 0 && action?.app_id) out.push(String(action.app_id));
-          } else {
-            if (raw) out.push(raw);
-            // Pick up Singul-style nested app_name even when the wrapper
-            // isn't strictly named "Singul" (some workflows rename it).
-            for (const p of params) {
-              if (p?.name === 'app_name' && p.value) {
-                const v = String(p.value);
-                if (!isSingulWrapper(v)) out.push(v);
-              }
-            }
-          }
-          return out;
-        };
         const labelHint = forwardTicketsWorkflows.length > 0 && flow.automationLabel
           ? `Matched on "${flow.automationLabel}" and "Forward Tickets"`
           : notifWorkflows.length > 0
@@ -4248,7 +4193,7 @@ function UsecaseDetailContent({
                   const out: string[] = [];
                   const seen = new Set<string>();
                   for (const a of (wf.actions || []) as any[]) {
-                    for (const n of resolveActionApps(a)) {
+                    for (const n of extractActionAppNames(a)) {
                       const k = normalizeAppName(n);
                       if (!k || seen.has(k)) continue;
                       seen.add(k);
@@ -4257,8 +4202,6 @@ function UsecaseDetailContent({
                   }
                   return out;
                 })();
-                const visibleActionApps = actionApps.slice(0, 3);
-                const extraActionCount = actionApps.length - visibleActionApps.length;
                 const TriggerIcon = triggerMeta.Icon;
                 return (
                 <Box
@@ -4321,6 +4264,7 @@ function UsecaseDetailContent({
                         <IntegrationStatusLite
                           singleLine
                           filterApps={actionApps}
+                          workflowAppNames={actionApps}
                           usecaseEnabledNames={enabledNamesSetLW}
                           onUsecaseAppToggle={flow.automationLabel ? handleUsecaseAppToggleLW : undefined}
                           usecaseLabel={flow.label}
@@ -5497,14 +5441,7 @@ function UsecaseCard({
         const seen = new Set<string>();
         for (const wf of linked) {
           for (const action of (wf.actions || [])) {
-            const candidates: string[] = [];
-            if (action.app_name) candidates.push(action.app_name);
-            if (Array.isArray(action.parameters)) {
-              for (const p of action.parameters) {
-                if (p?.name === 'app_name' && p.value) candidates.push(p.value);
-              }
-            }
-            for (const n of candidates) {
+            for (const n of extractActionAppNames(action)) {
               const k = normalizeAppName(n);
               if (!seen.has(k)) { currentNames.push(n); seen.add(k); }
             }
