@@ -496,6 +496,17 @@ export function pushInjectedUsecaseApp(flowId: string, appName: string) {
     localStorage.setItem(INJECTED_APPS_LS_KEY, JSON.stringify(parsed));
   } catch { /* localStorage unavailable */ }
 }
+export function removeInjectedUsecaseApp(flowId: string, appName: string) {
+  try {
+    const raw = localStorage.getItem(INJECTED_APPS_LS_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    const list: string[] = Array.isArray(parsed[flowId]) ? parsed[flowId] : [];
+    const k = String(appName || '').toLowerCase().replace(/[\s_-]+/g, '');
+    parsed[flowId] = list.filter((n) => String(n).toLowerCase().replace(/[\s_-]+/g, '') !== k);
+    localStorage.setItem(INJECTED_APPS_LS_KEY, JSON.stringify(parsed));
+  } catch { /* localStorage unavailable */ }
+}
 
 
 
