@@ -489,9 +489,11 @@
 
 .singul-results-grid .singul-app-info,
 .singul-dropdown-grid .singul-app-info {
-  gap: 8px;
+  gap: 10px;
   align-items: center;
+  width: 100%;
 }
+
 
 /* Grid items: tighter category chip */
 .singul-results-grid .singul-app-category,
