@@ -4229,16 +4229,17 @@ function UsecaseDetailContent({
           }
           return apps.length > 0 ? apps : undefined;
         })()}
+        autoActivate
         onSelectOverride={(app) => {
-          // Three-step UX:
+          // Two-step UX:
           //   (1) Optimistically wire the picked app into this usecase's
-          //       workflow so it appears in the Tools strip right away,
+          //       workflow so it appears in the Tools strip right away, and
           //   (2) Persist the choice to localStorage so it survives the
           //       handoff/reload (and shows up next session even if the
-          //       backend write was still in flight), and
-          //   (3) Navigate to the app's /apps/<name> page with an
-          //       auto-activate query param so the user lands on the auth
-          //       step with the Activate button already firing.
+          //       backend write was still in flight).
+          // We then return `false` so the AppSearchDrawer falls through to
+          // opening the AppDetailDrawer (sidebar) for configuration, where
+          // `autoActivate` fires the Activate button automatically.
           if (!flow?.automationLabel) return false;
           const linkedForApps = findWorkflowsForUsecase(flow, workflows);
           const enabledNames = new Set<string>();
@@ -4247,17 +4248,9 @@ function UsecaseDetailContent({
           }
           const newKey = normalizeAppName(app.name);
           const alreadyWired = enabledNames.has(newKey);
-          // Always persist + navigate, even if already wired in — the user
-          // explicitly clicked it and expects to reach the config page.
           pushInjectedUsecaseApp(flow.id, app.name);
-          const goToAppConfig = () => {
-            setAddToolFor(null);
-            const slug = String(app.name || '').toLowerCase().replace(/\s+/g, '_');
-            navigate(`/apps/${encodeURIComponent(slug)}?autoActivate=1&fromUsecase=${encodeURIComponent(flow.id)}`);
-          };
           if (alreadyWired) {
-            goToAppConfig();
-            return true; // skip detail drawer; we are navigating
+            return false; // open detail drawer for configuration
           }
           enabledNames.add(newKey);
           const isMultiDest = MULTI_DEST_FLOW_IDS.has(flow.id);
@@ -4276,16 +4269,12 @@ function UsecaseDetailContent({
             const k = normalizeAppName(n);
             if (enabledNames.has(k) && !seen.has(k)) { activeNames.push(n); seen.add(k); }
           }
-          // Preserve any previously-enabled app that isn't in the local
-          // catalog snapshot (e.g. a Communication app already wired into
-          // Forward Tickets before the Communication catalog was fetched).
           for (const k of enabledNames) {
             if (!seen.has(k)) { activeNames.push(k); seen.add(k); }
           }
           if (!seen.has(newKey)) activeNames.push(app.name);
           const body: Record<string, string> = { label: flow.automationLabel, app_name: activeNames.join(',') };
           if (flow.automationCategory) body.category = flow.automationCategory;
-          // Fire-and-forget — the optimistic refresh handles the UI update.
           fetch(apiUrl('/api/v2/workflows/generate'), {
             method: 'POST',
             credentials: 'include',
@@ -4309,8 +4298,7 @@ function UsecaseDetailContent({
               description: err?.message || 'The backend rejected the request.',
             });
           });
-          goToAppConfig();
-          return true; // we navigated; skip the detail drawer
+          return false; // open detail drawer for configuration
         }}
       />
 

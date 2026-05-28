@@ -144,6 +144,8 @@ interface AppSearchDrawerProps extends ShuffleHostProps {
   selectedApps?: Array<{ name: string; id?: string | null; icon?: string }>;
   /** Fires whenever the selection changes in multi-select mode. */
   onSelectionChange?: (apps: Array<{ name: string; id: string | null; icon: string; categories: string[] }>) => void;
+  /** When true, the AppDetailDrawer opened from this picker auto-fires Activate. */
+  autoActivate?: boolean;
 }
 
 
@@ -169,6 +171,7 @@ export default function AppSearchDrawer({
   multiSelect = false,
   selectedApps,
   onSelectionChange,
+  autoActivate = false,
   globalUrl,
   theme,
   colorMode,
@@ -608,6 +611,7 @@ export default function AppSearchDrawer({
         colorMode={colorMode}
         onRefresh={onClose}
         onAddToCanvas={onAddToCanvas}
+        autoActivate={autoActivate}
       />
     </>
   );
