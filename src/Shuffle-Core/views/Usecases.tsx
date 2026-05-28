@@ -3206,10 +3206,12 @@ function UsecaseDetailContent({
       return;
     }
 
-    // Forward Tickets is Cases-sourced — Shuffle itself IS the source, so
-    // there is no third-party source auth to validate. Skip the hard-block.
-    const isForwardTicketsFlow = flow.id === 'case_management_cases_forward_1';
-    if (willBeEnabled && !hasValidatedSource && !isForwardTicketsFlow) {
+    // Forward Tickets and Notifications are Cases/Shuffle-sourced — Shuffle
+    // itself IS the source, so there is no third-party source auth to
+    // validate. Skip the hard-block for these flows.
+    const isShuffleSourcedFlow = flow.id === 'case_management_cases_forward_1'
+      || flow.id === 'case_management_communication_1';
+    if (willBeEnabled && !hasValidatedSource && !isShuffleSourcedFlow) {
       // Hard-block the enable. The /workflows/generate endpoint may return
       // success: true and then quietly skip creating the workflow when no
       // source tool is authenticated, which makes the UI look like it worked
