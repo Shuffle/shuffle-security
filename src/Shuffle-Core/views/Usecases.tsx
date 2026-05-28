@@ -3010,8 +3010,8 @@ function UsecaseDetailContent({
               if (entry?.validation?.valid !== true) continue;
               const app = entry?.app;
               if (!app?.name) continue;
-              const cat = matchAppToCategory(app.name, app.categories || []);
-              if (cat !== flow.source) continue;
+              const cats = matchAppToCategoryList(app.name, app.categories || []);
+              if (!cats.includes(flow.source)) continue;
               const k = normalizeAppName(app.name);
               if (seen.has(k)) continue;
               seen.add(k);
