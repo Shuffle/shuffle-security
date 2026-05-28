@@ -3799,9 +3799,9 @@ function UsecaseDetailContent({
         if (!isAuthenticated) {
           message = 'Sign in first. Enable will not do anything until you are signed in.';
         } else if (isShuffleSourcedFlow) {
-          message = `To enable ${flow.label}, add a destination tool using the highlighted "+" under Destination below.`;
+          message = `To enable ${flow.label}, add a destination tool with a validated authentication using the highlighted "+" under Destination below. The workflow will not turn on until at least one destination app shows a green (validated) status.`;
         } else if (needsSource && !hasValidatedSource) {
-          message = `To enable ${flow.label}, add a ${sourceLabel} tool using the highlighted "+" under Source below.`;
+          message = `To enable ${flow.label}, you need at least one ${sourceLabel} tool with a validated authentication on the Source side. Add or authenticate one using the highlighted "+" under Source below — a configured but unvalidated app is not enough, the indicator must be green.`;
         }
         if (!message) return null;
         return (
