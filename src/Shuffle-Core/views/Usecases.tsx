@@ -4125,11 +4125,11 @@ function UsecaseDetailContent({
                 filterApps={appNamesWithShuffle}
                 isResolving={!categoryAppsResolved}
                 syntheticApps={synthetic}
-                workflowAppNames={Array.from(enabledNamesSet)}
+                workflowAppNames={Array.from(side === 'destination' ? destinationEnabledNamesSet : sourceEnabledNamesSet)}
                 onHover={(item) => setHoveredTool((prev) => ({ ...prev, [side]: item }))}
                 onSelect={(item) => setPinnedTool((prev) => ({ ...prev, [side]: prev[side]?.id === item.id ? null : item }))}
                 selectedId={pinned?.id}
-                usecaseEnabledNames={enabledNamesSet}
+                usecaseEnabledNames={side === 'destination' ? destinationEnabledNamesSet : sourceEnabledNamesSet}
                 onUsecaseAppToggle={sourceComingSoon
                   ? handleSourceComingSoon
                   : ((flow.automationLabel && !isComingSoon && !destIsShuffleOnly) ? handleUsecaseAppToggle : undefined)}
