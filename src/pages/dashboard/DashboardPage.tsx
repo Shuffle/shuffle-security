@@ -925,36 +925,6 @@ const DashboardPage = () => {
         priority: 4,
       },
       {
-        id: 'activate-apps',
-        title: 'Activate apps',
-        description: 'Browse the app catalog and activate the tools your team uses.',
-        icon: <Plug size={20} />,
-        status: hasActivatedApps ? 'complete' : 'not-started',
-        ctaLabel: 'Browse Apps',
-        ctaPath: '/apps',
-        priority: 1,
-        detail: hasActivatedApps ? undefined : 'Activate at least one app to unlock other steps.',
-      },
-      {
-        id: 'authenticate-apps',
-        title: 'Authenticate apps',
-        description: hasActivatedApps && !hasAuthenticatedApps
-          ? `You have ${activatedApps.length} app${activatedApps.length !== 1 ? 's' : ''} activated but none authenticated yet.`
-          : hasAuthenticatedApps
-          ? `${validatedApps.length} app${validatedApps.length !== 1 ? 's' : ''} authenticated and validated.`
-          : 'Add API keys or OAuth credentials so Shuffle can interact with your tools.',
-        icon: <KeyRound size={20} />,
-        status: hasAuthenticatedApps ? 'complete' : hasActivatedApps ? 'action-needed' : 'not-started',
-        ctaLabel: 'Set Up Auth',
-        ctaPath: '/onboarding/authenticate',
-        priority: 2,
-        detail: hasActivatedApps && !hasAuthenticatedApps
-          ? `${activatedApps.length} activated — add credentials to connect.`
-          : undefined,
-        disabled: activatedApps.length < 2,
-        disabledReason: activatedApps.length < 2 ? 'Activate at least 2 apps first' : undefined,
-      },
-      {
         id: 'enable-ingest',
         title: 'Enable incident ingestion',
         description: hasIngest
