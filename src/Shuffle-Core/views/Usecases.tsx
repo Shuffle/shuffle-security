@@ -3796,15 +3796,25 @@ function UsecaseDetailContent({
             const baseSeen = new Set(baseAppNames.map((n) => normalizeAppName(n)));
             const injected: string[] = [];
             if (endpoint.title === 'Destination' && !destIsShuffleOnly) {
-              // Never inject apps that actually belong to the Source-side
-              // catalog — otherwise a SIEM tool like Wazuh shows up under
-              // the Cases destination just because it's in the workflow.
-              const sourceSeen = new Set(
-                (categoryAppNames[flow.source] || []).map((n) => normalizeAppName(n))
+              // Never inject apps that actually belong to a Source-side
+              // catalog of ANY flow — otherwise a SIEM tool like Wazuh
+              // shows up under unrelated destinations just because it's
+              // enabled in some workflow. Only the current flow's target
+              // catalog and truly-foreign (uncategorized) apps may show.
+              const targetCatKey = flow.target;
+              const targetSeen = new Set(
+                (categoryAppNames[targetCatKey] || []).map((n) => normalizeAppName(n))
               );
+              const foreignCategorySeen = new Set<string>();
+              for (const [catKey, names] of Object.entries(categoryAppNames)) {
+                if (catKey === targetCatKey) continue;
+                for (const n of (names as string[])) {
+                  foreignCategorySeen.add(normalizeAppName(n));
+                }
+              }
               for (const k of enabledNamesSet) {
                 if (baseSeen.has(k)) continue;
-                if (sourceSeen.has(k)) continue;
+                if (foreignCategorySeen.has(k) && !targetSeen.has(k)) continue;
                 injected.push(k); baseSeen.add(k);
               }
             }
