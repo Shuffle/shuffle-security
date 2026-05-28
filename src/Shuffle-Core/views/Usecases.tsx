@@ -3092,7 +3092,7 @@ function UsecaseDetailContent({
 
       onToggled?.(flow.automationLabel, willBeEnabled);
       // Hard safety net in case the server never reflects the change.
-      setTimeout(() => setOptimisticEnabled(null), 8000);
+      scheduleEnableVerification(willBeEnabled);
     } catch (err: any) {
       setOptimisticEnabled(null);
       const raw = err?.message || '';
