@@ -4194,7 +4194,7 @@ function UsecaseDetailContent({
                 selectedId={pinned?.id}
                 usecaseEnabledNames={endpointEnabledNamesSet}
                 onUsecaseAppToggle={endpointToggleHandler}
-                usecaseLabel={flow.label}
+                usecaseLabel={destinationUsesForwardTickets ? 'Forward Tickets' : flow.label}
                 
                 onAddApp={addToolBlocked ? undefined : () => setAddToolFor({ side, categoryId: endpoint.categoryId, multiDest: endpointAllowsMultiDestAdd })}
                 addAppLabel={addToolBlocked ? undefined : (endpointAllowsMultiDestAdd ? 'Add destination tool (Communication or Cases)' : `Add ${endpoint.meta?.label || endpoint.title} tool`)}
