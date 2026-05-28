@@ -4040,8 +4040,12 @@ function UsecaseDetailContent({
           const names = extractWorkflowAppNames(wf);
           names.forEach((n) => enabledNamesSetLW.add(n));
         }
-        for (const n of readInjectedUsecaseApps(flow.id)) {
-          enabledNamesSetLW.add(normalizeAppName(n));
+        if (linkedWorkflows.length === 0) {
+          clearInjectedUsecaseApps(flow.id);
+        } else {
+          for (const n of readInjectedUsecaseApps(flow.id)) {
+            enabledNamesSetLW.add(normalizeAppName(n));
+          }
         }
         const handleUsecaseAppToggleLW = async (appName: string, enabled: boolean) => {
           if (!flow.automationLabel) {
