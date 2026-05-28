@@ -171,6 +171,7 @@ export default function AppSearchDrawer({
   multiSelect = false,
   selectedApps,
   onSelectionChange,
+  autoActivate = false,
   globalUrl,
   theme,
   colorMode,
