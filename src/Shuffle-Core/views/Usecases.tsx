@@ -2283,8 +2283,16 @@ function IntegrationStatusLite({
                 }}
               >
                 {showUsecaseToggle
-                  ? 'Open app'
-                  : (item.validated ? 'Manage authentication' : 'Configure authentication')}
+                  ? (item.validated
+                      ? 'Open app'
+                      : item.active
+                        ? 'Validate Auth'
+                        : 'Authenticate app')
+                  : (item.validated
+                      ? 'Manage authentication'
+                      : item.active
+                        ? 'Validate Auth'
+                        : 'Authenticate app')}
               </Button>
             </Box>
           </>
