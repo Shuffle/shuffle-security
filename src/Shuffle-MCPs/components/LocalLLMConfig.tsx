@@ -72,6 +72,39 @@ export interface LocalLLMTestResult {
   models?: string[];
   latencyMs?: number;
 }
+const PROVIDER_DOMAINS: Record<string, string> = {
+  'Shuffle AI': 'shuffler.io',
+  OpenAI: 'openai.com',
+  Anthropic: 'anthropic.com',
+  'Google Gemini': 'gemini.google.com',
+  Mistral: 'mistral.ai',
+  Groq: 'groq.com',
+  DeepSeek: 'deepseek.com',
+  'Together AI': 'together.ai',
+  OpenRouter: 'openrouter.ai',
+  'Ollama (localhost)': 'ollama.com',
+  'LM Studio (localhost)': 'lmstudio.ai',
+};
+
+const ProviderLogo = ({ label, url }: { label: string; url?: string }) => {
+  const [errored, setErrored] = useState(false);
+  let domain = PROVIDER_DOMAINS[label];
+  if (!domain && url) {
+    try { domain = new URL(url).hostname.replace(/^www\./, ''); } catch { /* noop */ }
+  }
+  const src = domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=64` : '';
+  const initial = label.trim().charAt(0).toUpperCase() || '?';
+  return (
+    <Box sx={{ width: 18, height: 18, borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'hsl(var(--muted))', overflow: 'hidden', flexShrink: 0 }}>
+      {src && !errored ? (
+        <img src={src} alt="" width={18} height={18} style={{ display: 'block' }} onError={() => setErrored(true)} />
+      ) : (
+        <Typography sx={{ fontSize: '0.65rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', lineHeight: 1 }}>{initial}</Typography>
+      )}
+    </Box>
+  );
+};
+
 
 export const getLocalModel = (): AgentLocalModel => ({ url: '', apikey: '', model: '' });
 export const saveLocalModelConfig = (_model: AgentLocalModel) => {};
@@ -247,7 +280,8 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
             const preset = ENDPOINT_PRESETS.find((p) => p.label === option);
             return (
               <li {...props} key={option}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%', minWidth: 0 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, width: '100%', minWidth: 0 }}>
+                  <ProviderLogo label={option} url={preset?.url} />
                   <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--popover-foreground))' }}>{option}</Typography>
                   {preset?.url && (
                     <Typography component="span" sx={{ ml: 'auto', color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -258,7 +292,25 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
               </li>
             );
           }}
-          renderInput={(params) => <TextField {...params} placeholder="Search a provider…" />}
+          renderInput={(params) => {
+            const preset = ENDPOINT_PRESETS.find((p) => p.label === effectivePreset);
+            return (
+              <TextField
+                {...params}
+                placeholder="Search a provider…"
+                slotProps={{
+                  input: {
+                    ...params.InputProps,
+                    startAdornment: effectivePreset ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center', pl: 0.5, mr: 0.5 }}>
+                        <ProviderLogo label={effectivePreset} url={preset?.url} />
+                      </Box>
+                    ) : undefined,
+                  },
+                }}
+              />
+            );
+          }}
           slotProps={{
             paper: { sx: { bgcolor: 'hsl(var(--popover))', color: 'hsl(var(--popover-foreground))', border: '1px solid hsl(var(--border))' } },
             popper: { sx: { zIndex: 9999 } },
