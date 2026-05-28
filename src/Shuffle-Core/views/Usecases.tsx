@@ -1758,6 +1758,8 @@ function IntegrationStatusLite({
   addAppLabel,
   highlightAddApp = false,
   extraTile,
+  workflowsByAppName,
+
 
 }: {
   filterApps?: string[];
