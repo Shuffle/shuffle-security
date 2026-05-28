@@ -4004,18 +4004,23 @@ function UsecaseDetailContent({
         }
         // Some actions are wrapped by Singul — the surface app_name is
         // "Singul" but the real tool is in parameters[name=app_name].value.
+        // Show Singul as a single chip and stack the inner app's icon on
+        // top so the user sees "Singul (with <inner>)" as one entry.
         const isSingulWrapper = (n: string) => /^singul$/i.test(String(n || '').trim());
-        const resolveActionApp = (action: any): string | null => {
+        type ActionChip = { name: string; via?: string };
+        const resolveActionChip = (action: any): ActionChip | null => {
           const raw = action?.app_name;
           if (!raw) return null;
           if (isSingulWrapper(raw)) {
             const params = Array.isArray(action?.parameters) ? action.parameters : [];
             for (const p of params) {
-              if (p?.name === 'app_name' && p.value) return String(p.value);
+              if (p?.name === 'app_name' && p.value) {
+                return { name: 'Singul', via: String(p.value) };
+              }
             }
-            return null; // hide unresolved Singul wrappers
+            return { name: 'Singul' };
           }
-          return raw;
+          return { name: String(raw) };
         };
         const labelHint = forwardTicketsWorkflows.length > 0 && flow.automationLabel
           ? `Matched on "${flow.automationLabel}" and "Forward Tickets"`
@@ -4057,24 +4062,24 @@ function UsecaseDetailContent({
                       : { label: 'Manual', Icon: MousePointerClick };
                   }
                 })();
-                // Collect distinct action app names so the right side can
-                // surface what the workflow actually does. Unwrap Singul-wrapped
-                // actions so the real chosen app is shown.
-                const actionApps: string[] = (() => {
-                  const out: string[] = [];
+                // Collect distinct action app chips. Singul-wrapped actions
+                // dedupe by inner app so multiple Singul calls to Wazuh
+                // surface as a single "Singul (Wazuh)" chip.
+                const actionChips: ActionChip[] = (() => {
+                  const out: ActionChip[] = [];
                   const seen = new Set<string>();
                   for (const a of (wf.actions || []) as any[]) {
-                    const n = resolveActionApp(a);
-                    if (!n) continue;
-                    const k = normalizeAppName(n);
+                    const chip = resolveActionChip(a);
+                    if (!chip) continue;
+                    const k = `${normalizeAppName(chip.name)}::${normalizeAppName(chip.via || '')}`;
                     if (seen.has(k)) continue;
                     seen.add(k);
-                    out.push(n);
+                    out.push(chip);
                   }
                   return out;
                 })();
-                const visibleActionApps = actionApps.slice(0, 3);
-                const extraActionCount = actionApps.length - visibleActionApps.length;
+                const visibleActionApps = actionChips.slice(0, 3);
+                const extraActionCount = actionChips.length - visibleActionApps.length;
                 const TriggerIcon = triggerMeta.Icon;
                 return (
                 <Box
@@ -4125,28 +4130,51 @@ function UsecaseDetailContent({
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexShrink: 0 }}>
                     {visibleActionApps.length > 0 && (
                       <Box
-                        title={`Actions: ${actionApps.join(', ')}`}
+                        title={`Actions: ${actionChips.map((c) => c.via ? `${c.name} (${c.via})` : c.name).join(', ')}`}
                         sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'nowrap' }}
                       >
-                        {visibleActionApps.map((n) => {
-                          const icon = iconByName.get(normalizeAppName(n));
+                        {visibleActionApps.map((chip) => {
+                          const icon = iconByName.get(normalizeAppName(chip.name));
+                          const viaIcon = chip.via ? iconByName.get(normalizeAppName(chip.via)) : undefined;
+                          const chipLabel = chip.via ? `${chip.name} (${chip.via})` : chip.name;
                           return (
                             <Box
-                              key={n}
-                              title={n}
+                              key={chipLabel}
+                              title={chipLabel}
                               sx={{
+                                position: 'relative',
                                 width: 22, height: 22, borderRadius: 0.75,
                                 border: CARD_BORDER, bgcolor: 'hsla(0, 0%, 60%, 0.04)',
                                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                                overflow: 'hidden', flexShrink: 0,
+                                overflow: 'visible', flexShrink: 0,
                               }}
                             >
                               {icon ? (
-                                <Box component="img" src={icon} alt={n} sx={{ width: 16, height: 16, objectFit: 'contain' }} />
+                                <Box component="img" src={icon} alt={chip.name} sx={{ width: 16, height: 16, objectFit: 'contain' }} />
                               ) : (
                                 <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: MUTED, lineHeight: 1 }}>
-                                  {n.slice(0, 1).toUpperCase()}
+                                  {chip.name.slice(0, 1).toUpperCase()}
                                 </Typography>
+                              )}
+                              {chip.via && (
+                                <Box
+                                  title={chip.via}
+                                  sx={{
+                                    position: 'absolute', right: -6, bottom: -6,
+                                    width: 14, height: 14, borderRadius: 0.5,
+                                    border: CARD_BORDER, bgcolor: CARD_BG,
+                                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                    overflow: 'hidden',
+                                  }}
+                                >
+                                  {viaIcon ? (
+                                    <Box component="img" src={viaIcon} alt={chip.via} sx={{ width: 10, height: 10, objectFit: 'contain' }} />
+                                  ) : (
+                                    <Typography sx={{ fontSize: '0.55rem', fontWeight: 700, color: MUTED, lineHeight: 1 }}>
+                                      {chip.via.slice(0, 1).toUpperCase()}
+                                    </Typography>
+                                  )}
+                                </Box>
                               )}
                             </Box>
                           );
