@@ -29,7 +29,7 @@ import {
   IconButton,
   Popover,
 } from '@mui/material';
-import { Search, ArrowRight, ArrowLeft, Download, Zap, Activity, CheckCircle2, Circle, AlertTriangle, Network, Clock, Power, PowerOff, FileJson, X, ExternalLink, Flame, PlayCircle, BookOpen, LayoutGrid, Server, Shield, MessageSquare, Mail, Crosshair, HardDrive, KeyRound, Cloud, Sparkles, Plus } from 'lucide-react';
+import { Search, ArrowRight, ArrowLeft, Download, Zap, Activity, CheckCircle2, Circle, AlertTriangle, Network, Clock, Power, PowerOff, FileJson, X, ExternalLink, Flame, PlayCircle, BookOpen, LayoutGrid, Server, Shield, MessageSquare, Mail, Crosshair, HardDrive, KeyRound, Cloud, Sparkles, Plus, Workflow, Rows3 } from 'lucide-react';
 import ReactGA from 'react-ga4';
 import shuffleSecurityIcon from '../assets/shuffle-icon.png';
 import UsecaseAlluvialDiagram from './UsecaseAlluvialDiagram';
@@ -3601,50 +3601,40 @@ function UsecaseDetailContent({
         const showAlluvial = alluvialEligible && connectionViewMode === 'source_destination';
         return (
       <Box sx={{ p: 3, borderRadius: 2, border: CARD_BORDER, bgcolor: CARD_BG, mb: 3, position: 'relative' }}>
-        {alluvialEligible && (
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 12,
-              right: 12,
-              zIndex: 2,
-              display: 'inline-flex',
-              borderRadius: 1.5,
-              border: '1px solid hsl(var(--border))',
-              bgcolor: 'hsl(var(--card))',
-              overflow: 'hidden',
-            }}
-          >
-            {([
-              { id: 'source_destination', label: 'Source / Destination' },
-              { id: 'line', label: 'Line view' },
-            ] as const).map((opt) => {
-              const active = connectionViewMode === opt.id;
-              return (
-                <Box
-                  key={opt.id}
-                  component="button"
-                  onClick={() => setConnectionViewMode(opt.id)}
-                  sx={{
-                    px: 1.25,
-                    height: 28,
-                    fontSize: '0.72rem',
-                    fontWeight: 600,
-                    fontFamily: 'inherit',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: active ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
-                    bgcolor: active ? 'hsl(var(--primary) / 0.12)' : 'transparent',
-                    transition: 'all 0.15s ease',
-                    '&:hover': { bgcolor: active ? 'hsl(var(--primary) / 0.18)' : 'hsl(var(--muted))' },
-                  }}
-                >
-                  {opt.label}
-                </Box>
-              );
-            })}
-          </Box>
-        )}
+        {alluvialEligible && (() => {
+          const nextMode = connectionViewMode === 'source_destination' ? 'line' : 'source_destination';
+          const tooltip = nextMode === 'line' ? 'Switch to Line view' : 'Switch to Source / Destination view';
+          const Icon = connectionViewMode === 'source_destination' ? Rows3 : Workflow;
+          return (
+            <Tooltip title={tooltip} placement="left" arrow>
+              <Box
+                component="button"
+                onClick={() => setConnectionViewMode(nextMode)}
+                aria-label={tooltip}
+                sx={{
+                  position: 'absolute',
+                  top: 10,
+                  right: 10,
+                  zIndex: 2,
+                  width: 24,
+                  height: 24,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: 'none',
+                  borderRadius: 1,
+                  bgcolor: 'transparent',
+                  color: 'hsl(var(--muted-foreground) / 0.6)',
+                  cursor: 'pointer',
+                  transition: 'color 0.15s ease, background-color 0.15s ease',
+                  '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted) / 0.5)' },
+                }}
+              >
+                <Icon size={14} />
+              </Box>
+            </Tooltip>
+          );
+        })()}
         {showAlluvial ? (
           <UsecaseAlluvialDiagram
             sourceCategory={flow.source}
