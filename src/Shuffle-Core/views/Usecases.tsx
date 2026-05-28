@@ -4129,7 +4129,15 @@ function UsecaseDetailContent({
                 duration: 6000,
               });
             };
-            const endpointEnabledNamesSet = side === 'destination' ? destinationEnabledNamesSet : sourceEnabledNamesSet;
+            // When Shuffle itself is the Source (case_management), the only
+            // meaningful "enabled tool" on the Source side is Shuffle. The
+            // workflow's other apps belong to the Destination side and would
+            // otherwise leak into Source as a "+N more / Hide extras" list.
+            const endpointEnabledNamesSet = side === 'destination'
+              ? destinationEnabledNamesSet
+              : (sourceIsShuffleOnly
+                  ? new Set(effectiveEnabled ? [normalizeAppName('Shuffle Security')] : [])
+                  : sourceEnabledNamesSet);
             const endpointWorkflowAppNames = Array.from(endpointEnabledNamesSet);
             const destinationUsesForwardTickets = side === 'destination' && inheritsForwardTickets;
             const endpointAllowsMultiDestAdd = MULTI_DEST_FLOW_IDS.has(flow.id) || destinationUsesForwardTickets;
