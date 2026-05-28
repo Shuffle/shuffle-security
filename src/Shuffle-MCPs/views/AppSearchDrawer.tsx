@@ -611,6 +611,7 @@ export default function AppSearchDrawer({
         colorMode={colorMode}
         onRefresh={onClose}
         onAddToCanvas={onAddToCanvas}
+        autoActivate={autoActivate}
       />
     </>
   );
