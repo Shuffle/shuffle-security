@@ -3897,8 +3897,8 @@ function UsecaseDetailContent({
                   : ((flow.automationLabel && !isComingSoon && !destIsShuffleOnly) ? handleUsecaseAppToggle : undefined)}
                 usecaseLabel={flow.label}
                 
-                onAddApp={(isComingSoon || destIsShuffleOnly || sourceComingSoon || (isCases && !MULTI_DEST_FLOW_IDS.has(flow.id)) || (isForwardTickets && side === 'source')) ? undefined : () => setAddToolFor({ side, categoryId: endpoint.categoryId, multiDest: MULTI_DEST_FLOW_IDS.has(flow.id) })}
-                addAppLabel={(isComingSoon || destIsShuffleOnly || sourceComingSoon || (isCases && !MULTI_DEST_FLOW_IDS.has(flow.id)) || (isForwardTickets && side === 'source')) ? undefined : (MULTI_DEST_FLOW_IDS.has(flow.id) ? 'Add destination tool (Communication or Cases)' : `Add ${endpoint.meta?.label || endpoint.title} tool`)}
+                onAddApp={(isComingSoon || destIsShuffleOnly || sourceComingSoon || (isCases && !MULTI_DEST_FLOW_IDS.has(flow.id)) || (isCasesSourceOnly && side === 'source')) ? undefined : () => setAddToolFor({ side, categoryId: endpoint.categoryId, multiDest: MULTI_DEST_FLOW_IDS.has(flow.id) })}
+                addAppLabel={(isComingSoon || destIsShuffleOnly || sourceComingSoon || (isCases && !MULTI_DEST_FLOW_IDS.has(flow.id)) || (isCasesSourceOnly && side === 'source')) ? undefined : (MULTI_DEST_FLOW_IDS.has(flow.id) ? 'Add destination tool (Communication or Cases)' : `Add ${endpoint.meta?.label || endpoint.title} tool`)}
                 extraTile={renderEndpointSlot && flow ? renderEndpointSlot({ flowId: flow.id, flowLabel: flow.label, side }) : undefined}
                 highlightAddApp={side === 'source' && enableAttempted && !hasValidatedSource && !effectiveEnabled}
 
