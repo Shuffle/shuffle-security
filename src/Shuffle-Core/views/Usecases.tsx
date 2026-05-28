@@ -468,6 +468,36 @@ const DESTINATION_SHUFFLE_ONLY_FLOW_IDS = new Set<string>([
   'threat_intel_case_management_1', // Enrichment
 ]);
 
+// ── Per-usecase "I just picked this app" persistence ──────────────────────────
+// When the user picks an app from the AppSearchDrawer we both wire it into the
+// workflow (best-effort) AND record it in localStorage so the next time they
+// open the usecase the app is shown as enabled — even if the backend write was
+// still in flight or got dropped.
+const INJECTED_APPS_LS_KEY = 'shuffle-security_usecase_injected_apps';
+export function readInjectedUsecaseApps(flowId: string): string[] {
+  try {
+    const raw = localStorage.getItem(INJECTED_APPS_LS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed?.[flowId]) ? parsed[flowId] : [];
+  } catch { return []; }
+}
+export function pushInjectedUsecaseApp(flowId: string, appName: string) {
+  try {
+    const raw = localStorage.getItem(INJECTED_APPS_LS_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    const list: string[] = Array.isArray(parsed[flowId]) ? parsed[flowId] : [];
+    const k = String(appName || '').toLowerCase().replace(/[\s_-]+/g, '');
+    if (!list.some((n) => String(n).toLowerCase().replace(/[\s_-]+/g, '') === k)) {
+      list.push(appName);
+    }
+    parsed[flowId] = list;
+    localStorage.setItem(INJECTED_APPS_LS_KEY, JSON.stringify(parsed));
+  } catch { /* localStorage unavailable */ }
+}
+
+
+
 // ── Default usecases (migrated from InfrastructurePage DATA_FLOWS) ─────────────
 
 export const DEFAULT_USECASES: Usecase[] = [
@@ -3654,6 +3684,12 @@ function UsecaseDetailContent({
             const names = extractWorkflowAppNames(wf);
             names.forEach((n) => enabledNamesSet.add(n));
           }
+          // Merge in any apps the user has chosen from the AppSearchDrawer in
+          // a previous session — keeps the picked tool visible even if the
+          // backend wiring is still in flight on the next reload.
+          for (const n of readInjectedUsecaseApps(flow.id)) {
+            enabledNamesSet.add(normalizeAppName(n));
+          }
           const handleUsecaseAppToggle = async (appName: string, enabled: boolean) => {
             if (!flow.automationLabel) {
               toast.error('This usecase is not toggleable yet');
@@ -4194,11 +4230,15 @@ function UsecaseDetailContent({
           return apps.length > 0 ? apps : undefined;
         })()}
         onSelectOverride={(app) => {
-          // Two-step UX: (1) immediately wire the picked app into this
-          // usecase's workflow so it appears in the Tools strip right away,
-          // and (2) return false so AppSearchDrawer still opens the app's
-          // detail drawer (which surfaces the auth page when no validated
-          // auth exists yet).
+          // Three-step UX:
+          //   (1) Optimistically wire the picked app into this usecase's
+          //       workflow so it appears in the Tools strip right away,
+          //   (2) Persist the choice to localStorage so it survives the
+          //       handoff/reload (and shows up next session even if the
+          //       backend write was still in flight), and
+          //   (3) Navigate to the app's /apps/<name> page with an
+          //       auto-activate query param so the user lands on the auth
+          //       step with the Activate button already firing.
           if (!flow?.automationLabel) return false;
           const linkedForApps = findWorkflowsForUsecase(flow, workflows);
           const enabledNames = new Set<string>();
@@ -4206,7 +4246,19 @@ function UsecaseDetailContent({
             extractWorkflowAppNames(wf).forEach((n) => enabledNames.add(n));
           }
           const newKey = normalizeAppName(app.name);
-          if (enabledNames.has(newKey)) return false; // already wired in
+          const alreadyWired = enabledNames.has(newKey);
+          // Always persist + navigate, even if already wired in — the user
+          // explicitly clicked it and expects to reach the config page.
+          pushInjectedUsecaseApp(flow.id, app.name);
+          const goToAppConfig = () => {
+            setAddToolFor(null);
+            const slug = String(app.name || '').toLowerCase().replace(/\s+/g, '_');
+            navigate(`/apps/${encodeURIComponent(slug)}?autoActivate=1&fromUsecase=${encodeURIComponent(flow.id)}`);
+          };
+          if (alreadyWired) {
+            goToAppConfig();
+            return true; // skip detail drawer; we are navigating
+          }
           enabledNames.add(newKey);
           const isMultiDest = MULTI_DEST_FLOW_IDS.has(flow.id);
           const catalog: string[] = isMultiDest
@@ -4257,7 +4309,8 @@ function UsecaseDetailContent({
               description: err?.message || 'The backend rejected the request.',
             });
           });
-          return false; // continue to detail/auth drawer
+          goToAppConfig();
+          return true; // we navigated; skip the detail drawer
         }}
       />
 

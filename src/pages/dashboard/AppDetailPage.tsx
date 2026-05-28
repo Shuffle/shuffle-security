@@ -1,7 +1,7 @@
 import { ArrowLeft as ArrowBackIcon, CheckCircle2 as CheckCircleIcon, AlertCircle as ErrorOutlineIcon, ExternalLink as OpenInNewIcon, RefreshCw as RefreshIcon, Activity as TimelineIcon, Lock as LockOutlinedIcon, ArrowRight as ArrowForwardIcon } from 'lucide-react';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { toast } from '@/lib/toast';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import {
   Box,
@@ -142,6 +142,9 @@ const GuestLockedSection = ({ title, description, appname }: { title: string; de
 const AppDetailPage = () => {
   const { appname } = useParams<{ appname: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const autoActivateRequested = searchParams.get('autoActivate') === '1';
+  const [autoActivateTried, setAutoActivateTried] = useState(false);
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   const [appLoading, setAppLoading] = useState(true);
@@ -337,6 +340,34 @@ const AppDetailPage = () => {
       setActivateLoading(false);
     }
   };
+
+  // Auto-activate: when arriving from the Usecases AppSearchDrawer with
+  // ?autoActivate=1, fire the Activate button as soon as the app's
+  // algoliaId is resolved and we know it is not already activated.
+  useEffect(() => {
+    if (!autoActivateRequested || autoActivateTried) return;
+    if (!isAuthenticated || appLoading) return;
+    if (!appInfo?.algoliaId) return;
+    // Wait until /api/v1/apps has resolved activation state.
+    if (isActivated === null) return;
+    if (isActivated) {
+      // Already activated — just strip the param so a refresh doesn't loop.
+      setAutoActivateTried(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete('autoActivate');
+      setSearchParams(next, { replace: true });
+      return;
+    }
+    setAutoActivateTried(true);
+    handleActivateToggle().finally(() => {
+      const next = new URLSearchParams(searchParams);
+      next.delete('autoActivate');
+      setSearchParams(next, { replace: true });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoActivateRequested, autoActivateTried, isAuthenticated, appLoading, appInfo?.algoliaId, isActivated]);
+
+
 
   // Get matching auth entries for this app
   const matchingEntries = useMemo(() => {
