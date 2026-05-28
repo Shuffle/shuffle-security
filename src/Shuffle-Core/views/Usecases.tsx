@@ -1499,6 +1499,32 @@ function findWorkflowsForUsecase(
   return matched;
 }
 
+function getLinkedWorkflowsForUsecase(
+  flow: Pick<Usecase, 'id' | 'automationLabel' | 'automationArea'>,
+  workflows: WorkflowSummary[],
+  notificationWorkflow?: WorkflowSummary | null,
+): { workflows: WorkflowSummary[]; forwardTicketsWorkflows: WorkflowSummary[]; notificationWorkflows: WorkflowSummary[] } {
+  const linked = findWorkflowsForUsecase(flow, workflows);
+  const seen = new Set(linked.map((wf) => wf.id).filter(Boolean));
+  const forwardTicketsWorkflows = USECASE_IDS_WITH_FORWARD_TICKETS_CONTEXT.has(flow.id)
+    ? findWorkflowsForUsecase({ automationLabel: 'Forward Tickets', automationArea: undefined as any }, workflows)
+        .filter((wf) => !seen.has(wf.id))
+    : [];
+  forwardTicketsWorkflows.forEach((wf) => { if (wf.id) seen.add(wf.id); });
+  const notificationWorkflows = notificationWorkflow?.id && !seen.has(notificationWorkflow.id)
+    ? [notificationWorkflow]
+    : [];
+  return { workflows: [...linked, ...forwardTicketsWorkflows, ...notificationWorkflows], forwardTicketsWorkflows, notificationWorkflows };
+}
+
+function getWorkflowEnabledAppNames(workflows: WorkflowSummary[]): Set<string> {
+  const names = new Set<string>();
+  for (const wf of workflows) {
+    for (const name of extractWorkflowAppNames(wf)) names.add(name);
+  }
+  return names;
+}
+
 // ============================================================================
 // Inlined: usecases query
 // ============================================================================
