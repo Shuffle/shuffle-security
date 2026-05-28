@@ -3771,12 +3771,15 @@ function UsecaseDetailContent({
             // tile under is "communication".
             const includesCases = endpoint.categoryId === 'case_management'
               || (endpoint.title === 'Destination' && isMultiDest);
-            // Forward Tickets is Cases → Cases: the source IS Shuffle Security
-            // itself, and the destination is the external ticketing tool. Hide
-            // the duplicate Shuffle Security tile on the destination side.
+            // Forward Tickets and Notifications are Cases-sourced: the source
+            // IS Shuffle Security itself, and the destination is the external
+            // tool. Hide the duplicate Shuffle Security tile on the destination
+            // side and disable adding source tools.
             const isForwardTickets = flow.id === 'case_management_cases_forward_1';
+            const isNotifications = flow.id === 'case_management_communication_1';
+            const isCasesSourceOnly = isForwardTickets || isNotifications;
             const skipShuffle = endpoint.title === 'Destination'
-              && (isForwardTickets || (flow.source === 'case_management' && !isMultiDest));
+              && (isCasesSourceOnly || (flow.source === 'case_management' && !isMultiDest));
             const showShuffle = includesCases && !skipShuffle;
             // When Shuffle itself is the Source, only surface the Shuffle Security
             // tile — hiding other case-management apps that would otherwise clutter
@@ -3894,8 +3897,8 @@ function UsecaseDetailContent({
                   : ((flow.automationLabel && !isComingSoon && !destIsShuffleOnly) ? handleUsecaseAppToggle : undefined)}
                 usecaseLabel={flow.label}
                 
-                onAddApp={(isComingSoon || destIsShuffleOnly || sourceComingSoon || (isCases && !MULTI_DEST_FLOW_IDS.has(flow.id)) || (isForwardTickets && side === 'source')) ? undefined : () => setAddToolFor({ side, categoryId: endpoint.categoryId, multiDest: MULTI_DEST_FLOW_IDS.has(flow.id) })}
-                addAppLabel={(isComingSoon || destIsShuffleOnly || sourceComingSoon || (isCases && !MULTI_DEST_FLOW_IDS.has(flow.id)) || (isForwardTickets && side === 'source')) ? undefined : (MULTI_DEST_FLOW_IDS.has(flow.id) ? 'Add destination tool (Communication or Cases)' : `Add ${endpoint.meta?.label || endpoint.title} tool`)}
+                onAddApp={(isComingSoon || destIsShuffleOnly || sourceComingSoon || (isCases && !MULTI_DEST_FLOW_IDS.has(flow.id)) || (isCasesSourceOnly && side === 'source')) ? undefined : () => setAddToolFor({ side, categoryId: endpoint.categoryId, multiDest: MULTI_DEST_FLOW_IDS.has(flow.id) })}
+                addAppLabel={(isComingSoon || destIsShuffleOnly || sourceComingSoon || (isCases && !MULTI_DEST_FLOW_IDS.has(flow.id)) || (isCasesSourceOnly && side === 'source')) ? undefined : (MULTI_DEST_FLOW_IDS.has(flow.id) ? 'Add destination tool (Communication or Cases)' : `Add ${endpoint.meta?.label || endpoint.title} tool`)}
                 extraTile={renderEndpointSlot && flow ? renderEndpointSlot({ flowId: flow.id, flowLabel: flow.label, side }) : undefined}
                 highlightAddApp={side === 'source' && enableAttempted && !hasValidatedSource && !effectiveEnabled}
 
