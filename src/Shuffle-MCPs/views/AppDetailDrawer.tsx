@@ -539,7 +539,8 @@ export default function AppDetailDrawer({
               categories={appInfo?.categories}
               isActivated={onAddToCanvas ? null : effectiveActivated}
               activateLoading={activateLoading}
-              onActivateToggle={handleActivateToggle}
+              onActivateToggle={() => handleActivateToggle()}
+              highlightActivate={autoActivatePulse}
               onAdd={onAddToCanvas && appName ? () => {
                 onAddToCanvas({ name: appName, icon: resolvedImage || '', algoliaId: resolvedAlgoliaId });
                 onClose();
