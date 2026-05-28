@@ -349,7 +349,9 @@ export const DashboardOverview = ({
               </ResponsiveContainer>
             ) : (
               <Box sx={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <EmptyState text={`No incident activity in the last ${days} days`} ctaLabel="Set up incident ingestion" onCta={() => navigateSetup('siem_case_management_1', '/incidents?highlight=ingest', 'area=automatic_ingestion&category=case_management')} />
+                <Box sx={{ width: '100%', mt: '-15px' }}>
+                  <EmptyState text={`No incident activity in the last ${days} days`} ctaLabel="Set up incident ingestion" onCta={() => navigateSetup('siem_case_management_1', '/incidents?highlight=ingest', 'area=automatic_ingestion&category=case_management')} />
+                </Box>
               </Box>
             )}
           </Box>
@@ -417,7 +419,9 @@ export const DashboardOverview = ({
                 </Box>
               </>
             ) : (
-              <EmptyState text="No host monitors or pipeline sensors deployed yet" ctaLabel="Deploy a monitor" onCta={() => navigateSetup('case_management_asset_management_monitors_1', '/monitors?add_host=true', 'area=detection&category=endpoint_detection')} />
+              <Box sx={{ width: '100%', mt: '-15px' }}>
+                <EmptyState text="No host monitors or pipeline sensors deployed yet" ctaLabel="Deploy a monitor" onCta={() => navigateSetup('case_management_asset_management_monitors_1', '/monitors?add_host=true', 'area=detection&category=endpoint_detection')} />
+              </Box>
             )}
           </Box>
           {monitorTotal > 0 && (
