@@ -4084,19 +4084,29 @@ function UsecaseDetailContent({
                         title={`Actions: ${actionApps.join(', ')}`}
                         sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'nowrap' }}
                       >
-                        {visibleActionApps.map((n) => (
-                          <Typography
-                            key={n}
-                            sx={{
-                              fontSize: '0.68rem', fontWeight: 600, color: MUTED,
-                              px: 0.75, py: 0.15, borderRadius: 0.75,
-                              border: CARD_BORDER, bgcolor: 'hsla(0, 0%, 60%, 0.04)',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {n}
-                          </Typography>
-                        ))}
+                        {visibleActionApps.map((n) => {
+                          const icon = iconByName.get(normalizeAppName(n));
+                          return (
+                            <Box
+                              key={n}
+                              title={n}
+                              sx={{
+                                width: 22, height: 22, borderRadius: 0.75,
+                                border: CARD_BORDER, bgcolor: 'hsla(0, 0%, 60%, 0.04)',
+                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                overflow: 'hidden', flexShrink: 0,
+                              }}
+                            >
+                              {icon ? (
+                                <Box component="img" src={icon} alt={n} sx={{ width: 16, height: 16, objectFit: 'contain' }} />
+                              ) : (
+                                <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: MUTED, lineHeight: 1 }}>
+                                  {n.slice(0, 1).toUpperCase()}
+                                </Typography>
+                              )}
+                            </Box>
+                          );
+                        })}
                         {extraActionCount > 0 && (
                           <Typography sx={{ fontSize: '0.68rem', fontWeight: 600, color: MUTED, px: 0.75, py: 0.15, borderRadius: 0.75, border: CARD_BORDER, bgcolor: 'hsla(0, 0%, 60%, 0.04)' }}>
                             +{extraActionCount}
