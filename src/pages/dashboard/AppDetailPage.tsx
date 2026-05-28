@@ -142,6 +142,9 @@ const GuestLockedSection = ({ title, description, appname }: { title: string; de
 const AppDetailPage = () => {
   const { appname } = useParams<{ appname: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const autoActivateRequested = searchParams.get('autoActivate') === '1';
+  const [autoActivateTried, setAutoActivateTried] = useState(false);
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
   const [appLoading, setAppLoading] = useState(true);
