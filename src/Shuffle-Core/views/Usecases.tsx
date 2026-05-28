@@ -1629,7 +1629,9 @@ function IntegrationStatusLite({
   usecaseLabel,
   onAddApp,
   addAppLabel,
+  highlightAddApp = false,
   extraTile,
+
 }: {
   filterApps?: string[];
   singleLine?: boolean;
@@ -1658,6 +1660,10 @@ function IntegrationStatusLite({
   onAddApp?: () => void;
   /** Tooltip / aria label for the add button. */
   addAppLabel?: string;
+  /** When true, pulse the "+" tile to draw attention (e.g. after user tried
+   *  to enable a usecase but no source tool is connected yet). */
+  highlightAddApp?: boolean;
+
   /** Optional trailing node rendered alongside the app tiles. Pass a plain
    *  ReactNode to render under Available, or `{ node, enabled }` to control
    *  whether it appears under Enabled or Available. */
@@ -2097,7 +2103,7 @@ function IntegrationStatusLite({
   const renderAddTile = () => {
     if (!onAddApp) return null;
     return (
-      <Tooltip key="__add" title={addAppLabel || 'Add tool'} placement="top" arrow>
+      <Tooltip key="__add" title={addAppLabel || 'Add tool'} placement="top" arrow open={highlightAddApp || undefined}>
         <Box
           onClick={() => onAddApp()}
           role="button"
@@ -2107,13 +2113,21 @@ function IntegrationStatusLite({
             height: 32,
             flexShrink: 0,
             borderRadius: '50% !important',
-            border: '1px dashed hsla(var(--muted-foreground) / 0.5)',
+            border: highlightAddApp
+              ? '1px dashed hsl(var(--primary))'
+              : '1px dashed hsla(var(--muted-foreground) / 0.5)',
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: 'hsl(var(--muted-foreground))',
+            color: highlightAddApp ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
             cursor: 'pointer',
             transition: 'all 0.15s ease',
+            animation: highlightAddApp ? 'shuffle-add-pulse 1.4s ease-out infinite' : 'none',
+            '@keyframes shuffle-add-pulse': {
+              '0%':   { boxShadow: '0 0 0 0 hsl(var(--primary) / 0.55)' },
+              '70%':  { boxShadow: '0 0 0 10px hsl(var(--primary) / 0)' },
+              '100%': { boxShadow: '0 0 0 0 hsl(var(--primary) / 0)' },
+            },
             '&:hover': {
               borderColor: 'hsl(var(--primary))',
               color: 'hsl(var(--primary))',
@@ -2127,6 +2141,7 @@ function IntegrationStatusLite({
       </Tooltip>
     );
   };
+
 
   // When the parent passes per-usecase context, split into Enabled vs Available
   // so it's obvious which apps are actually wired into the workflow and which
@@ -3489,7 +3504,7 @@ function UsecaseDetailContent({
         if (!isAuthenticated) {
           message = 'Sign in first. Enable will not do anything until you are signed in.';
         } else if (needsSource && !hasValidatedSource) {
-          message = `Connect a ${sourceLabel} tool first. ${flow.label} needs something to react to before Enable can generate the workflow.`;
+          message = `To enable ${flow.label}, add a ${sourceLabel} tool using the highlighted "+" under Source below.`;
           action = { label: `Connect ${sourceLabel}`, onClick: () => setAddToolFor({ side: 'source', categoryId: flow.source! }) };
         }
         if (!message) return null;
@@ -3777,6 +3792,8 @@ function UsecaseDetailContent({
                 onAddApp={(isComingSoon || destIsShuffleOnly || sourceComingSoon || (isCases && !MULTI_DEST_FLOW_IDS.has(flow.id))) ? undefined : () => setAddToolFor({ side, categoryId: endpoint.categoryId, multiDest: MULTI_DEST_FLOW_IDS.has(flow.id) })}
                 addAppLabel={(isComingSoon || destIsShuffleOnly || sourceComingSoon || (isCases && !MULTI_DEST_FLOW_IDS.has(flow.id))) ? undefined : (MULTI_DEST_FLOW_IDS.has(flow.id) ? 'Add destination tool (Communication or Cases)' : `Add ${endpoint.meta?.label || endpoint.title} tool`)}
                 extraTile={renderEndpointSlot && flow ? renderEndpointSlot({ flowId: flow.id, flowLabel: flow.label, side }) : undefined}
+                highlightAddApp={side === 'source' && enableAttempted && !hasValidatedSource && !effectiveEnabled}
+
               />
             </Box>
             );
