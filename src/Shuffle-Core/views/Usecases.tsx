@@ -5308,15 +5308,27 @@ function UsecasesPageInner() {
             }}
           >
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <IntegrationStatusLite
-                singleLine
-                workflowAppNames={Array.from(
-                  workflows.reduce((acc, wf) => {
-                    for (const n of extractWorkflowAppNames(wf)) acc.add(n);
-                    return acc;
-                  }, new Set<string>()),
-                )}
-              />
+              {(() => {
+                const appNameSet = new Set<string>();
+                const wfMap = new Map<string, string[]>();
+                for (const wf of workflows) {
+                  const wfLabel = wf.name || 'Untitled workflow';
+                  for (const n of extractWorkflowAppNames(wf)) {
+                    appNameSet.add(n);
+                    const key = normalizeAppName(n);
+                    const arr = wfMap.get(key) || [];
+                    if (!arr.includes(wfLabel)) arr.push(wfLabel);
+                    wfMap.set(key, arr);
+                  }
+                }
+                return (
+                  <IntegrationStatusLite
+                    singleLine
+                    workflowAppNames={Array.from(appNameSet)}
+                    workflowsByAppName={wfMap}
+                  />
+                );
+              })()}
             </Box>
             <Button
               component={Link}
