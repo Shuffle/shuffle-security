@@ -3735,8 +3735,15 @@ function UsecaseDetailContent({
           // Merge in any apps the user has chosen from the AppSearchDrawer in
           // a previous session — keeps the picked tool visible even if the
           // backend wiring is still in flight on the next reload.
-          for (const n of readInjectedUsecaseApps(flow.id)) {
-            enabledNamesSet.add(normalizeAppName(n));
+          // BUT: if no workflow exists for this usecase at all (deleted, never
+          // created), the injected snapshot is stale by definition — drop it
+          // so we don't show "enabled" tools that have nothing backing them.
+          if (linkedForApps.length === 0) {
+            clearInjectedUsecaseApps(flow.id);
+          } else {
+            for (const n of readInjectedUsecaseApps(flow.id)) {
+              enabledNamesSet.add(normalizeAppName(n));
+            }
           }
           const handleUsecaseAppToggle = async (appName: string, enabled: boolean) => {
             if (!flow.automationLabel) {
