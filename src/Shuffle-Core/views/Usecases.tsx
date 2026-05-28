@@ -4248,12 +4248,12 @@ function UsecaseDetailContent({
                   const out: string[] = [];
                   const seen = new Set<string>();
                   for (const a of (wf.actions || []) as any[]) {
-                    const n = resolveActionApp(a);
-                    if (!n) continue;
-                    const k = normalizeAppName(n);
-                    if (!k || seen.has(k)) continue;
-                    seen.add(k);
-                    out.push(n);
+                    for (const n of resolveActionApps(a)) {
+                      const k = normalizeAppName(n);
+                      if (!k || seen.has(k)) continue;
+                      seen.add(k);
+                      out.push(n);
+                    }
                   }
                   return out;
                 })();
