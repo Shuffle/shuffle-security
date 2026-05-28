@@ -23,7 +23,7 @@ export type SegmentedItem<V extends string = string> =
       type?: "tab";
       value: V;
       label: React.ReactNode;
-      count?: number;
+      count?: number | string;
       title?: string;
       disabled?: boolean;
       dataTour?: string;
