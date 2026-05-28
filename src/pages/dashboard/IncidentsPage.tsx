@@ -2,7 +2,8 @@ import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, Searc
 import { useState, useEffect, useMemo, useCallback, useRef, useSyncExternalStore } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useEntityLabel, useShowAutomation, useEntityText } from '@/hooks/useEntityLabel';
-import AppSearchDrawer from '@/Shuffle-MCPs/views/AppSearchDrawer';
+import { AppSearchDrawer } from '@/Shuffle-MCPs';
+import { useTheme } from '@/context/ThemeContext';
 import {
   Box,
   Card,
@@ -361,6 +362,8 @@ interface Filters {
 }
 
 const IncidentsPage = () => {
+  const { resolvedTheme } = useTheme();
+
 
   usePageMeta({
     title: 'Incidents',
@@ -3208,6 +3211,7 @@ const IncidentsPage = () => {
       />
 
       <AppSearchDrawer
+        theme={resolvedTheme}
         open={appSearchOpen}
         onClose={() => {
           setAppSearchOpen(false);
