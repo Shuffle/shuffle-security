@@ -3122,7 +3122,27 @@ function UsecaseDetailContent({
       return;
     }
     if (autoEnableFiredRef.current) return;
-    if (!flow || !canToggle || toggling) return;
+    if (toggling) return;
+    if (!flow) return;
+    if (!canToggle) {
+      // Don't silently swallow the click. Tell the user exactly why nothing
+      // happened so they can fix it (sign in, or pick a flow that is wired
+      // up for automation server-side).
+      autoEnableFiredRef.current = true;
+      onAutoEnableConsumed?.();
+      if (!isAuthenticated) {
+        toast.error('Sign in to enable usecases', {
+          description: 'You need to be signed in to generate the underlying workflow.',
+          duration: 8000,
+        });
+      } else if (!flow.automationLabel) {
+        toast.warning(`${flow.label} cannot be enabled yet`, {
+          description: 'This usecase does not have an automation label wired up server-side. Pick another usecase or contact support.',
+          duration: 8000,
+        });
+      }
+      return;
+    }
     if (effectiveEnabled) {
       // Already on — nothing to do; just consume the flag.
       autoEnableFiredRef.current = true;
