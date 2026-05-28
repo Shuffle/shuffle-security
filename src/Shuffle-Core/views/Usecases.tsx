@@ -3684,6 +3684,12 @@ function UsecaseDetailContent({
             const names = extractWorkflowAppNames(wf);
             names.forEach((n) => enabledNamesSet.add(n));
           }
+          // Merge in any apps the user has chosen from the AppSearchDrawer in
+          // a previous session — keeps the picked tool visible even if the
+          // backend wiring is still in flight on the next reload.
+          for (const n of readInjectedUsecaseApps(flow.id)) {
+            enabledNamesSet.add(normalizeAppName(n));
+          }
           const handleUsecaseAppToggle = async (appName: string, enabled: boolean) => {
             if (!flow.automationLabel) {
               toast.error('This usecase is not toggleable yet');
