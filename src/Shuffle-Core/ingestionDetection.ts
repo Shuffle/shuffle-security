@@ -153,8 +153,21 @@ export const FORWARD_TICKETS_WORKFLOW_NAME = 'Forward Tickets';
  */
 export function extractWorkflowAppNames(workflow: any): Set<string> {
   const names = new Set<string>();
-  for (const name of extractWorkflowActionAppNames(workflow)) {
-    names.add(normalizeAppName(name));
+  for (const raw of extractWorkflowActionAppNames(workflow)) {
+    // Defensive: even if upstream collectors miss it, re-split comma-joined
+    // values (e.g. "Wazuh,Gmail") and drop ignored runtime apps + opaque IDs
+    // so the "Selected apps" row never renders a single chip like
+    // "wazuh,gmail" or a 32-char hex blob.
+    const parts = typeof raw === 'string' && raw.includes(',') ? raw.split(',') : [raw];
+    for (const part of parts) {
+      const trimmed = (part || '').trim();
+      if (!trimmed) continue;
+      if (isIgnoredWorkflowAppName(trimmed)) continue;
+      if (looksLikeOpaqueId(trimmed)) continue;
+      const key = normalizeAppName(trimmed);
+      if (!key) continue;
+      names.add(key);
+    }
   }
   return names;
 }
