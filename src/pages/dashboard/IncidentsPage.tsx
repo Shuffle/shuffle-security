@@ -505,8 +505,18 @@ const IncidentsPage = () => {
    useEffect(() => {
      if (!demoActive) return;
      const hasEmail = demoInjectedApps.some(a => /outlook|office365|gmail/i.test(a.name));
-     if (hasEmail) markStepCompleted('add-outlook:outlook');
+     if (hasEmail) {
+       markStepCompleted('add-outlook:open-picker');
+       markStepCompleted('add-outlook:outlook');
+     }
    }, [demoActive, demoInjectedApps, markStepCompleted]);
+
+   // Mark the "Click Add ingestion source" sub-goal complete the moment the
+   // picker drawer opens during the add-outlook step.
+   useEffect(() => {
+     if (!isAddOutlookStep) return;
+     if (appSearchOpen) markStepCompleted('add-outlook:open-picker');
+   }, [isAddOutlookStep, appSearchOpen, markStepCompleted]);
 
    // Demo step #3 ("ingest-webhook"): the "Enable the AI Agent automation"
    // sub-goal is satisfied iff the "Run AI Agent" automation is currently
