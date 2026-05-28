@@ -3869,10 +3869,21 @@ function UsecaseDetailContent({
           if (allLinkedForApps.length === 0) {
             clearInjectedUsecaseApps(flow.id);
           } else {
+            const sourceCatalogKeys = new Set((categoryAppNames[flow.source] || []).map((n) => normalizeAppName(n)));
+            const destinationCatalogKeys = new Set(
+              ((MULTI_DEST_FLOW_IDS.has(flow.id) || USECASE_IDS_WITH_FORWARD_TICKETS_CONTEXT.has(flow.id))
+                ? [...(categoryAppNames['communication'] || []), ...(categoryAppNames['case_management'] || [])]
+                : (categoryAppNames[flow.target] || [])
+              ).map((n) => normalizeAppName(n))
+            );
             for (const n of readInjectedUsecaseApps(flow.id)) {
-                const key = normalizeAppName(n);
-                enabledNamesSet.add(key);
+              const key = normalizeAppName(n);
+              enabledNamesSet.add(key);
+              if (sourceCatalogKeys.has(key) && !destinationCatalogKeys.has(key)) {
+                sourceEnabledNamesSet.add(key);
+              } else {
                 destinationEnabledNamesSet.add(key);
+              }
             }
           }
           const handleUsecaseAppToggle = async (
