@@ -3477,29 +3477,25 @@ function UsecaseDetailContent({
 
       {/* Simple one-line hint: tell the user what clicking Enable will do
           (or what is missing). No panel, no checklist — just the answer. */}
-      {!isComingSoon && flow.automationLabel && !effectiveEnabled && (() => {
+      {/* Inline blocker hint — only shown AFTER the user has clicked Enable
+          and something is actually preventing the workflow from being
+          generated. Never shown by default. */}
+      {!isComingSoon && flow.automationLabel && !effectiveEnabled && enableAttempted && (() => {
         const selfContained = !!SELF_CONTAINED_ENABLE[flow.id];
         const needsSource = !!flow.source && !selfContained;
         const sourceLabel = flow.source ? categoryLabel(flow.source) : 'source';
-        let message: string;
+        let message: string | null = null;
         let action: { label: string; onClick: () => void } | undefined;
-        let warn = false;
         if (!isAuthenticated) {
-          message = 'Sign in first — Enable will not do anything until you are signed in.';
-          warn = true;
+          message = 'Sign in first. Enable will not do anything until you are signed in.';
         } else if (needsSource && !hasValidatedSource) {
-          message = `Connect a ${sourceLabel} tool first. Enable will not do anything until ${flow.label} has something to react to.`;
+          message = `Connect a ${sourceLabel} tool first. ${flow.label} needs something to react to before Enable can generate the workflow.`;
           action = { label: `Connect ${sourceLabel}`, onClick: () => setAddToolFor({ side: 'source', categoryId: flow.source! }) };
-          warn = true;
-        } else {
-          message = `Clicking Enable will generate and activate the "${flow.label}" workflow${needsSource ? ` against your connected ${sourceLabel} tool` : ''}.`;
         }
+        if (!message) return null;
         return (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3, px: 0.25 }}>
-            {warn
-              ? <AlertTriangle size={14} style={{ color: 'hsl(45 93% 47%)', flexShrink: 0 }} />
-              : <CheckCircle2 size={14} style={{ color: 'hsl(142 70% 45%)', flexShrink: 0 }} />}
-            <Typography sx={{ fontSize: '0.78rem', color: MUTED, lineHeight: 1.5, flex: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 3, p: 1.25, borderRadius: 1.5, border: '1px solid hsl(45 93% 47% / 0.35)', bgcolor: 'hsl(45 93% 47% / 0.08)' }}>
+            <Typography sx={{ fontSize: '0.8rem', color: FG, lineHeight: 1.5, flex: 1 }}>
               {message}
             </Typography>
             {action && (
@@ -3515,6 +3511,7 @@ function UsecaseDetailContent({
           </Box>
         );
       })()}
+
 
 
 
