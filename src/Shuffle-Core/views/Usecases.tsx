@@ -3796,8 +3796,16 @@ function UsecaseDetailContent({
             const baseSeen = new Set(baseAppNames.map((n) => normalizeAppName(n)));
             const injected: string[] = [];
             if (endpoint.title === 'Destination' && !destIsShuffleOnly) {
+              // Never inject apps that actually belong to the Source-side
+              // catalog — otherwise a SIEM tool like Wazuh shows up under
+              // the Cases destination just because it's in the workflow.
+              const sourceSeen = new Set(
+                (categoryAppNames[flow.source] || []).map((n) => normalizeAppName(n))
+              );
               for (const k of enabledNamesSet) {
-                if (!baseSeen.has(k)) { injected.push(k); baseSeen.add(k); }
+                if (baseSeen.has(k)) continue;
+                if (sourceSeen.has(k)) continue;
+                injected.push(k); baseSeen.add(k);
               }
             }
             const appNamesWithShuffle = injected.length
