@@ -4230,11 +4230,15 @@ function UsecaseDetailContent({
           return apps.length > 0 ? apps : undefined;
         })()}
         onSelectOverride={(app) => {
-          // Two-step UX: (1) immediately wire the picked app into this
-          // usecase's workflow so it appears in the Tools strip right away,
-          // and (2) return false so AppSearchDrawer still opens the app's
-          // detail drawer (which surfaces the auth page when no validated
-          // auth exists yet).
+          // Three-step UX:
+          //   (1) Optimistically wire the picked app into this usecase's
+          //       workflow so it appears in the Tools strip right away,
+          //   (2) Persist the choice to localStorage so it survives the
+          //       handoff/reload (and shows up next session even if the
+          //       backend write was still in flight), and
+          //   (3) Navigate to the app's /apps/<name> page with an
+          //       auto-activate query param so the user lands on the auth
+          //       step with the Activate button already firing.
           if (!flow?.automationLabel) return false;
           const linkedForApps = findWorkflowsForUsecase(flow, workflows);
           const enabledNames = new Set<string>();
@@ -4242,7 +4246,19 @@ function UsecaseDetailContent({
             extractWorkflowAppNames(wf).forEach((n) => enabledNames.add(n));
           }
           const newKey = normalizeAppName(app.name);
-          if (enabledNames.has(newKey)) return false; // already wired in
+          const alreadyWired = enabledNames.has(newKey);
+          // Always persist + navigate, even if already wired in — the user
+          // explicitly clicked it and expects to reach the config page.
+          pushInjectedUsecaseApp(flow.id, app.name);
+          const goToAppConfig = () => {
+            setAddToolFor(null);
+            const slug = String(app.name || '').toLowerCase().replace(/\s+/g, '_');
+            navigate(`/apps/${encodeURIComponent(slug)}?autoActivate=1&fromUsecase=${encodeURIComponent(flow.id)}`);
+          };
+          if (alreadyWired) {
+            goToAppConfig();
+            return true; // skip detail drawer; we are navigating
+          }
           enabledNames.add(newKey);
           const isMultiDest = MULTI_DEST_FLOW_IDS.has(flow.id);
           const catalog: string[] = isMultiDest
@@ -4293,7 +4309,8 @@ function UsecaseDetailContent({
               description: err?.message || 'The backend rejected the request.',
             });
           });
-          return false; // continue to detail/auth drawer
+          goToAppConfig();
+          return true; // we navigated; skip the detail drawer
         }}
       />
 
