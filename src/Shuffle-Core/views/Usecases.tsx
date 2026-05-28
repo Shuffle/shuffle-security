@@ -4140,23 +4140,22 @@ function UsecaseDetailContent({
           if (enabled) next.add(key); else next.delete(key);
           if (enabled) pushInjectedUsecaseApp(flow.id, appName);
           else removeInjectedUsecaseApp(flow.id, appName);
+          // Source of truth = the actual apps inside the linked workflow(s).
           const activeNames: string[] = [];
           const seen = new Set<string>();
-          const isMultiDest = MULTI_DEST_FLOW_IDS.has(flow.id);
-          const catalog: string[] = isMultiDest
-            ? [
-                ...((categoryAppNames['case_management'] || []) as string[]),
-                ...((categoryAppNames['communication'] || []) as string[]),
-              ]
-            : [
-                ...((categoryAppNames[flow.source] || []) as string[]),
-                ...((categoryAppNames[flow.target] || []) as string[]),
-              ];
-          for (const n of catalog) {
-            const k = normalizeAppName(n);
-            if (next.has(k) && !seen.has(k)) { activeNames.push(n); seen.add(k); }
+          for (const wf of allLinkedForSet) {
+            for (const action of (wf.actions || [])) {
+              for (const n of extractActionAppNames(action)) {
+                const k = normalizeAppName(n);
+                if (!k || seen.has(k)) continue;
+                if (!enabled && k === key) continue; // drop the one being disabled
+                seen.add(k);
+                activeNames.push(n);
+              }
+            }
           }
           if (enabled && !seen.has(key)) { activeNames.push(appName); seen.add(key); }
+
           try {
             const body: Record<string, string> = { label: flow.automationLabel };
             if (flow.automationCategory) body.category = flow.automationCategory;
