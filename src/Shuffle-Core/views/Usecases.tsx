@@ -4004,18 +4004,21 @@ function UsecaseDetailContent({
         }
         // Some actions are wrapped by Singul — the surface app_name is
         // "Singul" but the real tool is in parameters[name=app_name].value.
+        // We keep Singul itself as one chip and surface the inner app(s)
+        // as additional chips so the user sees both "Singul" and e.g. "Wazuh".
         const isSingulWrapper = (n: string) => /^singul$/i.test(String(n || '').trim());
-        const resolveActionApp = (action: any): string | null => {
+        const resolveActionApps = (action: any): string[] => {
           const raw = action?.app_name;
-          if (!raw) return null;
+          if (!raw) return [];
           if (isSingulWrapper(raw)) {
+            const out: string[] = ['Singul'];
             const params = Array.isArray(action?.parameters) ? action.parameters : [];
             for (const p of params) {
-              if (p?.name === 'app_name' && p.value) return String(p.value);
+              if (p?.name === 'app_name' && p.value) out.push(String(p.value));
             }
-            return null; // hide unresolved Singul wrappers
+            return out;
           }
-          return raw;
+          return [String(raw)];
         };
         const labelHint = forwardTicketsWorkflows.length > 0 && flow.automationLabel
           ? `Matched on "${flow.automationLabel}" and "Forward Tickets"`
@@ -4058,18 +4061,18 @@ function UsecaseDetailContent({
                   }
                 })();
                 // Collect distinct action app names so the right side can
-                // surface what the workflow actually does. Unwrap Singul-wrapped
-                // actions so the real chosen app is shown.
+                // surface what the workflow actually does. Singul-wrapped
+                // actions contribute both "Singul" and the inner chosen app.
                 const actionApps: string[] = (() => {
                   const out: string[] = [];
                   const seen = new Set<string>();
                   for (const a of (wf.actions || []) as any[]) {
-                    const n = resolveActionApp(a);
-                    if (!n) continue;
-                    const k = normalizeAppName(n);
-                    if (seen.has(k)) continue;
-                    seen.add(k);
-                    out.push(n);
+                    for (const n of resolveActionApps(a)) {
+                      const k = normalizeAppName(n);
+                      if (!k || seen.has(k)) continue;
+                      seen.add(k);
+                      out.push(n);
+                    }
                   }
                   return out;
                 })();
