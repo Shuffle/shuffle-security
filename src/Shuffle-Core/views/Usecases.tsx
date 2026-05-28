@@ -4994,6 +4994,12 @@ function UsecasesPageInner() {
       if (flow.id === 'case_management_assign_escalate_1') {
         return !!flow.automationLabel && enabledLabels.has(flow.automationLabel);
       }
+      // Forward Tickets is Cases-sourced: Shuffle itself IS the source, so
+      // there is no third-party source auth to validate. As long as the
+      // "Forward Tickets" workflow exists, treat it as enabled.
+      if (flow.id === 'case_management_cases_forward_1') {
+        return !!flow.automationLabel && enabledLabels.has(flow.automationLabel);
+      }
       // Threat-intel usecases are presence-driven: they "work" as soon as the
       // org has IOCs/feeds populated or enrichments running, even if no
       // dedicated "Realtime IOC extraction" / "Enable Threat feeds" workflow
