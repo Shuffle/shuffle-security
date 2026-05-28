@@ -247,7 +247,8 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
             const preset = ENDPOINT_PRESETS.find((p) => p.label === option);
             return (
               <li {...props} key={option}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%', minWidth: 0 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, width: '100%', minWidth: 0 }}>
+                  <ProviderLogo label={option} url={preset?.url} />
                   <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--popover-foreground))' }}>{option}</Typography>
                   {preset?.url && (
                     <Typography component="span" sx={{ ml: 'auto', color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -258,7 +259,25 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
               </li>
             );
           }}
-          renderInput={(params) => <TextField {...params} placeholder="Search a provider…" />}
+          renderInput={(params) => {
+            const preset = ENDPOINT_PRESETS.find((p) => p.label === effectivePreset);
+            return (
+              <TextField
+                {...params}
+                placeholder="Search a provider…"
+                slotProps={{
+                  input: {
+                    ...params.InputProps,
+                    startAdornment: effectivePreset ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center', pl: 0.5, mr: 0.5 }}>
+                        <ProviderLogo label={effectivePreset} url={preset?.url} />
+                      </Box>
+                    ) : undefined,
+                  },
+                }}
+              />
+            );
+          }}
           slotProps={{
             paper: { sx: { bgcolor: 'hsl(var(--popover))', color: 'hsl(var(--popover-foreground))', border: '1px solid hsl(var(--border))' } },
             popper: { sx: { zIndex: 9999 } },
