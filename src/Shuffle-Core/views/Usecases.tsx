@@ -4120,6 +4120,12 @@ function UsecaseDetailContent({
             const endpointEnabledNamesSet = side === 'destination' ? destinationEnabledNamesSet : sourceEnabledNamesSet;
             const endpointWorkflowAppNames = Array.from(endpointEnabledNamesSet);
             const destinationUsesForwardTickets = side === 'destination' && inheritsForwardTickets;
+            const endpointAllowsMultiDestAdd = MULTI_DEST_FLOW_IDS.has(flow.id) || destinationUsesForwardTickets;
+            const addToolBlocked = isComingSoon
+              || destIsShuffleOnly
+              || sourceComingSoon
+              || (isCases && !endpointAllowsMultiDestAdd)
+              || (isCasesSourceOnly && side === 'source');
             const endpointToggleHandler = sourceComingSoon
               ? handleSourceComingSoon
               : ((flow.automationLabel && !isComingSoon && !destIsShuffleOnly)
@@ -4178,8 +4184,8 @@ function UsecaseDetailContent({
                 onUsecaseAppToggle={endpointToggleHandler}
                 usecaseLabel={flow.label}
                 
-                onAddApp={(isComingSoon || destIsShuffleOnly || sourceComingSoon || (isCases && !MULTI_DEST_FLOW_IDS.has(flow.id)) || (isCasesSourceOnly && side === 'source')) ? undefined : () => setAddToolFor({ side, categoryId: endpoint.categoryId, multiDest: MULTI_DEST_FLOW_IDS.has(flow.id) })}
-                addAppLabel={(isComingSoon || destIsShuffleOnly || sourceComingSoon || (isCases && !MULTI_DEST_FLOW_IDS.has(flow.id)) || (isCasesSourceOnly && side === 'source')) ? undefined : (MULTI_DEST_FLOW_IDS.has(flow.id) ? 'Add destination tool (Communication or Cases)' : `Add ${endpoint.meta?.label || endpoint.title} tool`)}
+                onAddApp={addToolBlocked ? undefined : () => setAddToolFor({ side, categoryId: endpoint.categoryId, multiDest: endpointAllowsMultiDestAdd })}
+                addAppLabel={addToolBlocked ? undefined : (endpointAllowsMultiDestAdd ? 'Add destination tool (Communication or Cases)' : `Add ${endpoint.meta?.label || endpoint.title} tool`)}
                 extraTile={renderEndpointSlot && flow ? renderEndpointSlot({ flowId: flow.id, flowLabel: flow.label, side }) : undefined}
                 highlightAddApp={side === 'source' && enableAttempted && !hasValidatedSource && !effectiveEnabled}
 
