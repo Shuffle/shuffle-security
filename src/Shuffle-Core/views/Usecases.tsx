@@ -1367,6 +1367,11 @@ function findWorkflowsForUsecase(
   if (usecase.automationArea === 'automatic_ingestion') {
     labels.push(`${usecase.automationLabel.toLowerCase()}_webhook`);
   }
+  // The "Ingestion Webhook" workflow is the canonical webhook entrypoint for
+  // every automatic_ingestion usecase (SIEM/EDR/Email alerts). It is created
+  // by the WebhookIngestionButton / onboarding and is not always tagged with
+  // the usecase's automationLabel, so name-match it explicitly here.
+  const isIngestion = usecase.automationArea === 'automatic_ingestion';
   const matched: WorkflowSummary[] = [];
   const seen = new Set<string>();
   for (const wf of workflows) {
@@ -1377,12 +1382,14 @@ function findWorkflowsForUsecase(
     // named e.g. "Ingestion Webhook" but tagged "ingest tickets_webhook")
     // surface in the Linked Workflows list, consistent with how the card's
     // Enabled badge is computed.
-    const hits = labels.some(
-      (label) =>
-        (name && name.includes(label)) ||
-        tags.includes(label) ||
-        tags.some((t: string) => t.includes(label)),
-    );
+    const hits =
+      (isIngestion && name === 'ingestion webhook') ||
+      labels.some(
+        (label) =>
+          (name && name.includes(label)) ||
+          tags.includes(label) ||
+          tags.some((t: string) => t.includes(label)),
+      );
     if (!hits) continue;
     if (wf.id && seen.has(wf.id)) continue;
     if (wf.id) seen.add(wf.id);
