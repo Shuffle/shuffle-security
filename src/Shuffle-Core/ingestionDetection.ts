@@ -57,6 +57,7 @@ export const IGNORED_WORKFLOW_APP_NAMES: ReadonlySet<string> = new Set([
   'integration',
   'ai_agent',
   'shuffle_agent',
+  'shuffle_ai',
 ]);
 
 /** True if the given (possibly raw) app name is an internal Shuffle runtime
@@ -64,12 +65,29 @@ export const IGNORED_WORKFLOW_APP_NAMES: ReadonlySet<string> = new Set([
 export const isIgnoredWorkflowAppName = (name: string): boolean =>
   IGNORED_WORKFLOW_APP_NAMES.has(normalizeAppName(name));
 
+/** Hex-string IDs (e.g. "3e2bdf9d5069fe3f4746c29d68785a6a") sometimes leak
+ *  into app_name fields. They are not real app names — filter them out. */
+const looksLikeOpaqueId = (raw: string): boolean => {
+  const trimmed = raw.trim();
+  // 16+ char hex strings, or UUID-shaped values.
+  if (/^[a-f0-9]{16,}$/i.test(trimmed)) return true;
+  if (/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(trimmed)) return true;
+  return false;
+};
+
 const addWorkflowAppName = (names: string[], seen: Set<string>, raw: unknown) => {
   if (typeof raw !== 'string' || !raw.trim()) return;
-  const key = normalizeAppName(raw);
-  if (!key || isIgnoredWorkflowAppName(raw) || seen.has(key)) return;
-  seen.add(key);
-  names.push(raw.trim());
+  // Comma-separated app names (e.g. "Wazuh,Gmail") need to be split into
+  // individual entries so each app gets its own tile.
+  const parts = raw.includes(',') ? raw.split(',') : [raw];
+  for (const part of parts) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+    const key = normalizeAppName(trimmed);
+    if (!key || isIgnoredWorkflowAppName(trimmed) || looksLikeOpaqueId(trimmed) || seen.has(key)) continue;
+    seen.add(key);
+    names.push(trimmed);
+  }
 };
 
 const collectParameterAppNames = (input: unknown, names: string[], seen: Set<string>, depth = 0) => {
