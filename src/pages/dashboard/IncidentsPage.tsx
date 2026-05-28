@@ -362,6 +362,8 @@ interface Filters {
 }
 
 const IncidentsPage = () => {
+  const { resolvedTheme } = useTheme();
+
 
   usePageMeta({
     title: 'Incidents',
