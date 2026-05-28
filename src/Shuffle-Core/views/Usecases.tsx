@@ -3758,7 +3758,7 @@ function UsecaseDetailContent({
           // BUT: if no workflow exists for this usecase at all (deleted, never
           // created), the injected snapshot is stale by definition — drop it
           // so we don't show "enabled" tools that have nothing backing them.
-          if (linkedForApps.length === 0) {
+          if (allLinkedForApps.length === 0) {
             clearInjectedUsecaseApps(flow.id);
           } else {
             for (const n of readInjectedUsecaseApps(flow.id)) {
