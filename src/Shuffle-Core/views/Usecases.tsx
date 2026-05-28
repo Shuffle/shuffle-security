@@ -1892,6 +1892,49 @@ function IntegrationStatusLite({
     return () => { cancelled = true; };
   }, []);
 
+  // For workflow-derived app names that the local catalog/auth list doesn't
+  // know about (e.g. Wazuh referenced inside a Singul wrapper but not yet
+  // activated), look the icon up in the public Algolia catalog so chips and
+  // tiles still render a logo instead of a blank placeholder.
+  useEffect(() => {
+    const needed = (workflowAppNames || []).filter((name) => {
+      const key = normalizeAppName(name);
+      if (!key) return false;
+      if (catalogIcons[key]) return false;
+      if (integrations.some((i) => normalizeAppName(i.name) === key)) return false;
+      return true;
+    });
+    if (!needed.length) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { algoliasearch } = await import('algoliasearch');
+        const client = algoliasearch('JNSS5CFDZZ', '33e4e3564f4f060e96e0531957bed552');
+        const res: any = await (client as any).search({
+          requests: needed.map((name) => ({
+            indexName: 'appsearch',
+            query: name,
+            hitsPerPage: 1,
+          })),
+        });
+        if (cancelled) return;
+        const next: Record<string, string> = {};
+        (res?.results || []).forEach((r: any, idx: number) => {
+          const hit = r?.hits?.[0];
+          const icon = hit?.image_url || '';
+          if (!icon) return;
+          const requested = needed[idx];
+          next[normalizeAppName(requested)] = icon;
+          if (hit?.name) next[normalizeAppName(hit.name)] = icon;
+        });
+        if (Object.keys(next).length) {
+          setCatalogIcons((prev) => ({ ...prev, ...next }));
+        }
+      } catch { /* ignore */ }
+    })();
+    return () => { cancelled = true; };
+  }, [workflowAppNames, integrations, catalogIcons]);
+
   // Merge synthetic platform entries (e.g. "Shuffle Security") into the
   // installed-app list so they participate in filtering and ordering. Real
   // API data wins on the icon/state if both exist with the same name.
