@@ -3795,11 +3795,29 @@ function UsecaseDetailContent({
           || flow.id === 'case_management_communication_1';
         const needsSource = !!flow.source && !selfContained && !isShuffleSourcedFlow;
         const sourceLabel = flow.source ? categoryLabel(flow.source) : 'source';
+        // Detect if a source-side app is ALREADY wired into the usecase's
+        // workflow(s). If so, the user does not need to add another tool —
+        // they need to validate the one they already have. Focus the hint
+        // on that instead of pushing them to add yet another app.
+        let existingSourceAppName: string | null = null;
+        if (needsSource && !hasValidatedSource) {
+          try {
+            const linked = getLinkedWorkflowsForUsecase(flow, workflows, notificationWorkflow);
+            const sourceNames = Array.from(getWorkflowEnabledAppNames(linked.usecaseWorkflows));
+            const sourceCatalogKeys = new Set((categoryAppNames[flow.source] || []).map((n) => normalizeAppName(n)));
+            const match = sourceNames.find((n) => sourceCatalogKeys.has(normalizeAppName(n)));
+            if (match) existingSourceAppName = match;
+            else if (sourceNames.length > 0) existingSourceAppName = sourceNames[0];
+          } catch { /* fall through to generic copy */ }
+        }
         let message: string | null = null;
         if (!isAuthenticated) {
           message = 'Sign in first. Enable will not do anything until you are signed in.';
         } else if (isShuffleSourcedFlow) {
           message = `To enable ${flow.label}, add a destination tool with a validated authentication using the highlighted "+" under Destination below. The workflow will not turn on until at least one destination app shows a green (validated) status.`;
+        } else if (needsSource && !hasValidatedSource && existingSourceAppName) {
+          const displayName = existingSourceAppName.replace(/_/g, ' ');
+          message = `${flow.label} already has ${displayName} on the Source side, but its authentication is not validated yet. Open ${displayName} under Source below, fill in valid credentials and run Test — once the indicator turns green, ${flow.label} can be enabled. You do not need to add another ${sourceLabel} tool.`;
         } else if (needsSource && !hasValidatedSource) {
           message = `To enable ${flow.label}, you need at least one ${sourceLabel} tool with a validated authentication on the Source side. Add or authenticate one using the highlighted "+" under Source below — a configured but unvalidated app is not enough, the indicator must be green.`;
         }
