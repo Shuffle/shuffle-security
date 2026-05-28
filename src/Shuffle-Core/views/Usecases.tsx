@@ -4233,7 +4233,7 @@ function UsecaseDetailContent({
                 addAppLabel={addToolBlocked ? undefined : (endpointAllowsMultiDestAdd ? 'Add destination tool (Communication or Cases)' : `Add ${endpoint.meta?.label || endpoint.title} tool`)}
                 extraTile={renderEndpointSlot && flow ? renderEndpointSlot({ flowId: flow.id, flowLabel: flow.label, side }) : undefined}
                 highlightAddApp={enableAttempted && !effectiveEnabled && (
-                  flow.id === 'case_management_cases_forward_1'
+                  (flow.id === 'case_management_cases_forward_1' || flow.id === 'case_management_communication_1')
                     ? side === 'destination'
                     : side === 'source' && !hasValidatedSource
                 )}
