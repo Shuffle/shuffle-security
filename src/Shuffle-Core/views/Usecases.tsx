@@ -3727,8 +3727,28 @@ function UsecaseDetailContent({
           // full app_name list to /workflows/generate (same contract as the
           // /incidents Ingest popover so the two stay in sync).
           const linkedForApps = findWorkflowsForUsecase(flow, workflows);
+          // The TRUTH about which tools are wired up lives in the workflows
+          // themselves — including the shared "Forward Tickets" workflow used
+          // by the three ingest-to-case_management flows, and the org's
+          // default notification workflow. Walk every workflow surfaced in
+          // Linked Workflows below so Enabled Tools matches it 1:1.
+          const SHOWS_FORWARD_TICKETS_INGEST = new Set([
+            'siem_case_management_1',
+            'edr_case_management_1',
+            'email_case_management_1',
+          ]);
+          const forwardTicketsForApps = SHOWS_FORWARD_TICKETS_INGEST.has(flow.id)
+            ? findWorkflowsForUsecase(
+                { automationLabel: 'Forward Tickets', automationArea: undefined as any },
+                workflows,
+              ).filter((wf) => !linkedForApps.some((lw) => lw.id === wf.id))
+            : [];
+          const notifForApps = notificationWorkflow && !linkedForApps.some((lw) => lw.id === notificationWorkflow.id)
+            ? [notificationWorkflow]
+            : [];
+          const allLinkedForApps = [...linkedForApps, ...forwardTicketsForApps, ...notifForApps];
           const enabledNamesSet = new Set<string>();
-          for (const wf of linkedForApps) {
+          for (const wf of allLinkedForApps) {
             const names = extractWorkflowAppNames(wf);
             names.forEach((n) => enabledNamesSet.add(n));
           }
@@ -3738,7 +3758,7 @@ function UsecaseDetailContent({
           // BUT: if no workflow exists for this usecase at all (deleted, never
           // created), the injected snapshot is stale by definition — drop it
           // so we don't show "enabled" tools that have nothing backing them.
-          if (linkedForApps.length === 0) {
+          if (allLinkedForApps.length === 0) {
             clearInjectedUsecaseApps(flow.id);
           } else {
             for (const n of readInjectedUsecaseApps(flow.id)) {
@@ -4035,12 +4055,30 @@ function UsecaseDetailContent({
         // enable/disable handler, so clicking an app chip in Linked Workflows
         // opens the same "Enable/Disable for {usecase}" popover as the
         // Enabled Tools area.
+        // Same TRUTH source as Source/Destination: include the Forward
+        // Tickets / notification fallbacks so a tool wired only in those
+        // shared workflows still shows here as enabled.
+        const SHOWS_FORWARD_TICKETS_LW = new Set([
+          'siem_case_management_1',
+          'edr_case_management_1',
+          'email_case_management_1',
+        ]);
+        const forwardTicketsForLW = SHOWS_FORWARD_TICKETS_LW.has(flow.id)
+          ? findWorkflowsForUsecase(
+              { automationLabel: 'Forward Tickets', automationArea: undefined as any },
+              workflows,
+            ).filter((wf) => !linkedWorkflows.some((lw) => lw.id === wf.id))
+          : [];
+        const notifForLW = notificationWorkflow && !linkedWorkflows.some((lw) => lw.id === notificationWorkflow.id)
+          ? [notificationWorkflow]
+          : [];
+        const allLinkedForSet = [...linkedWorkflows, ...forwardTicketsForLW, ...notifForLW];
         const enabledNamesSetLW = new Set<string>();
-        for (const wf of linkedWorkflows) {
+        for (const wf of allLinkedForSet) {
           const names = extractWorkflowAppNames(wf);
           names.forEach((n) => enabledNamesSetLW.add(n));
         }
-        if (linkedWorkflows.length === 0) {
+        if (allLinkedForSet.length === 0) {
           clearInjectedUsecaseApps(flow.id);
         } else {
           for (const n of readInjectedUsecaseApps(flow.id)) {
