@@ -4414,6 +4414,15 @@ function UsecasesPageInner() {
   // "Disable" button there is misleading.
   const isFlowVisuallyEnabled = React.useCallback(
     (flow: Usecase): boolean => {
+      // Presence-based override: if the outcome bundle proves the usecase is
+      // producing data (enrichments performed, IOCs managed, incidents
+      // ingested, …) treat it as enabled regardless of workflow-name / auth
+      // heuristics. The outcomes hook reads directly from list_cache so this
+      // is the ground-truth signal — workflows may be renamed, untagged, or
+      // driven by an upstream feed that does not appear in the auth list.
+      const outcomeValue = getPageOutcome(flow.id)?.primary?.value;
+      if (typeof outcomeValue === 'number' && outcomeValue > 0) return true;
+
       // Agent Response is driven by the category automation, not a workflow.
       if (flow.id === 'case_management_agent_response_1') return aiAgentAutomationActive;
       // Add Host-Monitors is presence-driven: as soon as ≥2 host monitors are
@@ -4430,6 +4439,15 @@ function UsecasesPageInner() {
       // solely by whether the "Assign & Escalate" workflow exists, with no
       // separate source-tool requirement.
       if (flow.id === 'case_management_assign_escalate_1') {
+        return !!flow.automationLabel && enabledLabels.has(flow.automationLabel);
+      }
+      // Threat-intel usecases are presence-driven: they "work" as soon as the
+      // org has IOCs/feeds populated or enrichments running, even if no
+      // dedicated "Realtime IOC extraction" / "Enable Threat feeds" workflow
+      // is wired up. The outcome check above already covers the positive
+      // case; here we just skip the source-tool gate so a missing
+      // threat-intel auth does not force the card to "Disabled".
+      if (flow.source === 'threat_intel') {
         return !!flow.automationLabel && enabledLabels.has(flow.automationLabel);
       }
       if (!flow.automationLabel) return false;
@@ -4453,7 +4471,7 @@ function UsecasesPageInner() {
       }
       return false;
     },
-    [enabledLabels, validatedCategories, workflows, aiAgentAutomationActive, monitorsDeployedCount, notificationWorkflowReady],
+    [enabledLabels, validatedCategories, workflows, aiAgentAutomationActive, monitorsDeployedCount, notificationWorkflowReady, getPageOutcome],
   );
 
 
