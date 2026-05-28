@@ -1629,7 +1629,9 @@ function IntegrationStatusLite({
   usecaseLabel,
   onAddApp,
   addAppLabel,
+  highlightAddApp = false,
   extraTile,
+
 }: {
   filterApps?: string[];
   singleLine?: boolean;
