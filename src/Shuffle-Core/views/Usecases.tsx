@@ -29,7 +29,7 @@ import {
   IconButton,
   Popover,
 } from '@mui/material';
-import { Search, ArrowRight, ArrowLeft, Download, Zap, Activity, CheckCircle2, Circle, AlertTriangle, Network, Clock, Power, PowerOff, FileJson, X, ExternalLink, Flame, PlayCircle, BookOpen, LayoutGrid, Server, Shield, MessageSquare, Mail, Crosshair, HardDrive, KeyRound, Cloud, Sparkles, Plus, Workflow, Rows3, Webhook, MousePointerClick, GitBranch, MessageCircleQuestion } from 'lucide-react';
+import { Search, ArrowRight, ArrowLeft, Download, Zap, Activity, CheckCircle2, Circle, AlertTriangle, Network, Clock, Power, PowerOff, FileJson, X, ExternalLink, Flame, PlayCircle, BookOpen, LayoutGrid, Server, Shield, MessageSquare, Mail, Crosshair, HardDrive, KeyRound, Cloud, Sparkles, Plus, Workflow, Rows, Webhook, MousePointerClick, GitBranch, MessageCircleQuestion } from 'lucide-react';
 import ReactGA from 'react-ga4';
 import shuffleSecurityIcon from '../assets/shuffle-icon.png';
 import UsecaseAlluvialDiagram from './UsecaseAlluvialDiagram';
@@ -3863,7 +3863,7 @@ function UsecaseDetailContent({
         {alluvialEligible && (() => {
           const nextMode = connectionViewMode === 'source_destination' ? 'line' : 'source_destination';
           const tooltip = nextMode === 'line' ? 'Switch to Line view' : 'Switch to Source / Destination view';
-          const Icon = connectionViewMode === 'source_destination' ? Rows3 : Workflow;
+          const Icon = connectionViewMode === 'source_destination' ? Rows : Workflow;
           return (
             <Tooltip title={tooltip} placement="left" arrow>
               <Box
