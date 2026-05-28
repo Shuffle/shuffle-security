@@ -127,6 +127,10 @@ interface AppDetailDrawerProps extends ShuffleHostProps {
   /** Host app's currently active org id. If different from the library's tracked org,
    *  an `Org-Id` header is injected into the Singul curl preview. */
   activeOrgId?: string | null;
+  /** When true, automatically fire the Activate action once the app is loaded
+   *  and not yet activated. Used when the drawer is opened from a flow that
+   *  expects the app to be wired up immediately (e.g. Usecases tool picker). */
+  autoActivate?: boolean;
 }
 
 export default function AppDetailDrawer({
