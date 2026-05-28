@@ -3976,6 +3976,26 @@ function UsecaseDetailContent({
           : `Add ${addToolFor ? categoryLabel(addToolFor.categoryId) : ''} Tool`}
         subtitle="Search and authenticate an integration"
         priorityCategory={addToolFor?.multiDest ? undefined : addToolFor?.categoryId}
+        initialQuery={addToolFor?.multiDest
+          ? ''
+          : (addToolFor ? categoryLabel(addToolFor.categoryId) : '')}
+        connectionPathApps={(() => {
+          if (!addToolFor) return undefined;
+          const cats = addToolFor.multiDest
+            ? ['case_management', 'communication']
+            : [addToolFor.categoryId];
+          const seen = new Set<string>();
+          const apps: Array<{ name: string; icon: string; hasValidAuth?: boolean }> = [];
+          for (const cat of cats) {
+            for (const a of (validatedAppsByCategory[cat] || [])) {
+              const key = normalizeAppName(a.name);
+              if (seen.has(key)) continue;
+              seen.add(key);
+              apps.push({ name: a.name, icon: a.icon, hasValidAuth: true });
+            }
+          }
+          return apps.length > 0 ? apps : undefined;
+        })()}
         onSelectOverride={(app) => {
           // Two-step UX: (1) immediately wire the picked app into this
           // usecase's workflow so it appears in the Tools strip right away,
