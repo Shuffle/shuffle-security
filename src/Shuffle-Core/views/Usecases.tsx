@@ -39,7 +39,6 @@ import {
   extractActionAppNames,
   AiAgentPromptsEditor,
   extractWorkflowAppNames,
-  extractWorkflowActionAppNames,
   normalizeAppName,
   getIngestionCategory,
   shuffleFetch,
@@ -4164,37 +4163,6 @@ function UsecaseDetailContent({
             if (a.icon && !iconByName.has(k)) iconByName.set(k, a.icon);
           }
         }
-        // Some actions are wrapped by Singul — the surface app_name is
-        // "Singul" but the real tool is in parameters[name=app_name].value.
-        // We always unwrap to the inner app so the chip shows the real tool
-        // (e.g. Wazuh) instead of "Singul". When unwrapping fails, fall back
-        // to app_id and finally to the raw app_name so we never silently drop
-        // a real tool the workflow is actually using.
-        const isSingulWrapper = (n: string) => /^singul$/i.test(String(n || '').trim());
-        const resolveActionApps = (action: any): string[] => {
-          const out: string[] = [];
-          const raw = action?.app_name ? String(action.app_name) : '';
-          const params = Array.isArray(action?.parameters) ? action.parameters : [];
-          if (raw && isSingulWrapper(raw)) {
-            for (const p of params) {
-              if (p?.name === 'app_name' && p.value) out.push(String(p.value));
-            }
-            // No inner Singul target found — surface the app_id (often the
-            // real backing app) so the user still sees something concrete.
-            if (out.length === 0 && action?.app_id) out.push(String(action.app_id));
-          } else {
-            if (raw) out.push(raw);
-            // Pick up Singul-style nested app_name even when the wrapper
-            // isn't strictly named "Singul" (some workflows rename it).
-            for (const p of params) {
-              if (p?.name === 'app_name' && p.value) {
-                const v = String(p.value);
-                if (!isSingulWrapper(v)) out.push(v);
-              }
-            }
-          }
-          return out;
-        };
         const labelHint = forwardTicketsWorkflows.length > 0 && flow.automationLabel
           ? `Matched on "${flow.automationLabel}" and "Forward Tickets"`
           : notifWorkflows.length > 0
@@ -4242,7 +4210,7 @@ function UsecaseDetailContent({
                   const out: string[] = [];
                   const seen = new Set<string>();
                   for (const a of (wf.actions || []) as any[]) {
-                    for (const n of resolveActionApps(a)) {
+                    for (const n of extractActionAppNames(a)) {
                       const k = normalizeAppName(n);
                       if (!k || seen.has(k)) continue;
                       seen.add(k);
