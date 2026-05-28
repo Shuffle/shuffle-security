@@ -393,8 +393,9 @@ export default function AppDetailDrawer({
     lastValidAuthRef.current = null;
   }, [appName]);
 
-  const handleActivateToggle = async () => {
+  const handleActivateToggle = async (opts?: { silent?: boolean }) => {
     if (!appName || activateLoading) return;
+    const silent = !!opts?.silent;
     const wasActivated = isActivated;
     const prevAppId = activatedAppId;
     setIsActivated(!wasActivated);
@@ -406,7 +407,7 @@ export default function AppDetailDrawer({
         });
         if (!res.ok) throw new Error('Deactivate failed');
         setActivatedAppId(null);
-        toast.success(`${displayName} deactivated`);
+        if (!silent) toast.success(`${displayName} deactivated`);
       } else {
         const appId = resolvedAlgoliaId;
         if (!appId) throw new Error('App ID not resolved yet');
@@ -415,11 +416,11 @@ export default function AppDetailDrawer({
         });
         if (!activateRes.ok) throw new Error(`Activate failed (${activateRes.status})`);
         setActivatedAppId(appId);
-        toast.success(`${displayName} activated`);
+        if (!silent) toast.success(`${displayName} activated`);
       }
     } catch (err: any) {
       console.error('[Activate] Error:', err);
-      toast.error(err?.message || 'Activation failed');
+      if (!silent) toast.error(err?.message || 'Activation failed');
       setIsActivated(wasActivated);
       setActivatedAppId(prevAppId);
     } finally {
@@ -430,7 +431,10 @@ export default function AppDetailDrawer({
   // Auto-activate when the drawer opens with autoActivate=true. Fires once per
   // (open, appName) pair as soon as we know the app is not already activated
   // and the Algolia ID has resolved (required by the activate endpoint).
+  // Runs silently (no toast) — the Activate button itself pulses so the user
+  // sees the click happening.
   const autoActivateFiredRef = useRef<string | null>(null);
+  const [autoActivatePulse, setAutoActivatePulse] = useState(false);
   useEffect(() => {
     if (!open || !autoActivate || !appName) return;
     const key = `${appName}`;
@@ -439,13 +443,22 @@ export default function AppDetailDrawer({
     if (!resolvedAlgoliaId) return;
     if (activateLoading) return;
     autoActivateFiredRef.current = key;
-    handleActivateToggle();
+    setAutoActivatePulse(true);
+    handleActivateToggle({ silent: true }).finally(() => {
+      // Keep the highlight visible briefly after the request resolves so
+      // the user can see the button settled into its new state.
+      setTimeout(() => setAutoActivatePulse(false), 1200);
+    });
   }, [open, autoActivate, appName, isActivated, resolvedAlgoliaId, activateLoading]);
 
   // Reset auto-activate guard when drawer closes or app changes
   useEffect(() => {
-    if (!open) autoActivateFiredRef.current = null;
+    if (!open) {
+      autoActivateFiredRef.current = null;
+      setAutoActivatePulse(false);
+    }
   }, [open, appName]);
+
 
   const isLoadingAll = appLoading || (isAuthenticated && appAuthLoading);
 
@@ -526,7 +539,8 @@ export default function AppDetailDrawer({
               categories={appInfo?.categories}
               isActivated={onAddToCanvas ? null : effectiveActivated}
               activateLoading={activateLoading}
-              onActivateToggle={handleActivateToggle}
+              onActivateToggle={() => handleActivateToggle()}
+              highlightActivate={autoActivatePulse}
               onAdd={onAddToCanvas && appName ? () => {
                 onAddToCanvas({ name: appName, icon: resolvedImage || '', algoliaId: resolvedAlgoliaId });
                 onClose();

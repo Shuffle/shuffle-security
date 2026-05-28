@@ -34,6 +34,9 @@ export interface AppTitleHeaderProps extends ShuffleHostProps {
   activateLoading?: boolean;
   /** Called when user clicks Activate/Deactivate. */
   onActivateToggle?: () => void;
+  /** When true, visually highlight the Activate button to signal an
+   *  automatic click is happening (e.g. from a usecase auto-activate flow). */
+  highlightActivate?: boolean;
   /** When provided, replaces the Activate button with "+ Add". */
   onAdd?: () => void;
 }
@@ -48,6 +51,7 @@ export default function AppTitleHeader({
   isActivated = null,
   activateLoading = false,
   onActivateToggle,
+  highlightActivate = false,
   onAdd,
 }: AppTitleHeaderProps) {
   return (
@@ -147,6 +151,17 @@ export default function AppTitleHeader({
               ...(isActivated
                 ? { color: 'hsl(var(--muted-foreground))', borderColor: 'hsl(var(--border))', '&:hover': { borderColor: 'hsl(var(--destructive))', color: 'hsl(var(--destructive))', bgcolor: 'hsla(var(--destructive) / 0.08)' } }
                 : { bgcolor: 'hsl(var(--primary))', '&:hover': { bgcolor: 'hsl(var(--primary) / 0.85)' } }),
+              ...(highlightActivate
+                ? {
+                    boxShadow: '0 0 0 0 hsla(var(--primary) / 0.6)',
+                    animation: 'appTitleActivatePulse 1.1s ease-out infinite',
+                    '@keyframes appTitleActivatePulse': {
+                      '0%':   { boxShadow: '0 0 0 0 hsla(var(--primary) / 0.55)' },
+                      '70%':  { boxShadow: '0 0 0 10px hsla(var(--primary) / 0)' },
+                      '100%': { boxShadow: '0 0 0 0 hsla(var(--primary) / 0)' },
+                    },
+                  }
+                : {}),
             }}
           >
             {activateLoading ? '…' : isActivated ? 'Deactivate' : 'Activate'}
