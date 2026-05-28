@@ -5040,6 +5040,7 @@ function UsecasesPageInner() {
                 flowId={drawerFlowId ?? undefined}
                 hideBackNav
                 showConnectionPath
+                useAlluvialDiagram
                 onNavigateUsecase={(id) => setDrawerFlowId(id || null)}
                 usecases={usecases}
                 isEnabled={drawerEnabled}
