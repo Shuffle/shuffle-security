@@ -131,6 +131,10 @@ interface AppSearchDrawerProps extends ShuffleHostProps {
   highlightAppName?: string;
   /** Delay before the highlight kicks in (default 5000ms) */
   highlightDelayMs?: number;
+  /** Highlight these app cards IMMEDIATELY (no delay). Used for hover-driven
+   *  real-time highlights, e.g. the demo tour pointing at multiple pinned
+   *  apps at once. */
+  realtimeHighlightAppNames?: string[];
   /** Enable multi-select: clicking apps toggles them in/out of the selection,
    *  drawer stays open, and the picker shows checkboxes + a primary-bordered
    *  highlight on already-chosen rows. */
@@ -161,6 +165,7 @@ export default function AppSearchDrawer({
   pinnedApps,
   highlightAppName,
   highlightDelayMs = 5000,
+  realtimeHighlightAppNames,
   multiSelect = false,
   selectedApps,
   onSelectionChange,
@@ -445,6 +450,19 @@ export default function AppSearchDrawer({
                 '@keyframes shuffleHighlightPulse': {
                   '0%, 100%': { boxShadow: '0 0 0 2px hsl(var(--primary)), 0 0 12px 1px hsl(var(--primary) / 0.4)' },
                   '50%': { boxShadow: '0 0 0 2px hsl(var(--primary)), 0 0 24px 4px hsl(var(--primary) / 0.75)' },
+                },
+              } : {}),
+              ...(realtimeHighlightAppNames && realtimeHighlightAppNames.length > 0 ? {
+                [realtimeHighlightAppNames.map(n => `& .singul-dropdown-item[data-app-name="${n}"]`).join(', ')]: {
+                  borderColor: 'hsl(var(--primary)) !important',
+                  boxShadow: '0 0 0 2px hsl(var(--primary)), 0 0 22px 4px hsl(var(--primary) / 0.7) !important',
+                  animation: 'shuffleHighlightPulseStrong 1.1s ease-in-out infinite',
+                  transform: 'translateY(-1px)',
+                  transition: 'transform 120ms ease',
+                },
+                '@keyframes shuffleHighlightPulseStrong': {
+                  '0%, 100%': { boxShadow: '0 0 0 2px hsl(var(--primary)), 0 0 16px 2px hsl(var(--primary) / 0.55)' },
+                  '50%': { boxShadow: '0 0 0 2px hsl(var(--primary)), 0 0 30px 6px hsl(var(--primary) / 0.9)' },
                 },
               } : {}),
             }}

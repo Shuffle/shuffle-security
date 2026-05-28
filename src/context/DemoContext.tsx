@@ -102,7 +102,10 @@ export const TOUR_STEPS: TourStep[] = [
       targetSelector: '[data-tour="add-ingestion-source-button"]',
     },
     subGoals: [
-      { id: 'add-outlook:outlook', label: 'Add Outlook Office365 or Gmail' },
+      // Selector is a sentinel — IncidentsPage listens for it and pulses the
+      // pinned Outlook / Gmail cards inside AppSearchDrawer in real time when
+      // the user hovers this sub-goal row in the demo drawer.
+      { id: 'add-outlook:outlook', label: 'Add Outlook Office365 or Gmail', targetSelector: '[data-tour="demo-email-apps"]' },
     ],
   },
   {

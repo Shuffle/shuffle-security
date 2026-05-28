@@ -491,10 +491,13 @@ const IncidentsPage = () => {
    // automation row down to the bare minimum: webhook + the highlighted "+"
    // button. Existing ingest icons, the arrow, and the entire Forward section
    // are hidden so the user can't be distracted from the one click we want.
-   const { active: demoActive, drawerOpen: demoDrawerOpen, step: demoStep, completedSteps: demoCompletedSteps, markStepCompleted, setStepCompleted } = useDemo();
+   const { active: demoActive, drawerOpen: demoDrawerOpen, step: demoStep, completedSteps: demoCompletedSteps, markStepCompleted, setStepCompleted, hoveredGoalSelector } = useDemo();
    const demoStepId = TOUR_STEPS[demoStep]?.id;
    const isAddOutlookStep = demoActive && demoDrawerOpen && demoStepId === 'add-outlook';
    const shouldHighlightOutlook = isAddOutlookStep && !demoCompletedSteps['add-outlook:outlook'];
+   // Realtime highlight while the user hovers the "Add Outlook Office365 or
+   // Gmail" sub-goal row in the demo drawer — pulses both pinned cards.
+   const isHoveringEmailGoal = hoveredGoalSelector === '[data-tour="demo-email-apps"]';
 
    // Reconcile sub-goal completion with whatever apps are already injected.
    // Otherwise, returning to the tour after a reload would leave the goals
@@ -3234,6 +3237,7 @@ const IncidentsPage = () => {
           },
         ] : undefined}
         highlightAppName={shouldHighlightOutlook ? 'Outlook_Office365' : undefined}
+        realtimeHighlightAppNames={isAddOutlookStep && isHoveringEmailGoal ? ['Outlook_Office365', 'Gmail'] : undefined}
         onSelectOverride={isAddOutlookStep ? (app) => {
           // Pretend-authenticate flow: Outlook Office365 or Gmail advance the
           // tour. Anything else falls through to the normal detail drawer so
