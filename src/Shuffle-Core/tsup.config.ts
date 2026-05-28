@@ -41,6 +41,8 @@ export default defineConfig({
     'date-fns',
     /^date-fns\//,
     'framer-motion',
+    'html2canvas-pro',
+    'jspdf',
   ],
   loader: {
     '.css': 'copy',
