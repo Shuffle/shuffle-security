@@ -3932,11 +3932,19 @@ function UsecaseDetailContent({
         <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
           {(() => {
             const isMultiDest = MULTI_DEST_FLOW_IDS.has(flow.id);
+            // Ingest-to-cases usecases (SIEM/EDR/Email alerts) inherit the
+            // Forward Tickets workflow on the destination side. That workflow
+            // can contain Communication apps (Gmail, Slack, ...) alongside
+            // Cases apps, so widen the destination catalog the same way as
+            // multi-dest flows — otherwise foreign-category apps from the
+            // linked workflow get silently filtered out below.
+            const inheritsForwardTickets = USECASE_IDS_WITH_FORWARD_TICKETS_CONTEXT.has(flow.id);
+            const destSpansCommAndCases = isMultiDest || inheritsForwardTickets;
             // For multi-destination flows (Notifications, Forward Tickets)
             // the destination spans BOTH Communication and Cases catalogs —
             // surface the union of apps and label both categories so users
             // see the full picture instead of just one side.
-            const destAppNames = isMultiDest
+            const destAppNames = destSpansCommAndCases
               ? Array.from(new Set([
                   ...(categoryAppNames['communication'] || []),
                   ...(categoryAppNames['case_management'] || []),
@@ -4021,19 +4029,27 @@ function UsecaseDetailContent({
               // enabled in some workflow. Only the current flow's target
               // catalog and truly-foreign (uncategorized) apps may show.
               const targetCatKey = flow.target;
-              const targetSeen = new Set(
-                (categoryAppNames[targetCatKey] || []).map((n) => normalizeAppName(n))
-              );
+              // When the destination spans Communication AND Cases (multi-dest
+              // or ingest flows that inherit Forward Tickets), treat both
+              // catalogs as the "target" so apps from either side aren't
+              // filtered as "foreign" and dropped.
+              const targetCatKeys = destSpansCommAndCases
+                ? new Set(['communication', 'case_management'])
+                : new Set([targetCatKey]);
+              const targetSeen = new Set<string>();
+              for (const ck of targetCatKeys) {
+                for (const n of (categoryAppNames[ck] || [])) targetSeen.add(normalizeAppName(n));
+              }
               const foreignCategorySeen = new Set<string>();
               for (const [catKey, names] of Object.entries(categoryAppNames)) {
-                if (catKey === targetCatKey) continue;
+                if (targetCatKeys.has(catKey)) continue;
                 for (const n of (names as string[])) {
                   foreignCategorySeen.add(normalizeAppName(n));
                 }
               }
               for (const k of enabledNamesSet) {
                 if (baseSeen.has(k)) continue;
-                if (!isMultiDest && foreignCategorySeen.has(k) && !targetSeen.has(k)) continue;
+                if (!destSpansCommAndCases && foreignCategorySeen.has(k) && !targetSeen.has(k)) continue;
                 injected.push(k); baseSeen.add(k);
               }
             }
