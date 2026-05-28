@@ -1046,6 +1046,32 @@ const getStoredApiKey = (): string | null => {
 // and authentication probed via `/api/v1/getinfo`.
 // ============================================================================
 /**
+ * Async-resolved app icon used in the Linked Workflows chips. Falls back to
+ * the seeded icon (if any) while the catalog lookup is in flight, then to a
+ * single uppercase letter when no image is available.
+ */
+function WorkflowAppIcon({ name, seededIcon, size = 16 }: { name: string; seededIcon?: string; size?: number }) {
+  const [icon, setIcon] = useState<string | undefined>(seededIcon);
+  useEffect(() => {
+    setIcon(seededIcon);
+    if (seededIcon || !name) return;
+    let cancelled = false;
+    resolveApp(name)
+      .then((r) => { if (!cancelled && r?.image) setIcon(r.image); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [name, seededIcon]);
+  if (icon) {
+    return <Box component="img" src={icon} alt={name} sx={{ width: size, height: size, objectFit: 'contain' }} />;
+  }
+  return (
+    <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: 'hsl(var(--muted-foreground))', lineHeight: 1 }}>
+      {name.slice(0, 1).toUpperCase()}
+    </Typography>
+  );
+}
+
+/**
  * Raw response body from `GET /api/v1/getinfo`. Host apps typically already
  * have this loaded and pass it down as `userdata`.
  */
