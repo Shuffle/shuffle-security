@@ -2828,6 +2828,23 @@ function UsecaseDetailContent({
     }
   }, [isEnabled, optimisticEnabled]);
 
+  // Capture the latest server-side enablement in a ref so the optimistic
+  // 8-second safety net can verify whether the backend actually reflected the
+  // change, and surface a clear warning toast if it didn't.
+  const isEnabledRef = React.useRef(isEnabled);
+  useEffect(() => { isEnabledRef.current = isEnabled; }, [isEnabled]);
+  const scheduleEnableVerification = (willBeEnabled: boolean) => {
+    setTimeout(() => {
+      setOptimisticEnabled(null);
+      if (willBeEnabled && !isEnabledRef.current && flow) {
+        toast.warning(`${flow.label} did not confirm`, {
+          description: 'The backend accepted the request but the change has not been reflected after 8 seconds. Open Workflows to check whether the workflow was generated, or try again.',
+          duration: 10000,
+        });
+      }
+    }, 8000);
+  };
+
   // For the Notifications usecase, the linked workflow is referenced by the
   // org's `defaults.notification_workflow` UUID rather than by tag/name, so
   // findWorkflowsForUsecase() never picks it up. Fetch it explicitly so we
