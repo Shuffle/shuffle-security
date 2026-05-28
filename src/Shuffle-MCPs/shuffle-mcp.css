@@ -350,9 +350,15 @@
 .singul-results-grid .singul-dropdown-item {
   border: 1px solid var(--singul-item-border);
   border-radius: var(--singul-dropdown-border-radius);
-  padding: 10px 12px;
+  padding: 12px 14px;
   overflow: hidden;
+  /* Vertically center the inner content within the equal-height grid cell so
+     the icon and text line up on the same baseline instead of hugging the
+     top-left corner. */
+  display: flex;
+  align-items: center;
 }
+
 
 .singul-dropdown-grid .singul-dropdown-item:hover,
 .singul-results-grid .singul-dropdown-item:hover {
@@ -475,17 +481,22 @@
 /* Grid items: compact icon */
 .singul-results-grid .singul-app-icon,
 .singul-dropdown-grid .singul-app-icon {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 6px;
-  padding: 3px;
+  padding: 0;
+  object-fit: contain;
+  display: block;
 }
+
 
 .singul-results-grid .singul-app-info,
 .singul-dropdown-grid .singul-app-info {
-  gap: 8px;
+  gap: 10px;
   align-items: center;
+  width: 100%;
 }
+
 
 /* Grid items: tighter category chip */
 .singul-results-grid .singul-app-category,
