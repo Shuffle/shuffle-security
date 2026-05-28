@@ -3469,104 +3469,47 @@ function UsecaseDetailContent({
         </Box>
       </Box>
 
-      {/* Pre-flight requirements panel — makes it explicit when and WHY the
-          Enable button will (or will not) succeed, so users no longer click
-          and see "nothing happen". Hidden for Coming-soon flows and for
-          self-contained flows that do not need a source tool. */}
-      {!isComingSoon && flow.automationLabel && (() => {
+      {/* Simple one-line hint: tell the user what clicking Enable will do
+          (or what is missing). No panel, no checklist — just the answer. */}
+      {!isComingSoon && flow.automationLabel && !effectiveEnabled && (() => {
         const selfContained = !!SELF_CONTAINED_ENABLE[flow.id];
         const needsSource = !!flow.source && !selfContained;
         const sourceLabel = flow.source ? categoryLabel(flow.source) : 'source';
-        const checks: { ok: boolean; label: string; hint?: string; action?: { label: string; onClick: () => void } }[] = [];
-        checks.push({
-          ok: isAuthenticated,
-          label: isAuthenticated ? 'Signed in' : 'Sign in required',
-          hint: isAuthenticated ? undefined : 'You must be signed in to generate the underlying workflow.',
-        });
-        if (needsSource) {
-          checks.push({
-            ok: hasValidatedSource,
-            label: hasValidatedSource
-              ? `${sourceLabel} tool connected`
-              : `Connect a ${sourceLabel} tool`,
-            hint: hasValidatedSource
-              ? undefined
-              : `${flow.label} needs at least one validated ${sourceLabel} integration to react to — without it, the workflow has nothing to ingest and Enable will not do anything.`,
-            action: hasValidatedSource ? undefined : {
-              label: `Connect ${sourceLabel}`,
-              onClick: () => setAddToolFor({ side: 'source', categoryId: flow.source! }),
-            },
-          });
+        let message: string;
+        let action: { label: string; onClick: () => void } | undefined;
+        let warn = false;
+        if (!isAuthenticated) {
+          message = 'Sign in first — Enable will not do anything until you are signed in.';
+          warn = true;
+        } else if (needsSource && !hasValidatedSource) {
+          message = `Connect a ${sourceLabel} tool first. Enable will not do anything until ${flow.label} has something to react to.`;
+          action = { label: `Connect ${sourceLabel}`, onClick: () => setAddToolFor({ side: 'source', categoryId: flow.source! }) };
+          warn = true;
+        } else {
+          message = `Clicking Enable will generate and activate the "${flow.label}" workflow${needsSource ? ` against your connected ${sourceLabel} tool` : ''}.`;
         }
-        const allOk = checks.every((c) => c.ok);
-        const accent = allOk ? 'hsl(142 70% 45%)' : 'hsl(45 93% 47%)';
         return (
-          <Box
-            sx={{
-              p: 2,
-              borderRadius: 2,
-              border: `1px solid ${accent}40`,
-              bgcolor: `${accent}10`,
-              mb: 3,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 1,
-            }}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              {allOk ? <CheckCircle2 size={16} color={accent} /> : <AlertTriangle size={16} color={accent} />}
-              <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: FG }}>
-                {effectiveEnabled
-                  ? `${flow.label} is enabled`
-                  : allOk
-                    ? 'Ready to enable'
-                    : 'Cannot enable yet — fix the items below'}
-              </Typography>
-            </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, pl: 0.25 }}>
-              {checks.map((c, idx) => (
-                <Box key={idx} sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
-                  {c.ok ? (
-                    <CheckCircle2 size={14} style={{ color: 'hsl(142 70% 45%)', marginTop: 2, flexShrink: 0 }} />
-                  ) : (
-                    <Circle size={14} style={{ color: 'hsl(45 93% 47%)', marginTop: 2, flexShrink: 0 }} />
-                  )}
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography sx={{ fontSize: '0.8rem', fontWeight: 600, color: FG }}>
-                      {c.label}
-                    </Typography>
-                    {c.hint && (
-                      <Typography sx={{ fontSize: '0.72rem', color: MUTED, lineHeight: 1.5 }}>
-                        {c.hint}
-                      </Typography>
-                    )}
-                  </Box>
-                  {c.action && (
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      onClick={c.action.onClick}
-                      sx={{
-                        textTransform: 'none',
-                        fontSize: '0.72rem',
-                        fontWeight: 600,
-                        py: 0.4,
-                        px: 1,
-                        minHeight: 0,
-                        borderColor: 'hsl(var(--border))',
-                        color: FG,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {c.action.label}
-                    </Button>
-                  )}
-                </Box>
-              ))}
-            </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3, px: 0.25 }}>
+            {warn
+              ? <AlertTriangle size={14} style={{ color: 'hsl(45 93% 47%)', flexShrink: 0 }} />
+              : <CheckCircle2 size={14} style={{ color: 'hsl(142 70% 45%)', flexShrink: 0 }} />}
+            <Typography sx={{ fontSize: '0.78rem', color: MUTED, lineHeight: 1.5, flex: 1 }}>
+              {message}
+            </Typography>
+            {action && (
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={action.onClick}
+                sx={{ textTransform: 'none', fontSize: '0.72rem', fontWeight: 600, py: 0.4, px: 1, minHeight: 0, borderColor: 'hsl(var(--border))', color: FG, flexShrink: 0 }}
+              >
+                {action.label}
+              </Button>
+            )}
           </Box>
         );
       })()}
+
 
 
       {flow.id === 'case_management_agent_ai_incident_handling_1' && (
