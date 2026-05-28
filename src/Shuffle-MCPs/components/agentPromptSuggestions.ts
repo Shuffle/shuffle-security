@@ -62,6 +62,36 @@ export const AGENT_PROMPT_SUGGESTIONS: string[] = [
   'Audit MITRE ATT&CK coverage every Monday and flag techniques with zero detections',
   'Backtest new detection rules against the last 30 days of logs before promoting them to production',
 
+  // — SIEM operations ———————————————————————————————————————————
+  'Triage new Splunk alerts every 10 minutes and assign severity, owner, and next steps',
+  'Watch Microsoft Sentinel for high-severity incidents and page the on-call analyst immediately',
+  'Suppress noisy SIEM alerts that fire more than 50 times per hour and open a tuning ticket',
+  'Correlate failed login spikes in the SIEM with VPN logs and flag possible brute-force attempts',
+  'Hunt the SIEM every morning for sign-ins from countries we do not operate in',
+  'Forward critical SIEM detections straight to Case Management and skip the alert queue',
+  'Run a weekly SIEM data-source health check and alert me on any log source silent for over 1 hour',
+  'Enrich every SIEM alert with asset owner, criticality, and recent vulnerabilities before triage',
+  'Search the SIEM for the latest IOCs from threat intel feeds every 30 minutes',
+  'Summarise top 10 noisiest SIEM rules every Friday and propose tuning candidates',
+  'Detect lateral movement patterns in SIEM auth logs and open an incident with the affected hosts',
+  'Watch the SIEM for any disable or delete of audit logging and treat it as a critical incident',
+
+  // — EDR operations ————————————————————————————————————————————
+  'Isolate any endpoint that triggers a critical CrowdStrike alert and notify the user\'s manager',
+  'Kill any process on a flagged host that matches a known malware family in EDR telemetry',
+  'Watch SentinelOne for ransomware behavior detections and auto-contain the host within 60 seconds',
+  'Pull the process tree from EDR for every malware detection and attach it to the incident',
+  'Sweep all endpoints for a given hash or filename when a new IOC arrives and report matches',
+  'Detect newly created local admin accounts on any endpoint and require approval before keeping them',
+  'Alert when an EDR agent goes offline for more than 1 hour and open a ticket against the asset owner',
+  'Quarantine any binary flagged as suspicious by EDR and email the user with next steps',
+  'Hunt EDR telemetry every night for LOLBins executed from user-writable directories',
+  'Correlate EDR alerts with SIEM auth events to detect credential theft followed by execution',
+  'Run a weekly EDR coverage report and list endpoints without an active agent',
+  'Auto-resolve EDR alerts that match a known-good signed binary on our allowlist',
+
+
+
   // — Vulnerability management ————————————————————————————————————
   'Scan our asset inventory daily and open tickets for any new critical or high vulnerability',
   'Remind asset owners every Friday about open vulnerabilities older than 14 days',
