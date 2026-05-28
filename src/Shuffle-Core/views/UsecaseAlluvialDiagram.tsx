@@ -509,7 +509,7 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
             bgcolor: 'hsl(var(--card))',
             border: '1px solid hsl(var(--border))',
             borderRadius: 2,
-            p: 2.5,
+            p: 3,
             minWidth: 320,
             maxWidth: 400,
           },
