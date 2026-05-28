@@ -350,9 +350,15 @@
 .singul-results-grid .singul-dropdown-item {
   border: 1px solid var(--singul-item-border);
   border-radius: var(--singul-dropdown-border-radius);
-  padding: 10px 12px;
+  padding: 12px 14px;
   overflow: hidden;
+  /* Vertically center the inner content within the equal-height grid cell so
+     the icon and text line up on the same baseline instead of hugging the
+     top-left corner. */
+  display: flex;
+  align-items: center;
 }
+
 
 .singul-dropdown-grid .singul-dropdown-item:hover,
 .singul-results-grid .singul-dropdown-item:hover {
