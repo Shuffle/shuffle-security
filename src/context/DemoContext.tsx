@@ -102,9 +102,12 @@ export const TOUR_STEPS: TourStep[] = [
       targetSelector: '[data-tour="add-ingestion-source-button"]',
     },
     subGoals: [
-      // Selector is a sentinel — IncidentsPage listens for it and pulses the
-      // pinned Outlook / Gmail cards inside AppSearchDrawer in real time when
-      // the user hovers this sub-goal row in the demo drawer.
+      // 1) Open the picker by clicking the highlighted "+" button. Completed
+      //    by IncidentsPage when `appSearchOpen` flips true.
+      { id: 'add-outlook:open-picker', label: 'Click "Add ingestion source"', targetSelector: '[data-tour="add-ingestion-source-button"]' },
+      // 2) Pick the email tool. Selector is a sentinel — IncidentsPage listens
+      //    for it and pulses the pinned Outlook / Gmail cards inside
+      //    AppSearchDrawer in real time when the user hovers this row.
       { id: 'add-outlook:outlook', label: 'Add Outlook Office365 or Gmail', targetSelector: '[data-tour="demo-email-apps"]' },
     ],
   },
