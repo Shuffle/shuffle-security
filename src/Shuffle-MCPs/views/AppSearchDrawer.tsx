@@ -456,16 +456,35 @@ export default function AppSearchDrawer({
                 [realtimeHighlightAppNames.map(n => `& .singul-dropdown-item[data-app-name="${n}"]`).join(', ')]: {
                   position: 'relative',
                   zIndex: 2,
-                  borderColor: 'hsl(var(--primary)) !important',
-                  outline: '2px solid hsl(var(--primary))',
-                  outlineOffset: '1px',
+                  borderColor: 'hsl(var(--primary) / 0.78) !important',
+                  backgroundColor: 'hsl(var(--primary) / 0.08) !important',
+                  outline: 'none !important',
                   boxShadow: 'none !important',
-                  animation: 'shuffleHighlightPulseStrong 1.4s ease-in-out infinite',
-                  transition: 'outline-color 120ms ease',
+                  animation: 'shuffleHighlightPulseStrong 1.5s ease-in-out infinite',
+                  transition: 'border-color 120ms ease, background-color 120ms ease',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    left: '10px',
+                    top: '14px',
+                    bottom: '14px',
+                    width: '3px',
+                    borderRadius: '999px',
+                    backgroundColor: 'hsl(var(--primary))',
+                  },
+                  '& .singul-app-info': {
+                    paddingLeft: '8px',
+                  },
                 },
                 '@keyframes shuffleHighlightPulseStrong': {
-                  '0%, 100%': { outlineColor: 'hsl(var(--primary) / 0.7)' },
-                  '50%': { outlineColor: 'hsl(var(--primary))' },
+                  '0%, 100%': {
+                    borderColor: 'hsl(var(--primary) / 0.62)',
+                    backgroundColor: 'hsl(var(--primary) / 0.06)',
+                  },
+                  '50%': {
+                    borderColor: 'hsl(var(--primary) / 0.92)',
+                    backgroundColor: 'hsl(var(--primary) / 0.12)',
+                  },
                 },
               } : {}),
             }}
