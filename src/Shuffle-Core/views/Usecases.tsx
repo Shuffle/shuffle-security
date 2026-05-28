@@ -3194,11 +3194,19 @@ function UsecaseDetailContent({
         ]);
 
         const mapped: Record<string, Set<string>> = {};
+        const validated: Record<string, Map<string, string>> = {};
         const addApp = (name: string, categories: string[]) => {
           const categoryId = matchAppToCategory(name, categories);
           if (!categoryId) return;
           if (!mapped[categoryId]) mapped[categoryId] = new Set();
           mapped[categoryId].add(name);
+        };
+        const addValidated = (name: string, icon: string, categories: string[]) => {
+          const categoryId = matchAppToCategory(name, categories);
+          if (!categoryId) return;
+          if (!validated[categoryId]) validated[categoryId] = new Map();
+          const key = normalizeAppName(name);
+          if (!validated[categoryId].has(key)) validated[categoryId].set(key, icon);
         };
 
         if (authRes.ok) {
@@ -3206,7 +3214,12 @@ function UsecaseDetailContent({
           const authList = Array.isArray(authData) ? authData : (authData?.data || []);
           for (const entry of Array.isArray(authList) ? authList : []) {
             const app = entry?.app;
-            if (app?.name) addApp(app.name, app.categories || []);
+            if (app?.name) {
+              addApp(app.name, app.categories || []);
+              if (entry?.validation?.valid === true) {
+                addValidated(app.name, app?.large_image || app?.image || '', app.categories || []);
+              }
+            }
           }
         }
 
@@ -3220,6 +3233,14 @@ function UsecaseDetailContent({
         if (!cancelled) {
           setCategoryAppNames(
             Object.fromEntries(Object.entries(mapped).map(([key, value]) => [key, Array.from(value).sort()]))
+          );
+          setValidatedAppsByCategory(
+            Object.fromEntries(
+              Object.entries(validated).map(([key, m]) => [
+                key,
+                Array.from(m.entries()).map(([name, icon]) => ({ name, icon })),
+              ])
+            )
           );
         }
       } catch {
