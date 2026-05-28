@@ -2467,16 +2467,18 @@ function IntegrationStatusLite({
             </Box>
           </Box>
         )}
-        <Box>
-          <GroupLabel>
-            Available Tools{(availableList.length + (extraInAvailable ? 1 : 0)) > 0 ? ` · ${availableList.length + (extraInAvailable ? 1 : 0)}` : ''}
-          </GroupLabel>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
-            {extraInAvailable}
-            {availableList.map(renderIcon)}
-            {renderAddTile()}
+        {(availableList.length + (extraInAvailable ? 1 : 0) > 0 || !!onAddApp) && (
+          <Box>
+            <GroupLabel>
+              Available Tools{(availableList.length + (extraInAvailable ? 1 : 0)) > 0 ? ` · ${availableList.length + (extraInAvailable ? 1 : 0)}` : ''}
+            </GroupLabel>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
+              {extraInAvailable}
+              {availableList.map(renderIcon)}
+              {renderAddTile()}
+            </Box>
           </Box>
-        </Box>
+        )}
         {renderPopover()}
       </Box>
     );
