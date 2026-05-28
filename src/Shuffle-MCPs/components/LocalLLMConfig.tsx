@@ -72,6 +72,39 @@ export interface LocalLLMTestResult {
   models?: string[];
   latencyMs?: number;
 }
+const PROVIDER_DOMAINS: Record<string, string> = {
+  'Shuffle AI': 'shuffler.io',
+  OpenAI: 'openai.com',
+  Anthropic: 'anthropic.com',
+  'Google Gemini': 'gemini.google.com',
+  Mistral: 'mistral.ai',
+  Groq: 'groq.com',
+  DeepSeek: 'deepseek.com',
+  'Together AI': 'together.ai',
+  OpenRouter: 'openrouter.ai',
+  'Ollama (localhost)': 'ollama.com',
+  'LM Studio (localhost)': 'lmstudio.ai',
+};
+
+const ProviderLogo = ({ label, url }: { label: string; url?: string }) => {
+  const [errored, setErrored] = useState(false);
+  let domain = PROVIDER_DOMAINS[label];
+  if (!domain && url) {
+    try { domain = new URL(url).hostname.replace(/^www\./, ''); } catch { /* noop */ }
+  }
+  const src = domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=64` : '';
+  const initial = label.trim().charAt(0).toUpperCase() || '?';
+  return (
+    <Box sx={{ width: 18, height: 18, borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'hsl(var(--muted))', overflow: 'hidden', flexShrink: 0 }}>
+      {src && !errored ? (
+        <img src={src} alt="" width={18} height={18} style={{ display: 'block' }} onError={() => setErrored(true)} />
+      ) : (
+        <Typography sx={{ fontSize: '0.65rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', lineHeight: 1 }}>{initial}</Typography>
+      )}
+    </Box>
+  );
+};
+
 
 export const getLocalModel = (): AgentLocalModel => ({ url: '', apikey: '', model: '' });
 export const saveLocalModelConfig = (_model: AgentLocalModel) => {};
