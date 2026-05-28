@@ -23,7 +23,7 @@ export type SegmentedItem<V extends string = string> =
       type?: "tab";
       value: V;
       label: React.ReactNode;
-      count?: number;
+      count?: number | string;
       title?: string;
       disabled?: boolean;
       dataTour?: string;
@@ -250,7 +250,7 @@ export function SegmentedControl<V extends string = string>({
               >
                 {opt.label}
               </span>
-              {!isAction && typeof opt.count === "number" && (
+              {!isAction && (typeof opt.count === "number" || typeof opt.count === "string") && (
                 <span
                   style={{
                     position: "relative",

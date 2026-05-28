@@ -511,7 +511,7 @@ export default function AppSearchDrawer({
                     inline={true}
                     initialQuery={initialQuery}
                     initialFilterQuery={initialQuery}
-                    hitsPerPage={12}
+                    hitsPerPage={20}
                     showDescription={false}
                     showCategories={true}
                     showCheckbox={multiSelect}
