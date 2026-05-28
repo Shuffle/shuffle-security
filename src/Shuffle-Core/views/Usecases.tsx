@@ -3997,6 +3997,70 @@ function UsecaseDetailContent({
 
       {(() => {
         const linkedWorkflows = findWorkflowsForUsecase(flow, workflows);
+        // Mirror the Source/Destination popover behavior — figure out which
+        // apps the linked workflows currently use, and provide the same
+        // enable/disable handler, so clicking an app chip in Linked Workflows
+        // opens the same "Enable/Disable for {usecase}" popover as the
+        // Enabled Tools area.
+        const enabledNamesSetLW = new Set<string>();
+        for (const wf of linkedWorkflows) {
+          const names = extractWorkflowAppNames(wf);
+          names.forEach((n) => enabledNamesSetLW.add(n));
+        }
+        for (const n of readInjectedUsecaseApps(flow.id)) {
+          enabledNamesSetLW.add(normalizeAppName(n));
+        }
+        const handleUsecaseAppToggleLW = async (appName: string, enabled: boolean) => {
+          if (!flow.automationLabel) {
+            toast.error('This usecase is not toggleable yet');
+            return;
+          }
+          const next = new Set(Array.from(enabledNamesSetLW));
+          const key = normalizeAppName(appName);
+          if (enabled) next.add(key); else next.delete(key);
+          const activeNames: string[] = [];
+          const seen = new Set<string>();
+          const isMultiDest = MULTI_DEST_FLOW_IDS.has(flow.id);
+          const catalog: string[] = isMultiDest
+            ? [
+                ...((categoryAppNames['case_management'] || []) as string[]),
+                ...((categoryAppNames['communication'] || []) as string[]),
+              ]
+            : [
+                ...((categoryAppNames[flow.source] || []) as string[]),
+                ...((categoryAppNames[flow.target] || []) as string[]),
+              ];
+          for (const n of catalog) {
+            const k = normalizeAppName(n);
+            if (next.has(k) && !seen.has(k)) { activeNames.push(n); seen.add(k); }
+          }
+          if (enabled && !seen.has(key)) { activeNames.push(appName); seen.add(key); }
+          try {
+            const body: Record<string, string> = { label: flow.automationLabel };
+            if (flow.automationCategory) body.category = flow.automationCategory;
+            if (activeNames.length > 0) body.app_name = activeNames.join(',');
+            else body.action_name = 'remove';
+            const res = await fetch(apiUrl('/api/v2/workflows/generate'), {
+              method: 'POST',
+              credentials: 'include',
+              headers: { ...authHeader(), 'Content-Type': 'application/json' },
+              body: JSON.stringify(body),
+            });
+            let parsed: any = null;
+            try { parsed = await res.json(); } catch { /* ignore */ }
+            const ok = res.ok && parsed?.success !== false;
+            if (!ok) throw new Error(parsed?.reason || `Request failed (${res.status})`);
+            toast.success(enabled
+              ? `${appName} enabled for ${flow.label}`
+              : `${appName} disabled for ${flow.label}`);
+            invalidateAppsCache(); setIntegrationsRefreshKey((k2) => k2 + 1);
+            onToggled?.(flow.automationLabel, activeNames.length > 0);
+          } catch (err: any) {
+            toast.error(`Failed to ${enabled ? 'enable' : 'disable'} ${appName}`, {
+              description: err?.message || 'The backend rejected the request.',
+            });
+          }
+        };
         // The three ingest-to-case_management flows share the "Forward Tickets"
         // workflow on the destination side. Surface it here as informational
         // context — enabling a destination tool on these usecases does NOT
@@ -4166,6 +4230,9 @@ function UsecaseDetailContent({
                         <IntegrationStatusLite
                           singleLine
                           filterApps={actionApps}
+                          usecaseEnabledNames={enabledNamesSetLW}
+                          onUsecaseAppToggle={flow.automationLabel ? handleUsecaseAppToggleLW : undefined}
+                          usecaseLabel={flow.label}
                         />
                       </Box>
                     )}
