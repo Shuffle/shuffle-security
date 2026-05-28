@@ -3786,6 +3786,23 @@ function UsecaseDetailContent({
       </Box>
       )}
 
+      {flow.automationArea === 'notifications'
+        ? <NotificationsOutcomeBlock />
+        : flow.label === 'IOC feeds'
+          ? <IocFeedsOutcomeBlock />
+          : flow.id === 'case_management_assign_escalate_1'
+            ? <AssignEscalateOutcomeBlock flow={flow} workflows={workflows} />
+            : flow.id === 'case_management_agent_ai_incident_handling_1'
+              ? <AssignEscalateOutcomeBlock
+                  flow={{ ...flow, automationLabel: 'Assign & Escalate', automationCategory: 'cases', automationArea: 'assign_escalate' }}
+                  workflows={workflows}
+                />
+              : resolveOutcomeKind(flow) === 'enrichments_run'
+                ? <EnrichmentsOutcomeBlock flow={flow} />
+                : <FlowOutcomeBlock flow={flow} sourceCategoryLabel={sourceCat?.label} />}
+
+
+
       {(() => {
         const linkedWorkflows = findWorkflowsForUsecase(flow, workflows);
         // The three ingest-to-case_management flows share the "Forward Tickets"
