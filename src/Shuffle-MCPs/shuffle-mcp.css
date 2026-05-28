@@ -481,11 +481,14 @@
 /* Grid items: compact icon */
 .singul-results-grid .singul-app-icon,
 .singul-dropdown-grid .singul-app-icon {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 6px;
-  padding: 3px;
+  padding: 0;
+  object-fit: contain;
+  display: block;
 }
+
 
 .singul-results-grid .singul-app-info,
 .singul-dropdown-grid .singul-app-info {
