@@ -787,12 +787,27 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
   cloud: ['cloud', 'aws', 'azure', 'gcp', 'google cloud', 'oracle cloud', 'digitalocean', 'cloud provider'],
 };
 
-export function matchAppToCategory(appName: string, appCategories: string[]): string | null {
-  const searchText = [appName, ...appCategories].join(' ').toLowerCase();
+export function matchAppToCategoryList(appName: string, appCategories: string[]): string[] {
+  // Trust the app's declared categories when present — match keywords ONLY
+  // against the categories text so an app like "Wazuh" (declared SIEM) does
+  // not get pulled into Cases/EDR/Email just because its name or some other
+  // field happens to match a keyword there. Apps without any declared
+  // category fall back to a name-based match across every bucket so they
+  // remain discoverable.
+  const hasCategories = Array.isArray(appCategories) && appCategories.length > 0;
+  const searchText = hasCategories
+    ? appCategories.join(' ').toLowerCase()
+    : (appName || '').toLowerCase();
+  const hits: string[] = [];
   for (const [catId, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
-    if (keywords.some(kw => searchText.includes(kw))) return catId;
+    if (keywords.some(kw => searchText.includes(kw))) hits.push(catId);
   }
-  return null;
+  return hits;
+}
+
+export function matchAppToCategory(appName: string, appCategories: string[]): string | null {
+  const hits = matchAppToCategoryList(appName, appCategories);
+  return hits.length > 0 ? hits[0] : null;
 }
 
 // ── Automation-area helpers ────────────────────────────────────────────────────
