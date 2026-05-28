@@ -4106,6 +4106,25 @@ function UsecaseDetailContent({
                 duration: 6000,
               });
             };
+            const endpointEnabledNamesSet = side === 'destination' ? destinationEnabledNamesSet : sourceEnabledNamesSet;
+            const endpointWorkflowAppNames = Array.from(endpointEnabledNamesSet);
+            const destinationUsesForwardTickets = side === 'destination' && inheritsForwardTickets;
+            const endpointToggleHandler = sourceComingSoon
+              ? handleSourceComingSoon
+              : ((flow.automationLabel && !isComingSoon && !destIsShuffleOnly)
+                  ? (appName: string, enabled: boolean) => handleUsecaseAppToggle(appName, enabled, destinationUsesForwardTickets
+                      ? {
+                          automationLabel: 'Forward Tickets',
+                          automationCategory: 'cases',
+                          workflows: forwardTicketsLinkedForApps,
+                          enabledNamesSet: destinationEnabledNamesSet,
+                          toastLabel: 'Forward Tickets',
+                        }
+                      : {
+                          workflows: side === 'source' ? usecaseLinkedForApps : allLinkedForApps,
+                          enabledNamesSet: endpointEnabledNamesSet,
+                        })
+                  : undefined);
 
             return (
             <Box key={endpoint.title} sx={{ flex: 1, minWidth: 0 }}>
@@ -4140,14 +4159,12 @@ function UsecaseDetailContent({
                 filterApps={appNamesWithShuffle}
                 isResolving={!categoryAppsResolved}
                 syntheticApps={synthetic}
-                workflowAppNames={Array.from(side === 'destination' ? destinationEnabledNamesSet : sourceEnabledNamesSet)}
+                workflowAppNames={endpointWorkflowAppNames}
                 onHover={(item) => setHoveredTool((prev) => ({ ...prev, [side]: item }))}
                 onSelect={(item) => setPinnedTool((prev) => ({ ...prev, [side]: prev[side]?.id === item.id ? null : item }))}
                 selectedId={pinned?.id}
-                usecaseEnabledNames={side === 'destination' ? destinationEnabledNamesSet : sourceEnabledNamesSet}
-                onUsecaseAppToggle={sourceComingSoon
-                  ? handleSourceComingSoon
-                  : ((flow.automationLabel && !isComingSoon && !destIsShuffleOnly) ? handleUsecaseAppToggle : undefined)}
+                usecaseEnabledNames={endpointEnabledNamesSet}
+                onUsecaseAppToggle={endpointToggleHandler}
                 usecaseLabel={flow.label}
                 
                 onAddApp={(isComingSoon || destIsShuffleOnly || sourceComingSoon || (isCases && !MULTI_DEST_FLOW_IDS.has(flow.id)) || (isCasesSourceOnly && side === 'source')) ? undefined : () => setAddToolFor({ side, categoryId: endpoint.categoryId, multiDest: MULTI_DEST_FLOW_IDS.has(flow.id) })}
