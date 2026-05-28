@@ -2889,7 +2889,9 @@ function UsecaseDetailContent({
   const handleToggle = async () => {
     if (!flow?.automationLabel || toggling) return;
     const willBeEnabled = !effectiveEnabled;
+    if (willBeEnabled) setEnableAttempted(true);
     const sourceName = flow.source ? categoryLabel(flow.source) : 'source';
+
 
     // Self-contained usecases (e.g. IOC / threat feeds) do not need a
     // validated source-category tool — they seed their own defaults and
