@@ -47,17 +47,30 @@ export const IGNORED_WORKFLOW_APP_NAMES: ReadonlySet<string> = new Set([
   'integration',
   'ai_agent',
   'shuffle_agent',
+  'shuffle_ai',
 ]);
 
 export const isIgnoredWorkflowAppName = (name: string): boolean =>
   IGNORED_WORKFLOW_APP_NAMES.has(normalizeAppName(name));
 
+const looksLikeOpaqueId = (raw: string): boolean => {
+  const trimmed = raw.trim();
+  if (/^[a-f0-9]{16,}$/i.test(trimmed)) return true;
+  if (/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(trimmed)) return true;
+  return false;
+};
+
 const addWorkflowAppName = (names: string[], seen: Set<string>, raw: unknown) => {
   if (typeof raw !== 'string' || !raw.trim()) return;
-  const key = normalizeAppName(raw);
-  if (!key || isIgnoredWorkflowAppName(raw) || seen.has(key)) return;
-  seen.add(key);
-  names.push(raw.trim());
+  const parts = raw.includes(',') ? raw.split(',') : [raw];
+  for (const part of parts) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+    const key = normalizeAppName(trimmed);
+    if (!key || isIgnoredWorkflowAppName(trimmed) || looksLikeOpaqueId(trimmed) || seen.has(key)) continue;
+    seen.add(key);
+    names.push(trimmed);
+  }
 };
 
 const collectParameterAppNames = (input: unknown, names: string[], seen: Set<string>, depth = 0) => {
@@ -123,8 +136,15 @@ export const FORWARD_TICKETS_WORKFLOW_NAME = 'Forward Tickets';
  */
 export function extractWorkflowAppNames(workflow: any): Set<string> {
   const names = new Set<string>();
-  for (const name of extractWorkflowActionAppNames(workflow)) {
-    names.add(normalizeAppName(name));
+  for (const raw of extractWorkflowActionAppNames(workflow)) {
+    const parts = typeof raw === 'string' && raw.includes(',') ? raw.split(',') : [raw];
+    for (const part of parts) {
+      const trimmed = (part || '').trim();
+      if (!trimmed) continue;
+      if (isIgnoredWorkflowAppName(trimmed) || looksLikeOpaqueId(trimmed)) continue;
+      const key = normalizeAppName(trimmed);
+      if (key) names.add(key);
+    }
   }
   return names;
 }
