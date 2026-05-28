@@ -4170,13 +4170,8 @@ function UsecaseDetailContent({
                                 overflow: 'hidden', flexShrink: 0,
                               }}
                             >
-                              {icon ? (
-                                <Box component="img" src={icon} alt={n} sx={{ width: 16, height: 16, objectFit: 'contain' }} />
-                              ) : (
-                                <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: MUTED, lineHeight: 1 }}>
-                                  {n.slice(0, 1).toUpperCase()}
-                                </Typography>
-                              )}
+                              <WorkflowAppIcon name={n} seededIcon={icon} size={16} />
+
                             </Box>
                           );
                         })}
