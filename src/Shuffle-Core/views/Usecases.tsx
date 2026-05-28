@@ -3211,17 +3211,19 @@ function UsecaseDetailContent({
         const mapped: Record<string, Set<string>> = {};
         const validated: Record<string, Map<string, string>> = {};
         const addApp = (name: string, categories: string[]) => {
-          const categoryId = matchAppToCategory(name, categories);
-          if (!categoryId) return;
-          if (!mapped[categoryId]) mapped[categoryId] = new Set();
-          mapped[categoryId].add(name);
+          const cats = matchAppToCategoryList(name, categories);
+          for (const categoryId of cats) {
+            if (!mapped[categoryId]) mapped[categoryId] = new Set();
+            mapped[categoryId].add(name);
+          }
         };
         const addValidated = (name: string, icon: string, categories: string[]) => {
-          const categoryId = matchAppToCategory(name, categories);
-          if (!categoryId) return;
-          if (!validated[categoryId]) validated[categoryId] = new Map();
+          const cats = matchAppToCategoryList(name, categories);
           const key = normalizeAppName(name);
-          if (!validated[categoryId].has(key)) validated[categoryId].set(key, icon);
+          for (const categoryId of cats) {
+            if (!validated[categoryId]) validated[categoryId] = new Map();
+            if (!validated[categoryId].has(key)) validated[categoryId].set(key, icon);
+          }
         };
 
         if (authRes.ok) {
