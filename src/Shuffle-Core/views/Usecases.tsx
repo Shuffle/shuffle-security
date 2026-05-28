@@ -2803,6 +2803,10 @@ function UsecaseDetailContent({
   const [categoryAppsResolved, setCategoryAppsResolved] = useState(false);
   const [toggling, setToggling] = useState(false);
   const [optimisticEnabled, setOptimisticEnabled] = useState<boolean | null>(null);
+  // Only surface the "what to fix" inline hint AFTER the user has actually
+  // tried to enable this usecase — never as a default banner.
+  const [enableAttempted, setEnableAttempted] = useState(false);
+
   const effectiveEnabled = optimisticEnabled !== null ? optimisticEnabled : isEnabled;
   // App-search drawer state — mirrors the alluvial diagram's "+" buttons so
   // users can force-add a Source or Destination tool from this view too.
