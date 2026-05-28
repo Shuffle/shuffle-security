@@ -4075,29 +4075,15 @@ function UsecaseDetailContent({
         // enable/disable handler, so clicking an app chip in Linked Workflows
         // opens the same "Enable/Disable for {usecase}" popover as the
         // Enabled Tools area.
-        // Same TRUTH source as Source/Destination: include the Forward
-        // Tickets / notification fallbacks so a tool wired only in those
-        // shared workflows still shows here as enabled.
-        const SHOWS_FORWARD_TICKETS_LW = new Set([
-          'siem_case_management_1',
-          'edr_case_management_1',
-          'email_case_management_1',
-        ]);
-        const forwardTicketsForLW = SHOWS_FORWARD_TICKETS_LW.has(flow.id)
-          ? findWorkflowsForUsecase(
-              { automationLabel: 'Forward Tickets', automationArea: undefined as any },
-              workflows,
-            ).filter((wf) => !linkedWorkflows.some((lw) => lw.id === wf.id))
-          : [];
-        const notifForLW = notificationWorkflow && !linkedWorkflows.some((lw) => lw.id === notificationWorkflow.id)
-          ? [notificationWorkflow]
-          : [];
-        const allLinkedForSet = [...linkedWorkflows, ...forwardTicketsForLW, ...notifForLW];
-        const enabledNamesSetLW = new Set<string>();
-        for (const wf of allLinkedForSet) {
-          const names = extractWorkflowAppNames(wf);
-          names.forEach((n) => enabledNamesSetLW.add(n));
-        }
+        // Same TRUTH source as Source/Destination: one shared helper resolves
+        // every workflow that should count, then one extractor unwraps Singul
+        // nodes and returns only real tool names.
+        const {
+          workflows: allLinkedForSet,
+          forwardTicketsWorkflows: forwardTicketsForLW,
+          notificationWorkflows: notifForLW,
+        } = getLinkedWorkflowsForUsecase(flow, workflows, notificationWorkflow);
+        const enabledNamesSetLW = getWorkflowEnabledAppNames(allLinkedForSet);
         if (allLinkedForSet.length === 0) {
           clearInjectedUsecaseApps(flow.id);
         } else {
@@ -4163,23 +4149,11 @@ function UsecaseDetailContent({
         // context — enabling a destination tool on these usecases does NOT
         // toggle Forward Tickets, but it is the workflow that does the actual
         // forwarding, so showing it makes the wiring obvious.
-        const SHOWS_FORWARD_TICKETS = new Set([
-          'siem_case_management_1',
-          'edr_case_management_1',
-          'email_case_management_1',
-        ]);
-        const forwardTicketsWorkflows = SHOWS_FORWARD_TICKETS.has(flow.id)
-          ? findWorkflowsForUsecase(
-              { automationLabel: 'Forward Tickets', automationArea: undefined as any },
-              workflows,
-            ).filter((wf) => !linkedWorkflows.some((lw) => lw.id === wf.id))
-          : [];
+        const forwardTicketsWorkflows = forwardTicketsForLW;
         // Notifications: append the org's defaults.notification_workflow if not
         // already covered by tag/name matching.
-        const notifWorkflows = notificationWorkflow && !linkedWorkflows.some((lw) => lw.id === notificationWorkflow.id)
-          ? [notificationWorkflow]
-          : [];
-        const allLinked = [...linkedWorkflows, ...forwardTicketsWorkflows, ...notifWorkflows];
+        const notifWorkflows = notifForLW;
+        const allLinked = allLinkedForSet;
         if (allLinked.length === 0) return null;
         // Build a name->icon lookup from every validated app we have on hand
         // so action chips can render with the real app icon.
