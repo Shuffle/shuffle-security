@@ -3875,12 +3875,26 @@ function UsecaseDetailContent({
                 destinationEnabledNamesSet.add(key);
             }
           }
-          const handleUsecaseAppToggle = async (appName: string, enabled: boolean) => {
-            if (!flow.automationLabel) {
+          const handleUsecaseAppToggle = async (
+            appName: string,
+            enabled: boolean,
+            context?: {
+              automationLabel?: string;
+              automationCategory?: string;
+              workflows: WorkflowSummary[];
+              enabledNamesSet: Set<string>;
+              toastLabel?: string;
+            },
+          ) => {
+            const automationLabel = context?.automationLabel || flow.automationLabel;
+            if (!automationLabel) {
               toast.error('This usecase is not toggleable yet');
               return;
             }
-            const next = new Set(Array.from(enabledNamesSet));
+            const activeSet = context?.enabledNamesSet || enabledNamesSet;
+            const workflowScope = context?.workflows || allLinkedForApps;
+            const toastLabel = context?.toastLabel || flow.label;
+            const next = new Set(Array.from(activeSet));
             const key = normalizeAppName(appName);
             if (enabled) next.add(key); else next.delete(key);
             // Keep the localStorage "injected apps" snapshot in sync with the
@@ -3897,7 +3911,7 @@ function UsecaseDetailContent({
             // other apps still in the workflow.
             const activeNames: string[] = [];
             const seen = new Set<string>();
-            for (const wf of allLinkedForApps) {
+            for (const wf of workflowScope) {
               for (const action of (wf.actions || [])) {
                 for (const n of extractActionAppNames(action)) {
                   const k = normalizeAppName(n);
@@ -3913,8 +3927,9 @@ function UsecaseDetailContent({
             if (enabled && !seen.has(key)) { activeNames.push(appName); seen.add(key); }
 
             try {
-              const body: Record<string, string> = { label: flow.automationLabel };
-              if (flow.automationCategory) body.category = flow.automationCategory;
+              const body: Record<string, string> = { label: automationLabel };
+              const automationCategory = context?.automationCategory ?? flow.automationCategory;
+              if (automationCategory) body.category = automationCategory;
               if (activeNames.length > 0) body.app_name = activeNames.join(',');
               else body.action_name = 'remove';
               const res = await fetch(apiUrl('/api/v2/workflows/generate'), {
@@ -3928,10 +3943,10 @@ function UsecaseDetailContent({
               const ok = res.ok && parsed?.success !== false;
               if (!ok) throw new Error(parsed?.reason || `Request failed (${res.status})`);
               toast.success(enabled
-                ? `${appName} enabled for ${flow.label}`
-                : `${appName} disabled for ${flow.label}`);
+                ? `${appName} enabled for ${toastLabel}`
+                : `${appName} disabled for ${toastLabel}`);
               invalidateAppsCache(); setIntegrationsRefreshKey((k2) => k2 + 1);
-              onToggled?.(flow.automationLabel, activeNames.length > 0);
+              onToggled?.(automationLabel, activeNames.length > 0);
             } catch (err: any) {
               toast.error(`Failed to ${enabled ? 'enable' : 'disable'} ${appName}`, {
                 description: err?.message || 'The backend rejected the request.',
