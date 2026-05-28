@@ -2336,9 +2336,24 @@ function IntegrationStatusLite({
   // are just authenticated and ready to add.
   const useGroups = !!usecaseEnabledNames && !!onUsecaseAppToggle;
   const normalize = (n: string) => n.toLowerCase().trim().replace(/[\s_\-]+/g, '_');
-  const enabledList = useGroups
+  const [showHiddenEnabled, setShowHiddenEnabled] = useState(false);
+  // Enabled tools the category filter would otherwise hide. The workflow is the
+  // truth: if an app is wired into this usecase but lives outside the category
+  // filter, surface it via a "show hidden" affordance instead of silently
+  // dropping it.
+  const hiddenEnabledList = useGroups
+    ? merged.filter((i) => {
+        const k = normalize(i.name);
+        if (!usecaseEnabledNames!.has(k)) return false;
+        return !visible.some((v) => normalize(v.name) === k);
+      })
+    : [];
+  const enabledListBase = useGroups
     ? visible.filter((i) => usecaseEnabledNames!.has(normalize(i.name)))
     : [];
+  const enabledList = useGroups && showHiddenEnabled
+    ? [...enabledListBase, ...hiddenEnabledList]
+    : enabledListBase;
   const availableList = useGroups
     ? visible.filter((i) => !usecaseEnabledNames!.has(normalize(i.name)))
     : visible;
