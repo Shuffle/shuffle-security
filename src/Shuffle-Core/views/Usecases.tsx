@@ -1801,6 +1801,7 @@ function IntegrationStatusLite({
   const { apiUrl, authHeader } = useApi();
   const appDetail = useAppDetailOptional();
   const [integrations, setIntegrations] = useState<IntegrationItem[]>([]);
+  const [catalogIcons, setCatalogIcons] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [popoverFor, setPopoverFor] = useState<{ el: HTMLElement; item: IntegrationItem } | null>(null);
   const [togglingName, setTogglingName] = useState<string | null>(null);
