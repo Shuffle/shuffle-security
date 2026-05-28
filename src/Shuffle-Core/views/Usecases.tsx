@@ -1660,6 +1660,10 @@ function IntegrationStatusLite({
   onAddApp?: () => void;
   /** Tooltip / aria label for the add button. */
   addAppLabel?: string;
+  /** When true, pulse the "+" tile to draw attention (e.g. after user tried
+   *  to enable a usecase but no source tool is connected yet). */
+  highlightAddApp?: boolean;
+
   /** Optional trailing node rendered alongside the app tiles. Pass a plain
    *  ReactNode to render under Available, or `{ node, enabled }` to control
    *  whether it appears under Enabled or Available. */
