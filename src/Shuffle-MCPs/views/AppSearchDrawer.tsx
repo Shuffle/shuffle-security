@@ -204,6 +204,7 @@ export default function AppSearchDrawer({
     return () => clearTimeout(t);
   }, [open, highlightAppName, highlightDelayMs]);
 
+  const drawerWidth = `min(${width}px, 100vw)`;
 
   const handleClose = () => {
     setDetailAppName(null);
@@ -302,9 +303,10 @@ export default function AppSearchDrawer({
             // was added in MUI v6 and is silently ignored on MUI v5 hosts,
             // which made the drawer collapse to content width when
             // consumed from the published library.
-            width: `min(${width}px, 100vw)`,
-            minWidth: `min(${width}px, 100vw)`,
-            maxWidth: '100vw',
+            width: drawerWidth,
+            minWidth: drawerWidth,
+            maxWidth: drawerWidth,
+            flex: `0 0 ${drawerWidth}`,
             height: '100vh',
             display: 'flex',
             flexDirection: 'column',
@@ -317,7 +319,13 @@ export default function AppSearchDrawer({
 
         sx={{
           zIndex: 9999,
-          '& .MuiDrawer-paper': { boxSizing: 'border-box' },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: `${drawerWidth} !important`,
+            minWidth: `${drawerWidth} !important`,
+            maxWidth: `${drawerWidth} !important`,
+            flex: `0 0 ${drawerWidth} !important`,
+          },
         }}
 
       >
@@ -351,7 +359,7 @@ export default function AppSearchDrawer({
         </Box>
 
         {/* Search body */}
-        <Box sx={{ flex: 1, boxSizing: 'border-box', overflow: 'hidden', p: 3, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ flex: 1, width: '100%', minWidth: 0, boxSizing: 'border-box', overflow: 'hidden', p: 3, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
           
 
           {/* Connection path apps — shown first */}
@@ -400,6 +408,8 @@ export default function AppSearchDrawer({
           <Box
             sx={{
               flex: 1,
+              width: '100%',
+              minWidth: 0,
               minHeight: 0,
               overflow: 'hidden',
               '& .singul-container, & .singul-search-bar-container': {
@@ -412,16 +422,22 @@ export default function AppSearchDrawer({
               },
               '& .singul-results-container': {
                 flex: 1,
+                width: '100%',
+                minWidth: 0,
                 minHeight: 0,
                 maxHeight: 'none',
                 overflowY: 'auto',
               },
               '& .singul-results-grid': {
+                width: '100% !important',
+                minWidth: '0 !important',
                 gridTemplateColumns: 'repeat(2, minmax(0, 1fr)) !important',
                 gridAutoRows: '78px !important',
                 gap: '12px !important',
               },
               '& .singul-results-grid .singul-dropdown-item': {
+                width: '100%',
+                maxWidth: '100%',
                 minWidth: 0,
                 minHeight: '78px !important',
                 maxHeight: '78px !important',
