@@ -19,6 +19,13 @@ import { refreshAllIntegrationStatus } from '@/Shuffle-MCPs/components/Integrati
 import { UsageBar } from '@/Shuffle-MCPs/components/UsageBar';
 import { useSyncHostBaseUrl } from '@/Shuffle-MCPs/useSyncHostBaseUrl';
 import type { ShuffleHostProps } from '@/Shuffle-MCPs/host-props';
+import {
+  ENDPOINT_PRESETS,
+  PROVIDER_DOMAINS,
+  SHUFFLE_AI_PRESET,
+  CUSTOM_PRESET,
+  detectLLMProvider,
+} from '@/Shuffle-MCPs/llmProviderDetect';
 
 const OPENAI_APP_NAME = 'OpenAI';
 const OPENAI_APP_ID = '5d19dd82517870c68d40cacad9b5ca91';
