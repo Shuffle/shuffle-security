@@ -211,9 +211,9 @@ const fetchSensorGroups = async (): Promise<{ groups: MonitoringGroup[]; allEnvs
         groups[0] = { ...groups[0], hosts: [...groups[0].hosts, ...orphanSensorHosts] };
       } else {
         groups.push({
-          id: 'shuffle_sensors',
-          name: 'shuffle_sensors',
-          queue: 'shuffle_sensors',
+          id: 'default_monitors',
+          name: 'default_monitors',
+          queue: 'default_monitors',
           auth: '',
           org_id: '',
           hosts: orphanSensorHosts,
@@ -1102,7 +1102,7 @@ const AuthenticatedVulnAssetsPage = () => {
     setCreatingGroupLoading(false);
   };
 
-  // Auto-create a default "shuffle_sensors" group the first time the Add Host
+  // Auto-create a default "default_monitors" group the first time the Add Host
   // dialog opens on an org with no existing groups. We wait for /getenvironments
   // to finish (`!groupsLoading`) and snapshot via `autoCreatedDefaultRef` so we
   // never POST the same env twice. Errors fall through silently — the user can
@@ -1117,7 +1117,7 @@ const AuthenticatedVulnAssetsPage = () => {
     autoCreatedDefaultRef.current = true;
     (async () => {
       setCreatingGroupLoading(true);
-      const created = await createSensorGroupEnv('shuffle_sensors', allEnvs);
+      const created = await createSensorGroupEnv('default_monitors', allEnvs);
       if (created) {
         await loadGroups();
         setSelectedGroupId(created.id);
