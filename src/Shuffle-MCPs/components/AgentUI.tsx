@@ -333,6 +333,7 @@ import { getApiUrl, getAuthHeader, API_CONFIG, getShuffleCoreFormUrl } from '@/S
 import { fetchApps } from '@/Shuffle-MCPs/appsCache';
 import { resolveApps } from '@/Shuffle-MCPs/resolveApp';
 import { toast } from '@/Shuffle-MCPs/toast';
+import { detectLLMProvider, getProviderLogoUrl } from '@/Shuffle-MCPs/llmProviderDetect';
 import { runAgent } from '@/Shuffle-MCPs/agentRun';
 import { parseScheduleHint } from '@/Shuffle-MCPs/scheduleHint';
 import AgentRunDiagnosisBanner from '@/Shuffle-MCPs/components/AgentRunDiagnosisBanner';
