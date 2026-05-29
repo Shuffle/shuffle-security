@@ -2062,7 +2062,6 @@ export const AppAuthCard = ({
                               setPendingFailedAuthId(null);
                               setSelectedAuthId(acceptId);
                               setUserHasSelected(true);
-                              setLocalCredentials({});
                               setFieldErrors({});
                               // Delete every other saved auth for this app so
                               // the accepted one is the only entry left.
@@ -2080,6 +2079,15 @@ export const AppAuthCard = ({
                               }));
                               if (onRefreshAuth) await onRefreshAuth();
                               if (onSelectAuth) onSelectAuth(app.objectID, acceptId);
+                              // Tell anyone listening (AgentUI's "Choose LLM"
+                              // chip, sidebar integration dots, etc.) that
+                              // the auth list changed so they re-read it.
+                              if (typeof window !== 'undefined') {
+                                window.dispatchEvent(new CustomEvent('integrations-changed'));
+                                // Close the agent drawer so the user lands
+                                // back on the page with the accepted auth.
+                                window.dispatchEvent(new CustomEvent('agent-drawer-close'));
+                              }
                             }}
                             sx={{
                               color: 'hsl(var(--muted-foreground))',
