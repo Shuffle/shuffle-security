@@ -1349,6 +1349,10 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // suggestions in the picker. NOT auto-selected as `chosenApps`.
   const [availableApps, setAvailableApps] = useState<AgentUIApp[]>([]);
   const [authAppsLoading, setAuthAppsLoading] = useState(autoLoadApps && hasApiKey);
+  // Detected LLM provider derived from the saved OpenAI auth's `url` field.
+  // Populated by `loadAuthenticatedApps` so the "Choose LLM" chip can show
+  // the matching vendor logo and label.
+  const [detectedLLM, setDetectedLLM] = useState<{ label: string; url: string; logo: string } | null>(null);
   // Apps actually allowed for the current execution, derived from the agent's
   // `allowed_actions` field (format: "app:<id>:<name>"). Falls back to
   // `chosenApps` when the field is missing (legacy runs).
