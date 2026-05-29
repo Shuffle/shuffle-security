@@ -840,7 +840,7 @@ export const AppAuthCard = ({
                 displayEmpty
                 sx={{
                   backgroundColor: 'action.hover',
-                  borderRadius: 2,
+                  borderRadius: 1,
                   color: 'text.primary',
                   '& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
                   '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'text.disabled' },
