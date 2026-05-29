@@ -78,20 +78,8 @@ export interface LocalLLMTestResult {
   message: string;
   models?: string[];
   latencyMs?: number;
-}
-const PROVIDER_DOMAINS: Record<string, string> = {
-  'Shuffle AI': 'shuffler.io',
-  OpenAI: 'openai.com',
-  Anthropic: 'anthropic.com',
-  'Google Gemini': 'gemini.google.com',
-  Mistral: 'mistral.ai',
-  Groq: 'groq.com',
-  DeepSeek: 'deepseek.com',
-  'Together AI': 'together.ai',
-  OpenRouter: 'openrouter.ai',
-  'Ollama (localhost)': 'ollama.com',
-  'LM Studio (localhost)': 'lmstudio.ai',
-};
+
+
 
 const ProviderLogo = ({ label, url }: { label: string; url?: string }) => {
   const [errored, setErrored] = useState(false);
