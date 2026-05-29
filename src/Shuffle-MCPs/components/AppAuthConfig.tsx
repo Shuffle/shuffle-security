@@ -591,7 +591,7 @@ export const AppAuthCard = ({
     }
   }, [auth?.parameters, disableUrlPrefill]);
 
-  // Sync externally-driven URL/endpoint changes (e.g. provider preset
+  // Sync externally-driven URL/endpoint/model changes (e.g. provider preset
   // selectors) into the local form state so the field reflects the choice.
   useEffect(() => {
     const incoming = authState.credentials || {};
@@ -601,7 +601,8 @@ export const AppAuthCard = ({
       for (const [k, v] of Object.entries(incoming)) {
         const lk = k.toLowerCase();
         const isUrlish = lk.includes('url') || lk.includes('endpoint') || lk.includes('host');
-        if (isUrlish && typeof v === 'string' && v !== prev[k]) {
+        const isModel = lk === 'model';
+        if ((isUrlish || isModel) && typeof v === 'string' && v !== prev[k]) {
           next[k] = v;
           changed = true;
         }
