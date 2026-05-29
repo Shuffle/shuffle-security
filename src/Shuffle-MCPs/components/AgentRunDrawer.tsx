@@ -141,9 +141,14 @@ const AgentRunDrawer = ({
         setActiveTab('localLLM');
       }
     };
+    const onClose2 = () => { onClose(); };
     window.addEventListener('agent-drawer-open', onOpen as EventListener);
-    return () => window.removeEventListener('agent-drawer-open', onOpen as EventListener);
-  }, []);
+    window.addEventListener('agent-drawer-close', onClose2 as EventListener);
+    return () => {
+      window.removeEventListener('agent-drawer-open', onOpen as EventListener);
+      window.removeEventListener('agent-drawer-close', onClose2 as EventListener);
+    };
+  }, [onClose]);
 
   const effectiveLocalLLMSlot = localLLMSlot ?? (
     <LocalLLMConfig
