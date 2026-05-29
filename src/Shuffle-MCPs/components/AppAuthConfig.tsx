@@ -433,12 +433,16 @@ export const AppAuthCard = ({
       });
       // If this error came from the auto-test that fires right after a brand
       // new auth was saved, switch the form back to the "Add new" view so the
-      // user's still-populated credentials are visible and editable.
+      // user's still-populated credentials are visible and editable. We also
+      // remember the saved-but-failed auth so we can offer a "Save anyway"
+      // secondary CTA — our test isn't always authoritative.
       if (autoTestFiredRef.current === testingAuthId) {
         setSelectedAuthId(ADD_NEW_AUTH);
         setUserHasSelected(true);
+        setPendingFailedAuthId(testingAuthId);
         autoTestFiredRef.current = null;
       }
+
       // Clear testingAuthId after processing completed status
       setTestingAuthId(null);
     }
