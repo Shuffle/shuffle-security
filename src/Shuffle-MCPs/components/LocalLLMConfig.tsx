@@ -415,6 +415,42 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
         />
       )}
 
+      {!isShuffleAI && (PROVIDER_MODELS[effectivePreset]?.length ?? 0) > 0 && (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+            Model
+          </Typography>
+          <Autocomplete
+            size="small"
+            fullWidth
+            disableClearable
+            options={modelOptions}
+            value={modelSelectValue}
+            onChange={(_e, val) => handleModelChange(val)}
+            isOptionEqualToValue={(opt, val) => opt === val}
+            slotProps={{
+              paper: { sx: { bgcolor: 'hsl(var(--popover))', color: 'hsl(var(--popover-foreground))', border: '1px solid hsl(var(--border))' } },
+              popper: { sx: { zIndex: 9999 } },
+            }}
+            renderInput={(params) => (
+              <TextField {...params} placeholder="Select a model…" />
+            )}
+          />
+          {modelSelectValue === CUSTOM_MODEL && (
+            <TextField
+              size="small"
+              fullWidth
+              placeholder="Enter a custom model identifier"
+              value={customModel || (isCustomModel ? currentModel : '')}
+              onChange={(e) => handleCustomModelChange(e.target.value)}
+              helperText="Exact model name as expected by the provider's API"
+              sx={{ '& .MuiFormHelperText-root': { color: 'hsl(var(--muted-foreground))' } }}
+            />
+          )}
+        </Box>
+      )}
+
+
       {!isShuffleAI && (
         <AppAuthCard
           app={OPENAI_ALGOLIA_APP}
