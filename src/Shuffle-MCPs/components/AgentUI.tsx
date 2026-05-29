@@ -4165,18 +4165,16 @@ const AgentUI: React.FC<AgentUIProps> = ({
                         </Typography>
                       ) : null}
 
-                      {!isRunning && (
-                        <Box>
-                          <Button
-                            size="small"
-                            variant="text"
-                            onClick={() => setViewMode('detailed')}
-                            sx={{ color: 'hsl(var(--primary))', textTransform: 'none', px: 0 }}
-                          >
-                            View detailed timeline →
-                          </Button>
-                        </Box>
-                      )}
+                      <Box>
+                        <Button
+                          size="small"
+                          variant="text"
+                          onClick={() => setViewMode('detailed')}
+                          sx={{ color: 'hsl(var(--primary))', textTransform: 'none', px: 0 }}
+                        >
+                          {isRunning ? 'View live detailed timeline →' : 'View detailed timeline →'}
+                        </Button>
+                      </Box>
                     </>
                   );
                 })()}
