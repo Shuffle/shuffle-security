@@ -292,26 +292,29 @@ export default function AppSearchDrawer({
         anchor={anchor}
         open={open && detailAppName === null}
         onClose={handleClose}
-        slotProps={{
-          paper: {
-            className: scopeClassName,
-            sx: {
-              // Strict, environment-independent sizing so the drawer
-              // looks identical on every host (Shuffle Security, /agents,
-              // test page, embedded library, etc.). No breakpoint variance.
-              width: `min(${width}px, 100vw)`,
-              minWidth: `min(${width}px, 100vw)`,
-              maxWidth: '100vw',
-              height: '100vh',
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden',
-              background: 'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)',
-              borderLeft: anchor === 'right' ? '1px solid hsl(var(--border))' : 'none',
-              borderRight: anchor === 'left' ? '1px solid hsl(var(--border))' : 'none',
-            },
+        PaperProps={{
+          className: scopeClassName,
+          sx: {
+            // Strict, environment-independent sizing so the drawer
+            // looks identical on every host (Shuffle Security, /agents,
+            // test page, embedded library, etc.). No breakpoint variance.
+            // NOTE: use PaperProps (not slotProps.paper) — slotProps.paper
+            // was added in MUI v6 and is silently ignored on MUI v5 hosts,
+            // which made the drawer collapse to content width when
+            // consumed from the published library.
+            width: `min(${width}px, 100vw)`,
+            minWidth: `min(${width}px, 100vw)`,
+            maxWidth: '100vw',
+            height: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            background: 'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)',
+            borderLeft: anchor === 'right' ? '1px solid hsl(var(--border))' : 'none',
+            borderRight: anchor === 'left' ? '1px solid hsl(var(--border))' : 'none',
           },
         }}
+
         sx={{
           zIndex: 9999,
           '& .MuiDrawer-paper': { boxSizing: 'border-box' },
