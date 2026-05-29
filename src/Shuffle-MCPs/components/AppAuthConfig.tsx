@@ -2056,7 +2056,7 @@ export const AppAuthCard = ({
                           <Button
                             variant="text"
                             size="medium"
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation();
                               const acceptId = pendingFailedAuthId;
                               setPendingFailedAuthId(null);
@@ -2064,6 +2064,21 @@ export const AppAuthCard = ({
                               setUserHasSelected(true);
                               setLocalCredentials({});
                               setFieldErrors({});
+                              // Delete every other saved auth for this app so
+                              // the accepted one is the only entry left.
+                              const stale = apiAuthEntries.filter((e) => e.id && e.id !== acceptId);
+                              await Promise.all(stale.map(async (entry) => {
+                                try {
+                                  await fetch(getApiUrl(`/api/v1/apps/authentication/${entry.id}`), {
+                                    method: 'DELETE',
+                                    credentials: 'include',
+                                    headers: { ...getAuthHeader() },
+                                  });
+                                } catch (err) {
+                                  console.error('[AppAuthCard] Failed to delete stale auth on Save anyway:', err);
+                                }
+                              }));
+                              if (onRefreshAuth) await onRefreshAuth();
                               if (onSelectAuth) onSelectAuth(app.objectID, acceptId);
                             }}
                             sx={{
