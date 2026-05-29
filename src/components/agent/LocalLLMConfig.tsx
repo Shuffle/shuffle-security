@@ -493,6 +493,8 @@ const LocalLLMConfig = ({ compact, hasOpenAIAuth, globalUrl }: LocalLLMConfigPro
           hideDocsLink
           hideUrlFields
           borderless
+          compactAuthForm
+
         />
       )}
 

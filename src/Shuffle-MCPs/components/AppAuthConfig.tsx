@@ -185,6 +185,12 @@ export interface AppAuthCardProps extends ShuffleHostProps {
   /** Render without the outer Card border so the component can be embedded
    *  inside another bordered container without the nested "double border" look. */
   borderless?: boolean;
+  /** Compact mode for embedded auth setup (e.g. Local LLM). Hides the
+   *  "Select authentication" dropdown and the large "Pending Verification"
+   *  detail panel with its standalone Test Connection button. The inline
+   *  credentials form (with the small "Test Authentication" CTA) is always
+   *  visible so users can edit & retest in one place. */
+  compactAuthForm?: boolean;
   /** Render additional fields inside the expanded body, above the credential
    *  inputs. The slot receives the live `localCredentials` and a `setField`
    *  helper so its values are persisted as part of the auth on Save. */
@@ -193,6 +199,7 @@ export interface AppAuthCardProps extends ShuffleHostProps {
     setField: (key: string, value: string) => void;
   }) => React.ReactNode;
 }
+
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -226,7 +233,9 @@ export const AppAuthCard = ({
   hideDocsLink,
   hideUrlFields,
   borderless,
+  compactAuthForm,
   extraFieldsSlot,
+
   globalUrl,
   userdata,
   isLoaded,
@@ -453,7 +462,7 @@ export const AppAuthCard = ({
   // User can manually switch back to other auths or add new one
   const isCredentialError = localTestMessages.errorCode === 401 || localTestMessages.errorCode === 403;
 
-  const showAddNewForm = selectedAuthId === ADD_NEW_AUTH;
+  const showAddNewForm = compactAuthForm ? true : selectedAuthId === ADD_NEW_AUTH;
 
   // Compute configured/tested status for the SELECTED auth entry only (not any auth)
   const isConfigured = selectedAuth?.active === true;
@@ -1269,7 +1278,8 @@ export const AppAuthCard = ({
             }}
           >
             {/* Auth Selection Dropdown - always at top */}
-            {apiAuthEntries.length > 0 && (
+            {!compactAuthForm && apiAuthEntries.length > 0 && (
+
               <Box sx={{ mb: 3 }}>
                 <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', mb: 1 }}>
                   Select authentication

@@ -414,6 +414,8 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
           hideDocsLink
           hideUrlFields
           borderless
+          compactAuthForm
+
           extraFieldsSlot={
             (PROVIDER_MODELS[effectivePreset]?.length ?? 0) > 0
               ? ({ credentials, setField }) => {
