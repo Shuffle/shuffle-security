@@ -486,6 +486,10 @@ export const AppAuthCard = ({
   const [localCredentials, setLocalCredentials] = useState<Record<string, string>>(authState.credentials || {});
   // Track which secret fields the user has chosen to reveal (eye toggle).
   const [revealedFields, setRevealedFields] = useState<Record<string, boolean>>({});
+  // Auth id of a freshly-saved entry whose auto-test failed — drives the
+  // "Save anyway" secondary CTA so the user can accept it despite the failure.
+  const [pendingFailedAuthId, setPendingFailedAuthId] = useState<string | null>(null);
+
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
