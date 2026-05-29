@@ -242,6 +242,29 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
     handleAuthChange(OPENAI_APP_ID, { ...authState.credentials, url: value });
   };
 
+  const modelOptions = useMemo(() => {
+    const presetModels = PROVIDER_MODELS[effectivePreset] || [];
+    return [...presetModels, CUSTOM_MODEL];
+  }, [effectivePreset]);
+
+  const isCustomModel = currentModel !== '' && !((PROVIDER_MODELS[effectivePreset] || []).includes(currentModel));
+  const modelSelectValue = isCustomModel ? CUSTOM_MODEL : (currentModel || null);
+
+  const handleModelChange = (label: string | null) => {
+    if (!label) return;
+    if (label === CUSTOM_MODEL) {
+      handleAuthChange(OPENAI_APP_ID, { ...authState.credentials, model: customModel });
+      return;
+    }
+    setCustomModel('');
+    handleAuthChange(OPENAI_APP_ID, { ...authState.credentials, model: label });
+  };
+
+  const handleCustomModelChange = (value: string) => {
+    setCustomModel(value);
+    handleAuthChange(OPENAI_APP_ID, { ...authState.credentials, model: value });
+  };
+
   const isShuffleAI = effectivePreset === SHUFFLE_AI_PRESET;
   const orgId = userdata?.active_org?.id;
   const [orgData, setOrgData] = useState<{
