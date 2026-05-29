@@ -1021,9 +1021,12 @@ export const AppAuthCard = ({
     setSaveSuccess(success);
     if (success) {
       setUserHasSelected(false); // Allow auto-selection to pick up new auth
-      setLocalCredentials({}); // Clear form after success
       setFieldErrors({}); // Clear errors
+      // NOTE: Intentionally keep `localCredentials` populated so that if the
+      // auto-test that runs right after a successful PUT fails, the user can
+      // edit and retry without re-typing every field.
     }
+
   };
 
   // Helper to update local credentials and notify parent
