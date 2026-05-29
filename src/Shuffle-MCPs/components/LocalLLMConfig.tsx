@@ -155,7 +155,7 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
   };
 
   const currentUrl = (authState.credentials?.url as string) || '';
-  const currentModel = (authState.credentials?.model as string) || '';
+  // Model is now persisted inside the AppAuthCard credentials (read via extraFieldsSlot).
   const [customModel, setCustomModel] = useState<string>('');
   const attemptedDeletionRef = useRef<Set<string>>(new Set());
 
@@ -242,28 +242,8 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
     handleAuthChange(OPENAI_APP_ID, { ...authState.credentials, url: value });
   };
 
-  const modelOptions = useMemo(() => {
-    const presetModels = PROVIDER_MODELS[effectivePreset] || [];
-    return [...presetModels, CUSTOM_MODEL];
-  }, [effectivePreset]);
-
-  const isCustomModel = currentModel !== '' && !((PROVIDER_MODELS[effectivePreset] || []).includes(currentModel));
-  const modelSelectValue = isCustomModel ? CUSTOM_MODEL : (currentModel || null);
-
-  const handleModelChange = (label: string | null) => {
-    if (!label) return;
-    if (label === CUSTOM_MODEL) {
-      handleAuthChange(OPENAI_APP_ID, { ...authState.credentials, model: customModel });
-      return;
-    }
-    setCustomModel('');
-    handleAuthChange(OPENAI_APP_ID, { ...authState.credentials, model: label });
-  };
-
-  const handleCustomModelChange = (value: string) => {
-    setCustomModel(value);
-    handleAuthChange(OPENAI_APP_ID, { ...authState.credentials, model: value });
-  };
+  // Model dropdown lives inside the AppAuthCard via extraFieldsSlot so its
+  // value is persisted as a credential field on Save.
 
   const isShuffleAI = effectivePreset === SHUFFLE_AI_PRESET;
   const orgId = userdata?.active_org?.id;
@@ -415,42 +395,6 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
         />
       )}
 
-      {!isShuffleAI && (PROVIDER_MODELS[effectivePreset]?.length ?? 0) > 0 && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-            Model
-          </Typography>
-          <Autocomplete
-            size="small"
-            fullWidth
-            disableClearable
-            options={modelOptions}
-            value={modelSelectValue}
-            onChange={(_e, val) => handleModelChange(val)}
-            isOptionEqualToValue={(opt, val) => opt === val}
-            slotProps={{
-              paper: { sx: { bgcolor: 'hsl(var(--popover))', color: 'hsl(var(--popover-foreground))', border: '1px solid hsl(var(--border))' } },
-              popper: { sx: { zIndex: 9999 } },
-            }}
-            renderInput={(params) => (
-              <TextField {...params} placeholder="Select a model…" />
-            )}
-          />
-          {modelSelectValue === CUSTOM_MODEL && (
-            <TextField
-              size="small"
-              fullWidth
-              placeholder="Enter a custom model identifier"
-              value={customModel || (isCustomModel ? currentModel : '')}
-              onChange={(e) => handleCustomModelChange(e.target.value)}
-              helperText="Exact model name as expected by the provider's API"
-              sx={{ '& .MuiFormHelperText-root': { color: 'hsl(var(--muted-foreground))' } }}
-            />
-          )}
-        </Box>
-      )}
-
-
       {!isShuffleAI && (
         <AppAuthCard
           app={OPENAI_ALGOLIA_APP}
@@ -468,6 +412,61 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
           hideDocsLink
           hideUrlFields
           borderless
+          extraFieldsSlot={
+            (PROVIDER_MODELS[effectivePreset]?.length ?? 0) > 0
+              ? ({ credentials, setField }) => {
+                  const liveModel = credentials.model || '';
+                  const presetModels = PROVIDER_MODELS[effectivePreset] || [];
+                  const liveIsCustom = liveModel !== '' && !presetModels.includes(liveModel);
+                  const liveSelectValue = liveIsCustom ? CUSTOM_MODEL : (liveModel || null);
+                  return (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                        Model
+                      </Typography>
+                      <Autocomplete
+                        size="small"
+                        fullWidth
+                        disableClearable
+                        options={[...presetModels, CUSTOM_MODEL]}
+                        value={liveSelectValue}
+                        onChange={(_e, val) => {
+                          if (!val) return;
+                          if (val === CUSTOM_MODEL) {
+                            setField('model', customModel);
+                          } else {
+                            setCustomModel('');
+                            setField('model', val);
+                          }
+                        }}
+                        isOptionEqualToValue={(opt, val) => opt === val}
+                        slotProps={{
+                          paper: { sx: { bgcolor: 'hsl(var(--popover))', color: 'hsl(var(--popover-foreground))', border: '1px solid hsl(var(--border))' } },
+                          popper: { sx: { zIndex: 9999 } },
+                        }}
+                        renderInput={(params) => (
+                          <TextField {...params} placeholder="Select a model…" />
+                        )}
+                      />
+                      {liveSelectValue === CUSTOM_MODEL && (
+                        <TextField
+                          size="small"
+                          fullWidth
+                          placeholder="Enter a custom model identifier"
+                          value={customModel || (liveIsCustom ? liveModel : '')}
+                          onChange={(e) => {
+                            setCustomModel(e.target.value);
+                            setField('model', e.target.value);
+                          }}
+                          helperText="Exact model name as expected by the provider's API"
+                          sx={{ '& .MuiFormHelperText-root': { color: 'hsl(var(--muted-foreground))' } }}
+                        />
+                      )}
+                    </Box>
+                  );
+                }
+              : undefined
+          }
           globalUrl={globalUrl}
           userdata={userdata}
           isLoaded={isLoaded}

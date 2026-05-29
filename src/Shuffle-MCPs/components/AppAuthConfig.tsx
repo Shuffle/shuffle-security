@@ -182,6 +182,13 @@ export interface AppAuthCardProps extends ShuffleHostProps {
   /** Render without the outer Card border so the component can be embedded
    *  inside another bordered container without the nested "double border" look. */
   borderless?: boolean;
+  /** Render additional fields inside the expanded body, above the credential
+   *  inputs. The slot receives the live `localCredentials` and a `setField`
+   *  helper so its values are persisted as part of the auth on Save. */
+  extraFieldsSlot?: (api: {
+    credentials: Record<string, string>;
+    setField: (key: string, value: string) => void;
+  }) => React.ReactNode;
 }
 
 const containerVariants = {
@@ -216,6 +223,7 @@ export const AppAuthCard = ({
   hideDocsLink,
   hideUrlFields,
   borderless,
+  extraFieldsSlot,
   globalUrl,
   userdata,
   isLoaded,
@@ -1932,6 +1940,7 @@ export const AppAuthCard = ({
                   </Alert>
                 ) : (
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    {extraFieldsSlot?.({ credentials: localCredentials, setField: handleCredentialChange })}
                     {/* Render dynamic fields based on auth type */}
                     {renderOAuth2Fields()}
                     {renderParameterFields()}
