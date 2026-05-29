@@ -847,7 +847,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
         />
         <Box sx={{
           flex: 1,
-          minWidth: 0,
+          minWidth: 180,
           fontSize: '0.85rem',
           color: 'hsl(var(--foreground))',
           maxHeight: 60,
@@ -860,7 +860,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
           <Markdown remarkPlugins={[remarkGfm, remarkBreaks]}>{normalizeMarkdown(displayLabel)}</Markdown>
         </Box>
         <Tooltip title={hasTiming ? `Duration: ${dur.toFixed(2)}s · ${new Date(itemStart * 1000).toLocaleString()}` : 'No timing data'}>
-          <Box sx={{ width: maxWidth, position: 'relative', height: 10, flexShrink: 0 }}>
+          <Box sx={{ width: maxWidth, maxWidth, minWidth: 40, position: 'relative', height: 10, flexShrink: 1, flexBasis: maxWidth }}>
             {dur > 0 && (
               <Box sx={{
                 position: 'absolute',
