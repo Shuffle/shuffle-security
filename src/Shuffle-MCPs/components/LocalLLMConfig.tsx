@@ -19,11 +19,16 @@ import { refreshAllIntegrationStatus } from '@/Shuffle-MCPs/components/Integrati
 import { UsageBar } from '@/Shuffle-MCPs/components/UsageBar';
 import { useSyncHostBaseUrl } from '@/Shuffle-MCPs/useSyncHostBaseUrl';
 import type { ShuffleHostProps } from '@/Shuffle-MCPs/host-props';
+import {
+  ENDPOINT_PRESETS,
+  PROVIDER_DOMAINS,
+  SHUFFLE_AI_PRESET,
+  CUSTOM_PRESET,
+  detectLLMProvider,
+} from '@/Shuffle-MCPs/llmProviderDetect';
 
 const OPENAI_APP_NAME = 'OpenAI';
 const OPENAI_APP_ID = '5d19dd82517870c68d40cacad9b5ca91';
-const SHUFFLE_AI_PRESET = 'Shuffle AI';
-const CUSTOM_PRESET = 'Custom / self-hosted';
 
 const OPENAI_ALGOLIA_APP: AlgoliaSearchApp = {
   name: OPENAI_APP_NAME,
@@ -45,20 +50,6 @@ const OPENAI_ALGOLIA_APP: AlgoliaSearchApp = {
   verified: true,
 };
 
-const ENDPOINT_PRESETS: Array<{ label: string; url: string; apiKeyUrl?: string; apiKeyHint?: string }> = [
-  { label: SHUFFLE_AI_PRESET, url: '' },
-  { label: 'OpenAI', url: 'https://api.openai.com/v1', apiKeyUrl: 'https://platform.openai.com/api-keys', apiKeyHint: 'Create a key under API keys in the OpenAI platform dashboard.' },
-  { label: 'Anthropic', url: 'https://api.anthropic.com/v1/', apiKeyUrl: 'https://console.anthropic.com/settings/keys', apiKeyHint: 'Generate a key under Settings → API Keys in the Anthropic Console.' },
-  { label: 'Google Gemini', url: 'https://generativelanguage.googleapis.com/v1beta/openai/', apiKeyUrl: 'https://aistudio.google.com/app/apikey', apiKeyHint: 'Create a key in Google AI Studio under Get API key.' },
-  { label: 'Mistral', url: 'https://api.mistral.ai/v1', apiKeyUrl: 'https://console.mistral.ai/api-keys/', apiKeyHint: 'Create a key under API Keys in the Mistral Console.' },
-  { label: 'Groq', url: 'https://api.groq.com/openai/v1', apiKeyUrl: 'https://console.groq.com/keys', apiKeyHint: 'Create a key under API Keys in the Groq Console.' },
-  { label: 'DeepSeek', url: 'https://api.deepseek.com/v1', apiKeyUrl: 'https://platform.deepseek.com/api_keys', apiKeyHint: 'Create a key under API Keys in the DeepSeek platform.' },
-  { label: 'Together AI', url: 'https://api.together.xyz/v1', apiKeyUrl: 'https://api.together.ai/settings/api-keys', apiKeyHint: 'Create a key under Settings → API Keys in Together AI.' },
-  { label: 'OpenRouter', url: 'https://openrouter.ai/api/v1', apiKeyUrl: 'https://openrouter.ai/keys', apiKeyHint: 'Create a key under Keys in your OpenRouter dashboard.' },
-  { label: 'Ollama (localhost)', url: 'http://localhost:11434/v1', apiKeyHint: 'Local Ollama does not require an API key — any non-empty value works.' },
-  { label: 'LM Studio (localhost)', url: 'http://localhost:1234/v1', apiKeyHint: 'Local LM Studio does not require an API key — any non-empty value works.' },
-  { label: CUSTOM_PRESET, url: '' },
-];
 
 const CUSTOM_MODEL = 'Custom…';
 
@@ -88,19 +79,10 @@ export interface LocalLLMTestResult {
   models?: string[];
   latencyMs?: number;
 }
-const PROVIDER_DOMAINS: Record<string, string> = {
-  'Shuffle AI': 'shuffler.io',
-  OpenAI: 'openai.com',
-  Anthropic: 'anthropic.com',
-  'Google Gemini': 'gemini.google.com',
-  Mistral: 'mistral.ai',
-  Groq: 'groq.com',
-  DeepSeek: 'deepseek.com',
-  'Together AI': 'together.ai',
-  OpenRouter: 'openrouter.ai',
-  'Ollama (localhost)': 'ollama.com',
-  'LM Studio (localhost)': 'lmstudio.ai',
-};
+
+
+
+
 
 const ProviderLogo = ({ label, url }: { label: string; url?: string }) => {
   const [errored, setErrored] = useState(false);
@@ -154,7 +136,12 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
     credentials: {},
   };
 
-  const currentUrl = (authState.credentials?.url as string) || '';
+  // Prefer the in-memory edit (authState.credentials), but fall back to the
+  // persisted URL on the saved auth entry so we can auto-detect the vendor
+  // even when the user has not opened/edited the form yet.
+  const savedUrlFromEntry = (((openaiEntries[0] as any)?.fields) as Array<{ key?: string; value?: string }> | undefined || [])
+    .find((f) => (f?.key || '').toLowerCase() === 'url')?.value || '';
+  const currentUrl = ((authState.credentials?.url as string) || savedUrlFromEntry || '').trim();
   // Model is now persisted inside the AppAuthCard credentials (read via extraFieldsSlot).
   const [customModel, setCustomModel] = useState<string>('');
   const [customMode, setCustomMode] = useState<boolean>(false);
@@ -196,8 +183,7 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
     if (selectedPreset) return selectedPreset;
     if (!currentUrl && !hasOpenAIEntries) return SHUFFLE_AI_PRESET;
     if (!currentUrl) return '';
-    const match = ENDPOINT_PRESETS.find((p) => p.url && p.url === currentUrl);
-    return match ? match.label : CUSTOM_PRESET;
+    return detectLLMProvider(currentUrl)?.label || CUSTOM_PRESET;
   }, [selectedPreset, currentUrl, hasOpenAIEntries]);
 
   const applyShuffleAI = async () => {

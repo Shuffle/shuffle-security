@@ -333,6 +333,7 @@ import { getApiUrl, getAuthHeader, API_CONFIG, getShuffleCoreFormUrl } from '@/S
 import { fetchApps } from '@/Shuffle-MCPs/appsCache';
 import { resolveApps } from '@/Shuffle-MCPs/resolveApp';
 import { toast } from '@/Shuffle-MCPs/toast';
+import { detectLLMProvider, getProviderLogoUrl } from '@/Shuffle-MCPs/llmProviderDetect';
 import { runAgent } from '@/Shuffle-MCPs/agentRun';
 import { parseScheduleHint } from '@/Shuffle-MCPs/scheduleHint';
 import AgentRunDiagnosisBanner from '@/Shuffle-MCPs/components/AgentRunDiagnosisBanner';
@@ -1349,6 +1350,10 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // suggestions in the picker. NOT auto-selected as `chosenApps`.
   const [availableApps, setAvailableApps] = useState<AgentUIApp[]>([]);
   const [authAppsLoading, setAuthAppsLoading] = useState(autoLoadApps && hasApiKey);
+  // Detected LLM provider derived from the saved OpenAI auth's `url` field.
+  // Populated by `loadAuthenticatedApps` so the "Choose LLM" chip can show
+  // the matching vendor logo and label.
+  const [detectedLLM, setDetectedLLM] = useState<{ label: string; url: string; logo: string } | null>(null);
   // Apps actually allowed for the current execution, derived from the agent's
   // `allowed_actions` field (format: "app:<id>:<name>"). Falls back to
   // `chosenApps` when the field is missing (legacy runs).
@@ -1708,12 +1713,25 @@ const AgentUI: React.FC<AgentUIProps> = ({
       const list = Array.isArray(result) ? result : (result?.data || []);
       const seen = new Set<string>();
       const loaded: AgentUIApp[] = [];
+      let detectedFromEntries: { label: string; url: string; logo: string } | null = null;
       for (const entry of list) {
         const app = entry?.app || entry;
         const name: string | undefined = app?.name;
         if (!name) continue;
         const valid = entry?.active || entry?.validation?.valid || entry?.hasValidAuth || app?.is_valid || app?.tested;
         if (valid === false) continue;
+        // Capture the OpenAI auth URL so the "Choose LLM" chip can show the
+        // vendor logo derived from it (OpenAI, Anthropic, Groq, etc.).
+        if (!detectedFromEntries && (name.toLowerCase() === 'openai' || app?.id === '5d19dd82517870c68d40cacad9b5ca91')) {
+          const urlField = (entry?.fields || []).find((f: any) => (f?.key || '').toLowerCase() === 'url');
+          const urlVal = (urlField?.value || '').trim();
+          if (urlVal) {
+            const preset = detectLLMProvider(urlVal);
+            if (preset) {
+              detectedFromEntries = { label: preset.label, url: urlVal, logo: getProviderLogoUrl(preset.label, urlVal) };
+            }
+          }
+        }
         const key = normalizeAgentAppName(name);
         if (seen.has(key)) continue;
         seen.add(key);
@@ -1727,6 +1745,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
       // Always update — even an empty list — so revoked auth re-enables the
       // "requires authentication" banner instead of being stuck on stale state.
       setAvailableApps(loaded);
+      setDetectedLLM(detectedFromEntries);
     } catch {
       // silent — caller can still pick apps manually
     } finally {
@@ -3656,8 +3675,18 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted) / 0.5)' },
                     }}
                   >
-                    <SettingsIcon size={14} />
-                    Choose LLM
+                    {detectedLLM?.logo ? (
+                      <Box
+                        component="img"
+                        src={detectedLLM.logo}
+                        alt=""
+                        sx={{ width: 14, height: 14, borderRadius: '3px', objectFit: 'contain', display: 'block' }}
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    ) : (
+                      <SettingsIcon size={14} />
+                    )}
+                    {detectedLLM?.label || 'Choose LLM'}
                   </Box>
                 </Tooltip>
                 )}
