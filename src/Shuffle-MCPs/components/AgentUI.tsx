@@ -3675,8 +3675,18 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted) / 0.5)' },
                     }}
                   >
-                    <SettingsIcon size={14} />
-                    Choose LLM
+                    {detectedLLM?.logo ? (
+                      <Box
+                        component="img"
+                        src={detectedLLM.logo}
+                        alt=""
+                        sx={{ width: 14, height: 14, borderRadius: '3px', objectFit: 'contain', display: 'block' }}
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    ) : (
+                      <SettingsIcon size={14} />
+                    )}
+                    {detectedLLM?.label || 'Choose LLM'}
                   </Box>
                 </Tooltip>
                 )}
