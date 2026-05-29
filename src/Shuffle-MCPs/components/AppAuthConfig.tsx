@@ -480,6 +480,9 @@ export const AppAuthCard = ({
 
   // Local credentials state for the form
   const [localCredentials, setLocalCredentials] = useState<Record<string, string>>(authState.credentials || {});
+  // Track which secret fields the user has chosen to reveal (eye toggle).
+  const [revealedFields, setRevealedFields] = useState<Record<string, boolean>>({});
+
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // App config fetching for dynamic fields
