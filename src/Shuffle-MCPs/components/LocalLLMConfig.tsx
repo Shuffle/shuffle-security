@@ -78,6 +78,9 @@ export interface LocalLLMTestResult {
   message: string;
   models?: string[];
   latencyMs?: number;
+}
+
+
 
 
 
