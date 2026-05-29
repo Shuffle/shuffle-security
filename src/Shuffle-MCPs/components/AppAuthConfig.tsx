@@ -343,10 +343,6 @@ export const AppAuthCard = ({
           autoTestFiredRef.current = newestId;
           // Small delay to let state settle before firing test
           setTimeout(() => {
-            toast({
-              title: 'Auto-testing new authentication',
-              description: `Verifying connection for ${app.name.replace(/_/g, ' ')}...`,
-            });
             setTestingAuthId(newestId);
             onTestConnection(app.objectID, newestId);
           }, 500);
