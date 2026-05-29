@@ -233,7 +233,9 @@ export const AppAuthCard = ({
   hideDocsLink,
   hideUrlFields,
   borderless,
+  compactAuthForm,
   extraFieldsSlot,
+
   globalUrl,
   userdata,
   isLoaded,
