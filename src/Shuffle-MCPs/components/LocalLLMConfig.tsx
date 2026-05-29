@@ -183,8 +183,7 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
     if (selectedPreset) return selectedPreset;
     if (!currentUrl && !hasOpenAIEntries) return SHUFFLE_AI_PRESET;
     if (!currentUrl) return '';
-    const match = ENDPOINT_PRESETS.find((p) => p.url && p.url === currentUrl);
-    return match ? match.label : CUSTOM_PRESET;
+    return detectLLMProvider(currentUrl)?.label || CUSTOM_PRESET;
   }, [selectedPreset, currentUrl, hasOpenAIEntries]);
 
   const applyShuffleAI = async () => {
