@@ -146,37 +146,12 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
   const [customModel, setCustomModel] = useState<string>('');
   const [customMode, setCustomMode] = useState<boolean>(false);
 
-  const attemptedDeletionRef = useRef<Set<string>>(new Set());
-
-  useEffect(() => {
-    if (authState.status === 'testing') return;
-    const failedEntries = openaiEntries.filter((e) => e.validation && e.validation.valid === false && e.id);
-    if (failedEntries.length === 0) return;
-    let cancelled = false;
-    (async () => {
-      let deletedAny = false;
-      for (const entry of failedEntries) {
-        const id = entry.id as string;
-        if (attemptedDeletionRef.current.has(id)) continue;
-        attemptedDeletionRef.current.add(id);
-        try {
-          const resp = await fetch(getApiUrl(`/api/v1/apps/authentication/${id}`), {
-            method: 'DELETE',
-            credentials: 'include',
-            headers: { ...getAuthHeader() },
-          });
-          if (resp.ok) deletedAny = true;
-        } catch (err) {
-          console.error('[LocalLLMConfig] Failed to auto-delete failed OpenAI auth:', err);
-        }
-      }
-      if (!cancelled && deletedAny) {
-        await refreshAuth();
-        refreshAllIntegrationStatus();
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [openaiEntries, authState.status, refreshAuth]);
+  // NOTE: Previously this component auto-deleted any failed OpenAI auth
+  // entry as soon as its validation came back false. That fought against the
+  // "Save anyway" CTA in AppAuthCard — the user would click it, but the
+  // failed entry had already been wiped from the server. The user now owns
+  // the lifecycle: keep it (Save anyway), retry it, or delete it manually
+  // from the auth selector.
 
   const hasOpenAIEntries = openaiEntries.length > 0;
   const effectivePreset = useMemo(() => {
