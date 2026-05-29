@@ -60,6 +60,22 @@ const ENDPOINT_PRESETS: Array<{ label: string; url: string; apiKeyUrl?: string; 
   { label: CUSTOM_PRESET, url: '' },
 ];
 
+const CUSTOM_MODEL = 'Custom…';
+
+// Curated 2026-era model lists per provider. Custom value can always be typed in.
+const PROVIDER_MODELS: Record<string, string[]> = {
+  OpenAI: ['gpt-5.5', 'gpt-5.5-pro', 'gpt-5.4', 'gpt-5.4-pro', 'gpt-5.4-mini', 'gpt-5.4-nano', 'gpt-5.2', 'gpt-5', 'gpt-5-mini', 'gpt-5-nano', 'gpt-4.1', 'o4-mini'],
+  Anthropic: ['claude-opus-4-5', 'claude-sonnet-4-5', 'claude-haiku-4-5', 'claude-opus-4', 'claude-sonnet-4', 'claude-3-7-sonnet-latest'],
+  'Google Gemini': ['gemini-3-pro-preview', 'gemini-3-flash-preview', 'gemini-3.1-pro-preview', 'gemini-3.1-flash-lite-preview', 'gemini-3.5-flash', 'gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'],
+  Mistral: ['mistral-large-2026', 'mistral-medium-3', 'mistral-small-3.2', 'codestral-2026', 'magistral-medium-2026', 'ministral-8b-latest'],
+  Groq: ['llama-4-maverick-17b-128e', 'llama-4-scout-17b-16e', 'llama-3.3-70b-versatile', 'deepseek-r1-distill-llama-70b', 'qwen-3-32b', 'kimi-k2-instruct'],
+  DeepSeek: ['deepseek-v3.5', 'deepseek-v3', 'deepseek-r1', 'deepseek-coder-v3'],
+  'Together AI': ['meta-llama/Llama-4-Maverick-17B-128E-Instruct', 'meta-llama/Llama-4-Scout-17B-16E-Instruct', 'deepseek-ai/DeepSeek-V3', 'deepseek-ai/DeepSeek-R1', 'Qwen/Qwen3-235B-A22B'],
+  OpenRouter: ['openai/gpt-5.5', 'openai/gpt-5.4', 'anthropic/claude-opus-4.5', 'anthropic/claude-sonnet-4.5', 'google/gemini-3-pro-preview', 'google/gemini-3-flash-preview', 'meta-llama/llama-4-maverick', 'deepseek/deepseek-v3.5', 'x-ai/grok-4'],
+  'Ollama (localhost)': ['llama3.3', 'llama3.2', 'qwen3', 'qwen3:32b', 'deepseek-r1', 'deepseek-r1:70b', 'mistral-small3', 'phi4', 'gemma3'],
+  'LM Studio (localhost)': ['llama-3.3-70b-instruct', 'qwen3-32b', 'deepseek-r1-distill-qwen-32b', 'mistral-small-3', 'phi-4', 'gemma-3-27b'],
+};
+
 export interface AgentLocalModel {
   url: string;
   apikey: string;
@@ -139,6 +155,8 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
   };
 
   const currentUrl = (authState.credentials?.url as string) || '';
+  const currentModel = (authState.credentials?.model as string) || '';
+  const [customModel, setCustomModel] = useState<string>('');
   const attemptedDeletionRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -222,6 +240,29 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
   const handleCustomUrlChange = (value: string) => {
     setCustomUrl(value);
     handleAuthChange(OPENAI_APP_ID, { ...authState.credentials, url: value });
+  };
+
+  const modelOptions = useMemo(() => {
+    const presetModels = PROVIDER_MODELS[effectivePreset] || [];
+    return [...presetModels, CUSTOM_MODEL];
+  }, [effectivePreset]);
+
+  const isCustomModel = currentModel !== '' && !((PROVIDER_MODELS[effectivePreset] || []).includes(currentModel));
+  const modelSelectValue = isCustomModel ? CUSTOM_MODEL : (currentModel || null);
+
+  const handleModelChange = (label: string | null) => {
+    if (!label) return;
+    if (label === CUSTOM_MODEL) {
+      handleAuthChange(OPENAI_APP_ID, { ...authState.credentials, model: customModel });
+      return;
+    }
+    setCustomModel('');
+    handleAuthChange(OPENAI_APP_ID, { ...authState.credentials, model: label });
+  };
+
+  const handleCustomModelChange = (value: string) => {
+    setCustomModel(value);
+    handleAuthChange(OPENAI_APP_ID, { ...authState.credentials, model: value });
   };
 
   const isShuffleAI = effectivePreset === SHUFFLE_AI_PRESET;
@@ -373,6 +414,42 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
           sx={{ '& .MuiFormHelperText-root': { color: 'hsl(var(--muted-foreground))' } }}
         />
       )}
+
+      {!isShuffleAI && (PROVIDER_MODELS[effectivePreset]?.length ?? 0) > 0 && (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+            Model
+          </Typography>
+          <Autocomplete
+            size="small"
+            fullWidth
+            disableClearable
+            options={modelOptions}
+            value={modelSelectValue}
+            onChange={(_e, val) => handleModelChange(val)}
+            isOptionEqualToValue={(opt, val) => opt === val}
+            slotProps={{
+              paper: { sx: { bgcolor: 'hsl(var(--popover))', color: 'hsl(var(--popover-foreground))', border: '1px solid hsl(var(--border))' } },
+              popper: { sx: { zIndex: 9999 } },
+            }}
+            renderInput={(params) => (
+              <TextField {...params} placeholder="Select a model…" />
+            )}
+          />
+          {modelSelectValue === CUSTOM_MODEL && (
+            <TextField
+              size="small"
+              fullWidth
+              placeholder="Enter a custom model identifier"
+              value={customModel || (isCustomModel ? currentModel : '')}
+              onChange={(e) => handleCustomModelChange(e.target.value)}
+              helperText="Exact model name as expected by the provider's API"
+              sx={{ '& .MuiFormHelperText-root': { color: 'hsl(var(--muted-foreground))' } }}
+            />
+          )}
+        </Box>
+      )}
+
 
       {!isShuffleAI && (
         <AppAuthCard
