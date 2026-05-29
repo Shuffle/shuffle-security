@@ -793,7 +793,7 @@ export const AppAuthCard = ({
             sx={{
               '& .MuiOutlinedInput-root': {
                 backgroundColor: 'hsl(var(--background))',
-                borderRadius: 2,
+                borderRadius: 1,
                 '& fieldset': { borderColor: 'hsl(var(--border))' },
                 '&:hover fieldset': { borderColor: 'hsl(var(--border) / 0.8)' },
                 '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
@@ -814,7 +814,7 @@ export const AppAuthCard = ({
             sx={{
               '& .MuiOutlinedInput-root': {
                 backgroundColor: 'hsl(var(--background))',
-                borderRadius: 2,
+                borderRadius: 1,
                 '& fieldset': { borderColor: 'hsl(var(--border))' },
                 '&:hover fieldset': { borderColor: 'hsl(var(--border) / 0.8)' },
                 '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
@@ -840,7 +840,7 @@ export const AppAuthCard = ({
                 displayEmpty
                 sx={{
                   backgroundColor: 'action.hover',
-                  borderRadius: 2,
+                  borderRadius: 1,
                   color: 'text.primary',
                   '& .MuiOutlinedInput-notchedOutline': { borderColor: 'divider' },
                   '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'text.disabled' },
@@ -935,7 +935,7 @@ export const AppAuthCard = ({
               sx={{
                 '& .MuiOutlinedInput-root': {
                   backgroundColor: isSecretField ? 'hsl(var(--primary) / 0.06)' : 'hsl(var(--muted))',
-                  borderRadius: 2,
+                  borderRadius: 1,
                   '& fieldset': {
                     borderColor: fieldErrors[fieldKey]
                       ? 'hsl(var(--destructive))'
