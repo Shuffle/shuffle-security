@@ -6,8 +6,11 @@ import {
   Pencil as EditIcon,
   ChevronDown as ExpandMoreIcon,
   Lock as LockIcon,
-  BookOpen as MenuBookIcon
+  BookOpen as MenuBookIcon,
+  Eye as EyeIcon,
+  EyeOff as EyeOffIcon,
 } from 'lucide-react';
+
 import { toast } from '@/Shuffle-MCPs/toast';
 import {
   Box,
