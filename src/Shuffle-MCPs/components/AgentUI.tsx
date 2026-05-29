@@ -1713,12 +1713,25 @@ const AgentUI: React.FC<AgentUIProps> = ({
       const list = Array.isArray(result) ? result : (result?.data || []);
       const seen = new Set<string>();
       const loaded: AgentUIApp[] = [];
+      let detectedFromEntries: { label: string; url: string; logo: string } | null = null;
       for (const entry of list) {
         const app = entry?.app || entry;
         const name: string | undefined = app?.name;
         if (!name) continue;
         const valid = entry?.active || entry?.validation?.valid || entry?.hasValidAuth || app?.is_valid || app?.tested;
         if (valid === false) continue;
+        // Capture the OpenAI auth URL so the "Choose LLM" chip can show the
+        // vendor logo derived from it (OpenAI, Anthropic, Groq, etc.).
+        if (!detectedFromEntries && (name.toLowerCase() === 'openai' || app?.id === '5d19dd82517870c68d40cacad9b5ca91')) {
+          const urlField = (entry?.fields || []).find((f: any) => (f?.key || '').toLowerCase() === 'url');
+          const urlVal = (urlField?.value || '').trim();
+          if (urlVal) {
+            const preset = detectLLMProvider(urlVal);
+            if (preset) {
+              detectedFromEntries = { label: preset.label, url: urlVal, logo: getProviderLogoUrl(preset.label, urlVal) };
+            }
+          }
+        }
         const key = normalizeAgentAppName(name);
         if (seen.has(key)) continue;
         seen.add(key);
@@ -1732,6 +1745,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
       // Always update — even an empty list — so revoked auth re-enables the
       // "requires authentication" banner instead of being stuck on stale state.
       setAvailableApps(loaded);
+      setDetectedLLM(detectedFromEntries);
     } catch {
       // silent — caller can still pick apps manually
     } finally {
