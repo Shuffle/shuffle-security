@@ -2066,7 +2066,7 @@ export const AppAuthCard = ({
                             },
                           }}
                         >
-                          {saving ? 'Saving...' : 'Save Authentication'}
+                          {saving ? 'Testing...' : 'Test Authentication'}
                         </Button>
                       </Box>
                     )}
