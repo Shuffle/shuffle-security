@@ -2045,12 +2045,45 @@ export const AppAuthCard = ({
 
                     {/* Save button for non-OAuth2 apps */}
                     {!isOAuth2 && (
-                      <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 1.5 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 1.5, gap: 1, flexWrap: 'wrap' }}>
+                        {pendingFailedAuthId && (
+                          <Button
+                            variant="text"
+                            size="medium"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const acceptId = pendingFailedAuthId;
+                              setPendingFailedAuthId(null);
+                              setSelectedAuthId(acceptId);
+                              setUserHasSelected(true);
+                              setLocalCredentials({});
+                              setFieldErrors({});
+                              if (onSelectAuth) onSelectAuth(acceptId);
+                            }}
+                            sx={{
+                              color: 'hsl(var(--muted-foreground))',
+                              fontWeight: 600,
+                              textTransform: 'none',
+                              fontSize: '0.85rem',
+                              px: 2,
+                              py: 1,
+                              borderRadius: 2,
+                              '&:hover': {
+                                color: 'hsl(var(--foreground))',
+                                backgroundColor: 'hsl(var(--muted) / 0.5)',
+                              },
+                            }}
+                            title="Our test isn't always authoritative — keep the credentials you saved and dismiss the failure."
+                          >
+                            Save anyway
+                          </Button>
+                        )}
                         <Button
                           variant="outlined"
                           size="medium"
                           onClick={(e) => {
                             e.stopPropagation();
+                            setPendingFailedAuthId(null);
                             handleSave();
                           }}
                           disabled={saving || !isFormValid()}
@@ -2074,10 +2107,11 @@ export const AppAuthCard = ({
                             },
                           }}
                         >
-                          {saving ? 'Testing...' : 'Test Authentication'}
+                          {saving ? 'Testing...' : pendingFailedAuthId ? 'Retry Test' : 'Test Authentication'}
                         </Button>
                       </Box>
                     )}
+
 
                     {/* Save & Authenticate button for OAuth2 apps with manual credentials */}
                     {isOAuth2 && (() => {
