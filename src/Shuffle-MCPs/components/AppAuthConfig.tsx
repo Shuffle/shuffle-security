@@ -428,9 +428,18 @@ export const AppAuthCard = ({
         executionId: authState.executionId,
         errorCode: authState.errorCode,
       });
+      // If this error came from the auto-test that fires right after a brand
+      // new auth was saved, switch the form back to the "Add new" view so the
+      // user's still-populated credentials are visible and editable.
+      if (autoTestFiredRef.current === testingAuthId) {
+        setSelectedAuthId(ADD_NEW_AUTH);
+        setUserHasSelected(true);
+        autoTestFiredRef.current = null;
+      }
       // Clear testingAuthId after processing completed status
       setTestingAuthId(null);
     }
+
   }, [authState.status, authState.errorMessage, authState.successMessage, authState.warningMessage, testingAuthId, apiAuthEntries, wasPreValidatedPerAuth]);
   
   // Track credential errors (401/403) to show warning but don't auto-switch
