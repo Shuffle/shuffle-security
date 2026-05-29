@@ -157,6 +157,8 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
   const currentUrl = (authState.credentials?.url as string) || '';
   // Model is now persisted inside the AppAuthCard credentials (read via extraFieldsSlot).
   const [customModel, setCustomModel] = useState<string>('');
+  const [customMode, setCustomMode] = useState<boolean>(false);
+
   const attemptedDeletionRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
