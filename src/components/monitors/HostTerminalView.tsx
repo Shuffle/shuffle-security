@@ -174,6 +174,32 @@ export const HostTerminalView = ({
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [history.length]);
 
+  // Auto-expand entries the moment they finish running, so users see the
+  // result without needing to click the row open. Tracks entryIds we've
+  // observed running so we only expand on the running→finished transition
+  // (not for already-finished history hydrated from storage on mount).
+  const prevRunningRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    const nowRunning = new Set<string>();
+    const justFinished: string[] = [];
+    for (const e of history) {
+      if (e.status === 'sending' || e.status === 'polling') {
+        nowRunning.add(e.entryId);
+      } else if (prevRunningRef.current.has(e.entryId)) {
+        justFinished.push(e.entryId);
+      }
+    }
+    if (justFinished.length) {
+      setExpandedEntries(prev => {
+        const n = new Set(prev);
+        for (const id of justFinished) n.add(id);
+        return n;
+      });
+    }
+    prevRunningRef.current = nowRunning;
+  }, [history]);
+
+
   // Focus the command input on mount (and again when the tab regains focus).
   useEffect(() => {
     if (hideInput || inputDisabled) return;
