@@ -6,8 +6,11 @@ import {
   Pencil as EditIcon,
   ChevronDown as ExpandMoreIcon,
   Lock as LockIcon,
-  BookOpen as MenuBookIcon
+  BookOpen as MenuBookIcon,
+  Eye as EyeIcon,
+  EyeOff as EyeOffIcon,
 } from 'lucide-react';
+
 import { toast } from '@/Shuffle-MCPs/toast';
 import {
   Box,
@@ -477,6 +480,9 @@ export const AppAuthCard = ({
 
   // Local credentials state for the form
   const [localCredentials, setLocalCredentials] = useState<Record<string, string>>(authState.credentials || {});
+  // Track which secret fields the user has chosen to reveal (eye toggle).
+  const [revealedFields, setRevealedFields] = useState<Record<string, boolean>>({});
+
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // App config fetching for dynamic fields
@@ -904,6 +910,7 @@ export const AppAuthCard = ({
           const fieldKey = param.id || param.name || `param_${index}`;
           const lowerName = (param.name || '').toLowerCase();
           const isSecretField = lowerName.includes('password') || lowerName.includes('secret') || lowerName.includes('key') || lowerName.includes('token');
+          const isRevealed = !!revealedFields[fieldKey];
           return (
             <TextField
               key={fieldKey}
@@ -939,6 +946,18 @@ export const AppAuthCard = ({
                     e.target.removeAttribute('readonly');
                   },
                 } as any,
+                input: isSecretField ? {
+                  endAdornment: (
+                    <IconButton
+                      size="small"
+                      onClick={() => setRevealedFields(prev => ({ ...prev, [fieldKey]: !prev[fieldKey] }))}
+                      aria-label={isRevealed ? `Hide ${param.name}` : `Show ${param.name}`}
+                      sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--foreground))' } }}
+                    >
+                      {isRevealed ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
+                    </IconButton>
+                  ),
+                } : undefined,
               }}
               name={`auth-${fieldKey}-${app.objectID}-${Math.random().toString(36).slice(2, 8)}`}
               sx={{
@@ -964,7 +983,7 @@ export const AppAuthCard = ({
                 },
                 '& .MuiInputBase-input': {
                   color: 'hsl(var(--foreground))',
-                  ...(isSecretField && {
+                  ...(isSecretField && !isRevealed && {
                     WebkitTextSecurity: 'disc',
                     textSecurity: 'disc',
                     fontFamily: 'text-security-disc, monospace',
@@ -978,6 +997,7 @@ export const AppAuthCard = ({
         })}
       </Box>
     );
+
   };
 
   // No longer rendering fallback API key field - apps without parameters don't need auth config
@@ -1901,7 +1921,7 @@ export const AppAuthCard = ({
                   </Alert>
                 )}
                 <Typography variant="subtitle2" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, mb: 2 }}>
-                  {apiAuthEntries.length === 0 ? 'Configure Authentication' : 'Add New Authentication'}
+                  {apiAuthEntries.length === 0 ? `Configure ${app.name.replace(/_/g, ' ')}` : 'Add New Authentication'}
                 </Typography>
                 
                 {loading ? (
@@ -2046,7 +2066,7 @@ export const AppAuthCard = ({
                             },
                           }}
                         >
-                          {saving ? 'Saving...' : 'Save Authentication'}
+                          {saving ? 'Testing...' : 'Test Authentication'}
                         </Button>
                       </Box>
                     )}
