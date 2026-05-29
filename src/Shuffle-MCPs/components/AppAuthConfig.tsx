@@ -814,7 +814,7 @@ export const AppAuthCard = ({
             sx={{
               '& .MuiOutlinedInput-root': {
                 backgroundColor: 'hsl(var(--background))',
-                borderRadius: 2,
+                borderRadius: 1,
                 '& fieldset': { borderColor: 'hsl(var(--border))' },
                 '&:hover fieldset': { borderColor: 'hsl(var(--border) / 0.8)' },
                 '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
