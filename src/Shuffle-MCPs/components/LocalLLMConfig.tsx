@@ -157,6 +157,8 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
   const currentUrl = (authState.credentials?.url as string) || '';
   // Model is now persisted inside the AppAuthCard credentials (read via extraFieldsSlot).
   const [customModel, setCustomModel] = useState<string>('');
+  const [customMode, setCustomMode] = useState<boolean>(false);
+
   const attemptedDeletionRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -418,7 +420,8 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
                   const liveModel = credentials.model || '';
                   const presetModels = PROVIDER_MODELS[effectivePreset] || [];
                   const liveIsCustom = liveModel !== '' && !presetModels.includes(liveModel);
-                  const liveSelectValue = liveIsCustom ? CUSTOM_MODEL : (liveModel || null);
+                  const showCustom = customMode || liveIsCustom;
+                  const liveSelectValue = showCustom ? CUSTOM_MODEL : (liveModel || null);
                   return (
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                       <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
@@ -433,8 +436,13 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
                         onChange={(_e, val) => {
                           if (!val) return;
                           if (val === CUSTOM_MODEL) {
+                            setCustomMode(true);
+                            // Seed credential with whatever the user already
+                            // typed (may be empty). The visible TextField will
+                            // let them edit it from here.
                             setField('model', customModel);
                           } else {
+                            setCustomMode(false);
                             setCustomModel('');
                             setField('model', val);
                           }
@@ -448,7 +456,7 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
                           <TextField {...params} placeholder="Select a model…" />
                         )}
                       />
-                      {liveSelectValue === CUSTOM_MODEL && (
+                      {showCustom && (
                         <TextField
                           size="small"
                           fullWidth
@@ -464,6 +472,7 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
                       )}
                     </Box>
                   );
+
                 }
               : undefined
           }
