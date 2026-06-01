@@ -1417,6 +1417,15 @@ const AgentUI: React.FC<AgentUIProps> = ({
   };
 
   const [viewMode, setViewMode] = useState<'simple' | 'detailed'>(readStoredViewMode);
+
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('shuffle-agents-view-mode', viewMode);
+      }
+    } catch { /* localStorage unavailable — ignore */ }
+  }, [viewMode]);
+
   const [attachedImages, setAttachedImages] = useState<{ dataUrl: string; name: string }[]>([]);
   const [nowTick, setNowTick] = useState(() => Math.floor(Date.now() / 1000));
   // Local fallback start timestamp captured the moment we first see an
