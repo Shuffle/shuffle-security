@@ -1405,9 +1405,27 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const initialViewParam = searchParams.get('agentView');
-  const [viewMode, setViewMode] = useState<'simple' | 'detailed'>(
-    initialViewParam === 'detailed' ? 'detailed' : 'simple'
-  );
+
+  const readStoredViewMode = (): 'simple' | 'detailed' => {
+    if (initialViewParam === 'detailed') return 'detailed';
+    if (typeof window === 'undefined') return 'simple';
+    try {
+      const stored = window.localStorage.getItem('shuffle-agents-view-mode');
+      if (stored === 'detailed' || stored === 'simple') return stored;
+    } catch { /* localStorage unavailable — ignore */ }
+    return 'simple';
+  };
+
+  const [viewMode, setViewMode] = useState<'simple' | 'detailed'>(readStoredViewMode);
+
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('shuffle-agents-view-mode', viewMode);
+      }
+    } catch { /* localStorage unavailable — ignore */ }
+  }, [viewMode]);
+
   const [attachedImages, setAttachedImages] = useState<{ dataUrl: string; name: string }[]>([]);
   const [nowTick, setNowTick] = useState(() => Math.floor(Date.now() / 1000));
   // Local fallback start timestamp captured the moment we first see an
@@ -2073,7 +2091,14 @@ const AgentUI: React.FC<AgentUIProps> = ({
     
     setError(null);
     setLocalRunStart(null);
-    setViewMode('simple');
+    // When starting a new run, respect the user's stored Simple/Detailed
+    // preference rather than forcing Simple every time.
+    try {
+      const stored = typeof window !== 'undefined' ? window.localStorage.getItem('shuffle-agents-view-mode') : null;
+      setViewMode(stored === 'detailed' ? 'detailed' : 'simple');
+    } catch {
+      setViewMode('simple');
+    }
     setShowStarter(false);
     // The user is starting a new run — drop any sticky "manual Start" pin so
     // future polls/effects can populate Simple/Detailed normally.
