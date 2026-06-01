@@ -1405,9 +1405,18 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const initialViewParam = searchParams.get('agentView');
-  const [viewMode, setViewMode] = useState<'simple' | 'detailed'>(
-    initialViewParam === 'detailed' ? 'detailed' : 'simple'
-  );
+
+  const readStoredViewMode = (): 'simple' | 'detailed' => {
+    if (initialViewParam === 'detailed') return 'detailed';
+    if (typeof window === 'undefined') return 'simple';
+    try {
+      const stored = window.localStorage.getItem('shuffle-agents-view-mode');
+      if (stored === 'detailed' || stored === 'simple') return stored;
+    } catch { /* localStorage unavailable — ignore */ }
+    return 'simple';
+  };
+
+  const [viewMode, setViewMode] = useState<'simple' | 'detailed'>(readStoredViewMode);
   const [attachedImages, setAttachedImages] = useState<{ dataUrl: string; name: string }[]>([]);
   const [nowTick, setNowTick] = useState(() => Math.floor(Date.now() / 1000));
   // Local fallback start timestamp captured the moment we first see an
