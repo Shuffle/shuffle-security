@@ -215,42 +215,34 @@ const AdminPage = () => {
         Manage your tenant settings, users, and sub-tenants.
       </Typography>
 
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-        <Box sx={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 0.5,
-          p: 0.75,
-          bgcolor: 'hsl(var(--card))',
-          borderRadius: 999,
-          border: '1px solid hsl(var(--border))',
-          boxShadow: '0 4px 12px hsl(0 0% 0% / 0.15)',
-        }}>
-          {['Overview', 'Users', 'Tenants', 'Billing'].map((label, index) => (
-            <Box
-              key={label}
-              onClick={() => handleTabChange(null, index)}
-              sx={{
-                px: 2.5,
-                py: 1,
-                borderRadius: 999,
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                bgcolor: activeTab === index ? '#ff6600' : 'transparent',
-                color: activeTab === index ? '#ffffff' : 'hsl(var(--muted-foreground))',
-                fontWeight: activeTab === index ? 600 : 500,
-                fontSize: '0.875rem',
-                '&:hover': {
-                  bgcolor: activeTab === index ? '#ff6600' : 'hsl(var(--muted))',
-                  color: activeTab === index ? '#ffffff' : 'hsl(var(--foreground))',
-                },
-              }}
-            >
-              {label}
-            </Box>
-          ))}
-        </Box>
-      </Box>
+      {(() => {
+        const isSupport = userInfo?.support === true;
+        type TabValue = 'overview' | 'users' | 'tenants' | 'billing';
+        const valueByIndex: TabValue[] = ['overview', 'users', 'tenants', 'billing'];
+        const currentValue: TabValue = valueByIndex[activeTab] ?? 'overview';
+        const options: SegmentedItem<TabValue>[] = [
+          { value: 'overview', label: 'Overview' },
+          { value: 'users', label: 'Users' },
+          { value: 'tenants', label: 'Tenants' },
+          {
+            value: 'billing',
+            label: 'Billing',
+            disabled: !isSupport,
+            title: isSupport ? undefined : 'Only support users can view billing',
+          },
+        ];
+        return (
+          <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+            <SegmentedControl<TabValue>
+              options={options}
+              value={currentValue}
+              onChange={(v) => handleTabChange(null, valueByIndex.indexOf(v))}
+              variant="filled"
+              ariaLabel="Admin sections"
+            />
+          </Box>
+        );
+      })()}
 
       {activeTab === 0 && (
         <>
