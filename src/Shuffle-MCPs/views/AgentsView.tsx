@@ -176,6 +176,19 @@ const AgentsView = ({
     tab: 'localLLM',
   });
 
+  // Listen for the global `agent-drawer-open` event so CTAs inside AgentUI
+  // (e.g. the "Change LLM" button in AgentRunDiagnosisBanner) can open the
+  // built-in fallback drawer on hosts that do not mount their own listener.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ tab?: AgentRunDrawerTab }>).detail;
+      setBuiltInDrawer({ open: true, tab: (detail?.tab ?? 'localLLM') as AgentRunDrawerTab });
+    };
+    window.addEventListener('agent-drawer-open', handler as EventListener);
+    return () => window.removeEventListener('agent-drawer-open', handler as EventListener);
+  }, []);
+
   const effectiveSchedule = useCallback<NonNullable<AgentUIProps['onSchedule']>>(
     async (info) => {
       if (onSchedule) return onSchedule(info);
