@@ -65,7 +65,9 @@ import {
 
 //import { useAlert 
 import { typecost, typecost_single, } from "./HandlePaymentNew";
-import BillingStats from "../components/BillingStats";
+// BillingStats component is not yet available in this project — render a
+// lightweight placeholder so the rest of the Billing surface still works.
+const BillingStats = (_props: any) => null;
 import LicencePopup from "../components/LicencePopup";
 import { handlePayasyougo } from "./HandlePaymentNew"
 
