@@ -411,7 +411,7 @@ const AdminPage = () => {
       {activeTab === 1 && <UsersPage embedded />}
       {activeTab === 2 && (
         <TenantManagement
-          theme="system"
+          theme={shuffleTheme}
           {...({
             userdata: userInfo,
             selectedOrganization: fullOrg || userInfo?.active_org,
@@ -458,7 +458,7 @@ const AdminPage = () => {
               </Box>
             )}
             <Billing
-              theme="system"
+              theme={shuffleTheme}
               {...({
                 userdata: userInfo,
                 selectedOrganization: fullOrg || userInfo?.active_org,
