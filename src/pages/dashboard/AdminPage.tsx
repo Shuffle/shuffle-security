@@ -107,6 +107,7 @@ const AdminPage = () => {
         if (!response.ok) throw new Error('Failed to fetch organization details');
 
         const data = await response.json();
+        setFullOrg(data);
         const name = data.name || '';
         const description = data.description || '';
         const image = data.image || '';
