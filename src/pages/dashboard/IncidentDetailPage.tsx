@@ -1099,6 +1099,21 @@ const IncidentDetailPage = () => {
     overlaidFieldCount: number;
   } | null>(null);
   const ocsfFallbackAttemptedRef = useRef(false);
+  const ocsfFallbackDismissKey = id ? `ocsf-fallback-dismissed:${id}` : '';
+  const [ocsfFallbackDismissed, setOcsfFallbackDismissed] = useState<boolean>(() => {
+    if (!ocsfFallbackDismissKey || typeof window === 'undefined') return false;
+    try { return localStorage.getItem(ocsfFallbackDismissKey) === '1'; } catch { return false; }
+  });
+  useEffect(() => {
+    if (!ocsfFallbackDismissKey || typeof window === 'undefined') return;
+    try { setOcsfFallbackDismissed(localStorage.getItem(ocsfFallbackDismissKey) === '1'); } catch { /* ignore */ }
+  }, [ocsfFallbackDismissKey]);
+  const dismissOcsfFallback = () => {
+    setOcsfFallbackDismissed(true);
+    if (ocsfFallbackDismissKey) {
+      try { localStorage.setItem(ocsfFallbackDismissKey, '1'); } catch { /* ignore */ }
+    }
+  };
 
   const loadRevisions = useCallback(async () => {
     if (!id) return;
@@ -3947,7 +3962,7 @@ const IncidentDetailPage = () => {
       {/* Bad-data warning — surfaced inside the Timeline so users notice the
           drift right where they would inspect / roll back changes. Triggered
           by the same OCSF-recovery fallback that powers the top-of-page banner. */}
-      {ocsfFallbackInfo && (
+      {ocsfFallbackInfo && !ocsfFallbackDismissed && (
         <Box sx={{
           mx: 2,
           mt: 2,
@@ -3987,6 +4002,14 @@ const IncidentDetailPage = () => {
               </Button>
             )}
           </Box>
+          <IconButton
+            size="small"
+            onClick={dismissOcsfFallback}
+            aria-label="Dismiss"
+            sx={{ color: 'hsl(38 92% 50%)', p: 0.5, '&:hover': { bgcolor: 'hsl(38 92% 50% / 0.15)' } }}
+          >
+            <CloseIcon size={14} />
+          </IconButton>
         </Box>
       )}
       {/* Inline enrichment CTA — mirrors the Observables-tab banner so users
@@ -6037,34 +6060,9 @@ const IncidentDetailPage = () => {
       transition={{ duration: 0.4 }}
       style={{ maxWidth: 1400, width: '100%', marginLeft: 'auto', marginRight: 'auto' }}
     >
-      {/* OCSF recovery fallback banner — shown when the live payload was not
-          OCSF-shaped and we rebuilt the view from a previous valid revision. */}
-      {ocsfFallbackInfo && (
-        <Box sx={{
-          mb: 2,
-          p: 1.5,
-          borderRadius: 2,
-          bgcolor: 'hsl(38 92% 50% / 0.10)',
-          border: '1px solid hsl(38 92% 50% / 0.40)',
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: 1.25,
-        }}>
-          <HistoryIcon size={20} style={{ color: 'hsl(38 92% 50%)', marginTop: '0px' }} />
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="body2" sx={{ color: 'hsl(38 92% 50%)', fontWeight: 600, fontSize: '0.8rem' }}>
-              Recovered from a previous OCSF revision
-            </Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.72rem', display: 'block', mt: 0.25 }}>
-              The latest payload is not in a valid OCSF format. We rebuilt this view from the most recent valid revision
-              {ocsfFallbackInfo.revisionTimestamp ? ` (${new Date(ocsfFallbackInfo.revisionTimestamp).toLocaleString()})` : ''}
-              {ocsfFallbackInfo.overlaidFieldCount > 0
-                ? ` and overlaid ${ocsfFallbackInfo.overlaidFieldCount} new field${ocsfFallbackInfo.overlaidFieldCount === 1 ? '' : 's'} from the latest edit.`
-                : '.'} Validate your ingest pipeline or contact support@shuffler.io.
-            </Typography>
-          </Box>
-        </Box>
-      )}
+      {/* OCSF recovery fallback banner moved into the Timeline section
+          (and is dismissible there). Intentionally not shown at the top. */}
+
 
       {/* Read-only banner for shared/public view */}
       {isPublicView && (
