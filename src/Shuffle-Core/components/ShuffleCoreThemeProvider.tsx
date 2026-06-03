@@ -290,18 +290,41 @@ export const ShuffleCoreThemeProvider: React.FC<ShuffleCoreThemeProviderProps> =
   const scopeStyle = effectiveDark ? darkTokenStyle : lightTokenStyle;
 
   const merged = React.useMemo(
-    () =>
-      createTheme({
+    () => {
+      // Shuffle-Core legacy views (Billing, etc.) read a bunch of custom
+      // palette keys that aren't part of MUI. Provide safe defaults wired to
+      // our HSL token system so those views don't crash when the host app
+      // didn't pre-populate them.
+      const shuffleDefaults = {
+        platformColor: "hsl(var(--background))",
+        surfaceColor: "hsl(var(--background-surface))",
+        inputColor: "hsl(var(--input))",
+        cardBackgroundColor: "hsl(var(--card))",
+        cardHoverColor: "hsl(var(--accent))",
+        defaultBorder: "1px solid hsl(var(--border))",
+        scrollbarColor: "hsl(var(--muted))",
+        scrollbarColorTransparent: "transparent",
+        slateGrayColor: "hsl(var(--muted-foreground))",
+        green: "hsl(142 71% 45%)",
+        textFieldStyle: { backgroundColor: "hsl(var(--input))" },
+        DialogStyle: { backgroundColor: "hsl(var(--card))" },
+      };
+      const parentPalette = (parent as any).palette || {};
+      return createTheme({
         ...parent,
         palette: {
-          ...(parent as any).palette,
+          ...shuffleDefaults,
+          ...parentPalette,
+          textFieldStyle: { ...shuffleDefaults.textFieldStyle, ...(parentPalette.textFieldStyle || {}) },
+          DialogStyle: { ...shuffleDefaults.DialogStyle, ...(parentPalette.DialogStyle || {}) },
           mode: effectiveDark ? "dark" : "light",
         },
         components: {
           ...(parent as any).components,
           ...buildComponentOverrides(scopeClassName, scopeStyle),
         },
-      }),
+      });
+    },
     [parent, effectiveDark, scopeClassName, scopeStyle],
   );
 
