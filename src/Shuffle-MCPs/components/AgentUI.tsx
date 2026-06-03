@@ -3939,7 +3939,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 incident pages, so the user sees identical reasoning here. */}
             <AgentRunDiagnosisBanner
               run={execution?.results?.length ? execution : agentData}
-              sx={{ px: 0, pb: 0, mb: 2 }}
+              sx={{ px: 1.5, pb: 0, mb: 2 }}
               executionId={execution?.execution_id}
               onJumpToEvidence={(decisionIndex) => {
                 // Locate the timeline row for the offending decision and
