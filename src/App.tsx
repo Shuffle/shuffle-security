@@ -286,6 +286,7 @@ const ThemedApp = () => {
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/admin/users" element={<AdminPage />} />
               <Route path="/admin/tenants" element={<AdminPage />} />
+              <Route path="/admin/billing" element={<AdminPage />} />
               <Route path="/organizations" element={<OrganizationsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/preferences" element={<OrgPreferencesPage />} />
