@@ -427,38 +427,18 @@ const AdminPage = () => {
         return (
           <>
             {isSupport && (
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
-              <Box
-                sx={{
-                  display: 'inline-flex',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: 1,
-                  overflow: 'hidden',
-                  height: 36,
-                }}
-              >
-                {(['cloud', 'onprem'] as const).map((v) => (
-                  <Button
-                    key={v}
-                    onClick={() => setBillingView(v)}
-                    disableRipple
-                    sx={{
-                      height: 36,
-                      borderRadius: 0,
-                      textTransform: 'none',
-                      px: 2,
-                      bgcolor: billingView === v ? 'hsl(var(--primary))' : 'transparent',
-                      color: billingView === v ? 'hsl(var(--primary-foreground))' : 'hsl(var(--foreground))',
-                      '&:hover': {
-                        bgcolor: billingView === v ? 'hsl(var(--primary) / 0.9)' : 'hsl(var(--accent))',
-                      },
-                    }}
-                  >
-                    {v === 'cloud' ? 'Cloud' : 'On-prem'}
-                  </Button>
-                ))}
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+                <SegmentedControl<'cloud' | 'onprem'>
+                  options={[
+                    { value: 'cloud', label: 'Cloud' },
+                    { value: 'onprem', label: 'On-prem' },
+                  ]}
+                  value={billingView}
+                  onChange={(v) => setBillingView(v)}
+                  variant="filled"
+                  ariaLabel="Billing view"
+                />
               </Box>
-            </Box>
             )}
             <Billing
               theme="system"
