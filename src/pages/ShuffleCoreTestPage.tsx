@@ -769,6 +769,58 @@ const ShuffleCoreTestPage = () => {
             description={<><code>&lt;EditWorkflow /&gt;</code> — the create / edit workflow modal (name, description, tags, usecase mapping, form questions, due date, AI generation). Source-only here because it needs the host app's workflow + appFramework wiring.</>}
             code={SNIPPET_EDIT_WORKFLOW}
           />
+
+          <DemoSection
+            title="10. Billing"
+            description={<><code>&lt;Billing /&gt;</code> — license, subscription and app-run usage panel. Renders one card per active subscription on <code>selectedOrganization.subscriptions</code>. Pass the full org (from <code>/api/v1/orgs/:id</code>) so the subscription list is populated.</>}
+            code={SNIPPET_BILLING}
+            apis={[
+              { method: 'GET', path: '/api/v1/orgs/:id', description: 'Full org incl. subscriptions, billing, sync_features' },
+              { method: 'POST', path: '/api/v1/orgs/:id/billing', description: 'Update billing email / alert thresholds' },
+              { method: 'GET', path: '/api/v1/getenvironments', description: 'Per-environment app-run metering (on-prem only)' },
+            ]}
+          >
+            <Box sx={{ border: '1px solid hsl(var(--border))', borderRadius: 1.5, overflow: 'hidden', maxHeight: 720, overflowY: 'auto' }}>
+              <Billing
+                theme="system"
+                {...({
+                  userdata: userInfo,
+                  selectedOrganization: userInfo?.active_org,
+                  globalUrl: getApiUrl(''),
+                  serverside: false,
+                  isLoaded: true,
+                  billingInfo: {},
+                  stripeKey: '',
+                  isCloud: true,
+                } as any)}
+              />
+            </Box>
+          </DemoSection>
+
+          <DemoSection
+            title="11. Tenant management"
+            description={<><code>&lt;TenantManagement /&gt;</code> — multi-tenant manager: current tenant, parent (if any), sub-tenants, all tenants, plus a "Create sub-tenant" dialog. Drop-in companion to <code>&lt;Billing /&gt;</code>.</>}
+            code={SNIPPET_TENANT_MANAGEMENT}
+            apis={[
+              { method: 'GET', path: '/api/v1/orgs/:id/suborgs', description: 'Sub-tenants for the active org' },
+              { method: 'POST', path: '/api/v1/orgs/:id/create_sub_org', description: 'Create a new sub-tenant' },
+              { method: 'POST', path: '/api/v1/orgs/:id/change', description: 'Switch the active tenant (via setActiveOrg)' },
+            ]}
+          >
+            <Box sx={{ border: '1px solid hsl(var(--border))', borderRadius: 1.5, p: 2, maxHeight: 720, overflowY: 'auto' }}>
+              <TenantManagement
+                theme="system"
+                {...({
+                  userdata: userInfo,
+                  selectedOrganization: userInfo?.active_org,
+                  globalUrl: getApiUrl(''),
+                  serverside: false,
+                  isLoaded: true,
+                } as any)}
+              />
+            </Box>
+          </DemoSection>
+
         </Stack>
       </Container>
     </>
