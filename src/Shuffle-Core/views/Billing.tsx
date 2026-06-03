@@ -1,7 +1,7 @@
 // @ts-nocheck
 import React, { useState, useEffect, memo, useMemo, useContext } from "react";
+import { useTheme } from "@mui/material/styles";
 import ReactGA from 'react-ga4';
-import { getTheme } from "../theme";
 import countries from "../components/Countries";
 
 import {
@@ -71,7 +71,6 @@ const BillingStats = (_props: any) => null;
 import LicencePopup from "../components/LicencePopup";
 import { handlePayasyougo } from "./HandlePaymentNew"
 
-import { Context } from "../context/ContextApi";
 
 import DeleteIcon from '@mui/icons-material/Delete';
 import { DataGrid } from "@mui/x-data-grid";
@@ -644,8 +643,10 @@ const Billing = memo((props) => {
 	const { globalUrl, userdata, serverside, billingInfo, stripeKey,isLoaded, selectedOrganization, handleGetOrg, clickedFromOrgTab, removeCookie} = props;
 	//const alert = useAlert();
 	let navigate = useNavigate();
-	const { themeMode, brandColor,supportEmail } = useContext(Context);
-	const theme = getTheme(themeMode, brandColor);
+	const theme = useTheme();
+	const themeMode = theme.palette.mode;
+	const brandColor = theme.palette.primary.main;
+	const supportEmail = "support@shuffler.io";
 	const [isLoggedIn, setIsLoggedIn] = useState(false)
 	const [selectedDealModalOpen, setSelectedDealModalOpen] = React.useState(false);
 	const [dealList, setDealList] = React.useState([]);
@@ -1017,7 +1018,7 @@ const Billing = memo((props) => {
 		const [tosChecked, setTosChecked] = React.useState(subscription.eula_signed)
 		const [hovered, setHovered] = React.useState(false)
 		const [newBillingEmail, setNewBillingEmail] = useState('');
-		const {supportEmail} = useContext(Context);
+		const supportEmail = "support@shuffler.io";
 
 		var top_text = "Base Cloud Access"
 		if (subscription.limit === undefined && subscription.level === undefined || subscription.level === null || subscription.level === 0) {
@@ -3595,8 +3596,10 @@ const BillingStatsChildOrg = memo(({ userdata, globalUrl, selectedOrganization, 
 	const [tableCreated, setTableCreated] = useState(false)
 	const [searchQuery, setSearchQuery] = useState("");
 	const [filteredRows, setFilteredRows] = useState([]);
-	const { themeMode, brandColor, supportEmail } = useContext(Context);
-	const theme = getTheme(themeMode, brandColor);
+	const theme = useTheme();
+	const themeMode = theme.palette.mode;
+	const brandColor = theme.palette.primary.main;
+	const supportEmail = "support@shuffler.io";
 
 
 	// Handle page change
@@ -4000,8 +4003,9 @@ const BillingStatsChildOrg = memo(({ userdata, globalUrl, selectedOrganization, 
 const IncreaseLimitPopUp = memo(({ open, onClose, limit, setLimit, HandleEditLimit, editingOrgId, editing}) => {
 	const [currentLimit, setCurrentLimit] = useState(limit)
 
-	const { themeMode, brandColor } = useContext(Context);
-	const theme = getTheme(themeMode, brandColor);
+	const theme = useTheme();
+	const themeMode = theme.palette.mode;
+	const brandColor = theme.palette.primary.main;
 
 	return(
 		<Dialog open={open} onClose={onClose}
@@ -4085,8 +4089,9 @@ const IncreaseLimitPopUp = memo(({ open, onClose, limit, setLimit, HandleEditLim
 
 const PaddingWrapper = memo(({ clickedFromOrgTab, children }) => {
 	
-	const { themeMode, brandColor } = useContext(Context);
-	const theme = getTheme(themeMode, brandColor);
+	const theme = useTheme();
+	const themeMode = theme.palette.mode;
+	const brandColor = theme.palette.primary.main;
 
 	const wrapperStyle = useMemo(() => ({
 	  width: clickedFromOrgTab 

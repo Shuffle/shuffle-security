@@ -21,7 +21,7 @@ import { useAuth } from '@/context/AuthContext';
 import { getRegionFlag } from '@/lib/regionFlag';
 import UsersPage from './UsersPage';
 import TenantManagement from '@/components/tenants/TenantManagement';
-import Billing from '@/Shuffle-Core/views/Billing';
+import { Billing } from '@/Shuffle-Core';
 import { usePageMeta } from '@/hooks/usePageMeta';
 
 const REGION_OPTIONS = [
@@ -415,6 +415,7 @@ const AdminPage = () => {
       {activeTab === 2 && <TenantManagement />}
       {activeTab === 3 && (
         <Billing
+          theme="system"
           {...({
             userdata: userInfo,
             selectedOrganization: userInfo?.active_org,
