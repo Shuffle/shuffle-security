@@ -58,6 +58,7 @@ const AdminPage = () => {
   const getTabFromPath = useCallback(() => {
     if (location.pathname === '/admin/users') return 1;
     if (location.pathname === '/admin/tenants') return 2;
+    if (location.pathname === '/admin/billing') return 3;
     return 0;
   }, [location.pathname]);
 
