@@ -6037,34 +6037,9 @@ const IncidentDetailPage = () => {
       transition={{ duration: 0.4 }}
       style={{ maxWidth: 1400, width: '100%', marginLeft: 'auto', marginRight: 'auto' }}
     >
-      {/* OCSF recovery fallback banner — shown when the live payload was not
-          OCSF-shaped and we rebuilt the view from a previous valid revision. */}
-      {ocsfFallbackInfo && (
-        <Box sx={{
-          mb: 2,
-          p: 1.5,
-          borderRadius: 2,
-          bgcolor: 'hsl(38 92% 50% / 0.10)',
-          border: '1px solid hsl(38 92% 50% / 0.40)',
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: 1.25,
-        }}>
-          <HistoryIcon size={20} style={{ color: 'hsl(38 92% 50%)', marginTop: '0px' }} />
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="body2" sx={{ color: 'hsl(38 92% 50%)', fontWeight: 600, fontSize: '0.8rem' }}>
-              Recovered from a previous OCSF revision
-            </Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.72rem', display: 'block', mt: 0.25 }}>
-              The latest payload is not in a valid OCSF format. We rebuilt this view from the most recent valid revision
-              {ocsfFallbackInfo.revisionTimestamp ? ` (${new Date(ocsfFallbackInfo.revisionTimestamp).toLocaleString()})` : ''}
-              {ocsfFallbackInfo.overlaidFieldCount > 0
-                ? ` and overlaid ${ocsfFallbackInfo.overlaidFieldCount} new field${ocsfFallbackInfo.overlaidFieldCount === 1 ? '' : 's'} from the latest edit.`
-                : '.'} Validate your ingest pipeline or contact support@shuffler.io.
-            </Typography>
-          </Box>
-        </Box>
-      )}
+      {/* OCSF recovery fallback banner moved into the Timeline section
+          (and is dismissible there). Intentionally not shown at the top. */}
+
 
       {/* Read-only banner for shared/public view */}
       {isPublicView && (
