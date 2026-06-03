@@ -3962,7 +3962,7 @@ const IncidentDetailPage = () => {
       {/* Bad-data warning — surfaced inside the Timeline so users notice the
           drift right where they would inspect / roll back changes. Triggered
           by the same OCSF-recovery fallback that powers the top-of-page banner. */}
-      {ocsfFallbackInfo && (
+      {ocsfFallbackInfo && !ocsfFallbackDismissed && (
         <Box sx={{
           mx: 2,
           mt: 2,
