@@ -1099,6 +1099,21 @@ const IncidentDetailPage = () => {
     overlaidFieldCount: number;
   } | null>(null);
   const ocsfFallbackAttemptedRef = useRef(false);
+  const ocsfFallbackDismissKey = id ? `ocsf-fallback-dismissed:${id}` : '';
+  const [ocsfFallbackDismissed, setOcsfFallbackDismissed] = useState<boolean>(() => {
+    if (!ocsfFallbackDismissKey || typeof window === 'undefined') return false;
+    try { return localStorage.getItem(ocsfFallbackDismissKey) === '1'; } catch { return false; }
+  });
+  useEffect(() => {
+    if (!ocsfFallbackDismissKey || typeof window === 'undefined') return;
+    try { setOcsfFallbackDismissed(localStorage.getItem(ocsfFallbackDismissKey) === '1'); } catch { /* ignore */ }
+  }, [ocsfFallbackDismissKey]);
+  const dismissOcsfFallback = () => {
+    setOcsfFallbackDismissed(true);
+    if (ocsfFallbackDismissKey) {
+      try { localStorage.setItem(ocsfFallbackDismissKey, '1'); } catch { /* ignore */ }
+    }
+  };
 
   const loadRevisions = useCallback(async () => {
     if (!id) return;
