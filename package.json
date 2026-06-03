@@ -20,6 +20,7 @@
     "@lezer/highlight": "^1.2.3",
     "@mui/icons-material": "^7.3.6",
     "@mui/material": "^7.3.6",
+    "@mui/x-data-grid": "^9.3.0",
     "@mui/x-date-pickers": "^9.2.0",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
