@@ -103,6 +103,7 @@ export const RecentWorkflow = withTheme(RecentWorkflowRaw, 'RecentWorkflow');
 export const AutomationDashboard = withTheme(AutomationDashboardRaw, 'AutomationDashboard');
 export const DashboardOverview = withTheme(DashboardOverviewRaw, 'DashboardOverview');
 export const CombinedDashboard = withTheme(CombinedDashboardRaw, 'CombinedDashboard');
+export const Billing = withTheme(BillingRaw as any, 'Billing');
 export type { AutomationDashboardProps } from './components/dashboard/AutomationDashboard';
 export type { CombinedDashboardProps } from './components/dashboard/CombinedDashboard';
 export { AUTOMATION_RANGE_OPTIONS } from './components/dashboard/AutomationDashboard';
