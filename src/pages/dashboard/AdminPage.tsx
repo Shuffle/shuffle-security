@@ -413,21 +413,28 @@ const AdminPage = () => {
 
       {activeTab === 1 && <UsersPage embedded />}
       {activeTab === 2 && <TenantManagement />}
-      {activeTab === 3 && (
-        <Billing
-          theme="system"
-          {...({
-            userdata: userInfo,
-            selectedOrganization: userInfo?.active_org,
-            globalUrl: getApiUrl(''),
-            serverside: false,
-            isLoaded: true,
-            billingInfo: {},
-            stripeKey: '',
-            handleGetOrg: refreshUserInfo,
-          } as any)}
-        />
-      )}
+      {activeTab === 3 && (() => {
+        const origin = typeof window === 'undefined' || window.location === undefined ? '' : window.location.origin;
+        const isLiveStripeOrigin = origin === 'https://shuffler.io' || origin === 'https://security.shuffler.io';
+        const stripeKey = isLiveStripeOrigin
+          ? 'pk_live_51PXYYMEJjT17t98N20qEqItyt1fLQjrnn41lPeG2PjnSlZHTDNKHuisAbW00s4KAn86nGuqB9uSVU4ds8MutbnMU00DPXpZ8ZD'
+          : 'pk_test_51PXYYMEJjT17t98NbDkojZ3DRvsFUQBs35LGMx3i436BXwEBVFKB9nCvHt0Q3M4MG3dz4mHheuWvfoYvpaL3GmsG00k1Rb2ksO';
+        return (
+          <Billing
+            theme="system"
+            {...({
+              userdata: userInfo,
+              selectedOrganization: userInfo?.active_org,
+              globalUrl: getApiUrl(''),
+              serverside: false,
+              isLoaded: true,
+              billingInfo: {},
+              stripeKey,
+              handleGetOrg: refreshUserInfo,
+            } as any)}
+          />
+        );
+      })()}
     </Box>
   );
 };
