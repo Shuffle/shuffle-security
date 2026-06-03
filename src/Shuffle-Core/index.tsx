@@ -28,6 +28,7 @@ import AutomationDashboardRaw from './components/dashboard/AutomationDashboard';
 import DashboardOverviewRaw from './components/dashboard/DashboardOverview';
 import CombinedDashboardRaw from './components/dashboard/CombinedDashboard';
 import BillingRaw from './views/Billing';
+import TenantManagementRaw from './views/TenantManagement';
 
 /**
  * Wrap a Shuffle-Core surface in the theme provider. Every exported
@@ -104,6 +105,8 @@ export const AutomationDashboard = withTheme(AutomationDashboardRaw, 'Automation
 export const DashboardOverview = withTheme(DashboardOverviewRaw, 'DashboardOverview');
 export const CombinedDashboard = withTheme(CombinedDashboardRaw, 'CombinedDashboard');
 export const Billing = withTheme(BillingRaw as any, 'Billing');
+export const TenantManagement = withTheme(TenantManagementRaw as any, 'TenantManagement');
+export type { TenantManagementProps } from './views/TenantManagement';
 export type { AutomationDashboardProps } from './components/dashboard/AutomationDashboard';
 export type { CombinedDashboardProps } from './components/dashboard/CombinedDashboard';
 export { AUTOMATION_RANGE_OPTIONS } from './components/dashboard/AutomationDashboard';

@@ -20,8 +20,7 @@ import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { useAuth } from '@/context/AuthContext';
 import { getRegionFlag } from '@/lib/regionFlag';
 import UsersPage from './UsersPage';
-import TenantManagement from '@/components/tenants/TenantManagement';
-import { Billing } from '@/Shuffle-Core';
+import { Billing, TenantManagement } from '@/Shuffle-Core';
 import { SegmentedControl, type SegmentedItem } from '@/components/ui/segmented-control';
 import { usePageMeta } from '@/hooks/usePageMeta';
 
@@ -52,7 +51,7 @@ const AdminPage = () => {
   });
   const location = useLocation();
   const navigate = useNavigate();
-  const { userInfo, refreshUserInfo } = useAuth();
+  const { userInfo, refreshUserInfo, setActiveOrg } = useAuth();
   const orgId = userInfo?.active_org?.id;
 
   // Determine active tab from path
@@ -407,7 +406,20 @@ const AdminPage = () => {
       )}
 
       {activeTab === 1 && <UsersPage embedded />}
-      {activeTab === 2 && <TenantManagement />}
+      {activeTab === 2 && (
+        <TenantManagement
+          theme="system"
+          {...({
+            userdata: userInfo,
+            selectedOrganization: fullOrg || userInfo?.active_org,
+            globalUrl: getApiUrl(''),
+            serverside: false,
+            isLoaded: true,
+            setActiveOrg,
+            handleGetOrg: refreshUserInfo,
+          } as any)}
+        />
+      )}
       {activeTab === 3 && userInfo?.support !== true && (
         <Alert severity="info">Only support users can view billing.</Alert>
       )}
