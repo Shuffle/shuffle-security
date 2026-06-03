@@ -23,6 +23,7 @@ import UsersPage from './UsersPage';
 import { Billing, TenantManagement } from '@/Shuffle-Core';
 import { SegmentedControl, type SegmentedItem } from '@/components/ui/segmented-control';
 import { usePageMeta } from '@/hooks/usePageMeta';
+import { useTheme as useNextTheme } from 'next-themes';
 
 const REGION_OPTIONS = [
   { value: '', label: 'Default (UK)' },
@@ -52,6 +53,8 @@ const AdminPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { userInfo, refreshUserInfo, setActiveOrg } = useAuth();
+  const { resolvedTheme } = useNextTheme();
+  const shuffleTheme = (resolvedTheme === 'light' ? 'light' : 'dark') as 'light' | 'dark';
   const orgId = userInfo?.active_org?.id;
 
   // Determine active tab from path
@@ -408,7 +411,7 @@ const AdminPage = () => {
       {activeTab === 1 && <UsersPage embedded />}
       {activeTab === 2 && (
         <TenantManagement
-          theme="system"
+          theme={shuffleTheme}
           {...({
             userdata: userInfo,
             selectedOrganization: fullOrg || userInfo?.active_org,
@@ -455,7 +458,7 @@ const AdminPage = () => {
               </Box>
             )}
             <Billing
-              theme="system"
+              theme={shuffleTheme}
               {...({
                 userdata: userInfo,
                 selectedOrganization: fullOrg || userInfo?.active_org,
