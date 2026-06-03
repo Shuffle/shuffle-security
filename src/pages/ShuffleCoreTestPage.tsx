@@ -96,6 +96,34 @@ const SNIPPET_DASHBOARD_OVERVIEW = `import { DashboardOverview } from '@shufflei
   runningSensorCount={3}
 />`;
 
+const SNIPPET_BILLING = `import { Billing, getApiUrl } from '@shuffleio/shuffle-core';
+
+// License / subscription / app-run usage panel.
+// Pass the full org (with .subscriptions) from /api/v1/orgs/:id.
+<Billing
+  theme="system"
+  userdata={userInfo}
+  selectedOrganization={fullOrg}
+  globalUrl={getApiUrl('')}
+  isCloud
+  stripeKey="pk_live_..."
+  billingInfo={{}}
+  handleGetOrg={refreshUserInfo}
+/>`;
+
+const SNIPPET_TENANT_MANAGEMENT = `import { TenantManagement, getApiUrl } from '@shuffleio/shuffle-core';
+
+// Multi-tenant manager: current tenant, parent, sub-tenants, all tenants,
+// plus a "Create sub-tenant" dialog. Drop-in next to <Billing />.
+<TenantManagement
+  theme="system"
+  userdata={userInfo}
+  selectedOrganization={userInfo?.active_org}
+  globalUrl={getApiUrl('')}
+  setActiveOrg={setActiveOrg}
+  handleGetOrg={refreshUserInfo}
+/>`;
+
 const SNIPPET_EDIT_WORKFLOW = `import { useState } from 'react';
 import { Button } from '@mui/material';
 import { EditWorkflow } from '@shuffleio/shuffle-core';
