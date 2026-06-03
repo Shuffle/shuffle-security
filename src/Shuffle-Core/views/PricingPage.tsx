@@ -420,6 +420,7 @@ const PricingPage = ({
       <Box sx={{ mt: 14, maxWidth: "1200px", width: "100%", pb: 10 }}>
         <Typography
           variant="h4"
+          component="h2"
           align="center"
           sx={{
             color: "#ffffff",
@@ -473,6 +474,7 @@ const PricingPage = ({
           >
             <Typography
               variant="h5"
+              component="h3"
               sx={{ fontWeight: "bold", maxWidth: "200px", pl: 4 }}
             >
               Got other Questions?
@@ -1166,6 +1168,7 @@ const PricingPage = ({
         >
           <img
             src="/images/logos/orange-pink.png"
+            alt=""
             style={{
               width: "100%",
               height: "100%",

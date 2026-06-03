@@ -191,7 +191,8 @@ export const HeroSection = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             <Typography
-              variant="h5"
+              variant="h2"
+              component="p"
               sx={{
                 color: 'text.secondary',
                 maxWidth: 600,

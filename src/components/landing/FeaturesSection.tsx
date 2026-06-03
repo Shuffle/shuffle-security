@@ -151,7 +151,7 @@ const FeatureSection = ({ title, highlight, description, bullets, color, reverse
                     },
                   }}
                 >
-                  {linkLabel || 'Learn more'} →
+                  {linkLabel || 'View feature details'} →
                 </Box>
               </Box>
             )}
