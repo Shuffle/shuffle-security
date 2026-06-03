@@ -51,7 +51,7 @@ const AdminPage = () => {
   });
   const location = useLocation();
   const navigate = useNavigate();
-  const { userInfo, refreshUserInfo } = useAuth();
+  const { userInfo, refreshUserInfo, setActiveOrg } = useAuth();
   const orgId = userInfo?.active_org?.id;
 
   // Determine active tab from path
