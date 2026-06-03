@@ -4002,6 +4002,14 @@ const IncidentDetailPage = () => {
               </Button>
             )}
           </Box>
+          <IconButton
+            size="small"
+            onClick={dismissOcsfFallback}
+            aria-label="Dismiss"
+            sx={{ color: 'hsl(38 92% 50%)', p: 0.5, '&:hover': { bgcolor: 'hsl(38 92% 50% / 0.15)' } }}
+          >
+            <CloseIcon size={14} />
+          </IconButton>
         </Box>
       )}
       {/* Inline enrichment CTA — mirrors the Observables-tab banner so users
