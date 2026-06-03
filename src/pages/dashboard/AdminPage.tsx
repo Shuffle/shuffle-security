@@ -419,20 +419,63 @@ const AdminPage = () => {
         const stripeKey = isLiveStripeOrigin
           ? 'pk_live_51PXYYMEJjT17t98N20qEqItyt1fLQjrnn41lPeG2PjnSlZHTDNKHuisAbW00s4KAn86nGuqB9uSVU4ds8MutbnMU00DPXpZ8ZD'
           : 'pk_test_51PXYYMEJjT17t98NbDkojZ3DRvsFUQBs35LGMx3i436BXwEBVFKB9nCvHt0Q3M4MG3dz4mHheuWvfoYvpaL3GmsG00k1Rb2ksO';
+        const searchParams = new URLSearchParams(location.search);
+        const viewParam = searchParams.get('view');
+        const billingView: 'cloud' | 'onprem' = viewParam === 'onprem' ? 'onprem' : 'cloud';
+        const setBillingView = (next: 'cloud' | 'onprem') => {
+          const sp = new URLSearchParams(location.search);
+          sp.set('view', next);
+          navigate(`${location.pathname}?${sp.toString()}`, { replace: true });
+        };
         return (
-          <Billing
-            theme="system"
-            {...({
-              userdata: userInfo,
-              selectedOrganization: userInfo?.active_org,
-              globalUrl: getApiUrl(''),
-              serverside: false,
-              isLoaded: true,
-              billingInfo: {},
-              stripeKey,
-              handleGetOrg: refreshUserInfo,
-            } as any)}
-          />
+          <>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+              <Box
+                sx={{
+                  display: 'inline-flex',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: 1,
+                  overflow: 'hidden',
+                  height: 36,
+                }}
+              >
+                {(['cloud', 'onprem'] as const).map((v) => (
+                  <Button
+                    key={v}
+                    onClick={() => setBillingView(v)}
+                    disableRipple
+                    sx={{
+                      height: 36,
+                      borderRadius: 0,
+                      textTransform: 'none',
+                      px: 2,
+                      bgcolor: billingView === v ? 'hsl(var(--primary))' : 'transparent',
+                      color: billingView === v ? 'hsl(var(--primary-foreground))' : 'hsl(var(--foreground))',
+                      '&:hover': {
+                        bgcolor: billingView === v ? 'hsl(var(--primary) / 0.9)' : 'hsl(var(--accent))',
+                      },
+                    }}
+                  >
+                    {v === 'cloud' ? 'Cloud' : 'On-prem'}
+                  </Button>
+                ))}
+              </Box>
+            </Box>
+            <Billing
+              theme="system"
+              {...({
+                userdata: userInfo,
+                selectedOrganization: userInfo?.active_org,
+                globalUrl: getApiUrl(''),
+                serverside: false,
+                isLoaded: true,
+                billingInfo: {},
+                stripeKey,
+                isCloud: billingView === 'cloud',
+                handleGetOrg: refreshUserInfo,
+              } as any)}
+            />
+          </>
         );
       })()}
     </Box>
