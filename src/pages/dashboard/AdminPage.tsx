@@ -22,6 +22,7 @@ import { getRegionFlag } from '@/lib/regionFlag';
 import UsersPage from './UsersPage';
 import TenantManagement from '@/components/tenants/TenantManagement';
 import { Billing } from '@/Shuffle-Core';
+import { SegmentedControl, type SegmentedItem } from '@/components/ui/segmented-control';
 import { usePageMeta } from '@/hooks/usePageMeta';
 
 const REGION_OPTIONS = [
