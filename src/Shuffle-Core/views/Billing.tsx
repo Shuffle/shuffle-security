@@ -868,9 +868,10 @@ const Billing = memo((props) => {
 	}
 
 	const isCloud =
+		props?.isCloud !== undefined ? props.isCloud : (
 		window.location.host === "localhost:3002" ||
 		window.location.host === "shuffler.io" || 
-		window.location.host === "sandbox.shuffler.io";
+		window.location.host === "sandbox.shuffler.io");
 
 	billingInfo.subscription = {
 		"active": true,
