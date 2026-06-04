@@ -6133,6 +6133,7 @@ function UsecaseDrawerInner({ open, onClose, flowId }: { open: boolean; onClose:
   const { usecases } = useUsecasesLite();
   const { isAuthenticated } = useAuthLite();
   const { data: workflows = [], refetch: refetchWorkflows } = useWorkflowsLite();
+  const { scopeClassName: cfgScopeClassName } = useUsecasesConfig();
 
   // Simplified mirror of UsecasesPageInner.workflowEnabledLabels — good enough
   // for the standalone drawer (presence-based gates like agent-response /
