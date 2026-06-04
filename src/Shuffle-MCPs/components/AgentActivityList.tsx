@@ -135,20 +135,20 @@ const parseDatastoreTask = (
 };
 
 /** Scan every plausible text field on a run for the datastore Key/Category
- *  markers. The prompt can live in `execution_argument`, somewhere inside
- *  the AI Agent's `results[*].result`, or in the top-level `result` blob —
- *  so we stringify each and try the regex. */
+ *  markers. The original prompt lives at `run.original_input` (or `run.input`)
+ *  for datastore-triggered runs; we also check `execution_argument`, the
+ *  top-level `result`, and finally stringify `results[]` as a last resort. */
 const findDatastoreTaskInRun = (
   run: AgentRun,
 ): { key: string; category: string } | null => {
+  const anyRun = run as any;
   const candidates: string[] = [];
+  if (typeof anyRun.original_input === 'string') candidates.push(anyRun.original_input);
+  if (typeof anyRun.input === 'string') candidates.push(anyRun.input);
   if (run.execution_argument) candidates.push(run.execution_argument);
   if (run.result) candidates.push(run.result);
-  if (Array.isArray((run as any).results)) {
-    try { candidates.push(JSON.stringify((run as any).results)); } catch { /* ignore */ }
-  }
-  if (Array.isArray((run as any).decisions)) {
-    try { candidates.push(JSON.stringify((run as any).decisions)); } catch { /* ignore */ }
+  if (Array.isArray(anyRun.results)) {
+    try { candidates.push(JSON.stringify(anyRun.results)); } catch { /* ignore */ }
   }
   for (const c of candidates) {
     const hit = parseDatastoreTask(c);
@@ -156,6 +156,7 @@ const findDatastoreTaskInRun = (
   }
   return null;
 };
+
 
 const classifyRunSource = (run: AgentRun): RunSourceInfo => {
   const raw = (run.execution_source || '').trim();
@@ -331,8 +332,18 @@ const tryParseJson = (s: unknown): unknown => {
 
 /** Extract the original user prompt from a run, when available. */
 const getRunPrompt = (run: AgentRun): string | null => {
-  // 1) AI Agent node result inside results[] (deepest source of truth).
-  const results = Array.isArray((run as any).results) ? (run as any).results : null;
+  const anyRun = run as any;
+  // 1) Top-level `original_input` / `input` — the canonical prompt field on
+  //    the agent result. This is where datastore-triggered runs put their
+  //    TASK payload, and where manual runs put the typed prompt.
+  if (typeof anyRun.original_input === 'string' && anyRun.original_input.trim()) {
+    return anyRun.original_input.trim();
+  }
+  if (typeof anyRun.input === 'string' && anyRun.input.trim()) {
+    return anyRun.input.trim();
+  }
+  // 2) AI Agent node result inside results[].
+  const results = Array.isArray(anyRun.results) ? anyRun.results : null;
   if (results) {
     const agentResult = results.find((r: any) => r?.action?.app_name === 'AI Agent');
     if (agentResult?.result) {
@@ -347,12 +358,12 @@ const getRunPrompt = (run: AgentRun): string | null => {
       if (hit) return hit;
     }
   }
-  // 2) Top-level `result` blob (search rows hydrated via buildPatchFromRun).
+  // 3) Top-level `result` blob (search rows hydrated via buildPatchFromRun).
   if (run.result) {
     const hit = deepFindPrompt(tryParseJson(run.result));
     if (hit) return hit;
   }
-  // 3) Top-level `execution_argument` (sometimes raw text, sometimes JSON).
+  // 4) Top-level `execution_argument` (sometimes raw text, sometimes JSON).
   if (run.execution_argument) {
     const parsed = tryParseJson(run.execution_argument);
     const hit = deepFindPrompt(parsed);
@@ -360,13 +371,9 @@ const getRunPrompt = (run: AgentRun): string | null => {
     // Last resort: treat the whole thing as the prompt if it's short plain text.
     if (typeof parsed === 'string' && parsed.length < 240) return parsed;
   }
-  // 4) Decisions list — some flows only surface the user input here.
-  if (Array.isArray((run as any).decisions)) {
-    const hit = deepFindPrompt((run as any).decisions);
-    if (hit) return hit;
-  }
   return null;
 };
+
 
 
 
