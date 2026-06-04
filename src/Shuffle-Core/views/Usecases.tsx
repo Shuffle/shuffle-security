@@ -1156,7 +1156,7 @@ const DEFAULT_CONFIG: UsecasesPageConfig = {
   isLoaded: true,
   renderEndpointSlot: undefined,
   renderUsecaseDetailSlot: undefined,
-  scopeClassName: SCOPE_CLASS,
+  scopeClassName: 'shuffle-usecases-scope',
 };
 
 const UsecasesPageConfigContext = React.createContext<UsecasesPageConfig>(DEFAULT_CONFIG);
