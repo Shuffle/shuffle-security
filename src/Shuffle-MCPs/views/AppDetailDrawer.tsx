@@ -462,27 +462,42 @@ export default function AppDetailDrawer({
 
   const isLoadingAll = appLoading || (isAuthenticated && appAuthLoading);
 
+  // Strict, environment-independent sizing — matches AppSearchDrawer. Uses
+  // PaperProps (MUI v5 compatible) instead of slotProps.paper, which is
+  // silently ignored on v5 hosts and made the drawer collapse to content
+  // width when consumed from the published library.
+  const drawerWidth = `min(${width}px, 100vw)`;
+
   return (
     <Drawer
       anchor={anchor}
       open={open}
       onClose={handleClose}
-      slotProps={{
-        paper: {
-          className: scopeClassName,
-          sx: {
-            width: { xs: '100%', sm: width },
-            maxWidth: '100vw',
-            display: 'flex',
-            flexDirection: 'column',
-            background: 'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)',
-            borderLeft: anchor === 'right' ? '1px solid hsl(var(--border))' : 'none',
-            borderRight: anchor === 'left' ? '1px solid hsl(var(--border))' : 'none',
-          },
+      PaperProps={{
+        className: scopeClassName,
+        sx: {
+          width: drawerWidth,
+          minWidth: drawerWidth,
+          maxWidth: drawerWidth,
+          flex: `0 0 ${drawerWidth}`,
+          height: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          background: 'linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%)',
+          borderLeft: anchor === 'right' ? '1px solid hsl(var(--border))' : 'none',
+          borderRight: anchor === 'left' ? '1px solid hsl(var(--border))' : 'none',
         },
       }}
       sx={{
-        '& .MuiDrawer-paper': { boxSizing: 'border-box' },
+        zIndex: 9999,
+        '& .MuiDrawer-paper': {
+          boxSizing: 'border-box',
+          width: `${drawerWidth} !important`,
+          minWidth: `${drawerWidth} !important`,
+          maxWidth: `${drawerWidth} !important`,
+          flex: `0 0 ${drawerWidth} !important`,
+        },
       }}
     >
       {/* Header bar */}

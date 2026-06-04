@@ -1139,6 +1139,9 @@ interface UsecasesPageConfig {
    *  a usecase (e.g. the Incident Routing editor) instead of bundling it
    *  into Shuffle-Core. */
   renderUsecaseDetailSlot?: (params: { flowId: string; flowLabel: string }) => React.ReactNode;
+  /** Scope class to apply to portaled MUI surfaces (Drawer paper, etc.) so
+   *  the scoped HSL tokens resolve correctly even outside the page wrapper. */
+  scopeClassName?: string;
 }
 
 const DEFAULT_CONFIG: UsecasesPageConfig = {
@@ -1153,6 +1156,7 @@ const DEFAULT_CONFIG: UsecasesPageConfig = {
   isLoaded: true,
   renderEndpointSlot: undefined,
   renderUsecaseDetailSlot: undefined,
+  scopeClassName: 'shuffle-usecases-scope',
 };
 
 const UsecasesPageConfigContext = React.createContext<UsecasesPageConfig>(DEFAULT_CONFIG);
@@ -4709,6 +4713,7 @@ function UsecasesPageInner() {
 
   const navigate = useNavigate();
   const { apiUrl, authHeader } = useApi();
+  const { scopeClassName: cfgScopeClassName } = useUsecasesConfig();
   const { usecases, apiLoaded, getDrift } = useUsecasesLite();
   const { userInfo, isAuthenticated, refetch: refetchAuth } = useAuthLite();
   const { data: workflows = [], refetch: refetchWorkflows } = useWorkflowsLite();
@@ -5518,17 +5523,19 @@ function UsecasesPageInner() {
         open={drawerFlowId !== null}
         onClose={() => setDrawerFlowId(null)}
         PaperProps={{
+          className: cfgScopeClassName,
           sx: {
             width: { xs: '100%', sm: 720, md: 900 },
             maxWidth: '100vw',
-            // Explicit fallback so the drawer is never transparent in the
-            // standalone build (host CSS may not define --background).
-            backgroundColor: '#1a1a1a',
+            // Tokens resolve via the scope class on this paper. Fallback HSL
+            // values guarantee the drawer is never transparent even if the
+            // host CSS does not define --background / --foreground.
             bgcolor: 'hsl(var(--background, 0 0% 10%))',
             color: 'hsl(var(--foreground, 0 0% 100%))',
             backgroundImage: 'none',
           },
         }}
+        sx={{ zIndex: 9999 }}
       >
         <Box sx={{
           display: 'flex',
@@ -5537,7 +5544,6 @@ function UsecasesPageInner() {
           px: 3, py: 2,
           borderBottom: '1px solid hsl(var(--border, 0 0% 20%))',
           position: 'sticky', top: 0, zIndex: 2,
-          backgroundColor: '#1a1a1a',
           bgcolor: 'hsl(var(--background, 0 0% 10%))',
         }}>
           <Box />
@@ -6086,8 +6092,9 @@ export default function UsecasesPage(props: UsecasesPageProps = {}) {
       isLoaded: loaded,
       renderEndpointSlot,
       renderUsecaseDetailSlot,
+      scopeClassName: themeClass ? `${SCOPE_CLASS} ${themeClass}` : SCOPE_CLASS,
     };
-  }, [globalUrl, userdata, isLoaded, isLoggedIn, hostManaged, renderEndpointSlot, renderUsecaseDetailSlot]);
+  }, [globalUrl, userdata, isLoaded, isLoggedIn, hostManaged, renderEndpointSlot, renderUsecaseDetailSlot, themeClass]);
 
   return (
     <UsecasesPageConfigContext.Provider value={config}>
@@ -6126,6 +6133,7 @@ function UsecaseDrawerInner({ open, onClose, flowId }: { open: boolean; onClose:
   const { usecases } = useUsecasesLite();
   const { isAuthenticated } = useAuthLite();
   const { data: workflows = [], refetch: refetchWorkflows } = useWorkflowsLite();
+  const { scopeClassName: cfgScopeClassName } = useUsecasesConfig();
 
   // Simplified mirror of UsecasesPageInner.workflowEnabledLabels — good enough
   // for the standalone drawer (presence-based gates like agent-response /
@@ -6198,15 +6206,16 @@ function UsecaseDrawerInner({ open, onClose, flowId }: { open: boolean; onClose:
       open={open}
       onClose={onClose}
       PaperProps={{
+        className: cfgScopeClassName,
         sx: {
           width: { xs: '100%', sm: 720, md: 900 },
           maxWidth: '100vw',
-          backgroundColor: '#1a1a1a',
           bgcolor: 'hsl(var(--background, 0 0% 10%))',
           color: 'hsl(var(--foreground, 0 0% 100%))',
           backgroundImage: 'none',
         },
       }}
+      sx={{ zIndex: 9999 }}
     >
       <Box sx={{
         display: 'flex',
@@ -6215,7 +6224,6 @@ function UsecaseDrawerInner({ open, onClose, flowId }: { open: boolean; onClose:
         px: 3, py: 2,
         borderBottom: '1px solid hsl(var(--border, 0 0% 20%))',
         position: 'sticky', top: 0, zIndex: 2,
-        backgroundColor: '#1a1a1a',
         bgcolor: 'hsl(var(--background, 0 0% 10%))',
       }}>
         <Box />
@@ -6310,8 +6318,9 @@ export function UsecaseDrawer(props: UsecaseDrawerProps) {
       isLoaded: loaded,
       renderEndpointSlot,
       renderUsecaseDetailSlot,
+      scopeClassName: themeClass ? `${SCOPE_CLASS} ${themeClass}` : SCOPE_CLASS,
     };
-  }, [globalUrl, userdata, isLoaded, isLoggedIn, hostManaged, renderEndpointSlot, renderUsecaseDetailSlot]);
+  }, [globalUrl, userdata, isLoaded, isLoggedIn, hostManaged, renderEndpointSlot, renderUsecaseDetailSlot, themeClass]);
 
   return (
     <UsecasesPageConfigContext.Provider value={config}>
