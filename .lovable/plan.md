@@ -1,68 +1,49 @@
+## Problem
+
+On `/usecases/siem_alerts` the Alluvial diagram has its own click handlers:
+- Clicking an app bubble opens a small `Visit app / Enable Sync / Remove` popover (`AppBubble` local state).
+- Clicking the dashed `+` opens an `AppSearchDrawer` with its own `onSelectOverride` that calls `handleToggleSync` / `handleToggleForward`.
+
+The default Source/Destination view (`IntegrationStatusLite` in `UsecaseDetailContent`) does something different and richer:
+- Clicking a tile opens a popover with the usecase status chip ("In use" / "Not in use"), an `Enable for <usecase>` / `Disable for <usecase>` toggle wired to `handleUsecaseAppToggle` (POSTs `/api/v2/workflows/generate` with the full `app_name` list and toasts on success), and a `Manage authentication` / `Authenticate app` button that opens the AppDetailDrawer.
+- Clicking the `+` calls `setAddToolFor({ side, categoryId, multiDest })` which opens an `AppSearchDrawer` configured with `connectionPathApps`, `priorityCategory`, `autoActivate` and an `onSelectOverride` that wires the app into the usecase workflow via `/api/v2/workflows/generate` with toast feedback and `invalidateAppsCache()` + `setIntegrationsRefreshKey()`.
+
+The two surfaces disagree, and on the Alluvial side many clicks appear to do nothing because they delegate to `appDetailCtx.openApp` / local toggles that do not feed back into the same usecase wiring path the rest of the page expects.
+
 ## Goal
 
-Move the agent executions list (currently on `/agent`) and its click-to-open execution view into the `Shuffle-MCPs/` library so they work standalone. Replace the existing custom timeline drawer (`AgentActionDrawer`) with the canonical `AgentUI` Simple/Detailed view (the same one used on `/agents`).
+Make the Alluvial diagram reuse the default Source/Destination behavior end‑to‑end:
+- Clicking an app bubble opens the same popover, with `Enable for <usecase>` / `Disable for <usecase>` and `Manage authentication`.
+- Clicking the Add button opens the same `AppSearchDrawer` flow (`setAddToolFor`) the default view uses.
 
-## What gets added to `src/Shuffle-MCPs/`
+Visuals stay the same (positioned bubbles, stripes, webhook node). Only behavior changes.
 
-### 1. `agentActivity.ts` (new, library-internal)
-Self-contained service for `/api/v1/workflows/search` (workflow_id `AGENT`).
-- Reuses lib `API_CONFIG` / `getApiUrl` / `getAuthHeader` so it works standalone with the same `apiKey`/`apiBaseUrl`/`orgId` pattern as the rest of the library.
-- Exports `AgentRun`, `AgentRunResult`, `AgentDecision`, `searchAgentActivity()`.
+## Changes
 
-### 2. `AgentActivityList.tsx` (new)
-Standalone list component. Props:
-- `apiKey?`, `apiBaseUrl?`, `orgId?` — same auth pattern as `AgentUI`.
-- `onRunClick(run)` — required; consumer decides what happens on click.
-- `statusFilter?`, `searchQuery?`, `onStatusFilterChange?`, `onSearchQueryChange?` — optional controlled mode; uncontrolled by default.
-- `showSearchBar?`, `showStatusChips?` — default true; lets callers hide chrome.
-- Renders search box, status chips ("All / Completed / Running / Failed"), feed of run rows, "Load more", empty/loading/error states.
-- Internal lightweight `AgentRunRow` (replaces `AgentRunHeader`) — title, status chip, time-ago, duration. No project couplings (no `parseDatastoreReference`, no incident link, no skip-info; those are project-specific concerns and not needed for the standalone list).
-- HSL tokens only.
+### 1. `src/Shuffle-Core/views/UsecaseAlluvialDiagram.tsx`
 
-### 3. `AgentExecutionDrawer.tsx` (new)
-Right-side `Drawer` that embeds `<AgentUI>` configured to display an existing run with the Simple/Detailed view (no Start prompt).
-- Props: `open`, `onClose`, `run: AgentRun | null`, plus `apiKey?`, `apiBaseUrl?`, `orgId?`, `width?`.
-- Renders header (status icon, title, close button) + `<AgentUI>` underneath.
-- Uses a new `initialExecution` prop on `AgentUI` (see §4) so Simple/Detailed renders immediately from the already-loaded `AgentRun` data — no extra fetch needed and no `authorization` token required.
-- HSL tokens only.
+- Add optional handoff props on `UsecaseAlluvialDiagramProps`:
+  - `onBubbleClick?: (args: { appName: string; side: 'left' | 'right'; anchorEl: HTMLElement }) => boolean` — return `true` to skip the local Visit/Enable Sync/Remove popover.
+  - `onAddTool?: (side: 'left' | 'right') => boolean` — return `true` to skip the local `AppSearchDrawer`.
+- In `AppBubble`, accept and call a new `onPrimaryClick(appName, anchorEl)` prop. If it returns `true`, do not set local `anchorEl` (i.e., do not show the local popover). Webhook bubbles keep their existing popover behavior.
+- Pass `onPrimaryClick` through from the diagram so both source (`side="left"`) and destination (`side="right"`) bubbles delegate to the host.
+- In the diagram's `+` Add buttons (lines ~1434, ~1463, ~1494) call `onAddTool?.(side)` first; only fall back to `setSearchOpen(side)` (existing `AppSearchDrawer`) when the host did not handle it.
+- Keep all existing handlers (`handleToggleSync`, `handleToggleForward`, `handleVisitApp`, `handleRemoveApp`, webhook flow) intact for guest mode and standalone usage.
 
-### 4. Small extension to `AgentUI.tsx`
-Add a new optional prop:
-```ts
-initialExecution?: ExecutionData;
-```
-When provided:
-- Skip the starter (`setShowStarter(false)`).
-- `setExecution(initialExecution)` and seed `agentActionResult` / `agentData` from `initialExecution.results` (same path as `getExecution` after a successful fetch).
-- Skip the `getExecution` call (which requires `authorization`).
-- Polling-on-EXECUTING still works if the run is live and `authorization` is present; for completed runs, no polling needed.
+### 2. `src/Shuffle-Core/views/Usecases.tsx`
 
-This is the smallest surface-area change that lets the canonical Simple/Detailed UI render from a pre-loaded run.
+- In `UsecaseDetailContent`, wire the new props on the existing `<UsecaseAlluvialDiagram>` instance (around line 3918):
+  - `onAddTool={(side) => { setAddToolFor({ side: side === 'left' ? 'source' : 'destination', categoryId: side === 'left' ? flow.source : flow.target, multiDest: endpointAllowsMultiDestAdd }); return true; }}`
+  - `onBubbleClick={({ appName, side, anchorEl }) => { setPopoverFor({ el: anchorEl, item: synthesizeItem(appName) }); return true; }}`
+- Lift the existing `IntegrationStatusLite` popover (`renderPopover`) so it can be reused outside the lite strip, OR (simpler) expose the same data via a small inline popover component in `Usecases.tsx` that calls the same `handleUsecaseAppToggle` + `appDetail.openApp` the lite strip uses. Reuse the existing `popoverFor` shape (`{ el, item }`) so styling and copy stay identical.
+- `synthesizeItem(appName)` resolves the bubble's app name to an `IntegrationItem` using the already-fetched authenticated apps + catalog icons (same lookup the lite strip uses) so the popover shows `Validated` / `Configured` / `Not configured` correctly.
 
-### 5. `index.ts` re-exports
-Export `AgentActivityList`, `AgentExecutionDrawer`, `searchAgentActivity`, and the `AgentRun` / `AgentDecision` / `AgentRunResult` types.
+### 3. No changes to
 
-## Wire-up in the host app
+- `AppSearchDrawer`, `IntegrationStatusLite` rendering, `/api/v2/workflows/generate` request shape, guest-mode URL params, or webhook handling.
 
-### `src/pages/dashboard/AgentActivityPage.tsx`
-- Replace the `<AgentActivityFeed>` + `<AgentActionDrawer>` block with `<AgentActivityList onRunClick={setSelectedRun} />` + `<AgentExecutionDrawer open={!!selectedRun} onClose={...} run={selectedRun} />`.
-- Stats panel, page header, Run/Permissions buttons, search/filter bar — kept as-is. (We keep the page-level search/chips above the list, and pass them in as controlled props so the existing `useAgentActivity` stats panel still works.)
+## Technical notes
 
-### Files left in place (project-only, not migrated)
-- `src/components/agent/AgentActionDrawer.tsx` — superseded; deleted.
-- `src/components/agent/AgentActivityFeed.tsx` — superseded; deleted.
-- `src/components/agent/AgentRunHeader.tsx`, `AgentRunResultViewer.tsx` — kept; still used by `IncidentDetailPage`, `useAgentActivity` (search filter helper), and `AgentQuickViewDrawer`.
-- `src/services/agentActivity.ts` — kept as a thin re-export from the lib so `useAgentActivity` keeps working.
-- `src/hooks/useAgentActivity.ts` — kept; project-side stats + search/skip filtering remain useful for the page.
-
-## Out of scope
-
-- The "Run / Permissions / Local LLM" `AgentRunDrawer` already lives in the lib — unchanged.
-- No changes to incident-pivot links, skipped-run UI, or stats panel — those stay project-only.
-- `AgentQuickViewDrawer` (used in the dashboard) — unchanged.
-
-## Acceptance
-
-- `/agent` lists runs and opens a drawer on click that shows the same Simple/Detailed tabs as `/agents`.
-- `AgentActivityList` and `AgentExecutionDrawer` can be imported from `@/Shuffle-MCPs` and rendered with only `apiKey` + `apiBaseUrl` (no project hooks/contexts/services needed).
-- Typecheck clean.
+- The Alluvial today calls `appDetailCtx?.openApp(appName)` from `handleVisitApp`. Once `onBubbleClick` handles the click, that path is no longer hit for the bubble — but it stays available for any code still using `onVisitApp` (e.g., a guest flow).
+- `connectionViewMode === 'source_destination'` already gates Alluvial rendering, so this change only affects the three usecases that opt into it (`siem_case_management_1`, `edr_case_management_1`, `email_case_management_1`).
+- After approval I will verify by opening `/usecases/siem_alerts`, clicking an existing source app bubble (expecting the same popover as the default card view), and clicking the `+` button (expecting the same `AppSearchDrawer` opened by `setAddToolFor`).
