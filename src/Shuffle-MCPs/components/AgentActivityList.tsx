@@ -134,14 +134,36 @@ const parseDatastoreTask = (
   return { key, category };
 };
 
+/** Scan every plausible text field on a run for the datastore Key/Category
+ *  markers. The prompt can live in `execution_argument`, somewhere inside
+ *  the AI Agent's `results[*].result`, or in the top-level `result` blob —
+ *  so we stringify each and try the regex. */
+const findDatastoreTaskInRun = (
+  run: AgentRun,
+): { key: string; category: string } | null => {
+  const candidates: string[] = [];
+  if (run.execution_argument) candidates.push(run.execution_argument);
+  if (run.result) candidates.push(run.result);
+  if (Array.isArray((run as any).results)) {
+    try { candidates.push(JSON.stringify((run as any).results)); } catch { /* ignore */ }
+  }
+  if (Array.isArray((run as any).decisions)) {
+    try { candidates.push(JSON.stringify((run as any).decisions)); } catch { /* ignore */ }
+  }
+  for (const c of candidates) {
+    const hit = parseDatastoreTask(c);
+    if (hit) return hit;
+  }
+  return null;
+};
 
 const classifyRunSource = (run: AgentRun): RunSourceInfo => {
   const raw = (run.execution_source || '').trim();
   const src = raw.toLowerCase();
 
   // Datastore automation can be detected either via execution_source or by
-  // inspecting the execution argument for the standardized TASK payload.
-  const ds = parseDatastoreTask(run.execution_argument);
+  // finding the standardized Key:/Category: markers anywhere on the run.
+  const ds = findDatastoreTaskInRun(run);
   if (
     ds ||
     src.includes('datastore') ||
@@ -159,6 +181,7 @@ const classifyRunSource = (run: AgentRun): RunSourceInfo => {
       datastoreCategory: ds?.category,
     };
   }
+
 
   if (src.includes('schedule') || src.includes('cron')) {
     return {
@@ -337,8 +360,14 @@ const getRunPrompt = (run: AgentRun): string | null => {
     // Last resort: treat the whole thing as the prompt if it's short plain text.
     if (typeof parsed === 'string' && parsed.length < 240) return parsed;
   }
+  // 4) Decisions list — some flows only surface the user input here.
+  if (Array.isArray((run as any).decisions)) {
+    const hit = deepFindPrompt((run as any).decisions);
+    if (hit) return hit;
+  }
   return null;
 };
+
 
 
 const getRunTitle = (run: AgentRun): string => {
