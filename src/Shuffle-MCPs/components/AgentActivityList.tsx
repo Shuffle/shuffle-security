@@ -180,7 +180,7 @@ const getRunIconColor = (run: AgentRun): string => {
   const status = getEffectiveStatus(run);
   if (status === 'FINISHED' || status === 'SUCCESS') return 'hsl(var(--severity-low, 142 71% 45%))';
   if (status === 'FAILED' || status === 'ABORTED') return 'hsl(var(--severity-critical, 0 72% 55%))';
-  if (status === 'LIMIT_REACHED') return 'hsl(var(--severity-medium, 38 92% 50%))';
+  if (status === 'LIMIT_REACHED') return 'hsl(var(--severity-critical, 0 72% 55%))';
   if (status === 'EXECUTING' || status === 'RUNNING') return 'hsl(var(--severity-medium, 38 92% 50%))';
   return 'hsl(var(--primary, 24 100% 50%))';
 };
