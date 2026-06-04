@@ -1452,7 +1452,7 @@ export default function UsecaseAlluvialDiagram({
             {sourceApps.length === 0 ? (
               <Tooltip title="Browse and add source tools" placement="bottom" arrow>
                 <Box
-                  onClick={() => setSearchOpen('left')}
+                  onClick={() => { if (onAddTool && onAddTool('left')) return; setSearchOpen('left'); }}
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
