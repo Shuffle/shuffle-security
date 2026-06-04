@@ -22,11 +22,9 @@ export default defineConfig({
     'react',
     'react-dom',
     'react/jsx-runtime',
-    // List deep MUI/emotion subpaths explicitly (as plain strings, not regex)
-    // so esbuild emits bare specifiers that webpack 5's `fullySpecified`
-    // check in consuming apps accepts without extension.
+    // Keep MUI as barrel externals so the emitted ESM does not reference
+    // extensionless directory subpaths that webpack 5 rejects as fully specified.
     '@mui/material',
-    '@mui/material/styles',
     '@mui/material/utils',
     '@mui/system',
     '@mui/system/RtlProvider',

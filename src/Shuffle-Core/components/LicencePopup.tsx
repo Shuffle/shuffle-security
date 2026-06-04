@@ -1,9 +1,9 @@
 // @ts-nocheck
 import React, { useState, useEffect, useContext, useRef } from "react";
-import { useTheme } from "@mui/material/styles";
 import ReactGA from "react-ga4";
 
 import {
+  useTheme,
   Box,
   Typography,
   Divider,
