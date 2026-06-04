@@ -72,7 +72,7 @@ import LicencePopup from "../components/LicencePopup";
 import { handlePayasyougo } from "./HandlePaymentNew"
 
 
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Delete as DeleteIcon } from '@mui/icons-material';
 import { DataGrid } from "@mui/x-data-grid";
 
 const ProductionStatus = ({ selectedOrganization, userdata, isCloud, theme }) => {
