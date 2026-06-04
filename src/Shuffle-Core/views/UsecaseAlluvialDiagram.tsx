@@ -364,7 +364,7 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
         }}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         transformOrigin={{ vertical: 'top', horizontal: 'center' }}
-        sx={{ zIndex: 1600 }}
+        sx={{ zIndex: 9999 }}
         slotProps={{
           paper: {
             sx: {

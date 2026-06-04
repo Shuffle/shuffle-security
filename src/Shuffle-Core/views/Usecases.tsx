@@ -3924,13 +3924,8 @@ function UsecaseDetailContent({
             targetCategory={flow.target}
             highlightCategory={flow.source}
             isLoggedIn={isAuthenticated}
-            // Reuse the same AppDetailDrawer the default Source/Destination
-            // tile popover opens via its "Manage authentication" button.
-            onBubbleClick={({ appName }) => {
-              if (!appDetail) return false;
-              appDetail.openApp(appName);
-              return true;
-            }}
+            // Keep the AppBubble's built-in mini popover (Visit / Enable Sync
+            // / Remove). Only the "+" Add buttons delegate to the host below.
             // Reuse the same AppSearchDrawer wiring (setAddToolFor) the
             // default Source/Destination "+" tile uses, so adding a tool
             // from the alluvial goes through the same workflows/generate
