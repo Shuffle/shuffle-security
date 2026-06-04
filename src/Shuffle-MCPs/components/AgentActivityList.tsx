@@ -33,11 +33,14 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
+  Database,
   FileText,
   GitBranch,
   Globe,
+  Hand,
   Loader2,
   Server,
+  Workflow as WorkflowIcon,
   XCircle,
   Zap,
   Search as SearchIcon
@@ -91,15 +94,86 @@ const getEffectiveStatus = (run: AgentRun): string => {
   return raw;
 };
 
-const getRunIcon = (run: AgentRun): React.ReactNode => {
-  const src = (run.execution_source || '').toLowerCase();
-  const arg = (run.execution_argument || '').toLowerCase();
-  if (src.includes('schedule') || src.includes('cron')) return <Clock size={18} />;
-  if (src.includes('webhook') || src.includes('http')) return <Globe size={18} />;
-  if (arg.includes('alert') || arg.includes('detect')) return <Activity size={18} />;
-  if (arg.includes('report') || arg.includes('email')) return <FileText size={18} />;
-  if (arg.includes('endpoint') || arg.includes('server')) return <Server size={18} />;
-  return <Zap size={18} />;
+// Classifies an agent run by where it was triggered from. The icon to the
+// left of each row uses this so the user can tell at a glance whether the
+// agent was started manually from the /agents UI, kicked off by another
+// workflow, or fired by a datastore automation (enrichments, etc.).
+const SOURCE_ICON_SIZE = 18;
+
+interface RunSourceInfo {
+  kind: 'manual' | 'workflow' | 'datastore' | 'schedule' | 'webhook' | 'form' | 'unknown';
+  label: string;
+  reason: string;
+  icon: React.ReactNode;
+}
+
+const looksLikeExecutionId = (s: string): boolean =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s.trim());
+
+const classifyRunSource = (run: AgentRun): RunSourceInfo => {
+  const raw = (run.execution_source || '').trim();
+  const src = raw.toLowerCase();
+
+  if (src.includes('schedule') || src.includes('cron')) {
+    return {
+      kind: 'schedule',
+      label: 'Schedule',
+      reason: 'Started by a scheduled trigger (cron).',
+      icon: <Clock size={SOURCE_ICON_SIZE} />,
+    };
+  }
+  if (src.includes('webhook') || src.includes('http')) {
+    return {
+      kind: 'webhook',
+      label: 'Webhook',
+      reason: 'Started by an incoming webhook / HTTP trigger.',
+      icon: <Globe size={SOURCE_ICON_SIZE} />,
+    };
+  }
+  if (src.includes('form')) {
+    return {
+      kind: 'form',
+      label: 'Form',
+      reason: 'Started by a form submission.',
+      icon: <FileText size={SOURCE_ICON_SIZE} />,
+    };
+  }
+  if (
+    src.includes('datastore') ||
+    src.includes('enrichment') ||
+    src.includes('automation')
+  ) {
+    return {
+      kind: 'datastore',
+      label: 'Datastore automation',
+      reason: 'Started by a datastore automation (e.g. enrichment trigger).',
+      icon: <Database size={SOURCE_ICON_SIZE} />,
+    };
+  }
+  if (raw && looksLikeExecutionId(raw)) {
+    return {
+      kind: 'workflow',
+      label: 'Workflow',
+      reason: 'Started by another workflow as a subflow.',
+      icon: <WorkflowIcon size={SOURCE_ICON_SIZE} />,
+    };
+  }
+  if (src === '' || src === 'manual' || src === 'default' || src === 'demo') {
+    return {
+      kind: 'manual',
+      label: 'Manual',
+      reason: 'Started manually from the Agents UI.',
+      icon: <Hand size={SOURCE_ICON_SIZE} />,
+    };
+  }
+  return {
+    kind: 'unknown',
+    label: raw || 'Unknown',
+    reason: raw
+      ? `Started by "${raw}".`
+      : 'Trigger source unknown.',
+    icon: <Zap size={SOURCE_ICON_SIZE} />,
+  };
 };
 
 const getRunIconColor = (run: AgentRun): string => {
@@ -399,21 +473,32 @@ const AgentRunRow = ({ run, onClick, sx, appIcons, onAppClick }: RunRowProps) =>
         ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
       ]}
     >
-      <Box
-        sx={{
-          width: 40,
-          height: 40,
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          bgcolor: `${iconColor}15`,
-          color: iconColor,
-          flexShrink: 0,
-        }}
+      <Tooltip
+        title={
+          <Box sx={{ lineHeight: 1.4 }}>
+            <Box sx={{ fontWeight: 600 }}>{classifyRunSource(run).label}</Box>
+            <Box sx={{ opacity: 0.85 }}>{classifyRunSource(run).reason}</Box>
+          </Box>
+        }
+        placement="top"
+        arrow
       >
-        {getRunIcon(run)}
-      </Box>
+        <Box
+          sx={{
+            width: 40,
+            height: 40,
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: `${iconColor}15`,
+            color: iconColor,
+            flexShrink: 0,
+          }}
+        >
+          {classifyRunSource(run).icon}
+        </Box>
+      </Tooltip>
 
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25 }}>
