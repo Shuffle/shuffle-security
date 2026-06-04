@@ -4068,8 +4068,8 @@ const IncidentDetailPage = () => {
                 background workflow means the agent will never pick up the
                 comment. Mirror the enrichment-banner pattern and let users
                 enable it inline without leaving the incident. */}
-            {!assignEscalateStatus.isLoading
-              && !assignEscalateStatus.active
+            {!agentReadiness.isLoading
+              && !agentReadiness.active
               && /@\s*ai[\s_-]*agent\b/i.test(newComment) && (
               <Box sx={{
                 display: 'flex',
@@ -4088,8 +4088,8 @@ const IncidentDetailPage = () => {
                 <Button
                   size="small"
                   variant="contained"
-                  disabled={assignEscalateStatus.isEnabling}
-                  onClick={assignEscalateStatus.enable}
+                  disabled={agentReadiness.isEnabling}
+                  onClick={agentReadiness.enable}
                   sx={{
                     textTransform: 'none',
                     fontSize: '0.72rem',
@@ -4101,7 +4101,7 @@ const IncidentDetailPage = () => {
                     '&:hover': { bgcolor: '#f97316', boxShadow: 'none' },
                   }}
                 >
-                  {assignEscalateStatus.isEnabling ? <CircularProgress size={14} sx={{ color: '#fff' }} /> : 'Enable'}
+                  {agentReadiness.isEnabling ? <CircularProgress size={14} sx={{ color: '#fff' }} /> : 'Enable'}
                 </Button>
               </Box>
             )}
