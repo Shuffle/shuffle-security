@@ -1512,7 +1512,7 @@ export default function UsecaseAlluvialDiagram({
           >
             <Tooltip title="Add destination tools" placement="bottom" arrow>
               <IconButton
-                onClick={() => setSearchOpen('right')}
+                onClick={() => { if (onAddTool && onAddTool('right')) return; setSearchOpen('right'); }}
                 sx={{
                   width: 32,
                   height: 32,
