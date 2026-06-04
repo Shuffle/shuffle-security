@@ -33,7 +33,6 @@ export default defineConfig({
     '@mui/system/createTheme',
     '@mui/system/styled',
     '@mui/icons-material',
-    '@mui/icons-material/Delete',
     '@mui/x-data-grid',
     '@emotion/react',
     '@emotion/styled',
