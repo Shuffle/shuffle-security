@@ -105,14 +105,55 @@ interface RunSourceInfo {
   label: string;
   reason: string;
   icon: React.ReactNode;
+  datastoreKey?: string;
+  datastoreCategory?: string;
 }
 
 const looksLikeExecutionId = (s: string): boolean =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s.trim());
 
+// Datastore automations always start the agent with an `execution_argument`
+// that begins with "TASK:" and contains "Key:", "Category:" and "Finding".
+// We parse those out so we can both classify the run and build a deep link
+// to the originating datastore item.
+const DATASTORE_TASK_RE = /TASK:[\s\S]*\bKey:\s*([^\n\r]+?)\s*(?:\r?\n|$)[\s\S]*\bCategory:\s*([^\n\r]+?)\s*(?:\r?\n|$)[\s\S]*\bFinding\b/i;
+
+const parseDatastoreTask = (
+  arg?: string,
+): { key: string; category: string } | null => {
+  if (!arg) return null;
+  const m = arg.match(DATASTORE_TASK_RE);
+  if (!m) return null;
+  const key = (m[1] || '').trim();
+  const category = (m[2] || '').trim();
+  if (!key || !category) return null;
+  return { key, category };
+};
+
 const classifyRunSource = (run: AgentRun): RunSourceInfo => {
   const raw = (run.execution_source || '').trim();
   const src = raw.toLowerCase();
+
+  // Datastore automation can be detected either via execution_source or by
+  // inspecting the execution argument for the standardized TASK payload.
+  const ds = parseDatastoreTask(run.execution_argument);
+  if (
+    ds ||
+    src.includes('datastore') ||
+    src.includes('enrichment') ||
+    src.includes('automation')
+  ) {
+    return {
+      kind: 'datastore',
+      label: 'Datastore automation',
+      reason: ds
+        ? `Started by datastore automation (category "${ds.category}", key "${ds.key}"). Click to open in Datastore.`
+        : 'Started by a datastore automation (e.g. enrichment trigger).',
+      icon: <Database size={SOURCE_ICON_SIZE} />,
+      datastoreKey: ds?.key,
+      datastoreCategory: ds?.category,
+    };
+  }
 
   if (src.includes('schedule') || src.includes('cron')) {
     return {
@@ -136,18 +177,6 @@ const classifyRunSource = (run: AgentRun): RunSourceInfo => {
       label: 'Form',
       reason: 'Started by a form submission.',
       icon: <FileText size={SOURCE_ICON_SIZE} />,
-    };
-  }
-  if (
-    src.includes('datastore') ||
-    src.includes('enrichment') ||
-    src.includes('automation')
-  ) {
-    return {
-      kind: 'datastore',
-      label: 'Datastore automation',
-      reason: 'Started by a datastore automation (e.g. enrichment trigger).',
-      icon: <Database size={SOURCE_ICON_SIZE} />,
     };
   }
   if (raw && looksLikeExecutionId(raw)) {
@@ -175,6 +204,7 @@ const classifyRunSource = (run: AgentRun): RunSourceInfo => {
     icon: <Zap size={SOURCE_ICON_SIZE} />,
   };
 };
+
 
 const getRunIconColor = (run: AgentRun): string => {
   const status = getEffectiveStatus(run);
@@ -473,32 +503,55 @@ const AgentRunRow = ({ run, onClick, sx, appIcons, onAppClick }: RunRowProps) =>
         ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
       ]}
     >
-      <Tooltip
-        title={
-          <Box sx={{ lineHeight: 1.4 }}>
-            <Box sx={{ fontWeight: 600 }}>{classifyRunSource(run).label}</Box>
-            <Box sx={{ opacity: 0.85 }}>{classifyRunSource(run).reason}</Box>
-          </Box>
-        }
-        placement="top"
-        arrow
-      >
-        <Box
-          sx={{
-            width: 40,
-            height: 40,
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            bgcolor: `${iconColor}15`,
-            color: iconColor,
-            flexShrink: 0,
-          }}
-        >
-          {classifyRunSource(run).icon}
-        </Box>
-      </Tooltip>
+      {(() => {
+        const sourceInfo = classifyRunSource(run);
+        const dsLink =
+          sourceInfo.kind === 'datastore' && sourceInfo.datastoreKey && sourceInfo.datastoreCategory
+            ? `https://shuffler.io/admin?tab=datastore&category=${encodeURIComponent(sourceInfo.datastoreCategory)}&key=${encodeURIComponent(sourceInfo.datastoreKey)}`
+            : null;
+        return (
+          <Tooltip
+            title={
+              <Box sx={{ lineHeight: 1.4 }}>
+                <Box sx={{ fontWeight: 600 }}>{sourceInfo.label}</Box>
+                <Box sx={{ opacity: 0.85 }}>{sourceInfo.reason}</Box>
+              </Box>
+            }
+            placement="top"
+            arrow
+          >
+            <Box
+              onClick={
+                dsLink
+                  ? (e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      window.open(dsLink, '_blank', 'noopener,noreferrer');
+                    }
+                  : undefined
+              }
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                bgcolor: `${iconColor}15`,
+                color: iconColor,
+                flexShrink: 0,
+                cursor: dsLink ? 'pointer' : 'inherit',
+                transition: 'background 0.15s ease',
+                '&:hover': dsLink
+                  ? { bgcolor: `${iconColor}30` }
+                  : undefined,
+              }}
+            >
+              {sourceInfo.icon}
+            </Box>
+          </Tooltip>
+        );
+      })()}
+
 
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25 }}>
