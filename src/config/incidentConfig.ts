@@ -86,8 +86,7 @@ export const STATUS_SYNONYMS: Record<string, string> = {
 
 /**
  * Normalize a status string to a canonical status key.
- * Returns the canonical status if a synonym is found, otherwise returns the
- * original (lowercased, trimmed) value so the UI can flag it as unknown.
+ * Returns the canonical status if found, otherwise defaults to 'new'.
  */
 export const normalizeStatus = (raw: string | undefined): string => {
   if (!raw) return 'new';
@@ -99,8 +98,8 @@ export const normalizeStatus = (raw: string | undefined): string => {
   // Try without underscores
   const noUnder = key.replace(/_/g, '');
   if (STATUS_SYNONYMS[noUnder]) return STATUS_SYNONYMS[noUnder];
-  // Unknown - return as-is so UI can flag it
-  return key;
+  // Unknown - default to 'new'
+  return 'new';
 };
 
 /**
