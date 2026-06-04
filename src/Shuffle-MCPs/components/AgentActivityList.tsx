@@ -738,18 +738,7 @@ const AgentRunRow = ({ run, onClick, sx, appIcons, onAppClick }: RunRowProps) =>
               );
             })}
           </AvatarGroup>
-        ) : (
-          <Typography
-            sx={{
-              fontSize: '0.7rem',
-              color: 'hsl(var(--muted-foreground))',
-              opacity: 0.5,
-              fontStyle: 'italic',
-            }}
-          >
-            No apps
-          </Typography>
-        )}
+        ) : null}
       </Box>
 
     </Box>
