@@ -4068,8 +4068,8 @@ const IncidentDetailPage = () => {
                 background workflow means the agent will never pick up the
                 comment. Mirror the enrichment-banner pattern and let users
                 enable it inline without leaving the incident. */}
-            {!assignEscalateStatus.isLoading
-              && !assignEscalateStatus.active
+            {!agentReadiness.isLoading
+              && !agentReadiness.active
               && /@\s*ai[\s_-]*agent\b/i.test(newComment) && (
               <Box sx={{
                 display: 'flex',
