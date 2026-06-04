@@ -817,11 +817,13 @@ const Billing = memo((props) => {
 			return
 		}
 
+		const apiKey = userdata?.api_key || userdata?.apikey;
 		fetch(`${globalUrl}/api/v1/orgs/${orgid}/stats`, {
 		  method: "GET",
 		  headers: {
 			"Content-Type": "application/json",
 			Accept: "application/json",
+			...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
 		  },
 		  credentials: "include",
 		})
@@ -3378,6 +3380,7 @@ const BillingStatsChildOrg = memo(({ userdata, globalUrl, selectedOrganization, 
 			}
 			return
 		}
+		const apiKey = userdata?.api_key || userdata?.apikey;
 		const promises = childOrgs.map((org) => {
 			// get org stats base on region url
 			const baseUrl = org?.region_url?.length > 0 && !window?.location?.origin?.includes("localhost") ? org?.region_url : globalUrl;
@@ -3387,6 +3390,7 @@ const BillingStatsChildOrg = memo(({ userdata, globalUrl, selectedOrganization, 
 				credentials: "include",
 				headers: {
 					"Content-Type": "application/json",
+					...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
 				},
 			}).then((res) => res.json());
 		});
@@ -3415,6 +3419,7 @@ const BillingStatsChildOrg = memo(({ userdata, globalUrl, selectedOrganization, 
 			return
 		}
 
+		const apiKey = userdata?.api_key || userdata?.apikey;
 		const promises = childOrgs.map((org) => {
 			const baseUrl = org?.region_url?.length > 0 && !window?.location?.origin?.includes("localhost") ? org?.region_url : globalUrl;
 			const url = `${baseUrl}/api/v1/orgs/${org.id}`;
@@ -3423,6 +3428,7 @@ const BillingStatsChildOrg = memo(({ userdata, globalUrl, selectedOrganization, 
 				credentials: "include",
 				headers: {
 					"Content-Type": "application/json",
+					...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
 				},
 			}).then((res) => res.json());
 		});
