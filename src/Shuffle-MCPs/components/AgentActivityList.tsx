@@ -635,9 +635,6 @@ const AgentRunRow = ({ run, onClick, sx, appIcons, onAppClick }: RunRowProps) =>
           >
             {getRunTitle(run)}
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', color: cfg.color, flexShrink: 0 }}>
-            {cfg.icon}
-          </Box>
         </Box>
 
         <Typography
