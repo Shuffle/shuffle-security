@@ -3962,7 +3962,15 @@ const IncidentDetailPage = () => {
       {/* Bad-data warning — surfaced inside the Timeline so users notice the
           drift right where they would inspect / roll back changes. Triggered
           by the same OCSF-recovery fallback that powers the top-of-page banner. */}
-      {ocsfFallbackInfo && !ocsfFallbackDismissed && (
+      {ocsfFallbackInfo && !ocsfFallbackDismissed && (() => {
+        // Suppress for freshly manually-created incidents — the minimal initial
+        // payload often trips the OCSF-missing-fields check, but there is nothing
+        // to "roll back" to. If the incident was created within the last 10 min,
+        // hide the banner.
+        const createdMs = incident?.createdTs || 0;
+        if (createdMs && Date.now() - createdMs < 10 * 60 * 1000) return null;
+        return true;
+      })() && (
         <Box sx={{
           mx: 2,
           mt: 2,
