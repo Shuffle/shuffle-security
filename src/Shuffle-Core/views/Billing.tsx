@@ -811,13 +811,25 @@ const Billing = memo((props) => {
 		});
 	};
 
+	const getApiKey = () => {
+		try {
+			return (
+				userdata?.api_key ||
+				userdata?.apikey ||
+				(typeof window !== 'undefined' ? window.localStorage.getItem('shuffle_api_key') : null)
+			);
+		} catch {
+			return null;
+		}
+	};
+
 	const getStats = (orgid) => {
 		
 		if (orgid === undefined || orgid === null) {
 			return
 		}
 
-		const apiKey = userdata?.api_key || userdata?.apikey;
+		const apiKey = getApiKey();
 		fetch(`${globalUrl}/api/v1/orgs/${orgid}/stats`, {
 		  method: "GET",
 		  headers: {
@@ -3380,7 +3392,7 @@ const BillingStatsChildOrg = memo(({ userdata, globalUrl, selectedOrganization, 
 			}
 			return
 		}
-		const apiKey = userdata?.api_key || userdata?.apikey;
+		const apiKey = getApiKey();
 		const promises = childOrgs.map((org) => {
 			// get org stats base on region url
 			const baseUrl = org?.region_url?.length > 0 && !window?.location?.origin?.includes("localhost") ? org?.region_url : globalUrl;
@@ -3419,7 +3431,7 @@ const BillingStatsChildOrg = memo(({ userdata, globalUrl, selectedOrganization, 
 			return
 		}
 
-		const apiKey = userdata?.api_key || userdata?.apikey;
+		const apiKey = getApiKey();
 		const promises = childOrgs.map((org) => {
 			const baseUrl = org?.region_url?.length > 0 && !window?.location?.origin?.includes("localhost") ? org?.region_url : globalUrl;
 			const url = `${baseUrl}/api/v1/orgs/${org.id}`;
