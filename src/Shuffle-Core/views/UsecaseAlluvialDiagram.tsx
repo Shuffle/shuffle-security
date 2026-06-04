@@ -64,6 +64,19 @@ export interface UsecaseAlluvialDiagramProps extends ShuffleCoreHostProps {
    * and apps matching this category get a visual highlight.
    */
   highlightCategory?: string;
+  /**
+   * Host-side handoff for clicking an app bubble. Return `true` to suppress
+   * the diagram's built-in Visit/Enable Sync/Remove popover and let the host
+   * render its own (mirrors the default Source/Destination tile popover in
+   * `UsecaseDetailContent`).
+   */
+  onBubbleClick?: (args: { appName: string; side: 'left' | 'right'; anchorEl: HTMLElement }) => boolean;
+  /**
+   * Host-side handoff for clicking a `+` Add tool button. Return `true` to
+   * suppress the diagram's built-in `AppSearchDrawer` and let the host open
+   * its own (mirrors `setAddToolFor` in `UsecaseDetailContent`).
+   */
+  onAddTool?: (side: 'left' | 'right') => boolean;
 }
 
 // ── Pattern matchers ───────────────────────────────────────────────────────────
@@ -135,7 +148,7 @@ function getStatusColor(app: AppNode): string {
 
 // ── App bubble component ───────────────────────────────────────────────────────
 
-function AppBubble({ app, size = 40, highlighted = false, isSample = false, disabled = false, side = 'left', onClickApp, onRemoveApp, onToggleSync, onVisitApp, webhookInfo, onWebhookToggled }: { app: AppNode; size?: number; highlighted?: boolean; isSample?: boolean; disabled?: boolean; side?: 'left' | 'right'; onClickApp?: (appName: string) => void; onRemoveApp?: (appName: string) => void; onToggleSync?: (appName: string, enabled: boolean) => void; onVisitApp?: (appName: string) => void; webhookInfo?: { url: string | null; exists: boolean; enabled: boolean; workflowId: string | null }; onWebhookToggled?: () => void }) {
+function AppBubble({ app, size = 40, highlighted = false, isSample = false, disabled = false, side = 'left', onClickApp, onRemoveApp, onToggleSync, onVisitApp, onPrimaryClick, webhookInfo, onWebhookToggled }: { app: AppNode; size?: number; highlighted?: boolean; isSample?: boolean; disabled?: boolean; side?: 'left' | 'right'; onClickApp?: (appName: string) => void; onRemoveApp?: (appName: string) => void; onToggleSync?: (appName: string, enabled: boolean) => void; onVisitApp?: (appName: string) => void; onPrimaryClick?: (appName: string, anchorEl: HTMLElement, side: 'left' | 'right') => boolean; webhookInfo?: { url: string | null; exists: boolean; enabled: boolean; workflowId: string | null }; onWebhookToggled?: () => void }) {
   const [imgFailed, setImgFailed] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [tooltipOpen, setTooltipOpen] = useState(false);
@@ -164,6 +177,12 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
   const handleClick = (e: React.MouseEvent<HTMLElement>) => {
     if (isSample) return;
     closeTooltip();
+    // Host can hijack the click (e.g. to open the same popover the default
+    // Source/Destination tile uses). Webhook bubbles always keep the local
+    // popover since the host has no equivalent UX for them.
+    if (!isWebhook && onPrimaryClick && onPrimaryClick(app.name, e.currentTarget, side)) {
+      return;
+    }
     setAnchorEl(e.currentTarget);
   };
 
@@ -608,6 +627,8 @@ export default function UsecaseAlluvialDiagram({
   targetCategory,
   highlightCategory,
   isLoggedIn = false,
+  onBubbleClick,
+  onAddTool,
 }: UsecaseAlluvialDiagramProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   // isLoggedIn comes from props (host injects); defaults to false.
@@ -1363,7 +1384,7 @@ export default function UsecaseAlluvialDiagram({
                   pointerEvents: 'auto',
                 }}
               >
-                <AppBubble app={app} size={nodeSize} highlighted={!!app.isHighlighted} isSample={!isLoggedIn} disabled={app.isEnabled === false} onRemoveApp={handleRemoveApp} onToggleSync={isLoggedIn && highlightCategory ? handleToggleSync : undefined} onVisitApp={handleVisitApp} webhookInfo={app.id === 'webhook-ingestion' ? webhookInfo : undefined} onWebhookToggled={handleWebhookToggled} />
+                <AppBubble app={app} size={nodeSize} highlighted={!!app.isHighlighted} isSample={!isLoggedIn} disabled={app.isEnabled === false} onRemoveApp={handleRemoveApp} onToggleSync={isLoggedIn && highlightCategory ? handleToggleSync : undefined} onVisitApp={handleVisitApp} onPrimaryClick={onBubbleClick ? (name, el, s) => !!onBubbleClick({ appName: name, side: s, anchorEl: el }) : undefined} webhookInfo={app.id === 'webhook-ingestion' ? webhookInfo : undefined} onWebhookToggled={handleWebhookToggled} />
               </Box>
             );
           })}
@@ -1414,7 +1435,7 @@ export default function UsecaseAlluvialDiagram({
                   pointerEvents: 'auto',
                 }}
               >
-                <AppBubble app={app} size={nodeSize} isSample={!isLoggedIn} side="right" onRemoveApp={handleRemoveApp} onToggleSync={isLoggedIn ? handleToggleForward : undefined} onVisitApp={handleVisitApp} />
+                <AppBubble app={app} size={nodeSize} isSample={!isLoggedIn} side="right" onRemoveApp={handleRemoveApp} onToggleSync={isLoggedIn ? handleToggleForward : undefined} onVisitApp={handleVisitApp} onPrimaryClick={onBubbleClick ? (name, el, s) => !!onBubbleClick({ appName: name, side: s, anchorEl: el }) : undefined} />
               </Box>
             );
           })}
@@ -1431,7 +1452,7 @@ export default function UsecaseAlluvialDiagram({
             {sourceApps.length === 0 ? (
               <Tooltip title="Browse and add source tools" placement="bottom" arrow>
                 <Box
-                  onClick={() => setSearchOpen('left')}
+                  onClick={() => { if (onAddTool && onAddTool('left')) return; setSearchOpen('left'); }}
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
@@ -1460,7 +1481,7 @@ export default function UsecaseAlluvialDiagram({
             ) : (
               <Tooltip title="Add source tools" placement="bottom" arrow>
                 <IconButton
-                  onClick={() => setSearchOpen('left')}
+                  onClick={() => { if (onAddTool && onAddTool('left')) return; setSearchOpen('left'); }}
                   sx={{
                     width: 32,
                     height: 32,
@@ -1491,7 +1512,7 @@ export default function UsecaseAlluvialDiagram({
           >
             <Tooltip title="Add destination tools" placement="bottom" arrow>
               <IconButton
-                onClick={() => setSearchOpen('right')}
+                onClick={() => { if (onAddTool && onAddTool('right')) return; setSearchOpen('right'); }}
                 sx={{
                   width: 32,
                   height: 32,
