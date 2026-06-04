@@ -435,7 +435,9 @@ const getRunSubtitle = (run: AgentRun): string => {
       if (run.result.length < 120) return run.result;
     }
   }
-  return run.execution_source || 'Agent execution';
+  const status = getEffectiveStatus(run);
+  const isRunning = status === 'EXECUTING' || status === 'RUNNING' || status === 'WAITING';
+  return run.execution_source || (isRunning ? 'Agent still running…' : 'Agent execution');
 };
 
 // ── Run row ──────────────────────────────────────────────────────────────────
