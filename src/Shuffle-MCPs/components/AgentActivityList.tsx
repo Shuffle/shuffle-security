@@ -473,21 +473,32 @@ const AgentRunRow = ({ run, onClick, sx, appIcons, onAppClick }: RunRowProps) =>
         ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
       ]}
     >
-      <Box
-        sx={{
-          width: 40,
-          height: 40,
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          bgcolor: `${iconColor}15`,
-          color: iconColor,
-          flexShrink: 0,
-        }}
+      <Tooltip
+        title={
+          <Box sx={{ lineHeight: 1.4 }}>
+            <Box sx={{ fontWeight: 600 }}>{classifyRunSource(run).label}</Box>
+            <Box sx={{ opacity: 0.85 }}>{classifyRunSource(run).reason}</Box>
+          </Box>
+        }
+        placement="top"
+        arrow
       >
-        {getRunIcon(run)}
-      </Box>
+        <Box
+          sx={{
+            width: 40,
+            height: 40,
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: `${iconColor}15`,
+            color: iconColor,
+            flexShrink: 0,
+          }}
+        >
+          {classifyRunSource(run).icon}
+        </Box>
+      </Tooltip>
 
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25 }}>
