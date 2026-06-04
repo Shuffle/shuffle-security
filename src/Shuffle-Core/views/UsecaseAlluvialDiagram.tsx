@@ -64,6 +64,19 @@ export interface UsecaseAlluvialDiagramProps extends ShuffleCoreHostProps {
    * and apps matching this category get a visual highlight.
    */
   highlightCategory?: string;
+  /**
+   * Host-side handoff for clicking an app bubble. Return `true` to suppress
+   * the diagram's built-in Visit/Enable Sync/Remove popover and let the host
+   * render its own (mirrors the default Source/Destination tile popover in
+   * `UsecaseDetailContent`).
+   */
+  onBubbleClick?: (args: { appName: string; side: 'left' | 'right'; anchorEl: HTMLElement }) => boolean;
+  /**
+   * Host-side handoff for clicking a `+` Add tool button. Return `true` to
+   * suppress the diagram's built-in `AppSearchDrawer` and let the host open
+   * its own (mirrors `setAddToolFor` in `UsecaseDetailContent`).
+   */
+  onAddTool?: (side: 'left' | 'right') => boolean;
 }
 
 // ── Pattern matchers ───────────────────────────────────────────────────────────
