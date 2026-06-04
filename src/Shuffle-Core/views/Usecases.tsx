@@ -2186,6 +2186,7 @@ function IntegrationStatusLite({
         onClose={() => setPopoverFor(null)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+        sx={{ zIndex: 9999 }}
         slotProps={{
           paper: {
             sx: {
