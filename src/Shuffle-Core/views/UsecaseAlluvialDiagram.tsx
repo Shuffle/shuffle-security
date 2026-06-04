@@ -1435,7 +1435,7 @@ export default function UsecaseAlluvialDiagram({
                   pointerEvents: 'auto',
                 }}
               >
-                <AppBubble app={app} size={nodeSize} isSample={!isLoggedIn} side="right" onRemoveApp={handleRemoveApp} onToggleSync={isLoggedIn ? handleToggleForward : undefined} onVisitApp={handleVisitApp} />
+                <AppBubble app={app} size={nodeSize} isSample={!isLoggedIn} side="right" onRemoveApp={handleRemoveApp} onToggleSync={isLoggedIn ? handleToggleForward : undefined} onVisitApp={handleVisitApp} onPrimaryClick={onBubbleClick ? (name, el, s) => !!onBubbleClick({ appName: name, side: s, anchorEl: el }) : undefined} />
               </Box>
             );
           })}
