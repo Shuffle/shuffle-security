@@ -177,6 +177,12 @@ function AppBubble({ app, size = 40, highlighted = false, isSample = false, disa
   const handleClick = (e: React.MouseEvent<HTMLElement>) => {
     if (isSample) return;
     closeTooltip();
+    // Host can hijack the click (e.g. to open the same popover the default
+    // Source/Destination tile uses). Webhook bubbles always keep the local
+    // popover since the host has no equivalent UX for them.
+    if (!isWebhook && onPrimaryClick && onPrimaryClick(app.name, e.currentTarget, side)) {
+      return;
+    }
     setAnchorEl(e.currentTarget);
   };
 
