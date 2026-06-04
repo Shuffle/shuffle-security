@@ -81,7 +81,7 @@ const AgentRunDiagnosisBanner = ({ run, sx, onJumpToEvidence, executionId }: Pro
 
   if (!failureInfo && !diagnosis) return null;
 
-  const isCritical = !!failureInfo;
+  const isCritical = !!failureInfo || diagnosis?.kind === 'token_limit';
   const tone = isCritical ? 'critical' : 'medium';
   const Icon = isCritical ? AlertTriangle : HelpCircle;
 
