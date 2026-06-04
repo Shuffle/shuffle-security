@@ -360,8 +360,14 @@ const getRunPrompt = (run: AgentRun): string | null => {
     // Last resort: treat the whole thing as the prompt if it's short plain text.
     if (typeof parsed === 'string' && parsed.length < 240) return parsed;
   }
+  // 4) Decisions list — some flows only surface the user input here.
+  if (Array.isArray((run as any).decisions)) {
+    const hit = deepFindPrompt((run as any).decisions);
+    if (hit) return hit;
+  }
   return null;
 };
+
 
 
 const getRunTitle = (run: AgentRun): string => {
