@@ -811,13 +811,25 @@ const Billing = memo((props) => {
 		});
 	};
 
+	const getApiKey = () => {
+		try {
+			return (
+				userdata?.api_key ||
+				userdata?.apikey ||
+				(typeof window !== 'undefined' ? window.localStorage.getItem('shuffle_api_key') : null)
+			);
+		} catch {
+			return null;
+		}
+	};
+
 	const getStats = (orgid) => {
 		
 		if (orgid === undefined || orgid === null) {
 			return
 		}
 
-		const apiKey = userdata?.api_key || userdata?.apikey;
+		const apiKey = getApiKey();
 		fetch(`${globalUrl}/api/v1/orgs/${orgid}/stats`, {
 		  method: "GET",
 		  headers: {
