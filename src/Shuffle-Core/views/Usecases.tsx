@@ -5523,17 +5523,19 @@ function UsecasesPageInner() {
         open={drawerFlowId !== null}
         onClose={() => setDrawerFlowId(null)}
         PaperProps={{
+          className: cfgScopeClassName,
           sx: {
             width: { xs: '100%', sm: 720, md: 900 },
             maxWidth: '100vw',
-            // Explicit fallback so the drawer is never transparent in the
-            // standalone build (host CSS may not define --background).
-            backgroundColor: '#1a1a1a',
+            // Tokens resolve via the scope class on this paper. Fallback HSL
+            // values guarantee the drawer is never transparent even if the
+            // host CSS does not define --background / --foreground.
             bgcolor: 'hsl(var(--background, 0 0% 10%))',
             color: 'hsl(var(--foreground, 0 0% 100%))',
             backgroundImage: 'none',
           },
         }}
+        sx={{ zIndex: 9999 }}
       >
         <Box sx={{
           display: 'flex',
