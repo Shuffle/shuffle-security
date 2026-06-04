@@ -85,9 +85,10 @@ const AgentRunDiagnosisBanner = ({ run, sx, onJumpToEvidence, executionId }: Pro
   const tone = isCritical ? 'critical' : 'medium';
   const Icon = isCritical ? AlertTriangle : HelpCircle;
 
-  const message = isCritical
-    ? failureInfo!.reason
+  const message = failureInfo
+    ? failureInfo.reason
     : `${diagnosis!.title} — ${diagnosis!.remediation}`;
+
 
   const firstEvidence = diagnosis?.evidence?.[0] || null;
   const jumpDecisionIndex = firstEvidence ? extractDecisionIndex(firstEvidence.path) : null;
