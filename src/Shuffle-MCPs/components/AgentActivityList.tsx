@@ -112,23 +112,28 @@ interface RunSourceInfo {
 const looksLikeExecutionId = (s: string): boolean =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s.trim());
 
-// Datastore automations always start the agent with an `execution_argument`
-// that begins with "TASK:" and contains "Key:", "Category:" and "Finding".
-// We parse those out so we can both classify the run and build a deep link
-// to the originating datastore item.
-const DATASTORE_TASK_RE = /TASK:[\s\S]*\bKey:\s*([^\n\r]+?)\s*(?:\r?\n|$)[\s\S]*\bCategory:\s*([^\n\r]+?)\s*(?:\r?\n|$)[\s\S]*\bFinding\b/i;
+// Datastore automations start the agent with an `execution_argument` that
+// contains the standardized "Key: <value>" and "Category: <value>" markers
+// (and usually also "TASK:" / "Finding"). The key/category values are the
+// only thing we actually need to deep-link back to the datastore item, so
+// we match those independently rather than demanding a strict ordering.
+// Values can be anything that is not whitespace.
+const DATASTORE_KEY_RE = /\bKey:\s*(\S+)/i;
+const DATASTORE_CATEGORY_RE = /\bCategory:\s*(\S+)/i;
 
 const parseDatastoreTask = (
   arg?: string,
 ): { key: string; category: string } | null => {
   if (!arg) return null;
-  const m = arg.match(DATASTORE_TASK_RE);
-  if (!m) return null;
-  const key = (m[1] || '').trim();
-  const category = (m[2] || '').trim();
+  const k = arg.match(DATASTORE_KEY_RE);
+  const c = arg.match(DATASTORE_CATEGORY_RE);
+  if (!k || !c) return null;
+  const key = (k[1] || '').trim();
+  const category = (c[1] || '').trim();
   if (!key || !category) return null;
   return { key, category };
 };
+
 
 const classifyRunSource = (run: AgentRun): RunSourceInfo => {
   const raw = (run.execution_source || '').trim();
