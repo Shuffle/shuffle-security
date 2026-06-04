@@ -5544,7 +5544,6 @@ function UsecasesPageInner() {
           px: 3, py: 2,
           borderBottom: '1px solid hsl(var(--border, 0 0% 20%))',
           position: 'sticky', top: 0, zIndex: 2,
-          backgroundColor: '#1a1a1a',
           bgcolor: 'hsl(var(--background, 0 0% 10%))',
         }}>
           <Box />
