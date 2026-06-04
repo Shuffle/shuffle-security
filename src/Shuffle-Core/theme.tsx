@@ -2,7 +2,7 @@
 // installs a full MUI theme via `ShuffleCoreThemeProvider`; this helper
 // just returns a compatible theme object so legacy components that call
 // `getTheme(themeMode, brandColor)` keep working without a hook.
-import { createTheme } from '@mui/material/styles';
+import { createTheme } from '@mui/material';
 
 export const getTheme = (themeMode: 'light' | 'dark' = 'dark', brandColor: string = '#FF6600') =>
   createTheme({
