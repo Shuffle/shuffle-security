@@ -6092,8 +6092,9 @@ export default function UsecasesPage(props: UsecasesPageProps = {}) {
       isLoaded: loaded,
       renderEndpointSlot,
       renderUsecaseDetailSlot,
+      scopeClassName: themeClass ? `${SCOPE_CLASS} ${themeClass}` : SCOPE_CLASS,
     };
-  }, [globalUrl, userdata, isLoaded, isLoggedIn, hostManaged, renderEndpointSlot, renderUsecaseDetailSlot]);
+  }, [globalUrl, userdata, isLoaded, isLoggedIn, hostManaged, renderEndpointSlot, renderUsecaseDetailSlot, themeClass]);
 
   return (
     <UsecasesPageConfigContext.Provider value={config}>
