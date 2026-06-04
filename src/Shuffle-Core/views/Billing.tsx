@@ -817,11 +817,13 @@ const Billing = memo((props) => {
 			return
 		}
 
+		const apiKey = userdata?.api_key || userdata?.apikey;
 		fetch(`${globalUrl}/api/v1/orgs/${orgid}/stats`, {
 		  method: "GET",
 		  headers: {
 			"Content-Type": "application/json",
 			Accept: "application/json",
+			...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
 		  },
 		  credentials: "include",
 		})
