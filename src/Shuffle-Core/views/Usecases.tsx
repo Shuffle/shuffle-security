@@ -1139,6 +1139,9 @@ interface UsecasesPageConfig {
    *  a usecase (e.g. the Incident Routing editor) instead of bundling it
    *  into Shuffle-Core. */
   renderUsecaseDetailSlot?: (params: { flowId: string; flowLabel: string }) => React.ReactNode;
+  /** Scope class to apply to portaled MUI surfaces (Drawer paper, etc.) so
+   *  the scoped HSL tokens resolve correctly even outside the page wrapper. */
+  scopeClassName?: string;
 }
 
 const DEFAULT_CONFIG: UsecasesPageConfig = {
@@ -1153,6 +1156,7 @@ const DEFAULT_CONFIG: UsecasesPageConfig = {
   isLoaded: true,
   renderEndpointSlot: undefined,
   renderUsecaseDetailSlot: undefined,
+  scopeClassName: SCOPE_CLASS,
 };
 
 const UsecasesPageConfigContext = React.createContext<UsecasesPageConfig>(DEFAULT_CONFIG);
