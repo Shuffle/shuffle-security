@@ -853,6 +853,26 @@ const Billing = memo((props) => {
 			}
 
 			setStatistics(responseJson);
+
+			// BillingStats is stubbed in this project, so compute the monthly
+			// app run total ourselves from daily_statistics for the current month.
+			try {
+				const daily = Array.isArray(responseJson?.daily_statistics) ? responseJson.daily_statistics : [];
+				const now = new Date();
+				const y = now.getUTCFullYear();
+				const m = now.getUTCMonth();
+				const monthly = daily.reduce((sum, entry) => {
+					if (!entry?.date) return sum;
+					const d = new Date(entry.date);
+					if (d.getUTCFullYear() === y && d.getUTCMonth() === m) {
+						return sum + (Number(entry.app_executions) || 0) + (Number(entry.child_app_executions) || 0);
+					}
+					return sum;
+				}, 0);
+				setMonthlyAppRunsParent(monthly);
+			} catch (e) {
+				console.log("Error computing monthly app runs:", e);
+			}
 		})
 		.catch((error) => {
 			console.log("error: ", error)
