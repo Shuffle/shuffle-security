@@ -25,6 +25,14 @@ export interface OutcomeBreakdownEntry {
   label: string;
   value: number;
   iconUrl?: string;
+  /** Optional React node used in place of the iconUrl bubble. */
+  iconNode?: import('react').ReactNode;
+  /** Optional href — when set, the entry's label becomes a link. */
+  href?: string;
+  /** When true, open href in a new tab. */
+  external?: boolean;
+  /** Optional click handler — takes precedence over href. */
+  onClick?: () => void;
 }
 
 export interface UsecaseOutcome {
