@@ -357,9 +357,18 @@ export function UsecaseOutcomeSection({
                   <Box key={entry.key} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     {(() => {
                       const iocCategory = iocCategoryByKey?.[entry.key];
+                      const href = entry.href || (iocCategory
+                        ? `https://shuffler.io/admin?tab=datastore&category=${encodeURIComponent(iocCategory)}`
+                        : undefined);
+                      const external = entry.external || !!iocCategory;
+                      const clickable = !!entry.onClick || !!href;
                       const label = (
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 160 }}>
-                          {entry.iconUrl && (
+                          {entry.iconNode ? (
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 20, height: 20, flexShrink: 0, color: FG }}>
+                              {entry.iconNode}
+                            </Box>
+                          ) : entry.iconUrl && (
                             <Box
                               sx={{
                                 width: 20,
@@ -388,14 +397,25 @@ export function UsecaseOutcomeSection({
                           </Typography>
                         </Box>
                       );
-                      if (iocCategory) {
+                      if (entry.onClick) {
+                        return (
+                          <Box
+                            component="button"
+                            type="button"
+                            onClick={entry.onClick}
+                            sx={{ all: 'unset', cursor: 'pointer', '&:hover': { opacity: 0.85 } }}
+                          >
+                            {label}
+                          </Box>
+                        );
+                      }
+                      if (href) {
                         return (
                           <Box
                             component="a"
-                            href={`https://shuffler.io/admin?tab=datastore&category=${encodeURIComponent(iocCategory)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            sx={{ textDecoration: 'none', '&:hover': { opacity: 0.85 } }}
+                            href={href}
+                            {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                            sx={{ textDecoration: 'none', cursor: 'pointer', '&:hover': { opacity: 0.85 } }}
                           >
                             {label}
                           </Box>

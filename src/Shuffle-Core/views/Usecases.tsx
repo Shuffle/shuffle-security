@@ -2562,6 +2562,7 @@ function WebhookExecutionsOutcomeBlock({
   sourceCategoryLabel?: string;
 }) {
   const { getOutcome, isLoading } = useUsecaseOutcomes([flow]);
+  const appDetail = useAppDetailOptional();
   const webhookWorkflow = useMemo(
     () => workflows.find((w) => w?.name === 'Ingestion Webhook'),
     [workflows],
@@ -2573,18 +2574,27 @@ function WebhookExecutionsOutcomeBlock({
   const base = getOutcome(flow.id);
   const outcome = useMemo(() => {
     if (!base) return base;
-    if (!webhookWorkflow || stats.total <= 0) return base;
-    const webhookEntry = {
-      key: 'ingestion_webhook',
-      label: 'Webhook',
-      value: stats.total,
-    };
-    return {
-      ...base,
-      breakdown: [webhookEntry, ...(base.breakdown || [])],
-      isEmpty: false,
-    };
-  }, [base, webhookWorkflow, stats.total]);
+    const enrichedBreakdown = (base.breakdown || []).map((entry) => ({
+      ...entry,
+      onClick: appDetail ? () => appDetail.openApp(entry.label) : entry.onClick,
+    })) as typeof base.breakdown;
+    const next = { ...base, breakdown: enrichedBreakdown };
+    if (webhookWorkflow && stats.total > 0) {
+      next.breakdown = [
+        {
+          key: 'ingestion_webhook',
+          label: 'Webhook',
+          value: stats.total,
+          iconNode: <Webhook size={14} strokeWidth={2} />,
+          href: `https://shuffler.io/workflows/${webhookWorkflow.id}`,
+          external: true,
+        },
+        ...next.breakdown,
+      ];
+      next.isEmpty = false;
+    }
+    return next;
+  }, [base, webhookWorkflow, stats.total, appDetail]);
 
   return (
     <UsecaseOutcomeSection
