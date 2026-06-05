@@ -258,35 +258,26 @@ function deriveIncidentsOutcome(
   usecase: UsecaseShape,
 ): UsecaseOutcome {
   const { sample, total } = bundle.incidents;
-  const matchingSample = sample.filter((s) => {
-    if (!usecase.source) return true;
-    if (s.sourceCategory && s.sourceCategory === usecase.source) return true;
-    if (productMatchesCategory(s.product, usecase.source)) return true;
-    return false;
-  });
-  // Scale: matching share of sample × total.
-  const sampleShare = sample.length > 0 ? matchingSample.length / sample.length : 0;
-  const value = Math.round(total * sampleShare);
-
+  // Show ALL tools that produced incidents — do not filter by source category.
+  // Breakdown values are scaled from the sample so they sum to `total`.
   const counts = new Map<string, number>();
-  for (const inc of matchingSample) {
+  for (const inc of sample) {
     const key = inc.product || 'unknown';
     counts.set(key, (counts.get(key) || 0) + 1);
   }
-  // Scale breakdown values up to match the total.
-  const breakdown = topN(counts, 4).map((entry) => ({
+  const breakdown = topN(counts, 10).map((entry) => ({
     ...entry,
-    value: matchingSample.length > 0 ? Math.round((entry.value / matchingSample.length) * value) : 0,
+    value: sample.length > 0 ? Math.round((entry.value / sample.length) * total) : 0,
   }));
 
   return {
     kind: 'incidents_ingested',
-    primary: { value, label: OUTCOME_PRIMARY_LABEL.incidents_ingested },
-    trendPct: trendPct(matchingSample),
+    primary: { value: total, label: OUTCOME_PRIMARY_LABEL.incidents_ingested },
+    trendPct: trendPct(sample),
     breakdown,
     windowDays: 30,
-    isEmpty: value === 0,
-    emptyReason: value === 0 ? (total === 0 ? 'no_data_yet' : 'no_source_tool') : undefined,
+    isEmpty: total === 0,
+    emptyReason: total === 0 ? 'no_data_yet' : undefined,
   };
 }
 
