@@ -18,9 +18,9 @@ import { parseHostUrlSegment } from '@/utils/hostUrlSegment';
 const OsIcon = ({ os, size = 14, className = '' }: { os: string; size?: number; className?: string }) => {
   const lower = (os || '').toLowerCase();
   if (lower.includes('windows') || lower.includes('win'))
-    return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M0 3.5l9.9-1.4v9.6H0zm11.1-1.5L24 0v11.7H11.1zM0 12.6h9.9v9.6L0 20.7zm11.1-.3H24V24l-12.9-1.8z"/></svg>;
+    return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M0 3.5l9.9-1.4v9.6H0zm11.1-1.5L24 0v11.7H11.1zM0 12.6h9.9v9.6L0 20.7zm11.1-.3H24V24l-12.9-1.8z" /></svg>;
   if (lower.includes('mac') || lower.includes('darwin'))
-    return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M18.7 19.4c-.7 1-1.4 2-2.6 2s-1.7-.7-3.2-.7-2 .7-3.2.7-1.7-.9-2.5-1.9C5.5 17.2 4 13.6 5.7 11.3c.8-1.1 2.2-1.8 3.7-1.9 1.2 0 2.3.8 3 .8s2.1-.9 3.5-.8c.6 0 2.3.2 3.4 1.8-3 1.8-2.5 5.5.4 7.2zM15.3 2c-2.2.1-4 2.4-3.7 4.3 2 .2 4-2 3.7-4.3z"/></svg>;
+    return <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M18.7 19.4c-.7 1-1.4 2-2.6 2s-1.7-.7-3.2-.7-2 .7-3.2.7-1.7-.9-2.5-1.9C5.5 17.2 4 13.6 5.7 11.3c.8-1.1 2.2-1.8 3.7-1.9 1.2 0 2.3.8 3 .8s2.1-.9 3.5-.8c.6 0 2.3.2 3.4 1.8-3 1.8-2.5 5.5.4 7.2zM15.3 2c-2.2.1-4 2.4-3.7 4.3 2 .2 4-2 3.7-4.3z" /></svg>;
   return <Laptop size={size} className={className} />;
 };
 
@@ -31,7 +31,7 @@ interface SensorHost {
   elevated_access: boolean;
   hd_encrypted: boolean | string;
   hostname: string;
-  installed_software: { name: string; [key: string]: unknown }[];
+  installed_software: { name: string;[key: string]: unknown }[];
   code_scanner?: { path: string; type: string; packages: { name: string; version: string }[] }[];
   log_forwarding: string;
   os: string;

@@ -8,13 +8,15 @@
  *  - They reached the final tour step or ran "Clean up demo data"
  */
 
-import { Box, Typography, IconButton, Tooltip } from '@mui/material';
+import { Box, Typography, IconButton, Tooltip, useTheme } from '@mui/material';
 import { Sparkles, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useDemo } from '@/context/DemoContext';
 
 export const DemoResumePill = () => {
+  const theme = useTheme();
+  const primaryColor = theme.palette.primary.main;
   const { drawerOpen, wasStarted, resumeDismissed, resumeTour, dismissResumePrompt } = useDemo();
   const location = useLocation();
 
@@ -61,7 +63,7 @@ export const DemoResumePill = () => {
         cursor: 'pointer',
         transition: 'border-color 0.2s ease, transform 0.2s ease',
         '&:hover': {
-          borderColor: '#FF6600',
+          borderColor: primaryColor,
           transform: 'translateY(-1px)',
         },
       }}
@@ -69,7 +71,7 @@ export const DemoResumePill = () => {
       role="button"
       aria-label="Continue demo mode"
     >
-      <Sparkles size={16} color="#FF6600" />
+      <Sparkles size={16} color={primaryColor} />
       <Typography
         variant="body2"
         sx={{ fontWeight: 600, color: 'hsl(var(--foreground))', fontSize: '0.8125rem' }}

@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
-import { Box, Container, Typography, Button } from '@mui/material';
+import { Box, Container, Typography, Button, useTheme } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -26,6 +26,8 @@ export default function AppsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const theme = useTheme();
+  const primaryColor = theme.palette.primary.main;
 
   usePageMeta({
     title: '3,000+ Integrations',
@@ -169,11 +171,11 @@ export default function AppsPage() {
                   fontSize: { xs: '0.9rem', md: '1rem' },
                   fontWeight: 600,
                   borderRadius: 3,
-                  background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
-                  boxShadow: '0 8px 32px rgba(255, 102, 0, 0.35)',
+                  background: primaryColor,
+                  boxShadow: `0 8px 32px ${primaryColor}40`,
                   '&:hover': {
                     transform: 'translateY(-2px)',
-                    boxShadow: '0 12px 40px rgba(255, 102, 0, 0.45)',
+                    boxShadow: `0 12px 40px ${primaryColor}60`,
                   },
                 }}
               >
@@ -208,7 +210,7 @@ export default function AppsPage() {
                     key={category.id}
                     sx={{
                       p: 2.5,
-                      backgroundColor: isActive ? 'rgba(255, 102, 0, 0.1)' : 'action.hover',
+                      backgroundColor: isActive ? `${primaryColor}1A` : 'action.hover',
                       border: '1px solid',
                       borderColor: isActive ? 'primary.main' : 'divider',
                       borderRadius: 3,
@@ -216,8 +218,8 @@ export default function AppsPage() {
                       transition: 'all 0.3s ease',
                       textAlign: 'center',
                       '&:hover': {
-                        borderColor: 'rgba(255, 102, 0, 0.5)',
-                        backgroundColor: isActive ? 'rgba(255, 102, 0, 0.15)' : 'action.selected',
+                        borderColor: `${primaryColor}80`,
+                        backgroundColor: isActive ? `${primaryColor}26` : 'action.selected',
                       },
                     }}
                     onClick={() => handleCategoryClick(category.id, category.searchTerm)}
@@ -227,7 +229,7 @@ export default function AppsPage() {
                         width: 40,
                         height: 40,
                         borderRadius: '50%',
-                        backgroundColor: isActive ? 'rgba(255, 102, 0, 0.2)' : 'action.hover',
+                        backgroundColor: isActive ? `${primaryColor}33` : 'action.hover',
                         border: '2px solid',
                         borderColor: isActive ? 'primary.main' : 'divider',
                         display: 'flex',
@@ -238,7 +240,7 @@ export default function AppsPage() {
                         transition: 'all 0.3s ease',
                       }}
                     >
-                      <category.icon size={18} color={isActive ? '#FF6600' : undefined} />
+                      <category.icon size={18} color={isActive ? primaryColor : undefined} />
                     </Box>
                     <Typography
                       variant="subtitle2"
@@ -294,8 +296,8 @@ export default function AppsPage() {
                   border: '1px solid rgba(255, 255, 255, 0.06)',
                   transition: 'all 0.2s ease',
                   '&:hover': {
-                    backgroundColor: 'rgba(255, 102, 0, 0.08)',
-                    borderColor: 'rgba(255, 102, 0, 0.3)',
+                    backgroundColor: `${primaryColor}14`,
+                    borderColor: `${primaryColor}4D`,
                   },
                 },
                 '& .singul-search-input': {
@@ -306,8 +308,8 @@ export default function AppsPage() {
                   padding: { xs: '12px 14px', md: '14px 16px' },
                   borderRadius: '12px',
                   '&:focus': {
-                    borderColor: '#FF6600',
-                    boxShadow: '0 0 0 3px rgba(255, 102, 0, 0.15)',
+                    borderColor: primaryColor,
+                    boxShadow: `0 0 0 3px ${primaryColor}26`,
                   },
                   '&::placeholder': {
                     color: 'rgba(255, 255, 255, 0.4)',

@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
 import {
   CheckCircle,
   XCircle,
@@ -160,6 +160,8 @@ interface AgentRunHeaderProps {
 }
 
 const AgentRunHeader = ({ run, onClick, showChevron, isExpanded }: AgentRunHeaderProps) => {
+  const theme = useTheme();
+  const primaryColor = theme.palette.primary.main;
   const skipInfo = getAgentSkipInfo(run);
   const isSkipped = skipInfo.skipped;
   const skipColor = 'hsl(var(--muted-foreground))';
@@ -295,9 +297,9 @@ const AgentRunHeader = ({ run, onClick, showChevron, isExpanded }: AgentRunHeade
                   cursor: 'pointer',
                   transition: 'all 0.15s ease',
                   '&:hover': {
-                    borderColor: '#ff6600',
-                    color: '#ff6600',
-                    bgcolor: 'rgba(255, 102, 0, 0.08)',
+                    borderColor: primaryColor,
+                    color: primaryColor,
+                    bgcolor: `${primaryColor}14`,
                   },
                 }}
               >

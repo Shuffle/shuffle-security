@@ -106,7 +106,8 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { userInfo, setActiveOrg, logout } = useAuth();
-  const { theme: currentTheme, setTheme } = useTheme();
+  const { theme: currentTheme, setTheme, brandColor } = useTheme();
+  const primaryColor = brandColor || '#FF6600';
   const { plural: entityPlural, basePath: entityBasePath } = useEntityPreference();
   const sidebarTabs = useSidebarTabs();
   const isSupport = userInfo?.support === true;
@@ -325,16 +326,14 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           <svg width="32" height="32" viewBox="0 0 56 56" fill="none">
             <path
               d="M14 14h28v6H20v16h16v-10h-8v-6h14v22H14V14z"
-              fill="#FF6600"
+              fill={primaryColor}
             />
           </svg>
           {!visuallyCollapsed && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
                 <Typography sx={{ 
-                  background: 'linear-gradient(135deg, #FF6600 0%, #FF8533 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
+                  color: primaryColor,
                   fontWeight: 600, 
                   fontSize: '1rem' 
                 }}>
@@ -392,10 +391,10 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
             }}
           >
             <svg width="24" height="24" viewBox="0 0 56 56" fill="none">
-              <path d="M14 14h28v6H20v16h16v-10h-8v-6h14v22H14V14z" fill="#FF6600" />
+              <path d="M14 14h28v6H20v16h16v-10h-8v-6h14v22H14V14z" fill={primaryColor} />
             </svg>
             <Typography sx={{ fontSize: '0.875rem', color: 'hsl(var(--foreground))', fontWeight: 600 }}>
-              <span style={{ color: '#FF6600' }}>Shuffle</span> Security
+              <span style={{ color: primaryColor }}>Shuffle</span> Security
             </Typography>
           </MenuItem>
           <MenuItem
@@ -425,7 +424,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
           >
             <img src={shuffleInfraLogo} alt="Shuffle Core" width={24} height={24} style={{ borderRadius: 4 }} />
             <Typography sx={{ fontSize: '0.875rem', color: 'hsl(var(--foreground))' }}>
-              <span style={{ color: '#FF6600' }}>Shuffle</span> Core
+              <span style={{ color: primaryColor }}>Shuffle</span> Core
             </Typography>
           </MenuItem>
         </Menu>

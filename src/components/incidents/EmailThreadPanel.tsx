@@ -19,6 +19,7 @@ import {
   Button,
   Divider,
   Stack,
+  useTheme,
 } from '@mui/material';
 import DOMPurify from 'dompurify';
 
@@ -229,7 +230,7 @@ const RecipientRow = ({
       <IconButton
         size="small"
         onClick={onRemove}
-        sx={{ p: 0.25, color: 'text.secondary', '&:hover': { color: '#ff6600' } }}
+        sx={{ p: 0.25, color: 'text.secondary', '&:hover': { color: primaryColor } }}
       >
         <ExpandLessIcon size={14} style={{ transform: 'rotate(45deg)' }} />
       </IconButton>
@@ -238,6 +239,8 @@ const RecipientRow = ({
 );
 
 const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, onForward }: EmailThreadPanelProps) => {
+  const theme = useTheme();
+  const primaryColor = theme.palette.primary.main;
   const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
   const [showReplyBox, setShowReplyBox] = useState(false);
   const [replyText, setReplyText] = useState('');
@@ -442,8 +445,8 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
       {onReply && (
         <Tooltip title="Reply">
           <IconButton size="small" onClick={() => setShowReplyBox(!showReplyBox)} sx={{
-            color: showReplyBox ? '#ff6600' : 'text.secondary',
-            '&:hover': { color: '#ff6600' },
+            color: showReplyBox ? primaryColor : 'text.secondary',
+            '&:hover': { color: primaryColor },
           }}>
             <ReplyIcon size={18} />
           </IconButton>
@@ -453,7 +456,7 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
         <Tooltip title="Forward">
           <IconButton size="small" onClick={onForward} sx={{
             color: 'text.secondary',
-            '&:hover': { color: '#ff6600' },
+            '&:hover': { color: primaryColor },
           }}>
             <ForwardIcon size={18} />
           </IconButton>
@@ -467,8 +470,8 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
             if (!poppedOut) setThreadCollapsed(false);
           }}
           sx={{
-            color: poppedOut ? '#ff6600' : 'text.secondary',
-            '&:hover': { color: '#ff6600' },
+            color: poppedOut ? primaryColor : 'text.secondary',
+            '&:hover': { color: primaryColor },
           }}
         >
           {poppedOut ? <CloseIcon size={18} /> : <OpenInNewIcon size={16} />}
@@ -781,7 +784,7 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
               sx={{
                 fontSize: '0.75rem',
                 textTransform: 'none',
-                bgcolor: '#ff6600',
+                bgcolor: primaryColor,
                 '&:hover': { bgcolor: '#e55a00' },
               }}
             >
@@ -800,7 +803,7 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
     <IncidentSection
       title="Email Thread"
       icon={EmailIcon}
-      iconColor="#ff6600"
+      iconColor={primaryColor}
       open={!threadCollapsed}
       onOpenChange={(o) => {
         setThreadCollapsed(!o);

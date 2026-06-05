@@ -10,6 +10,12 @@ interface Organization {
   creator_org?: string;
   /** Role of the current user within this org (e.g. "admin", "user"). From /api/v1/getinfo => active_org.role */
   role?: string;
+  branding?: {
+    theme?: 'light' | 'dark' | 'system';
+    brand_color?: string; 
+    brand_name?: string;
+    [key: string]: unknown;
+  };
 }
 
 interface SyncFeatureUsage {

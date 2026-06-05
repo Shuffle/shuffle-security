@@ -551,7 +551,7 @@ const DashboardPage = () => {
   const [dashboardTab, setDashboardTab] = useState<'security' | 'automation'>(() => {
     try { return (localStorage.getItem('shuffle_dashboard_tab') as 'security' | 'automation') || 'security'; } catch { return 'security'; }
   });
-  useEffect(() => { try { localStorage.setItem('shuffle_dashboard_tab', dashboardTab); } catch {} }, [dashboardTab]);
+  useEffect(() => { try { localStorage.setItem('shuffle_dashboard_tab', dashboardTab); } catch { } }, [dashboardTab]);
   // Preserve the visual position of the dashboard tab bar across tab swaps.
   // Each branch mounts a completely different subtree (AutomationDashboard vs
   // DashboardOverview) with very different heights, so the browser's scroll
@@ -603,17 +603,17 @@ const DashboardPage = () => {
   const [dashboardDays, setDashboardDays] = useState<string>(() => {
     try { return localStorage.getItem('shuffle_dashboard_days') || '30'; } catch { return '30'; }
   });
-  useEffect(() => { try { localStorage.setItem('shuffle_dashboard_days', dashboardDays); } catch {} }, [dashboardDays]);
+  useEffect(() => { try { localStorage.setItem('shuffle_dashboard_days', dashboardDays); } catch { } }, [dashboardDays]);
   // Shared granularity for both dashboard tabs.
   const [dashboardGran, setDashboardGran] = useState<'daily' | 'monthly'>(() => {
     try { return ((localStorage.getItem('shuffle_dashboard_gran') as 'daily' | 'monthly') || 'daily'); } catch { return 'daily'; }
   });
-  useEffect(() => { try { localStorage.setItem('shuffle_dashboard_gran', dashboardGran); } catch {} }, [dashboardGran]);
+  useEffect(() => { try { localStorage.setItem('shuffle_dashboard_gran', dashboardGran); } catch { } }, [dashboardGran]);
   // Shared Workflows | Apps toggle for the Automation dashboard (shown but disabled on Security).
   const [dashboardMode, setDashboardMode] = useState<'workflows' | 'apps'>(() => {
     try { return ((localStorage.getItem('shuffle_dashboard_mode') as 'workflows' | 'apps') || 'workflows'); } catch { return 'workflows'; }
   });
-  useEffect(() => { try { localStorage.setItem('shuffle_dashboard_mode', dashboardMode); } catch {} }, [dashboardMode]);
+  useEffect(() => { try { localStorage.setItem('shuffle_dashboard_mode', dashboardMode); } catch { } }, [dashboardMode]);
   // Ephemeral custom date range — set when the user click-drags on a chart to
   // zoom in. Cleared via the × on the "Last" select. Not persisted on purpose.
   const [dashboardCustomRange, setDashboardCustomRange] = useState<{ fromMs: number; toMs: number } | null>(null);
@@ -1003,524 +1003,524 @@ const DashboardPage = () => {
 
   return (
     <>
-    <Box sx={{ maxWidth: 1100, width: '100%', mx: 'auto', p: { xs: 2, sm: 3, md: 4 } }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Typography variant="h4" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-            Dashboard
-          </Typography>
-          {(isLoading || setupLoading) && !isRefreshing && (
-            <Loader2 size={18} style={{ color: 'hsl(var(--muted-foreground))', animation: 'spin 1s linear infinite' }} />
-          )}
-        </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {isParentOrg && subOrgs.length > 0 && (() => {
-            const currentOrgImage = userInfo?.active_org?.image;
-            const currentOrgName = userInfo?.active_org?.name || 'Current Tenant';
-            const sortedChildren = [...subOrgs]
-              .filter(o => o.id !== currentOrgId)
-              .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
-            const options: { id: string; name: string; image?: string; isParent?: boolean }[] = [
-              { id: currentOrgId || '', name: currentOrgName, image: currentOrgImage, isParent: true },
-              ...sortedChildren.map(o => ({ id: o.id, name: o.name, image: o.image, isParent: false })),
-            ];
-            const value = options.find(o => o.id === effectiveOrgId) || options[0];
-            return (
-              <Autocomplete
+      <Box sx={{ maxWidth: 1100, width: '100%', mx: 'auto', p: { xs: 2, sm: 3, md: 4 } }}>
+        {/* Header */}
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Typography variant="h4" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+              Dashboard
+            </Typography>
+            {(isLoading || setupLoading) && !isRefreshing && (
+              <Loader2 size={18} style={{ color: 'hsl(var(--muted-foreground))', animation: 'spin 1s linear infinite' }} />
+            )}
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {isParentOrg && subOrgs.length > 0 && (() => {
+              const currentOrgImage = userInfo?.active_org?.image;
+              const currentOrgName = userInfo?.active_org?.name || 'Current Tenant';
+              const sortedChildren = [...subOrgs]
+                .filter(o => o.id !== currentOrgId)
+                .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+              const options: { id: string; name: string; image?: string; isParent?: boolean }[] = [
+                { id: currentOrgId || '', name: currentOrgName, image: currentOrgImage, isParent: true },
+                ...sortedChildren.map(o => ({ id: o.id, name: o.name, image: o.image, isParent: false })),
+              ];
+              const value = options.find(o => o.id === effectiveOrgId) || options[0];
+              return (
+                <Autocomplete
+                  size="small"
+                  disableClearable
+                  options={options}
+                  value={value}
+                  getOptionLabel={(option) => option.name}
+                  isOptionEqualToValue={(option, v) => option.id === v.id}
+                  onChange={(_, newValue) => {
+                    if (!newValue) return;
+                    // Local view-as: do NOT change the active org. Just re-fetch
+                    // the dashboard's data using this org's Org-Id header.
+                    setViewOrgId(newValue.id === currentOrgId ? null : newValue.id);
+                  }}
+                  renderOption={(props, option) => (
+                    <li {...props} key={option.id} style={{ paddingLeft: option.isParent ? 16 : 36 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {option.image ? (
+                          <img src={option.image} alt="" style={{ width: 20, height: 20, borderRadius: 4, objectFit: 'contain', flexShrink: 0 }} />
+                        ) : (
+                          <Box sx={{ width: 20, height: 20, borderRadius: '4px', bgcolor: 'hsl(var(--muted) / 0.5)', flexShrink: 0 }} />
+                        )}
+                        <Typography sx={{ fontSize: '0.82rem', fontWeight: option.isParent ? 600 : 400 }}>{option.name}</Typography>
+                      </Box>
+                    </li>
+                  )}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      placeholder="Tenant"
+                      sx={{ minWidth: 180, width: 180 }}
+                    />
+                  )}
+                  sx={{
+                    minWidth: 180,
+                    width: 180,
+                    '& .MuiOutlinedInput-root': { minHeight: 36, py: '2px' },
+                  }}
+                  slotProps={{ popper: { sx: { zIndex: 1500 } } }}
+                />
+              );
+            })()}
+            <Tooltip title="Refresh">
+              <IconButton
+                onClick={handleRefresh}
                 size="small"
-                disableClearable
-                options={options}
-                value={value}
-                getOptionLabel={(option) => option.name}
-                isOptionEqualToValue={(option, v) => option.id === v.id}
-                onChange={(_, newValue) => {
-                  if (!newValue) return;
-                  // Local view-as: do NOT change the active org. Just re-fetch
-                  // the dashboard's data using this org's Org-Id header.
-                  setViewOrgId(newValue.id === currentOrgId ? null : newValue.id);
-                }}
-                renderOption={(props, option) => (
-                  <li {...props} key={option.id} style={{ paddingLeft: option.isParent ? 16 : 36 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      {option.image ? (
-                        <img src={option.image} alt="" style={{ width: 20, height: 20, borderRadius: 4, objectFit: 'contain', flexShrink: 0 }} />
-                      ) : (
-                        <Box sx={{ width: 20, height: 20, borderRadius: '4px', bgcolor: 'hsl(var(--muted) / 0.5)', flexShrink: 0 }} />
-                      )}
-                      <Typography sx={{ fontSize: '0.82rem', fontWeight: option.isParent ? 600 : 400 }}>{option.name}</Typography>
-                    </Box>
-                  </li>
-                )}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    placeholder="Tenant"
-                    sx={{ minWidth: 180, width: 180 }}
-                  />
-                )}
-                sx={{
-                  minWidth: 180,
-                  width: 180,
-                  '& .MuiOutlinedInput-root': { minHeight: 36, py: '2px' },
-                }}
-                slotProps={{ popper: { sx: { zIndex: 1500 } } }}
-              />
-            );
-          })()}
-          <Tooltip title="Refresh">
-            <IconButton
-              onClick={handleRefresh}
-              size="small"
-              sx={{ color: 'hsl(var(--muted-foreground))' }}
-            >
-              <RefreshIcon
-                size={20}
-                className={isRefreshing ? 'animate-spin' : ''}
-                style={{ transition: 'transform 0.6s ease' }}
-              />
-            </IconButton>
-          </Tooltip>
+                sx={{ color: 'hsl(var(--muted-foreground))' }}
+              >
+                <RefreshIcon
+                  size={20}
+                  className={isRefreshing ? 'animate-spin' : ''}
+                  style={{ transition: 'transform 0.6s ease' }}
+                />
+              </IconButton>
+            </Tooltip>
+          </Box>
         </Box>
-      </Box>
-      <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem', mb: 2 }}>
-        Get started by completing the setup steps below, then monitor agent activity.
-      </Typography>
+        <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem', mb: 2 }}>
+          Get started by completing the setup steps below, then monitor agent activity.
+        </Typography>
 
-      {/* ── Demo Mode CTA ────────────────────────────────────────────────────── */}
-      <DemoModeCard />
+        {/* ── Demo Mode CTA ────────────────────────────────────────────────────── */}
+        <DemoModeCard />
 
-      {/* Overview is shown to all users. When the Setup Guide is incomplete
+        {/* Overview is shown to all users. When the Setup Guide is incomplete
           it renders BELOW the guide; once complete it moves to the top. */}
-      {/* ── Agent Notifications + Setup Guide + Overview (order swaps when setup complete) ── */}
-      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-      {!setupLoading && (
-        <Box sx={{ mb: 2, mt: 3, order: allComplete ? 0 : 2 }}>
-          {(() => {
-            const dashboardTabs = (
-              <SegmentedControl
-                ariaLabel="Dashboard view"
-                value={dashboardTab}
-                onChange={(v) => handleDashboardTabChange(v as 'security' | 'automation')}
-                options={[
-                  { value: 'security', label: 'Security Operations' },
-                  { value: 'automation', label: 'Automation' },
-                ]}
-              />
-            );
-            const handleDashboardRefresh = () => {
-              // Bump key so AutomationDashboard re-fetches; also refresh Security data.
-              setDashboardRefreshKey(k => k + 1);
-              try { fetchIncidents(); } catch { /* noop */ }
-              try { refreshNotifications(); } catch { /* noop */ }
-            };
-            const fmtShort = (ms: number) => {
-              const d = new Date(ms);
-              const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
-              return `${M} ${d.getDate()}`;
-            };
-            const customRangeLabel = dashboardCustomRange
-              ? `${fmtShort(dashboardCustomRange.fromMs)} → ${fmtShort(dashboardCustomRange.toMs)}`
-              : null;
-            const sharedControls = (
-              <>
-                <FormControl size="small" sx={{ minWidth: customRangeLabel ? 220 : 130 }}>
-                  <InputLabel>Last</InputLabel>
-                  <Select
-                    label="Last"
-                    value={dashboardCustomRange ? '__custom__' : dashboardDays}
-                    onChange={(e) => {
-                      const v = String(e.target.value);
-                      if (v === '__custom__') return;
-                      setDashboardCustomRange(null);
-                      setDashboardDays(v);
-                    }}
-                    renderValue={() => customRangeLabel ?? (AUTOMATION_RANGE_OPTIONS.find(o => o.value === dashboardDays)?.label ?? `${dashboardDays} days`)}
-                    endAdornment={dashboardCustomRange ? (
-                      <IconButton
-                        size="small"
-                        onMouseDown={(e) => { e.stopPropagation(); }}
-                        onClick={(e) => { e.stopPropagation(); setDashboardCustomRange(null); }}
-                        sx={{ mr: 3, p: 0.25, color: 'hsl(var(--muted-foreground))' }}
-                        aria-label="Clear custom range"
-                      >
-                        <CloseIcon size={14} />
-                      </IconButton>
-                    ) : undefined}
-                  >
-                    {customRangeLabel && (
-                      <MenuItem value="__custom__" disabled>{customRangeLabel} (custom)</MenuItem>
-                    )}
-                    {AUTOMATION_RANGE_OPTIONS.map(o => (
-                      <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-                <Box sx={{ alignSelf: 'flex-end', opacity: dashboardTab === 'security' ? 0.5 : 1, pointerEvents: dashboardTab === 'security' ? 'none' : 'auto' }}>
+        {/* ── Agent Notifications + Setup Guide + Overview (order swaps when setup complete) ── */}
+        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+          {!setupLoading && (
+            <Box sx={{ mb: 2, mt: 3, order: allComplete ? 0 : 2 }}>
+              {(() => {
+                const dashboardTabs = (
                   <SegmentedControl
-                    ariaLabel="Mode"
-                    value={dashboardMode}
-                    onChange={(v) => setDashboardMode(v as 'workflows' | 'apps')}
+                    ariaLabel="Dashboard view"
+                    value={dashboardTab}
+                    onChange={(v) => handleDashboardTabChange(v as 'security' | 'automation')}
                     options={[
-                      { value: 'workflows', label: 'Workflows', disabled: dashboardTab === 'security' },
-                      { value: 'apps', label: 'Apps', disabled: dashboardTab === 'security' },
+                      { value: 'security', label: 'Security Operations' },
+                      { value: 'automation', label: 'Automation' },
                     ]}
                   />
-                </Box>
-                <Box sx={{ alignSelf: 'flex-end' }}>
-                  <SegmentedControl
-                    ariaLabel="Granularity"
-                    value={dashboardGran}
-                    onChange={(v) => setDashboardGran(v as 'daily' | 'monthly')}
-                    options={[{ value: 'daily', label: 'Daily' }, { value: 'monthly', label: 'Monthly' }]}
-                  />
-                </Box>
-                <MuiTooltip title="Refresh">
-                  <IconButton
-                    size="small"
-                    onClick={handleDashboardRefresh}
-                    sx={{ color: 'hsl(var(--muted-foreground))', alignSelf: 'flex-end', width: 36, height: 36, borderRadius: '8px' }}
-                  >
-                    <RefreshIcon size={16} />
-                  </IconButton>
-                </MuiTooltip>
-              </>
-            );
-            const sharedHeader = (
-              <Box ref={dashboardTabsRef} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', minHeight: 36 }}>
-                  {dashboardTabs}
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
-                  {sharedControls}
-                </Box>
-              </Box>
-            );
-            return dashboardTab === 'automation' ? (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
-                {sharedHeader}
-                <AutomationDashboard
-                  days={dashboardDays}
-                  onDaysChange={setDashboardDays}
-                  gran={dashboardGran}
-                  onGranChange={setDashboardGran}
-                  mode={dashboardMode}
-                  onModeChange={setDashboardMode}
-                  refreshKey={dashboardRefreshKey}
-                  hideRefresh
-                  customRange={dashboardCustomRange}
-                  onRangeSelect={(fromMs, toMs) => setDashboardCustomRange({ fromMs, toMs })}
-                />
-              </Box>
-            ) : (
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
-                {sharedHeader}
-                <DashboardOverview
-                  incidents={overviewIncidents}
-                  incidentsLoading={incidentsLoading}
-                  vulnSeverityCounts={vulnSeverityCounts}
-                  vulnLoading={vulnLoading}
-                  monitorHostCount={hostMonitorCount}
-                  runningSensorCount={runningSensorCount}
-                  monitorsLoading={hasHostMonitor === null}
-                  days={parseInt(dashboardDays, 10) || 30}
-                  gran={dashboardGran}
-                  customRange={dashboardCustomRange}
-                  onRangeSelect={(fromMs, toMs) => setDashboardCustomRange({ fromMs, toMs })}
-                />
-              </Box>
-            );
-          })()}
-        </Box>
-      )}
-      <Box id="agent-notifications" sx={{ order: 3, scrollMarginTop: 80 }}>
-        <Box
-          onClick={() => setAgentNotificationsCollapsed(c => !c)}
-          sx={{
-            display: 'flex', alignItems: 'center', gap: 1,
-            mb: agentNotificationsCollapsed ? 0 : 2,
-            cursor: 'pointer', userSelect: 'none',
-          }}
-        >
-          <AlertTriangle size={18} style={{ color: 'hsl(var(--severity-high))' }} />
-          <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: 'hsl(var(--foreground))' }}>
-            Agent Notifications
-          </Typography>
-          {totalCount > 0 && (
-            <Chip
-              label={totalCount}
-              size="small"
-              sx={{
-                height: 22,
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                backgroundColor: 'hsl(var(--severity-high) / 0.15)',
-                color: 'hsl(var(--severity-high))',
-              }}
-            />
-          )}
-          <Box sx={{ flex: 1 }} />
-          <IconButton
-            size="small"
-            onClick={(e) => { e.stopPropagation(); setAgentNotificationsCollapsed(c => !c); }}
-            sx={{ color: 'hsl(var(--muted-foreground))' }}
-            aria-label={agentNotificationsCollapsed ? 'Expand agent notifications' : 'Collapse agent notifications'}
-          >
-            {agentNotificationsCollapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
-          </IconButton>
-        </Box>
-
-        <Collapse in={!agentNotificationsCollapsed} timeout="auto" unmountOnExit>
-
-
-        {/* Filter chips */}
-        <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-          {([
-            { key: 'all' as const, label: 'All', count: totalCount },
-            { key: 'approval' as const, label: 'Needs Approval', count: approvalCount },
-            { key: 'question' as const, label: 'Pending Question', count: questionCount },
-          ]).map(f => (
-            <Chip
-              key={f.key}
-              label={`${f.label}${f.count > 0 ? ` (${f.count})` : ''}`}
-              size="small"
-              variant={filter === f.key ? 'filled' : 'outlined'}
-              onClick={() => { setFilter(f.key); setCurrentPage(0); }}
-              sx={{
-                fontSize: '0.75rem',
-                height: 28,
-                borderColor: filter === f.key ? 'hsl(var(--primary))' : 'hsl(var(--border))',
-                bgcolor: filter === f.key ? 'hsl(var(--primary) / 0.15)' : 'transparent',
-                color: filter === f.key ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
-                '&:hover': { bgcolor: 'hsl(var(--muted))' },
-              }}
-            />
-          ))}
-        </Box>
-
-        {isLoading && filteredCount === 0 ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {[0, 1, 2].map(i => (
-              <Skeleton key={i} variant="rounded" height={72} sx={{ borderRadius: 2, bgcolor: 'hsl(var(--muted) / 0.3)' }} />
-            ))}
-          </Box>
-        ) : filteredCount === 0 ? (
-          <Box
-            sx={{
-              px: 3,
-              py: 4,
-              borderRadius: 2,
-              border: '1px solid hsl(var(--border))',
-              backgroundColor: 'transparent',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              textAlign: 'center',
-            }}
-          >
-            <CheckCircle size={28} style={{ color: 'hsl(var(--severity-low))', marginBottom: 8 }} />
-            <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem' }}>
-              All clear — no notifications requiring your attention.
-            </Typography>
-          </Box>
-        ) : (
-          <>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {paginated.map((notification) => (
-              <motion.div
-                key={notification.id}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <NotificationRow
-                  notification={notification}
-                  entityBasePath={entityBasePath}
-                  onApprove={handleApprove}
-                  onQuickView={(n) => setQuickViewItem({ type: 'notification', notification: n })}
-                  onAnswer={(n) => setQuickViewItem({ type: 'notification', notification: n })}
-                />
-              </motion.div>
-            ))}
-          </Box>
-          {totalPages > 1 && (
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mt: 2 }}>
-              <Button
-                size="small"
-                disabled={currentPage === 0}
-                onClick={() => setCurrentPage(p => p - 1)}
-                sx={{
-                  fontSize: '0.75rem',
-                  textTransform: 'none',
-                  color: 'hsl(var(--foreground))',
-                  minWidth: 32,
-                  '&.Mui-disabled': { color: 'hsl(var(--muted-foreground) / 0.4)' },
-                }}
-              >
-                Previous
-              </Button>
-              <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
-                {currentPage + 1} / {totalPages}
-              </Typography>
-              <Button
-                size="small"
-                disabled={currentPage >= totalPages - 1}
-                onClick={() => setCurrentPage(p => p + 1)}
-                sx={{
-                  fontSize: '0.75rem',
-                  textTransform: 'none',
-                  color: 'hsl(var(--foreground))',
-                  minWidth: 32,
-                  '&.Mui-disabled': { color: 'hsl(var(--muted-foreground) / 0.4)' },
-                }}
-              >
-                Next
-              </Button>
+                );
+                const handleDashboardRefresh = () => {
+                  // Bump key so AutomationDashboard re-fetches; also refresh Security data.
+                  setDashboardRefreshKey(k => k + 1);
+                  try { fetchIncidents(); } catch { /* noop */ }
+                  try { refreshNotifications(); } catch { /* noop */ }
+                };
+                const fmtShort = (ms: number) => {
+                  const d = new Date(ms);
+                  const M = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getMonth()];
+                  return `${M} ${d.getDate()}`;
+                };
+                const customRangeLabel = dashboardCustomRange
+                  ? `${fmtShort(dashboardCustomRange.fromMs)} → ${fmtShort(dashboardCustomRange.toMs)}`
+                  : null;
+                const sharedControls = (
+                  <>
+                    <FormControl size="small" sx={{ minWidth: customRangeLabel ? 220 : 130 }}>
+                      <InputLabel>Last</InputLabel>
+                      <Select
+                        label="Last"
+                        value={dashboardCustomRange ? '__custom__' : dashboardDays}
+                        onChange={(e) => {
+                          const v = String(e.target.value);
+                          if (v === '__custom__') return;
+                          setDashboardCustomRange(null);
+                          setDashboardDays(v);
+                        }}
+                        renderValue={() => customRangeLabel ?? (AUTOMATION_RANGE_OPTIONS.find(o => o.value === dashboardDays)?.label ?? `${dashboardDays} days`)}
+                        endAdornment={dashboardCustomRange ? (
+                          <IconButton
+                            size="small"
+                            onMouseDown={(e) => { e.stopPropagation(); }}
+                            onClick={(e) => { e.stopPropagation(); setDashboardCustomRange(null); }}
+                            sx={{ mr: 3, p: 0.25, color: 'hsl(var(--muted-foreground))' }}
+                            aria-label="Clear custom range"
+                          >
+                            <CloseIcon size={14} />
+                          </IconButton>
+                        ) : undefined}
+                      >
+                        {customRangeLabel && (
+                          <MenuItem value="__custom__" disabled>{customRangeLabel} (custom)</MenuItem>
+                        )}
+                        {AUTOMATION_RANGE_OPTIONS.map(o => (
+                          <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <Box sx={{ alignSelf: 'flex-end', opacity: dashboardTab === 'security' ? 0.5 : 1, pointerEvents: dashboardTab === 'security' ? 'none' : 'auto' }}>
+                      <SegmentedControl
+                        ariaLabel="Mode"
+                        value={dashboardMode}
+                        onChange={(v) => setDashboardMode(v as 'workflows' | 'apps')}
+                        options={[
+                          { value: 'workflows', label: 'Workflows', disabled: dashboardTab === 'security' },
+                          { value: 'apps', label: 'Apps', disabled: dashboardTab === 'security' },
+                        ]}
+                      />
+                    </Box>
+                    <Box sx={{ alignSelf: 'flex-end' }}>
+                      <SegmentedControl
+                        ariaLabel="Granularity"
+                        value={dashboardGran}
+                        onChange={(v) => setDashboardGran(v as 'daily' | 'monthly')}
+                        options={[{ value: 'daily', label: 'Daily' }, { value: 'monthly', label: 'Monthly' }]}
+                      />
+                    </Box>
+                    <MuiTooltip title="Refresh">
+                      <IconButton
+                        size="small"
+                        onClick={handleDashboardRefresh}
+                        sx={{ color: 'hsl(var(--muted-foreground))', alignSelf: 'flex-end', width: 36, height: 36, borderRadius: '8px' }}
+                      >
+                        <RefreshIcon size={16} />
+                      </IconButton>
+                    </MuiTooltip>
+                  </>
+                );
+                const sharedHeader = (
+                  <Box ref={dashboardTabsRef} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', minHeight: 36 }}>
+                      {dashboardTabs}
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+                      {sharedControls}
+                    </Box>
+                  </Box>
+                );
+                return dashboardTab === 'automation' ? (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
+                    {sharedHeader}
+                    <AutomationDashboard
+                      days={dashboardDays}
+                      onDaysChange={setDashboardDays}
+                      gran={dashboardGran}
+                      onGranChange={setDashboardGran}
+                      mode={dashboardMode}
+                      onModeChange={setDashboardMode}
+                      refreshKey={dashboardRefreshKey}
+                      hideRefresh
+                      customRange={dashboardCustomRange}
+                      onRangeSelect={(fromMs, toMs) => setDashboardCustomRange({ fromMs, toMs })}
+                    />
+                  </Box>
+                ) : (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, mt: 2 }}>
+                    {sharedHeader}
+                    <DashboardOverview
+                      incidents={overviewIncidents}
+                      incidentsLoading={incidentsLoading}
+                      vulnSeverityCounts={vulnSeverityCounts}
+                      vulnLoading={vulnLoading}
+                      monitorHostCount={hostMonitorCount}
+                      runningSensorCount={runningSensorCount}
+                      monitorsLoading={hasHostMonitor === null}
+                      days={parseInt(dashboardDays, 10) || 30}
+                      gran={dashboardGran}
+                      customRange={dashboardCustomRange}
+                      onRangeSelect={(fromMs, toMs) => setDashboardCustomRange({ fromMs, toMs })}
+                    />
+                  </Box>
+                );
+              })()}
             </Box>
           )}
-          </>
-        )}
-        </Collapse>
-      </Box>
-
-      {/* ── Setup Checklist ──────────────────────────────────────────────────── */}
-      <Box sx={{ mt: 5, mb: allComplete ? 4 : 0, order: allComplete ? 2 : 1 }}>
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            mb: setupCollapsed ? 0 : 2,
-            cursor: progressPercent >= 80 ? 'pointer' : 'default',
-          }}
-          onClick={() => {
-            if (progressPercent >= 80) setSetupCollapsed(c => !c);
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Sparkles size={18} style={{ color: 'hsl(var(--primary))' }} />
-            <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: 'hsl(var(--foreground))' }}>
-              Setup Guide
-            </Typography>
-            <Chip
-              label={`${completedCount}/${totalSteps}`}
-              size="small"
+          <Box id="agent-notifications" sx={{ order: 3, scrollMarginTop: 80 }}>
+            <Box
+              onClick={() => setAgentNotificationsCollapsed(c => !c)}
               sx={{
-                height: 22,
-                fontSize: '0.72rem',
-                fontWeight: 600,
-                backgroundColor: allComplete ? 'hsl(var(--severity-low) / 0.15)' : 'hsl(var(--primary) / 0.15)',
-                color: allComplete ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
+                display: 'flex', alignItems: 'center', gap: 1,
+                mb: agentNotificationsCollapsed ? 0 : 2,
+                cursor: 'pointer', userSelect: 'none',
               }}
-            />
-          </Box>
-          {progressPercent >= 80 && (
-            <IconButton size="small" onClick={(e) => { e.stopPropagation(); setSetupCollapsed(c => !c); }} sx={{ color: 'hsl(var(--muted-foreground))' }}>
-              {setupCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-            </IconButton>
-          )}
-        </Box>
-        {!setupCollapsed && (<>
+            >
+              <AlertTriangle size={18} style={{ color: 'hsl(var(--severity-high))' }} />
+              <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: 'hsl(var(--foreground))' }}>
+                Agent Notifications
+              </Typography>
+              {totalCount > 0 && (
+                <Chip
+                  label={totalCount}
+                  size="small"
+                  sx={{
+                    height: 22,
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    backgroundColor: 'hsl(var(--severity-high) / 0.15)',
+                    color: 'hsl(var(--severity-high))',
+                  }}
+                />
+              )}
+              <Box sx={{ flex: 1 }} />
+              <IconButton
+                size="small"
+                onClick={(e) => { e.stopPropagation(); setAgentNotificationsCollapsed(c => !c); }}
+                sx={{ color: 'hsl(var(--muted-foreground))' }}
+                aria-label={agentNotificationsCollapsed ? 'Expand agent notifications' : 'Collapse agent notifications'}
+              >
+                {agentNotificationsCollapsed ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
+              </IconButton>
+            </Box>
 
-        {/* Progress bar */}
-        <Box sx={{ mb: 2.5 }}>
-          <LinearProgress
-            variant={setupLoading ? 'indeterminate' : 'determinate'}
-            value={progressPercent}
-            sx={{
-              height: 6,
-              borderRadius: 3,
-              backgroundColor: 'hsl(var(--muted))',
-              '& .MuiLinearProgress-bar': {
-                borderRadius: 3,
-                backgroundColor: allComplete ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
-                transition: 'transform 0.6s ease',
-              },
-            }}
-          />
-        </Box>
+            <Collapse in={!agentNotificationsCollapsed} timeout="auto" unmountOnExit>
 
-        {/* Steps */}
-        {setupLoading ? (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {[0, 1, 2].map(i => (
-              <Skeleton key={i} variant="rounded" height={68} sx={{ borderRadius: 2, bgcolor: 'hsl(var(--muted) / 0.3)' }} />
-            ))}
-          </Box>
-        ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-            {(showCompleted ? visibleSteps : incompleteVisibleSteps).map((step, i) => (
-              <SetupStepCard key={step.id} step={step} index={i} onIgnore={handleIgnoreStep} onRestore={handleRestoreStep} />
-            ))}
-            {(completedVisibleSteps.length > 0 || ignoredStepsList.length > 0) && (
-              <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
-                {completedVisibleSteps.length > 0 && (
+
+              {/* Filter chips */}
+              <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                {([
+                  { key: 'all' as const, label: 'All', count: totalCount },
+                  { key: 'approval' as const, label: 'Needs Approval', count: approvalCount },
+                  { key: 'question' as const, label: 'Pending Question', count: questionCount },
+                ]).map(f => (
                   <Chip
+                    key={f.key}
+                    label={`${f.label}${f.count > 0 ? ` (${f.count})` : ''}`}
                     size="small"
-                    label={showCompleted ? `Hide finished (${completedVisibleSteps.length})` : `Show finished (${completedVisibleSteps.length})`}
-                    onClick={() => setShowCompleted(v => !v)}
-                    variant="outlined"
+                    variant={filter === f.key ? 'filled' : 'outlined'}
+                    onClick={() => { setFilter(f.key); setCurrentPage(0); }}
                     sx={{
-                      fontSize: '0.72rem',
-                      height: 24,
-                      borderColor: 'hsl(var(--border))',
-                      color: 'hsl(var(--muted-foreground))',
+                      fontSize: '0.75rem',
+                      height: 28,
+                      borderColor: filter === f.key ? 'hsl(var(--primary))' : 'hsl(var(--border))',
+                      bgcolor: filter === f.key ? 'hsl(var(--primary) / 0.15)' : 'transparent',
+                      color: filter === f.key ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
                       '&:hover': { bgcolor: 'hsl(var(--muted))' },
                     }}
                   />
-                )}
-                {ignoredStepsList.length > 0 && (
-                  <Chip
-                    size="small"
-                    label={showIgnored ? `Hide ignored (${ignoredStepsList.length})` : `Show ignored (${ignoredStepsList.length})`}
-                    onClick={() => setShowIgnored(v => !v)}
-                    variant="outlined"
-                    sx={{
-                      fontSize: '0.72rem',
-                      height: 24,
-                      borderColor: 'hsl(var(--border))',
-                      color: 'hsl(var(--muted-foreground))',
-                      '&:hover': { bgcolor: 'hsl(var(--muted))' },
-                    }}
-                  />
-                )}
-              </Box>
-            )}
-            {showIgnored && ignoredStepsList.length > 0 && (
-              <>
-                <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', mt: 1, opacity: 0.7 }}>
-                  Ignored ({ignoredStepsList.length})
-                </Typography>
-                {ignoredStepsList.map((step, i) => (
-                  <SetupStepCard key={step.id} step={step} index={visibleSteps.length + i} ignored onRestore={handleRestoreStep} />
                 ))}
-              </>
-            )}
+              </Box>
+
+              {isLoading && filteredCount === 0 ? (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                  {[0, 1, 2].map(i => (
+                    <Skeleton key={i} variant="rounded" height={72} sx={{ borderRadius: 2, bgcolor: 'hsl(var(--muted) / 0.3)' }} />
+                  ))}
+                </Box>
+              ) : filteredCount === 0 ? (
+                <Box
+                  sx={{
+                    px: 3,
+                    py: 4,
+                    borderRadius: 2,
+                    border: '1px solid hsl(var(--border))',
+                    backgroundColor: 'transparent',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                  }}
+                >
+                  <CheckCircle size={28} style={{ color: 'hsl(var(--severity-low))', marginBottom: 8 }} />
+                  <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.875rem' }}>
+                    All clear — no notifications requiring your attention.
+                  </Typography>
+                </Box>
+              ) : (
+                <>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                    {paginated.map((notification) => (
+                      <motion.div
+                        key={notification.id}
+                        initial={{ opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <NotificationRow
+                          notification={notification}
+                          entityBasePath={entityBasePath}
+                          onApprove={handleApprove}
+                          onQuickView={(n) => setQuickViewItem({ type: 'notification', notification: n })}
+                          onAnswer={(n) => setQuickViewItem({ type: 'notification', notification: n })}
+                        />
+                      </motion.div>
+                    ))}
+                  </Box>
+                  {totalPages > 1 && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mt: 2 }}>
+                      <Button
+                        size="small"
+                        disabled={currentPage === 0}
+                        onClick={() => setCurrentPage(p => p - 1)}
+                        sx={{
+                          fontSize: '0.75rem',
+                          textTransform: 'none',
+                          color: 'hsl(var(--foreground))',
+                          minWidth: 32,
+                          '&.Mui-disabled': { color: 'hsl(var(--muted-foreground) / 0.4)' },
+                        }}
+                      >
+                        Previous
+                      </Button>
+                      <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))' }}>
+                        {currentPage + 1} / {totalPages}
+                      </Typography>
+                      <Button
+                        size="small"
+                        disabled={currentPage >= totalPages - 1}
+                        onClick={() => setCurrentPage(p => p + 1)}
+                        sx={{
+                          fontSize: '0.75rem',
+                          textTransform: 'none',
+                          color: 'hsl(var(--foreground))',
+                          minWidth: 32,
+                          '&.Mui-disabled': { color: 'hsl(var(--muted-foreground) / 0.4)' },
+                        }}
+                      >
+                        Next
+                      </Button>
+                    </Box>
+                  )}
+                </>
+              )}
+            </Collapse>
           </Box>
-        )}
-        </>)}
-      </Box>
-      </Box>
-    </Box>
 
-    <AgentQuestionDialog
-      open={!!questionNotification}
-      onClose={() => setQuestionNotification(null)}
-      notification={questionNotification}
-      onSubmit={handleSubmitAnswers}
-    />
+          {/* ── Setup Checklist ──────────────────────────────────────────────────── */}
+          <Box sx={{ mt: 5, mb: allComplete ? 4 : 0, order: allComplete ? 2 : 1 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                mb: setupCollapsed ? 0 : 2,
+                cursor: progressPercent >= 80 ? 'pointer' : 'default',
+              }}
+              onClick={() => {
+                if (progressPercent >= 80) setSetupCollapsed(c => !c);
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                <Sparkles size={18} style={{ color: 'hsl(var(--primary))' }} />
+                <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: 'hsl(var(--foreground))' }}>
+                  Setup Guide
+                </Typography>
+                <Chip
+                  label={`${completedCount}/${totalSteps}`}
+                  size="small"
+                  sx={{
+                    height: 22,
+                    fontSize: '0.72rem',
+                    fontWeight: 600,
+                    backgroundColor: allComplete ? 'hsl(var(--severity-low) / 0.15)' : 'hsl(var(--primary) / 0.15)',
+                    color: allComplete ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
+                  }}
+                />
+              </Box>
+              {progressPercent >= 80 && (
+                <IconButton size="small" onClick={(e) => { e.stopPropagation(); setSetupCollapsed(c => !c); }} sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                  {setupCollapsed ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
+                </IconButton>
+              )}
+            </Box>
+            {!setupCollapsed && (<>
 
-    <AgentQuickViewDrawer
-      open={!!quickViewItem}
-      onClose={() => setQuickViewItem(null)}
-      item={quickViewItem}
-      entityBasePath={entityBasePath}
-      onApprove={handleApprove}
-      onDeny={handleDeny}
-      onConfigureApprove={handleConfigureApprove}
-      onSubmitAnswers={handleSubmitAnswers}
-    />
+              {/* Progress bar */}
+              <Box sx={{ mb: 2.5 }}>
+                <LinearProgress
+                  variant={setupLoading ? 'indeterminate' : 'determinate'}
+                  value={progressPercent}
+                  sx={{
+                    height: 6,
+                    borderRadius: 3,
+                    backgroundColor: 'hsl(var(--muted))',
+                    '& .MuiLinearProgress-bar': {
+                      borderRadius: 3,
+                      backgroundColor: allComplete ? 'hsl(var(--severity-low))' : 'hsl(var(--primary))',
+                      transition: 'transform 0.6s ease',
+                    },
+                  }}
+                />
+              </Box>
+
+              {/* Steps */}
+              {setupLoading ? (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                  {[0, 1, 2].map(i => (
+                    <Skeleton key={i} variant="rounded" height={68} sx={{ borderRadius: 2, bgcolor: 'hsl(var(--muted) / 0.3)' }} />
+                  ))}
+                </Box>
+              ) : (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                  {(showCompleted ? visibleSteps : incompleteVisibleSteps).map((step, i) => (
+                    <SetupStepCard key={step.id} step={step} index={i} onIgnore={handleIgnoreStep} onRestore={handleRestoreStep} />
+                  ))}
+                  {(completedVisibleSteps.length > 0 || ignoredStepsList.length > 0) && (
+                    <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>
+                      {completedVisibleSteps.length > 0 && (
+                        <Chip
+                          size="small"
+                          label={showCompleted ? `Hide finished (${completedVisibleSteps.length})` : `Show finished (${completedVisibleSteps.length})`}
+                          onClick={() => setShowCompleted(v => !v)}
+                          variant="outlined"
+                          sx={{
+                            fontSize: '0.72rem',
+                            height: 24,
+                            borderColor: 'hsl(var(--border))',
+                            color: 'hsl(var(--muted-foreground))',
+                            '&:hover': { bgcolor: 'hsl(var(--muted))' },
+                          }}
+                        />
+                      )}
+                      {ignoredStepsList.length > 0 && (
+                        <Chip
+                          size="small"
+                          label={showIgnored ? `Hide ignored (${ignoredStepsList.length})` : `Show ignored (${ignoredStepsList.length})`}
+                          onClick={() => setShowIgnored(v => !v)}
+                          variant="outlined"
+                          sx={{
+                            fontSize: '0.72rem',
+                            height: 24,
+                            borderColor: 'hsl(var(--border))',
+                            color: 'hsl(var(--muted-foreground))',
+                            '&:hover': { bgcolor: 'hsl(var(--muted))' },
+                          }}
+                        />
+                      )}
+                    </Box>
+                  )}
+                  {showIgnored && ignoredStepsList.length > 0 && (
+                    <>
+                      <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground))', mt: 1, opacity: 0.7 }}>
+                        Ignored ({ignoredStepsList.length})
+                      </Typography>
+                      {ignoredStepsList.map((step, i) => (
+                        <SetupStepCard key={step.id} step={step} index={visibleSteps.length + i} ignored onRestore={handleRestoreStep} />
+                      ))}
+                    </>
+                  )}
+                </Box>
+              )}
+            </>)}
+          </Box>
+        </Box>
+      </Box>
+
+      <AgentQuestionDialog
+        open={!!questionNotification}
+        onClose={() => setQuestionNotification(null)}
+        notification={questionNotification}
+        onSubmit={handleSubmitAnswers}
+      />
+
+      <AgentQuickViewDrawer
+        open={!!quickViewItem}
+        onClose={() => setQuickViewItem(null)}
+        item={quickViewItem}
+        entityBasePath={entityBasePath}
+        onApprove={handleApprove}
+        onDeny={handleDeny}
+        onConfigureApprove={handleConfigureApprove}
+        onSubmitAnswers={handleSubmitAnswers}
+      />
     </>
   );
 };

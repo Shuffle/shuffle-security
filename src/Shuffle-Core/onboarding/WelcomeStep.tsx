@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Typography, Container } from '@mui/material';
+import { Box, Typography, Container, useTheme } from '@mui/material';
 import { motion } from 'framer-motion';
 import { 
   AlertTriangle, 
@@ -47,6 +47,8 @@ interface WelcomeStepProps {
 }
 
 export const WelcomeStep = ({ onSelect, selectedChallenge }: WelcomeStepProps) => {
+  const theme = useTheme();
+  const primaryColor = theme.palette.primary.main;
   const [hoveredChallenge, setHoveredChallenge] = useState<string | null>(null);
   const activeChallenge = challenges.find(c => c.id === selectedChallenge);
 
@@ -75,7 +77,7 @@ export const WelcomeStep = ({ onSelect, selectedChallenge }: WelcomeStepProps) =
             animate={{ rotate: [0, 15, -15, 0] }}
             transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
           >
-            <Sparkles size={16} color="#FF6600" />
+            <Sparkles size={16} color={primaryColor} />
           </motion.div>
           <Typography variant="caption" sx={{ color: 'hsl(var(--primary))', fontWeight: 600, letterSpacing: '0.5px' }}>
             WELCOME TO SHUFFLE

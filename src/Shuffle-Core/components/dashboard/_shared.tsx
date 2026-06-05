@@ -4,7 +4,7 @@
  * cyberpunk neon palette, KPI tiles with sparklines, Panel wrapper with
  * uppercase title, EmptyState CTA, and shared chart tooltip.
  */
-import { Box, Typography, Skeleton } from '@mui/material';
+import { Box, Typography, Skeleton, useTheme } from '@mui/material';
 import { motion } from 'framer-motion';
 import { ArrowUpRight, type LucideIcon } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
@@ -413,33 +413,38 @@ export const Panel = ({ title, action, children, delay = 0 }: {
   </motion.div>
 );
 
-export const EmptyState = ({ text, ctaLabel, onCta }: { text: string; ctaLabel?: string; onCta?: () => void }) => (
-  <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 120, gap: 1.25, textAlign: 'center', px: 2, pt: '25px' }}>
-    <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.78rem' }}>{text}</Typography>
-    {ctaLabel && onCta && (
-      <Box
-        component="button"
-        onClick={onCta}
-        sx={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 0.75,
-          height: 36,
-          px: 2,
-          borderRadius: 1,
-          border: 'none',
-          bgcolor: 'hsl(var(--primary))',
-          color: 'hsl(var(--primary-foreground))',
-          fontSize: '0.8rem',
-          fontWeight: 600,
-          cursor: 'pointer',
-          transition: 'all 0.15s ease',
-          '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' },
-        }}
-      >
-        {ctaLabel}
-        <ArrowUpRight size={14} />
-      </Box>
-    )}
-  </Box>
-);
+export const EmptyState = ({ text, ctaLabel, onCta }: { text: string; ctaLabel?: string; onCta?: () => void }) => {
+  const theme = useTheme();
+  const primaryColor = theme.palette.primary.main;
+  
+  return (
+    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 120, gap: 1.25, textAlign: 'center', px: 2, pt: '25px' }}>
+      <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.78rem' }}>{text}</Typography>
+      {ctaLabel && onCta && (
+        <Box
+          component="button"
+          onClick={onCta}
+          sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 0.75,
+            height: 36,
+            px: 2,
+            borderRadius: 1,
+            border: 'none',
+            bgcolor: primaryColor,
+            color: '#FFFFFF',
+            fontSize: '0.8rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+            '&:hover': { opacity: 0.9 },
+          }}
+        >
+          {ctaLabel}
+          <ArrowUpRight size={14} />
+        </Box>
+      )}
+    </Box>
+  );
+};

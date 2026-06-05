@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { Box, Typography, Tooltip, CircularProgress } from '@mui/material';
+import { Box, Typography, Tooltip, CircularProgress, useTheme } from '@mui/material';
 import { TrendingUp, TrendingDown, Activity } from 'lucide-react';
 // In the standalone library build, support diagnostics are always off.
 // The host app overrides this internally via its own AuthContext, but the
@@ -48,7 +48,6 @@ function auditCtaPath(href: string): 'ok' | 'broken' | 'external' {
 
 const FG = 'hsl(var(--foreground, 0 0% 100%))';
 const MUTED = 'hsl(var(--muted-foreground, 0 0% 60%))';
-const PRIMARY = 'hsl(var(--primary, 24 100% 50%))';
 const BORDER = 'hsl(var(--border, 0 0% 20%))';
 const CARD = 'hsl(var(--card, 0 0% 13%))';
 
@@ -84,6 +83,9 @@ export interface UsecaseOutcomeChipProps {
 }
 
 export function UsecaseOutcomeChip({ outcome, sourceCategoryLabel, hidden }: UsecaseOutcomeChipProps) {
+  const theme = useTheme();
+  const primaryColor = theme.palette.primary.main;
+  
   if (hidden || !outcome || outcome.kind === 'none') return null;
 
   if (outcome.isEmpty) {
@@ -104,7 +106,7 @@ export function UsecaseOutcomeChip({ outcome, sourceCategoryLabel, hidden }: Use
   return (
     <Box sx={{ mt: 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
-        <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: PRIMARY }} />
+        <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: primaryColor }} />
         <Typography sx={{ fontSize: '0.78rem', fontWeight: 700, color: FG }}>
           {formatNumber(outcome.primary.value)}
         </Typography>
@@ -245,6 +247,8 @@ export function UsecaseOutcomeSection({
   iocCategoryByKey,
   loading,
 }: UsecaseOutcomeSectionProps) {
+  const theme = useTheme();
+  const primaryColor = theme.palette.primary.main;
   const isSupport = useIsSupport();
   if (!outcome || outcome.kind === 'none') return null;
 
@@ -284,7 +288,7 @@ export function UsecaseOutcomeSection({
           const fallbackLabel = `Loading ${outcome.kind.replace(/_/g, ' ')}…`;
           return (
             <Box sx={{ mt: 1.5, display: 'flex', alignItems: 'center', gap: 1.25, flexWrap: 'wrap' }}>
-              <CircularProgress size={14} thickness={5} sx={{ color: PRIMARY }} />
+              <CircularProgress size={14} thickness={5} sx={{ color: primaryColor }} />
               <Typography sx={{ fontSize: '0.85rem', color: MUTED }}>
                 {label || fallbackLabel}
               </Typography>
@@ -400,7 +404,7 @@ export function UsecaseOutcomeSection({
                       return label;
                     })()}
                     <Box sx={{ flex: 1, height: 6, borderRadius: 3, bgcolor: BORDER, overflow: 'hidden' }}>
-                      <Box sx={{ height: '100%', width: `${share}%`, bgcolor: PRIMARY }} />
+                      <Box sx={{ height: '100%', width: `${share}%`, bgcolor: primaryColor }} />
                     </Box>
                     <Typography sx={{ fontSize: '0.8rem', color: FG, fontWeight: 600, minWidth: 60, textAlign: 'right' }}>
                       {formatNumber(entry.value)}
@@ -459,7 +463,7 @@ export function UsecaseOutcomeSection({
               sx={{
                 fontSize: '0.85rem',
                 fontWeight: 600,
-                color: PRIMARY,
+                color: primaryColor,
                 textDecoration: 'none',
                 '&:hover': { textDecoration: 'underline' },
               }}

@@ -14,7 +14,7 @@ const getCommon = () => ({
   shape: { borderRadius: 8 },
 });
 
-const getComponents = (_mode: 'light' | 'dark') => {
+const getComponents = (_mode: 'light' | 'dark', primaryColor: string = '#FF6600') => {
   const border = 'hsl(var(--border))';
   const cardBg = 'var(--gradient-card)';
   const drawerBg = 'hsl(var(--sidebar-background))';
@@ -28,18 +28,21 @@ const getComponents = (_mode: 'light' | 'dark') => {
       styleOverrides: {
         root: { borderRadius: 8, padding: '10px 24px', fontWeight: 600 },
         containedPrimary: {
-          background: 'var(--gradient-accent)',
-          boxShadow: '0 4px 14px hsl(var(--primary) / 0.25)',
+          background: primaryColor,
+          color: '#FFFFFF',
+          boxShadow: `0 4px 14px ${primaryColor}40`,
           '&:hover': {
-            background: 'var(--gradient-accent)',
-            boxShadow: '0 6px 20px hsl(var(--primary) / 0.35)',
+            background: primaryColor,
+            opacity: 0.9,
+            boxShadow: `0 6px 20px ${primaryColor}60`,
           },
         },
         outlined: {
-          borderColor: 'hsl(var(--primary) / 0.5)',
+          borderColor: `${primaryColor}80`,
+          color: primaryColor,
           '&:hover': {
-            borderColor: 'hsl(var(--primary))',
-            backgroundColor: 'hsl(var(--primary) / 0.08)',
+            borderColor: primaryColor,
+            backgroundColor: `${primaryColor}14`,
           },
         },
       },
@@ -97,12 +100,19 @@ const getComponents = (_mode: 'light' | 'dark') => {
   };
 };
 
-export const createMuiTheme = (mode: 'light' | 'dark') => {
+export const createMuiTheme = (mode: 'light' | 'dark', brandColor?: string | null) => {
+  const primaryColor = brandColor || '#FF6600';
+  
   return createTheme({
     ...getCommon(),
     palette: {
       mode,
-      primary: { main: 'hsl(var(--primary))', light: 'hsl(var(--primary-glow))', dark: 'hsl(var(--primary))', contrastText: 'hsl(var(--primary-foreground))' },
+      primary: { 
+        main: primaryColor, 
+        light: primaryColor, 
+        dark: primaryColor, 
+        contrastText: '#FFFFFF' 
+      },
       secondary: { main: 'hsl(var(--secondary))', light: 'hsl(var(--muted))', dark: 'hsl(var(--secondary))', contrastText: 'hsl(var(--secondary-foreground))' },
       error: { main: 'hsl(var(--destructive))', light: 'hsl(var(--destructive))', dark: 'hsl(var(--destructive))', contrastText: 'hsl(var(--destructive-foreground))' },
       warning: { main: 'hsl(var(--severity-medium))', light: 'hsl(var(--severity-medium))', dark: 'hsl(var(--severity-medium))', contrastText: 'hsl(var(--foreground))' },
@@ -119,9 +129,9 @@ export const createMuiTheme = (mode: 'light' | 'dark') => {
       },
       divider: 'hsl(var(--border))',
     },
-    components: getComponents(mode),
+    components: getComponents(mode, primaryColor),
   });
 };
 
 // Default export for backward compat
-export const muiTheme = createMuiTheme('dark');
+export const muiTheme = createMuiTheme('dark', '#FF6600');

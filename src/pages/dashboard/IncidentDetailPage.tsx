@@ -3552,7 +3552,7 @@ const IncidentDetailPage = () => {
       bgcolor: 'hsl(var(--input))',
       '& fieldset': { borderColor: 'hsl(var(--border))' },
       '&:hover fieldset': { borderColor: 'hsl(var(--muted-foreground) / 0.4)' },
-      '&.Mui-focused fieldset': { borderColor: '#FF6600' },
+      '&.Mui-focused fieldset': { borderColor: 'hsl(var(--primary))' },
     },
   };
 
@@ -3884,7 +3884,7 @@ const IncidentDetailPage = () => {
   // Loading spinner shown next to the "Timeline" title in the IncidentSection
   // `badge` slot. Used to indicate revisions are still being fetched.
   const renderTimelineBadge = () =>
-    revisionsLoading ? <CircularProgress size={14} sx={{ color: '#ff6600' }} /> : null;
+    revisionsLoading ? <CircularProgress size={14} sx={{ color: 'hsl(var(--primary))' }} /> : null;
 
   // Body of the Timeline panel (everything below the header). The header,
   // chevron and collapse behaviour are owned by the surrounding
@@ -3938,7 +3938,7 @@ const IncidentDetailPage = () => {
                 sx={{
                   p: 0.25,
                   color: 'hsl(var(--border))',
-                  '&.Mui-checked': { color: '#ff6600' },
+                  '&.Mui-checked': { color: 'hsl(var(--primary))' },
                 }}
               />
               <Box sx={{ flex: 1 }}>{label}</Box>
@@ -4028,8 +4028,8 @@ const IncidentDetailPage = () => {
       {/* Comment Input */}
       <Box sx={{ p: 2, borderBottom: '1px solid hsl(var(--border-subtle))' }}>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Avatar sx={{ width: 28, height: 28, bgcolor: 'rgba(255, 102, 0, 0.2)' }}>
-            <PersonIcon size={16} style={{ color: '#ff6600' }} />
+          <Avatar sx={{ width: 28, height: 28, bgcolor: 'hsl(var(--primary) / 0.2)' }}>
+            <PersonIcon size={16} style={{ color: 'hsl(var(--primary))' }} />
           </Avatar>
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }} ref={commentInputRef}>
             {replyingTo && (
@@ -4041,13 +4041,13 @@ const IncidentDetailPage = () => {
                   px: 1.25,
                   py: 0.75,
                   borderRadius: 1,
-                  bgcolor: 'rgba(255, 102, 0, 0.08)',
-                  border: '1px solid rgba(255, 102, 0, 0.25)',
+                  bgcolor: 'hsl(var(--primary) / 0.08)',
+                  border: '1px solid hsl(var(--primary) / 0.25)',
                 }}
               >
-                <ReplyIcon size={14} style={{ color: '#ff6600' }} />
+                <ReplyIcon size={14} style={{ color: 'hsl(var(--primary))' }} />
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: '#ff6600', lineHeight: 1.2 }}>
+                  <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--primary))', lineHeight: 1.2 }}>
                     Replying to {replyingTo.label}
                   </Typography>
                   {replyingTo.preview && (

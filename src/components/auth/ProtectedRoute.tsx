@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate, useLocation, useSearchParams } from 'react-router-dom';
-import { Box, CircularProgress, Typography } from '@mui/material';
+import { Box, CircularProgress, Typography, useTheme } from '@mui/material';
 import { useAuth } from '@/context/AuthContext';
 
 interface ProtectedRouteProps {
@@ -14,6 +14,7 @@ interface ProtectedRouteProps {
  * this because they do not pass through ProtectedRoute.
  */
 const AuthCheckingOverlay = () => {
+  const theme = useTheme();
   const [tier, setTier] = useState(0); // 0=initial, 1=>4s, 2=>10s
 
   useEffect(() => {
@@ -53,7 +54,7 @@ const AuthCheckingOverlay = () => {
         textAlign: 'center',
       }}
     >
-      <CircularProgress size={44} thickness={4} sx={{ color: '#FF6600' }} />
+      <CircularProgress size={44} thickness={4} sx={{ color: theme.palette.primary.main }} />
       <Typography sx={{ fontSize: '0.95rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
         {primary}
       </Typography>

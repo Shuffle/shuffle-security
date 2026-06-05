@@ -12,6 +12,7 @@ import {
   CircularProgress,
   IconButton,
   InputAdornment,
+  useTheme,
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { getApiUrl, API_ENDPOINTS, API_CONFIG, isDevEnvironment } from '@/Shuffle-MCPs/api';
@@ -25,6 +26,8 @@ interface AuthPageProps {
 }
 
 const AuthPage = ({ mode }: AuthPageProps) => {
+  const theme = useTheme();
+  const primaryColor = theme.palette.primary.main;
 
   usePageMeta({
     title: mode === 'register' ? 'Create your account' : 'Sign in',
@@ -337,7 +340,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                   <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
                     <path
                       d="M14 14h28v6H20v16h16v-10h-8v-6h14v22H14V14z"
-                      fill="#FF6600"
+                      fill={primaryColor}
                     />
                   </svg>
                 </Box>

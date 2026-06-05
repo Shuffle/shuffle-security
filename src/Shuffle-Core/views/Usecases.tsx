@@ -28,6 +28,7 @@ import {
   Drawer,
   IconButton,
   Popover,
+  useTheme,
 } from '@mui/material';
 import { Search, ArrowRight, ArrowLeft, Download, Zap, Activity, CheckCircle2, Circle, AlertTriangle, Network, Clock, Power, PowerOff, FileJson, X, ExternalLink, Flame, PlayCircle, BookOpen, LayoutGrid, Server, Shield, MessageSquare, Mail, Crosshair, HardDrive, KeyRound, Cloud, Sparkles, Plus, Workflow, Rows, Webhook, MousePointerClick, GitBranch, MessageCircleQuestion } from 'lucide-react';
 import ReactGA from 'react-ga4';
@@ -60,28 +61,28 @@ export const FLOW_PHASES: {
   step: number;
   color: string;
 }[] = [
-  {
-    id: 'ingest',
-    step: 1,
-    label: 'Ingest & Tool Setup',
-    subtitle: 'Connect your tools and get data flowing in. Start here.',
-    color: '--infra-siem',
-  },
-  {
-    id: 'response',
-    step: 2,
-    label: 'Agents & Response Actions',
-    subtitle: 'Automate containment, notifications, and remediation.',
-    color: '--infra-edr',
-  },
-  {
-    id: 'correlation',
-    step: 3,
-    label: 'Context & Correlation',
-    subtitle: 'Enrich alerts with intelligence, assets, and identity data.',
-    color: '--infra-threat-intel',
-  },
-];
+    {
+      id: 'ingest',
+      step: 1,
+      label: 'Ingest & Tool Setup',
+      subtitle: 'Connect your tools and get data flowing in. Start here.',
+      color: '--infra-siem',
+    },
+    {
+      id: 'response',
+      step: 2,
+      label: 'Agents & Response Actions',
+      subtitle: 'Automate containment, notifications, and remediation.',
+      color: '--infra-edr',
+    },
+    {
+      id: 'correlation',
+      step: 3,
+      label: 'Context & Correlation',
+      subtitle: 'Enrich alerts with intelligence, assets, and identity data.',
+      color: '--infra-threat-intel',
+    },
+  ];
 
 // ── Tool category definitions ──────────────────────────────────────────────────
 
@@ -1086,7 +1087,7 @@ function WorkflowAppIcon({ name, seededIcon, size = 16 }: { name: string; seeded
     let cancelled = false;
     resolveApp(name)
       .then((r) => { if (!cancelled && r?.image) setIcon(r.image); })
-      .catch(() => {});
+      .catch(() => { });
     return () => { cancelled = true; };
   }, [name, seededIcon]);
   if (icon) {
@@ -1108,7 +1109,7 @@ export interface UsecasesUserData {
   id?: string;
   username?: string;
   support?: boolean;
-  active_org?: { id?: string; name?: string; [key: string]: any };
+  active_org?: { id?: string; name?: string;[key: string]: any };
   orgs?: any[];
   region_url?: string;
   app_execution_limit?: number;
@@ -1386,11 +1387,11 @@ function useAuthLite() {
       setState({
         userInfo: ext
           ? {
-              id: ext.id,
-              username: ext.username,
-              support: ext.support === true,
-              interests: Array.isArray(ext.interests) ? ext.interests : [],
-            }
+            id: ext.id,
+            username: ext.username,
+            support: ext.support === true,
+            interests: Array.isArray(ext.interests) ? ext.interests : [],
+          }
           : null,
         isAuthenticated: cfg.externalIsAuthenticated,
       });
@@ -1511,7 +1512,7 @@ function getLinkedWorkflowsForUsecase(
   const seen = new Set(linked.map((wf) => wf.id).filter(Boolean));
   const forwardTicketsWorkflows = USECASE_IDS_WITH_FORWARD_TICKETS_CONTEXT.has(flow.id)
     ? findWorkflowsForUsecase({ automationLabel: 'Forward Tickets', automationArea: undefined as any }, workflows)
-        .filter((wf) => !seen.has(wf.id))
+      .filter((wf) => !seen.has(wf.id))
     : [];
   forwardTicketsWorkflows.forEach((wf) => { if (wf.id) seen.add(wf.id); });
   const notificationWorkflows = notificationWorkflow?.id && !seen.has(notificationWorkflow.id)
@@ -2030,12 +2031,12 @@ function IntegrationStatusLite({
         title={isShuffleSecurity
           ? `${integration.name} (always available)`
           : `${integration.name}${integration.validated ? ' (validated)' : integration.active ? ' (configured)' : ' (not configured)'}${(() => {
-              const wfs = workflowsByAppName?.get(normalizeAppName(integration.name));
-              if (!wfs || wfs.length === 0) return '';
-              const shown = wfs.slice(0, 3).join(', ');
-              const more = wfs.length > 3 ? ` (+${wfs.length - 3} more)` : '';
-              return ` — used in: ${shown}${more}`;
-            })()}`}
+            const wfs = workflowsByAppName?.get(normalizeAppName(integration.name));
+            if (!wfs || wfs.length === 0) return '';
+            const shown = wfs.slice(0, 3).join(', ');
+            const more = wfs.length > 3 ? ` (+${wfs.length - 3} more)` : '';
+            return ` — used in: ${shown}${more}`;
+          })()}`}
         placement="top"
         arrow
       >
@@ -2286,10 +2287,10 @@ function IntegrationStatusLite({
                   {isToggling
                     ? (inUsecase ? 'Disabling…' : 'Enabling…')
                     : (inUsecase
-                        ? `Disable for ${usecaseLabel || 'this usecase'}`
-                        : (!item.validated && !item.active
-                            ? 'Authenticate first to enable'
-                            : `Enable for ${usecaseLabel || 'this usecase'}`))}
+                      ? `Disable for ${usecaseLabel || 'this usecase'}`
+                      : (!item.validated && !item.active
+                        ? 'Authenticate first to enable'
+                        : `Enable for ${usecaseLabel || 'this usecase'}`))}
                 </Button>
               )}
               <Button
@@ -2313,15 +2314,15 @@ function IntegrationStatusLite({
               >
                 {showUsecaseToggle
                   ? (item.validated
-                      ? 'Open app'
-                      : item.active
-                        ? 'Validate Auth'
-                        : 'Authenticate app')
+                    ? 'Open app'
+                    : item.active
+                      ? 'Validate Auth'
+                      : 'Authenticate app')
                   : (item.validated
-                      ? 'Manage authentication'
-                      : item.active
-                        ? 'Validate Auth'
-                        : 'Authenticate app')}
+                    ? 'Manage authentication'
+                    : item.active
+                      ? 'Validate Auth'
+                      : 'Authenticate app')}
               </Button>
             </Box>
           </>
@@ -2354,8 +2355,8 @@ function IntegrationStatusLite({
             transition: 'all 0.15s ease',
             animation: highlightAddApp ? 'shuffle-add-pulse 1.4s ease-out infinite' : 'none',
             '@keyframes shuffle-add-pulse': {
-              '0%':   { boxShadow: '0 0 0 0 hsl(var(--primary) / 0.55)' },
-              '70%':  { boxShadow: '0 0 0 10px hsl(var(--primary) / 0)' },
+              '0%': { boxShadow: '0 0 0 0 hsl(var(--primary) / 0.55)' },
+              '70%': { boxShadow: '0 0 0 10px hsl(var(--primary) / 0)' },
               '100%': { boxShadow: '0 0 0 0 hsl(var(--primary) / 0)' },
             },
             '&:hover': {
@@ -2384,10 +2385,10 @@ function IntegrationStatusLite({
   // dropping it.
   const hiddenEnabledList = useGroups
     ? merged.filter((i) => {
-        const k = normalize(i.name);
-        if (!usecaseEnabledNames!.has(k)) return false;
-        return !visible.some((v) => normalize(v.name) === k);
-      })
+      const k = normalize(i.name);
+      if (!usecaseEnabledNames!.has(k)) return false;
+      return !visible.some((v) => normalize(v.name) === k);
+    })
     : [];
   const enabledListBase = useGroups
     ? visible.filter((i) => usecaseEnabledNames!.has(normalize(i.name)))
@@ -2546,6 +2547,8 @@ function FlowOutcomeBlock({ flow, sourceCategoryLabel }: { flow: Usecase; source
 // both surfaces stay in sync. Read-only here; "Configure" jumps to the
 // dialog on /incidents.
 function AiIncidentHandlingPromptsBlock() {
+  const theme = useTheme();
+  const primaryColor = theme.palette.primary.main;
   const [loading, setLoading] = useState(true);
   const [enabled, setEnabled] = useState(false);
   const [prompts, setPrompts] = useState<string[]>([]);
@@ -2554,7 +2557,6 @@ function AiIncidentHandlingPromptsBlock() {
 
   const FG = 'hsl(var(--foreground))';
   const MUTED = 'hsl(var(--muted-foreground))';
-  const PRIMARY = 'hsl(var(--primary))';
   const BORDER = 'hsl(var(--border))';
   const CARD = 'hsl(var(--card))';
 
@@ -2640,7 +2642,7 @@ function AiIncidentHandlingPromptsBlock() {
           AI Agent prompts
         </Typography>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-          <CircularProgress size={14} thickness={5} sx={{ color: PRIMARY }} />
+          <CircularProgress size={14} thickness={5} sx={{ color: primaryColor }} />
           <Typography sx={{ fontSize: '0.85rem', color: MUTED }}>Loading prompts…</Typography>
         </Box>
       </Box>
@@ -2679,7 +2681,7 @@ function AiIncidentHandlingPromptsBlock() {
           component={Link}
           to="/incidents"
           size="small"
-          sx={{ textTransform: 'none', fontSize: '0.75rem', color: PRIMARY }}
+          sx={{ textTransform: 'none', fontSize: '0.75rem', color: primaryColor }}
         >
           Configure
         </Button>
@@ -2899,6 +2901,8 @@ function IocFeedsOutcomeBlock() {
 // Assign & Escalate usecase — graphs executions of the matched workflow over
 // the last ~30 days using /api/v2/workflows/{id}/executions `timeline` field.
 function AssignEscalateOutcomeBlock({ flow, workflows }: { flow: Usecase; workflows: WorkflowSummary[] }) {
+  const theme = useTheme();
+  const primaryColor = theme.palette.primary.main;
   const { apiUrl, authHeader } = useApi();
   const [timeline, setTimeline] = useState<{ key: string; data: number }[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -2942,7 +2946,6 @@ function AssignEscalateOutcomeBlock({ flow, workflows }: { flow: Usecase; workfl
 
   const FG = 'hsl(var(--foreground))';
   const MUTED = 'hsl(var(--muted-foreground))';
-  const PRIMARY = 'hsl(var(--primary))';
   const BORDER = 'hsl(var(--border))';
   const CARD = 'hsl(var(--card))';
 
@@ -2958,7 +2961,7 @@ function AssignEscalateOutcomeBlock({ flow, workflows }: { flow: Usecase; workfl
           Outcome · last 30 days
         </Typography>
         <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 1.25 }}>
-          <CircularProgress size={14} thickness={5} sx={{ color: PRIMARY }} />
+          <CircularProgress size={14} thickness={5} sx={{ color: primaryColor }} />
           <Typography sx={{ fontSize: '0.85rem', color: MUTED }}>
             Loading Assign &amp; Escalate workflow executions from the last 30 days…
           </Typography>
@@ -2988,7 +2991,7 @@ function AssignEscalateOutcomeBlock({ flow, workflows }: { flow: Usecase; workfl
         </Typography>
       </Box>
       <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5, flexWrap: 'wrap', mb: 2 }}>
-        <Typography sx={{ fontSize: '1.6rem', fontWeight: 800, color: PRIMARY, lineHeight: 1 }}>
+        <Typography sx={{ fontSize: '1.6rem', fontWeight: 800, color: primaryColor, lineHeight: 1 }}>
           {total.toLocaleString()}
         </Typography>
         <Typography sx={{ fontSize: '0.9rem', color: FG }}>
@@ -3008,9 +3011,9 @@ function AssignEscalateOutcomeBlock({ flow, workflows }: { flow: Usecase; workfl
                       height: `${h}%`,
                       minWidth: 4,
                       borderRadius: '2px 2px 0 0',
-                      bgcolor: p.data > 0 ? PRIMARY : BORDER,
+                      bgcolor: p.data > 0 ? primaryColor : BORDER,
                       transition: 'background-color 0.15s',
-                      '&:hover': { bgcolor: p.data > 0 ? PRIMARY : MUTED },
+                      '&:hover': { bgcolor: p.data > 0 ? primaryColor : MUTED },
                     }}
                   />
                 </Tooltip>
@@ -3077,6 +3080,8 @@ function UsecaseDetailContent({
   /** Support-only: render the usecase's reference image at the top of the detail view. */
   showImage?: boolean;
 }) {
+  const theme = useTheme();
+  const primaryColor = theme.palette.primary.main;
   const navigate = useNavigate();
   const { apiUrl, authHeader } = useApi();
   const { renderEndpointSlot, renderUsecaseDetailSlot } = useUsecasesConfig();
@@ -3113,7 +3118,7 @@ function UsecaseDetailContent({
   });
   const setConnectionViewMode = (mode: 'source_destination' | 'line') => {
     setConnectionViewModeState(mode);
-    try { window.localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode); } catch {}
+    try { window.localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode); } catch { }
   };
 
   const effectiveEnabled = optimisticEnabled !== null ? optimisticEnabled : isEnabled;
@@ -3249,9 +3254,9 @@ function UsecaseDetailContent({
         duration: 10000,
         action: flow.source
           ? {
-              label: `Connect ${sourceName}`,
-              onClick: () => setAddToolFor({ side: 'source', categoryId: flow.source! }),
-            }
+            label: `Connect ${sourceName}`,
+            onClick: () => setAddToolFor({ side: 'source', categoryId: flow.source! }),
+          }
           : undefined,
       });
       return;
@@ -3308,9 +3313,9 @@ function UsecaseDetailContent({
             duration: 10000,
             action: flow.source
               ? {
-                  label: `Connect ${sourceName}`,
-                  onClick: () => setAddToolFor({ side: 'source', categoryId: flow.source! }),
-                }
+                label: `Connect ${sourceName}`,
+                onClick: () => setAddToolFor({ side: 'source', categoryId: flow.source! }),
+              }
               : undefined,
           });
           return;
@@ -3586,13 +3591,18 @@ function UsecaseDetailContent({
   const CARD_BORDER = '1px solid hsl(var(--border, 0 0% 20%))';
   const FG = 'hsl(var(--foreground, 0 0% 100%))';
   const MUTED = 'hsl(var(--muted-foreground, 0 0% 60%))';
-  const PRIMARY = 'hsl(var(--primary, 24 100% 50%))';
   // Resolve a category color token (e.g. "--infra-siem") to an actual hsl()
-  // string with a sensible fallback (Shuffle orange) so badges/icons retain
-  // their accent color even when the host page lacks design tokens.
-  const accent = (token?: string) => `hsl(var(${token || '--primary'}, 24 100% 50%))`;
-  const accentBg = (token: string | undefined, alpha: number) =>
-    `hsla(var(${token || '--primary'}, 24 100% 50%) / ${alpha})`;
+  // string with a sensible fallback using the theme's primary color.
+  const accent = (token?: string) => token ? `hsl(var(${token}, 24 100% 50%))` : primaryColor;
+  const accentBg = (token: string | undefined, alpha: number) => {
+    if (token) return `hsla(var(${token}, 24 100% 50%) / ${alpha})`;
+    // Convert hex to rgba for alpha transparency
+    const hex = primaryColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
 
   return (
     <Box sx={{ maxWidth: 860, width: '100%', mx: 'auto', pb: 4, color: FG }}>
@@ -3626,8 +3636,8 @@ function UsecaseDetailContent({
             position: 'relative',
             overflow: 'hidden',
             borderRadius: 2,
-            border: '1px solid hsla(24, 100%, 50%, 0.4)',
-            background: 'linear-gradient(135deg, hsla(24, 100%, 50%, 0.18) 0%, hsla(24, 100%, 50%, 0.06) 60%, hsla(24, 100%, 50%, 0.02) 100%)',
+            border: `1px solid ${primaryColor}66`,
+            background: `linear-gradient(135deg, ${primaryColor}2E 0%, ${primaryColor}0F 60%, ${primaryColor}05 100%)`,
             p: { xs: 2, md: 2.5 },
             mb: 3,
             display: 'flex',
@@ -3645,8 +3655,8 @@ function UsecaseDetailContent({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              bgcolor: 'hsla(24, 100%, 50%, 0.18)',
-              color: PRIMARY,
+              bgcolor: `${primaryColor}2E`,
+              color: primaryColor,
             }}
           >
             <Sparkles size={22} />
@@ -3672,9 +3682,9 @@ function UsecaseDetailContent({
                 fontSize: '0.85rem',
                 px: 2,
                 py: 1,
-                bgcolor: PRIMARY,
+                bgcolor: primaryColor,
                 color: 'hsl(var(--primary-foreground, 0 0% 100%))',
-                '&:hover': { bgcolor: 'hsla(24, 100%, 50%, 0.9)' },
+                '&:hover': { opacity: 0.9 },
                 whiteSpace: 'nowrap',
               }}
             >
@@ -3751,19 +3761,20 @@ function UsecaseDetailContent({
                     py: 0.6,
                     px: 1.25,
                     bgcolor: effectiveEnabled
-                      ? 'transparent'
-                      : 'hsl(var(--primary, 24 100% 50%))',
+                      ? primaryColor
+                      : primaryColor,
                     color: effectiveEnabled
                       ? 'hsl(var(--foreground))'
                       : 'hsl(var(--primary-foreground, 0 0% 100%))',
                     border: effectiveEnabled
-                      ? '1px solid hsl(var(--border))'
+                      ? `1px solid ${primaryColor}`
                       : '1px solid transparent',
                     boxShadow: 'none',
                     '&:hover': {
                       bgcolor: effectiveEnabled
-                        ? 'transparent'
-                        : 'hsla(24, 100%, 50%, 0.9)',
+                        ? primaryColor
+                        : primaryColor,
+                      opacity: effectiveEnabled ? 1 : 0.9,
                       borderColor: effectiveEnabled ? 'hsl(var(--foreground) / 0.4)' : 'transparent',
                       boxShadow: 'none',
                     },
@@ -3783,7 +3794,7 @@ function UsecaseDetailContent({
                 </Typography>
               )}
               {typeof flow.priority === 'number' && (
-                <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, fontSize: '0.68rem', fontWeight: 700, px: 1, py: 0.35, borderRadius: 1, bgcolor: 'hsla(24, 100%, 50%, 0.1)', color: PRIMARY, border: '1px solid hsla(24, 100%, 50%, 0.25)' }}>
+                <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, fontSize: '0.68rem', fontWeight: 700, px: 1, py: 0.35, borderRadius: 1, bgcolor: `${primaryColor}1A`, color: primaryColor, border: `1px solid ${primaryColor}40` }}>
                   <Flame size={11} />
                   Priority {flow.priority}
                 </Box>
@@ -4034,280 +4045,280 @@ function UsecaseDetailContent({
             // already wired into the workflow (the user explicitly clicked it).
             if (enabled && !seen.has(key)) { activeNames.push(appName); seen.add(key); }
 
-            try {
-              const body: Record<string, string> = { label: automationLabel };
-              const automationCategory = context?.automationCategory ?? flow.automationCategory;
-              if (automationCategory) body.category = automationCategory;
-              if (activeNames.length > 0) body.app_name = activeNames.join(',');
-              else body.action_name = 'remove';
-              const res = await fetch(apiUrl('/api/v2/workflows/generate'), {
-                method: 'POST',
-                credentials: 'include',
-                headers: { ...authHeader(), 'Content-Type': 'application/json' },
-                body: JSON.stringify(body),
-              });
-              let parsed: any = null;
-              try { parsed = await res.json(); } catch { /* ignore */ }
-              const ok = res.ok && parsed?.success !== false;
-              if (!ok) throw new Error(parsed?.reason || `Request failed (${res.status})`);
-              toast.success(enabled
-                ? `${appName} enabled for ${toastLabel}`
-                : `${appName} disabled for ${toastLabel}`);
-              invalidateAppsCache(); setIntegrationsRefreshKey((k2) => k2 + 1);
-              onToggled?.(automationLabel, activeNames.length > 0);
-            } catch (err: any) {
-              toast.error(`Failed to ${enabled ? 'enable' : 'disable'} ${appName}`, {
-                description: err?.message || 'The backend rejected the request.',
-              });
-            }
-          };
-          return (
-        <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
-          {(() => {
-            const isMultiDest = MULTI_DEST_FLOW_IDS.has(flow.id);
-            // Ingest-to-cases usecases (SIEM/EDR/Email alerts) use the Forward
-            // Tickets workflow as the Destination truth source. Do not mix the
-            // ingest workflow's SIEM/EDR/Email apps into the destination tools.
-            const inheritsForwardTickets = USECASE_IDS_WITH_FORWARD_TICKETS_CONTEXT.has(flow.id);
-            const destSpansCommAndCases = isMultiDest || inheritsForwardTickets;
-            // For multi-destination flows (Notifications, Forward Tickets)
-            // the destination spans BOTH Communication and Cases catalogs —
-            // surface the union of apps and label both categories so users
-            // see the full picture instead of just one side.
-            const destAppNames = destSpansCommAndCases
-              ? Array.from(new Set([
-                  ...(categoryAppNames['communication'] || []),
-                  ...(categoryAppNames['case_management'] || []),
-                ])).sort()
-              : (categoryAppNames[flow.target] || []);
-            const commMeta = getToolCategoryMeta('communication');
-            const casesMeta = getToolCategoryMeta('case_management');
-            const destMeta = isMultiDest
-              ? {
-                  ...targetCat,
-                  label: 'Communication & Cases',
-                  // Render both category icons side-by-side so the destination
-                  // tile visually reads as "both" rather than just one.
-                  icon: (
-                    <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
-                      <Box component="span" sx={{ display: 'inline-flex', '& > svg': { width: 12, height: 12 } }}>
-                        {commMeta?.icon}
-                      </Box>
-                      <Box component="span" sx={{ display: 'inline-flex', '& > svg': { width: 12, height: 12 } }}>
-                        {casesMeta?.icon}
-                      </Box>
-                    </Box>
-                  ),
-                }
-              : targetCat;
-            const destCategoryId = isMultiDest ? 'communication' : flow.target;
-            return ([
-              { title: 'Source', meta: sourceCat, details: sourceDetails, categoryId: flow.source, appNames: categoryAppNames[flow.source] || [] },
-              // Self-contained usecases (e.g. Assign & Escalate) operate entirely
-              // within Cases and have no separate destination tool to wire up.
-              flow.id === 'case_management_assign_escalate_1'
-                ? null
-                : { title: 'Destination', meta: destMeta, details: targetDetails, categoryId: destCategoryId, appNames: destAppNames },
-            ].filter(Boolean) as Array<{ title: string; meta: any; details: any; categoryId: string; appNames: string[] }>).map((endpoint) => {
-            // The Shuffle platform itself owns the Cases category, so always
-            // surface "Shuffle Security" alongside any installed case-management
-            // apps. Pre-pend it so it sorts first and the user immediately sees
-            // that Shuffle covers this leg of the flow.
-            // Skip Shuffle Security on Destination when Source is also Cases —
-            // avoids duplicating the platform on both sides of the flow.
-            // Multi-dest flows span Cases as a valid destination too, so show
-            // the Shuffle Security tile even when the category id we render the
-            // tile under is "communication".
-            const includesCases = endpoint.categoryId === 'case_management'
-              || (endpoint.title === 'Destination' && isMultiDest);
-            // Forward Tickets and Notifications are Cases-sourced: the source
-            // IS Shuffle Security itself, and the destination is the external
-            // tool. Hide the duplicate Shuffle Security tile on the destination
-            // side and disable adding source tools.
-            const isForwardTickets = flow.id === 'case_management_cases_forward_1';
-            const isNotifications = flow.id === 'case_management_communication_1';
-            const isCasesSourceOnly = isForwardTickets || isNotifications;
-            const skipShuffle = endpoint.title === 'Destination'
-              && (isCasesSourceOnly || (flow.source === 'case_management' && !isMultiDest));
-            const showShuffle = includesCases && !skipShuffle;
-            // When Shuffle itself is the Source, only surface the Shuffle Security
-            // tile — hiding other case-management apps that would otherwise clutter
-            // the source side of the flow.
-            const sourceIsShuffleOnly = endpoint.title === 'Source' && endpoint.categoryId === 'case_management';
-            // Some usecases (e.g. Enrichment) run entirely on a built-in Shuffle
-            // workflow — the destination has no third-party apps to wire up,
-            // only the Shuffle Security platform itself.
-            const destIsShuffleOnly = endpoint.title === 'Destination'
-              && DESTINATION_SHUFFLE_ONLY_FLOW_IDS.has(flow.id);
-            const baseAppNames = sourceIsShuffleOnly || destIsShuffleOnly
-              ? ['Shuffle Security']
-              : showShuffle
-                ? ['Shuffle Security', ...endpoint.appNames.filter((n) => n.toLowerCase() !== 'shuffle security')]
-                : endpoint.appNames;
-            // Inject any workflow apps that are enabled but don't belong to
-            // this category's catalog so the user can still see — and
-            // toggle — them locally instead of having ghost apps stuck in
-            // the workflow with no UI representation. Only do this on the
-            // Destination tile (the togglable side); the Source tile is
-            // gated by category and shouldn't surface foreign apps.
-            const baseSeen = new Set(baseAppNames.map((n) => normalizeAppName(n)));
-            const injected: string[] = [];
-            if (endpoint.title === 'Destination' && !destIsShuffleOnly) {
-              // Never inject apps that actually belong to a Source-side
-              // catalog of ANY flow — otherwise a SIEM tool like Wazuh
-              // shows up under unrelated destinations just because it's
-              // enabled in some workflow. Only the current flow's target
-              // catalog and truly-foreign (uncategorized) apps may show.
-              const targetCatKey = flow.target;
-              // When the destination spans Communication AND Cases (multi-dest
-              // or ingest flows that inherit Forward Tickets), treat both
-              // catalogs as the "target" so apps from either side aren't
-              // filtered as "foreign" and dropped.
-              const targetCatKeys = destSpansCommAndCases
-                ? new Set(['communication', 'case_management'])
-                : new Set([targetCatKey]);
-              const targetSeen = new Set<string>();
-              for (const ck of targetCatKeys) {
-                for (const n of (categoryAppNames[ck] || [])) targetSeen.add(normalizeAppName(n));
-              }
-              const foreignCategorySeen = new Set<string>();
-              for (const [catKey, names] of Object.entries(categoryAppNames)) {
-                if (targetCatKeys.has(catKey)) continue;
-                for (const n of (names as string[])) {
-                  foreignCategorySeen.add(normalizeAppName(n));
-                }
-              }
-              const endpointEnabledNamesSet = endpoint.title === 'Destination'
-                ? destinationEnabledNamesSet
-                : sourceEnabledNamesSet;
-              for (const k of endpointEnabledNamesSet) {
-                if (baseSeen.has(k)) continue;
-                if (!destSpansCommAndCases && foreignCategorySeen.has(k) && !targetSeen.has(k)) continue;
-                injected.push(k); baseSeen.add(k);
-              }
-            }
-            const appNamesWithShuffle = injected.length
-              ? [...baseAppNames, ...injected]
-              : baseAppNames;
-            const synthetic = (showShuffle || destIsShuffleOnly)
-              ? [{
-                  id: 'shuffle-security',
-                  name: 'Shuffle Security',
-                  icon: shuffleSecurityIcon,
-                  validated: !!effectiveEnabled,
-                  active: !!effectiveEnabled,
-                }]
-              : undefined;
-            const side: 'source' | 'destination' = endpoint.title === 'Source' ? 'source' : 'destination';
-            const pinned = pinnedTool[side];
-            // `isCases` gates "Add tool" behaviour — for multi-dest we always
-            // want the add button enabled regardless of underlying category id.
-            const isCases = endpoint.categoryId === 'case_management';
-            // Source side of a "coming soon" usecase: intercept toggles so we
-            // surface a clear message instead of silently failing or wiring up
-            // an unsupported source app.
-            const sourceComingSoon = endpoint.title === 'Source'
-              && SOURCE_COMING_SOON_FLOW_IDS.has(flow.id);
-            const handleSourceComingSoon = (_appName: string) => {
-              toast.warning('Coming soon', {
-                description: `${flow.label} does not yet support wiring up ${endpoint.meta?.label || 'source'} tools as triggers. The workflow runs on Shuffle's built-in pipeline.`,
-                duration: 6000,
-              });
-            };
-            // When Shuffle itself is the Source (case_management), the only
-            // meaningful "enabled tool" on the Source side is Shuffle. The
-            // workflow's other apps belong to the Destination side and would
-            // otherwise leak into Source as a "+N more / Hide extras" list.
-            const endpointEnabledNamesSet = side === 'destination'
-              ? destinationEnabledNamesSet
-              : (sourceIsShuffleOnly
-                  ? new Set(effectiveEnabled ? [normalizeAppName('Shuffle Security')] : [])
-                  : sourceEnabledNamesSet);
-            const endpointWorkflowAppNames = Array.from(endpointEnabledNamesSet);
-            const destinationUsesForwardTickets = side === 'destination' && inheritsForwardTickets;
-            const endpointAllowsMultiDestAdd = MULTI_DEST_FLOW_IDS.has(flow.id) || destinationUsesForwardTickets;
-            const addToolBlocked = isComingSoon
-              || destIsShuffleOnly
-              || sourceComingSoon
-              || (isCases && !endpointAllowsMultiDestAdd)
-              || (isCasesSourceOnly && side === 'source');
-            const endpointToggleHandler = sourceComingSoon
-              ? handleSourceComingSoon
-              : ((flow.automationLabel && !isComingSoon && !destIsShuffleOnly)
-                  ? (appName: string, enabled: boolean) => handleUsecaseAppToggle(appName, enabled, destinationUsesForwardTickets
-                      ? {
-                          automationLabel: 'Forward Tickets',
-                          automationCategory: 'cases',
-                          workflows: forwardTicketsLinkedForApps,
-                          enabledNamesSet: destinationEnabledNamesSet,
-                          toastLabel: 'Forward Tickets',
+                  try {
+                    const body: Record<string, string> = { label: automationLabel };
+                    const automationCategory = context?.automationCategory ?? flow.automationCategory;
+                    if (automationCategory) body.category = automationCategory;
+                    if (activeNames.length > 0) body.app_name = activeNames.join(',');
+                    else body.action_name = 'remove';
+                    const res = await fetch(apiUrl('/api/v2/workflows/generate'), {
+                      method: 'POST',
+                      credentials: 'include',
+                      headers: { ...authHeader(), 'Content-Type': 'application/json' },
+                      body: JSON.stringify(body),
+                    });
+                    let parsed: any = null;
+                    try { parsed = await res.json(); } catch { /* ignore */ }
+                    const ok = res.ok && parsed?.success !== false;
+                    if (!ok) throw new Error(parsed?.reason || `Request failed (${res.status})`);
+                    toast.success(enabled
+                      ? `${appName} enabled for ${toastLabel}`
+                      : `${appName} disabled for ${toastLabel}`);
+                    invalidateAppsCache(); setIntegrationsRefreshKey((k2) => k2 + 1);
+                    onToggled?.(automationLabel, activeNames.length > 0);
+                  } catch (err: any) {
+                    toast.error(`Failed to ${enabled ? 'enable' : 'disable'} ${appName}`, {
+                      description: err?.message || 'The backend rejected the request.',
+                    });
+                  }
+                };
+                return (
+                  <Box sx={{ display: 'flex', alignItems: 'stretch', gap: 2, flexDirection: { xs: 'column', md: 'row' } }}>
+                    {(() => {
+                      const isMultiDest = MULTI_DEST_FLOW_IDS.has(flow.id);
+                      // Ingest-to-cases usecases (SIEM/EDR/Email alerts) use the Forward
+                      // Tickets workflow as the Destination truth source. Do not mix the
+                      // ingest workflow's SIEM/EDR/Email apps into the destination tools.
+                      const inheritsForwardTickets = USECASE_IDS_WITH_FORWARD_TICKETS_CONTEXT.has(flow.id);
+                      const destSpansCommAndCases = isMultiDest || inheritsForwardTickets;
+                      // For multi-destination flows (Notifications, Forward Tickets)
+                      // the destination spans BOTH Communication and Cases catalogs —
+                      // surface the union of apps and label both categories so users
+                      // see the full picture instead of just one side.
+                      const destAppNames = destSpansCommAndCases
+                        ? Array.from(new Set([
+                          ...(categoryAppNames['communication'] || []),
+                          ...(categoryAppNames['case_management'] || []),
+                        ])).sort()
+                        : (categoryAppNames[flow.target] || []);
+                      const commMeta = getToolCategoryMeta('communication');
+                      const casesMeta = getToolCategoryMeta('case_management');
+                      const destMeta = isMultiDest
+                        ? {
+                          ...targetCat,
+                          label: 'Communication & Cases',
+                          // Render both category icons side-by-side so the destination
+                          // tile visually reads as "both" rather than just one.
+                          icon: (
+                            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
+                              <Box component="span" sx={{ display: 'inline-flex', '& > svg': { width: 12, height: 12 } }}>
+                                {commMeta?.icon}
+                              </Box>
+                              <Box component="span" sx={{ display: 'inline-flex', '& > svg': { width: 12, height: 12 } }}>
+                                {casesMeta?.icon}
+                              </Box>
+                            </Box>
+                          ),
                         }
-                      : {
-                          workflows: side === 'source' ? usecaseLinkedForApps : allLinkedForApps,
-                          enabledNamesSet: endpointEnabledNamesSet,
-                        })
-                  : undefined);
+                        : targetCat;
+                      const destCategoryId = isMultiDest ? 'communication' : flow.target;
+                      return ([
+                        { title: 'Source', meta: sourceCat, details: sourceDetails, categoryId: flow.source, appNames: categoryAppNames[flow.source] || [] },
+                        // Self-contained usecases (e.g. Assign & Escalate) operate entirely
+                        // within Cases and have no separate destination tool to wire up.
+                        flow.id === 'case_management_assign_escalate_1'
+                          ? null
+                          : { title: 'Destination', meta: destMeta, details: targetDetails, categoryId: destCategoryId, appNames: destAppNames },
+                      ].filter(Boolean) as Array<{ title: string; meta: any; details: any; categoryId: string; appNames: string[] }>).map((endpoint) => {
+                        // The Shuffle platform itself owns the Cases category, so always
+                        // surface "Shuffle Security" alongside any installed case-management
+                        // apps. Pre-pend it so it sorts first and the user immediately sees
+                        // that Shuffle covers this leg of the flow.
+                        // Skip Shuffle Security on Destination when Source is also Cases —
+                        // avoids duplicating the platform on both sides of the flow.
+                        // Multi-dest flows span Cases as a valid destination too, so show
+                        // the Shuffle Security tile even when the category id we render the
+                        // tile under is "communication".
+                        const includesCases = endpoint.categoryId === 'case_management'
+                          || (endpoint.title === 'Destination' && isMultiDest);
+                        // Forward Tickets and Notifications are Cases-sourced: the source
+                        // IS Shuffle Security itself, and the destination is the external
+                        // tool. Hide the duplicate Shuffle Security tile on the destination
+                        // side and disable adding source tools.
+                        const isForwardTickets = flow.id === 'case_management_cases_forward_1';
+                        const isNotifications = flow.id === 'case_management_communication_1';
+                        const isCasesSourceOnly = isForwardTickets || isNotifications;
+                        const skipShuffle = endpoint.title === 'Destination'
+                          && (isCasesSourceOnly || (flow.source === 'case_management' && !isMultiDest));
+                        const showShuffle = includesCases && !skipShuffle;
+                        // When Shuffle itself is the Source, only surface the Shuffle Security
+                        // tile — hiding other case-management apps that would otherwise clutter
+                        // the source side of the flow.
+                        const sourceIsShuffleOnly = endpoint.title === 'Source' && endpoint.categoryId === 'case_management';
+                        // Some usecases (e.g. Enrichment) run entirely on a built-in Shuffle
+                        // workflow — the destination has no third-party apps to wire up,
+                        // only the Shuffle Security platform itself.
+                        const destIsShuffleOnly = endpoint.title === 'Destination'
+                          && DESTINATION_SHUFFLE_ONLY_FLOW_IDS.has(flow.id);
+                        const baseAppNames = sourceIsShuffleOnly || destIsShuffleOnly
+                          ? ['Shuffle Security']
+                          : showShuffle
+                            ? ['Shuffle Security', ...endpoint.appNames.filter((n) => n.toLowerCase() !== 'shuffle security')]
+                            : endpoint.appNames;
+                        // Inject any workflow apps that are enabled but don't belong to
+                        // this category's catalog so the user can still see — and
+                        // toggle — them locally instead of having ghost apps stuck in
+                        // the workflow with no UI representation. Only do this on the
+                        // Destination tile (the togglable side); the Source tile is
+                        // gated by category and shouldn't surface foreign apps.
+                        const baseSeen = new Set(baseAppNames.map((n) => normalizeAppName(n)));
+                        const injected: string[] = [];
+                        if (endpoint.title === 'Destination' && !destIsShuffleOnly) {
+                          // Never inject apps that actually belong to a Source-side
+                          // catalog of ANY flow — otherwise a SIEM tool like Wazuh
+                          // shows up under unrelated destinations just because it's
+                          // enabled in some workflow. Only the current flow's target
+                          // catalog and truly-foreign (uncategorized) apps may show.
+                          const targetCatKey = flow.target;
+                          // When the destination spans Communication AND Cases (multi-dest
+                          // or ingest flows that inherit Forward Tickets), treat both
+                          // catalogs as the "target" so apps from either side aren't
+                          // filtered as "foreign" and dropped.
+                          const targetCatKeys = destSpansCommAndCases
+                            ? new Set(['communication', 'case_management'])
+                            : new Set([targetCatKey]);
+                          const targetSeen = new Set<string>();
+                          for (const ck of targetCatKeys) {
+                            for (const n of (categoryAppNames[ck] || [])) targetSeen.add(normalizeAppName(n));
+                          }
+                          const foreignCategorySeen = new Set<string>();
+                          for (const [catKey, names] of Object.entries(categoryAppNames)) {
+                            if (targetCatKeys.has(catKey)) continue;
+                            for (const n of (names as string[])) {
+                              foreignCategorySeen.add(normalizeAppName(n));
+                            }
+                          }
+                          const endpointEnabledNamesSet = endpoint.title === 'Destination'
+                            ? destinationEnabledNamesSet
+                            : sourceEnabledNamesSet;
+                          for (const k of endpointEnabledNamesSet) {
+                            if (baseSeen.has(k)) continue;
+                            if (!destSpansCommAndCases && foreignCategorySeen.has(k) && !targetSeen.has(k)) continue;
+                            injected.push(k); baseSeen.add(k);
+                          }
+                        }
+                        const appNamesWithShuffle = injected.length
+                          ? [...baseAppNames, ...injected]
+                          : baseAppNames;
+                        const synthetic = (showShuffle || destIsShuffleOnly)
+                          ? [{
+                            id: 'shuffle-security',
+                            name: 'Shuffle Security',
+                            icon: shuffleSecurityIcon,
+                            validated: !!effectiveEnabled,
+                            active: !!effectiveEnabled,
+                          }]
+                          : undefined;
+                        const side: 'source' | 'destination' = endpoint.title === 'Source' ? 'source' : 'destination';
+                        const pinned = pinnedTool[side];
+                        // `isCases` gates "Add tool" behaviour — for multi-dest we always
+                        // want the add button enabled regardless of underlying category id.
+                        const isCases = endpoint.categoryId === 'case_management';
+                        // Source side of a "coming soon" usecase: intercept toggles so we
+                        // surface a clear message instead of silently failing or wiring up
+                        // an unsupported source app.
+                        const sourceComingSoon = endpoint.title === 'Source'
+                          && SOURCE_COMING_SOON_FLOW_IDS.has(flow.id);
+                        const handleSourceComingSoon = (_appName: string) => {
+                          toast.warning('Coming soon', {
+                            description: `${flow.label} does not yet support wiring up ${endpoint.meta?.label || 'source'} tools as triggers. The workflow runs on Shuffle's built-in pipeline.`,
+                            duration: 6000,
+                          });
+                        };
+                        // When Shuffle itself is the Source (case_management), the only
+                        // meaningful "enabled tool" on the Source side is Shuffle. The
+                        // workflow's other apps belong to the Destination side and would
+                        // otherwise leak into Source as a "+N more / Hide extras" list.
+                        const endpointEnabledNamesSet = side === 'destination'
+                          ? destinationEnabledNamesSet
+                          : (sourceIsShuffleOnly
+                            ? new Set(effectiveEnabled ? [normalizeAppName('Shuffle Security')] : [])
+                            : sourceEnabledNamesSet);
+                        const endpointWorkflowAppNames = Array.from(endpointEnabledNamesSet);
+                        const destinationUsesForwardTickets = side === 'destination' && inheritsForwardTickets;
+                        const endpointAllowsMultiDestAdd = MULTI_DEST_FLOW_IDS.has(flow.id) || destinationUsesForwardTickets;
+                        const addToolBlocked = isComingSoon
+                          || destIsShuffleOnly
+                          || sourceComingSoon
+                          || (isCases && !endpointAllowsMultiDestAdd)
+                          || (isCasesSourceOnly && side === 'source');
+                        const endpointToggleHandler = sourceComingSoon
+                          ? handleSourceComingSoon
+                          : ((flow.automationLabel && !isComingSoon && !destIsShuffleOnly)
+                            ? (appName: string, enabled: boolean) => handleUsecaseAppToggle(appName, enabled, destinationUsesForwardTickets
+                              ? {
+                                automationLabel: 'Forward Tickets',
+                                automationCategory: 'cases',
+                                workflows: forwardTicketsLinkedForApps,
+                                enabledNamesSet: destinationEnabledNamesSet,
+                                toastLabel: 'Forward Tickets',
+                              }
+                              : {
+                                workflows: side === 'source' ? usecaseLinkedForApps : allLinkedForApps,
+                                enabledNamesSet: endpointEnabledNamesSet,
+                              })
+                            : undefined);
 
-            return (
-            <Box key={endpoint.title} sx={{ flex: 1, minWidth: 0 }}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mb: 1.25 }}>
-                <Typography sx={{ fontSize: '0.62rem', fontWeight: 700, color: MUTED, letterSpacing: '0.1em' }}>
-                  {endpoint.title}
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+                        return (
+                          <Box key={endpoint.title} sx={{ flex: 1, minWidth: 0 }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mb: 1.25 }}>
+                              <Typography sx={{ fontSize: '0.62rem', fontWeight: 700, color: MUTED, letterSpacing: '0.1em' }}>
+                                {endpoint.title}
+                              </Typography>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
 
-                  <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: FG, letterSpacing: '0.02em', flexShrink: 0 }}>
-                    {endpoint.title === 'Source' && endpoint.categoryId === 'case_management' ? 'Shuffle' : (endpoint.meta?.label || 'Unknown')}
-                  </Typography>
-                  {endpoint.details ? (
-                    <Typography sx={{
-                      fontSize: '0.7rem',
-                      color: MUTED,
-                      lineHeight: 1.4,
-                      minWidth: 0,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}>
-                      · {endpoint.details.description.split('—')[0].trim()}
-                    </Typography>
-                  ) : null}
-                </Box>
-              </Box>
+                                <Typography sx={{ fontSize: '0.85rem', fontWeight: 700, color: FG, letterSpacing: '0.02em', flexShrink: 0 }}>
+                                  {endpoint.title === 'Source' && endpoint.categoryId === 'case_management' ? 'Shuffle' : (endpoint.meta?.label || 'Unknown')}
+                                </Typography>
+                                {endpoint.details ? (
+                                  <Typography sx={{
+                                    fontSize: '0.7rem',
+                                    color: MUTED,
+                                    lineHeight: 1.4,
+                                    minWidth: 0,
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    whiteSpace: 'nowrap',
+                                  }}>
+                                    · {endpoint.details.description.split('—')[0].trim()}
+                                  </Typography>
+                                ) : null}
+                              </Box>
+                            </Box>
 
 
-              <IntegrationStatusLite
-                key={`${endpoint.categoryId}-${integrationsRefreshKey}`}
-                filterApps={appNamesWithShuffle}
-                isResolving={!categoryAppsResolved}
-                syntheticApps={synthetic}
-                workflowAppNames={endpointWorkflowAppNames}
-                onHover={(item) => setHoveredTool((prev) => ({ ...prev, [side]: item }))}
-                onSelect={(item) => setPinnedTool((prev) => ({ ...prev, [side]: prev[side]?.id === item.id ? null : item }))}
-                selectedId={pinned?.id}
-                usecaseEnabledNames={endpointEnabledNamesSet}
-                onUsecaseAppToggle={endpointToggleHandler}
-                usecaseLabel={destinationUsesForwardTickets ? 'Forward Tickets' : flow.label}
-                
-                onAddApp={addToolBlocked ? undefined : () => setAddToolFor({ side, categoryId: endpoint.categoryId, multiDest: endpointAllowsMultiDestAdd })}
-                addAppLabel={addToolBlocked ? undefined : (endpointAllowsMultiDestAdd ? 'Add destination tool (Communication or Cases)' : `Add ${endpoint.meta?.label || endpoint.title} tool`)}
-                extraTile={renderEndpointSlot && flow ? renderEndpointSlot({ flowId: flow.id, flowLabel: flow.label, side }) : undefined}
-                highlightAddApp={enableAttempted && !effectiveEnabled && (
-                  (flow.id === 'case_management_cases_forward_1' || flow.id === 'case_management_communication_1')
-                    ? side === 'destination'
-                    : side === 'source' && !hasValidatedSource
-                )}
+                            <IntegrationStatusLite
+                              key={`${endpoint.categoryId}-${integrationsRefreshKey}`}
+                              filterApps={appNamesWithShuffle}
+                              isResolving={!categoryAppsResolved}
+                              syntheticApps={synthetic}
+                              workflowAppNames={endpointWorkflowAppNames}
+                              onHover={(item) => setHoveredTool((prev) => ({ ...prev, [side]: item }))}
+                              onSelect={(item) => setPinnedTool((prev) => ({ ...prev, [side]: prev[side]?.id === item.id ? null : item }))}
+                              selectedId={pinned?.id}
+                              usecaseEnabledNames={endpointEnabledNamesSet}
+                              onUsecaseAppToggle={endpointToggleHandler}
+                              usecaseLabel={destinationUsesForwardTickets ? 'Forward Tickets' : flow.label}
 
-              />
-            </Box>
-            );
-          });
-          })()}
-        </Box>
-          );
-        })()
-        )}
-      </Box>
+                              onAddApp={addToolBlocked ? undefined : () => setAddToolFor({ side, categoryId: endpoint.categoryId, multiDest: endpointAllowsMultiDestAdd })}
+                              addAppLabel={addToolBlocked ? undefined : (endpointAllowsMultiDestAdd ? 'Add destination tool (Communication or Cases)' : `Add ${endpoint.meta?.label || endpoint.title} tool`)}
+                              extraTile={renderEndpointSlot && flow ? renderEndpointSlot({ flowId: flow.id, flowLabel: flow.label, side }) : undefined}
+                              highlightAddApp={enableAttempted && !effectiveEnabled && (
+                                (flow.id === 'case_management_cases_forward_1' || flow.id === 'case_management_communication_1')
+                                  ? side === 'destination'
+                                  : side === 'source' && !hasValidatedSource
+                              )}
+
+                            />
+                          </Box>
+                        );
+                      });
+                    })()}
+                  </Box>
+                );
+              })()
+            )}
+          </Box>
         );
       })()}
 
@@ -4319,9 +4330,9 @@ function UsecaseDetailContent({
             ? <AssignEscalateOutcomeBlock flow={flow} workflows={workflows} />
             : flow.id === 'case_management_agent_ai_incident_handling_1'
               ? <AssignEscalateOutcomeBlock
-                  flow={{ ...flow, automationLabel: 'Assign & Escalate', automationCategory: 'cases', automationArea: 'assign_escalate' }}
-                  workflows={workflows}
-                />
+                flow={{ ...flow, automationLabel: 'Assign & Escalate', automationCategory: 'cases', automationArea: 'assign_escalate' }}
+                workflows={workflows}
+              />
               : resolveOutcomeKind(flow) === 'enrichments_run'
                 ? <EnrichmentsOutcomeBlock flow={flow} />
                 : <FlowOutcomeBlock flow={flow} sourceCategoryLabel={sourceCat?.label} />}
@@ -4471,76 +4482,76 @@ function UsecaseDetailContent({
                 })();
                 const TriggerIcon = triggerMeta.Icon;
                 return (
-                <Box
-                  key={wf.id}
-                  component="a"
-                  href={`https://shuffler.io/workflows/${wf.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 2,
-                    p: 1.25,
-                    borderRadius: 1.5,
-                    border: CARD_BORDER,
-                    bgcolor: 'hsla(0, 0%, 60%, 0.03)',
-                    textDecoration: 'none',
-                    color: FG,
-                    transition: 'background-color 120ms ease',
-                    '&:hover': { bgcolor: 'hsla(24, 100%, 50%, 0.06)', borderColor: 'hsla(24, 100%, 50%, 0.3)' },
-                  }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0, flex: 1 }}>
-                    <Box
-                      title={`Trigger: ${triggerMeta.label}`}
-                      sx={{
-                        display: 'inline-flex', alignItems: 'center', gap: 0.5,
-                        px: 0.75, py: 0.25, borderRadius: 0.75,
-                        border: CARD_BORDER, bgcolor: 'hsla(0, 0%, 60%, 0.04)',
-                        color: MUTED, flexShrink: 0,
-                      }}
-                    >
-                      <TriggerIcon size={12} />
-                      <Typography sx={{ fontSize: '0.68rem', fontWeight: 600, lineHeight: 1, color: MUTED }}>
-                        {triggerMeta.label}
-                      </Typography>
-                    </Box>
-                    <Typography sx={{ fontSize: '0.85rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {wf.name || 'Untitled workflow'}
-                    </Typography>
-                    {isForwardingContext && (
-                      <Typography sx={{ fontSize: '0.68rem', fontWeight: 600, color: MUTED, px: 0.75, py: 0.15, borderRadius: 0.75, border: CARD_BORDER, flexShrink: 0 }}>
-                        Forwarding context
-                      </Typography>
-                    )}
-                  </Box>
                   <Box
-                    sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexShrink: 0 }}
-                    onClick={(e) => {
-                      // The card itself is a link to shuffler.io — clicks on
-                      // the app tiles should open the same popover used in
-                      // Source/Destination, not navigate away.
-                      e.preventDefault();
-                      e.stopPropagation();
+                    key={wf.id}
+                    component="a"
+                    href={`https://shuffler.io/workflows/${wf.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 2,
+                      p: 1.25,
+                      borderRadius: 1.5,
+                      border: CARD_BORDER,
+                      bgcolor: 'hsla(0, 0%, 60%, 0.03)',
+                      textDecoration: 'none',
+                      color: FG,
+                      transition: 'background-color 120ms ease',
+                      '&:hover': { bgcolor: `${primaryColor}0F`, borderColor: `${primaryColor}4D` },
                     }}
                   >
-                    {actionApps.length > 0 && (
-                      <Box title={`Actions: ${actionApps.join(', ')}`} sx={{ display: 'flex', alignItems: 'center' }}>
-                        <IntegrationStatusLite
-                          singleLine
-                          filterApps={actionApps}
-                          workflowAppNames={actionApps}
-                          usecaseEnabledNames={enabledNamesSetLW}
-                          onUsecaseAppToggle={flow.automationLabel ? handleUsecaseAppToggleLW : undefined}
-                          usecaseLabel={flow.label}
-                        />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0, flex: 1 }}>
+                      <Box
+                        title={`Trigger: ${triggerMeta.label}`}
+                        sx={{
+                          display: 'inline-flex', alignItems: 'center', gap: 0.5,
+                          px: 0.75, py: 0.25, borderRadius: 0.75,
+                          border: CARD_BORDER, bgcolor: 'hsla(0, 0%, 60%, 0.04)',
+                          color: MUTED, flexShrink: 0,
+                        }}
+                      >
+                        <TriggerIcon size={12} />
+                        <Typography sx={{ fontSize: '0.68rem', fontWeight: 600, lineHeight: 1, color: MUTED }}>
+                          {triggerMeta.label}
+                        </Typography>
                       </Box>
-                    )}
-                    <ExternalLink size={13} style={{ color: MUTED, flexShrink: 0 }} />
+                      <Typography sx={{ fontSize: '0.85rem', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {wf.name || 'Untitled workflow'}
+                      </Typography>
+                      {isForwardingContext && (
+                        <Typography sx={{ fontSize: '0.68rem', fontWeight: 600, color: MUTED, px: 0.75, py: 0.15, borderRadius: 0.75, border: CARD_BORDER, flexShrink: 0 }}>
+                          Forwarding context
+                        </Typography>
+                      )}
+                    </Box>
+                    <Box
+                      sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexShrink: 0 }}
+                      onClick={(e) => {
+                        // The card itself is a link to shuffler.io — clicks on
+                        // the app tiles should open the same popover used in
+                        // Source/Destination, not navigate away.
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                    >
+                      {actionApps.length > 0 && (
+                        <Box title={`Actions: ${actionApps.join(', ')}`} sx={{ display: 'flex', alignItems: 'center' }}>
+                          <IntegrationStatusLite
+                            singleLine
+                            filterApps={actionApps}
+                            workflowAppNames={actionApps}
+                            usecaseEnabledNames={enabledNamesSetLW}
+                            onUsecaseAppToggle={flow.automationLabel ? handleUsecaseAppToggleLW : undefined}
+                            usecaseLabel={flow.label}
+                          />
+                        </Box>
+                      )}
+                      <ExternalLink size={13} style={{ color: MUTED, flexShrink: 0 }} />
+                    </Box>
                   </Box>
-                </Box>
                 );
               })}
             </Box>
@@ -4560,7 +4571,7 @@ function UsecaseDetailContent({
           )}
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
             {flow.video && (
-              <Button href={flow.video} target="_blank" rel="noopener noreferrer" startIcon={<PlayCircle size={16} />} sx={{ textTransform: 'none', fontSize: '0.8rem', fontWeight: 600, color: PRIMARY, border: '1px solid hsla(24, 100%, 50%, 0.3)', bgcolor: 'hsla(24, 100%, 50%, 0.06)' }}>
+              <Button href={flow.video} target="_blank" rel="noopener noreferrer" startIcon={<PlayCircle size={16} />} sx={{ textTransform: 'none', fontSize: '0.8rem', fontWeight: 600, color: primaryColor, border: `1px solid ${primaryColor}4D`, bgcolor: `${primaryColor}0F` }}>
                 Watch video
               </Button>
             )}
@@ -4643,13 +4654,13 @@ function UsecaseDetailContent({
           const isMultiDest = MULTI_DEST_FLOW_IDS.has(flow.id) || addTargetsForwardTickets;
           const catalog: string[] = isMultiDest
             ? [
-                ...((categoryAppNames['case_management'] || []) as string[]),
-                ...((categoryAppNames['communication'] || []) as string[]),
-              ]
+              ...((categoryAppNames['case_management'] || []) as string[]),
+              ...((categoryAppNames['communication'] || []) as string[]),
+            ]
             : [
-                ...((categoryAppNames[flow.source] || []) as string[]),
-                ...((categoryAppNames[flow.target] || []) as string[]),
-              ];
+              ...((categoryAppNames[flow.source] || []) as string[]),
+              ...((categoryAppNames[flow.target] || []) as string[]),
+            ];
           const activeNames: string[] = [];
           const seen = new Set<string>();
           for (const n of catalog) {
@@ -4746,6 +4757,9 @@ function UsecasesPageInner() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [areaFilter, setAreaFilter] = useState<string>('all');
   const [tagFilter, setTagFilter] = useState<string>('all');
+
+  const theme = useTheme()
+  const primaryColor = theme.palette.primary.main
 
   const navigate = useNavigate();
   const { apiUrl, authHeader } = useApi();
@@ -5421,10 +5435,8 @@ function UsecasesPageInner() {
                 color: 'hsl(var(--foreground, 0 0% 100%)) !important',
                 bgcolor: 'transparent',
                 '&:hover': {
-                  borderColor: 'hsl(var(--primary, 24 100% 50%))',
-                  // Use a translucent primary tint instead of --accent (which is
-                  // solid orange in this theme and would clash with the text).
-                  bgcolor: 'hsla(24, 100%, 50%, 0.12)',
+                  borderColor: primaryColor,
+                  bgcolor: `${primaryColor}1F`,
                   color: 'hsl(var(--foreground, 0 0% 100%)) !important',
                 },
                 '&:hover .MuiButton-startIcon': {
@@ -5683,6 +5695,8 @@ function UsecaseCard({
   const effectiveEnabled = optimisticEnabled !== null ? optimisticEnabled : isEnabled;
   const { apiUrl, authHeader } = useApi();
 
+  const theme = useTheme()
+  const primaryColor = theme.palette.primary.main
   // Clear optimistic state only once the server has caught up. Otherwise a
   // refetch that lands before the backend finished the mutation will briefly
   // flip the button back to its previous state.
@@ -5932,9 +5946,9 @@ function UsecaseCard({
                 minHeight: 0,
                 py: 0.4,
                 px: 1,
-                bgcolor: 'hsl(var(--primary))',
-                color: 'hsl(var(--primary-foreground))',
-                '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' },
+                bgcolor: primaryColor,
+                color: '#FFFFF',
+                '&:hover': { bgcolor: primaryColor },
               }}
             >
               {flow.customAction.label || 'Configure'}
@@ -6005,22 +6019,16 @@ function UsecaseCard({
                     minHeight: 0,
                     py: 0.4,
                     px: 1,
-                    bgcolor: effectiveEnabled
-                      ? 'transparent'
-                      : 'hsl(var(--primary))',
-                    color: effectiveEnabled
-                      ? 'hsl(var(--foreground))'
-                      : 'hsl(var(--primary-foreground))',
-                    borderColor: effectiveEnabled
-                      ? 'hsl(var(--border))'
-                      : 'transparent',
+                    bgcolor: primaryColor,
+                    color: "#FFFFFF",
+                    borderColor: primaryColor,
                     borderStyle: 'solid',
                     boxShadow: 'none',
                     '&:hover': {
                       bgcolor: effectiveEnabled
                         ? 'transparent'
-                        : 'hsl(var(--primary) / 0.9)',
-                      borderColor: effectiveEnabled ? 'hsl(var(--foreground) / 0.4)' : 'transparent',
+                        : primaryColor,
+                      borderColor: effectiveEnabled ? primaryColor : 'transparent',
                       boxShadow: 'none',
                     },
                   }}

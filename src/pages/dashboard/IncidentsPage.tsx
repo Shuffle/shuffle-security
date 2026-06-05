@@ -1966,8 +1966,8 @@ const IncidentsPage = () => {
               onClick={() => fetchItems()}
               sx={{
                 px: 4, py: 1.5, borderRadius: 2, textTransform: 'none', fontWeight: 600, fontSize: '0.95rem',
-                backgroundColor: '#FF6600',
-                '&:hover': { backgroundColor: '#e55c00' },
+                backgroundColor: 'hsl(var(--primary))',
+                '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)' },
               }}
             >
               Retry

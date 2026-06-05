@@ -485,8 +485,8 @@ const AppDetailPage = () => {
               borderRadius: 2,
               textTransform: 'none',
               fontWeight: 600,
-              backgroundColor: '#FF6600',
-              '&:hover': { backgroundColor: '#e55c00' },
+              backgroundColor: 'hsl(var(--primary))',
+              '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)' },
             }}
           >
             Browse Integrations

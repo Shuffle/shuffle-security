@@ -175,8 +175,8 @@ const queryClient = new QueryClient();
 
 /** Inner app that reads theme context */
 const ThemedApp = () => {
-  const { resolvedTheme } = useTheme();
-  const muiTheme = useMemo(() => createMuiTheme(resolvedTheme), [resolvedTheme]);
+  const { resolvedTheme, brandColor } = useTheme();
+  const muiTheme = useMemo(() => createMuiTheme(resolvedTheme, brandColor), [resolvedTheme, brandColor]);
 
   return (
     <MuiThemeProvider theme={muiTheme}>
