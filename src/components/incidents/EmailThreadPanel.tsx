@@ -230,7 +230,7 @@ const RecipientRow = ({
       <IconButton
         size="small"
         onClick={onRemove}
-        sx={{ p: 0.25, color: 'text.secondary', '&:hover': { color: primaryColor } }}
+        sx={{ p: 0.25, color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
       >
         <ExpandLessIcon size={14} style={{ transform: 'rotate(45deg)' }} />
       </IconButton>
