@@ -2548,6 +2548,10 @@ function FlowOutcomeBlock({ flow, sourceCategoryLabel }: { flow: Usecase; source
 // This is the most honest "what did this automation produce?" number we can
 // show today because every alert that arrives through the webhook triggers
 // one execution.
+// Same as FlowOutcomeBlock, but injects an additional "Webhook" entry into
+// the breakdown showing the number of executions (last 30 days) of the
+// "Ingestion Webhook" workflow, alongside the per-tool counts (Elasticsearch,
+// etc.) that the standard outcome already produces.
 function WebhookExecutionsOutcomeBlock({
   flow,
   workflows,
@@ -2557,31 +2561,37 @@ function WebhookExecutionsOutcomeBlock({
   workflows: WorkflowSummary[];
   sourceCategoryLabel?: string;
 }) {
+  const { getOutcome, isLoading } = useUsecaseOutcomes([flow]);
   const webhookWorkflow = useMemo(
     () => workflows.find((w) => w?.name === 'Ingestion Webhook'),
     [workflows],
   );
-  const { stats, isLoading } = useWorkflowExecutionStats(webhookWorkflow?.id || null);
+  const { stats, isLoading: webhookLoading } = useWorkflowExecutionStats(
+    webhookWorkflow?.id || null,
+  );
 
-  const outcome = {
-    kind: 'incidents_ingested' as const,
-    primary: { value: stats.total, label: 'webhook executions' },
-    breakdown: [],
-    windowDays: 30 as const,
-    isEmpty: !isLoading && stats.total === 0,
-    emptyReason: !webhookWorkflow
-      ? ('not_enabled' as const)
-      : stats.total === 0
-        ? ('no_data_yet' as const)
-        : undefined,
-  };
+  const base = getOutcome(flow.id);
+  const outcome = useMemo(() => {
+    if (!base) return base;
+    if (!webhookWorkflow || stats.total <= 0) return base;
+    const webhookEntry = {
+      key: 'ingestion_webhook',
+      label: 'Webhook',
+      value: stats.total,
+    };
+    return {
+      ...base,
+      breakdown: [webhookEntry, ...(base.breakdown || [])],
+      isEmpty: false,
+    };
+  }, [base, webhookWorkflow, stats.total]);
 
   return (
     <UsecaseOutcomeSection
       outcome={outcome}
       sourceCategoryLabel={sourceCategoryLabel}
       sourceId={flow.source}
-      loading={isLoading}
+      loading={isLoading || webhookLoading}
     />
   );
 }
