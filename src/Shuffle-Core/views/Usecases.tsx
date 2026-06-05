@@ -2542,6 +2542,50 @@ function FlowOutcomeBlock({ flow, sourceCategoryLabel }: { flow: Usecase; source
   return <UsecaseOutcomeSection outcome={getOutcome(flow.id)} sourceCategoryLabel={sourceCategoryLabel} sourceId={flow.source} loading={isLoading} />;
 }
 
+// Ingestion Webhook outcome — for SIEM/EDR alert flows we surface the actual
+// number of webhook executions (last 30 days) pulled from
+// /api/v2/workflows/{id}/executions `timeline`, summed into a single total.
+// This is the most honest "what did this automation produce?" number we can
+// show today because every alert that arrives through the webhook triggers
+// one execution.
+function WebhookExecutionsOutcomeBlock({
+  flow,
+  workflows,
+  sourceCategoryLabel,
+}: {
+  flow: Usecase;
+  workflows: WorkflowSummary[];
+  sourceCategoryLabel?: string;
+}) {
+  const webhookWorkflow = useMemo(
+    () => workflows.find((w) => w?.name === 'Ingestion Webhook'),
+    [workflows],
+  );
+  const { stats, isLoading } = useWorkflowExecutionStats(webhookWorkflow?.id || null);
+
+  const outcome = {
+    kind: 'incidents_ingested' as const,
+    primary: { value: stats.total, label: 'webhook executions' },
+    breakdown: [],
+    windowDays: 30 as const,
+    isEmpty: !isLoading && stats.total === 0,
+    emptyReason: !webhookWorkflow
+      ? ('not_enabled' as const)
+      : stats.total === 0
+        ? ('no_data_yet' as const)
+        : undefined,
+  };
+
+  return (
+    <UsecaseOutcomeSection
+      outcome={outcome}
+      sourceCategoryLabel={sourceCategoryLabel}
+      sourceId={flow.source}
+      loading={isLoading}
+    />
+  );
+}
+
 // AI Incident Handling block — shows the live "Run AI Agent" prompts
 // configured on the shuffle-security_incidents category, using the same
 // AiAgentPromptsEditor component as the /incidents Automations dialog so
