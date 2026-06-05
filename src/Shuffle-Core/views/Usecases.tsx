@@ -2577,7 +2577,7 @@ function WebhookExecutionsOutcomeBlock({
     const enrichedBreakdown = (base.breakdown || []).map((entry) => ({
       ...entry,
       onClick: appDetail ? () => appDetail.openApp(entry.label) : entry.onClick,
-    }));
+    })) as typeof base.breakdown;
     const next = { ...base, breakdown: enrichedBreakdown };
     if (webhookWorkflow && stats.total > 0) {
       next.breakdown = [
