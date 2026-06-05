@@ -4402,7 +4402,7 @@ function UsecaseDetailContent({
                 flow={{ ...flow, automationLabel: 'Assign & Escalate', automationCategory: 'cases', automationArea: 'assign_escalate' }}
                 workflows={workflows}
               />
-              : (flow.id === 'siem_case_management_1' || flow.id === 'edr_case_management_1')
+              : (flow.id === 'siem_case_management_1' || flow.id === 'edr_case_management_1' || flow.id === 'email_case_management_1' || flow.id === 'case_management_cases_forward_1')
                 ? <WebhookExecutionsOutcomeBlock flow={flow} workflows={workflows} sourceCategoryLabel={sourceCat?.label} />
                 : resolveOutcomeKind(flow) === 'enrichments_run'
                   ? <EnrichmentsOutcomeBlock flow={flow} />
