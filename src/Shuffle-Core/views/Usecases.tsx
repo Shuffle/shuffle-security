@@ -4172,6 +4172,9 @@ function UsecaseDetailContent({
             // a disabled app as still-enabled in the Source/Destination strip.
             if (enabled) pushInjectedUsecaseApp(flow.id, appName);
             else removeInjectedUsecaseApp(flow.id, appName);
+            // Optimistically refresh the tool strip so the user sees the
+            // change immediately, before the backend write completes.
+            invalidateAppsCache(); setIntegrationsRefreshKey((k2) => k2 + 1);
             // Source of truth = the actual apps inside the linked workflow(s).
             // Anything currently wired into the workflow stays wired unless it
             // IS the app the user just toggled off. This prevents accidentally
