@@ -1177,6 +1177,7 @@ const DEFAULT_CONFIG: UsecasesPageConfig = {
   isLoaded: true,
   renderEndpointSlot: undefined,
   renderUsecaseDetailSlot: undefined,
+  renderUsecaseActionModal: undefined,
   scopeClassName: 'shuffle-usecases-scope',
 };
 
