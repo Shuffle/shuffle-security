@@ -6436,6 +6436,7 @@ export function UsecaseDrawer(props: UsecaseDrawerProps) {
     theme = 'system',
     renderEndpointSlot,
     renderUsecaseDetailSlot,
+    renderUsecaseActionModal,
   } = props;
   useSyncHostBaseUrl(globalUrl);
 
