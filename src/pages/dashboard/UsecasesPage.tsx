@@ -10,6 +10,7 @@ import { WebhookIngestionButton, type WebhookIngestionInfo } from '@/components/
 import { useWebhookStatus } from '@/hooks/useWebhookStatus';
 import { useWorkflows } from '@/hooks/useWorkflows';
 import { IncidentRoutingEditor } from '@/components/settings/IncidentRoutingEditor';
+import MonitorsView from '@/Shuffle-Core/views/monitors/MonitorsView';
 import { useTheme } from '@/context/ThemeContext';
 import { useAuth } from '@/context/AuthContext';
 
