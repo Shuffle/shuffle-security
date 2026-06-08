@@ -4571,6 +4571,10 @@ function UsecaseDetailContent({
             invalidateAppsCache(); setIntegrationsRefreshKey((k2) => k2 + 1);
             onToggled?.(flow.automationLabel, activeNames.length > 0);
           } catch (err: any) {
+            // Roll back the optimistic localStorage update on failure.
+            if (enabled) removeInjectedUsecaseApp(flow.id, appName);
+            else pushInjectedUsecaseApp(flow.id, appName);
+            invalidateAppsCache(); setIntegrationsRefreshKey((k2) => k2 + 1);
             toast.error(`Failed to ${enabled ? 'enable' : 'disable'} ${appName}`, {
               description: err?.message || 'The backend rejected the request.',
             });
