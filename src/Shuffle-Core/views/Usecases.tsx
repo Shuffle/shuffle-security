@@ -4853,6 +4853,9 @@ function UsecaseDetailContent({
             try { parsed = await res.json(); } catch { /* ignore */ }
             const ok = res.ok && parsed?.success !== false;
             if (!ok) {
+              // Roll back the optimistic localStorage update on failure.
+              removeInjectedUsecaseApp(flow.id, app.name);
+              invalidateAppsCache(); setIntegrationsRefreshKey((k) => k + 1);
               toast.error(`Failed to add ${app.name}`, {
                 description: parsed?.reason || `Request failed (${res.status})`,
               });
@@ -4862,6 +4865,9 @@ function UsecaseDetailContent({
             invalidateAppsCache(); setIntegrationsRefreshKey((k) => k + 1);
             onToggled?.(automationLabel, true);
           }).catch((err) => {
+            // Roll back the optimistic localStorage update on failure.
+            removeInjectedUsecaseApp(flow.id, app.name);
+            invalidateAppsCache(); setIntegrationsRefreshKey((k) => k + 1);
             toast.error(`Failed to add ${app.name}`, {
               description: err?.message || 'The backend rejected the request.',
             });
