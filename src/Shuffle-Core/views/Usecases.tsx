@@ -804,6 +804,7 @@ export const DEFAULT_USECASES: Usecase[] = [
     customAction: {
       label: 'Add Monitor',
       href: '/monitors?add_host=true',
+      modal: 'add-host',
       description: 'Open the monitor deployment dialog to register a new host.',
     },
   },
