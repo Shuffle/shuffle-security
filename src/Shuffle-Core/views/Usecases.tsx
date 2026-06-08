@@ -4814,6 +4814,9 @@ function UsecaseDetailContent({
           const newKey = normalizeAppName(app.name);
           const alreadyWired = enabledNames.has(newKey);
           pushInjectedUsecaseApp(flow.id, app.name);
+          // Optimistically refresh the tool strip so the newly-picked app
+          // appears immediately, before the backend write completes.
+          invalidateAppsCache(); setIntegrationsRefreshKey((k) => k + 1);
           if (alreadyWired) {
             return false; // open detail drawer for configuration
           }
