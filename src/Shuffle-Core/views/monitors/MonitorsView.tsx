@@ -23,7 +23,7 @@ import { Switch } from '@/components/ui/switch';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Laptop, HardDrive, Lock, Package, Zap, Plus, Copy, Check, Activity, ChevronRight, ChevronDown, Radar, FolderOpen, Loader2, CheckCircle2, Send, RefreshCw, ShieldCheck, ShieldX, Cpu, Hash, Clock, Globe, Play, Terminal, Square, Maximize2, AlertTriangle, FileCode } from 'lucide-react';
-import { usePageMeta } from '@/hooks/usePageMeta';
+// usePageMeta intentionally not imported here — owned by host wrapper.
 import { toast } from '@/lib/toast';
 import { getApiUrl, getAuthHeader, API_CONFIG } from '@/Shuffle-MCPs/api';
 import { DEFAULT_AGENT_PERMISSIONS } from '@/hooks/useAgentPermissions';
