@@ -4172,6 +4172,9 @@ function UsecaseDetailContent({
             // a disabled app as still-enabled in the Source/Destination strip.
             if (enabled) pushInjectedUsecaseApp(flow.id, appName);
             else removeInjectedUsecaseApp(flow.id, appName);
+            // Optimistically refresh the tool strip so the user sees the
+            // change immediately, before the backend write completes.
+            invalidateAppsCache(); setIntegrationsRefreshKey((k2) => k2 + 1);
             // Source of truth = the actual apps inside the linked workflow(s).
             // Anything currently wired into the workflow stays wired unless it
             // IS the app the user just toggled off. This prevents accidentally
@@ -4218,6 +4221,10 @@ function UsecaseDetailContent({
                     invalidateAppsCache(); setIntegrationsRefreshKey((k2) => k2 + 1);
                     onToggled?.(automationLabel, activeNames.length > 0);
                   } catch (err: any) {
+                    // Roll back the optimistic localStorage update on failure.
+                    if (enabled) removeInjectedUsecaseApp(flow.id, appName);
+                    else pushInjectedUsecaseApp(flow.id, appName);
+                    invalidateAppsCache(); setIntegrationsRefreshKey((k2) => k2 + 1);
                     toast.error(`Failed to ${enabled ? 'enable' : 'disable'} ${appName}`, {
                       description: err?.message || 'The backend rejected the request.',
                     });
@@ -4524,6 +4531,9 @@ function UsecaseDetailContent({
           if (enabled) next.add(key); else next.delete(key);
           if (enabled) pushInjectedUsecaseApp(flow.id, appName);
           else removeInjectedUsecaseApp(flow.id, appName);
+          // Optimistically refresh the tool strip so the change is visible
+          // immediately, without waiting for the backend write.
+          invalidateAppsCache(); setIntegrationsRefreshKey((k2) => k2 + 1);
           // Source of truth = the actual apps inside the linked workflow(s).
           const activeNames: string[] = [];
           const seen = new Set<string>();
@@ -4561,6 +4571,10 @@ function UsecaseDetailContent({
             invalidateAppsCache(); setIntegrationsRefreshKey((k2) => k2 + 1);
             onToggled?.(flow.automationLabel, activeNames.length > 0);
           } catch (err: any) {
+            // Roll back the optimistic localStorage update on failure.
+            if (enabled) removeInjectedUsecaseApp(flow.id, appName);
+            else pushInjectedUsecaseApp(flow.id, appName);
+            invalidateAppsCache(); setIntegrationsRefreshKey((k2) => k2 + 1);
             toast.error(`Failed to ${enabled ? 'enable' : 'disable'} ${appName}`, {
               description: err?.message || 'The backend rejected the request.',
             });
@@ -4800,6 +4814,9 @@ function UsecaseDetailContent({
           const newKey = normalizeAppName(app.name);
           const alreadyWired = enabledNames.has(newKey);
           pushInjectedUsecaseApp(flow.id, app.name);
+          // Optimistically refresh the tool strip so the newly-picked app
+          // appears immediately, before the backend write completes.
+          invalidateAppsCache(); setIntegrationsRefreshKey((k) => k + 1);
           if (alreadyWired) {
             return false; // open detail drawer for configuration
           }
@@ -4836,6 +4853,9 @@ function UsecaseDetailContent({
             try { parsed = await res.json(); } catch { /* ignore */ }
             const ok = res.ok && parsed?.success !== false;
             if (!ok) {
+              // Roll back the optimistic localStorage update on failure.
+              removeInjectedUsecaseApp(flow.id, app.name);
+              invalidateAppsCache(); setIntegrationsRefreshKey((k) => k + 1);
               toast.error(`Failed to add ${app.name}`, {
                 description: parsed?.reason || `Request failed (${res.status})`,
               });
@@ -4845,6 +4865,9 @@ function UsecaseDetailContent({
             invalidateAppsCache(); setIntegrationsRefreshKey((k) => k + 1);
             onToggled?.(automationLabel, true);
           }).catch((err) => {
+            // Roll back the optimistic localStorage update on failure.
+            removeInjectedUsecaseApp(flow.id, app.name);
+            invalidateAppsCache(); setIntegrationsRefreshKey((k) => k + 1);
             toast.error(`Failed to add ${app.name}`, {
               description: err?.message || 'The backend rejected the request.',
             });
