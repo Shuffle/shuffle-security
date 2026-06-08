@@ -58,6 +58,12 @@ const UsecasesPage = (props: UsecasesPageProps = {}) => {
         // changes apply in both places.
         return <IncidentRoutingEditor forceShow />;
       }}
+      renderUsecaseActionModal={({ modal, open, onClose }) => {
+        // Embed the same Add Host dialog from /monitors directly in the
+        // usecase sidebar so users can deploy a monitor without navigating.
+        if (modal !== 'add-host' || !open) return null;
+        return <MonitorsView mode="add-host-dialog" onClose={onClose} />;
+      }}
     />
   );
 };
