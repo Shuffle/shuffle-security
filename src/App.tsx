@@ -88,7 +88,7 @@ import PipelinesPage from '@/pages/dashboard/PipelinesPage';
 import DashboardPage from '@/pages/dashboard/DashboardPage';
 import DashboardViewPage from '@/pages/dashboard/DashboardViewPage';
 import VulnerabilitiesPage from '@/pages/dashboard/VulnerabilitiesPage';
-import VulnAssetsPage from '@/pages/dashboard/VulnAssetsPage';
+import MonitorsPage from '@/pages/dashboard/MonitorsPage';
 import AssetsPage from '@/pages/dashboard/AssetsPage';
 import WorkflowsNotSupportedPage from '@/pages/dashboard/WorkflowsNotSupportedPage';
 import HostTerminalPage from '@/pages/dashboard/HostTerminalPage';
