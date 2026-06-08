@@ -44,8 +44,23 @@ import { getDatastoreByCategory, setDatastoreItems, deleteDatastoreItems, DATAST
 import { seedDefaultThreatFeeds } from '@/hooks/useThreatFeeds';
 import { seedDefaultIOCTypes } from '@/hooks/useIOCTypes';
 import { generateWorkflow } from '@/lib/workflowGenerate';
+import { enableThreatIntelAutomation } from '@/Shuffle-Core/hooks/useEnrichmentStatus';
 import { DEFAULT_AGENT_PERMISSIONS } from '@/hooks/useAgentPermissions';
 import { DEMO_FLAG_KEY, DEMO_ACTIVE_KEY } from '@/lib/demoSeedData';
+
+/**
+ * Enable the "Assign & Escalate" background workflow(s) — same call the
+ * Automation Readiness banner performs via `useAssignEscalateStatus.enable`.
+ * Schedule-based, so `allowEmpty` is required.
+ */
+const enableAssignEscalateAutomation = async (): Promise<void> => {
+  const labels = getAutomationLabels('assign_escalate');
+  await Promise.allSettled(
+    labels.map((label) =>
+      generateWorkflow({ label, enabledAppNames: [], category: 'cases', allowEmpty: true }),
+    ),
+  );
+};
 
 /**
  * Local de-duped writer into the demo cleanup index. Mirrors `recordSeed`
