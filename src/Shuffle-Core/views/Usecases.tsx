@@ -359,6 +359,13 @@ export interface Usecase {
     url?: string;
     /** Optional helper text rendered next to the CTA. */
     description?: string;
+    /**
+     * Optional modal key. When set, the CTA opens an inline dialog provided
+     * by the host via the `renderUsecaseActionModal` slot instead of (or in
+     * addition to) navigating via `href`/`url`. Used so flows like
+     * "Add Host-Monitors" can deploy a monitor without leaving the page.
+     */
+    modal?: string;
   };
 }
 
