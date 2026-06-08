@@ -1718,4 +1718,5 @@ const AuthenticatedMonitorsView = ({ mode = 'page', onClose }: MonitorsViewProps
   );
 };
 
-export default VulnAssetsPage;
+export default MonitorsView;
+export { MonitorsView };
