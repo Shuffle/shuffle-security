@@ -159,7 +159,13 @@ const buildComponentOverrides = (scopeClassName: string) => ({
     },
   },
   MuiTooltip: {
-    defaultProps: { slotProps: { tooltip: { className: scopeClassName } } },
+    defaultProps: {
+      slotProps: {
+        tooltip: { className: scopeClassName },
+        // Render above app Drawers/Popovers that use z-index 9999.
+        popper: { sx: { zIndex: 10000 } },
+      },
+    },
   },
   MuiDivider: {
     styleOverrides: { root: { borderColor: "hsl(var(--border))" } },

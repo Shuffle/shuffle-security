@@ -259,7 +259,16 @@ const buildComponentOverrides = (scopeClassName: string, scopeStyle: ShuffleToke
     },
   },
   MuiTooltip: {
-    defaultProps: { slotProps: { tooltip: { className: scopeClassName, style: scopeStyle } } },
+    defaultProps: {
+      // Match the host MUI theme: tooltips need to render above Drawers /
+      // Popovers / Dialogs that use z-index 9999 in this app (e.g. the
+      // usecase config drawer + sidebar popovers). MUI's default popper
+      // z-index (1500) puts them UNDER those panels.
+      slotProps: {
+        tooltip: { className: scopeClassName, style: scopeStyle },
+        popper: { sx: { zIndex: 10000 } },
+      },
+    },
   },
 });
 
