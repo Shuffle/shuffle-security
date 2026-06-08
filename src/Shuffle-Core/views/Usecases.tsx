@@ -4838,6 +4838,18 @@ export interface UsecasesPageProps {
    * Use it to inject a full configuration UI (e.g. Incident Routing editor).
    */
   renderUsecaseDetailSlot?: (params: { flowId: string; flowLabel: string }) => React.ReactNode;
+  /**
+   * Optional host slot that renders an inline modal for a usecase whose
+   * `customAction.modal` matches. Used to embed dialogs like "Add Host"
+   * directly from the usecase sidebar.
+   */
+  renderUsecaseActionModal?: (params: {
+    modal: string;
+    flowId: string;
+    flowLabel: string;
+    open: boolean;
+    onClose: () => void;
+  }) => React.ReactNode;
 }
 
 function UsecasesPageInner() {
