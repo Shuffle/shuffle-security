@@ -425,10 +425,13 @@ export interface MonitorsViewProps {
 }
 
 const MonitorsView = ({ mode = 'page', onClose }: MonitorsViewProps = {}) => {
-  // Only the full-page mode owns the document title.
-  usePageMeta(mode === 'page'
-    ? { title: 'Monitors', description: 'Monitor host compliance and security posture' }
-    : { title: undefined as any });
+  // Only the full-page mode owns the document title; dialog mode keeps the
+  // host page's metadata intact.
+  usePageMeta(
+    mode === 'page'
+      ? { title: 'Monitors', description: 'Monitor host compliance and security posture' }
+      : { title: '', description: '' },
+  );
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   if (authLoading) return null;
   if (!isAuthenticated) return mode === 'page' ? <PublicMonitorsView /> : null;
