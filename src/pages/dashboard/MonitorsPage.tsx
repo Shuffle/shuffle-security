@@ -6,7 +6,14 @@
  * mounted inline from the usecase sidebar via `mode="add-host-dialog"`).
  */
 import MonitorsView from '@/Shuffle-Core/views/monitors/MonitorsView';
+import { usePageMeta } from '@/hooks/usePageMeta';
 
-const MonitorsPage = () => <MonitorsView />;
+const MonitorsPage = () => {
+  usePageMeta({
+    title: 'Monitors',
+    description: 'Monitor host compliance and security posture',
+  });
+  return <MonitorsView />;
+};
 
 export default MonitorsPage;
