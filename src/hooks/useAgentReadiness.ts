@@ -122,14 +122,15 @@ export const useAgentReadiness = (): AgentReadinessStatus => {
     return matchingWorkflow ? ids.includes(matchingWorkflow.id) : false;
   }, [categoryConfig, hasWorkflow, matchingWorkflow]);
 
-  // Option A: when category_config is entirely absent from the /list_cache
-  // response (org just hasn't ingested anything yet), treat the agent as
-  // UNKNOWN — assume Active rather than flashing "not enabled". We only
-  // mark inactive when category_config exists but neither path A nor B is
-  // satisfied.
+  // Mirror the "Automation Readiness" panel (useAssignEscalateStatus): the
+  // agent is considered active as soon as the Assign & Escalate background
+  // workflow exists. We also accept the new built-in "Run AI Agent" path.
+  // Requiring an additional "Run workflow" category-automation link produced
+  // false negatives (workflow exists and is executing, but the banner still
+  // claimed the agent was off).
   const serverActive = categoryConfigMissing
     ? true
-    : hasAiAgentAutomation || (hasWorkflow && hasCategoryAutomation);
+    : hasAiAgentAutomation || hasWorkflow;
   const active = optimistic !== null ? optimistic : serverActive;
 
   const refetchAll = useCallback(async () => {
