@@ -5129,6 +5129,67 @@ function UsecasesPageInner() {
     return set;
   }, [trustedWorkflowStates, workflowEnabledLabels]);
 
+  // Deep-link by ?name=... — match either a usecase's label OR a workflow's
+  // name/tag, and prefer usecases that are currently Enabled. Falls back to
+  // the first match if none are enabled. Redirects to the canonical
+  // /usecases/:slug URL so the rest of the page logic stays single-shape.
+  useEffect(() => {
+    if (routeParams.flowId) return;
+    const rawName = searchParams.get('name');
+    if (!rawName) return;
+    if (!usecases || usecases.length === 0) return;
+    const needle = rawName.trim().toLowerCase();
+    if (!needle) return;
+    const needleSlug = slugify(rawName);
+
+    const labelMatches = usecases.filter(u => {
+      const lbl = (u.label || '').toLowerCase();
+      if (!lbl) return false;
+      return lbl === needle || slugify(u.label || '') === needleSlug || lbl.includes(needle) || needle.includes(lbl);
+    });
+
+    const workflowMatchedLabels = new Set<string>();
+    for (const wf of workflows) {
+      const wname = (wf.name || '').toLowerCase();
+      const tags = (wf.tags || []).map(t => String(t).toLowerCase());
+      if (wname === needle || wname.includes(needle) || tags.includes(needle) || tags.some(t => t.includes(needle))) {
+        for (const uc of usecases) {
+          const lbl = uc.automationLabel?.toLowerCase();
+          if (!lbl) continue;
+          if (wname === lbl || wname.includes(lbl) || tags.includes(lbl) || tags.some(t => t.includes(lbl))) {
+            workflowMatchedLabels.add(uc.id);
+          }
+        }
+      }
+    }
+    const workflowMatches = usecases.filter(u => workflowMatchedLabels.has(u.id));
+
+    const combined: typeof usecases = [];
+    const seen = new Set<string>();
+    for (const u of [...labelMatches, ...workflowMatches]) {
+      if (seen.has(u.id)) continue;
+      seen.add(u.id);
+      combined.push(u);
+    }
+    if (combined.length === 0) return;
+
+    combined.sort((a, b) => {
+      const aEn = a.automationLabel && enabledLabels.has(a.automationLabel) ? 1 : 0;
+      const bEn = b.automationLabel && enabledLabels.has(b.automationLabel) ? 1 : 0;
+      return bEn - aEn;
+    });
+
+    const pick = combined[0];
+    const slug = slugify(pick.label || pick.id);
+    const next = new URLSearchParams(searchParams);
+    next.delete('name');
+    const qs = next.toString();
+    navigate(
+      { pathname: `/usecases/${slug}`, search: qs ? `?${qs}` : '' },
+      { replace: true },
+    );
+  }, [routeParams.flowId, searchParams, usecases, workflows, enabledLabels, navigate]);
+
   // Page-level outcomes bundle — used to drive presence-based enable signals
   // (e.g. "Add Host-Monitors" lights up as Enabled when ≥2 host monitors are
   // actually deployed, regardless of whether a workflow exists).
