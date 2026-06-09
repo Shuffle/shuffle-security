@@ -607,6 +607,10 @@ export interface LiveDemoEnvironmentResult {
  * UI to wait on it.
  */
 export const enableLiveDemoEnvironment = (): LiveDemoEnvironmentResult => {
+  // Reset incident timeline filters so the demo always starts with the
+  // default set (agent, manual, tasks, observables, correlations).
+  try { localStorage.removeItem('shuffle-incident-timeline-filters-v2'); } catch { /* ignore */ }
+
   // Stage A — snapshot the user's existing Threat Feeds + Observable
   // Regexes (so we can restore them later) and force-reset both to the
   // canonical defaults the demo needs.
