@@ -13,7 +13,7 @@
  *  - Unknown: neither — rendered as plain text without a hover card.
  */
 import { User as PersonIcon, Github as GitHubIcon } from 'lucide-react';
-import { Box, Typography, Avatar, Chip, Link as MuiLink } from '@mui/material';
+import { Box, Typography, Avatar, Chip, Link as MuiLink, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import AgentIcon from '@/Shuffle-MCPs/components/AgentIcon';
@@ -72,7 +72,7 @@ export const UserHoverCard = ({ username, isAgent, className }: UserHoverCardPro
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (verifiedAgent) {
-      navigate('/agent');
+      navigate('/agents#agent-activity');
     } else if (realUser) {
       navigate('/users');
     }
@@ -265,20 +265,47 @@ export const UserHoverCard = ({ username, isAgent, className }: UserHoverCardPro
           )}
         </Box>
 
-        <Typography
-          variant="caption"
+        <Box
           sx={{
-            display: 'block',
             mt: 1.25,
             pt: 1,
             borderTop: '1px solid hsl(var(--border-subtle))',
-            color: 'hsl(var(--primary))',
-            fontSize: '0.7rem',
-            fontWeight: 500,
           }}
         >
-          {verifiedAgent ? 'Click to open Agent activity →' : 'Click to open Org Admin →'}
-        </Typography>
+          <Button
+            fullWidth
+            size="small"
+            variant={verifiedAgent ? 'contained' : 'outlined'}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleClick(e);
+            }}
+            startIcon={verifiedAgent ? <AgentIcon size={14} /> : <PersonIcon size={14} />}
+            sx={{
+              height: 30,
+              fontSize: '0.72rem',
+              fontWeight: 600,
+              textTransform: 'none',
+              borderRadius: 1,
+              ...(verifiedAgent
+                ? {
+                    bgcolor: 'hsl(var(--primary))',
+                    color: 'hsl(var(--primary-foreground))',
+                    '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' },
+                  }
+                : {
+                    borderColor: 'hsl(var(--border))',
+                    color: 'hsl(var(--foreground))',
+                    '&:hover': {
+                      bgcolor: 'hsl(var(--muted))',
+                      borderColor: 'hsl(var(--border))',
+                    },
+                  }),
+            }}
+          >
+            {verifiedAgent ? 'Open Agent activity' : 'Open Org Admin'}
+          </Button>
+        </Box>
       </HoverCardContent>
     </HoverCard>
   );

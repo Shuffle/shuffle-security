@@ -221,6 +221,18 @@ const AgentsView = ({
   }, [onChooseLLM]);
 
 
+  // Scroll to the activity list when arriving at /agents#agent-activity
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.location.hash !== '#agent-activity') return;
+    const tryScroll = () => {
+      const el = document.getElementById('agent-activity');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    const t = window.setTimeout(tryScroll, 150);
+    return () => window.clearTimeout(t);
+  }, []);
+
   const handleEditWorkflow = useCallback(
     ({ workflowId, name, prompt, apps }: { workflowId: string; name: string; prompt: string; apps: Array<{ name: string; id?: string }> }) => {
       setEditing({ workflowId, name });
@@ -305,7 +317,7 @@ const AgentsView = ({
           onAppsChange={handleAppsChange}
         />
         {agentView === 'start' && (
-          <Box sx={{ pt: { xs: 4, md: '8vh' } }}>
+          <Box id="agent-activity" sx={{ pt: { xs: 4, md: '8vh' }, scrollMarginTop: 80 }}>
             <AgentActivityList
               apiBaseUrl={globalUrl}
               apiKey={apiKey}
