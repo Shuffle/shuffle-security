@@ -6663,6 +6663,42 @@ const IncidentDetailPage = () => {
               <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', display: 'block', mb: 1.5 }}>
                 Your question is posted to the Timeline as @AIAgent and the agent will reply there. Observables, IOC matches, correlations, stakeholders and the top related incidents are auto-attached as context.
               </Typography>
+              <Box sx={{ display: 'flex', gap: 1, mb: 1.5 }}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => openAgentDrawer('permissions')}
+                  sx={{
+                    flex: 1,
+                    height: 32,
+                    textTransform: 'none',
+                    fontSize: '0.72rem',
+                    fontWeight: 600,
+                    borderColor: 'hsl(var(--border))',
+                    color: 'hsl(var(--foreground))',
+                    '&:hover': { borderColor: 'hsl(var(--primary))', bgcolor: 'hsl(var(--primary) / 0.06)' },
+                  }}
+                >
+                  Assign tools
+                </Button>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => openAgentDrawer('localLLM')}
+                  sx={{
+                    flex: 1,
+                    height: 32,
+                    textTransform: 'none',
+                    fontSize: '0.72rem',
+                    fontWeight: 600,
+                    borderColor: 'hsl(var(--border))',
+                    color: 'hsl(var(--foreground))',
+                    '&:hover': { borderColor: 'hsl(var(--primary))', bgcolor: 'hsl(var(--primary) / 0.06)' },
+                  }}
+                >
+                  Choose LLM
+                </Button>
+              </Box>
               {!agentReadiness.isLoading && !agentReadiness.active && (
                 <Box
                   sx={{
