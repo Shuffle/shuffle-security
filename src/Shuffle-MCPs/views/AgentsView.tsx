@@ -305,7 +305,7 @@ const AgentsView = ({
           onAppsChange={handleAppsChange}
         />
         {agentView === 'start' && (
-          <Box sx={{ pt: { xs: 4, md: '8vh' } }}>
+          <Box id="agent-activity" sx={{ pt: { xs: 4, md: '8vh' }, scrollMarginTop: 80 }}>
             <AgentActivityList
               apiBaseUrl={globalUrl}
               apiKey={apiKey}
