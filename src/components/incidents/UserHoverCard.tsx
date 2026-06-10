@@ -265,20 +265,47 @@ export const UserHoverCard = ({ username, isAgent, className }: UserHoverCardPro
           )}
         </Box>
 
-        <Typography
-          variant="caption"
+        <Box
           sx={{
-            display: 'block',
             mt: 1.25,
             pt: 1,
             borderTop: '1px solid hsl(var(--border-subtle))',
-            color: 'hsl(var(--primary))',
-            fontSize: '0.7rem',
-            fontWeight: 500,
           }}
         >
-          {verifiedAgent ? 'Click to open Agent activity →' : 'Click to open Org Admin →'}
-        </Typography>
+          <Button
+            fullWidth
+            size="small"
+            variant={verifiedAgent ? 'contained' : 'outlined'}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleClick(e);
+            }}
+            startIcon={verifiedAgent ? <AgentIcon size={14} /> : <PersonIcon size={14} />}
+            sx={{
+              height: 30,
+              fontSize: '0.72rem',
+              fontWeight: 600,
+              textTransform: 'none',
+              borderRadius: 1,
+              ...(verifiedAgent
+                ? {
+                    bgcolor: 'hsl(var(--primary))',
+                    color: 'hsl(var(--primary-foreground))',
+                    '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)' },
+                  }
+                : {
+                    borderColor: 'hsl(var(--border))',
+                    color: 'hsl(var(--foreground))',
+                    '&:hover': {
+                      bgcolor: 'hsl(var(--muted))',
+                      borderColor: 'hsl(var(--border))',
+                    },
+                  }),
+            }}
+          >
+            {verifiedAgent ? 'Open Agent activity' : 'Open Org Admin'}
+          </Button>
+        </Box>
       </HoverCardContent>
     </HoverCard>
   );
