@@ -72,7 +72,7 @@ export const UserHoverCard = ({ username, isAgent, className }: UserHoverCardPro
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (verifiedAgent) {
-      navigate('/agent');
+      navigate('/agents#agent-activity');
     } else if (realUser) {
       navigate('/users');
     }
