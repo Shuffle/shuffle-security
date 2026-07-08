@@ -168,11 +168,14 @@ export const setDatastoreItem = async (
     ...(category === 'shuffle-security_incidents' ? { ignore_security_rules: true } : {}),
   }];
 
+  // NOTE: pass `orgId` to getAuthHeader so its Org-Id matches the target
+  // tenant. Spreading getAuthHeader() AFTER a manual 'Org-Id' would let the
+  // session's active org overwrite the target and silently mis-route writes.
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'Org-Id': orgId,
-    ...getAuthHeader(),
+    ...getAuthHeader(orgId),
   };
+
 
   console.log(`[datastore.set] key=${rawKey} category=${category} orgId=${orgId}${overrideOrgId ? ' (override)' : ''}`);
 
