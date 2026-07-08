@@ -108,6 +108,7 @@ export interface RoutingRule {
 }
 
 const FIELD_SUGGESTIONS = [
+  '*', // whole-object match: scans every string in the incident (auto base64-decoded)
   'title',
   'description',
   'source',
@@ -121,7 +122,13 @@ const FIELD_SUGGESTIONS = [
   'rawOCSF.unmapped_original.from',
   'rawOCSF.unmapped_original.to',
   'rawOCSF.unmapped_original.subject',
+  'rawOCSF.unmapped_original.payload.body.data',
 ];
+
+const FIELD_LABELS: Record<string, string> = {
+  '*': '* (whole incident, auto base64-decoded)',
+};
+
 
 const OP_LABELS: Record<RoutingConditionOp, string> = {
   equals: 'equals',
