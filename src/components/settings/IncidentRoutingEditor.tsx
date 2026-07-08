@@ -715,74 +715,91 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
               <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: '0.05em' }}>
                 When
               </Typography>
-              <Chip
-                label={rule.matchMode === 'all' ? 'all match' : 'any matches'}
-                size="small"
-                onClick={() => updateRule(rule.id, { matchMode: rule.matchMode === 'all' ? 'any' : 'all' })}
-                sx={{
-                  height: 22,
-                  fontSize: '0.65rem',
-                  bgcolor: 'hsl(var(--muted))',
-                  cursor: 'pointer',
-                  '&:hover': { bgcolor: 'hsl(var(--muted) / 0.7)' },
-                }}
-              />
+              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.65rem' }}>
+                All rows must match. Click the connector between two rows to switch AND ↔ OR (OR rows indent under their group).
+              </Typography>
             </Box>
-            {rule.conditions.map((cond, idx) => (
-              <Box key={idx} sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-                <TextField
-                  size="small"
-                  value={cond.field}
-                  onChange={(e) => updateCondition(rule.id, idx, { field: e.target.value })}
-                  placeholder="Field path"
-                  select
-                  SelectProps={{
-                    native: false,
-                    renderValue: (v) => v as string,
-                  }}
-                  sx={{ minWidth: 220, flex: 1 }}
-                >
-                  {FIELD_SUGGESTIONS.map((f) => (
-                    <MenuItem key={f} value={f} sx={{ fontSize: '0.8rem' }}>
-                      {f}
-                    </MenuItem>
-                  ))}
-                  {!FIELD_SUGGESTIONS.includes(cond.field) && cond.field && (
-                    <MenuItem value={cond.field}>{cond.field}</MenuItem>
-                  )}
-                </TextField>
-                <TextField
-                  size="small"
-                  select
-                  value={cond.op}
-                  onChange={(e) => updateCondition(rule.id, idx, { op: e.target.value as RoutingConditionOp })}
-                  sx={{ width: 140 }}
-                >
-                  {(Object.keys(OP_LABELS) as RoutingConditionOp[]).map((op) => (
-                    <MenuItem key={op} value={op} sx={{ fontSize: '0.8rem' }}>
-                      {OP_LABELS[op]}
-                    </MenuItem>
-                  ))}
-                </TextField>
-                {cond.op !== 'exists' && (
+            {rule.conditions.map((cond, idx) => {
+              const isOr = idx > 0 && !!cond.or;
+              return (
+              <Box key={idx} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                {idx > 0 && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, pl: isOr ? 0 : 0 }}>
+                    <Chip
+                      label={isOr ? 'OR' : 'AND'}
+                      size="small"
+                      onClick={() => updateCondition(rule.id, idx, { or: !isOr })}
+                      sx={{
+                        height: 20,
+                        fontSize: '0.6rem',
+                        fontWeight: 700,
+                        letterSpacing: '0.05em',
+                        bgcolor: isOr ? 'hsl(var(--primary) / 0.15)' : 'hsl(var(--muted))',
+                        color: isOr ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
+                        cursor: 'pointer',
+                        borderRadius: 0.5,
+                        '&:hover': { bgcolor: isOr ? 'hsl(var(--primary) / 0.25)' : 'hsl(var(--muted) / 0.7)' },
+                      }}
+                    />
+                  </Box>
+                )}
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap', pl: isOr ? 4 : 0, borderLeft: isOr ? '2px solid hsl(var(--primary) / 0.3)' : 'none', ml: isOr ? 1 : 0 }}>
                   <TextField
                     size="small"
-                    value={cond.value || ''}
-                    onChange={(e) => updateCondition(rule.id, idx, { value: e.target.value })}
-                    placeholder="value"
-                    sx={{ flex: 1, minWidth: 200 }}
-                  />
-                )}
-                <IconButton
-                  size="small"
-                  onClick={() => removeCondition(rule.id, idx)}
-                  disabled={rule.conditions.length <= 1}
-                  sx={{ width: 36, height: 36 }}
-                >
-                  <DeleteOutlineIcon size={16} />
-                </IconButton>
+                    value={cond.field}
+                    onChange={(e) => updateCondition(rule.id, idx, { field: e.target.value })}
+                    placeholder="Field path"
+                    select
+                    SelectProps={{
+                      native: false,
+                      renderValue: (v) => (v as string),
+                    }}
+                    sx={{ minWidth: 220, flex: 1 }}
+                  >
+                    {FIELD_SUGGESTIONS.map((f) => (
+                      <MenuItem key={f} value={f} sx={{ fontSize: '0.8rem' }}>
+                        {FIELD_LABELS[f] || f}
+                      </MenuItem>
+                    ))}
+                    {!FIELD_SUGGESTIONS.includes(cond.field) && cond.field && (
+                      <MenuItem value={cond.field}>{cond.field}</MenuItem>
+                    )}
+                  </TextField>
+                  <TextField
+                    size="small"
+                    select
+                    value={cond.op}
+                    onChange={(e) => updateCondition(rule.id, idx, { op: e.target.value as RoutingConditionOp })}
+                    sx={{ width: 140 }}
+                  >
+                    {(Object.keys(OP_LABELS) as RoutingConditionOp[]).map((op) => (
+                      <MenuItem key={op} value={op} sx={{ fontSize: '0.8rem' }}>
+                        {OP_LABELS[op]}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                  {cond.op !== 'exists' && (
+                    <TextField
+                      size="small"
+                      value={cond.value || ''}
+                      onChange={(e) => updateCondition(rule.id, idx, { value: e.target.value })}
+                      placeholder="value"
+                      sx={{ flex: 1, minWidth: 200 }}
+                    />
+                  )}
+                  <IconButton
+                    size="small"
+                    onClick={() => removeCondition(rule.id, idx)}
+                    disabled={rule.conditions.length <= 1}
+                    sx={{ width: 36, height: 36 }}
+                  >
+                    <DeleteOutlineIcon size={16} />
+                  </IconButton>
+                </Box>
               </Box>
-            ))}
+              );
+            })}
+
             <Button
               size="small"
               onClick={() => addCondition(rule.id)}
