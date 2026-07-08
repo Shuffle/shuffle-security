@@ -6316,17 +6316,23 @@ const IncidentDetailPage = () => {
           }}>
             <LanguageIcon size={16} style={{ color: '#a78bfa', flexShrink: 0 }} />
             {sharedOrgs.length > 0 ? (
-              <>
-                <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))' }}>
-                  This incident exists in <strong>{sharedOrgs.length + 1} tenants</strong> — changes sync to all:
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
-                  {/* Show the "viewing" org first */}
-                  {(() => {
-                    const viewingOrg = isCrossOrg
-                      ? { name: crossOrgInfo?.name || crossOrgId, image: crossOrgInfo?.image }
-                      : { name: userInfo?.active_org?.name || '', image: userInfo?.active_org?.image };
-                    return (
+              (() => {
+                const viewingOrgId = isCrossOrg ? (crossOrgId || '') : (userInfo?.active_org?.id || '');
+                const seenIds = new Set<string>([viewingOrgId]);
+                const uniqueShared = sharedOrgs.filter(o => {
+                  if (!o?.id || seenIds.has(o.id)) return false;
+                  seenIds.add(o.id);
+                  return true;
+                });
+                const viewingOrg = isCrossOrg
+                  ? { name: crossOrgInfo?.name || crossOrgId, image: crossOrgInfo?.image as string | undefined }
+                  : { name: userInfo?.active_org?.name || '', image: userInfo?.active_org?.image };
+                return (
+                  <>
+                    <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))' }}>
+                      This incident exists in <strong>{uniqueShared.length + 1} tenants</strong> — changes sync to all:
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
                       <Chip
                         size="small"
                         variant="outlined"
@@ -6334,20 +6340,20 @@ const IncidentDetailPage = () => {
                         label={viewingOrg.name}
                         sx={{ height: 22, fontSize: '0.72rem', bgcolor: 'transparent', borderColor: 'rgba(167, 139, 250, 0.4)', color: '#a78bfa', fontWeight: 600 }}
                       />
-                    );
-                  })()}
-                  {sharedOrgs.map(org => (
-                    <Chip
-                      key={org.id}
-                      size="small"
-                      variant="outlined"
-                      avatar={org.image ? <img src={org.image} alt="" style={{ width: 16, height: 16, borderRadius: 3 }} /> : undefined}
-                      label={org.name}
-                      sx={{ height: 22, fontSize: '0.72rem', bgcolor: 'transparent', borderColor: 'rgba(255,255,255,0.12)', color: 'text.secondary' }}
-                    />
-                  ))}
-                </Box>
-              </>
+                      {uniqueShared.map(org => (
+                        <Chip
+                          key={org.id}
+                          size="small"
+                          variant="outlined"
+                          avatar={org.image ? <img src={org.image} alt="" style={{ width: 16, height: 16, borderRadius: 3 }} /> : undefined}
+                          label={org.name}
+                          sx={{ height: 22, fontSize: '0.72rem', bgcolor: 'transparent', borderColor: 'rgba(255,255,255,0.12)', color: 'text.secondary' }}
+                        />
+                      ))}
+                    </Box>
+                  </>
+                );
+              })()
             ) : isCrossOrg && (
               <>
                 {crossOrgInfo?.image ? (
