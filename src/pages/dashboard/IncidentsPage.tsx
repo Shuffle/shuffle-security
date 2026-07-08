@@ -446,7 +446,10 @@ const IncidentsPage = () => {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  // Default child orgs to showing only their own incidents immediately
+  // Default child orgs to showing only their own incidents immediately.
+  // Persisted filters are ALWAYS loaded (per-org key) so tenant selection
+  // and other non-URL fields survive reloads. URL params, when present,
+  // override the persisted value for that specific key.
   const [filters, setFilters] = useState<Filters>(() => {
     const parseList = (v: string | null) => {
       if (!v) return null;
@@ -454,33 +457,41 @@ const IncidentsPage = () => {
       if (!arr.length) return null;
       return arr.length === 1 ? arr[0] : arr;
     };
-    const persisted = !hasActiveFilterParams(searchParams) ? loadPersistedFilters() : null;
-    if (persisted?.filters) {
-      return persisted.filters;
-    }
+    const persisted = loadPersistedFilters(currentOrgId);
+    const persistedFilters = persisted?.filters;
+    const urlHas = hasActiveFilterParams(searchParams);
+
     const sevParam = parseList(searchParams.get('severity'));
     const statusParam = parseList(searchParams.get('status'));
     const tlpParam = searchParams.get('tlp');
     const assigneeParam = searchParams.get('assignee');
     const sourceParam = searchParams.get('source');
     const tagParam = searchParams.get('tag');
+
+    // Pick URL value when the URL provides it, otherwise fall back to the
+    // persisted value, then the default. `org` is never in the URL, so it
+    // comes purely from persisted state (or the child-org default).
+    const pick = <T,>(urlVal: T | null, persistedVal: T | null | undefined, fallback: T | null): T | null =>
+      (urlHas ? urlVal : null) ?? (persistedVal ?? null) ?? fallback;
+
     return {
-      severity: sevParam,
-      status: statusParam ?? DEFAULT_STATUS_FILTER,
-      tlp: tlpParam || null,
-      assignee: assigneeParam || null,
-      source: sourceParam || null,
-      tag: tagParam || null,
-      org: isChildOrg && currentOrgId ? [currentOrgId] : null,
+      severity: pick(sevParam, persistedFilters?.severity, null),
+      status:   pick(statusParam, persistedFilters?.status, DEFAULT_STATUS_FILTER),
+      tlp:      pick(tlpParam || null, persistedFilters?.tlp, null),
+      assignee: pick(assigneeParam || null, persistedFilters?.assignee, null),
+      source:   pick(sourceParam || null, persistedFilters?.source, null),
+      tag:      pick(tagParam || null, persistedFilters?.tag, null),
+      org:      persistedFilters?.org ?? (isChildOrg && currentOrgId ? [currentOrgId] : null),
     };
   });
   const [negatedFilters, setNegatedFilters] = useState<Set<string>>(() => {
-    const persisted = !hasActiveFilterParams(searchParams) ? loadPersistedFilters() : null;
-    if (persisted?.negatedFilters) {
+    const persisted = loadPersistedFilters(currentOrgId);
+    const urlHas = hasActiveFilterParams(searchParams);
+    if (!urlHas && persisted?.negatedFilters) {
       return new Set(persisted.negatedFilters);
     }
     const neg = searchParams.get('not');
-    if (!neg) return new Set();
+    if (!neg) return persisted?.negatedFilters ? new Set(persisted.negatedFilters) : new Set();
     return new Set(neg.split(',').map(s => s.trim()).filter(Boolean));
   });
 
@@ -510,7 +521,7 @@ const IncidentsPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.severity, filters.status, filters.tlp, filters.assignee, filters.source, filters.tag, negatedFilters]);
   const [dateFrom, setDateFrom] = useState<Date | undefined>(() => {
-    const persisted = loadPersistedFilters();
+    const persisted = loadPersistedFilters(currentOrgId);
     if (persisted?.dateFrom) {
       const d = new Date(persisted.dateFrom);
       if (!isNaN(d.getTime())) return d;
@@ -518,7 +529,7 @@ const IncidentsPage = () => {
     return undefined;
   });
   const [dateTo, setDateTo] = useState<Date | undefined>(() => {
-    const persisted = loadPersistedFilters();
+    const persisted = loadPersistedFilters(currentOrgId);
     if (persisted?.dateTo) {
       const d = new Date(persisted.dateTo);
       if (!isNaN(d.getTime())) return d;
@@ -527,10 +538,12 @@ const IncidentsPage = () => {
   });
 
   // Persist incident filters to localStorage for up to 24 hours so reloads
-  // and sidebar navigation restore the last active filter set.
+  // and sidebar navigation restore the last active filter set. Keyed per
+  // org so switching tenants doesn't leak the previous tenant's selection.
   useEffect(() => {
-    savePersistedFilters(filters, negatedFilters, dateFrom, dateTo);
-  }, [filters, negatedFilters, dateFrom, dateTo]);
+    if (!currentOrgId) return; // wait until we know which org to key under
+    savePersistedFilters(currentOrgId, filters, negatedFilters, dateFrom, dateTo);
+  }, [currentOrgId, filters, negatedFilters, dateFrom, dateTo]);
 
   const orgFilterValidatedRef = useRef(false);
   useEffect(() => {
