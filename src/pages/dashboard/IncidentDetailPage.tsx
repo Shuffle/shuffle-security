@@ -6599,10 +6599,10 @@ const IncidentDetailPage = () => {
                 if (!a.field) return false;
                 const expected = parseRoutingActionValue(a.value);
                 const canonicalField = a.field.startsWith('rawOCSF.') ? a.field.slice('rawOCSF.'.length) : a.field;
+                if (canonicalField === 'severity') return editedSeverity === normalizeRoutingSeverityValue(String(expected));
+                if (canonicalField === 'status') return editedStatus === normalizeStatus(String(expected));
                 const actual = canonicalField === 'title' ? editedTitle
                   : canonicalField === 'description' || canonicalField === 'desc' ? editedMessage
-                  : canonicalField === 'severity' ? editedSeverity
-                  : canonicalField === 'status' ? editedStatus
                   : canonicalField === 'assignee' ? editedAssignee
                   : canonicalField === 'priority' ? ((incident?.rawOCSF as any)?.priority ?? (rawCustomAttrs as any)?.priority)
                   : canonicalField === 'labels' || canonicalField === 'types' ? editedLabels.includes(String(expected)) ? expected : undefined
