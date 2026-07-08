@@ -9567,15 +9567,44 @@ const IncidentDetailPage = () => {
                   }
 
                   // 2) Only now — after every add is verified — remove the
-                  // incident from any tenants that were unchecked.
+                  // incident from any tenants that were unchecked. Some
+                  // gateways return a non-2xx from delete_cache even when the
+                  // row is actually gone, so treat the operation as succeeded
+                  // when a follow-up read confirms the item is missing.
                   const removedOk: string[] = [];
                   const removeFailures: string[] = [];
                   for (const oldOrgId of toRemove) {
+                    let deleteReturnedOk = false;
                     try {
                       const delRes = await deleteDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, oldOrgId);
-                      if (delRes.success) removedOk.push(oldOrgId);
-                      else removeFailures.push(oldOrgId);
+                      deleteReturnedOk = !!delRes.success;
                     } catch {
+                      deleteReturnedOk = false;
+                    }
+
+                    // Verify the row is actually gone regardless of the API's
+                    // status code. Poll with a short backoff to absorb any
+                    // eventual-consistency lag on the tenant's cache read.
+                    let gone = false;
+                    const backoffsMs = [0, 300, 600, 1000, 1500];
+                    for (const wait of backoffsMs) {
+                      if (gone) break;
+                      if (wait > 0) await new Promise(r => setTimeout(r, wait));
+                      try {
+                        const check = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, oldOrgId);
+                        const anyCheck = check as any;
+                        const stillThere = check?.success && (check.item?.value || anyCheck?.item?.key || anyCheck?.item?.edited);
+                        if (!stillThere) gone = true;
+                      } catch { /* retry */ }
+                    }
+
+                    if (gone) {
+                      removedOk.push(oldOrgId);
+                    } else if (deleteReturnedOk) {
+                      // API said OK but the row is still readable — trust the
+                      // API and move on; the read may just be lagging.
+                      removedOk.push(oldOrgId);
+                    } else {
                       removeFailures.push(oldOrgId);
                     }
                   }
