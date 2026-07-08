@@ -1967,6 +1967,52 @@ const IncidentDetailPage = () => {
         timestamp: new Date().toISOString(),
       });
     } else {
+      // Primary tenant lookup returned nothing. Before giving up, probe the
+      // other tenants this user can see — the incident may have been moved
+      // (or the URL was seeded before the source tenant existed) and only
+      // lives elsewhere now. If found, redirect to the correct key so a
+      // page refresh always lands on a real copy.
+      if (!isPublicView && id) {
+        const activeId = userInfo?.active_org?.id;
+        const probeTargets: string[] = [];
+        const seenProbe = new Set<string>();
+        const addProbe = (oid?: string | null) => {
+          if (!oid || seenProbe.has(oid)) return;
+          if (oid === (crossOrgId || activeId)) return; // already checked
+          seenProbe.add(oid);
+          probeTargets.push(oid);
+        };
+        if (crossOrgId) addProbe(activeId); // if URL had crossOrg, also try active
+        if (parentOrg) addProbe(parentOrg.id);
+        for (const so of subOrgs) addProbe(so.id);
+
+        if (probeTargets.length > 0) {
+          try {
+            const probeResults = await Promise.all(
+              probeTargets.map(async (oid) => {
+                try {
+                  const r = await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS, oid);
+                  const valLen = r.item?.value?.length || 0;
+                  const stub = !!(r.success && r.item) && !r.item.key && valLen <= 2;
+                  return r.success && r.item && !stub ? oid : null;
+                } catch {
+                  return null;
+                }
+              }),
+            );
+            const foundOrgId = probeResults.find(Boolean) as string | undefined;
+            if (foundOrgId) {
+              const newKey = foundOrgId === activeId ? id : `${foundOrgId}::${id}`;
+              console.log(`[IncidentDetail] primary lookup empty; found copy in tenant ${foundOrgId} — redirecting`);
+              navigate(`${entityBasePath}/${newKey}`, { replace: true });
+              return;
+            }
+          } catch (err) {
+            console.warn('[IncidentDetail] cross-tenant fallback probe failed:', err);
+          }
+        }
+      }
+
       const stage = isEmptyStub ? 'no-item' : (result.success ? 'no-item' : 'no-success');
       setLoadDebug({
         stage,
@@ -1988,7 +2034,7 @@ const IncidentDetailPage = () => {
     }
     
     setLoading(false);
-  }, [id, rawId, isPublicView, publicOrg, publicAuth, crossOrgId, userInfo?.active_org?.id]);
+  }, [id, rawId, isPublicView, publicOrg, publicAuth, crossOrgId, userInfo?.active_org?.id, parentOrg, subOrgs, navigate, entityBasePath]);
 
   // Initial load
   useEffect(() => {
