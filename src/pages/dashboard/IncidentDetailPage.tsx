@@ -7187,6 +7187,11 @@ const IncidentDetailPage = () => {
                     onClick={() => {
                       setActionsMenuAnchor(null);
                       setMoveTargetOrgId('');
+                      const sourceOrgId = crossOrgId || userInfo?.active_org?.id || '';
+                      const initial = new Set<string>();
+                      if (sourceOrgId) initial.add(sourceOrgId);
+                      for (const so of sharedOrgs) initial.add(so.id);
+                      setMoveSelectedOrgIds(initial);
                       setShowMoveDialog(true);
                     }}
                   >
