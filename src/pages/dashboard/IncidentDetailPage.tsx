@@ -6419,72 +6419,67 @@ const IncidentDetailPage = () => {
           <Typography variant="body2">Back to {entityPlural}</Typography>
         </Box>
 
-        {/* Multi-org / Cross-org banner */}
-        {(isCrossOrg || sharedOrgs.length > 0) && (
-          <Box sx={{
-            mb: 2,
-            px: 2,
-            py: 1.5,
-            borderRadius: 1.5,
-            bgcolor: 'rgba(139, 92, 246, 0.08)',
-            border: '1px solid rgba(139, 92, 246, 0.25)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1.5,
-            flexWrap: 'wrap',
-          }}>
-            <LanguageIcon size={16} style={{ color: '#a78bfa', flexShrink: 0 }} />
-            {sharedOrgs.length > 0 ? (
-              (() => {
-                const viewingOrgId = isCrossOrg ? (crossOrgId || '') : (userInfo?.active_org?.id || '');
-                const seenIds = new Set<string>([viewingOrgId]);
-                const uniqueShared = sharedOrgs.filter(o => {
-                  if (!o?.id || seenIds.has(o.id)) return false;
-                  seenIds.add(o.id);
-                  return true;
-                });
-                const viewingOrg = isCrossOrg
-                  ? { name: crossOrgInfo?.name || crossOrgId, image: crossOrgInfo?.image as string | undefined }
-                  : { name: userInfo?.active_org?.name || '', image: userInfo?.active_org?.image };
-                return (
-                  <>
-                    <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))' }}>
-                      This incident exists in <strong>{uniqueShared.length + 1} tenants</strong> — changes sync to all:
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
-                      <Chip
-                        size="small"
-                        variant="outlined"
-                        avatar={viewingOrg.image ? <img src={viewingOrg.image} alt="" style={{ width: 16, height: 16, borderRadius: 3 }} /> : undefined}
-                        label={viewingOrg.name}
-                        sx={{ height: 22, fontSize: '0.72rem', bgcolor: 'transparent', borderColor: 'rgba(167, 139, 250, 0.4)', color: '#a78bfa', fontWeight: 600 }}
-                      />
-                      {uniqueShared.map(org => (
-                        <Chip
-                          key={org.id}
-                          size="small"
-                          variant="outlined"
-                          avatar={org.image ? <img src={org.image} alt="" style={{ width: 16, height: 16, borderRadius: 3 }} /> : undefined}
-                          label={org.name}
-                          sx={{ height: 22, fontSize: '0.72rem', bgcolor: 'transparent', borderColor: 'rgba(255,255,255,0.12)', color: 'text.secondary' }}
-                        />
-                      ))}
-                    </Box>
-                  </>
-                );
-              })()
-            ) : isCrossOrg && (
-              <>
-                {crossOrgInfo?.image ? (
-                  <img src={crossOrgInfo.image} alt="" style={{ width: 20, height: 20, borderRadius: 4, objectFit: 'contain', flexShrink: 0 }} />
-                ) : null}
-                <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))' }}>
-                  Viewing incident for organization <strong>{crossOrgInfo?.name || crossOrgId}</strong>
-                </Typography>
-              </>
-            )}
-          </Box>
-        )}
+        {/* Multi-org / Cross-org banner — always shown so the URL form
+            (`/incidents/ID` vs `/incidents/ORG::ID`) does not change the UI.
+            The only difference between the two is which tenant is the
+            primary focus. */}
+        {(() => {
+          const viewingOrgId = isCrossOrg ? (crossOrgId || '') : (userInfo?.active_org?.id || '');
+          if (!viewingOrgId && sharedOrgs.length === 0) return null;
+          const seenIds = new Set<string>([viewingOrgId]);
+          const uniqueShared = sharedOrgs.filter(o => {
+            if (!o?.id || seenIds.has(o.id)) return false;
+            seenIds.add(o.id);
+            return true;
+          });
+          const viewingOrg = isCrossOrg
+            ? { name: crossOrgInfo?.name || crossOrgId, image: crossOrgInfo?.image as string | undefined }
+            : { name: userInfo?.active_org?.name || '', image: userInfo?.active_org?.image };
+          const hasShared = uniqueShared.length > 0;
+          return (
+            <Box sx={{
+              mb: 2,
+              px: 2,
+              py: 1.5,
+              borderRadius: 1.5,
+              bgcolor: 'rgba(139, 92, 246, 0.08)',
+              border: '1px solid rgba(139, 92, 246, 0.25)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              flexWrap: 'wrap',
+            }}>
+              <LanguageIcon size={16} style={{ color: '#a78bfa', flexShrink: 0 }} />
+              <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))' }}>
+                {hasShared
+                  ? <>This incident exists in <strong>{uniqueShared.length + 1} tenants</strong> — changes sync to all:</>
+                  : <>Viewing incident for organization <strong>{viewingOrg.name}</strong></>}
+              </Typography>
+              {hasShared && (
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <Chip
+                    size="small"
+                    variant="outlined"
+                    avatar={viewingOrg.image ? <img src={viewingOrg.image} alt="" style={{ width: 16, height: 16, borderRadius: 3 }} /> : undefined}
+                    label={viewingOrg.name}
+                    sx={{ height: 22, fontSize: '0.72rem', bgcolor: 'transparent', borderColor: 'rgba(167, 139, 250, 0.4)', color: '#a78bfa', fontWeight: 600 }}
+                  />
+                  {uniqueShared.map(org => (
+                    <Chip
+                      key={org.id}
+                      size="small"
+                      variant="outlined"
+                      avatar={org.image ? <img src={org.image} alt="" style={{ width: 16, height: 16, borderRadius: 3 }} /> : undefined}
+                      label={org.name}
+                      sx={{ height: 22, fontSize: '0.72rem', bgcolor: 'transparent', borderColor: 'rgba(255,255,255,0.12)', color: 'text.secondary' }}
+                    />
+                  ))}
+                </Box>
+              )}
+            </Box>
+          );
+        })()}
+
 
 
         <Box sx={{ 
