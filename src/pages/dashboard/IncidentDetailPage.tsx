@@ -1784,16 +1784,6 @@ const IncidentDetailPage = () => {
         console.warn(`[CrossOrg] viewing tenant ${viewingOrgId} is flagged as a ghost by authoritative stamp`);
       }
 
-      // Self-heal: aggressively re-delete any auto-recovered ghost copies so
-      // the backend's datastore-history recovery does not keep resurrecting
-      // them on every refresh. Fire-and-forget: the UI already filters them.
-      if (ghostIds.length > 0) {
-        console.log(`[CrossOrg] Self-healing ${ghostIds.length} auto-recovered ghost copies:`, ghostIds);
-        void Promise.allSettled(
-          ghostIds.map(oid => deleteDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS, oid)),
-        );
-      }
-
       const found = filtered.map(({ id: oid, name, image }) => ({ id: oid, name, image }));
       console.log(`[CrossOrg] Probed ${orgsToProbe.length} orgs for key "${id}", found in ${found.length} additional orgs${authStamp ? ' (stamp-filtered)' : ''}:`, found.map(o => o.name));
       setSharedOrgs(found);
