@@ -471,8 +471,11 @@ const IncidentsPage = () => {
     // Pick URL value when the URL provides it, otherwise fall back to the
     // persisted value, then the default. `org` is never in the URL, so it
     // comes purely from persisted state (or the child-org default).
-    const pick = <T,>(urlVal: T | null, persistedVal: T | null | undefined, fallback: T | null): T | null =>
-      (urlHas ? urlVal : null) ?? (persistedVal ?? null) ?? fallback;
+    const pick = <T,>(urlVal: T | null, persistedVal: T | null | undefined, fallback: T | null): T | null => {
+      if (urlHas && urlVal != null) return urlVal;
+      if (persistedVal != null) return persistedVal;
+      return fallback;
+    };
 
     return {
       severity: pick(sevParam, persistedFilters?.severity, null),
