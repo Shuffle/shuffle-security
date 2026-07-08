@@ -1859,21 +1859,7 @@ const IncidentDetailPage = () => {
     const itemKeyEmpty = !result.item?.key;
     const isEmptyStub = !!(result.success && result.item) && itemKeyEmpty && itemValueLen <= 2;
 
-    // Tombstones are stamped placeholders we leave in a removed tenant to
-    // block datastore-history auto-recovery. Treat them exactly like a
-    // missing item so the cross-tenant probe below can redirect to a live
-    // copy — otherwise the user would land on an empty ghost.
-    let isTombstoneCopy = false;
-    if (result.success && result.item?.value && !isEmptyStub) {
-      try {
-        const parsedProbe = typeof result.item.value === 'string'
-          ? JSON.parse(result.item.value)
-          : result.item.value;
-        isTombstoneCopy = isTenantTombstone(parsedProbe);
-      } catch { /* ignore */ }
-    }
-
-    if (result.success && result.item && !isEmptyStub && !isTombstoneCopy) {
+    if (result.success && result.item && !isEmptyStub) {
       setPublicAuthorization(result.item.public_authorization || '');
       const itemData = {
         key: result.item.key || id,
