@@ -208,18 +208,42 @@ export const RoutingRulePreviewBanner = ({
       '&:hover': { borderColor: 'hsl(var(--primary))', bgcolor: 'hsl(var(--primary) / 0.08)' },
     };
 
+    // Applied → render as a muted "done" chip so users see it was covered
+    // without another click doing nothing / re-firing side effects.
+    if (isApplied(a)) {
+      const label =
+        a.type === 'suggest_move' ? `Moved to ${a.targetOrgId ? (orgNameById[a.targetOrgId] || a.targetOrgId.slice(0, 8)) : '?'}`
+        : a.type === 'set_severity' ? `Severity: ${a.value}`
+        : a.type === 'set_status' ? `Status: ${a.value}`
+        : a.type === 'set_priority' ? `Priority: ${a.value}`
+        : a.type === 'add_label' ? `Label: ${a.value}`
+        : a.type === 'assign_to' ? `Assigned: ${a.value}`
+        : a.type === 'add_comment' ? 'Comment posted'
+        : a.type === 'set_field' ? `${a.field}: ${a.value}`
+        : ACTION_TYPE_LABELS[a.type];
+      return (
+        <Chip
+          key={idx}
+          size="small"
+          label={`✓ ${label}`}
+          sx={{
+            height: 24,
+            fontSize: 11,
+            bgcolor: 'hsl(var(--muted) / 0.6)',
+            color: 'hsl(var(--muted-foreground))',
+            textDecoration: 'line-through',
+          }}
+        />
+      );
+    }
+
     switch (a.type) {
       case 'suggest_move': {
         const name = a.targetOrgId ? (orgNameById[a.targetOrgId] || a.targetOrgId.slice(0, 8)) : 'no target';
         return (
-          <Button
-            key={idx}
-            size="small"
-            variant="outlined"
-            onClick={() => a.targetOrgId && onMove?.(a.targetOrgId, name)}
+          <Button key={idx} size="small" variant="outlined" sx={baseSx}
             disabled={!a.targetOrgId || !onMove}
-            sx={baseSx}
-          >
+            onClick={() => runAction(a)}>
             Move to {name}
           </Button>
         );
@@ -227,45 +251,53 @@ export const RoutingRulePreviewBanner = ({
       case 'set_severity':
         return (
           <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={!a.value || !onApply}
-            onClick={() => a.value && onApply?.({ severity: a.value })}>
+            disabled={!a.value || !onApply} onClick={() => runAction(a)}>
             Set severity → {a.value || '?'}
           </Button>
         );
       case 'set_status':
         return (
           <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={!a.value || !onApply}
-            onClick={() => a.value && onApply?.({ status: a.value })}>
+            disabled={!a.value || !onApply} onClick={() => runAction(a)}>
             Set status → {a.value || '?'}
+          </Button>
+        );
+      case 'set_priority':
+        return (
+          <Button key={idx} size="small" variant="outlined" sx={baseSx}
+            disabled={!a.value || !onApply} onClick={() => runAction(a)}>
+            Set priority → {a.value || '?'}
           </Button>
         );
       case 'add_label':
         return (
           <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={!a.value || !onApply}
-            onClick={() => a.value && onApply?.({ addLabel: a.value })}>
+            disabled={!a.value || !onApply} onClick={() => runAction(a)}>
             Add label "{a.value || ''}"
           </Button>
         );
       case 'assign_to':
         return (
           <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={!a.value || !onApply}
-            onClick={() => a.value && onApply?.({ assignee: a.value })}>
+            disabled={!a.value || !onApply} onClick={() => runAction(a)}>
             Assign to {a.value || '?'}
           </Button>
         );
       case 'add_comment':
         return (
           <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={!a.value || !onApply}
-            onClick={() => a.value && onApply?.({ addComment: a.value })}>
+            disabled={!a.value || !onApply} onClick={() => runAction(a)}>
             Add comment
           </Button>
         );
-      case 'set_priority':
       case 'set_field':
+        return (
+          <Button key={idx} size="small" variant="outlined" sx={baseSx}
+            disabled={!a.field || a.value === undefined || !onApply}
+            onClick={() => runAction(a)}>
+            Set {a.field || '?'} → {a.value || '?'}
+          </Button>
+        );
       default:
         return (
           <Chip
