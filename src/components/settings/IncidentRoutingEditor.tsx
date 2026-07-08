@@ -368,7 +368,10 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
         createdTs: rule.createdTs || Date.now(),
         updatedTs: Date.now(),
       };
-      const ok = await addItem(rule.id, JSON.stringify(payload));
+      // Pass skipRefresh=false so `items` includes the new rule before we
+      // remove it from `localOnlyIds` — otherwise the drafts-rebuild effect
+      // drops the just-saved rule from the list.
+      const ok = await addItem(rule.id, JSON.stringify(payload), false);
       if (ok) {
         toast.success('Routing rule saved');
         // Update local draft in place — no full reload of the area.
