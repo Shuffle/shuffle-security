@@ -64,6 +64,8 @@ const LEGACY_ALERTS_CATEGORY = 'shuffle-alerts';
 const LEGACY_SECURITY_ALERTS_CATEGORY = 'shuffle-security_alerts';
 const MIGRATION_KEY = 'shuffle_incidents_migrated_v1';
 const DEFAULT_STATUS_FILTER = ['new', 'in_progress'];
+const INCIDENT_FILTERS_STORAGE_KEY = 'shuffle_incidents_filters_v1';
+const INCIDENT_FILTERS_TTL_MS = 24 * 60 * 60 * 1000;
 
 const toRawIncidentKey = (key: string): string => {
   if (!key?.includes('::')) return key;
