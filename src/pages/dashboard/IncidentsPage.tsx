@@ -1,4 +1,4 @@
-import { readTenantStamp, isTenantGhost, isTenantTombstone, type TenantStamp } from '@/utils/tenantAuthority';
+import { readTenantStamp, isTenantGhost, type TenantStamp } from '@/utils/tenantAuthority';
 import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, Search as SearchIcon, X as CloseIcon, Plus as AddIcon, RefreshCw as RefreshIcon, Play as PlayArrowIcon, Rocket as RocketLaunchIcon, EyeOff as VisibilityOffIcon, AlertTriangle as WarningAmberIcon, Download as DownloadIcon, Calendar as CalendarTodayIcon } from 'lucide-react';
 import { useState, useEffect, useMemo, useCallback, useRef, useSyncExternalStore } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -1155,11 +1155,7 @@ const IncidentsPage = () => {
         if (!s) continue;
         if (!authStamp || s.updatedAt > authStamp.updatedAt) authStamp = s;
       }
-      const liveCopies = copies.filter(c => {
-        if (isTenantGhost(c.orgId, authStamp)) return false;
-        if (isTenantTombstone((c.inc as any).rawOCSF)) return false;
-        return true;
-      });
+      const liveCopies = copies.filter(c => !isTenantGhost(c.orgId, authStamp));
       // If every remaining copy was a ghost (shouldn't happen — at least the
       // authoritative one lives somewhere) fall back to raw copies rather
       // than dropping the incident entirely.
