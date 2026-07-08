@@ -270,9 +270,9 @@ export const getDatastoreItem = async (
   // no explicit override, because the URL path already carries this orgId.
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'Org-Id': orgId,
-    ...getAuthHeader(),
+    ...getAuthHeader(orgId),
   };
+
 
   console.log(`[datastore.get] key=${rawKey} category=${category} orgId=${orgId}${overrideOrgId ? ' (override)' : ''}`);
 
