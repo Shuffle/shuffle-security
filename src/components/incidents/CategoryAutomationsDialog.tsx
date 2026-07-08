@@ -449,7 +449,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
   const handleSave = async () => {
     const orgId = getOrgId();
     if (!orgId) {
-      toast.error('No organization found');
+      toast.error('No tenant found');
       return;
     }
 

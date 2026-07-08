@@ -1,6 +1,6 @@
 /**
- * Hook to fetch sub-organizations for the current org.
- * Used for multi-tenant views where parent orgs can see child org data.
+ * Hook to fetch sub-tenants for the current org.
+ * Used for multi-tenant views where parent orgs can see child tenant data.
  */
 import { useState, useEffect, useCallback } from 'react';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';

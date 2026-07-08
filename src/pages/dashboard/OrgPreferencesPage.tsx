@@ -171,8 +171,8 @@ const SidebarTabsSelector = () => {
 const OrgPreferencesPage = () => {
 
   usePageMeta({
-    title: 'Organization preferences',
-    description: 'Configure terminology, sidebar visibility, SLA targets, and other organization-wide preferences.',
+    title: 'Tenant preferences',
+    description: 'Configure terminology, sidebar visibility, SLA targets, and other tenant-wide preferences.',
     url: '/preferences',
   });
   const showAutomation = useShowAutomation();

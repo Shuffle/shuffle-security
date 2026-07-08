@@ -1628,7 +1628,7 @@ const IncidentDetailPage = () => {
     orgId: crossOrgId || undefined,
   });
 
-  const { subOrgs, parentOrg } = useSubOrgs(userInfo?.active_org?.id);
+  const { subOrgs, parentOrg, isParentOrg } = useSubOrgs(userInfo?.active_org?.id);
   const crossOrgInfo = useMemo(() => {
     if (!crossOrgId) return null;
     if (parentOrg && parentOrg.id === crossOrgId) return { name: parentOrg.name, image: parentOrg.image };
@@ -6434,61 +6434,62 @@ const IncidentDetailPage = () => {
 
       {/* Compact Header */}
       <Box sx={{ mb: 2 }}>
-        {/* Back link */}
-        <Box 
-          component={Link}
-          to={entityBasePath}
-          sx={{ 
-            display: 'inline-flex', 
-            alignItems: 'center', 
-            gap: 0.5, 
-            color: '#22b8cf', 
-            textDecoration: 'none',
-            mb: 2,
-            '&:hover': { textDecoration: 'underline' },
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 2,
+            flexWrap: 'wrap',
           }}
         >
-          <ArrowBackIcon size={18} />
-          <Typography variant="body2">Back to {entityPlural}</Typography>
-        </Box>
-
-        {/* Multi-org / Cross-org banner — always shown so the URL form
-            (`/incidents/ID` vs `/incidents/ORG::ID`) does not change the UI.
-            The only difference between the two is which tenant is the
-            primary focus. */}
-        {(() => {
-          const viewingOrgId = isCrossOrg ? (crossOrgId || '') : (userInfo?.active_org?.id || '');
-          if (!viewingOrgId && sharedOrgs.length === 0) return null;
-          const seenIds = new Set<string>([viewingOrgId]);
-          const uniqueShared = sharedOrgs.filter(o => {
-            if (!o?.id || seenIds.has(o.id)) return false;
-            seenIds.add(o.id);
-            return true;
-          });
-          const viewingOrg = isCrossOrg
-            ? { name: crossOrgInfo?.name || crossOrgId, image: crossOrgInfo?.image as string | undefined }
-            : { name: userInfo?.active_org?.name || '', image: userInfo?.active_org?.image };
-          const hasShared = uniqueShared.length > 0;
-          return (
-            <Box sx={{
-              mb: 2,
-              px: 2,
-              py: 1.5,
-              borderRadius: 1.5,
-              bgcolor: 'rgba(139, 92, 246, 0.08)',
-              border: '1px solid rgba(139, 92, 246, 0.25)',
-              display: 'flex',
+          {/* Back link */}
+          <Box
+            component={Link}
+            to={entityBasePath}
+            sx={{
+              display: 'inline-flex',
               alignItems: 'center',
-              gap: 1.5,
-              flexWrap: 'wrap',
-            }}>
-              <LanguageIcon size={16} style={{ color: '#a78bfa', flexShrink: 0 }} />
-              <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))' }}>
-                {hasShared
-                  ? <>This incident exists in <strong>{uniqueShared.length + 1} tenants</strong> — changes sync to all:</>
-                  : <>Viewing incident for organization <strong>{viewingOrg.name}</strong></>}
-              </Typography>
-              {hasShared && (
+              gap: 0.5,
+              color: '#22b8cf',
+              textDecoration: 'none',
+              '&:hover': { textDecoration: 'underline' },
+            }}
+          >
+            <ArrowBackIcon size={18} />
+            <Typography variant="body2">Back to {entityPlural}</Typography>
+          </Box>
+
+          {/* Tenant indicator — only shown in multi-tenant environments */}
+          {(() => {
+            const isMultiTenant = isParentOrg || isCrossOrg;
+            if (!isMultiTenant) return null;
+            const viewingOrgId = isCrossOrg ? (crossOrgId || '') : (userInfo?.active_org?.id || '');
+            if (!viewingOrgId && sharedOrgs.length === 0) return null;
+            const seenIds = new Set<string>([viewingOrgId]);
+            const uniqueShared = sharedOrgs.filter(o => {
+              if (!o?.id || seenIds.has(o.id)) return false;
+              seenIds.add(o.id);
+              return true;
+            });
+            const viewingOrg = isCrossOrg
+              ? { name: crossOrgInfo?.name || crossOrgId, image: crossOrgInfo?.image as string | undefined }
+              : { name: userInfo?.active_org?.name || '', image: userInfo?.active_org?.image };
+            const hasShared = uniqueShared.length > 0;
+            return (
+              <Box sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 1,
+                flexWrap: 'wrap',
+                justifyContent: 'flex-end',
+              }}>
+                <LanguageIcon size={16} style={{ color: '#a78bfa', flexShrink: 0 }} />
+                <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))' }}>
+                  {hasShared
+                    ? <>This incident exists in <strong>{uniqueShared.length + 1} tenants</strong> — changes sync to all:</>
+                    : <>Tenant:</>}
+                </Typography>
                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
                   <Chip
                     size="small"
@@ -6497,7 +6498,7 @@ const IncidentDetailPage = () => {
                     label={viewingOrg.name}
                     sx={{ height: 22, fontSize: '0.72rem', bgcolor: 'transparent', borderColor: 'rgba(167, 139, 250, 0.4)', color: '#a78bfa', fontWeight: 600 }}
                   />
-                  {uniqueShared.map(org => (
+                  {hasShared && uniqueShared.map(org => (
                     <Chip
                       key={org.id}
                       size="small"
@@ -6508,14 +6509,14 @@ const IncidentDetailPage = () => {
                     />
                   ))}
                 </Box>
-              )}
-            </Box>
-          );
-        })()}
+              </Box>
+            );
+          })()}
+        </Box>
 
 
 
-        <Box sx={{ 
+        <Box sx={{
           display: 'flex',
           alignItems: { xs: 'flex-start', sm: 'center' },
           flexDirection: { xs: 'column', sm: 'row' },
