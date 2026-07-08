@@ -9646,105 +9646,40 @@ const IncidentDetailPage = () => {
 
                 setIsMoving(true);
                 try {
-                  // Pull the freshest copy from the source tenant so every
-                  // write targets the same authoritative payload.
-                  const fresh = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, sourceOrgId);
-                  let value: any = null;
-                  if (fresh?.success && fresh.item?.value) {
-                    try {
-                      value = typeof fresh.item.value === 'string' ? JSON.parse(fresh.item.value) : fresh.item.value;
-                    } catch { value = fresh.item.value; }
-                  }
-                  if (!value) value = incident.rawOCSF || incident;
-
-                  // Stamp the payload with an authoritative tenant list so
-                  // any later auto-recovery from datastore history can be
-                  // recognised as a ghost — the UI treats any tenant NOT in
-                  // this list (with an older stamp) as non-authoritative and
-                  // hides it from presence/count. This is the "know it was
-                  // moved" marker requested by the product.
-                  const stampedAt = Date.now();
                   const selectedList = Array.from(selected);
-                  const removedList = Array.from(new Set([
-                    ...toRemove,
-                    ...(((value as any)?.metadata?.extensions?.custom_attributes?._tenants_removed) || []),
-                  ]));
-                  if (typeof value !== 'object' || value === null) value = {};
-                  const metaBase = { ...(value.metadata || {}) };
-                  const extBase = { ...(metaBase.extensions || {}) };
-                  const custBase = { ...(extBase.custom_attributes || {}) };
-                  custBase._tenants = selectedList;
-                  custBase._tenants_removed = removedList;
-                  custBase._tenants_updated_at = stampedAt;
-                  extBase.custom_attributes = custBase;
-                  metaBase.extensions = extBase;
-                  value.metadata = metaBase;
-
-                  // Defence in depth: never touch an org that is not either
-                  // in the selected set (add/restamp) or the remove set. If
-                  // the two lists disagree with the intent, abort instead of
-                  // silently spreading the incident to unintended tenants.
                   const selectedSet = new Set(selectedList);
                   const removeSet = new Set(toRemove);
                   const activeId = userInfo?.active_org?.id;
+
+                  // Safety: never issue a request against an org that isn't
+                  // explicitly in toAdd or toRemove. In particular, never
+                  // touch the current active org unless it's one of those.
                   const overlap = [...selectedSet].filter(o => removeSet.has(o));
                   if (overlap.length > 0) {
-                    console.error('[MoveTenant] refused: overlapping add/remove targets', overlap);
                     throw new Error('Internal conflict in tenant selection — aborted');
                   }
                   console.log('[MoveTenant] intent', {
                     incidentId: incident.id,
                     sourceOrgId,
                     activeOrgId: activeId,
-                    selected: selectedList,
                     toAdd,
                     toRemove,
                   });
 
-                  // 1) Write the stamped payload into every SELECTED tenant
-                  // (both new adds AND already-present copies), so every live
-                  // copy carries the same authoritative tenant list. Each
-                  // write is pinned to its target org via Org-Id header and
-                  // payload org_id — no request may target another tenant.
-                  const addedOk: string[] = [];
-                  for (const targetOrgId of selectedList) {
-                    if (!selectedSet.has(targetOrgId)) {
-                      // Impossible unless selectedList was mutated — hard stop.
-                      throw new Error(`[MoveTenant] refused write to non-selected tenant ${targetOrgId}`);
-                    }
-                    console.log(`[MoveTenant] add/restamp -> ${targetOrgId}`);
-                    const writeRes = await setDatastoreItem(incident.id, value as object, DATASTORE_CATEGORIES.INCIDENTS, targetOrgId);
-                    if (!writeRes.success) {
-                      if (toAdd.includes(targetOrgId)) {
-                        throw new Error(writeRes.error || `Failed to write incident to tenant ${targetOrgId}`);
-                      } else {
-                        console.warn(`[MoveTenant] restamp of existing tenant ${targetOrgId} failed:`, writeRes.error);
-                        continue;
-                      }
-                    }
-                    if (!toAdd.includes(targetOrgId)) continue; // no need to verify restamps
-                    let verified = false;
-                    const backoffsMs = [0, 400, 800, 1200, 1600, 2000, 2500, 3000];
-                    for (const wait of backoffsMs) {
-                      if (verified) break;
-                      if (wait > 0) await new Promise(r => setTimeout(r, wait));
+                  // Grab the payload we'll write to new tenants. Prefer the
+                  // already-loaded incident so we do NOT fire an extra read
+                  // just to move it.
+                  let value: any = incident.rawOCSF || incident;
+                  if (toAdd.length > 0 && !value) {
+                    const fresh = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, sourceOrgId);
+                    if (fresh?.success && fresh.item?.value) {
                       try {
-                        const check = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, targetOrgId);
-                        const anyCheck = check as any;
-                        if (check?.success && (check.item?.value || anyCheck?.item?.key || anyCheck?.item?.edited)) {
-                          verified = true;
-                        }
-                      } catch { /* retry */ }
+                        value = typeof fresh.item.value === 'string' ? JSON.parse(fresh.item.value) : fresh.item.value;
+                      } catch { value = fresh.item.value; }
                     }
-                    if (!verified) {
-                      console.warn(`[MoveTenant] target ${targetOrgId} read did not confirm; trusting write result`);
-                    }
-                    addedOk.push(targetOrgId);
                   }
 
-                  // 2) Only now — after every add is verified — delete the
-                  // incident from any tenants that were unchecked. Each
-                  // delete is pinned to its exact target org.
+                  // 1) Delete from old tenants.
                   const removedOk: string[] = [];
                   const removeFailures: string[] = [];
                   for (const oldOrgId of toRemove) {
@@ -9756,57 +9691,54 @@ const IncidentDetailPage = () => {
                     try {
                       const dr = await deleteDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, oldOrgId);
                       deleted = !!dr.success;
-                    } catch {
-                      deleted = false;
-                    }
-
-                    if (deleted) {
-                      removedOk.push(oldOrgId);
-                    } else {
-                      removeFailures.push(oldOrgId);
-                    }
+                    } catch { deleted = false; }
+                    if (deleted) removedOk.push(oldOrgId); else removeFailures.push(oldOrgId);
                   }
 
-                  // Post-move validation runs two checks against the API so
-                  // any backend routing/permission issue is visible instead
-                  // of silent:
-                  //   (a) every SELECTED tenant must now contain the copy
-                  //       (catches "write did not land in target");
-                  //   (b) no unselected known tenant may still contain it
-                  //       (catches "delete did not stick / auto-recovery").
+                  // 2) Verify each deletion (one read per removed tenant).
+                  const stillPresent: string[] = [];
+                  for (const oldOrgId of toRemove) {
+                    try {
+                      const check = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, oldOrgId);
+                      if (check?.success && check.item?.value) stillPresent.push(oldOrgId);
+                    } catch { /* ignore */ }
+                  }
+                  if (stillPresent.length > 0) {
+                    console.error('[MoveTenant] delete not honored by backend', stillPresent);
+                  }
+
+                  // 3) Add to new tenants.
+                  const addedOk: string[] = [];
+                  const addFailures: string[] = [];
+                  for (const targetOrgId of toAdd) {
+                    if (removeSet.has(targetOrgId)) {
+                      throw new Error(`[MoveTenant] refused add to removed tenant ${targetOrgId}`);
+                    }
+                    console.log(`[MoveTenant] add -> ${targetOrgId}`);
+                    let written = false;
+                    try {
+                      const wr = await setDatastoreItem(incident.id, value as object, DATASTORE_CATEGORIES.INCIDENTS, targetOrgId);
+                      written = !!wr.success;
+                    } catch { written = false; }
+                    if (written) addedOk.push(targetOrgId); else addFailures.push(targetOrgId);
+                  }
+
+                  // 4) Verify each addition (one read per added tenant).
                   const missingTargets: string[] = [];
-                  const strayHits: string[] = [];
-                  try {
-                    const knownIds = new Set<string>();
-                    if (activeId) knownIds.add(activeId);
-                    if (parentOrg?.id) knownIds.add(parentOrg.id);
-                    for (const so of subOrgs) knownIds.add(so.id);
-                    for (const so of sharedOrgs) knownIds.add(so.id);
-                    for (const oid of selectedList) knownIds.add(oid);
-
-                    await Promise.all([...knownIds].map(async (oid) => {
-                      try {
-                        const check = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, oid);
-                        const present = !!(check?.success && check.item?.value);
-                        if (selectedSet.has(oid)) {
-                          if (!present) missingTargets.push(oid);
-                        } else {
-                          if (present) strayHits.push(oid);
-                        }
-                      } catch { /* ignore */ }
-                    }));
-
-                    if (missingTargets.length > 0) {
-                      console.error('[MoveTenant] target write did not land', missingTargets);
-                      toast.error(`Write did not land in ${missingTargets.length} target tenant(s) — backend rejected the move`);
-                    }
-                    if (strayHits.length > 0) {
-                      console.error('[MoveTenant] stray copies still present after move', strayHits);
-                      toast.error(`Incident still present in ${strayHits.length} unselected tenant(s) — backend did not delete`);
-                    }
-                  } catch (e) {
-                    console.warn('[MoveTenant] post-move validation failed', e);
+                  for (const targetOrgId of toAdd) {
+                    try {
+                      const check = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, targetOrgId);
+                      if (!(check?.success && check.item?.value)) missingTargets.push(targetOrgId);
+                    } catch { missingTargets.push(targetOrgId); }
                   }
+                  if (missingTargets.length > 0) {
+                    console.error('[MoveTenant] write not honored by backend', missingTargets);
+                    toast.error(`Write did not land in ${missingTargets.length} target tenant(s) — backend rejected the move`);
+                  }
+                  if (stillPresent.length > 0) {
+                    toast.error(`Incident still present in ${stillPresent.length} old tenant(s) — backend did not delete`);
+                  }
+
 
 
 
