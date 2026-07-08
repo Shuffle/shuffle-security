@@ -9767,31 +9767,47 @@ const IncidentDetailPage = () => {
                     }
                   }
 
-                  // 3) Post-move validation: for the active org and every
-                  // known sub/parent org NOT in the selected set, read back
-                  // and warn if the incident somehow landed there. This
-                  // makes any org-routing bug visible instead of silent.
+                  // Post-move validation runs two checks against the API so
+                  // any backend routing/permission issue is visible instead
+                  // of silent:
+                  //   (a) every SELECTED tenant must now contain the copy
+                  //       (catches "write did not land in target");
+                  //   (b) no unselected known tenant may still contain it
+                  //       (catches "delete did not stick / auto-recovery").
+                  const missingTargets: string[] = [];
+                  const strayHits: string[] = [];
                   try {
                     const knownIds = new Set<string>();
                     if (activeId) knownIds.add(activeId);
                     if (parentOrg?.id) knownIds.add(parentOrg.id);
                     for (const so of subOrgs) knownIds.add(so.id);
                     for (const so of sharedOrgs) knownIds.add(so.id);
-                    const shouldBeAbsent = [...knownIds].filter(o => !selectedSet.has(o));
-                    const strayHits: string[] = [];
-                    await Promise.all(shouldBeAbsent.map(async (oid) => {
+                    for (const oid of selectedList) knownIds.add(oid);
+
+                    await Promise.all([...knownIds].map(async (oid) => {
                       try {
                         const check = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, oid);
-                        if (check?.success && check.item?.value) strayHits.push(oid);
+                        const present = !!(check?.success && check.item?.value);
+                        if (selectedSet.has(oid)) {
+                          if (!present) missingTargets.push(oid);
+                        } else {
+                          if (present) strayHits.push(oid);
+                        }
                       } catch { /* ignore */ }
                     }));
+
+                    if (missingTargets.length > 0) {
+                      console.error('[MoveTenant] target write did not land', missingTargets);
+                      toast.error(`Write did not land in ${missingTargets.length} target tenant(s) — backend rejected the move`);
+                    }
                     if (strayHits.length > 0) {
                       console.error('[MoveTenant] stray copies still present after move', strayHits);
-                      toast.error(`Incident still present in ${strayHits.length} unselected tenant(s) — check console`);
+                      toast.error(`Incident still present in ${strayHits.length} unselected tenant(s) — backend did not delete`);
                     }
                   } catch (e) {
                     console.warn('[MoveTenant] post-move validation failed', e);
                   }
+
 
 
 
