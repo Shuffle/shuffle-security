@@ -3637,6 +3637,14 @@ const IncidentDetailPage = () => {
           const value = parseRoutingActionValue(action.value);
           if (field === 'title') nextTitle = String(value);
           else if (field === 'description' || field === 'desc') nextMessage = String(value);
+          else if (field === 'severity') nextSeverity = normalizeRoutingSeverityValue(String(value));
+          else if (field === 'status') nextStatus = normalizeStatus(String(value));
+          else if (field === 'assignee') nextAssignee = String(value);
+          else if (field === 'priority') nextRaw.priority = String(value);
+          else if (field === 'labels' || field === 'types') {
+            const label = String(value).trim();
+            if (label && !nextLabels.includes(label)) nextLabels = [...nextLabels, label];
+          }
           else if (field.startsWith('rawOCSF.')) setDeepValue(nextRaw, field.slice('rawOCSF.'.length), value);
           else {
             const key = field.replace(/^customFields\./, '').replace(/^custom_fields\./, '');
