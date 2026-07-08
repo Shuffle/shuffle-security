@@ -317,7 +317,7 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
     });
   };
 
-  const addCondition = (id: string) => {
+  const addCondition = (id: string, asOr: boolean = false) => {
     setDrafts((prev) => {
       const r = prev[id];
       if (!r) return prev;
@@ -325,7 +325,10 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
         ...prev,
         [id]: {
           ...r,
-          conditions: [...r.conditions, { field: 'title', op: 'contains', value: '' }],
+          conditions: [
+            ...r.conditions,
+            { field: 'title', op: 'contains', value: '', or: asOr && r.conditions.length > 0 },
+          ],
           updatedTs: Date.now(),
         },
       };
