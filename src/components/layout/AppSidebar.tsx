@@ -188,6 +188,11 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
     });
     if (owning) {
       setExpandedItems(prev => (prev.length === 1 && prev[0] === owning.label ? prev : [owning.label]));
+    } else {
+      // No group owns the current route (top-level item like Host Monitors or
+      // Vulnerabilities) — collapse everything so the previous group does not
+      // stay open.
+      setExpandedItems(prev => (prev.length === 0 ? prev : []));
     }
   }, [location.pathname, navItems]);
 
