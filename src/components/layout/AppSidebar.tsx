@@ -596,7 +596,7 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                 </Tooltip>
                 {/* Expanded: show children in collapsible list */}
                 {!visuallyCollapsed && (
-                  <Collapse in={expandedItems.includes(item.label)} timeout={220}>
+                  <Collapse in={expandedItems.includes(item.label)} timeout={220} appear>
                     <List component="div" disablePadding>
                       {item.children.map((child) => (
                         <ListItem key={child.path} disablePadding sx={{ mb: 0.5 }}>
