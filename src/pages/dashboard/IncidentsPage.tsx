@@ -467,6 +467,10 @@ const IncidentsPage = () => {
     };
   });
   const [negatedFilters, setNegatedFilters] = useState<Set<string>>(() => {
+    const persisted = !hasActiveFilterParams(searchParams) ? loadPersistedFilters() : null;
+    if (persisted?.negatedFilters) {
+      return new Set(persisted.negatedFilters);
+    }
     const neg = searchParams.get('not');
     if (!neg) return new Set();
     return new Set(neg.split(',').map(s => s.trim()).filter(Boolean));
