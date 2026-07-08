@@ -31,6 +31,7 @@ import {
 } from '@/components/settings/IncidentRoutingEditor';
 import { useSubOrgs } from '@/hooks/useSubOrgs';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from '@/lib/toast';
 import {
   evaluateRoutingRules,
   type IncidentEvaluationContext,
@@ -52,6 +53,7 @@ interface RoutingRulePreviewBannerProps {
   incidentId?: string;
   onMove?: (targetOrgId: string, targetOrgName?: string) => void;
   onApply?: (patch: RoutingApplyPayload) => void | Promise<void>;
+  onApplyActions?: (actions: RoutingAction[]) => void | Promise<void>;
   /**
    * Optional predicate the host page implements to tell the banner whether
    * a given action's effect is already present on the incident (e.g. label
@@ -69,6 +71,7 @@ export const RoutingRulePreviewBanner = ({
   incidentId,
   onMove,
   onApply,
+  onApplyActions,
   isActionApplied,
 }: RoutingRulePreviewBannerProps) => {
   const { userInfo } = useAuth();
@@ -128,6 +131,7 @@ export const RoutingRulePreviewBanner = ({
 
   const [dismissed, setDismissed] = useState<Set<string>>(() => new Set());
   const [expanded, setExpanded] = useState(true);
+  const [isApplying, setIsApplying] = useState(false);
 
   // Hydrate dismissals per incident.
   useEffect(() => {
@@ -150,6 +154,7 @@ export const RoutingRulePreviewBanner = ({
     .filter((m) => !dismissed.has(m.rule.id))
     .filter((m) => m.rule.actions.some((a) => !isApplied(a)));
   if (visible.length === 0) return null;
+  const pendingActions = visible.flatMap((m) => m.rule.actions.filter((a) => !isApplied(a)));
 
   /** Dispatch a single action through the correct callback. */
   const runAction = async (a: RoutingAction) => {
@@ -176,12 +181,27 @@ export const RoutingRulePreviewBanner = ({
   };
 
   const applyAllForRule = async (rule: RoutingRule) => {
-    for (const a of rule.actions) {
-      // Skip already-applied and re-check after each run so we never double-apply.
-      if (!isApplied(a)) {
-        // eslint-disable-next-line no-await-in-loop
-        await runAction(a);
+    await applyActions(rule.actions);
+  };
+
+  const applyActions = async (actions: RoutingAction[]) => {
+    const todo = actions.filter((a) => !isApplied(a));
+    if (todo.length === 0 || isApplying) return;
+    setIsApplying(true);
+    try {
+      if (onApplyActions) {
+        await onApplyActions(todo);
+      } else {
+        for (const a of todo) {
+          // eslint-disable-next-line no-await-in-loop
+          await runAction(a);
+        }
       }
+    } catch (error) {
+      console.error('[RoutingRulePreviewBanner] apply failed', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to apply routing action');
+    } finally {
+      setIsApplying(false);
     }
   };
 
@@ -206,6 +226,7 @@ export const RoutingRulePreviewBanner = ({
       borderColor: 'hsl(var(--primary) / 0.5)',
       color: 'hsl(var(--primary))',
       '&:hover': { borderColor: 'hsl(var(--primary))', bgcolor: 'hsl(var(--primary) / 0.08)' },
+      '&.Mui-disabled': { borderColor: 'hsl(var(--border))', color: 'hsl(var(--muted-foreground))' },
     };
 
     // Applied → render as a muted "done" chip so users see it was covered
@@ -242,8 +263,8 @@ export const RoutingRulePreviewBanner = ({
         const name = a.targetOrgId ? (orgNameById[a.targetOrgId] || a.targetOrgId.slice(0, 8)) : 'no target';
         return (
           <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={!a.targetOrgId || !onMove}
-            onClick={() => runAction(a)}>
+            disabled={isApplying || !a.targetOrgId || (!onMove && !onApplyActions)}
+            onClick={() => applyActions([a])}>
             Move to {name}
           </Button>
         );
@@ -251,50 +272,50 @@ export const RoutingRulePreviewBanner = ({
       case 'set_severity':
         return (
           <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={!a.value || !onApply} onClick={() => runAction(a)}>
+            disabled={isApplying || !a.value || (!onApply && !onApplyActions)} onClick={() => applyActions([a])}>
             Set severity → {a.value || '?'}
           </Button>
         );
       case 'set_status':
         return (
           <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={!a.value || !onApply} onClick={() => runAction(a)}>
+            disabled={isApplying || !a.value || (!onApply && !onApplyActions)} onClick={() => applyActions([a])}>
             Set status → {a.value || '?'}
           </Button>
         );
       case 'set_priority':
         return (
           <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={!a.value || !onApply} onClick={() => runAction(a)}>
+            disabled={isApplying || !a.value || (!onApply && !onApplyActions)} onClick={() => applyActions([a])}>
             Set priority → {a.value || '?'}
           </Button>
         );
       case 'add_label':
         return (
           <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={!a.value || !onApply} onClick={() => runAction(a)}>
+            disabled={isApplying || !a.value || (!onApply && !onApplyActions)} onClick={() => applyActions([a])}>
             Add label "{a.value || ''}"
           </Button>
         );
       case 'assign_to':
         return (
           <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={!a.value || !onApply} onClick={() => runAction(a)}>
+            disabled={isApplying || !a.value || (!onApply && !onApplyActions)} onClick={() => applyActions([a])}>
             Assign to {a.value || '?'}
           </Button>
         );
       case 'add_comment':
         return (
           <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={!a.value || !onApply} onClick={() => runAction(a)}>
+            disabled={isApplying || !a.value || (!onApply && !onApplyActions)} onClick={() => applyActions([a])}>
             Add comment
           </Button>
         );
       case 'set_field':
         return (
           <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={!a.field || a.value === undefined || !onApply}
-            onClick={() => runAction(a)}>
+            disabled={isApplying || !a.field || a.value === undefined || (!onApply && !onApplyActions)}
+            onClick={() => applyActions([a])}>
             Set {a.field || '?'} → {a.value || '?'}
           </Button>
         );
@@ -334,6 +355,27 @@ export const RoutingRulePreviewBanner = ({
         <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, flex: 1 }}>
           {visible.length} routing rule{visible.length === 1 ? '' : 's'} matched this incident
         </Typography>
+        {pendingActions.length > 0 && (
+          <Button
+            size="small"
+            variant="contained"
+            disabled={isApplying}
+            onClick={() => applyActions(pendingActions)}
+            sx={{
+              height: 28,
+              textTransform: 'none',
+              fontWeight: 700,
+              fontSize: 12,
+              px: 1.5,
+              bgcolor: 'hsl(var(--primary))',
+              color: 'hsl(var(--primary-foreground))',
+              boxShadow: 'none',
+              '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)', boxShadow: 'none' },
+            }}
+          >
+            {isApplying ? 'Applying…' : `Apply all (${pendingActions.length})`}
+          </Button>
+        )}
         <Tooltip title={expanded ? 'Collapse' : 'Expand'}>
           <IconButton size="small" onClick={() => setExpanded((v) => !v)}
             sx={{ width: 28, height: 28, color: 'hsl(var(--muted-foreground))' }}>
@@ -366,6 +408,7 @@ export const RoutingRulePreviewBanner = ({
                     <Button
                       size="small"
                       variant="contained"
+                      disabled={isApplying}
                       onClick={() => applyAllForRule(m.rule)}
                       sx={{
                         height: 26,

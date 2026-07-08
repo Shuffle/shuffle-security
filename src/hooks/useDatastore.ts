@@ -79,7 +79,7 @@ export const useDatastore = ({ category, orgId: overrideOrgId }: UseDatastoreOpt
 
       do {
         page++;
-        const response = await getDatastoreByCategory(category, currentCursor);
+        const response = await getDatastoreByCategory(category, currentCursor, undefined, overrideOrgId);
         lastResponse = response;
         setLastDiagnostics(response.diagnostics || null);
         console.log(`[useDatastore] fetchItems category=${category} page=${page} success=${response.success} dataLength=${response.data?.length} cursor=${response.cursor || 'none'}`);
@@ -182,7 +182,7 @@ export const useDatastore = ({ category, orgId: overrideOrgId }: UseDatastoreOpt
     };
     window.addEventListener('demo:refresh', onRefresh);
     return () => window.removeEventListener('demo:refresh', onRefresh);
-  }, [category, fetchItems]);
+  }, [category, fetchItems, overrideOrgId]);
 
   const addItem = useCallback(async (key: string, value: string | object, skipRefresh = true): Promise<boolean> => {
     setError(null);
@@ -240,7 +240,7 @@ export const useDatastore = ({ category, orgId: overrideOrgId }: UseDatastoreOpt
   const removeItem = useCallback(async (key: string): Promise<boolean> => {
     setError(null);
     try {
-      const response = await deleteDatastoreItem(key, category);
+      const response = await deleteDatastoreItem(key, category, overrideOrgId);
       if (response.success) {
         await fetchItems(); // Refresh the list
         return true;

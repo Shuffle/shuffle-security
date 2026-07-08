@@ -95,6 +95,7 @@ import { RoutingRulePreviewBanner } from '@/components/incidents/RoutingRulePrev
 import {
   ROUTING_DATASTORE_CATEGORY,
   type RoutingRule,
+  type RoutingAction,
   ACTION_TYPE_LABELS,
 } from '@/components/settings/IncidentRoutingEditor';
 import { evaluateRoutingRules, type IncidentEvaluationContext } from '@/utils/routingRuleEvaluator';
@@ -244,6 +245,46 @@ const formatDuration = (ms: number): string => {
 
 const parseTimestamp = (timestamp: number | string | undefined): number => {
   return normalizeToMs(timestamp);
+};
+
+const normalizeRoutingSeverityValue = (value?: string): string => {
+  const raw = String(value || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+  const match = severityOptions.find((s) =>
+    s.value.toLowerCase() === raw ||
+    s.label.toLowerCase().replace(/[\s-]+/g, '_') === raw
+  );
+  return match?.value || raw;
+};
+
+const parseRoutingActionValue = (value: string | undefined): string | number | boolean => {
+  const trimmed = String(value ?? '').trim();
+  if (/^(true|false)$/i.test(trimmed)) return trimmed.toLowerCase() === 'true';
+  if (/^-?\d+(\.\d+)?$/.test(trimmed)) return Number(trimmed);
+  return trimmed;
+};
+
+const readDeepValue = (obj: any, path: string): any => {
+  if (!obj || !path) return undefined;
+  const parts = path.split('.').filter(Boolean);
+  let cur = obj;
+  for (const part of parts) {
+    if (cur == null) return undefined;
+    cur = cur[part];
+  }
+  return cur;
+};
+
+const setDeepValue = (obj: any, path: string, value: string | number | boolean) => {
+  if (!obj || !path) return;
+  const parts = path.split('.').filter(Boolean);
+  if (parts.length === 0) return;
+  let cur = obj;
+  for (let i = 0; i < parts.length - 1; i += 1) {
+    const part = parts[i];
+    if (!cur[part] || typeof cur[part] !== 'object' || Array.isArray(cur[part])) cur[part] = {};
+    cur = cur[part];
+  }
+  cur[parts[parts.length - 1]] = value;
 };
 
 // Quick OCSF-shape check used by the revision-fallback logic. Mirrors the
@@ -3458,6 +3499,249 @@ const IncidentDetailPage = () => {
     }, 7000);
   };
 
+  const moveIncidentToTenant = async (targetOrgId: string, updatedValue?: any) => {
+    if (!incident?.id) throw new Error('No incident loaded');
+    const sourceOrgId = crossOrgId || userInfo?.active_org?.id;
+    if (!sourceOrgId) throw new Error('Could not determine source tenant');
+    const targetName = subOrgs.find((o) => o.id === targetOrgId)?.name
+      || (parentOrg?.id === targetOrgId ? parentOrg.name : undefined)
+      || (userInfo?.active_org?.id === targetOrgId ? userInfo.active_org.name : undefined)
+      || targetOrgId.slice(0, 8);
+
+    const presentOrgIds = new Set<string>([sourceOrgId, ...sharedOrgs.map((o) => o.id)]);
+    let value = updatedValue || incident.rawOCSF || incident;
+    if (!value) {
+      const fresh = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, sourceOrgId);
+      if (fresh?.success && fresh.item?.value) {
+        value = typeof fresh.item.value === 'string' ? JSON.parse(fresh.item.value) : fresh.item.value;
+      }
+    }
+
+    if (targetOrgId !== sourceOrgId) {
+      const write = await setDatastoreItem(incident.id, value as object, DATASTORE_CATEGORIES.INCIDENTS, targetOrgId);
+      if (!write.success) throw new Error(`Could not write incident to ${targetName}`);
+      const check = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, targetOrgId);
+      if (!(check?.success && check.item?.value)) throw new Error(`Could not verify incident in ${targetName}`);
+    }
+
+    const deleteFailures: string[] = [];
+    for (const oldOrgId of presentOrgIds) {
+      if (oldOrgId === targetOrgId) continue;
+      const deleted = await deleteDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, oldOrgId);
+      if (!deleted.success) deleteFailures.push(oldOrgId);
+    }
+    if (deleteFailures.length > 0) {
+      throw new Error(`Incident moved, but ${deleteFailures.length} old tenant copy could not be removed`);
+    }
+
+    setSharedOrgs([]);
+    if (searchParams.get('shared_orgs')) {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('shared_orgs');
+      setSearchParams(nextParams, { replace: true });
+    }
+    if (targetOrgId !== sourceOrgId) {
+      const activeId = userInfo?.active_org?.id;
+      const newKey = targetOrgId === activeId ? incident.id : `${targetOrgId}::${incident.id}`;
+      navigate(`${entityBasePath}/${newKey}`, { replace: true });
+    }
+  };
+
+  const applyRoutingActions = async (actions: RoutingAction[]) => {
+    if (!incident?.id || !incident.rawOCSF) return;
+
+    const actionable = actions.filter((a) => a && a.type);
+    if (actionable.length === 0) return;
+
+    let nextTitle = editedTitle;
+    let nextMessage = editedMessage;
+    let nextSeverity = editedSeverity;
+    let nextStatus = editedStatus;
+    let nextAssignee = editedAssignee;
+    let nextLabels = [...editedLabels];
+    let nextCustomFields = { ...editedCustomFields };
+    let nextActivity = [...activity];
+    let nextRaw: any = structuredClone(incident.rawOCSF);
+    const moveActions: RoutingAction[] = [];
+    let changed = false;
+
+    for (const action of actionable) {
+      switch (action.type) {
+        case 'suggest_move':
+          if (action.targetOrgId) moveActions.push(action);
+          break;
+        case 'set_severity': {
+          const next = normalizeRoutingSeverityValue(action.value);
+          if (next && nextSeverity !== next) {
+            nextSeverity = next;
+            changed = true;
+          }
+          break;
+        }
+        case 'set_status': {
+          const next = normalizeStatus(action.value);
+          if (next && nextStatus !== next) {
+            nextStatus = next;
+            changed = true;
+          }
+          break;
+        }
+        case 'set_priority': {
+          const priority = String(action.value || '').trim();
+          if (priority) {
+            nextRaw.priority = priority;
+            changed = true;
+          }
+          break;
+        }
+        case 'add_label': {
+          const label = String(action.value || '').trim();
+          if (label && !nextLabels.includes(label)) {
+            nextLabels = [...nextLabels, label];
+            changed = true;
+          }
+          break;
+        }
+        case 'assign_to': {
+          const assignee = String(action.value || '').trim();
+          if (assignee && nextAssignee !== assignee) {
+            nextAssignee = assignee;
+            changed = true;
+          }
+          break;
+        }
+        case 'add_comment': {
+          const text = String(action.value || '').trim();
+          const alreadyPosted = nextActivity.some((it: any) => it?.type === 'comment' && typeof it?.content === 'string' && it.content.trim() === text);
+          if (text && !alreadyPosted) {
+            nextActivity = [
+              ...nextActivity,
+              {
+                id: `routing-comment-${Date.now()}-${nextActivity.length}`,
+                type: 'comment',
+                user: 'Incident Routing Rules',
+                timestamp: Date.now(),
+                content: text,
+                details: { source: 'incident_routing_rule' },
+                attachments: [],
+                ai_handled: true,
+              } as ActivityItem,
+            ];
+            changed = true;
+          }
+          break;
+        }
+        case 'set_field': {
+          const field = String(action.field || '').trim();
+          if (!field) break;
+          const value = parseRoutingActionValue(action.value);
+          const canonicalField = field.startsWith('rawOCSF.') ? field.slice('rawOCSF.'.length) : field;
+          if (canonicalField === 'title') nextTitle = String(value);
+          else if (canonicalField === 'description' || canonicalField === 'desc') nextMessage = String(value);
+          else if (canonicalField === 'severity') nextSeverity = normalizeRoutingSeverityValue(String(value));
+          else if (canonicalField === 'status') nextStatus = normalizeStatus(String(value));
+          else if (canonicalField === 'assignee') nextAssignee = String(value);
+          else if (canonicalField === 'priority') nextRaw.priority = String(value);
+          else if (canonicalField === 'labels' || canonicalField === 'types') {
+            const label = String(value).trim();
+            if (label && !nextLabels.includes(label)) nextLabels = [...nextLabels, label];
+          }
+          else if (field.startsWith('rawOCSF.')) setDeepValue(nextRaw, field.slice('rawOCSF.'.length), value);
+          else {
+            const key = field.replace(/^customFields\./, '').replace(/^custom_fields\./, '');
+            nextCustomFields = { ...nextCustomFields, [key]: value };
+          }
+          changed = true;
+          break;
+        }
+      }
+    }
+
+    const severityOption = severityOptions.find((s) => s.value === nextSeverity);
+    const { label: statusLabel, id: statusId } = getOCSFStatus(nextStatus);
+    const existingFindingInfo = nextRaw?.finding_info_list?.[0] || nextRaw?.finding_info;
+    const customAttrs = nextRaw?.metadata?.extensions?.custom_attributes || {};
+    const updatedData = {
+      ...nextRaw,
+      title: nextTitle,
+      desc: nextMessage || nextTitle,
+      severity_id: severityOption?.id || nextRaw.severity_id || 3,
+      severity: severityOption?.label || nextRaw.severity || 'Medium',
+      status_id: statusId,
+      status: statusLabel,
+      assignee: nextAssignee.trim() || '',
+      types: nextLabels,
+      observables: editedObservables,
+      stakeholders: editedStakeholders,
+      references: editedReferences,
+      tasks,
+      activity: nextActivity,
+      finding_info_list: [{
+        ...existingFindingInfo,
+        title: nextTitle,
+        types: nextLabels,
+        references: editedReferences,
+        src_url: editedReferences[0] || '',
+      }],
+      metadata: {
+        ...nextRaw.metadata,
+        extensions: {
+          ...nextRaw.metadata?.extensions,
+          custom_attributes: {
+            ...customAttrs,
+            tlp: editedTlp,
+            assignee: nextAssignee.trim() || '',
+            customFields: nextCustomFields,
+            stakeholders: editedStakeholders,
+            observables: editedObservables,
+            priority: nextRaw.priority ?? customAttrs.priority,
+          },
+        },
+      },
+    };
+
+    if (changed) {
+      const ok = await addItem(incident.id, updatedData);
+      if (!ok) throw new Error('Failed to apply routing rule actions');
+      if (sharedOrgs.length > 0) {
+        await Promise.allSettled(sharedOrgs.map((org) =>
+          setDatastoreItem(incident.id, updatedData, DATASTORE_CATEGORIES.INCIDENTS, org.id)
+        ));
+      }
+      setEditedTitle(nextTitle);
+      setEditedMessage(nextMessage);
+      setEditedSeverity(nextSeverity);
+      setEditedStatus(nextStatus);
+      setEditedAssignee(nextAssignee);
+      setEditedLabels(nextLabels);
+      setEditedCustomFields(nextCustomFields);
+      setActivity(nextActivity);
+      setIncident((prev) => prev ? { ...prev, title: nextTitle, severity: nextSeverity, status: nextStatus, assignee: nextAssignee, labels: nextLabels, customFields: nextCustomFields, activity: nextActivity, rawOCSF: updatedData } : prev);
+      setRawJsonText(JSON.stringify(updatedData, null, 2));
+      initialValuesRef.current = {
+        title: nextTitle,
+        message: nextMessage,
+        severity: nextSeverity,
+        assignee: nextAssignee,
+        status: nextStatus,
+        tlp: editedTlp,
+        references: JSON.stringify(editedReferences),
+        observables: JSON.stringify(editedObservables),
+        customFields: JSON.stringify(nextCustomFields),
+        tasks: JSON.stringify(tasks),
+        stakeholders: JSON.stringify(editedStakeholders),
+        labels: JSON.stringify(nextLabels),
+      };
+    }
+
+    for (const action of moveActions) {
+      if (action.targetOrgId) {
+        await moveIncidentToTenant(action.targetOrgId, updatedData);
+      }
+    }
+    toast.success(`Applied ${actionable.length} routing action${actionable.length === 1 ? '' : 's'}`);
+  };
+
   const handleResolve = async (resolutionData: ResolutionData) => {
     if (!incident) return;
     
@@ -6257,6 +6541,7 @@ const IncidentDetailPage = () => {
             stakeholders: editedStakeholders,
             rawOCSF: incident.rawOCSF,
           }}
+          onApplyActions={applyRoutingActions}
           onApply={async (patch) => {
             if (patch.severity) {
               setEditedSeverity(patch.severity);
@@ -6267,8 +6552,7 @@ const IncidentDetailPage = () => {
               toast.success(`Status set to ${patch.status}`);
             }
             if (patch.priority) {
-              toast.message(`Priority: ${patch.priority}`,
-                { description: 'Priority writes run via the routing workflow.' });
+              await applyRoutingActions([{ type: 'set_priority', value: patch.priority }]);
             }
             if (patch.assignee) {
               setEditedAssignee(patch.assignee);
@@ -6285,15 +6569,19 @@ const IncidentDetailPage = () => {
               await handleAddComment(patch.addComment);
             }
             if (patch.setField) {
-              toast.message(`Set ${patch.setField.field} → ${patch.setField.value}`,
-                { description: 'Custom-field writes are executed by the routing workflow.' });
+              await applyRoutingActions([{ type: 'set_field', field: patch.setField.field, value: patch.setField.value }]);
             }
           }}
           isActionApplied={(a) => {
+            const currentOrgIds = new Set<string>([
+              crossOrgId || userInfo?.active_org?.id || '',
+              ...sharedOrgs.map((org) => org.id),
+            ].filter(Boolean));
+            const rawCustomAttrs = incident?.rawOCSF?.metadata?.extensions?.custom_attributes || {};
             switch (a.type) {
-              case 'set_severity': return !!a.value && editedSeverity === a.value;
-              case 'set_status':   return !!a.value && editedStatus === a.value;
-              case 'set_priority': return false; // priority writes are workflow-driven
+              case 'set_severity': return !!a.value && editedSeverity === normalizeRoutingSeverityValue(a.value);
+              case 'set_status':   return !!a.value && editedStatus === normalizeStatus(a.value);
+              case 'set_priority': return !!a.value && String((incident?.rawOCSF as any)?.priority ?? (rawCustomAttrs as any)?.priority ?? '') === String(a.value);
               case 'add_label':    return !!a.value && editedLabels.includes(a.value);
               case 'assign_to':    return !!a.value && editedAssignee === a.value;
               case 'add_comment': {
@@ -6306,16 +6594,28 @@ const IncidentDetailPage = () => {
                   it.content.trim() === needle
                 );
               }
-              case 'suggest_move': return false; // cross-tenant moves aren't tracked here
-              case 'set_field':    return false; // handled by backend workflow
+              case 'suggest_move': return !!a.targetOrgId && currentOrgIds.size === 1 && currentOrgIds.has(a.targetOrgId);
+              case 'set_field': {
+                if (!a.field) return false;
+                const expected = parseRoutingActionValue(a.value);
+                const canonicalField = a.field.startsWith('rawOCSF.') ? a.field.slice('rawOCSF.'.length) : a.field;
+                if (canonicalField === 'severity') return editedSeverity === normalizeRoutingSeverityValue(String(expected));
+                if (canonicalField === 'status') return editedStatus === normalizeStatus(String(expected));
+                const actual = canonicalField === 'title' ? editedTitle
+                  : canonicalField === 'description' || canonicalField === 'desc' ? editedMessage
+                  : canonicalField === 'assignee' ? editedAssignee
+                  : canonicalField === 'priority' ? ((incident?.rawOCSF as any)?.priority ?? (rawCustomAttrs as any)?.priority)
+                  : canonicalField === 'labels' || canonicalField === 'types' ? editedLabels.includes(String(expected)) ? expected : undefined
+                  : a.field.startsWith('rawOCSF.')
+                    ? readDeepValue(incident?.rawOCSF, a.field.slice('rawOCSF.'.length))
+                    : editedCustomFields[a.field.replace(/^customFields\./, '').replace(/^custom_fields\./, '')];
+                return String(actual ?? '') === String(expected ?? '');
+              }
               default: return false;
             }
           }}
-          onMove={(targetOrgId, targetOrgName) => {
-            toast.message(
-              `Suggested move to ${targetOrgName || targetOrgId.slice(0, 8)}`,
-              { description: 'Cross-tenant moves run via the routing workflow once configured.' }
-            );
+          onMove={async (targetOrgId) => {
+            await moveIncidentToTenant(targetOrgId);
           }}
         />
         </div>

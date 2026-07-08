@@ -368,9 +368,10 @@ const tryExtractItemsFromBody = (rawBody: string): { items: DatastoreItem[]; cat
 export const getDatastoreByCategory = async (
   category: string,
   cursor?: string,
-  limit?: number
+  limit?: number,
+  overrideOrgId?: string
 ): Promise<DatastoreResponse> => {
-  const orgId = getOrgId();
+  const orgId = overrideOrgId || getOrgId();
   if (!orgId) {
     return {
       success: false,
@@ -415,7 +416,7 @@ export const getDatastoreByCategory = async (
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          ...getAuthHeader(),
+          ...getAuthHeader(orgId),
         },
       }
     );
@@ -429,7 +430,7 @@ export const getDatastoreByCategory = async (
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
-            ...getAuthHeader(),
+            ...getAuthHeader(orgId),
           },
         }
       );
@@ -482,7 +483,7 @@ export const getDatastoreByCategory = async (
             credentials: 'include',
             headers: {
               'Content-Type': 'application/json',
-              ...getAuthHeader(),
+              ...getAuthHeader(orgId),
             },
           }
         );
