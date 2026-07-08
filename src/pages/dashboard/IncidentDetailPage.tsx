@@ -1199,8 +1199,26 @@ const IncidentDetailPage = () => {
   }, [rawDescriptionHtml]);
   const hasHtmlDescription = sanitizedDescriptionHtml.length > 0;
 
-  const enrichmentStatus = useEnrichmentStatus();
-  const assignEscalateStatus = useAssignEscalateStatus();
+  // Hoisted here so automation-status hooks below can scope to every tenant
+  // this incident lives in (primary + shared). Populated by the effect further
+  // down that probes for shared copies across sub-tenants.
+  const [sharedOrgs, setSharedOrgs] = useState<Array<{ id: string; name: string; image?: string }>>([]);
+
+  // Validate automation status against every tenant this incident lives in
+  // (primary + shared), so a copy in tenant A that lacks enrichment still
+  // surfaces the CTA even when the active session is on tenant B. `enable()`
+  // will run against every tenant currently missing the automation.
+  const incidentOrgIds = useMemo(() => {
+    const ids: string[] = [];
+    const primary = crossOrgId || userInfo?.active_org?.id;
+    if (primary) ids.push(primary);
+    for (const so of sharedOrgs) {
+      if (so?.id && !ids.includes(so.id)) ids.push(so.id);
+    }
+    return ids;
+  }, [crossOrgId, userInfo?.active_org?.id, sharedOrgs]);
+  const enrichmentStatus = useEnrichmentStatus(undefined, { orgIds: incidentOrgIds });
+  const assignEscalateStatus = useAssignEscalateStatus({ orgIds: incidentOrgIds });
   const isSupportUser = useIsSupport();
 
   // ── Inline enrichment CTA visibility ───────────────────────────────────
@@ -1673,7 +1691,7 @@ const IncidentDetailPage = () => {
   // Detect which other orgs share the same incident key
   // Primary source: shared_orgs query param from the list page (most reliable)
   // Fallback: probe each org via get_cache
-  const [sharedOrgs, setSharedOrgs] = useState<Array<{ id: string; name: string; image?: string }>>([]);
+  // (see hoisted declaration above)
   
   useEffect(() => {
     if (!id || !userInfo?.active_org?.id) return;
