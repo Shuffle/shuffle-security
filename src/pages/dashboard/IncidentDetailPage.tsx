@@ -9420,38 +9420,59 @@ const IncidentDetailPage = () => {
                     No other tenants available.
                   </Typography>
                 ) : (
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, border: '1px solid hsl(var(--border))', borderRadius: 1, p: 0.5, maxHeight: 320, overflowY: 'auto' }}>
-                    {candidates.map(c => {
-                      const isPresent = presentSet.has(c.id);
-                      const isChecked = moveSelectedOrgIds.has(c.id);
-                      return (
-                        <Box
-                          key={c.id}
-                          onClick={() => {
-                            if (isMoving) return;
-                            setMoveSelectedOrgIds(prev => {
-                              const next = new Set(prev);
-                              if (next.has(c.id)) next.delete(c.id); else next.add(c.id);
-                              return next;
-                            });
-                          }}
-                          sx={{
-                            display: 'flex', alignItems: 'center', gap: 1,
-                            px: 1, py: 0.5, borderRadius: 0.5, cursor: isMoving ? 'not-allowed' : 'pointer',
-                            '&:hover': { bgcolor: 'hsl(var(--muted) / 0.4)' },
-                          }}
-                        >
-                          <Checkbox size="small" checked={isChecked} disabled={isMoving} sx={{ p: 0.5 }} />
+                  <Autocomplete
+                    multiple
+                    size="small"
+                    disableCloseOnSelect
+                    disabled={isMoving}
+                    options={candidates}
+                    value={candidates.filter(c => moveSelectedOrgIds.has(c.id))}
+                    getOptionLabel={(opt) => opt.name}
+                    isOptionEqualToValue={(a, b) => a.id === b.id}
+                    onChange={(_e, next) => {
+                      setMoveSelectedOrgIds(new Set(next.map(n => n.id)));
+                    }}
+                    renderOption={(props, opt, { selected }) => (
+                      <li {...props} key={opt.id}>
+                        <Checkbox size="small" checked={selected} sx={{ p: 0.5, mr: 1 }} />
+                        <Box sx={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 1 }}>
                           <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {c.name}
+                            {opt.name}
                           </Typography>
-                          {isPresent && (
+                          {presentSet.has(opt.id) && (
                             <Chip size="small" label="Currently here" sx={{ height: 20, fontSize: '0.65rem', bgcolor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }} />
                           )}
                         </Box>
-                      );
-                    })}
-                  </Box>
+                      </li>
+                    )}
+                    renderTags={(value, getTagProps) =>
+                      value.map((opt, index) => {
+                        const { key, ...tagProps } = getTagProps({ index });
+                        return (
+                          <Chip
+                            key={key}
+                            {...tagProps}
+                            size="small"
+                            label={opt.name}
+                            sx={{
+                              height: 22,
+                              fontSize: '0.72rem',
+                              bgcolor: presentSet.has(opt.id) ? 'hsl(var(--muted))' : 'hsl(var(--primary) / 0.15)',
+                              color: 'hsl(var(--foreground))',
+                            }}
+                          />
+                        );
+                      })
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Tenants"
+                        placeholder={moveSelectedOrgIds.size === 0 ? 'Search tenants…' : ''}
+                      />
+                    )}
+                    slotProps={{ popper: { sx: { zIndex: 9999 } } }}
+                  />
                 )}
                 {noneSelected && (
                   <Typography variant="caption" sx={{ display: 'block', mt: 1, color: 'hsl(var(--destructive))' }}>
