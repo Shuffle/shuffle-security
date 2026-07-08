@@ -23,6 +23,12 @@ import type {
   RoutingRule,
   RoutingCondition,
 } from '@/components/settings/IncidentRoutingEditor';
+import {
+  evaluateTree,
+  collectLeaves,
+  type ConditionGroup,
+  type ConditionLeaf,
+} from '@/utils/routingConditionTree';
 
 export interface RoutingRuleMatch {
   rule: RoutingRule;
@@ -277,12 +283,27 @@ export const evaluateRoutingRules = (
   const out: RoutingRuleMatch[] = [];
   for (const rule of rules) {
     if (!rule.enabled) continue;
-    if (!rule.conditions || rule.conditions.length === 0) continue;
 
+    // Prefer tree model when the rule carries one (arbitrary AND/OR
+    // nesting up to the UI's depth cap). Fall back to the legacy flat
+    // conditions[] shape otherwise.
+    const tree = (rule as any).conditionTree as ConditionGroup | undefined;
+    if (tree && tree.kind === 'group' && tree.children?.length > 0) {
+      const leafEval = (leaf: ConditionLeaf) =>
+        evaluateCondition(ctx, { field: leaf.field, op: leaf.op, value: leaf.value });
+      if (evaluateTree(tree, leafEval)) {
+        // Report every leaf that individually matched, for the banner UI.
+        const matched = collectLeaves(tree)
+          .filter(leafEval)
+          .map((l) => ({ field: l.field, op: l.op, value: l.value } as RoutingCondition));
+        out.push({ rule, matched });
+      }
+      continue;
+    }
+
+    if (!rule.conditions || rule.conditions.length === 0) continue;
     const groups = buildGroups(rule);
     const matched: RoutingCondition[] = [];
-    // Every group must have at least one matching condition (AND across
-    // groups, OR within a group).
     let ok = true;
     for (const group of groups) {
       const hits = group.filter((c) => evaluateCondition(ctx, c));
