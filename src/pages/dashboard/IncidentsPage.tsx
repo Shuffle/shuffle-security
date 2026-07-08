@@ -1,3 +1,4 @@
+import { readTenantStamp, isTenantGhost, type TenantStamp } from '@/utils/tenantAuthority';
 import { ChevronLeft as ChevronLeftIcon, ChevronRight as ChevronRightIcon, Search as SearchIcon, X as CloseIcon, Plus as AddIcon, RefreshCw as RefreshIcon, Play as PlayArrowIcon, Rocket as RocketLaunchIcon, EyeOff as VisibilityOffIcon, AlertTriangle as WarningAmberIcon, Download as DownloadIcon, Calendar as CalendarTodayIcon } from 'lucide-react';
 import { useState, useEffect, useMemo, useCallback, useRef, useSyncExternalStore } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -1115,24 +1116,27 @@ const IncidentsPage = () => {
 
     const allIncidents = [...currentOrgIncidents, ...subOrgIncidents];
 
-    // Deduplicate cross-org incidents with the same key — keep the most recently edited
+    // Deduplicate cross-org incidents with the same key — keep the most
+    // recently edited copy AND respect the authoritative tenant stamp so
+    // ghost copies (auto-recovered by pipelines in tenants the incident was
+    // explicitly moved out of) are hidden from the tenant count.
     const deduped: DisplayIncident[] = [];
-    const keyMap = new Map<string, { best: DisplayIncident; allOrgs: Array<{ orgId: string; orgName: string; orgImage?: string }> }>();
-    
+    const keyMap = new Map<string, {
+      best: DisplayIncident;
+      copies: Array<{ orgId: string; orgName: string; orgImage?: string; inc: DisplayIncident }>;
+    }>();
+
     for (const inc of allIncidents) {
-      // Extract raw key (strip orgId:: prefix)
       const rawKey = toRawIncidentKey(inc.id);
       const existing = keyMap.get(rawKey);
-      const incOrgInfo = { orgId: inc.orgId || '', orgName: inc.orgName || '', orgImage: inc.orgImage };
-      
+      const copyEntry = { orgId: inc.orgId || '', orgName: inc.orgName || '', orgImage: inc.orgImage, inc };
+
       if (!existing) {
-        keyMap.set(rawKey, { best: inc, allOrgs: [incOrgInfo] });
+        keyMap.set(rawKey, { best: inc, copies: [copyEntry] });
       } else {
-        // Only add if this orgId isn't already tracked
-        if (!existing.allOrgs.some(o => o.orgId === incOrgInfo.orgId)) {
-          existing.allOrgs.push(incOrgInfo);
+        if (!existing.copies.some(o => o.orgId === copyEntry.orgId)) {
+          existing.copies.push(copyEntry);
         }
-        // Keep the one with the latest edit timestamp
         const existingTs = existing.best.editedTs || existing.best.createdTs || 0;
         const newTs = inc.editedTs || inc.createdTs || 0;
         if (newTs > existingTs) {
@@ -1140,11 +1144,38 @@ const IncidentsPage = () => {
         }
       }
     }
-    
-    for (const { best, allOrgs } of keyMap.values()) {
+
+    for (const { best, copies } of keyMap.values()) {
+      // Pick the authoritative tenant stamp (newest _tenants_updated_at
+      // across all copies). Any tenant in the stamp's `removed` list is a
+      // ghost and gets filtered out of the presence set.
+      let authStamp: TenantStamp | null = null;
+      for (const c of copies) {
+        const s = readTenantStamp((c.inc as any).rawOCSF);
+        if (!s) continue;
+        if (!authStamp || s.updatedAt > authStamp.updatedAt) authStamp = s;
+      }
+      const liveCopies = copies.filter(c => !isTenantGhost(c.orgId, authStamp));
+      // If every remaining copy was a ghost (shouldn't happen — at least the
+      // authoritative one lives somewhere) fall back to raw copies rather
+      // than dropping the incident entirely.
+      const effectiveCopies = liveCopies.length > 0 ? liveCopies : copies;
+      const allOrgs = effectiveCopies.map(c => ({ orgId: c.orgId, orgName: c.orgName, orgImage: c.orgImage }));
+
+      // If `best` came from a ghost tenant, promote the most-recent live copy
+      // instead so we don't render a stale/duplicated tenant on the card.
+      let bestInc = best;
+      if (isTenantGhost(best.orgId || '', authStamp)) {
+        const sortedLive = [...effectiveCopies].sort((a, b) => {
+          const at = a.inc.editedTs || a.inc.createdTs || 0;
+          const bt = b.inc.editedTs || b.inc.createdTs || 0;
+          return bt - at;
+        });
+        if (sortedLive[0]) bestInc = sortedLive[0].inc;
+      }
+
       deduped.push({
-        ...best,
-        // Attach shared org info for downstream use
+        ...bestInc,
         sharedOrgs: allOrgs.length > 1 ? allOrgs : undefined,
       });
     }

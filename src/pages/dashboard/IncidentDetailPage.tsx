@@ -1,3 +1,4 @@
+import { readTenantStamp, isTenantGhost, type TenantStamp } from '@/utils/tenantAuthority';
 import { useState, useEffect, useMemo, useCallback, useRef, forwardRef } from 'react';
 import DOMPurify from 'dompurify';
 import AgentIcon from '@/Shuffle-MCPs/components/AgentIcon';
@@ -1709,14 +1710,16 @@ const IncidentDetailPage = () => {
     if (orgsToProbe.length === 0) return;
 
     const probeOrgs = async () => {
-      const found: Array<{ id: string; name: string; image?: string }> = [];
-      
+      // Collect every copy along with its raw value so we can compute the
+      // authoritative tenant stamp before deciding which tenants are real.
+      const raw: Array<{ id: string; name: string; image?: string; value: string | null }> = [];
+
       const results = await Promise.allSettled(
         orgsToProbe.map(async (org) => {
           try {
             const result = await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS, org.id);
             if (result.success && result.item?.value && result.item.value.length > 2) {
-              return { id: org.id, name: org.name, image: org.image };
+              return { id: org.id, name: org.name, image: org.image, value: result.item.value };
             }
           } catch {
             // Ignore probe failures
@@ -1724,13 +1727,39 @@ const IncidentDetailPage = () => {
           return null;
         })
       );
-      
+
       for (const r of results) {
         if (r.status === 'fulfilled' && r.value) {
-          found.push(r.value);
+          raw.push(r.value);
         }
       }
-      console.log(`[CrossOrg] Probed ${orgsToProbe.length} orgs for key "${id}", found in ${found.length} additional orgs:`, found.map(o => o.name));
+
+      // Also include the currently-viewed tenant when computing the stamp so
+      // its `_tenants` list wins if it's the newest.
+      const viewingOrgId = crossOrgId || userInfo.active_org?.id || '';
+      let authStamp: TenantStamp | null = null;
+      const consider = (value: string | null) => {
+        if (!value) return;
+        try {
+          const parsed = JSON.parse(value);
+          const s = readTenantStamp(parsed);
+          if (s && (!authStamp || s.updatedAt > authStamp.updatedAt)) authStamp = s;
+        } catch { /* ignore parse errors */ }
+      };
+      for (const c of raw) consider(c.value);
+      // Also consider whatever the primary loader already has in memory (the
+      // incident state) via a lightweight direct read to avoid coupling.
+      // Ghosts: any tenant explicitly excluded by the stamp.
+      const filtered = raw.filter(c => !isTenantGhost(c.id, authStamp));
+      // If the viewing tenant is a ghost per the stamp, the user is looking
+      // at a stale copy — leave that decision to the load logic. Just make
+      // sure we don't count ghost tenants as "shared".
+      if (isTenantGhost(viewingOrgId, authStamp)) {
+        console.warn(`[CrossOrg] viewing tenant ${viewingOrgId} is flagged as a ghost by authoritative stamp`);
+      }
+
+      const found = filtered.map(({ id: oid, name, image }) => ({ id: oid, name, image }));
+      console.log(`[CrossOrg] Probed ${orgsToProbe.length} orgs for key "${id}", found in ${found.length} additional orgs${authStamp ? ' (stamp-filtered)' : ''}:`, found.map(o => o.name));
       setSharedOrgs(found);
     };
     probeOrgs();
@@ -1994,13 +2023,29 @@ const IncidentDetailPage = () => {
                   const r = await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS, oid);
                   const valLen = r.item?.value?.length || 0;
                   const stub = !!(r.success && r.item) && !r.item.key && valLen <= 2;
-                  return r.success && r.item && !stub ? oid : null;
+                  if (!(r.success && r.item && !stub)) return null;
+                  let parsedValue: unknown = null;
+                  try { parsedValue = r.item.value ? JSON.parse(r.item.value) : null; } catch { /* ignore */ }
+                  return { orgId: oid, value: parsedValue };
                 } catch {
                   return null;
                 }
               }),
             );
-            const foundOrgId = probeResults.find(Boolean) as string | undefined;
+            const hits = probeResults.filter((r): r is { orgId: string; value: unknown } => !!r);
+            // Pick authoritative stamp so we don't chase a ghost.
+            let authStamp: TenantStamp | null = null;
+            for (const h of hits) {
+              const s = readTenantStamp(h.value);
+              if (s && (!authStamp || s.updatedAt > authStamp.updatedAt)) authStamp = s;
+            }
+            const liveHits = hits.filter(h => !isTenantGhost(h.orgId, authStamp));
+            // Prefer a hit that matches the authoritative tenants list;
+            // otherwise fall back to any live hit.
+            const preferred = authStamp
+              ? liveHits.find(h => authStamp!.tenants.includes(h.orgId)) || liveHits[0]
+              : liveHits[0] || hits[0];
+            const foundOrgId = preferred?.orgId;
             if (foundOrgId) {
               const newKey = foundOrgId === activeId ? id : `${foundOrgId}::${id}`;
               console.log(`[IncidentDetail] primary lookup empty; found copy in tenant ${foundOrgId} — redirecting`);
@@ -9581,7 +9626,7 @@ const IncidentDetailPage = () => {
                   // Pull the freshest copy from the source tenant so every
                   // write targets the same authoritative payload.
                   const fresh = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, sourceOrgId);
-                  let value: unknown = null;
+                  let value: any = null;
                   if (fresh?.success && fresh.item?.value) {
                     try {
                       value = typeof fresh.item.value === 'string' ? JSON.parse(fresh.item.value) : fresh.item.value;
@@ -9589,16 +9634,47 @@ const IncidentDetailPage = () => {
                   }
                   if (!value) value = incident.rawOCSF || incident;
 
-                  // 1) Write into every new tenant and verify each one before
-                  // touching any deletions. If ANY add fails to verify, we
-                  // bail out and roll back the additions so we never delete
-                  // the last copy of an incident.
+                  // Stamp the payload with an authoritative tenant list so
+                  // any later auto-recovery from datastore history can be
+                  // recognised as a ghost — the UI treats any tenant NOT in
+                  // this list (with an older stamp) as non-authoritative and
+                  // hides it from presence/count. This is the "know it was
+                  // moved" marker requested by the product.
+                  const stampedAt = Date.now();
+                  const selectedList = Array.from(selected);
+                  const removedList = Array.from(new Set([
+                    ...toRemove,
+                    ...(((value as any)?.metadata?.extensions?.custom_attributes?._tenants_removed) || []),
+                  ]));
+                  if (typeof value !== 'object' || value === null) value = {};
+                  const metaBase = { ...(value.metadata || {}) };
+                  const extBase = { ...(metaBase.extensions || {}) };
+                  const custBase = { ...(extBase.custom_attributes || {}) };
+                  custBase._tenants = selectedList;
+                  custBase._tenants_removed = removedList;
+                  custBase._tenants_updated_at = stampedAt;
+                  extBase.custom_attributes = custBase;
+                  metaBase.extensions = extBase;
+                  value.metadata = metaBase;
+
+                  // 1) Write the stamped payload into every selected tenant
+                  // (both new adds AND already-present copies), so every live
+                  // copy carries the same authoritative tenant list. Verify
+                  // each new add before touching any deletions.
                   const addedOk: string[] = [];
-                  for (const targetOrgId of toAdd) {
+                  for (const targetOrgId of selectedList) {
                     const writeRes = await setDatastoreItem(incident.id, value as object, DATASTORE_CATEGORIES.INCIDENTS, targetOrgId);
                     if (!writeRes.success) {
-                      throw new Error(writeRes.error || `Failed to write incident to tenant ${targetOrgId}`);
+                      // Only fail hard on a NEW add — restamping an existing
+                      // copy is best-effort and shouldn't block the move.
+                      if (toAdd.includes(targetOrgId)) {
+                        throw new Error(writeRes.error || `Failed to write incident to tenant ${targetOrgId}`);
+                      } else {
+                        console.warn(`[MoveTenant] restamp of existing tenant ${targetOrgId} failed:`, writeRes.error);
+                        continue;
+                      }
                     }
+                    if (!toAdd.includes(targetOrgId)) continue; // no need to verify restamps
                     let verified = false;
                     const backoffsMs = [0, 400, 800, 1200, 1600, 2000, 2500, 3000];
                     for (const wait of backoffsMs) {
