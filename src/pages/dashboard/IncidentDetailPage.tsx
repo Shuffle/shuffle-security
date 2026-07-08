@@ -868,6 +868,7 @@ const IncidentDetailPage = () => {
   const [mergePreselectedId, setMergePreselectedId] = useState<string | undefined>(undefined);
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [moveTargetOrgId, setMoveTargetOrgId] = useState<string>('');
+  const [moveSelectedOrgIds, setMoveSelectedOrgIds] = useState<Set<string>>(new Set());
   const [isMoving, setIsMoving] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [publicAuthorization, setPublicAuthorization] = useState<string>('');
