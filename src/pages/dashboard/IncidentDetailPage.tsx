@@ -1204,7 +1204,7 @@ const IncidentDetailPage = () => {
   // down that probes for shared copies across sub-tenants.
   const [sharedOrgs, setSharedOrgs] = useState<Array<{ id: string; name: string; image?: string }>>([]);
 
-
+  // Validate automation status against every tenant this incident lives in
   // (primary + shared), so a copy in tenant A that lacks enrichment still
   // surfaces the CTA even when the active session is on tenant B. `enable()`
   // will run against every tenant currently missing the automation.
