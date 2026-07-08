@@ -6267,8 +6267,8 @@ const IncidentDetailPage = () => {
               toast.success(`Status set to ${patch.status}`);
             }
             if (patch.priority) {
-              setEditedPriority?.(patch.priority);
-              toast.success(`Priority set to ${patch.priority}`);
+              toast.message(`Priority: ${patch.priority}`,
+                { description: 'Priority writes run via the routing workflow.' });
             }
             if (patch.assignee) {
               setEditedAssignee(patch.assignee);
