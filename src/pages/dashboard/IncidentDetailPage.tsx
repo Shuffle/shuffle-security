@@ -9581,7 +9581,7 @@ const IncidentDetailPage = () => {
                   // Pull the freshest copy from the source tenant so every
                   // write targets the same authoritative payload.
                   const fresh = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, sourceOrgId);
-                  let value: unknown = null;
+                  let value: any = null;
                   if (fresh?.success && fresh.item?.value) {
                     try {
                       value = typeof fresh.item.value === 'string' ? JSON.parse(fresh.item.value) : fresh.item.value;
@@ -9589,16 +9589,47 @@ const IncidentDetailPage = () => {
                   }
                   if (!value) value = incident.rawOCSF || incident;
 
-                  // 1) Write into every new tenant and verify each one before
-                  // touching any deletions. If ANY add fails to verify, we
-                  // bail out and roll back the additions so we never delete
-                  // the last copy of an incident.
+                  // Stamp the payload with an authoritative tenant list so
+                  // any later auto-recovery from datastore history can be
+                  // recognised as a ghost — the UI treats any tenant NOT in
+                  // this list (with an older stamp) as non-authoritative and
+                  // hides it from presence/count. This is the "know it was
+                  // moved" marker requested by the product.
+                  const stampedAt = Date.now();
+                  const selectedList = Array.from(selected);
+                  const removedList = Array.from(new Set([
+                    ...toRemove,
+                    ...(((value as any)?.metadata?.extensions?.custom_attributes?._tenants_removed) || []),
+                  ]));
+                  if (typeof value !== 'object' || value === null) value = {};
+                  const metaBase = { ...(value.metadata || {}) };
+                  const extBase = { ...(metaBase.extensions || {}) };
+                  const custBase = { ...(extBase.custom_attributes || {}) };
+                  custBase._tenants = selectedList;
+                  custBase._tenants_removed = removedList;
+                  custBase._tenants_updated_at = stampedAt;
+                  extBase.custom_attributes = custBase;
+                  metaBase.extensions = extBase;
+                  value.metadata = metaBase;
+
+                  // 1) Write the stamped payload into every selected tenant
+                  // (both new adds AND already-present copies), so every live
+                  // copy carries the same authoritative tenant list. Verify
+                  // each new add before touching any deletions.
                   const addedOk: string[] = [];
-                  for (const targetOrgId of toAdd) {
+                  for (const targetOrgId of selectedList) {
                     const writeRes = await setDatastoreItem(incident.id, value as object, DATASTORE_CATEGORIES.INCIDENTS, targetOrgId);
                     if (!writeRes.success) {
-                      throw new Error(writeRes.error || `Failed to write incident to tenant ${targetOrgId}`);
+                      // Only fail hard on a NEW add — restamping an existing
+                      // copy is best-effort and shouldn't block the move.
+                      if (toAdd.includes(targetOrgId)) {
+                        throw new Error(writeRes.error || `Failed to write incident to tenant ${targetOrgId}`);
+                      } else {
+                        console.warn(`[MoveTenant] restamp of existing tenant ${targetOrgId} failed:`, writeRes.error);
+                        continue;
+                      }
                     }
+                    if (!toAdd.includes(targetOrgId)) continue; // no need to verify restamps
                     let verified = false;
                     const backoffsMs = [0, 400, 800, 1200, 1600, 2000, 2500, 3000];
                     for (const wait of backoffsMs) {
