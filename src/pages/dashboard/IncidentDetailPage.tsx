@@ -5174,21 +5174,19 @@ const IncidentDetailPage = () => {
             sx={{
               p: 1.5,
               borderRadius: 1.5,
-              bgcolor: 'rgba(100, 149, 237, 0.04)',
-              border: '1px solid rgba(100, 149, 237, 0.12)',
-              ...(showAsCreation && {
-                cursor: 'pointer',
-                transition: 'background-color 0.15s ease, border-color 0.15s ease',
-                '&:hover': {
-                  bgcolor: 'rgba(100, 149, 237, 0.08)',
-                  borderColor: 'rgba(100, 149, 237, 0.24)',
-                },
-              }),
+              bgcolor: 'transparent',
+              border: '1px solid hsl(var(--border-subtle))',
+              transition: 'background-color 0.15s ease, border-color 0.15s ease',
+              '&:hover': {
+                bgcolor: 'hsl(var(--muted) / 0.4)',
+                borderColor: 'hsl(var(--border))',
+              },
+              ...(showAsCreation && { cursor: 'pointer' }),
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-              <Avatar sx={{ width: 24, height: 24, bgcolor: 'rgba(100, 149, 237, 0.15)' }}>
-                <HistoryIcon size={14} style={{ color: '#6495ed' }} />
+              <Avatar sx={{ width: 24, height: 24, bgcolor: 'hsl(var(--muted) / 0.6)' }}>
+                <HistoryIcon size={14} style={{ color: 'hsl(var(--muted-foreground))' }} />
               </Avatar>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
@@ -5196,13 +5194,13 @@ const IncidentDetailPage = () => {
                     {showAsCreation ? 'Incident created' : `Revision #${revisions.length - item.idx}`}
                   </Typography>
                   {isLatest && !showAsCreation && (
-                    <Chip label="Latest" size="small" variant="outlined" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'transparent', borderColor: 'rgba(255, 102, 0, 0.4)', color: '#ff6600', fontWeight: 600 }} />
+                    <Chip label="Latest" size="small" variant="outlined" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'transparent', borderColor: 'hsl(var(--border))', color: 'text.secondary', fontWeight: 600 }} />
                   )}
                   {isFirst && !isLatest && !showAsCreation && (
-                    <Chip label="Initial" size="small" variant="outlined" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'transparent', borderColor: 'rgba(255,255,255,0.12)', color: 'text.secondary', fontWeight: 600 }} />
+                    <Chip label="Initial" size="small" variant="outlined" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'transparent', borderColor: 'hsl(var(--border-subtle))', color: 'text.secondary', fontWeight: 600 }} />
                   )}
                   {totalChanges > 0 && !showAsCreation && (
-                    <Chip label={`${totalChanges} change${totalChanges !== 1 ? 's' : ''}`} size="small" variant="outlined" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'transparent', borderColor: 'rgba(255, 102, 0, 0.4)', color: '#ff6600' }} />
+                    <Chip label={`${totalChanges} change${totalChanges !== 1 ? 's' : ''}`} size="small" variant="outlined" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'transparent', borderColor: 'hsl(var(--border))', color: 'text.secondary' }} />
                   )}
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
@@ -5411,14 +5409,18 @@ const IncidentDetailPage = () => {
         // Compact "step" pill — these are derived events (task created /
         // observable added / correlation found) injected on the frontend so
         // the user can see *when* every artefact appeared on the timeline.
-        const stepStyle: Record<StepKind, { color: string; icon: React.ReactNode }> = {
-          'task-created':         { color: '#a855f7', icon: <TaskAltIcon size={12} /> },
-          'task-completed':       { color: '#22c55e', icon: <CheckCircleIcon size={12} /> },
-          'task-status-changed':  { color: '#3b82f6', icon: <ForwardIcon size={12} /> },
-          'observable-added':     { color: '#06b6d4', icon: <VisibilityIcon size={12} /> },
-          'correlation-found':    { color: '#f59e0b', icon: <LinkIcon size={12} /> },
-          'incident-created':     { color: '#6495ed', icon: <HistoryIcon size={12} /> },
-          'routing-matched':      { color: 'hsl(var(--primary))', icon: <CallSplitIcon size={12} /> },
+        // Step pills use a single neutral scheme so the timeline reads
+        // "here's the sequence of what happened" rather than a colour
+        // parade. The icon shape still tells you WHAT happened; only IOC /
+        // error pills escape into red below.
+        const stepStyle: Record<StepKind, { icon: React.ReactNode }> = {
+          'task-created':         { icon: <TaskAltIcon size={12} /> },
+          'task-completed':       { icon: <CheckCircleIcon size={12} /> },
+          'task-status-changed':  { icon: <ForwardIcon size={12} /> },
+          'observable-added':     { icon: <VisibilityIcon size={12} /> },
+          'correlation-found':    { icon: <LinkIcon size={12} /> },
+          'incident-created':     { icon: <HistoryIcon size={12} /> },
+          'routing-matched':      { icon: <CallSplitIcon size={12} /> },
         };
         const cfg = stepStyle[item.kind];
         // Highlight observable-added pills when the underlying observable
@@ -5507,14 +5509,13 @@ const IncidentDetailPage = () => {
           pillObsKey = item.id.slice('step-corr-obs-'.length).toLowerCase();
         }
         const isIocPill = !!pillObsKey && iocObservableKeys.has(pillObsKey);
-        // IOC pills override the kind-based color with the destructive token
-        // so the user immediately sees that *this* observable is known-bad —
-        // not just that an observable was added.
-        const pillColor = isIocPill ? 'hsl(var(--destructive))' : cfg.color;
-        const pillBg = isIocPill ? 'hsl(var(--destructive) / 0.08)' : `${cfg.color}0F`;
-        const pillBorder = isIocPill ? 'hsl(var(--destructive) / 0.5)' : `${cfg.color}33`;
-        const pillBgHover = isIocPill ? 'hsl(var(--destructive) / 0.14)' : `${cfg.color}1F`;
-        const pillBorderHover = isIocPill ? 'hsl(var(--destructive) / 0.7)' : `${cfg.color}66`;
+        // IOC pills override the neutral scheme with the destructive token
+        // so the user immediately sees that *this* observable is known-bad.
+        const pillColor = isIocPill ? 'hsl(var(--destructive))' : 'hsl(var(--muted-foreground))';
+        const pillBg = isIocPill ? 'hsl(var(--destructive) / 0.08)' : 'transparent';
+        const pillBorder = isIocPill ? 'hsl(var(--destructive) / 0.5)' : 'hsl(var(--border-subtle))';
+        const pillBgHover = isIocPill ? 'hsl(var(--destructive) / 0.14)' : 'hsl(var(--muted) / 0.5)';
+        const pillBorderHover = isIocPill ? 'hsl(var(--destructive) / 0.7)' : 'hsl(var(--border))';
 
         // Sparse-correlation context strip: when this pill represents a
         // correlation (or an observable that has correlations) and the set
@@ -5778,7 +5779,6 @@ const IncidentDetailPage = () => {
       // They cannot be modified or replied to — render a distinct,
       // resolution-themed badge instead of the comment-style card.
       if (isStatusActivity) {
-        const resolvedColor = 'hsl(var(--status-resolved))';
         return (
           <Box
             key={actItem.id}
@@ -5791,16 +5791,21 @@ const IncidentDetailPage = () => {
               px: 1.5,
               py: 1,
               borderRadius: 1.5,
-              bgcolor: 'hsl(var(--status-resolved) / 0.08)',
-              border: '1px solid hsl(var(--status-resolved) / 0.25)',
+              bgcolor: 'transparent',
+              border: '1px solid hsl(var(--border-subtle))',
+              transition: 'background-color 0.15s ease, border-color 0.15s ease',
+              '&:hover': {
+                bgcolor: 'hsl(var(--muted) / 0.4)',
+                borderColor: 'hsl(var(--border))',
+              },
             }}
           >
-            <Avatar sx={{ width: 22, height: 22, bgcolor: 'hsl(var(--status-resolved) / 0.18)', color: resolvedColor }}>
+            <Avatar sx={{ width: 22, height: 22, bgcolor: 'hsl(var(--muted) / 0.6)', color: 'hsl(var(--muted-foreground))' }}>
               <CheckCircleIcon size={14} />
             </Avatar>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
-                <Typography sx={{ fontSize: '0.73rem', fontWeight: 700, color: resolvedColor, letterSpacing: 0.3, textTransform: 'uppercase' }}>
+                <Typography sx={{ fontSize: '0.73rem', fontWeight: 600, color: 'hsl(var(--foreground))', letterSpacing: 0.3, textTransform: 'uppercase' }}>
                   Incident resolution
                 </Typography>
                 <Chip
@@ -5811,8 +5816,8 @@ const IncidentDetailPage = () => {
                     fontSize: '0.58rem',
                     fontWeight: 600,
                     bgcolor: 'transparent',
-                    border: '1px solid hsl(var(--status-resolved) / 0.4)',
-                    color: resolvedColor,
+                    border: '1px solid hsl(var(--border-subtle))',
+                    color: 'text.secondary',
                     '& .MuiChip-label': { px: 0.6 },
                   }}
                 />
