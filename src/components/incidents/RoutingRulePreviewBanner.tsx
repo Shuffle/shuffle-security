@@ -69,6 +69,7 @@ export const RoutingRulePreviewBanner = ({
   incidentId,
   onMove,
   onApply,
+  isActionApplied,
 }: RoutingRulePreviewBannerProps) => {
   const { userInfo } = useAuth();
   const currentOrgId = userInfo?.active_org?.id;
