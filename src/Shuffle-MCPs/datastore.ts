@@ -262,13 +262,16 @@ export const getDatastoreItem = async (
     payload.category = category;
   }
 
+  // Always pin Org-Id header so the backend routes the read to the exact
+  // tenant we asked for — do NOT rely on session default even when there is
+  // no explicit override, because the URL path already carries this orgId.
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Org-Id': orgId,
     ...getAuthHeader(),
   };
-  if (overrideOrgId) {
-    headers['Org-Id'] = overrideOrgId;
-  }
+
+  console.log(`[datastore.get] key=${rawKey} category=${category} orgId=${orgId}${overrideOrgId ? ' (override)' : ''}`);
 
   const response = await fetch(getApiUrl(`/api/v1/orgs/${orgId}/get_cache`), {
     method: 'POST',
@@ -284,6 +287,7 @@ export const getDatastoreItem = async (
     }
     return { success: false, error: `Failed to get datastore item: ${response.statusText}` };
   }
+
 
   const data = await response.json();
   
