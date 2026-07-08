@@ -168,11 +168,14 @@ export const setDatastoreItem = async (
     ...(category === 'shuffle-security_incidents' ? { ignore_security_rules: true } : {}),
   }];
 
+  // NOTE: pass `orgId` to getAuthHeader so its Org-Id matches the target
+  // tenant. Spreading getAuthHeader() AFTER a manual 'Org-Id' would let the
+  // session's active org overwrite the target and silently mis-route writes.
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'Org-Id': orgId,
-    ...getAuthHeader(),
+    ...getAuthHeader(orgId),
   };
+
 
   console.log(`[datastore.set] key=${rawKey} category=${category} orgId=${orgId}${overrideOrgId ? ' (override)' : ''}`);
 
@@ -216,9 +219,9 @@ export const setDatastoreItems = async (
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      'Org-Id': orgId,
-      ...getAuthHeader(),
+      ...getAuthHeader(orgId),
     },
+
     body: JSON.stringify(payload),
   });
 
@@ -267,9 +270,9 @@ export const getDatastoreItem = async (
   // no explicit override, because the URL path already carries this orgId.
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'Org-Id': orgId,
-    ...getAuthHeader(),
+    ...getAuthHeader(orgId),
   };
+
 
   console.log(`[datastore.get] key=${rawKey} category=${category} orgId=${orgId}${overrideOrgId ? ' (override)' : ''}`);
 
@@ -594,9 +597,9 @@ export const deleteDatastoreItem = async (
   // destructive operation.
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'Org-Id': orgId,
-    ...getAuthHeader(),
+    ...getAuthHeader(orgId),
   };
+
 
   console.log(`[datastore.delete] key=${rawKey} category=${category} orgId=${orgId}${overrideOrgId ? ' (override)' : ''}`);
 
