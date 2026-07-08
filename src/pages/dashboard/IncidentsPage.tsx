@@ -446,6 +446,10 @@ const IncidentsPage = () => {
       if (!arr.length) return null;
       return arr.length === 1 ? arr[0] : arr;
     };
+    const persisted = !hasActiveFilterParams(searchParams) ? loadPersistedFilters() : null;
+    if (persisted?.filters) {
+      return persisted.filters;
+    }
     const sevParam = parseList(searchParams.get('severity'));
     const statusParam = parseList(searchParams.get('status'));
     const tlpParam = searchParams.get('tlp');
