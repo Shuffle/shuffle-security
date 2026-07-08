@@ -9679,35 +9679,8 @@ const IncidentDetailPage = () => {
                     }
                   }
 
-                  // 1) Delete from old tenants.
-                  const removedOk: string[] = [];
-                  const removeFailures: string[] = [];
-                  for (const oldOrgId of toRemove) {
-                    if (selectedSet.has(oldOrgId)) {
-                      throw new Error(`[MoveTenant] refused delete on selected tenant ${oldOrgId}`);
-                    }
-                    console.log(`[MoveTenant] delete -> ${oldOrgId}`);
-                    let deleted = false;
-                    try {
-                      const dr = await deleteDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, oldOrgId);
-                      deleted = !!dr.success;
-                    } catch { deleted = false; }
-                    if (deleted) removedOk.push(oldOrgId); else removeFailures.push(oldOrgId);
-                  }
-
-                  // 2) Verify each deletion (one read per removed tenant).
-                  const stillPresent: string[] = [];
-                  for (const oldOrgId of toRemove) {
-                    try {
-                      const check = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, oldOrgId);
-                      if (check?.success && check.item?.value) stillPresent.push(oldOrgId);
-                    } catch { /* ignore */ }
-                  }
-                  if (stillPresent.length > 0) {
-                    console.error('[MoveTenant] delete not honored by backend', stillPresent);
-                  }
-
-                  // 3) Add to new tenants.
+                  // 1) Add to new tenants FIRST (safer: if writes fail we
+                  //    haven't destroyed the source copy yet).
                   const addedOk: string[] = [];
                   const addFailures: string[] = [];
                   for (const targetOrgId of toAdd) {
@@ -9723,7 +9696,7 @@ const IncidentDetailPage = () => {
                     if (written) addedOk.push(targetOrgId); else addFailures.push(targetOrgId);
                   }
 
-                  // 4) Verify each addition (one read per added tenant).
+                  // 2) Verify each addition (one read per added tenant).
                   const missingTargets: string[] = [];
                   for (const targetOrgId of toAdd) {
                     try {
@@ -9731,13 +9704,50 @@ const IncidentDetailPage = () => {
                       if (!(check?.success && check.item?.value)) missingTargets.push(targetOrgId);
                     } catch { missingTargets.push(targetOrgId); }
                   }
-                  if (missingTargets.length > 0) {
-                    console.error('[MoveTenant] write not honored by backend', missingTargets);
-                    toast.error(`Write did not land in ${missingTargets.length} target tenant(s) — backend rejected the move`);
+
+                  // If any add failed OR verification came up empty, ABORT
+                  // before deleting anything. This preserves the source copy
+                  // so the user can retry / roll back manually.
+                  if (addFailures.length > 0 || missingTargets.length > 0) {
+                    console.error('[MoveTenant] add phase failed — skipping deletes', { addFailures, missingTargets });
+                    toast.error(
+                      `Add failed for ${(addFailures.length || missingTargets.length)} target tenant(s) — old copies were NOT deleted so you can retry`
+                    );
+                    setIsMoving(false);
+                    return;
+                  }
+
+                  // 3) Now delete from old tenants (only reached if all adds
+                  //    landed and verified).
+                  const removedOk: string[] = [];
+                  const removeFailures: string[] = [];
+                  for (const oldOrgId of toRemove) {
+                    if (selectedSet.has(oldOrgId)) {
+                      throw new Error(`[MoveTenant] refused delete on selected tenant ${oldOrgId}`);
+                    }
+                    console.log(`[MoveTenant] delete -> ${oldOrgId}`);
+                    let deleted = false;
+                    try {
+                      const dr = await deleteDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, oldOrgId);
+                      deleted = !!dr.success;
+                    } catch { deleted = false; }
+                    if (deleted) removedOk.push(oldOrgId); else removeFailures.push(oldOrgId);
+                  }
+
+                  // 4) Verify each deletion (one read per removed tenant).
+                  const stillPresent: string[] = [];
+                  for (const oldOrgId of toRemove) {
+                    try {
+                      const check = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, oldOrgId);
+                      if (check?.success && check.item?.value) stillPresent.push(oldOrgId);
+                    } catch { /* ignore */ }
                   }
                   if (stillPresent.length > 0) {
-                    toast.error(`Incident still present in ${stillPresent.length} old tenant(s) — backend did not delete`);
+                    console.error('[MoveTenant] delete not honored by backend', stillPresent);
+                    toast.error(`Incident still present in ${stillPresent.length} old tenant(s) — backend did not delete (new copies are live, safe to retry delete)`);
                   }
+
+
 
 
 
