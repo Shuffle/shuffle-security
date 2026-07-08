@@ -328,7 +328,7 @@ const OrgPreferencesPage = () => {
         </Paper>
 
         {/*
-          Incident Routing — multi-tenant rule list. Rules are evaluated by
+          Incident Rules — multi-tenant rule list. Rules are evaluated by
           the user's incident automation (workflow); the UI only suggests
           moves and provides a confirmation CTA on the incident page.
           Component is fully standalone and can be lifted out to a dedicated
@@ -347,7 +347,7 @@ const OrgPreferencesPage = () => {
         >
           <Box>
             <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-              Incident Routing
+              Incident Rules
             </Typography>
             <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
               Define rules that suggest moving incidents between tenants. Your incident automation
