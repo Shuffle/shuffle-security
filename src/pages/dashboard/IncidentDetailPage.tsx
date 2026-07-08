@@ -9722,49 +9722,20 @@ const IncidentDetailPage = () => {
                     addedOk.push(targetOrgId);
                   }
 
-                  // 2) Only now — after every add is verified — clear the
-                  // incident from any tenants that were unchecked. We do NOT
-                  // hard-delete the row: the datastore backend auto-recovers
-                  // deleted keys from history on the next read, which brings
-                  // the removed incident back. Instead we overwrite the copy
-                  // with a stamped TOMBSTONE payload. The row stays present
-                  // (no auto-recovery kicks in) and the UI filters it via
-                  // `isTenantTombstone` / `isTenantGhost`.
+                  // 2) Only now — after every add is verified — delete the
+                  // incident from any tenants that were unchecked.
                   const removedOk: string[] = [];
                   const removeFailures: string[] = [];
                   for (const oldOrgId of toRemove) {
-                    const tombstone = buildTombstonePayload(value, {
-                      tenants: selectedList,
-                      removed: removedList,
-                      updatedAt: stampedAt,
-                    });
-                    let writeReturnedOk = false;
+                    let deleted = false;
                     try {
-                      const wr = await setDatastoreItem(incident.id, tombstone, DATASTORE_CATEGORIES.INCIDENTS, oldOrgId);
-                      writeReturnedOk = !!wr.success;
+                      const dr = await deleteDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, oldOrgId);
+                      deleted = !!dr.success;
                     } catch {
-                      writeReturnedOk = false;
+                      deleted = false;
                     }
 
-                    // Verify the tombstone actually landed by reading it back
-                    // and checking the flag. Small backoff to absorb cache lag.
-                    let verified = false;
-                    const backoffsMs = [0, 300, 600, 1000, 1500];
-                    for (const wait of backoffsMs) {
-                      if (verified) break;
-                      if (wait > 0) await new Promise(r => setTimeout(r, wait));
-                      try {
-                        const check = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, oldOrgId);
-                        if (check?.success && check.item?.value) {
-                          try {
-                            const parsed = typeof check.item.value === 'string' ? JSON.parse(check.item.value) : check.item.value;
-                            if (isTenantTombstone(parsed)) verified = true;
-                          } catch { /* retry */ }
-                        }
-                      } catch { /* retry */ }
-                    }
-
-                    if (verified || writeReturnedOk) {
+                    if (deleted) {
                       removedOk.push(oldOrgId);
                     } else {
                       removeFailures.push(oldOrgId);
