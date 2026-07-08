@@ -517,6 +517,30 @@ const IncidentsPage = () => {
     }
     return undefined;
   });
+
+  // Persist incident filters to localStorage for up to 24 hours so reloads
+  // and sidebar navigation restore the last active filter set.
+  useEffect(() => {
+    savePersistedFilters(filters, negatedFilters, dateFrom, dateTo);
+  }, [filters, negatedFilters, dateFrom, dateTo]);
+
+  const orgFilterValidatedRef = useRef(false);
+  useEffect(() => {
+    if (!currentOrgId || orgFilterValidatedRef.current) return;
+    if (!isChildOrg && subOrgs.length === 0) return;
+    orgFilterValidatedRef.current = true;
+    const validIds = new Set([currentOrgId, ...subOrgs.map(o => o.id)]);
+    setFilters(prev => {
+      if (!prev.org) return prev;
+      const nextOrg = prev.org.filter(id => validIds.has(id));
+      if (nextOrg.length === prev.org.length) return prev;
+      if (nextOrg.length === 0) {
+        return { ...prev, org: isChildOrg ? [currentOrgId] : null };
+      }
+      return { ...prev, org: nextOrg };
+    });
+  }, [currentOrgId, subOrgs, isChildOrg]);
+
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [automationsDialogOpen, setAutomationsDialogOpen] = useState(false);
   const [categoryAutomations, setCategoryAutomations] = useState<CategoryAutomation[]>([]);
