@@ -292,10 +292,15 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
   const sortedRules = useMemo(
     () =>
       Object.values(drafts).sort((a, b) => {
+        // Unsaved (freshly added) rules always float to the top so it's
+        // obvious a new one was just created.
+        const aLocal = localOnlyIds.has(a.id) ? 0 : 1;
+        const bLocal = localOnlyIds.has(b.id) ? 0 : 1;
+        if (aLocal !== bLocal) return aLocal - bLocal;
         if (a.priority !== b.priority) return a.priority - b.priority;
         return (a.createdTs || 0) - (b.createdTs || 0);
       }),
-    [drafts]
+    [drafts, localOnlyIds]
   );
 
   const updateRule = (id: string, patch: Partial<RoutingRule>) => {
@@ -312,7 +317,7 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
     });
   };
 
-  const addCondition = (id: string) => {
+  const addCondition = (id: string, asOr: boolean = false) => {
     setDrafts((prev) => {
       const r = prev[id];
       if (!r) return prev;
@@ -320,7 +325,10 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
         ...prev,
         [id]: {
           ...r,
-          conditions: [...r.conditions, { field: 'title', op: 'contains', value: '' }],
+          conditions: [
+            ...r.conditions,
+            { field: 'title', op: 'contains', value: '', or: asOr && r.conditions.length > 0 },
+          ],
           updatedTs: Date.now(),
         },
       };
@@ -363,7 +371,10 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
         createdTs: rule.createdTs || Date.now(),
         updatedTs: Date.now(),
       };
-      const ok = await addItem(rule.id, JSON.stringify(payload));
+      // Pass skipRefresh=false so `items` includes the new rule before we
+      // remove it from `localOnlyIds` — otherwise the drafts-rebuild effect
+      // drops the just-saved rule from the list.
+      const ok = await addItem(rule.id, JSON.stringify(payload), false);
       if (ok) {
         toast.success('Routing rule saved');
         // Update local draft in place — no full reload of the area.
@@ -513,7 +524,7 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
   if (!isParentOrg && !forceShow) {
     return (
       <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
-        Incident Rules are only available when you have one or more child tenants.
+        Incident Routing Rules are only available when you have one or more child tenants.
       </Typography>
     );
   }
@@ -715,113 +726,235 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
             </Tooltip>
           </Box>
 
-          {/* Conditions */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: '0.05em' }}>
-                When
-              </Typography>
-              <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.65rem' }}>
-                All rows must match. Click the connector between two rows to switch AND ↔ OR (OR rows indent under their group).
-              </Typography>
-            </Box>
-            {rule.conditions.map((cond, idx) => {
-              const isOr = idx > 0 && !!cond.or;
-              return (
-              <Box key={idx} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                {idx > 0 && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, pl: isOr ? 0 : 0 }}>
-                    <Chip
-                      label={isOr ? 'OR' : 'AND'}
-                      size="small"
-                      onClick={() => updateCondition(rule.id, idx, { or: !isOr })}
-                      sx={{
-                        height: 20,
-                        fontSize: '0.6rem',
-                        fontWeight: 700,
-                        letterSpacing: '0.05em',
-                        bgcolor: isOr ? 'hsl(var(--primary) / 0.15)' : 'hsl(var(--muted))',
-                        color: isOr ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
-                        cursor: 'pointer',
-                        borderRadius: 0.5,
-                        '&:hover': { bgcolor: isOr ? 'hsl(var(--primary) / 0.25)' : 'hsl(var(--muted) / 0.7)' },
-                      }}
-                    />
-                  </Box>
-                )}
-                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap', pl: isOr ? 4 : 0, borderLeft: isOr ? '2px solid hsl(var(--primary) / 0.3)' : 'none', ml: isOr ? 1 : 0 }}>
-                  <TextField
-                    size="small"
-                    value={cond.field}
-                    onChange={(e) => updateCondition(rule.id, idx, { field: e.target.value })}
-                    placeholder="Field path"
-                    select
-                    SelectProps={{
-                      native: false,
-                      renderValue: (v) => (v as string),
-                    }}
-                    sx={{ minWidth: 220, flex: 1 }}
-                  >
-                    {FIELD_SUGGESTIONS.map((f) => (
-                      <MenuItem key={f} value={f} sx={{ fontSize: '0.8rem' }}>
-                        {FIELD_LABELS[f] || f}
-                      </MenuItem>
-                    ))}
-                    {!FIELD_SUGGESTIONS.includes(cond.field) && cond.field && (
-                      <MenuItem value={cond.field}>{cond.field}</MenuItem>
-                    )}
-                  </TextField>
-                  <TextField
-                    size="small"
-                    select
-                    value={cond.op}
-                    onChange={(e) => updateCondition(rule.id, idx, { op: e.target.value as RoutingConditionOp })}
-                    sx={{ width: 140 }}
-                  >
-                    {(Object.keys(OP_LABELS) as RoutingConditionOp[]).map((op) => (
-                      <MenuItem key={op} value={op} sx={{ fontSize: '0.8rem' }}>
-                        {OP_LABELS[op]}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                  {cond.op !== 'exists' && (
-                    <TextField
-                      size="small"
-                      value={cond.value || ''}
-                      onChange={(e) => updateCondition(rule.id, idx, { value: e.target.value })}
-                      placeholder="value"
-                      sx={{ flex: 1, minWidth: 200 }}
-                    />
-                  )}
-                  <IconButton
-                    size="small"
-                    onClick={() => removeCondition(rule.id, idx)}
-                    disabled={rule.conditions.length <= 1}
-                    sx={{ width: 36, height: 36 }}
-                  >
-                    <DeleteOutlineIcon size={16} />
-                  </IconButton>
+          {/* Conditions — grouped visually so nested OR/AND is unambiguous:
+              each "group" is an OR box (rows joined by OR), and groups are
+              AND'd together. */}
+          {(() => {
+            // Build groups from the flat conditions array.
+            const groups: { idx: number; cond: RoutingCondition }[][] = [];
+            rule.conditions.forEach((c, i) => {
+              if (i === 0 || !c.or) groups.push([{ idx: i, cond: c }]);
+              else groups[groups.length - 1].push({ idx: i, cond: c });
+            });
+            return (
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: '0.05em' }}>
+                    When
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.65rem' }}>
+                    Each box below must match (AND between boxes). Rows inside a box are joined with OR — ANY row matches the box.
+                  </Typography>
                 </Box>
-              </Box>
-              );
-            })}
 
-            <Button
-              size="small"
-              onClick={() => addCondition(rule.id)}
-              startIcon={<AddIcon size={14} />}
-              sx={{
-                alignSelf: 'flex-start',
-                height: 28,
-                textTransform: 'none',
-                fontSize: '0.7rem',
-                color: 'hsl(var(--muted-foreground))',
-                '&:hover': { color: 'hsl(var(--primary))', bgcolor: 'transparent' },
-              }}
-            >
-              Add condition
-            </Button>
-          </Box>
+                {groups.map((group, gIdx) => (
+                  <Box key={gIdx} sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                    {/* AND separator between groups */}
+                    {gIdx > 0 && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 0.75 }}>
+                        <Box sx={{ flex: 1, height: '1px', bgcolor: 'hsl(var(--border))' }} />
+                        <Chip
+                          label="AND"
+                          size="small"
+                          sx={{
+                            height: 20,
+                            fontSize: '0.6rem',
+                            fontWeight: 700,
+                            letterSpacing: '0.08em',
+                            bgcolor: 'hsl(var(--muted))',
+                            color: 'hsl(var(--foreground))',
+                            borderRadius: 0.5,
+                          }}
+                        />
+                        <Box sx={{ flex: 1, height: '1px', bgcolor: 'hsl(var(--border))' }} />
+                      </Box>
+                    )}
+
+                    {/* Group container */}
+                    <Box
+                      sx={{
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: 1,
+                        p: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 0.75,
+                        bgcolor: group.length > 1 ? 'hsl(var(--primary) / 0.04)' : 'transparent',
+                        borderColor: group.length > 1 ? 'hsl(var(--primary) / 0.3)' : 'hsl(var(--border))',
+                        position: 'relative',
+                      }}
+                    >
+                      {group.length > 1 && (
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            position: 'absolute',
+                            top: -8,
+                            left: 8,
+                            px: 0.75,
+                            bgcolor: 'hsl(var(--card))',
+                            color: 'hsl(var(--primary))',
+                            fontWeight: 700,
+                            fontSize: '0.6rem',
+                            letterSpacing: '0.08em',
+                          }}
+                        >
+                          MATCH ANY (OR)
+                        </Typography>
+                      )}
+
+                      {group.map(({ idx, cond }, memberIdx) => (
+                        <Box key={idx} sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                          {memberIdx > 0 && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, pl: 1 }}>
+                              <Chip
+                                label="OR"
+                                size="small"
+                                sx={{
+                                  height: 18,
+                                  fontSize: '0.6rem',
+                                  fontWeight: 700,
+                                  letterSpacing: '0.08em',
+                                  bgcolor: 'hsl(var(--primary) / 0.15)',
+                                  color: 'hsl(var(--primary))',
+                                  borderRadius: 0.5,
+                                }}
+                              />
+                            </Box>
+                          )}
+                          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+                            <TextField
+                              size="small"
+                              value={cond.field}
+                              onChange={(e) => updateCondition(rule.id, idx, { field: e.target.value })}
+                              placeholder="Field path"
+                              select
+                              SelectProps={{ native: false, renderValue: (v) => (v as string) }}
+                              sx={{ minWidth: 220, flex: 1 }}
+                            >
+                              {FIELD_SUGGESTIONS.map((f) => (
+                                <MenuItem key={f} value={f} sx={{ fontSize: '0.8rem' }}>
+                                  {FIELD_LABELS[f] || f}
+                                </MenuItem>
+                              ))}
+                              {!FIELD_SUGGESTIONS.includes(cond.field) && cond.field && (
+                                <MenuItem value={cond.field}>{cond.field}</MenuItem>
+                              )}
+                            </TextField>
+                            <TextField
+                              size="small"
+                              select
+                              value={cond.op}
+                              onChange={(e) => updateCondition(rule.id, idx, { op: e.target.value as RoutingConditionOp })}
+                              sx={{ width: 140 }}
+                            >
+                              {(Object.keys(OP_LABELS) as RoutingConditionOp[]).map((op) => (
+                                <MenuItem key={op} value={op} sx={{ fontSize: '0.8rem' }}>
+                                  {OP_LABELS[op]}
+                                </MenuItem>
+                              ))}
+                            </TextField>
+                            {cond.op !== 'exists' && (
+                              <TextField
+                                size="small"
+                                value={cond.value || ''}
+                                onChange={(e) => updateCondition(rule.id, idx, { value: e.target.value })}
+                                placeholder="value"
+                                sx={{ flex: 1, minWidth: 200 }}
+                              />
+                            )}
+                            {/* Move-between-groups toggle (only meaningful when
+                                not the first row overall) */}
+                            {idx > 0 && (
+                              <Tooltip title={cond.or ? 'Detach from OR group (make AND)' : 'Merge into previous OR group'}>
+                                <Chip
+                                  label={cond.or ? '→ AND' : '→ OR'}
+                                  size="small"
+                                  onClick={() => updateCondition(rule.id, idx, { or: !cond.or })}
+                                  sx={{
+                                    height: 24,
+                                    fontSize: '0.6rem',
+                                    fontWeight: 700,
+                                    letterSpacing: '0.05em',
+                                    bgcolor: 'transparent',
+                                    color: 'hsl(var(--muted-foreground))',
+                                    border: '1px dashed hsl(var(--border))',
+                                    cursor: 'pointer',
+                                    borderRadius: 0.5,
+                                    '&:hover': { color: 'hsl(var(--primary))', borderColor: 'hsl(var(--primary))' },
+                                  }}
+                                />
+                              </Tooltip>
+                            )}
+                            <IconButton
+                              size="small"
+                              onClick={() => removeCondition(rule.id, idx)}
+                              disabled={rule.conditions.length <= 1}
+                              sx={{ width: 36, height: 36 }}
+                            >
+                              <DeleteOutlineIcon size={16} />
+                            </IconButton>
+                          </Box>
+                        </Box>
+                      ))}
+
+                      {/* Per-group "Add OR row" — only inside a group with at
+                          least one member. Makes it obvious how OR grows. */}
+                      <Button
+                        size="small"
+                        onClick={() => {
+                          // Append a new OR row to THIS group. Because groups
+                          // are contiguous, we can simply add after the last
+                          // condition when the target group is the last group.
+                          // For non-last groups, splice into the array.
+                          setDrafts((prev) => {
+                            const r = prev[rule.id];
+                            if (!r) return prev;
+                            const lastMemberIdx = group[group.length - 1].idx;
+                            const conds = r.conditions.slice();
+                            conds.splice(lastMemberIdx + 1, 0, {
+                              field: 'title',
+                              op: 'contains',
+                              value: '',
+                              or: true,
+                            });
+                            return { ...prev, [rule.id]: { ...r, conditions: conds, updatedTs: Date.now() } };
+                          });
+                        }}
+                        startIcon={<AddIcon size={12} />}
+                        sx={{
+                          alignSelf: 'flex-start',
+                          height: 24,
+                          textTransform: 'none',
+                          fontSize: '0.65rem',
+                          color: 'hsl(var(--primary))',
+                          '&:hover': { bgcolor: 'hsl(var(--primary) / 0.08)' },
+                        }}
+                      >
+                        OR alternative
+                      </Button>
+                    </Box>
+                  </Box>
+                ))}
+
+                <Button
+                  size="small"
+                  onClick={() => addCondition(rule.id, false)}
+                  startIcon={<AddIcon size={14} />}
+                  sx={{
+                    alignSelf: 'flex-start',
+                    height: 28,
+                    textTransform: 'none',
+                    fontSize: '0.7rem',
+                    color: 'hsl(var(--muted-foreground))',
+                    '&:hover': { color: 'hsl(var(--primary))', bgcolor: 'transparent' },
+                  }}
+                >
+                  AND condition
+                </Button>
+              </Box>
+            );
+          })()}
 
           {/* Actions */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pt: 1, borderTop: '1px solid hsl(var(--border))' }}>

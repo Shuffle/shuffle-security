@@ -566,13 +566,13 @@ export const DEFAULT_USECASES: Usecase[] = [
   },
   {
     id: 'case_management_incident_routing_1', phase: 'correlation', source: 'case_management', target: 'case_management',
-    label: 'Incident Rules', animated: true,
+    label: 'Incident Routing Rules', animated: true,
     tags: ['Context', 'Correlation', 'Routing'],
     description: 'Route incoming incidents to the right sub-organization based on tenant, source, severity, observables, or any field in the incident payload. Keeps multi-tenant environments tidy and ensures the right team owns each incident from the start.',
     agenticDescription: 'An agent evaluates each new incident against your rules, decides which sub-organization should own it, and either suggests or executes the move with full audit trail.',
     automationArea: 'correlation',
     customAction: {
-      label: 'Configure Rules',
+      label: 'Configure Routing Rules',
       href: '/preferences?tab=routing',
       description: 'Open Organization Preferences to manage incident rules.',
     },
