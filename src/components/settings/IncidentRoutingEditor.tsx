@@ -57,10 +57,17 @@ export type RoutingConditionOp =
   | 'exists';
 
 export interface RoutingCondition {
-  field: string; // e.g. "title", "source", "observables.email", "labels", "stakeholders.email"
+  field: string; // e.g. "title", "source", "observables.email", "labels", "stakeholders.email", or "*" for the whole object
   op: RoutingConditionOp;
   value?: string;
+  /**
+   * When true, this condition joins the PREVIOUS condition as an OR
+   * alternative. Groups formed this way are then AND'd together. The first
+   * condition in a rule ignores this flag (nothing to OR with).
+   */
+  or?: boolean;
 }
+
 
 export type RoutingActionType =
   | 'suggest_move'
