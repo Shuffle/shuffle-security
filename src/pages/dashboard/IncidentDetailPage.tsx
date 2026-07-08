@@ -1775,12 +1775,23 @@ const IncidentDetailPage = () => {
         }
       } catch { /* ignore */ }
 
-      const filtered = raw.filter(c => !isTenantGhost(c.id, authStamp));
+      const ghostIds = raw.filter(c => isTenantGhost(c.id, authStamp)).map(c => c.id);
+      const filtered = raw.filter(c => !ghostIds.includes(c.id));
       // If the viewing tenant is a ghost per the stamp, the user is looking
       // at a stale copy — leave that decision to the load logic. Just make
       // sure we don't count ghost tenants as "shared".
       if (isTenantGhost(viewingOrgId, authStamp)) {
         console.warn(`[CrossOrg] viewing tenant ${viewingOrgId} is flagged as a ghost by authoritative stamp`);
+      }
+
+      // Self-heal: aggressively re-delete any auto-recovered ghost copies so
+      // the backend's datastore-history recovery does not keep resurrecting
+      // them on every refresh. Fire-and-forget: the UI already filters them.
+      if (ghostIds.length > 0) {
+        console.log(`[CrossOrg] Self-healing ${ghostIds.length} auto-recovered ghost copies:`, ghostIds);
+        void Promise.allSettled(
+          ghostIds.map(oid => deleteDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS, oid)),
+        );
       }
 
       const found = filtered.map(({ id: oid, name, image }) => ({ id: oid, name, image }));
