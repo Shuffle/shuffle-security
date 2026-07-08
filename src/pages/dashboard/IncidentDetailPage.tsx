@@ -6598,9 +6598,17 @@ const IncidentDetailPage = () => {
               case 'set_field': {
                 if (!a.field) return false;
                 const expected = parseRoutingActionValue(a.value);
-                const actual = a.field.startsWith('rawOCSF.')
-                  ? readDeepValue(incident?.rawOCSF, a.field.slice('rawOCSF.'.length))
-                  : editedCustomFields[a.field.replace(/^customFields\./, '').replace(/^custom_fields\./, '')];
+                const canonicalField = a.field.startsWith('rawOCSF.') ? a.field.slice('rawOCSF.'.length) : a.field;
+                const actual = canonicalField === 'title' ? editedTitle
+                  : canonicalField === 'description' || canonicalField === 'desc' ? editedMessage
+                  : canonicalField === 'severity' ? editedSeverity
+                  : canonicalField === 'status' ? editedStatus
+                  : canonicalField === 'assignee' ? editedAssignee
+                  : canonicalField === 'priority' ? ((incident?.rawOCSF as any)?.priority ?? (rawCustomAttrs as any)?.priority)
+                  : canonicalField === 'labels' || canonicalField === 'types' ? editedLabels.includes(String(expected)) ? expected : undefined
+                  : a.field.startsWith('rawOCSF.')
+                    ? readDeepValue(incident?.rawOCSF, a.field.slice('rawOCSF.'.length))
+                    : editedCustomFields[a.field.replace(/^customFields\./, '').replace(/^custom_fields\./, '')];
                 return String(actual ?? '') === String(expected ?? '');
               }
               default: return false;

@@ -31,6 +31,7 @@ import {
 } from '@/components/settings/IncidentRoutingEditor';
 import { useSubOrgs } from '@/hooks/useSubOrgs';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from '@/lib/toast';
 import {
   evaluateRoutingRules,
   type IncidentEvaluationContext,
@@ -196,6 +197,9 @@ export const RoutingRulePreviewBanner = ({
           await runAction(a);
         }
       }
+    } catch (error) {
+      console.error('[RoutingRulePreviewBanner] apply failed', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to apply routing action');
     } finally {
       setIsApplying(false);
     }
