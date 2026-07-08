@@ -9680,16 +9680,41 @@ const IncidentDetailPage = () => {
                   metaBase.extensions = extBase;
                   value.metadata = metaBase;
 
-                  // 1) Write the stamped payload into every selected tenant
+                  // Defence in depth: never touch an org that is not either
+                  // in the selected set (add/restamp) or the remove set. If
+                  // the two lists disagree with the intent, abort instead of
+                  // silently spreading the incident to unintended tenants.
+                  const selectedSet = new Set(selectedList);
+                  const removeSet = new Set(toRemove);
+                  const activeId = userInfo?.active_org?.id;
+                  const overlap = [...selectedSet].filter(o => removeSet.has(o));
+                  if (overlap.length > 0) {
+                    console.error('[MoveTenant] refused: overlapping add/remove targets', overlap);
+                    throw new Error('Internal conflict in tenant selection — aborted');
+                  }
+                  console.log('[MoveTenant] intent', {
+                    incidentId: incident.id,
+                    sourceOrgId,
+                    activeOrgId: activeId,
+                    selected: selectedList,
+                    toAdd,
+                    toRemove,
+                  });
+
+                  // 1) Write the stamped payload into every SELECTED tenant
                   // (both new adds AND already-present copies), so every live
-                  // copy carries the same authoritative tenant list. Verify
-                  // each new add before touching any deletions.
+                  // copy carries the same authoritative tenant list. Each
+                  // write is pinned to its target org via Org-Id header and
+                  // payload org_id — no request may target another tenant.
                   const addedOk: string[] = [];
                   for (const targetOrgId of selectedList) {
+                    if (!selectedSet.has(targetOrgId)) {
+                      // Impossible unless selectedList was mutated — hard stop.
+                      throw new Error(`[MoveTenant] refused write to non-selected tenant ${targetOrgId}`);
+                    }
+                    console.log(`[MoveTenant] add/restamp -> ${targetOrgId}`);
                     const writeRes = await setDatastoreItem(incident.id, value as object, DATASTORE_CATEGORIES.INCIDENTS, targetOrgId);
                     if (!writeRes.success) {
-                      // Only fail hard on a NEW add — restamping an existing
-                      // copy is best-effort and shouldn't block the move.
                       if (toAdd.includes(targetOrgId)) {
                         throw new Error(writeRes.error || `Failed to write incident to tenant ${targetOrgId}`);
                       } else {
@@ -9718,10 +9743,15 @@ const IncidentDetailPage = () => {
                   }
 
                   // 2) Only now — after every add is verified — delete the
-                  // incident from any tenants that were unchecked.
+                  // incident from any tenants that were unchecked. Each
+                  // delete is pinned to its exact target org.
                   const removedOk: string[] = [];
                   const removeFailures: string[] = [];
                   for (const oldOrgId of toRemove) {
+                    if (selectedSet.has(oldOrgId)) {
+                      throw new Error(`[MoveTenant] refused delete on selected tenant ${oldOrgId}`);
+                    }
+                    console.log(`[MoveTenant] delete -> ${oldOrgId}`);
                     let deleted = false;
                     try {
                       const dr = await deleteDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, oldOrgId);
@@ -9736,6 +9766,33 @@ const IncidentDetailPage = () => {
                       removeFailures.push(oldOrgId);
                     }
                   }
+
+                  // 3) Post-move validation: for the active org and every
+                  // known sub/parent org NOT in the selected set, read back
+                  // and warn if the incident somehow landed there. This
+                  // makes any org-routing bug visible instead of silent.
+                  try {
+                    const knownIds = new Set<string>();
+                    if (activeId) knownIds.add(activeId);
+                    if (parentOrg?.id) knownIds.add(parentOrg.id);
+                    for (const so of subOrgs) knownIds.add(so.id);
+                    for (const so of sharedOrgs) knownIds.add(so.id);
+                    const shouldBeAbsent = [...knownIds].filter(o => !selectedSet.has(o));
+                    const strayHits: string[] = [];
+                    await Promise.all(shouldBeAbsent.map(async (oid) => {
+                      try {
+                        const check = await getDatastoreItem(incident.id, DATASTORE_CATEGORIES.INCIDENTS, oid);
+                        if (check?.success && check.item?.value) strayHits.push(oid);
+                      } catch { /* ignore */ }
+                    }));
+                    if (strayHits.length > 0) {
+                      console.error('[MoveTenant] stray copies still present after move', strayHits);
+                      toast.error(`Incident still present in ${strayHits.length} unselected tenant(s) — check console`);
+                    }
+                  } catch (e) {
+                    console.warn('[MoveTenant] post-move validation failed', e);
+                  }
+
 
 
                   if (removeFailures.length > 0) {
