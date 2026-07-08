@@ -364,6 +364,55 @@ interface Filters {
   org: string[] | null;
 }
 
+interface PersistedIncidentFilters {
+  filters: Filters;
+  negatedFilters: string[];
+  dateFrom?: string;
+  dateTo?: string;
+  savedAt: number;
+}
+
+const hasActiveFilterParams = (params: URLSearchParams): boolean => {
+  const keys = ['severity', 'status', 'tlp', 'assignee', 'source', 'tag', 'not'];
+  return keys.some(k => params.has(k));
+};
+
+const loadPersistedFilters = (): PersistedIncidentFilters | null => {
+  try {
+    const raw = localStorage.getItem(INCIDENT_FILTERS_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PersistedIncidentFilters;
+    if (!parsed || typeof parsed.savedAt !== 'number') return null;
+    if (Date.now() - parsed.savedAt > INCIDENT_FILTERS_TTL_MS) {
+      localStorage.removeItem(INCIDENT_FILTERS_STORAGE_KEY);
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const savePersistedFilters = (
+  filters: Filters,
+  negatedFilters: Set<string>,
+  dateFrom?: Date,
+  dateTo?: Date
+) => {
+  try {
+    const payload: PersistedIncidentFilters = {
+      filters,
+      negatedFilters: Array.from(negatedFilters),
+      dateFrom: dateFrom?.toISOString(),
+      dateTo: dateTo?.toISOString(),
+      savedAt: Date.now(),
+    };
+    localStorage.setItem(INCIDENT_FILTERS_STORAGE_KEY, JSON.stringify(payload));
+  } catch {
+    // ignore localStorage errors
+  }
+};
+
 const IncidentsPage = () => {
   const { resolvedTheme } = useTheme();
 
