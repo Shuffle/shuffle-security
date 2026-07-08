@@ -40,16 +40,25 @@ import {
 export interface RoutingApplyPayload {
   severity?: string;
   status?: string;
+  priority?: string;
   assignee?: string;
   addLabel?: string;
   addComment?: string;
+  setField?: { field: string; value: string };
 }
 
 interface RoutingRulePreviewBannerProps {
   context: IncidentEvaluationContext;
   incidentId?: string;
   onMove?: (targetOrgId: string, targetOrgName?: string) => void;
-  onApply?: (patch: RoutingApplyPayload) => void;
+  onApply?: (patch: RoutingApplyPayload) => void | Promise<void>;
+  /**
+   * Optional predicate the host page implements to tell the banner whether
+   * a given action's effect is already present on the incident (e.g. label
+   * already added, comment text already posted). Fully-applied rules are
+   * hidden and applied actions render as muted "done" chips.
+   */
+  isActionApplied?: (action: RoutingAction) => boolean;
 }
 
 const dismissKey = (incidentId: string | undefined, ruleId: string) =>
@@ -60,6 +69,7 @@ export const RoutingRulePreviewBanner = ({
   incidentId,
   onMove,
   onApply,
+  isActionApplied,
 }: RoutingRulePreviewBannerProps) => {
   const { userInfo } = useAuth();
   const currentOrgId = userInfo?.active_org?.id;
@@ -132,8 +142,49 @@ export const RoutingRulePreviewBanner = ({
     setDismissed(next);
   }, [incidentId, matches]);
 
-  const visible = matches.filter((m) => !dismissed.has(m.rule.id));
+  // Filter out dismissed rules AND rules whose actions have all already been
+  // applied (nothing left to suggest). `isActionApplied` is optional — when
+  // absent we keep prior behavior and show everything.
+  const isApplied = (a: RoutingAction) => (isActionApplied ? isActionApplied(a) : false);
+  const visible = matches
+    .filter((m) => !dismissed.has(m.rule.id))
+    .filter((m) => m.rule.actions.some((a) => !isApplied(a)));
   if (visible.length === 0) return null;
+
+  /** Dispatch a single action through the correct callback. */
+  const runAction = async (a: RoutingAction) => {
+    if (isApplied(a)) return;
+    switch (a.type) {
+      case 'suggest_move':
+        if (a.targetOrgId && onMove) {
+          const name = orgNameById[a.targetOrgId] || a.targetOrgId.slice(0, 8);
+          await onMove(a.targetOrgId, name);
+        }
+        return;
+      case 'set_severity':  if (a.value) await onApply?.({ severity: a.value }); return;
+      case 'set_status':    if (a.value) await onApply?.({ status: a.value }); return;
+      case 'set_priority':  if (a.value) await onApply?.({ priority: a.value }); return;
+      case 'add_label':     if (a.value) await onApply?.({ addLabel: a.value }); return;
+      case 'assign_to':     if (a.value) await onApply?.({ assignee: a.value }); return;
+      case 'add_comment':   if (a.value) await onApply?.({ addComment: a.value }); return;
+      case 'set_field':
+        if (a.field && a.value !== undefined) {
+          await onApply?.({ setField: { field: a.field, value: a.value } });
+        }
+        return;
+    }
+  };
+
+  const applyAllForRule = async (rule: RoutingRule) => {
+    for (const a of rule.actions) {
+      // Skip already-applied and re-check after each run so we never double-apply.
+      if (!isApplied(a)) {
+        // eslint-disable-next-line no-await-in-loop
+        await runAction(a);
+      }
+    }
+  };
+
 
   const dismissRule = (ruleId: string) => {
     try {
@@ -157,18 +208,42 @@ export const RoutingRulePreviewBanner = ({
       '&:hover': { borderColor: 'hsl(var(--primary))', bgcolor: 'hsl(var(--primary) / 0.08)' },
     };
 
+    // Applied → render as a muted "done" chip so users see it was covered
+    // without another click doing nothing / re-firing side effects.
+    if (isApplied(a)) {
+      const label =
+        a.type === 'suggest_move' ? `Moved to ${a.targetOrgId ? (orgNameById[a.targetOrgId] || a.targetOrgId.slice(0, 8)) : '?'}`
+        : a.type === 'set_severity' ? `Severity: ${a.value}`
+        : a.type === 'set_status' ? `Status: ${a.value}`
+        : a.type === 'set_priority' ? `Priority: ${a.value}`
+        : a.type === 'add_label' ? `Label: ${a.value}`
+        : a.type === 'assign_to' ? `Assigned: ${a.value}`
+        : a.type === 'add_comment' ? 'Comment posted'
+        : a.type === 'set_field' ? `${a.field}: ${a.value}`
+        : ACTION_TYPE_LABELS[a.type];
+      return (
+        <Chip
+          key={idx}
+          size="small"
+          label={`✓ ${label}`}
+          sx={{
+            height: 24,
+            fontSize: 11,
+            bgcolor: 'hsl(var(--muted) / 0.6)',
+            color: 'hsl(var(--muted-foreground))',
+            textDecoration: 'line-through',
+          }}
+        />
+      );
+    }
+
     switch (a.type) {
       case 'suggest_move': {
         const name = a.targetOrgId ? (orgNameById[a.targetOrgId] || a.targetOrgId.slice(0, 8)) : 'no target';
         return (
-          <Button
-            key={idx}
-            size="small"
-            variant="outlined"
-            onClick={() => a.targetOrgId && onMove?.(a.targetOrgId, name)}
+          <Button key={idx} size="small" variant="outlined" sx={baseSx}
             disabled={!a.targetOrgId || !onMove}
-            sx={baseSx}
-          >
+            onClick={() => runAction(a)}>
             Move to {name}
           </Button>
         );
@@ -176,45 +251,53 @@ export const RoutingRulePreviewBanner = ({
       case 'set_severity':
         return (
           <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={!a.value || !onApply}
-            onClick={() => a.value && onApply?.({ severity: a.value })}>
+            disabled={!a.value || !onApply} onClick={() => runAction(a)}>
             Set severity → {a.value || '?'}
           </Button>
         );
       case 'set_status':
         return (
           <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={!a.value || !onApply}
-            onClick={() => a.value && onApply?.({ status: a.value })}>
+            disabled={!a.value || !onApply} onClick={() => runAction(a)}>
             Set status → {a.value || '?'}
+          </Button>
+        );
+      case 'set_priority':
+        return (
+          <Button key={idx} size="small" variant="outlined" sx={baseSx}
+            disabled={!a.value || !onApply} onClick={() => runAction(a)}>
+            Set priority → {a.value || '?'}
           </Button>
         );
       case 'add_label':
         return (
           <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={!a.value || !onApply}
-            onClick={() => a.value && onApply?.({ addLabel: a.value })}>
+            disabled={!a.value || !onApply} onClick={() => runAction(a)}>
             Add label "{a.value || ''}"
           </Button>
         );
       case 'assign_to':
         return (
           <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={!a.value || !onApply}
-            onClick={() => a.value && onApply?.({ assignee: a.value })}>
+            disabled={!a.value || !onApply} onClick={() => runAction(a)}>
             Assign to {a.value || '?'}
           </Button>
         );
       case 'add_comment':
         return (
           <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={!a.value || !onApply}
-            onClick={() => a.value && onApply?.({ addComment: a.value })}>
+            disabled={!a.value || !onApply} onClick={() => runAction(a)}>
             Add comment
           </Button>
         );
-      case 'set_priority':
       case 'set_field':
+        return (
+          <Button key={idx} size="small" variant="outlined" sx={baseSx}
+            disabled={!a.field || a.value === undefined || !onApply}
+            onClick={() => runAction(a)}>
+            Set {a.field || '?'} → {a.value || '?'}
+          </Button>
+        );
       default:
         return (
           <Chip
@@ -275,9 +358,31 @@ export const RoutingRulePreviewBanner = ({
               }}
             >
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}>
-                  {m.rule.name}
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25 }}>
+                  <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, flex: 1, minWidth: 0 }}>
+                    {m.rule.name}
+                  </Typography>
+                  {m.rule.actions.filter((a) => !isApplied(a)).length > 1 && (
+                    <Button
+                      size="small"
+                      variant="contained"
+                      onClick={() => applyAllForRule(m.rule)}
+                      sx={{
+                        height: 26,
+                        textTransform: 'none',
+                        fontWeight: 700,
+                        fontSize: 11,
+                        px: 1.25,
+                        bgcolor: 'hsl(var(--primary))',
+                        color: 'hsl(var(--primary-foreground))',
+                        boxShadow: 'none',
+                        '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)', boxShadow: 'none' },
+                      }}
+                    >
+                      Apply all ({m.rule.actions.filter((a) => !isApplied(a)).length})
+                    </Button>
+                  )}
+                </Box>
                 <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', display: 'block', mb: 0.75 }}>
                   Matched {m.matched.length}/{m.rule.conditions.length} condition{m.rule.conditions.length === 1 ? '' : 's'}
                   {m.matched[0]?.field ? ` — ${m.matched[0].field} ${m.matched[0].op}${m.matched[0].value ? ` "${m.matched[0].value}"` : ''}` : ''}

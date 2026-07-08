@@ -6257,7 +6257,7 @@ const IncidentDetailPage = () => {
             stakeholders: editedStakeholders,
             rawOCSF: incident.rawOCSF,
           }}
-          onApply={(patch) => {
+          onApply={async (patch) => {
             if (patch.severity) {
               setEditedSeverity(patch.severity);
               toast.success(`Severity set to ${patch.severity}`);
@@ -6265,6 +6265,10 @@ const IncidentDetailPage = () => {
             if (patch.status) {
               setEditedStatus(patch.status);
               toast.success(`Status set to ${patch.status}`);
+            }
+            if (patch.priority) {
+              toast.message(`Priority: ${patch.priority}`,
+                { description: 'Priority writes run via the routing workflow.' });
             }
             if (patch.assignee) {
               setEditedAssignee(patch.assignee);
@@ -6275,7 +6279,36 @@ const IncidentDetailPage = () => {
               toast.success(`Added label "${patch.addLabel}"`);
             }
             if (patch.addComment) {
-              toast.message('Comment suggested', { description: patch.addComment });
+              // Actually post the comment via the real pipeline instead of
+              // showing a toast. This writes to the activity feed and
+              // persists to the incident's OCSF record.
+              await handleAddComment(patch.addComment);
+            }
+            if (patch.setField) {
+              toast.message(`Set ${patch.setField.field} → ${patch.setField.value}`,
+                { description: 'Custom-field writes are executed by the routing workflow.' });
+            }
+          }}
+          isActionApplied={(a) => {
+            switch (a.type) {
+              case 'set_severity': return !!a.value && editedSeverity === a.value;
+              case 'set_status':   return !!a.value && editedStatus === a.value;
+              case 'set_priority': return false; // priority writes are workflow-driven
+              case 'add_label':    return !!a.value && editedLabels.includes(a.value);
+              case 'assign_to':    return !!a.value && editedAssignee === a.value;
+              case 'add_comment': {
+                if (!a.value) return false;
+                const needle = a.value.trim();
+                if (!needle) return false;
+                return activity.some((it: any) =>
+                  it?.type === 'comment' &&
+                  typeof it?.content === 'string' &&
+                  it.content.trim() === needle
+                );
+              }
+              case 'suggest_move': return false; // cross-tenant moves aren't tracked here
+              case 'set_field':    return false; // handled by backend workflow
+              default: return false;
             }
           }}
           onMove={(targetOrgId, targetOrgName) => {
