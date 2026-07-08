@@ -219,9 +219,9 @@ export const setDatastoreItems = async (
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      'Org-Id': orgId,
-      ...getAuthHeader(),
+      ...getAuthHeader(orgId),
     },
+
     body: JSON.stringify(payload),
   });
 
