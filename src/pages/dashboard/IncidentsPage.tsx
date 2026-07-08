@@ -1155,7 +1155,11 @@ const IncidentsPage = () => {
         if (!s) continue;
         if (!authStamp || s.updatedAt > authStamp.updatedAt) authStamp = s;
       }
-      const liveCopies = copies.filter(c => !isTenantGhost(c.orgId, authStamp));
+      const liveCopies = copies.filter(c => {
+        if (isTenantGhost(c.orgId, authStamp)) return false;
+        if (isTenantTombstone((c.inc as any).rawOCSF)) return false;
+        return true;
+      });
       // If every remaining copy was a ghost (shouldn't happen — at least the
       // authoritative one lives somewhere) fall back to raw copies rather
       // than dropping the incident entirely.
