@@ -5409,14 +5409,18 @@ const IncidentDetailPage = () => {
         // Compact "step" pill — these are derived events (task created /
         // observable added / correlation found) injected on the frontend so
         // the user can see *when* every artefact appeared on the timeline.
-        const stepStyle: Record<StepKind, { color: string; icon: React.ReactNode }> = {
-          'task-created':         { color: '#a855f7', icon: <TaskAltIcon size={12} /> },
-          'task-completed':       { color: '#22c55e', icon: <CheckCircleIcon size={12} /> },
-          'task-status-changed':  { color: '#3b82f6', icon: <ForwardIcon size={12} /> },
-          'observable-added':     { color: '#06b6d4', icon: <VisibilityIcon size={12} /> },
-          'correlation-found':    { color: '#f59e0b', icon: <LinkIcon size={12} /> },
-          'incident-created':     { color: '#6495ed', icon: <HistoryIcon size={12} /> },
-          'routing-matched':      { color: 'hsl(var(--primary))', icon: <CallSplitIcon size={12} /> },
+        // Step pills use a single neutral scheme so the timeline reads
+        // "here's the sequence of what happened" rather than a colour
+        // parade. The icon shape still tells you WHAT happened; only IOC /
+        // error pills escape into red below.
+        const stepStyle: Record<StepKind, { icon: React.ReactNode }> = {
+          'task-created':         { icon: <TaskAltIcon size={12} /> },
+          'task-completed':       { icon: <CheckCircleIcon size={12} /> },
+          'task-status-changed':  { icon: <ForwardIcon size={12} /> },
+          'observable-added':     { icon: <VisibilityIcon size={12} /> },
+          'correlation-found':    { icon: <LinkIcon size={12} /> },
+          'incident-created':     { icon: <HistoryIcon size={12} /> },
+          'routing-matched':      { icon: <CallSplitIcon size={12} /> },
         };
         const cfg = stepStyle[item.kind];
         // Highlight observable-added pills when the underlying observable
@@ -5505,14 +5509,13 @@ const IncidentDetailPage = () => {
           pillObsKey = item.id.slice('step-corr-obs-'.length).toLowerCase();
         }
         const isIocPill = !!pillObsKey && iocObservableKeys.has(pillObsKey);
-        // IOC pills override the kind-based color with the destructive token
-        // so the user immediately sees that *this* observable is known-bad —
-        // not just that an observable was added.
-        const pillColor = isIocPill ? 'hsl(var(--destructive))' : cfg.color;
-        const pillBg = isIocPill ? 'hsl(var(--destructive) / 0.08)' : `${cfg.color}0F`;
-        const pillBorder = isIocPill ? 'hsl(var(--destructive) / 0.5)' : `${cfg.color}33`;
-        const pillBgHover = isIocPill ? 'hsl(var(--destructive) / 0.14)' : `${cfg.color}1F`;
-        const pillBorderHover = isIocPill ? 'hsl(var(--destructive) / 0.7)' : `${cfg.color}66`;
+        // IOC pills override the neutral scheme with the destructive token
+        // so the user immediately sees that *this* observable is known-bad.
+        const pillColor = isIocPill ? 'hsl(var(--destructive))' : 'hsl(var(--muted-foreground))';
+        const pillBg = isIocPill ? 'hsl(var(--destructive) / 0.08)' : 'transparent';
+        const pillBorder = isIocPill ? 'hsl(var(--destructive) / 0.5)' : 'hsl(var(--border-subtle))';
+        const pillBgHover = isIocPill ? 'hsl(var(--destructive) / 0.14)' : 'hsl(var(--muted) / 0.5)';
+        const pillBorderHover = isIocPill ? 'hsl(var(--destructive) / 0.7)' : 'hsl(var(--border))';
 
         // Sparse-correlation context strip: when this pill represents a
         // correlation (or an observable that has correlations) and the set
