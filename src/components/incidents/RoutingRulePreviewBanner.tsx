@@ -40,16 +40,25 @@ import {
 export interface RoutingApplyPayload {
   severity?: string;
   status?: string;
+  priority?: string;
   assignee?: string;
   addLabel?: string;
   addComment?: string;
+  setField?: { field: string; value: string };
 }
 
 interface RoutingRulePreviewBannerProps {
   context: IncidentEvaluationContext;
   incidentId?: string;
   onMove?: (targetOrgId: string, targetOrgName?: string) => void;
-  onApply?: (patch: RoutingApplyPayload) => void;
+  onApply?: (patch: RoutingApplyPayload) => void | Promise<void>;
+  /**
+   * Optional predicate the host page implements to tell the banner whether
+   * a given action's effect is already present on the incident (e.g. label
+   * already added, comment text already posted). Fully-applied rules are
+   * hidden and applied actions render as muted "done" chips.
+   */
+  isActionApplied?: (action: RoutingAction) => boolean;
 }
 
 const dismissKey = (incidentId: string | undefined, ruleId: string) =>
