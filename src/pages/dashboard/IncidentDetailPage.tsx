@@ -6780,40 +6780,61 @@ const IncidentDetailPage = () => {
             const viewingOrg = isCrossOrg
               ? { name: crossOrgInfo?.name || crossOrgId, image: crossOrgInfo?.image as string | undefined }
               : { name: userInfo?.active_org?.name || '', image: userInfo?.active_org?.image };
-            const hasShared = uniqueShared.length > 0;
+            const allTenants = [{ id: viewingOrgId, name: viewingOrg.name, image: viewingOrg.image }, ...uniqueShared];
+            const total = allTenants.length;
+            const openMoveDialog = () => {
+              setMoveTargetOrgId('');
+              const sourceOrgId = crossOrgId || userInfo?.active_org?.id || '';
+              const initial = new Set<string>();
+              if (sourceOrgId) initial.add(sourceOrgId);
+              for (const so of sharedOrgs) initial.add(so.id);
+              setMoveSelectedOrgIds(initial);
+              setShowMoveDialog(true);
+            };
+            const commonChipSx = {
+              height: 24,
+              fontSize: '0.72rem',
+              bgcolor: 'transparent',
+              borderColor: 'hsl(var(--border))',
+              color: 'hsl(var(--foreground))',
+              cursor: 'pointer',
+              '&:hover': { bgcolor: 'hsl(var(--muted))' },
+            } as const;
             return (
-              <Box sx={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 1,
-                flexWrap: 'wrap',
-                justifyContent: 'flex-end',
-              }}>
-                <LanguageIcon size={16} style={{ color: '#a78bfa', flexShrink: 0 }} />
-                <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))' }}>
-                  {hasShared
-                    ? <>This incident exists in <strong>{uniqueShared.length + 1} tenants</strong> — changes sync to all:</>
-                    : <>Tenant:</>}
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+              <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                {total > 1 ? (
+                  <Tooltip
+                    title={
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, py: 0.5 }}>
+                        {allTenants.map(t => (
+                          <Box key={t.id} sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                            {t.image ? <img src={t.image} alt="" style={{ width: 14, height: 14, borderRadius: 3 }} /> : null}
+                            <span>{t.name}</span>
+                          </Box>
+                        ))}
+                      </Box>
+                    }
+                    placement="bottom-end"
+                    arrow
+                  >
+                    <Chip
+                      size="small"
+                      variant="outlined"
+                      label={`${total} tenants`}
+                      onClick={openMoveDialog}
+                      sx={commonChipSx}
+                    />
+                  </Tooltip>
+                ) : (
                   <Chip
                     size="small"
                     variant="outlined"
                     avatar={viewingOrg.image ? <img src={viewingOrg.image} alt="" style={{ width: 16, height: 16, borderRadius: 3 }} /> : undefined}
                     label={viewingOrg.name}
-                    sx={{ height: 22, fontSize: '0.72rem', bgcolor: 'transparent', borderColor: 'rgba(167, 139, 250, 0.4)', color: '#a78bfa', fontWeight: 600 }}
+                    onClick={openMoveDialog}
+                    sx={commonChipSx}
                   />
-                  {hasShared && uniqueShared.map(org => (
-                    <Chip
-                      key={org.id}
-                      size="small"
-                      variant="outlined"
-                      avatar={org.image ? <img src={org.image} alt="" style={{ width: 16, height: 16, borderRadius: 3 }} /> : undefined}
-                      label={org.name}
-                      sx={{ height: 22, fontSize: '0.72rem', bgcolor: 'transparent', borderColor: 'rgba(255,255,255,0.12)', color: 'text.secondary' }}
-                    />
-                  ))}
-                </Box>
+                )}
               </Box>
             );
           })()}
