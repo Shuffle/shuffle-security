@@ -5174,21 +5174,19 @@ const IncidentDetailPage = () => {
             sx={{
               p: 1.5,
               borderRadius: 1.5,
-              bgcolor: 'rgba(100, 149, 237, 0.04)',
-              border: '1px solid rgba(100, 149, 237, 0.12)',
-              ...(showAsCreation && {
-                cursor: 'pointer',
-                transition: 'background-color 0.15s ease, border-color 0.15s ease',
-                '&:hover': {
-                  bgcolor: 'rgba(100, 149, 237, 0.08)',
-                  borderColor: 'rgba(100, 149, 237, 0.24)',
-                },
-              }),
+              bgcolor: 'transparent',
+              border: '1px solid hsl(var(--border-subtle))',
+              transition: 'background-color 0.15s ease, border-color 0.15s ease',
+              '&:hover': {
+                bgcolor: 'hsl(var(--muted) / 0.4)',
+                borderColor: 'hsl(var(--border))',
+              },
+              ...(showAsCreation && { cursor: 'pointer' }),
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-              <Avatar sx={{ width: 24, height: 24, bgcolor: 'rgba(100, 149, 237, 0.15)' }}>
-                <HistoryIcon size={14} style={{ color: '#6495ed' }} />
+              <Avatar sx={{ width: 24, height: 24, bgcolor: 'hsl(var(--muted) / 0.6)' }}>
+                <HistoryIcon size={14} style={{ color: 'hsl(var(--muted-foreground))' }} />
               </Avatar>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
@@ -5196,13 +5194,13 @@ const IncidentDetailPage = () => {
                     {showAsCreation ? 'Incident created' : `Revision #${revisions.length - item.idx}`}
                   </Typography>
                   {isLatest && !showAsCreation && (
-                    <Chip label="Latest" size="small" variant="outlined" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'transparent', borderColor: 'rgba(255, 102, 0, 0.4)', color: '#ff6600', fontWeight: 600 }} />
+                    <Chip label="Latest" size="small" variant="outlined" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'transparent', borderColor: 'hsl(var(--border))', color: 'text.secondary', fontWeight: 600 }} />
                   )}
                   {isFirst && !isLatest && !showAsCreation && (
-                    <Chip label="Initial" size="small" variant="outlined" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'transparent', borderColor: 'rgba(255,255,255,0.12)', color: 'text.secondary', fontWeight: 600 }} />
+                    <Chip label="Initial" size="small" variant="outlined" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'transparent', borderColor: 'hsl(var(--border-subtle))', color: 'text.secondary', fontWeight: 600 }} />
                   )}
                   {totalChanges > 0 && !showAsCreation && (
-                    <Chip label={`${totalChanges} change${totalChanges !== 1 ? 's' : ''}`} size="small" variant="outlined" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'transparent', borderColor: 'rgba(255, 102, 0, 0.4)', color: '#ff6600' }} />
+                    <Chip label={`${totalChanges} change${totalChanges !== 1 ? 's' : ''}`} size="small" variant="outlined" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'transparent', borderColor: 'hsl(var(--border))', color: 'text.secondary' }} />
                   )}
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
