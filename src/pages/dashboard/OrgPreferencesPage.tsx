@@ -347,7 +347,7 @@ const OrgPreferencesPage = () => {
         >
           <Box>
             <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-              Incident Rules
+              Incident Routing Rules
             </Typography>
             <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
               Define rules that suggest moving incidents between tenants. Your incident automation
