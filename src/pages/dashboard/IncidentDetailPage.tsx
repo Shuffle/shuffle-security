@@ -3635,13 +3635,14 @@ const IncidentDetailPage = () => {
           const field = String(action.field || '').trim();
           if (!field) break;
           const value = parseRoutingActionValue(action.value);
-          if (field === 'title') nextTitle = String(value);
-          else if (field === 'description' || field === 'desc') nextMessage = String(value);
-          else if (field === 'severity') nextSeverity = normalizeRoutingSeverityValue(String(value));
-          else if (field === 'status') nextStatus = normalizeStatus(String(value));
-          else if (field === 'assignee') nextAssignee = String(value);
-          else if (field === 'priority') nextRaw.priority = String(value);
-          else if (field === 'labels' || field === 'types') {
+          const canonicalField = field.startsWith('rawOCSF.') ? field.slice('rawOCSF.'.length) : field;
+          if (canonicalField === 'title') nextTitle = String(value);
+          else if (canonicalField === 'description' || canonicalField === 'desc') nextMessage = String(value);
+          else if (canonicalField === 'severity') nextSeverity = normalizeRoutingSeverityValue(String(value));
+          else if (canonicalField === 'status') nextStatus = normalizeStatus(String(value));
+          else if (canonicalField === 'assignee') nextAssignee = String(value);
+          else if (canonicalField === 'priority') nextRaw.priority = String(value);
+          else if (canonicalField === 'labels' || canonicalField === 'types') {
             const label = String(value).trim();
             if (label && !nextLabels.includes(label)) nextLabels = [...nextLabels, label];
           }
