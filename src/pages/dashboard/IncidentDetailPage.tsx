@@ -6318,7 +6318,7 @@ const IncidentDetailPage = () => {
             {sharedOrgs.length > 0 ? (
               <>
                 <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))' }}>
-                  This incident exists in <strong>{sharedOrgs.length + 1} organizations</strong> — changes sync to all:
+                  This incident exists in <strong>{sharedOrgs.length + 1} tenants</strong> — changes sync to all:
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
                   {/* Show the "viewing" org first */}
@@ -9582,15 +9582,37 @@ const IncidentDetailPage = () => {
 
                   setShowMoveDialog(false);
 
+                  // Refresh local presence state so the header banner and
+                  // the next open of this dialog reflect the new tenant set
+                  // without needing a page reload.
+                  const activeId = userInfo?.active_org?.id;
+                  const stayingOrgId = toRemove.includes(sourceOrgId)
+                    ? ((activeId && selected.has(activeId)) ? activeId : Array.from(selected)[0])
+                    : sourceOrgId;
+                  const knownOrgLookup = new Map<string, { id: string; name: string; image?: string }>();
+                  if (userInfo?.active_org) knownOrgLookup.set(userInfo.active_org.id, { id: userInfo.active_org.id, name: userInfo.active_org.name || userInfo.active_org.id, image: userInfo.active_org.image });
+                  if (parentOrg) knownOrgLookup.set(parentOrg.id, { id: parentOrg.id, name: parentOrg.name || parentOrg.id, image: (parentOrg as any).image });
+                  for (const so of subOrgs) knownOrgLookup.set(so.id, { id: so.id, name: so.name || so.id, image: (so as any).image });
+                  for (const so of sharedOrgs) knownOrgLookup.set(so.id, { id: so.id, name: so.name || so.id, image: so.image });
+                  const nextSharedOrgs = Array.from(selected)
+                    .filter(oid => oid !== stayingOrgId)
+                    .map(oid => knownOrgLookup.get(oid) || { id: oid, name: oid.slice(0, 8) + '…' });
+                  setSharedOrgs(nextSharedOrgs);
+
+                  // Strip the stale shared_orgs URL param so a later reload
+                  // doesn't seed the old presence set back into state.
+                  if (searchParams.get('shared_orgs')) {
+                    const nextParams = new URLSearchParams(searchParams);
+                    nextParams.delete('shared_orgs');
+                    setSearchParams(nextParams, { replace: true });
+                  }
+
                   // Navigate away if the current tenant is no longer in the
-                  // selection. Prefer active org if it still holds a copy,
+                  // selection. Prefer active tenant if it still holds a copy,
                   // otherwise the first selected tenant.
                   if (toRemove.includes(sourceOrgId)) {
-                    const activeId = userInfo?.active_org?.id;
-                    const remaining = Array.from(selected);
-                    const nextOrg = (activeId && remaining.includes(activeId)) ? activeId : remaining[0];
-                    if (nextOrg) {
-                      const newKey = nextOrg === activeId ? incident.id : `${nextOrg}::${incident.id}`;
+                    if (stayingOrgId) {
+                      const newKey = stayingOrgId === activeId ? incident.id : `${stayingOrgId}::${incident.id}`;
                       navigate(`${entityBasePath}/${newKey}`, { replace: true });
                     } else {
                       navigate(entityBasePath, { replace: true });
