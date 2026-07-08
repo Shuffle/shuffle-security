@@ -292,10 +292,15 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
   const sortedRules = useMemo(
     () =>
       Object.values(drafts).sort((a, b) => {
+        // Unsaved (freshly added) rules always float to the top so it's
+        // obvious a new one was just created.
+        const aLocal = localOnlyIds.has(a.id) ? 0 : 1;
+        const bLocal = localOnlyIds.has(b.id) ? 0 : 1;
+        if (aLocal !== bLocal) return aLocal - bLocal;
         if (a.priority !== b.priority) return a.priority - b.priority;
         return (a.createdTs || 0) - (b.createdTs || 0);
       }),
-    [drafts]
+    [drafts, localOnlyIds]
   );
 
   const updateRule = (id: string, patch: Partial<RoutingRule>) => {
