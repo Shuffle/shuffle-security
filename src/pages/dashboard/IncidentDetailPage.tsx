@@ -2067,7 +2067,7 @@ const IncidentDetailPage = () => {
               const s = readTenantStamp(h.value);
               if (s && (!authStamp || s.updatedAt > authStamp.updatedAt)) authStamp = s;
             }
-            const liveHits = hits.filter(h => !isTenantGhost(h.orgId, authStamp) && !isTenantTombstone(h.value));
+            const liveHits = hits.filter(h => !isTenantGhost(h.orgId, authStamp));
             // Prefer a hit that matches the authoritative tenants list;
             // otherwise fall back to any live hit.
             const preferred = authStamp
