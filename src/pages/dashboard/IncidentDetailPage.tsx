@@ -6315,6 +6315,16 @@ const IncidentDetailPage = () => {
             flexWrap: 'wrap',
           }}>
             <LanguageIcon size={16} style={{ color: '#a78bfa', flexShrink: 0 }} />
+            {sharedOrgs.length > 0 ? (() => {
+              const viewingOrgId = isCrossOrg ? (crossOrgId || '') : (userInfo?.active_org?.id || '');
+              const seenIds = new Set<string>([viewingOrgId]);
+              const uniqueShared = sharedOrgs.filter(o => {
+                if (!o?.id || seenIds.has(o.id)) return false;
+                seenIds.add(o.id);
+                return true;
+              });
+              return (
+            <>{/* legacy-open */}
             {sharedOrgs.length > 0 ? (
               <>
                 <Typography sx={{ fontSize: '0.82rem', color: 'hsl(var(--foreground))' }}>
