@@ -9388,18 +9388,28 @@ const IncidentDetailPage = () => {
             // Build the full candidate list — every tenant the user could
             // place this incident in. Preserve current presence (source +
             // sharedOrgs) so a partial catalog never hides an existing copy.
+            // Build a name lookup from every known tenant source first so
+            // even the currently-viewed tenant (which may only be present as
+            // a raw id from the URL) resolves to a friendly name.
+            const nameLookup = new Map<string, string>();
+            if (userInfo?.active_org?.id) nameLookup.set(userInfo.active_org.id, userInfo.active_org.name || userInfo.active_org.id);
+            if (parentOrg) nameLookup.set(parentOrg.id, parentOrg.name || parentOrg.id);
+            for (const so of subOrgs) nameLookup.set(so.id, so.name || so.id);
+            for (const so of sharedOrgs) nameLookup.set(so.id, so.name || so.id);
+            if (crossOrgId && crossOrgInfo?.name) nameLookup.set(crossOrgId, crossOrgInfo.name);
+
             const seen = new Set<string>();
             const candidates: { id: string; name: string }[] = [];
-            const addCandidate = (id: string, name?: string) => {
+            const addCandidate = (id: string, fallback?: string) => {
               if (!id || seen.has(id)) return;
               seen.add(id);
-              candidates.push({ id, name: name || id });
+              candidates.push({ id, name: nameLookup.get(id) || fallback || id });
             };
-            if (sourceOrgId) addCandidate(sourceOrgId, sourceOrgId === activeId ? (userInfo?.active_org?.name || sourceOrgId) : sourceOrgId);
+            if (sourceOrgId) addCandidate(sourceOrgId);
             for (const so of sharedOrgs) addCandidate(so.id, so.name);
-            if (activeId) addCandidate(activeId, userInfo?.active_org?.name || activeId);
-            if (parentOrg) addCandidate(parentOrg.id, parentOrg.name || parentOrg.id);
-            for (const so of subOrgs) addCandidate(so.id, so.name || so.id);
+            if (activeId) addCandidate(activeId, userInfo?.active_org?.name);
+            if (parentOrg) addCandidate(parentOrg.id, parentOrg.name);
+            for (const so of subOrgs) addCandidate(so.id, so.name);
 
             const presentSet = new Set<string>();
             if (sourceOrgId) presentSet.add(sourceOrgId);
