@@ -465,12 +465,14 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                     fullWidth
                     required
                     disabled={loading}
+                    autoComplete={isLogin ? 'current-password' : 'new-password'}
                     InputProps={{
                       endAdornment: (
                         <InputAdornment position="end">
                           <IconButton
                             onClick={() => setShowPassword(!showPassword)}
                             edge="end"
+                            aria-label={showPassword ? 'Hide password' : 'Show password'}
                             sx={{ color: 'text.secondary' }}
                           >
                             {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
