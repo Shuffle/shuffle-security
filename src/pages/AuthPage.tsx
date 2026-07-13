@@ -595,7 +595,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                   color: 'text.secondary',
                 }}
               >
-                {isLogin ? "Don't have an account yet? " : 'Already have an account? '}
+                {isLogin ? 'Do not have an account yet? ' : 'Already have an account? '}
                 <Link
                   to={isLogin ? '/register' : '/login'}
                   style={{
