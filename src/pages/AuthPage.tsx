@@ -302,10 +302,11 @@ const AuthPage = ({ mode }: AuthPageProps) => {
         sx={{
           minHeight: '100vh',
           display: 'flex',
-          alignItems: 'center',
+          alignItems: { xs: 'flex-start', sm: 'center' },
           justifyContent: 'center',
-          p: 3,
-          mt: -6,
+          p: { xs: 2, sm: 3 },
+          pt: { xs: 4, sm: 3 },
+          mt: { xs: 0, sm: -6 },
         }}
       >
         <motion.div
@@ -323,7 +324,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
               borderRadius: 2,
             }}
           >
-            <CardContent sx={{ p: 5 }}>
+            <CardContent sx={{ p: { xs: 3, sm: 5 } }}>
               {/* Logo */}
               <Box sx={{ textAlign: 'center', mb: 4 }}>
                 <Box
