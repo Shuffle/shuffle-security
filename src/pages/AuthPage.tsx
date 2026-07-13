@@ -305,7 +305,7 @@ const AuthPage = ({ mode }: AuthPageProps) => {
           alignItems: { xs: 'flex-start', sm: 'center' },
           justifyContent: 'center',
           p: { xs: 2, sm: 3 },
-          pt: { xs: 4, sm: 3 },
+          pt: { xs: 10, sm: 3 },
           mt: { xs: 0, sm: -6 },
         }}
       >
