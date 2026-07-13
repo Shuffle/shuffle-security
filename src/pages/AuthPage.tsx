@@ -431,13 +431,15 @@ const AuthPage = ({ mode }: AuthPageProps) => {
                     Email
                   </Typography>
                   <TextField
-                    type="text"
+                    type="email"
                     placeholder="username@example.com"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     fullWidth
                     required
                     disabled={loading}
+                    autoComplete="email"
+                    inputProps={{ inputMode: 'email', autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false }}
                     sx={inputSx}
                   />
                 </Box>
