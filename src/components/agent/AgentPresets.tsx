@@ -8,7 +8,7 @@
  */
 import { useState } from 'react';
 import { Box, Button, Menu, MenuItem, Typography } from '@mui/material';
-import { Workflow, ShieldAlert, Blocks, LifeBuoy, Bug, Radar, Plus } from 'lucide-react';
+import { Workflow, ShieldAlert, Blocks, LifeBuoy, Bug, Radar, Monitor, Plus } from 'lucide-react';
 
 export interface AgentPreset {
   id: string;
