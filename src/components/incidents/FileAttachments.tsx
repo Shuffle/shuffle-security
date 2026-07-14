@@ -336,21 +336,26 @@ export const FileAttachments = ({
           multiple
         />
         
-        {attachments.map((attachment) => (
-          <Chip
-            key={attachment.id}
-            icon={getFileIcon(attachment.filename)}
-            label={attachment.filename}
-            size="small"
-            onDelete={() => handleDelete(attachment)}
-            onClick={() => handleOpen(attachment)}
-            sx={{
-              bgcolor: 'hsl(var(--muted) / 0.5)',
-              '&:hover': { bgcolor: 'hsl(var(--muted) / 0.8)' },
-              '& .MuiChip-icon': { color: 'text.secondary' },
-            }}
-          />
-        ))}
+        {attachments.map((attachment) => {
+          const isDeleting = deletingIds.has(attachment.id);
+          return (
+            <Chip
+              key={attachment.id}
+              icon={isDeleting ? <CircularProgress size={12} sx={{ color: 'text.secondary' }} /> : getFileIcon(attachment.filename)}
+              label={attachment.filename}
+              size="small"
+              onDelete={isDeleting ? undefined : () => handleDelete(attachment)}
+              onClick={() => handleOpen(attachment)}
+              disabled={isDeleting}
+              sx={{
+                bgcolor: 'hsl(var(--muted) / 0.5)',
+                '&:hover': { bgcolor: 'hsl(var(--muted) / 0.8)' },
+                '& .MuiChip-icon': { color: 'text.secondary' },
+                opacity: isDeleting ? 0.6 : 1,
+              }}
+            />
+          );
+        })}
         
         {!hideAddButton && (
           <Tooltip title="Attach file">
