@@ -21,9 +21,14 @@ export interface WebhookIngestionInfo {
 interface WebhookIngestionButtonProps {
   webhook: WebhookIngestionInfo;
   onToggled?: () => void;
+  /** Workflow label used with /api/v2/workflows/generate to create/remove the
+   *  webhook workflow. Defaults to 'Ingest Tickets_webhook' for incidents;
+   *  the vulnerabilities row overrides this to 'Ingest Vulnerabilities_webhook'
+   *  so both webhooks stay unique server-side. */
+  workflowLabel?: string;
 }
 
-export const WebhookIngestionButton = ({ webhook, onToggled }: WebhookIngestionButtonProps) => {
+export const WebhookIngestionButton = ({ webhook, onToggled, workflowLabel = 'Ingest Tickets_webhook' }: WebhookIngestionButtonProps) => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [copied, setCopied] = useState(false);
   const [optimisticEnabled, setOptimisticEnabled] = useState<boolean | null>(null);
