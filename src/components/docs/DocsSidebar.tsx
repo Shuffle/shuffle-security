@@ -97,6 +97,8 @@ export const DocsSidebar = ({ onNavigate }: DocsSidebarProps) => {
       }
     })();
     return () => { cancelled = true; };
+  }, []);
+
   const handleClick = () => {
     onNavigate?.();
   };
