@@ -21,6 +21,7 @@ import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { useWorkflows } from '@/hooks/useWorkflows';
 import { VulnerabilityAutomationBanner } from '@/components/vulnerabilities/VulnerabilityAutomationBanner';
 import { IngestionSourcesRow } from '@/components/ingestion/IngestionSourcesRow';
+import { AddVulnerabilityDialog } from '@/components/vulnerabilities/AddVulnerabilityDialog';
 
 const SEVERITY_COLORS: Record<VulnSeverity, string> = {
   critical: 'bg-red-500/10 text-red-500 border-red-500/20',
@@ -153,6 +154,7 @@ const AuthenticatedVulnerabilitiesView = () => {
   const [aiScanLoading, setAiScanLoading] = useState(false);
   const [aiScanResult, setAiScanResult] = useState<string | null>(null);
   const [enablingAutomation, setEnablingAutomation] = useState(false);
+  const [addVulnOpen, setAddVulnOpen] = useState(false);
 
   const { data: workflows, refetch: refetchWorkflows } = useWorkflows();
   const vulnComparisonWorkflow = (workflows || []).find(
@@ -275,6 +277,10 @@ const AuthenticatedVulnerabilitiesView = () => {
             addSubtitle="Search and authenticate a tool to ingest vulnerabilities from"
             onSourcesChanged={() => refresh()}
           />
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setAddVulnOpen(true)}>
+            <Plus size={14} />
+            Add Vulnerability
+          </Button>
           <Button size="sm" className="gap-1.5" onClick={() => navigate('/monitors?add_host=true')}>
             <Plus size={14} />
             Add Host Monitor
@@ -380,6 +386,11 @@ const AuthenticatedVulnerabilitiesView = () => {
         </div>
       )}
 
+      <AddVulnerabilityDialog
+        open={addVulnOpen}
+        onOpenChange={setAddVulnOpen}
+        onAdded={() => refresh()}
+      />
     </div>
   );
 };
