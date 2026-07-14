@@ -56,12 +56,48 @@ const externalLinks: DocLink[] = [
   },
 ];
 
+interface RemoteDoc {
+  name: string;
+  slug: string;
+  label: string;
+  read_time?: number;
+}
+
+// Slugs already covered by local docs — hide these from the remote fallback list
+const LOCAL_SLUGS = new Set(['index', 'getting-started', 'incident-creation', 'shuffle-pipelines', 'monitoring', 'setup']);
+// Remote names that map onto our local slugs (avoid duplicates)
+const LOCAL_REMOTE_ALIASES = new Set(['getting_started']);
+
+const toLabel = (name: string) =>
+  name.replace(/[_-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
 export const DocsSidebar = ({ onNavigate }: DocsSidebarProps) => {
   const { slug = 'index' } = useParams<{ slug: string }>();
+  const [remoteDocs, setRemoteDocs] = useState<RemoteDoc[]>([]);
 
-  const handleClick = () => {
-    onNavigate?.();
-  };
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(getApiUrl('/api/v1/docs'));
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data?.success || !Array.isArray(data.list)) return;
+        const mapped: RemoteDoc[] = data.list
+          .filter((d: { name?: string }) => d?.name && !LOCAL_REMOTE_ALIASES.has(d.name))
+          .map((d: { name: string; read_time?: number }) => {
+            const s = d.name.replace(/_/g, '-').toLowerCase();
+            return { name: d.name, slug: s, label: toLabel(d.name), read_time: d.read_time };
+          })
+          .filter((d: RemoteDoc) => !LOCAL_SLUGS.has(d.slug))
+          .sort((a: RemoteDoc, b: RemoteDoc) => a.label.localeCompare(b.label));
+        if (!cancelled) setRemoteDocs(mapped);
+      } catch {
+        // Silent fail — remote docs are a nice-to-have
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <Box
