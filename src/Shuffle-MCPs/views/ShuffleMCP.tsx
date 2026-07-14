@@ -378,8 +378,17 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
       setQuery('');
       performSearch(''); // Show top results when cleared
     },
+    focus: (selectAll = false) => {
+      const el = inputRef.current;
+      if (!el) return;
+      el.focus();
+      if (selectAll) {
+        try { el.select(); } catch { /* noop */ }
+      }
+    },
     getQuery: () => query,
   }), [performSearch, onSearchChange, query]);
+
 
   // Handle input change
   const handleInputChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
