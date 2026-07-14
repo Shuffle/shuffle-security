@@ -339,8 +339,73 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
           </div>
         )}
 
+        {stage === 'checking' && <RadarLoader messages={['Checking existing apps…']} />}
         {stage === 'generating' && <RadarLoader messages={GENERATION_MESSAGES} />}
         {stage === 'verifying' && <RadarLoader messages={VERIFICATION_MESSAGES} />}
+
+        {stage === 'existing' && existing && (
+          <div className="py-2 space-y-3">
+            <div
+              className="flex items-start gap-4 p-4 rounded-lg"
+              style={{
+                border: '1px solid hsl(var(--primary) / 0.4)',
+                background: 'hsl(var(--primary) / 0.06)',
+              }}
+            >
+              <div
+                className="flex items-center justify-center rounded-md shrink-0 overflow-hidden"
+                style={{
+                  width: 56,
+                  height: 56,
+                  background: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                }}
+              >
+                {existing.image_url ? (
+                  <img
+                    src={existing.image_url}
+                    alt={existing.name}
+                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                  />
+                ) : (
+                  <Sparkles size={22} style={{ color: 'hsl(var(--primary))' }} />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-semibold uppercase tracking-wide mb-1"
+                  style={{ color: 'hsl(var(--primary))' }}
+                >
+                  Already exists
+                </div>
+                <div
+                  className="font-semibold text-base truncate"
+                  style={{ color: 'hsl(var(--foreground))' }}
+                >
+                  {existing.name}
+                </div>
+                {existing.description && (
+                  <div
+                    className="text-sm mt-1"
+                    style={{
+                      color: 'hsl(var(--muted-foreground))',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {existing.description}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
+              This app is already available in the catalog. Generate a new version only if you need a different vendor or API.
+            </div>
+          </div>
+        )}
+
 
         {stage === 'preview' && spec && (
           <div className="py-2">
