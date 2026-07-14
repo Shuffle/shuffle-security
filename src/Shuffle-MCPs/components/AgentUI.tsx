@@ -72,6 +72,7 @@ import {
 } from './agentPromptSuggestions';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
+import AgentPresets from '@/components/agent/AgentPresets';
 
 // Normalize agent answer text so react-markdown renders it correctly:
 // - Decode literal escape sequences ("\n", "\t", "\r") that come back
@@ -3451,6 +3452,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   if (e.target) e.target.value = '';
                 }}
               />
+              <AgentPresets variant="inline" />
               {(() => {
                 const allowWithoutExecution = showStarter;
                 const promptTooShort = showStarter && (actionInput || '').trim().length < 1;
