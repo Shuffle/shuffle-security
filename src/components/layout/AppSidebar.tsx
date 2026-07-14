@@ -530,10 +530,13 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                       to={item.path!}
                       data-tour={item.path === entityBasePath ? 'sidebar-incidents-link' : undefined}
                       onClick={() => {
-                        // Always switch the expanded group to this item synchronously
-                        // (avoids a brief flicker where the previously-open group stays
-                        // open while the route changes).
-                        setExpandedItems([item.label]);
+                        // Let the route-change effect stage the animation
+                        // (close previous group first, then open this one).
+                        // Only pre-open when nothing is currently expanded so
+                        // opening from empty stays instant.
+                        setExpandedItems(prev =>
+                          prev.length === 0 ? [item.label] : prev
+                        );
                       }}
                       sx={{
                         borderRadius: 1,
