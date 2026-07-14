@@ -154,6 +154,7 @@ const AuthenticatedVulnerabilitiesView = () => {
   const [aiScanLoading, setAiScanLoading] = useState(false);
   const [aiScanResult, setAiScanResult] = useState<string | null>(null);
   const [enablingAutomation, setEnablingAutomation] = useState(false);
+  const [addVulnOpen, setAddVulnOpen] = useState(false);
 
   const { data: workflows, refetch: refetchWorkflows } = useWorkflows();
   const vulnComparisonWorkflow = (workflows || []).find(
