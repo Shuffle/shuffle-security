@@ -1,4 +1,5 @@
-import { Home as HomeIcon, Settings as SettingsIcon, Server as DnsIcon, Radio as SensorsIcon, ExternalLink as OpenInNewIcon, AlertTriangle as ReportProblemIcon, Radar as RadarIcon, Download as DownloadIcon } from 'lucide-react';
+import { Home as HomeIcon, Settings as SettingsIcon, Server as DnsIcon, Radio as SensorsIcon, ExternalLink as OpenInNewIcon, AlertTriangle as ReportProblemIcon, Radar as RadarIcon, Download as DownloadIcon, FileText as FileTextIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   Box,
@@ -9,6 +10,7 @@ import {
   ListItemText,
   Typography,
 } from '@mui/material';
+import { getApiUrl } from '@/Shuffle-MCPs/api';
 interface DocLink {
   label: string;
   slug: string;
@@ -54,12 +56,53 @@ const externalLinks: DocLink[] = [
   },
 ];
 
+interface RemoteDoc {
+  name: string;
+  slug: string;
+  label: string;
+  read_time?: number;
+}
+
+// Slugs already covered by local docs — hide these from the remote fallback list
+const LOCAL_SLUGS = new Set(['index', 'getting-started', 'incident-creation', 'shuffle-pipelines', 'monitoring', 'setup']);
+// Remote names that map onto our local slugs (avoid duplicates)
+const LOCAL_REMOTE_ALIASES = new Set(['getting_started']);
+
+const toLabel = (name: string) =>
+  name.replace(/[_-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
 export const DocsSidebar = ({ onNavigate }: DocsSidebarProps) => {
   const { slug = 'index' } = useParams<{ slug: string }>();
+  const [remoteDocs, setRemoteDocs] = useState<RemoteDoc[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(getApiUrl('/api/v1/docs'));
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data?.success || !Array.isArray(data.list)) return;
+        const mapped: RemoteDoc[] = data.list
+          .filter((d: { name?: string }) => d?.name && !LOCAL_REMOTE_ALIASES.has(d.name))
+          .map((d: { name: string; read_time?: number }) => {
+            const s = d.name.replace(/_/g, '-').toLowerCase();
+            return { name: d.name, slug: s, label: toLabel(d.name), read_time: d.read_time };
+          })
+          .filter((d: RemoteDoc) => !LOCAL_SLUGS.has(d.slug))
+          .sort((a: RemoteDoc, b: RemoteDoc) => a.label.localeCompare(b.label));
+        if (!cancelled) setRemoteDocs(mapped);
+      } catch {
+        // Silent fail — remote docs are a nice-to-have
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const handleClick = () => {
     onNavigate?.();
   };
+
 
   return (
     <Box
@@ -119,6 +162,55 @@ export const DocsSidebar = ({ onNavigate }: DocsSidebarProps) => {
           </ListItem>
         ))}
       </List>
+
+      {remoteDocs.length > 0 && (
+        <>
+          <Typography
+            variant="overline"
+            sx={{
+              px: 3,
+              mt: 4,
+              display: 'block',
+              color: 'text.secondary',
+              fontWeight: 600,
+              letterSpacing: 1.5,
+            }}
+          >
+            Reference
+          </Typography>
+          <List sx={{ px: 1, mt: 1 }}>
+            {remoteDocs.map((doc) => (
+              <ListItem key={doc.slug} disablePadding>
+                <ListItemButton
+                  component={Link}
+                  to={`/docs/${doc.slug}`}
+                  onClick={handleClick}
+                  selected={slug === doc.slug}
+                  sx={{
+                    borderRadius: 1,
+                    mx: 1,
+                    '&.Mui-selected': {
+                      backgroundColor: 'rgba(255, 102, 0, 0.1)',
+                      '&:hover': { backgroundColor: 'rgba(255, 102, 0, 0.15)' },
+                      '& .MuiListItemIcon-root': { color: 'primary.main' },
+                      '& .MuiListItemText-primary': { color: 'primary.main', fontWeight: 600 },
+                    },
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 40, color: 'text.secondary' }}>
+                    <FileTextIcon size={18} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={doc.label}
+                    primaryTypographyProps={{ fontSize: '0.875rem' }}
+                  />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </>
+      )}
+
 
       <Typography
         variant="overline"

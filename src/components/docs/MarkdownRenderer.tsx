@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Link } from 'react-router-dom';
 import { Box, CircularProgress } from '@mui/material';
+import { getApiUrl } from '@/Shuffle-MCPs/api';
 
 // Import markdown files statically
 const docs: Record<string, () => Promise<{ default: string }>> = {
@@ -18,6 +19,26 @@ interface MarkdownRendererProps {
   slug?: string;
 }
 
+// Fetch a doc from the Shuffle Core /api/v1/docs/{name} endpoint.
+// The API returns { success, reason: <markdown> }.
+const fetchRemoteDoc = async (slug: string): Promise<string | null> => {
+  // Remote docs use underscores (e.g. getting_started); our local slugs use dashes.
+  const candidates = Array.from(new Set([slug, slug.replace(/-/g, '_')]));
+  for (const name of candidates) {
+    try {
+      const res = await fetch(getApiUrl(`/api/v1/docs/${encodeURIComponent(name)}`));
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (data?.success && typeof data.reason === 'string' && data.reason.trim().length > 0) {
+        return data.reason;
+      }
+    } catch {
+      // Try next candidate
+    }
+  }
+  return null;
+};
+
 export const MarkdownRenderer = ({ slug = 'index' }: MarkdownRendererProps) => {
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -27,23 +48,27 @@ export const MarkdownRenderer = ({ slug = 'index' }: MarkdownRendererProps) => {
     const loadContent = async () => {
       setLoading(true);
       setError(null);
-      
-      try {
-        const loader = docs[slug];
-        if (!loader) {
-          setError(`Documentation not found: ${slug}`);
+
+      const loader = docs[slug];
+      if (loader) {
+        try {
+          const module = await loader();
+          setContent(module.default);
           setLoading(false);
           return;
+        } catch (err) {
+          console.warn('Local markdown load failed, falling back to remote:', err);
         }
-        
-        const module = await loader();
-        setContent(module.default);
-      } catch (err) {
-        console.error('Failed to load markdown:', err);
-        setError('Failed to load documentation');
-      } finally {
-        setLoading(false);
       }
+
+      // Fallback: fetch from Shuffle Core docs API
+      const remote = await fetchRemoteDoc(slug);
+      if (remote) {
+        setContent(remote);
+      } else {
+        setError(`Documentation not found: ${slug}`);
+      }
+      setLoading(false);
     };
 
     loadContent();
