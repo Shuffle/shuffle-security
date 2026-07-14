@@ -639,6 +639,8 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
         {/* Inline Results Container */}
         {inline && (
           <div
+            ref={resultsScrollRef}
+            onScroll={handleResultsScroll}
             className={`singul-results-container ${layout === 'grid' ? 'singul-results-grid' : ''}`}
             style={{
               ...customStyles.resultsContainer,
@@ -649,15 +651,20 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
             {displayResults.length > 0 ? (
               <>
                 {displayResults.map((app, index) => renderAppItem(app, index))}
-                <div className="singul-end-of-results" style={{
-                  padding: '10px 16px',
-                  color: 'hsl(var(--foreground) / 0.3)',
-                  textAlign: 'center' as const,
-                  fontSize: '11px',
-                  gridColumn: '1 / -1',
-                }}>
-                  Can't find what you're looking for? Try a different search term.
-                </div>
+                {isLoadingMore && (
+                  <InfiniteScrollSkeleton layout={layout} gridColumns={typeof gridColumns === 'number' ? gridColumns : (gridColumns.md || 3)} />
+                )}
+                {!hasMore && !isLoadingMore && (
+                  <div className="singul-end-of-results" style={{
+                    padding: '10px 16px',
+                    color: 'hsl(var(--foreground) / 0.3)',
+                    textAlign: 'center' as const,
+                    fontSize: '11px',
+                    gridColumn: '1 / -1',
+                  }}>
+                    Can't find what you're looking for? Try a different search term.
+                  </div>
+                )}
               </>
             ) : query.trim() ? (
               <div className="singul-empty-state" style={customStyles.emptyState}>
