@@ -109,6 +109,7 @@ import { DemoSpotlight } from '@/components/demo/DemoSpotlight';
 import { DemoCompletionWatcher } from '@/components/demo/DemoCompletionWatcher';
 import { DemoResumePill } from '@/components/demo/DemoResumePill';
 import GlobalAgentDrawer from '@/components/agent/GlobalAgentDrawer';
+import AgentPresets from '@/components/agent/AgentPresets';
 
 
 /** Layout that conditionally shows sidebar for authenticated users, navbar + content for guests */
@@ -144,14 +145,19 @@ const AgentsRoute = ({ theme }: { theme: 'light' | 'dark' }) => {
     sync_features: (userInfo as any).sync_features,
   } : undefined;
   return (
-    <AgentsView
-      globalUrl={API_CONFIG.baseUrl}
-      theme={theme}
-      userdata={userdata as any}
-      isLoaded={!isLoading}
-      isLoggedIn={isAuthenticated}
-      permissionsSlot={<PermissionsPanel compact />}
-    />
+    <>
+      <Box sx={{ px: { xs: 2, md: 4 }, pt: { xs: 3, md: '5vh' }, maxWidth: 820, mx: 'auto', width: '100%', boxSizing: 'border-box' }}>
+        <AgentPresets />
+      </Box>
+      <AgentsView
+        globalUrl={API_CONFIG.baseUrl}
+        theme={theme}
+        userdata={userdata as any}
+        isLoaded={!isLoading}
+        isLoggedIn={isAuthenticated}
+        permissionsSlot={<PermissionsPanel compact />}
+      />
+    </>
   );
 };
 

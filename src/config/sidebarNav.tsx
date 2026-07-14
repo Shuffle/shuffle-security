@@ -90,12 +90,6 @@ export const SIDEBAR_NAV: SidebarItemSpec[] = [
     alwaysVisible: true,
     children: [
       {
-        tabKey: 'incidents_templates',
-        label: 'Templates',
-        path: '/templates',
-        icon: <DescriptionIcon size={20} />,
-      },
-      {
         tabKey: 'incidents_custom_fields',
         label: 'Custom Fields',
         path: '/incidents/custom-fields',
