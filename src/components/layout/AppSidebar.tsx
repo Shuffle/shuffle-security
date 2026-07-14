@@ -175,9 +175,13 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
     return () => document.removeEventListener('keydown', handleGlobalKey);
   }, []);
 
-  // Auto-expand the nav group whose own path or any child path matches the current route.
-  // This prevents the previously-expanded group (e.g. Incidents) from staying open when
-  // navigating to a sibling group like Vulnerabilities.
+  // Auto-expand the nav group whose own path or any child path matches the
+  // current route. When switching between sibling groups we stage the change:
+  // first close the previously-open group, then open the new one after the
+  // close animation finishes. This avoids the "jump" of two Collapses firing
+  // in the same tick.
+  const expandTransitionMs = 220;
+  const pendingExpandRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     const path = location.pathname;
     const matches = (p?: string) => !!p && (path === p || path.startsWith(p + '/'));
@@ -186,15 +190,31 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
       if (item.children?.some(c => matches(c.path))) return true;
       return false;
     });
-    if (owning) {
-      setExpandedItems(prev => (prev.length === 1 && prev[0] === owning.label ? prev : [owning.label]));
-    } else {
-      // No group owns the current route (top-level item like Host Monitors or
-      // Vulnerabilities) — collapse everything so the previous group does not
-      // stay open.
-      setExpandedItems(prev => (prev.length === 0 ? prev : []));
-    }
+    const target = owning ? [owning.label] : [];
+
+    setExpandedItems(prev => {
+      // Already correct — no-op.
+      if (prev.length === target.length && prev.every((v, i) => v === target[i])) {
+        return prev;
+      }
+      // Switching between two different groups: close first, then open the
+      // new one on a delay so the two animations run sequentially.
+      if (prev.length > 0 && target.length > 0 && prev[0] !== target[0]) {
+        if (pendingExpandRef.current) clearTimeout(pendingExpandRef.current);
+        pendingExpandRef.current = setTimeout(() => {
+          setExpandedItems(target);
+          pendingExpandRef.current = null;
+        }, expandTransitionMs);
+        return [];
+      }
+      // Opening from empty, closing to empty, or same-group edge case.
+      return target;
+    });
   }, [location.pathname, navItems]);
+
+  useEffect(() => () => {
+    if (pendingExpandRef.current) clearTimeout(pendingExpandRef.current);
+  }, []);
 
   // The sidebar appears expanded if it's actually expanded OR hover-expanded
   const visuallyCollapsed = collapsed && !hoverExpanded;
@@ -510,10 +530,13 @@ export const AppSidebar = ({ collapsed, onToggle }: AppSidebarProps) => {
                       to={item.path!}
                       data-tour={item.path === entityBasePath ? 'sidebar-incidents-link' : undefined}
                       onClick={() => {
-                        // Always switch the expanded group to this item synchronously
-                        // (avoids a brief flicker where the previously-open group stays
-                        // open while the route changes).
-                        setExpandedItems([item.label]);
+                        // Let the route-change effect stage the animation
+                        // (close previous group first, then open this one).
+                        // Only pre-open when nothing is currently expanded so
+                        // opening from empty stays instant.
+                        setExpandedItems(prev =>
+                          prev.length === 0 ? [item.label] : prev
+                        );
                       }}
                       sx={{
                         borderRadius: 1,
