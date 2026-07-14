@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Link } from 'react-router-dom';
-import { Box, CircularProgress } from '@mui/material';
+import { Box, CircularProgress, Avatar, AvatarGroup, Tooltip, Stack, Typography, Link as MuiLink } from '@mui/material';
+import { Clock as ClockIcon, Github as GithubIcon } from 'lucide-react';
 import { getApiUrl } from '@/Shuffle-MCPs/api';
 
 // Import markdown files statically
@@ -15,13 +16,29 @@ const docs: Record<string, () => Promise<{ default: string }>> = {
   setup: () => import('@/docs/setup.md?raw'),
 };
 
+interface Contributor {
+  name?: string;
+  url?: string;
+  image?: string;
+}
+
+interface RemoteDocMeta {
+  name?: string;
+  contributors?: Contributor[];
+  read_time?: number;
+  edited?: string;
+  link?: string;
+}
+
 interface MarkdownRendererProps {
   slug?: string;
 }
 
 // Fetch a doc from the Shuffle Core /api/v1/docs/{name} endpoint.
-// The API returns { success, reason: <markdown> }.
-const fetchRemoteDoc = async (slug: string): Promise<string | null> => {
+// The API returns { success, reason: <markdown>, meta: {...} }.
+const fetchRemoteDoc = async (
+  slug: string,
+): Promise<{ markdown: string; meta: RemoteDocMeta | null } | null> => {
   // Remote docs use underscores (e.g. getting_started); our local slugs use dashes.
   const candidates = Array.from(new Set([slug, slug.replace(/-/g, '_')]));
   for (const name of candidates) {
@@ -30,7 +47,7 @@ const fetchRemoteDoc = async (slug: string): Promise<string | null> => {
       if (!res.ok) continue;
       const data = await res.json();
       if (data?.success && typeof data.reason === 'string' && data.reason.trim().length > 0) {
-        return data.reason;
+        return { markdown: data.reason, meta: (data.meta as RemoteDocMeta) ?? null };
       }
     } catch {
       // Try next candidate
@@ -41,6 +58,7 @@ const fetchRemoteDoc = async (slug: string): Promise<string | null> => {
 
 export const MarkdownRenderer = ({ slug = 'index' }: MarkdownRendererProps) => {
   const [content, setContent] = useState<string>('');
+  const [meta, setMeta] = useState<RemoteDocMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,6 +66,7 @@ export const MarkdownRenderer = ({ slug = 'index' }: MarkdownRendererProps) => {
     const loadContent = async () => {
       setLoading(true);
       setError(null);
+      setMeta(null);
 
       const loader = docs[slug];
       if (loader) {
@@ -64,7 +83,8 @@ export const MarkdownRenderer = ({ slug = 'index' }: MarkdownRendererProps) => {
       // Fallback: fetch from Shuffle Core docs API
       const remote = await fetchRemoteDoc(slug);
       if (remote) {
-        setContent(remote);
+        setContent(remote.markdown);
+        setMeta(remote.meta);
       } else {
         setError(`Documentation not found: ${slug}`);
       }
