@@ -144,14 +144,19 @@ const AgentsRoute = ({ theme }: { theme: 'light' | 'dark' }) => {
     sync_features: (userInfo as any).sync_features,
   } : undefined;
   return (
-    <AgentsView
-      globalUrl={API_CONFIG.baseUrl}
-      theme={theme}
-      userdata={userdata as any}
-      isLoaded={!isLoading}
-      isLoggedIn={isAuthenticated}
-      permissionsSlot={<PermissionsPanel compact />}
-    />
+    <>
+      <Box sx={{ px: { xs: 2, md: 4 }, pt: { xs: 3, md: '5vh' }, maxWidth: 820, mx: 'auto', width: '100%', boxSizing: 'border-box' }}>
+        <AgentPresets />
+      </Box>
+      <AgentsView
+        globalUrl={API_CONFIG.baseUrl}
+        theme={theme}
+        userdata={userdata as any}
+        isLoaded={!isLoading}
+        isLoggedIn={isAuthenticated}
+        permissionsSlot={<PermissionsPanel compact />}
+      />
+    </>
   );
 };
 
