@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useCallback } from 'react';
+import { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -185,6 +185,18 @@ const CategorySection = ({
   const Icon = category.icon;
   const hasSelections = selectedApps.length > 0;
   const isLast = stepIndex === totalSteps - 1;
+
+  // When the section opens (or is remounted via singulKey), auto-focus the
+  // search input and select any existing text so the user can immediately
+  // start typing to overwrite the pre-filled category query.
+  useEffect(() => {
+    if (!isOpen) return;
+    const t = setTimeout(() => {
+      singulRef.current?.focus(true);
+    }, 260); // wait for Collapse expand animation
+    return () => clearTimeout(t);
+  }, [isOpen, singulKey]);
+
 
   return (
     <Box
