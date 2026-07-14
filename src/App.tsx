@@ -109,6 +109,7 @@ import { DemoSpotlight } from '@/components/demo/DemoSpotlight';
 import { DemoCompletionWatcher } from '@/components/demo/DemoCompletionWatcher';
 import { DemoResumePill } from '@/components/demo/DemoResumePill';
 import GlobalAgentDrawer from '@/components/agent/GlobalAgentDrawer';
+import AgentPresets from '@/components/agent/AgentPresets';
 
 
 /** Layout that conditionally shows sidebar for authenticated users, navbar + content for guests */
