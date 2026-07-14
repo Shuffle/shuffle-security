@@ -5043,7 +5043,7 @@ const IncidentDetailPage = () => {
     const getItemLabel = (it: TimelineItem): string => {
       if (it.type === 'revision') {
         if (it.idx === revisions.length - 1 && !isOnlyRevisionsFilter) return 'Incident created';
-        return `Revision #${revisions.length - it.idx}`;
+        return `Change #${revisions.length - it.idx}`;
       }
       if (it.type === 'agent') return 'Agent run';
       if (it.type === 'step') return it.label;
@@ -5191,7 +5191,7 @@ const IncidentDetailPage = () => {
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
                   <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.73rem' }}>
-                    {showAsCreation ? 'Incident created' : `Revision #${revisions.length - item.idx}`}
+                    {showAsCreation ? 'Incident created' : `Change #${revisions.length - item.idx}`}
                   </Typography>
                   {isLatest && !showAsCreation && (
                     <Chip label="Latest" size="small" variant="outlined" sx={{ height: 16, fontSize: '0.58rem', bgcolor: 'transparent', borderColor: 'hsl(var(--border))', color: 'text.secondary', fontWeight: 600 }} />
@@ -9287,7 +9287,7 @@ const IncidentDetailPage = () => {
                         const payload = typeof rev.value === 'string' ? JSON.parse(rev.value) : rev.value;
                         setRawJsonText(JSON.stringify(payload, null, 2));
                         setSelectedRevisionIdx(idx);
-                        toast.success('Revision loaded — hit Save to persist');
+                        toast.success('Change loaded — hit Save to persist');
                       } catch {
                         setRawJsonText(typeof rev.value === 'string' ? rev.value : JSON.stringify(rev.value, null, 2));
                         setSelectedRevisionIdx(idx);
@@ -9297,10 +9297,10 @@ const IncidentDetailPage = () => {
                   renderValue={() => (
                     <Typography variant="caption" sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>
                       {revisionsLoading
-                        ? 'Loading revisions…'
+                        ? 'Loading changes…'
                         : selectedRevisionIdx !== null
-                          ? `Viewing revision #${revisions.length - selectedRevisionIdx}`
-                          : `Load revision (${revisions.length})`}
+                          ? `Viewing change #${revisions.length - selectedRevisionIdx}`
+                          : `Load change (${revisions.length})`}
                     </Typography>
                   )}
                   sx={{
@@ -9353,7 +9353,7 @@ const IncidentDetailPage = () => {
                     };
                     return revisions.map((rev: any, i: number) => {
                       const ts = normalizeToMs(rev?.edited ?? rev?.created);
-                      const label = ts ? new Date(ts).toLocaleString() : `Revision ${i + 1}`;
+                      const label = ts ? new Date(ts).toLocaleString() : `Change ${i + 1}`;
                       // Compare against the previous (older) revision: index i+1
                       const prev = revisions[i + 1];
                       const counts = prev ? diffCount(prev?.value, rev?.value) : null;
@@ -9660,7 +9660,7 @@ const IncidentDetailPage = () => {
         }}
       >
         <DialogTitle sx={{ color: 'hsl(var(--foreground))', fontSize: '0.9rem', fontWeight: 600, pb: 0.5 }}>
-          Revision Data
+          Change Data
         </DialogTitle>
         <DialogContent>
           <Box
