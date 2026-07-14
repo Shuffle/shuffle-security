@@ -375,6 +375,9 @@ const CategorySection = ({
               border: '1px solid hsl(var(--border))',
               backgroundColor: 'transparent',
               transition: 'border-color 0.3s ease',
+              '& .singul-results-container': {
+                maxHeight: '430px !important',
+              },
             }}
           >
             <ShuffleMCP
