@@ -265,27 +265,22 @@ const AuthenticatedVulnerabilitiesView = () => {
               <TooltipContent>Refresh</TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span tabIndex={0}>
-                  <Button variant="outline" size="sm" className="gap-1.5 opacity-50 cursor-not-allowed pointer-events-none" disabled>
-                    <Plus size={14} />
-                    Add Source
-                  </Button>
-                </span>
-              </TooltipTrigger>
-              <TooltipContent side="bottom" className="max-w-[220px] text-center">
-                <p className="text-xs">VMS tools, GitHub, Docker, Asset & IAM platforms, and more</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <IngestionSourcesRow
+            workflowLabel="Ingest Vulnerabilities"
+            category="vulnerabilities"
+            webhookLabel="Ingest Vulnerabilities_webhook"
+            webhookWorkflowName="Vulnerability Ingestion Webhook"
+            titleTooltip="Apps with authentication appear here. Verified apps show in green, unverified in yellow. Toggle them to control which tools automatically pull in vulnerabilities."
+            addSubtitle="Search and authenticate a tool to ingest vulnerabilities from"
+            onSourcesChanged={() => refresh()}
+          />
           <Button size="sm" className="gap-1.5" onClick={() => navigate('/monitors?add_host=true')}>
             <Plus size={14} />
             Add Host Monitor
           </Button>
         </div>
       </div>
+
 
       {/* Stats row */}
       <div className="grid grid-cols-4 gap-3">
