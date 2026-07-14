@@ -386,6 +386,11 @@ const AuthenticatedVulnerabilitiesView = () => {
         </div>
       )}
 
+      <AddVulnerabilityDialog
+        open={addVulnOpen}
+        onOpenChange={setAddVulnOpen}
+        onAdded={() => refresh()}
+      />
     </div>
   );
 };
