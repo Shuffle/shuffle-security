@@ -62,6 +62,13 @@ export const AGENT_PRESETS: AgentPreset[] = [
     defaultPrompt: 'Modify my detections to ',
     icon: <Radar size={16} />,
   },
+  {
+    id: 'host-monitor-control',
+    label: 'Host Monitor Control',
+    description: 'Controls a host computer with screenshots and mouse/keyboard input — useful for hands-on remediation or guided walkthroughs.',
+    defaultPrompt: 'Take control of this host and help me with: ',
+    icon: <Monitor size={16} />,
+  },
 ];
 
 export interface AgentPresetsProps {
