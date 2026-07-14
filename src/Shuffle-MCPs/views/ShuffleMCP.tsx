@@ -106,6 +106,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
   renderItem,
   renderEmptyState,
   renderLoadingState,
+  renderEndOfResults,
   onAppSelected,
   onSelectionChange,
   onSearchChange,
