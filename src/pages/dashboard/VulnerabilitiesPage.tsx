@@ -277,6 +277,10 @@ const AuthenticatedVulnerabilitiesView = () => {
             addSubtitle="Search and authenticate a tool to ingest vulnerabilities from"
             onSourcesChanged={() => refresh()}
           />
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setAddVulnOpen(true)}>
+            <Plus size={14} />
+            Add Vulnerability
+          </Button>
           <Button size="sm" className="gap-1.5" onClick={() => navigate('/monitors?add_host=true')}>
             <Plus size={14} />
             Add Host Monitor
