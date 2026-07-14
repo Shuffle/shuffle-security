@@ -250,28 +250,44 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
     };
   }, [isAppConfigured, isAppValidated]);
 
-  // Perform search
-  const performSearch = useCallback(async (searchQuery: string) => {
+  // Perform search (page 0 = new query, page > 0 = append for infinite scroll)
+  const performSearch = useCallback(async (searchQuery: string, pageIndex: number = 0) => {
     if (!searchClient.current) {
       return;
     }
 
-    setIsLoading(true);
+    const isAppend = pageIndex > 0;
+    if (isAppend) {
+      setIsLoadingMore(true);
+    } else {
+      setIsLoading(true);
+      activeQueryRef.current = searchQuery;
+    }
+
     try {
       const searchResult = await searchClient.current.searchSingleIndex({
         indexName: algoliaIndexName,
         searchParams: {
           query: searchQuery || '', // Empty string gets top results
           hitsPerPage,
+          page: pageIndex,
         },
       });
 
+      // Ignore stale responses if the query changed while this was in flight
+      if (activeQueryRef.current !== searchQuery) return;
+
       const hits = (searchResult.hits as AlgoliaSearchApp[]).map(h => ({ ...h, source: 'public' as const }));
-      setResults(hits);
+      const totalPages = (searchResult as any).nbPages ?? 1;
+      setHasMore(pageIndex + 1 < totalPages);
+      setPage(pageIndex);
+      setResults(prev => (isAppend ? [...prev, ...hits] : hits));
       setSearchError(null);
       // Open dropdown if we got Algolia hits OR we have private apps to show
-      setIsOpen(hits.length > 0 || privateApps.length > 0);
-      setSelectedIndex(-1);
+      if (!isAppend) {
+        setIsOpen(hits.length > 0 || privateApps.length > 0);
+        setSelectedIndex(-1);
+      }
     } catch (error: any) {
       // Algolia rate-limit (429) or network error: don't blank out the dropdown
       // if we still have private apps to show from /api/v1/apps.
@@ -285,12 +301,26 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
           ? 'Search is temporarily rate limited by Algolia. Please wait a moment and try again.'
           : 'Search is temporarily unavailable. Please try again in a moment.',
       });
-      setResults([]);
-      setIsOpen(privateApps.length > 0);
+      if (!isAppend) {
+        setResults([]);
+        setIsOpen(privateApps.length > 0);
+      }
+      setHasMore(false);
     } finally {
-      setIsLoading(false);
+      if (isAppend) setIsLoadingMore(false);
+      else setIsLoading(false);
     }
   }, [hitsPerPage, algoliaIndexName, privateApps.length]);
+
+  // Infinite scroll: load next page when scrolled near bottom of results
+  const handleResultsScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    if (!hasMore || isLoading || isLoadingMore) return;
+    const el = e.currentTarget;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (distanceFromBottom < 200) {
+      performSearch(activeQueryRef.current, page + 1);
+    }
+  }, [hasMore, isLoading, isLoadingMore, page, performSearch]);
 
   // Expose imperative methods via ref
   useImperativeHandle(ref, () => ({
