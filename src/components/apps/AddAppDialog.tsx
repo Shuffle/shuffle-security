@@ -4,12 +4,11 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Sparkles, Link2, CheckCircle2, AlertTriangle, Plus } from 'lucide-react';
+import { Plus, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { getApiUrl, getAuthHeader } from '@shuffleio/shuffle-mcps';
 import { toast } from '@/lib/toast';
 
@@ -58,109 +57,30 @@ interface AddAppDialogProps {
   onCreated?: (appId: string) => void;
 }
 
-// ─── Fun loader: scanning radar with rotating status text ────────────────────
-const GENERATION_MESSAGES = [
-  'Fetching documentation…',
-  'Parsing endpoints…',
-  'Extracting schemas…',
-  'Inferring authentication…',
-  'Assembling OpenAPI spec…',
-];
-
-const VERIFICATION_MESSAGES = [
-  'Validating spec…',
-  'Compiling app…',
-  'Registering integration…',
-];
-
-const RadarLoader = ({ messages }: { messages: string[] }) => {
-  const [idx, setIdx] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => setIdx((i) => (i + 1) % messages.length), 1600);
-    return () => clearInterval(t);
-  }, [messages]);
-
+// ─── Minimal loader: centered spinner with a single status line ────────────
+const DotsLoader = ({ message }: { message: string }) => {
   return (
-    <div className="flex flex-col items-center justify-center py-10 gap-6">
-      <div className="relative w-32 h-32">
-        {/* Rings */}
-        {[0, 1, 2].map((r) => (
-          <div
-            key={r}
-            className="absolute inset-0 rounded-full border"
-            style={{
-              borderColor: 'hsl(var(--border))',
-              transform: `scale(${1 - r * 0.22})`,
-            }}
-          />
-        ))}
-        {/* Sweep */}
-        <div
-          className="absolute inset-0 rounded-full overflow-hidden"
-          style={{ animation: 'addapp-spin 2.4s linear infinite' }}
-        >
-          <div
-            className="absolute top-1/2 left-1/2 w-1/2 h-1/2 origin-top-left"
-            style={{
-              background:
-                'conic-gradient(from 0deg, hsl(var(--primary) / 0.55), transparent 55%)',
-            }}
-          />
-        </div>
-        {/* Center dot */}
-        <div
-          className="absolute top-1/2 left-1/2 w-3 h-3 rounded-full"
-          style={{
-            transform: 'translate(-50%, -50%)',
-            background: 'hsl(var(--primary))',
-            boxShadow: '0 0 12px hsl(var(--primary) / 0.7)',
-          }}
-        />
-        {/* Blips */}
-        {[
-          { top: '18%', left: '30%', delay: '0s' },
-          { top: '62%', left: '72%', delay: '0.6s' },
-          { top: '40%', left: '80%', delay: '1.1s' },
-          { top: '75%', left: '25%', delay: '1.7s' },
-        ].map((b, i) => (
+    <div className="flex flex-col items-center justify-center py-8 gap-4">
+      <div className="flex items-center gap-1">
+        {[0, 1, 2].map((i) => (
           <div
             key={i}
-            className="absolute w-1.5 h-1.5 rounded-full"
+            className="w-2 h-2 rounded-full"
             style={{
-              top: b.top,
-              left: b.left,
               background: 'hsl(var(--primary))',
-              animation: `addapp-blip 2.4s ${b.delay} ease-in-out infinite`,
+              animation: 'addapp-bounce 1.2s ease-in-out infinite',
+              animationDelay: `${i * 0.16}s`,
             }}
           />
         ))}
       </div>
-
-      <div className="text-center min-h-[40px]">
-        <div
-          key={idx}
-          className="text-sm font-medium"
-          style={{
-            color: 'hsl(var(--foreground))',
-            animation: 'addapp-fade 0.4s ease',
-          }}
-        >
-          {messages[idx]}
-        </div>
-        <div className="text-xs mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
-          This can take up to a minute.
-        </div>
+      <div className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>
+        {message}
       </div>
-
       <style>{`
-        @keyframes addapp-spin { to { transform: rotate(360deg); } }
-        @keyframes addapp-blip {
-          0%, 100% { opacity: 0.2; transform: scale(0.8); }
-          50% { opacity: 1; transform: scale(1.4); }
-        }
-        @keyframes addapp-fade {
-          from { opacity: 0; transform: translateY(4px); }
-          to { opacity: 1; transform: translateY(0); }
+        @keyframes addapp-bounce {
+          0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+          40% { transform: translateY(-6px); opacity: 1; }
         }
       `}</style>
     </div>
@@ -175,14 +95,7 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
   const [createdAppId, setCreatedAppId] = useState<string>('');
   const [existing, setExisting] = useState<ExistingMatch | null>(null);
 
-  const endpointCount = (() => {
-    if (!spec?.paths) return 0;
-    let count = 0;
-    for (const p of Object.values(spec.paths)) {
-      if (p && typeof p === 'object') count += Object.keys(p).length;
-    }
-    return count;
-  })();
+  const title = spec?.info?.title || '';
 
   const reset = useCallback(() => {
     setInput('');
@@ -298,176 +211,51 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
     }
   };
 
-  const title = spec?.info?.title || '';
-  const description = spec?.info?.description || '';
-  const image = (spec?.info as { 'x-image'?: string } | undefined)?.['x-image'] || '';
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[560px]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[420px]">
+        <DialogHeader className="items-center text-center">
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles size={18} style={{ color: 'hsl(var(--primary))' }} />
-            Generate a new app
+            <Plus size={18} style={{ color: 'hsl(var(--primary))' }} />
+            Add app
           </DialogTitle>
-          <DialogDescription>
-            Paste an API documentation URL or a product name. We will generate an OpenAPI spec
-            and turn it into a Shuffle app.
-          </DialogDescription>
         </DialogHeader>
 
         {stage === 'idle' && (
-          <div className="space-y-3 py-2">
-            <div className="relative">
-              <Link2
-                size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2"
-                style={{ color: 'hsl(var(--muted-foreground))' }}
-              />
-              <Input
-                autoFocus
-                placeholder="https://docs.example.com/api  or  Example API"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') handleGenerate(); }}
-                className="pl-9 h-11"
-              />
-            </div>
-            <div className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
-              Tip: A link to the vendor's REST API reference gives the best results.
-            </div>
+          <div className="py-4">
+            <Input
+              autoFocus
+              placeholder="App name or docs URL"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleGenerate(); }}
+              className="h-11 text-center"
+            />
           </div>
         )}
 
-        {stage === 'checking' && <RadarLoader messages={['Checking existing apps…']} />}
-        {stage === 'generating' && <RadarLoader messages={GENERATION_MESSAGES} />}
-        {stage === 'verifying' && <RadarLoader messages={VERIFICATION_MESSAGES} />}
+        {stage === 'checking' && <DotsLoader message="Checking existing apps…" />}
+        {stage === 'generating' && <DotsLoader message="Generating app…" />}
+        {stage === 'verifying' && <DotsLoader message="Finishing up…" />}
 
         {stage === 'existing' && existing && (
-          <div className="py-2 space-y-3">
-            <div
-              className="flex items-start gap-4 p-4 rounded-lg"
-              style={{
-                border: '1px solid hsl(var(--primary) / 0.4)',
-                background: 'hsl(var(--primary) / 0.06)',
-              }}
-            >
-              <div
-                className="flex items-center justify-center rounded-md shrink-0 overflow-hidden"
-                style={{
-                  width: 56,
-                  height: 56,
-                  background: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                }}
-              >
-                {existing.image_url ? (
-                  <img
-                    src={existing.image_url}
-                    alt={existing.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                  />
-                ) : (
-                  <Sparkles size={22} style={{ color: 'hsl(var(--primary))' }} />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-semibold uppercase tracking-wide mb-1"
-                  style={{ color: 'hsl(var(--primary))' }}
-                >
-                  Already exists
-                </div>
-                <div
-                  className="font-semibold text-base truncate"
-                  style={{ color: 'hsl(var(--foreground))' }}
-                >
-                  {existing.name}
-                </div>
-                {existing.description && (
-                  <div
-                    className="text-sm mt-1"
-                    style={{
-                      color: 'hsl(var(--muted-foreground))',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 3,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    {existing.description}
-                  </div>
-                )}
-              </div>
+          <div className="py-4 text-center space-y-2">
+            <div className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>
+              <span style={{ color: 'hsl(var(--foreground))' }}>{existing.name}</span> already exists.
             </div>
             <div className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
-              This app is already available in the catalog. Generate a new version only if you need a different vendor or API.
+              Use it or generate a new version.
             </div>
           </div>
         )}
 
-
         {stage === 'preview' && spec && (
-          <div className="py-2">
-            <div
-              className="flex items-start gap-4 p-4 rounded-lg"
-              style={{
-                border: '1px solid hsl(var(--border))',
-                background: 'hsl(var(--muted) / 0.3)',
-              }}
-            >
-              <div
-                className="flex items-center justify-center rounded-md shrink-0 overflow-hidden"
-                style={{
-                  width: 56,
-                  height: 56,
-                  background: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                }}
-              >
-                {image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={image}
-                    alt={title}
-                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                  />
-                ) : (
-                  <Sparkles size={22} style={{ color: 'hsl(var(--primary))' }} />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div
-                  className="font-semibold text-base truncate"
-                  style={{ color: 'hsl(var(--foreground))' }}
-                >
-                  {title || 'Untitled app'}
-                </div>
-                {description && (
-                  <div
-                    className="text-sm mt-1"
-                    style={{
-                      color: 'hsl(var(--muted-foreground))',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 3,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    {description}
-                  </div>
-                )}
-                <div className="mt-2 inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full"
-                  style={{
-                    background: 'hsl(var(--primary) / 0.12)',
-                    color: 'hsl(var(--primary))',
-                    border: '1px solid hsl(var(--primary) / 0.3)',
-                  }}
-                >
-                  {endpointCount} endpoint{endpointCount === 1 ? '' : 's'}
-                </div>
-              </div>
+          <div className="py-4 text-center">
+            <div className="font-semibold" style={{ color: 'hsl(var(--foreground))' }}>
+              {title || 'Untitled app'}
+            </div>
+            <div className="text-sm mt-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
+              Ready to create.
             </div>
           </div>
         )}
@@ -500,14 +288,11 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
           </div>
         )}
 
-        <DialogFooter>
+        <DialogFooter className="justify-center sm:justify-center">
           {stage === 'idle' && (
             <>
               <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-              <Button onClick={handleGenerate} disabled={!input.trim()}>
-                <Sparkles size={14} className="mr-1.5" />
-                Generate
-              </Button>
+              <Button onClick={handleGenerate} disabled={!input.trim()}>Add</Button>
             </>
           )}
           {(stage === 'checking' || stage === 'generating' || stage === 'verifying') && (
@@ -520,7 +305,6 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
                 variant="outline"
                 onClick={() => { setExisting(null); runGeneration(input.trim()); }}
               >
-                <Sparkles size={14} className="mr-1.5" />
                 Generate anyway
               </Button>
               <Button
@@ -529,7 +313,6 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
                   onOpenChange(false);
                 }}
               >
-                <CheckCircle2 size={14} className="mr-1.5" />
                 Use existing
               </Button>
             </>
@@ -537,10 +320,7 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
           {stage === 'preview' && (
             <>
               <Button variant="ghost" onClick={reset}>Try another</Button>
-              <Button onClick={handleCreate}>
-                <Plus size={14} className="mr-1.5" />
-                Create app
-              </Button>
+              <Button onClick={handleCreate}>Create app</Button>
             </>
           )}
           {stage === 'error' && (
@@ -570,7 +350,7 @@ export const AddAppButton = ({ onCreated, variant = 'outline', size = 'sm', labe
   return (
     <>
       <Button variant={variant} size={size} onClick={() => setOpen(true)}>
-        <Sparkles size={14} className="mr-1.5" style={{ color: 'hsl(var(--primary))' }} />
+        <Plus size={14} className="mr-1.5" />
         {label}
       </Button>
       <AddAppDialog open={open} onOpenChange={setOpen} onCreated={onCreated} />
