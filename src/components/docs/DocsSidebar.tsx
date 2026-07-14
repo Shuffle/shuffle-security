@@ -163,6 +163,55 @@ export const DocsSidebar = ({ onNavigate }: DocsSidebarProps) => {
         ))}
       </List>
 
+      {remoteDocs.length > 0 && (
+        <>
+          <Typography
+            variant="overline"
+            sx={{
+              px: 3,
+              mt: 4,
+              display: 'block',
+              color: 'text.secondary',
+              fontWeight: 600,
+              letterSpacing: 1.5,
+            }}
+          >
+            Reference
+          </Typography>
+          <List sx={{ px: 1, mt: 1 }}>
+            {remoteDocs.map((doc) => (
+              <ListItem key={doc.slug} disablePadding>
+                <ListItemButton
+                  component={Link}
+                  to={`/docs/${doc.slug}`}
+                  onClick={handleClick}
+                  selected={slug === doc.slug}
+                  sx={{
+                    borderRadius: 1,
+                    mx: 1,
+                    '&.Mui-selected': {
+                      backgroundColor: 'rgba(255, 102, 0, 0.1)',
+                      '&:hover': { backgroundColor: 'rgba(255, 102, 0, 0.15)' },
+                      '& .MuiListItemIcon-root': { color: 'primary.main' },
+                      '& .MuiListItemText-primary': { color: 'primary.main', fontWeight: 600 },
+                    },
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 40, color: 'text.secondary' }}>
+                    <FileTextIcon size={18} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={doc.label}
+                    primaryTypographyProps={{ fontSize: '0.875rem' }}
+                  />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </>
+      )}
+
+
       <Typography
         variant="overline"
         sx={{
