@@ -251,13 +251,38 @@ export const FileAttachments = ({
     }
   };
 
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
+
   const handleDelete = async (attachment: FileAttachment) => {
-    const result = await deleteFile(attachment.id);
-    if (result.success) {
-      onChange(attachments.filter(a => a.id !== attachment.id));
-      toast.success(`Deleted ${attachment.filename}`);
-    } else {
-      toast.error('Failed to delete file');
+    if (deletingIds.has(attachment.id)) return;
+    const ok = typeof window !== 'undefined'
+      ? window.confirm(`Delete "${attachment.filename}"? This cannot be undone.`)
+      : true;
+    if (!ok) return;
+
+    setDeletingIds(prev => {
+      const next = new Set(prev);
+      next.add(attachment.id);
+      return next;
+    });
+    const toastId = toast.loading(`Deleting ${attachment.filename}…`);
+    try {
+      const result = await deleteFile(attachment.id);
+      if (result.success) {
+        onChange(attachments.filter(a => a.id !== attachment.id));
+        toast.success(`Deleted ${attachment.filename}`, { id: toastId });
+      } else {
+        toast.error(`Failed to delete ${attachment.filename}`, {
+          id: toastId,
+          description: result.reason || 'The server did not confirm the deletion.',
+        });
+      }
+    } finally {
+      setDeletingIds(prev => {
+        const next = new Set(prev);
+        next.delete(attachment.id);
+        return next;
+      });
     }
   };
 
