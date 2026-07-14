@@ -421,7 +421,7 @@ const CategorySection = ({
               renderEndOfResults={() => (
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5, py: 1 }}>
                   <Typography sx={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))' }}>
-                    Can't find what you are looking for?
+                    Cannot find what you are looking for?
                   </Typography>
                   <AddAppButton
                     size="sm"
