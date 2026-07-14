@@ -173,6 +173,7 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
   const [spec, setSpec] = useState<OpenApiSpec | null>(null);
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [createdAppId, setCreatedAppId] = useState<string>('');
+  const [existing, setExisting] = useState<ExistingMatch | null>(null);
 
   const endpointCount = (() => {
     if (!spec?.paths) return 0;
@@ -189,6 +190,7 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
     setSpec(null);
     setErrorMsg('');
     setCreatedAppId('');
+    setExisting(null);
   }, []);
 
   useEffect(() => {
@@ -199,12 +201,9 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
     }
   }, [open, reset]);
 
-  const handleGenerate = async () => {
-    const value = input.trim();
-    if (!value) {
-      toast.error('Enter a name or documentation URL');
-      return;
-    }
+  /** Actual OpenAPI generation. Split out so we can call it either directly
+   *  (URL input) or after the user rejects an existing Algolia match. */
+  const runGeneration = useCallback(async (value: string) => {
     setStage('generating');
     setErrorMsg('');
     try {
@@ -215,7 +214,6 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
       });
       if (!res.ok) throw new Error(`Failed to generate spec (${res.status})`);
       const data = await res.json();
-      // The endpoint may return { openapi: {...} } or the spec directly
       const openapiSpec: OpenApiSpec =
         (data && typeof data === 'object' && 'info' in data)
           ? data
@@ -230,7 +228,47 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
       setErrorMsg(msg);
       setStage('error');
     }
+  }, []);
+
+  const handleGenerate = async () => {
+    const value = input.trim();
+    if (!value) {
+      toast.error('Enter a name or documentation URL');
+      return;
+    }
+
+    // URL inputs skip the Algolia check — the user has clearly picked a
+    // documentation source rather than trying to reuse an existing app.
+    if (looksLikeUrl(value)) {
+      await runGeneration(value);
+      return;
+    }
+
+    // Name input: check Algolia for a semi-exact match to avoid re-creating
+    // an app that already exists in the catalog.
+    setStage('checking');
+    setErrorMsg('');
+    try {
+      const { algoliasearch } = await import('algoliasearch');
+      const client = algoliasearch('JNSS5CFDZZ', '33e4e3564f4f060e96e0531957bed552');
+      const res = await client.searchSingleIndex({
+        indexName: 'appsearch',
+        searchParams: { query: value, hitsPerPage: 5 },
+      });
+      const hits = ((res.hits as unknown[]) || []) as ExistingMatch[];
+      const match = hits.find((h) => isSemiExactMatch(value, h?.name || ''));
+      if (match) {
+        setExisting(match);
+        setStage('existing');
+        return;
+      }
+    } catch {
+      // Algolia unavailable — fall through and generate anyway.
+    }
+    await runGeneration(value);
   };
+
+
 
   const handleCreate = async () => {
     if (!spec) return;
