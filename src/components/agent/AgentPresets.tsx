@@ -64,103 +64,127 @@ export const AGENT_PRESETS: AgentPreset[] = [
   },
 ];
 
-export const AgentPresets = () => {
+export interface AgentPresetsProps {
+  /** Inline variant sits inside the prompt input row alongside action buttons. */
+  variant?: 'default' | 'inline';
+}
+
+export const AgentPresets = ({ variant = 'default' }: AgentPresetsProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
-  return (
-    <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
-      <Button
-        size="small"
-        onClick={(e) => setAnchorEl(e.currentTarget)}
-        startIcon={<Plus size={14} />}
-        sx={{
-          textTransform: 'none',
-          fontSize: '0.78rem',
-          height: 30,
-          px: 1.25,
-          borderRadius: 999,
-          color: 'hsl(var(--muted-foreground))',
-          border: '1px solid hsl(var(--border))',
-          bgcolor: 'hsl(var(--card))',
-          '&:hover': {
-            bgcolor: 'hsl(var(--muted))',
-            color: 'hsl(var(--foreground))',
-            borderColor: 'hsl(var(--border))',
+  const trigger = (
+    <Button
+      size="small"
+      onClick={(e) => setAnchorEl(e.currentTarget)}
+      startIcon={<Plus size={14} />}
+      sx={{
+        textTransform: 'none',
+        fontSize: '0.78rem',
+        fontWeight: 500,
+        height: variant === 'inline' ? 36 : 30,
+        px: variant === 'inline' ? 1.5 : 1.25,
+        borderRadius: 999,
+        color: 'hsl(var(--muted-foreground))',
+        border: '1px solid hsl(var(--border))',
+        bgcolor: 'transparent',
+        flexShrink: 0,
+        '&:hover': {
+          bgcolor: 'hsl(var(--muted))',
+          color: 'hsl(var(--foreground))',
+          borderColor: 'hsl(var(--border))',
+        },
+      }}
+    >
+      Presets
+    </Button>
+  );
+
+  const menu = (
+    <Menu
+      anchorEl={anchorEl}
+      open={open}
+      onClose={() => setAnchorEl(null)}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+      slotProps={{
+        paper: {
+          sx: {
+            mt: 0.5,
+            maxWidth: 360,
+            bgcolor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
+            boxShadow: '0 8px 24px hsl(var(--background) / 0.4)',
           },
-        }}
-      >
-        Presets
-      </Button>
-      <Menu
-        anchorEl={anchorEl}
-        open={open}
-        onClose={() => setAnchorEl(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        slotProps={{
-          paper: {
-            sx: {
-              mt: 0.5,
-              maxWidth: 360,
-              bgcolor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
-              boxShadow: '0 8px 24px hsl(var(--background) / 0.4)',
-            },
-          },
-        }}
-      >
-        <Box sx={{ px: 1.5, py: 1, borderBottom: '1px solid hsl(var(--border))' }}>
-          <Typography sx={{ fontSize: '0.72rem', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))' }}>
-            Agent presets
-          </Typography>
-          <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7, mt: 0.25 }}>
-            Coming soon — will pre-fill the prompt, apps and LLM.
-          </Typography>
-        </Box>
-        {AGENT_PRESETS.map((p) => (
-          <MenuItem
-            key={p.id}
-            disabled
-            aria-disabled="true"
+        },
+      }}
+    >
+      <Box sx={{ px: 1.5, py: 1, borderBottom: '1px solid hsl(var(--border))' }}>
+        <Typography sx={{ fontSize: '0.72rem', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))' }}>
+          Agent presets
+        </Typography>
+        <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7, mt: 0.25 }}>
+          Coming soon — will pre-fill the prompt, apps and LLM.
+        </Typography>
+      </Box>
+      {AGENT_PRESETS.map((p) => (
+        <MenuItem
+          key={p.id}
+          disabled
+          aria-disabled="true"
+          sx={{
+            alignItems: 'flex-start',
+            gap: 1.25,
+            py: 1,
+            px: 1.5,
+            opacity: '1 !important',
+            '&.Mui-disabled': { opacity: 1 },
+            cursor: 'not-allowed',
+            whiteSpace: 'normal',
+          }}
+        >
+          <Box
             sx={{
-              alignItems: 'flex-start',
-              gap: 1.25,
-              py: 1,
-              px: 1.5,
-              opacity: '1 !important',
-              '&.Mui-disabled': { opacity: 1 },
-              cursor: 'not-allowed',
-              whiteSpace: 'normal',
+              mt: 0.25,
+              width: 26,
+              height: 26,
+              borderRadius: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              bgcolor: 'hsl(var(--muted))',
+              color: 'hsl(var(--muted-foreground))',
+              flexShrink: 0,
             }}
           >
-            <Box
-              sx={{
-                mt: 0.25,
-                width: 26,
-                height: 26,
-                borderRadius: 1,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                bgcolor: 'hsl(var(--muted))',
-                color: 'hsl(var(--muted-foreground))',
-                flexShrink: 0,
-              }}
-            >
-              {p.icon}
-            </Box>
-            <Box sx={{ minWidth: 0 }}>
-              <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-                {p.label}
-              </Typography>
-              <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.4, mt: 0.25 }}>
-                {p.description}
-              </Typography>
-            </Box>
-          </MenuItem>
-        ))}
-      </Menu>
+            {p.icon}
+          </Box>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+              {p.label}
+            </Typography>
+            <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.4, mt: 0.25 }}>
+              {p.description}
+            </Typography>
+          </Box>
+        </MenuItem>
+      ))}
+    </Menu>
+  );
+
+  if (variant === 'inline') {
+    return (
+      <>
+        {trigger}
+        {menu}
+      </>
+    );
+  }
+
+  return (
+    <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+      {trigger}
+      {menu}
     </Box>
   );
 };
