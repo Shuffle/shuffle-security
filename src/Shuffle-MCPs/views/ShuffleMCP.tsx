@@ -20,6 +20,49 @@ const DEFAULT_ALGOLIA_API_KEY = '33e4e3564f4f060e96e0531957bed552';
 const DEFAULT_ALGOLIA_INDEX = 'appsearch';
 const EMPTY_SELECTED_APPS: AlgoliaSearchApp[] = [];
 
+// Skeleton row(s) rendered at the bottom of an infinite-scrolling result list
+// while the next page is being fetched from Algolia.
+const InfiniteScrollSkeleton: React.FC<{ layout: 'list' | 'grid'; gridColumns: number }> = ({ layout, gridColumns }) => {
+  const count = layout === 'grid' ? Math.max(3, gridColumns) : 3;
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <div
+          key={`skel-${i}`}
+          className="singul-dropdown-item"
+          aria-hidden="true"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            padding: '10px 14px',
+            opacity: 0.6,
+            pointerEvents: 'none',
+          }}
+        >
+          <div style={{
+            width: 28, height: 28, borderRadius: 6,
+            background: 'hsl(var(--muted) / 0.5)',
+            animation: 'singul-skeleton-pulse 1.2s ease-in-out infinite',
+          }} />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{
+              width: '55%', height: 10, borderRadius: 4,
+              background: 'hsl(var(--muted) / 0.5)',
+              animation: 'singul-skeleton-pulse 1.2s ease-in-out infinite',
+            }} />
+            <div style={{
+              width: '35%', height: 8, borderRadius: 4,
+              background: 'hsl(var(--muted) / 0.35)',
+              animation: 'singul-skeleton-pulse 1.2s ease-in-out infinite',
+            }} />
+          </div>
+        </div>
+      ))}
+    </>
+  );
+};
+
 export interface ShuffleMCPHandle {
   search: (query: string) => void;
   clear: () => void;
@@ -41,7 +84,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
   inline = false,
   initialQuery = '',
   initialFilterQuery,
-  hitsPerPage = 15,
+  hitsPerPage = 20,
   apiKey,
   apiBaseUrl = 'https://shuffler.io',
   authPath = '/api/v1/apps/authentication',
@@ -74,6 +117,9 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
   const [privateApps, setPrivateApps] = useState<AlgoliaSearchApp[]>([]);
   const [sourceFilter, setSourceFilter] = useState<'all' | 'public' | 'private' | 'authenticated'>('all');
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
   const [searchError, setSearchError] = useState<{ rateLimited: boolean; message: string } | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -83,9 +129,11 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
   const hasInitialized = useRef(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const resultsScrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchClient = useRef<SearchClient | null>(null);
+  const activeQueryRef = useRef<string>('');
 
   // Fetch authenticated apps when apiKey is provided
   const fetchAuthenticatedApps = useCallback(async () => {
@@ -245,28 +293,44 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
     };
   }, [isAppConfigured, isAppValidated]);
 
-  // Perform search
-  const performSearch = useCallback(async (searchQuery: string) => {
+  // Perform search (page 0 = new query, page > 0 = append for infinite scroll)
+  const performSearch = useCallback(async (searchQuery: string, pageIndex: number = 0) => {
     if (!searchClient.current) {
       return;
     }
 
-    setIsLoading(true);
+    const isAppend = pageIndex > 0;
+    if (isAppend) {
+      setIsLoadingMore(true);
+    } else {
+      setIsLoading(true);
+      activeQueryRef.current = searchQuery;
+    }
+
     try {
       const searchResult = await searchClient.current.searchSingleIndex({
         indexName: algoliaIndexName,
         searchParams: {
           query: searchQuery || '', // Empty string gets top results
           hitsPerPage,
+          page: pageIndex,
         },
       });
 
+      // Ignore stale responses if the query changed while this was in flight
+      if (activeQueryRef.current !== searchQuery) return;
+
       const hits = (searchResult.hits as AlgoliaSearchApp[]).map(h => ({ ...h, source: 'public' as const }));
-      setResults(hits);
+      const totalPages = (searchResult as any).nbPages ?? 1;
+      setHasMore(pageIndex + 1 < totalPages);
+      setPage(pageIndex);
+      setResults(prev => (isAppend ? [...prev, ...hits] : hits));
       setSearchError(null);
       // Open dropdown if we got Algolia hits OR we have private apps to show
-      setIsOpen(hits.length > 0 || privateApps.length > 0);
-      setSelectedIndex(-1);
+      if (!isAppend) {
+        setIsOpen(hits.length > 0 || privateApps.length > 0);
+        setSelectedIndex(-1);
+      }
     } catch (error: any) {
       // Algolia rate-limit (429) or network error: don't blank out the dropdown
       // if we still have private apps to show from /api/v1/apps.
@@ -280,12 +344,26 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
           ? 'Search is temporarily rate limited by Algolia. Please wait a moment and try again.'
           : 'Search is temporarily unavailable. Please try again in a moment.',
       });
-      setResults([]);
-      setIsOpen(privateApps.length > 0);
+      if (!isAppend) {
+        setResults([]);
+        setIsOpen(privateApps.length > 0);
+      }
+      setHasMore(false);
     } finally {
-      setIsLoading(false);
+      if (isAppend) setIsLoadingMore(false);
+      else setIsLoading(false);
     }
   }, [hitsPerPage, algoliaIndexName, privateApps.length]);
+
+  // Infinite scroll: load next page when scrolled near bottom of results
+  const handleResultsScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    if (!hasMore || isLoading || isLoadingMore) return;
+    const el = e.currentTarget;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (distanceFromBottom < 200) {
+      performSearch(activeQueryRef.current, page + 1);
+    }
+  }, [hasMore, isLoading, isLoadingMore, page, performSearch]);
 
   // Expose imperative methods via ref
   useImperativeHandle(ref, () => ({
@@ -604,6 +682,8 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
         {/* Inline Results Container */}
         {inline && (
           <div
+            ref={resultsScrollRef}
+            onScroll={handleResultsScroll}
             className={`singul-results-container ${layout === 'grid' ? 'singul-results-grid' : ''}`}
             style={{
               ...customStyles.resultsContainer,
@@ -614,15 +694,20 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
             {displayResults.length > 0 ? (
               <>
                 {displayResults.map((app, index) => renderAppItem(app, index))}
-                <div className="singul-end-of-results" style={{
-                  padding: '10px 16px',
-                  color: 'hsl(var(--foreground) / 0.3)',
-                  textAlign: 'center' as const,
-                  fontSize: '11px',
-                  gridColumn: '1 / -1',
-                }}>
-                  Can't find what you're looking for? Try a different search term.
-                </div>
+                {isLoadingMore && (
+                  <InfiniteScrollSkeleton layout={layout} gridColumns={typeof gridColumns === 'number' ? gridColumns : (gridColumns.md || 3)} />
+                )}
+                {!hasMore && !isLoadingMore && (
+                  <div className="singul-end-of-results" style={{
+                    padding: '10px 16px',
+                    color: 'hsl(var(--foreground) / 0.3)',
+                    textAlign: 'center' as const,
+                    fontSize: '11px',
+                    gridColumn: '1 / -1',
+                  }}>
+                    Can't find what you're looking for? Try a different search term.
+                  </div>
+                )}
               </>
             ) : query.trim() ? (
               <div className="singul-empty-state" style={customStyles.emptyState}>
@@ -659,6 +744,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
         {/* Dropdown Results (non-inline mode) */}
         {!inline && isOpen && (
           <div
+            onScroll={handleResultsScroll}
             className={`singul-dropdown ${layout === 'grid' ? 'singul-dropdown-grid' : ''}`}
             style={{
               ...customStyles.dropdown,
@@ -667,7 +753,12 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
             }}
           >
             {displayResults.length > 0 ? (
-              displayResults.map((app, index) => renderAppItem(app, index))
+              <>
+                {displayResults.map((app, index) => renderAppItem(app, index))}
+                {isLoadingMore && (
+                  <InfiniteScrollSkeleton layout={layout} gridColumns={typeof gridColumns === 'number' ? gridColumns : (gridColumns.md || 3)} />
+                )}
+              </>
             ) : (
               <div className="singul-empty-state" style={customStyles.emptyState}>
                 {searchError ? (
