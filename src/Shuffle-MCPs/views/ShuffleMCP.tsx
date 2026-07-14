@@ -66,7 +66,9 @@ const InfiniteScrollSkeleton: React.FC<{ layout: 'list' | 'grid'; gridColumns: n
 export interface ShuffleMCPHandle {
   search: (query: string) => void;
   clear: () => void;
+  focus: (selectAll?: boolean) => void;
 }
+
 
 export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
   authToken,
