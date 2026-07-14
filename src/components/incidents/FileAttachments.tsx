@@ -158,10 +158,11 @@ const ImageThumbnail = ({
           </IconButton>
           <IconButton 
             size="small" 
-            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            onClick={(e) => { e.stopPropagation(); if (!deleting) onDelete(); }}
+            disabled={deleting}
             sx={{ color: 'error.main', p: 0.5 }}
           >
-            <DeleteIcon size={14} />
+            {deleting ? <CircularProgress size={12} sx={{ color: 'error.main' }} /> : <DeleteIcon size={14} />}
           </IconButton>
         </Box>
       </Box>
