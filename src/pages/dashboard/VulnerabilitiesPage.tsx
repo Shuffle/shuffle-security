@@ -20,6 +20,7 @@ import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { useWorkflows } from '@/hooks/useWorkflows';
 import { VulnerabilityAutomationBanner } from '@/components/vulnerabilities/VulnerabilityAutomationBanner';
+import { IngestionSourcesRow } from '@/components/ingestion/IngestionSourcesRow';
 
 const SEVERITY_COLORS: Record<VulnSeverity, string> = {
   critical: 'bg-red-500/10 text-red-500 border-red-500/20',
