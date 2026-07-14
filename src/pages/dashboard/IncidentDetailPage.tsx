@@ -4393,7 +4393,7 @@ const IncidentDetailPage = () => {
               Incident data looks broken — consider rolling back
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem', display: 'block', mt: 0.25 }}>
-              The latest payload is not valid OCSF. This often happens after a manual edit to the underlying datastore item. The last known-good revision
+              The latest payload is not valid OCSF. This often happens after a manual edit to the underlying datastore item. The last known-good change
               {ocsfFallbackInfo.revisionTimestamp ? ` is from ${new Date(ocsfFallbackInfo.revisionTimestamp).toLocaleString()}` : ''} — find it under the Changes filter below and restore it.
             </Typography>
             {!isFilterActive('revisions') && (
