@@ -196,9 +196,14 @@ export const getFileDownloadUrl = (fileId: string): string => {
 };
 
 /**
- * Delete a file
+ * Delete a file. The backend may respond with either a JSON body
+ * (`{ success: true }`), an empty body, or a non-2xx status with a
+ * text/JSON error reason. Normalize all of these into a single shape
+ * so the UI can show accurate feedback.
  */
-export const deleteFile = async (fileId: string): Promise<{ success: boolean }> => {
+export const deleteFile = async (
+  fileId: string,
+): Promise<{ success: boolean; reason?: string; status?: number }> => {
   try {
     const response = await fetch(getApiUrl(`/api/v1/files/${fileId}`), {
       method: 'DELETE',
@@ -206,10 +211,34 @@ export const deleteFile = async (fileId: string): Promise<{ success: boolean }> 
       headers: getAuthHeader(),
     });
 
-    return await response.json();
+    const raw = await response.text();
+    let parsed: unknown = null;
+    if (raw) {
+      try { parsed = JSON.parse(raw); } catch { /* non-JSON body */ }
+    }
+    const body = (parsed && typeof parsed === 'object') ? parsed as Record<string, unknown> : {};
+
+    if (!response.ok) {
+      const reason =
+        (typeof body.reason === 'string' && body.reason) ||
+        (typeof body.error === 'string' && body.error) ||
+        (raw && raw.slice(0, 200)) ||
+        `HTTP ${response.status}`;
+      return { success: false, reason, status: response.status };
+    }
+
+    // 2xx: treat as success unless the server explicitly says otherwise.
+    if (body && body.success === false) {
+      return {
+        success: false,
+        reason: (typeof body.reason === 'string' ? body.reason : 'Delete rejected by server'),
+        status: response.status,
+      };
+    }
+    return { success: true, status: response.status };
   } catch (error) {
     console.error('Failed to delete file:', error);
-    return { success: false };
+    return { success: false, reason: 'Network error' };
   }
 };
 

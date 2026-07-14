@@ -84,11 +84,13 @@ const useImagePreview = (fileId: string, isImage: boolean) => {
 const ImageThumbnail = ({ 
   attachment, 
   onDelete, 
-  onDownload 
+  onDownload,
+  deleting = false,
 }: { 
   attachment: FileAttachment; 
   onDelete: () => void; 
   onDownload: () => void;
+  deleting?: boolean;
 }) => {
   const blobUrl = useImagePreview(attachment.id, true);
   const [showPreview, setShowPreview] = useState(false);
@@ -156,10 +158,11 @@ const ImageThumbnail = ({
           </IconButton>
           <IconButton 
             size="small" 
-            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            onClick={(e) => { e.stopPropagation(); if (!deleting) onDelete(); }}
+            disabled={deleting}
             sx={{ color: 'error.main', p: 0.5 }}
           >
-            <DeleteIcon size={14} />
+            {deleting ? <CircularProgress size={12} sx={{ color: 'error.main' }} /> : <DeleteIcon size={14} />}
           </IconButton>
         </Box>
       </Box>
@@ -251,13 +254,38 @@ export const FileAttachments = ({
     }
   };
 
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
+
   const handleDelete = async (attachment: FileAttachment) => {
-    const result = await deleteFile(attachment.id);
-    if (result.success) {
-      onChange(attachments.filter(a => a.id !== attachment.id));
-      toast.success(`Deleted ${attachment.filename}`);
-    } else {
-      toast.error('Failed to delete file');
+    if (deletingIds.has(attachment.id)) return;
+    const ok = typeof window !== 'undefined'
+      ? window.confirm(`Delete "${attachment.filename}"? This cannot be undone.`)
+      : true;
+    if (!ok) return;
+
+    setDeletingIds(prev => {
+      const next = new Set(prev);
+      next.add(attachment.id);
+      return next;
+    });
+    const toastId = toast.loading(`Deleting ${attachment.filename}…`);
+    try {
+      const result = await deleteFile(attachment.id);
+      toast.dismiss(toastId as string | number);
+      if (result.success) {
+        onChange(attachments.filter(a => a.id !== attachment.id));
+        toast.success(`Deleted ${attachment.filename}`);
+      } else {
+        toast.error(`Failed to delete ${attachment.filename}`, {
+          description: result.reason || 'The server did not confirm the deletion.',
+        });
+      }
+    } finally {
+      setDeletingIds(prev => {
+        const next = new Set(prev);
+        next.delete(attachment.id);
+        return next;
+      });
     }
   };
 
@@ -311,21 +339,26 @@ export const FileAttachments = ({
           multiple
         />
         
-        {attachments.map((attachment) => (
-          <Chip
-            key={attachment.id}
-            icon={getFileIcon(attachment.filename)}
-            label={attachment.filename}
-            size="small"
-            onDelete={() => handleDelete(attachment)}
-            onClick={() => handleOpen(attachment)}
-            sx={{
-              bgcolor: 'hsl(var(--muted) / 0.5)',
-              '&:hover': { bgcolor: 'hsl(var(--muted) / 0.8)' },
-              '& .MuiChip-icon': { color: 'text.secondary' },
-            }}
-          />
-        ))}
+        {attachments.map((attachment) => {
+          const isDeleting = deletingIds.has(attachment.id);
+          return (
+            <Chip
+              key={attachment.id}
+              icon={isDeleting ? <CircularProgress size={12} sx={{ color: 'text.secondary' }} /> : getFileIcon(attachment.filename)}
+              label={attachment.filename}
+              size="small"
+              onDelete={isDeleting ? undefined : () => handleDelete(attachment)}
+              onClick={() => handleOpen(attachment)}
+              disabled={isDeleting}
+              sx={{
+                bgcolor: 'hsl(var(--muted) / 0.5)',
+                '&:hover': { bgcolor: 'hsl(var(--muted) / 0.8)' },
+                '& .MuiChip-icon': { color: 'text.secondary' },
+                opacity: isDeleting ? 0.6 : 1,
+              }}
+            />
+          );
+        })}
         
         {!hideAddButton && (
           <Tooltip title="Attach file">
@@ -374,6 +407,7 @@ export const FileAttachments = ({
                   <ImageThumbnail
                     key={attachment.id}
                     attachment={attachment}
+                    deleting={deletingIds.has(attachment.id)}
                     onDelete={() => handleDelete(attachment)}
                     onDownload={() => handleDownload(attachment)}
                   />
@@ -385,10 +419,12 @@ export const FileAttachments = ({
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             {attachments
               .filter(a => !isImageFile(a.filename))
-              .map((attachment) => (
+              .map((attachment) => {
+                const isDeleting = deletingIds.has(attachment.id);
+                return (
                 <Box
                   key={attachment.id}
-                  onClick={() => handleOpen(attachment)}
+                  onClick={() => !isDeleting && handleOpen(attachment)}
                   sx={{
                     display: 'flex',
                     alignItems: 'center',
@@ -397,8 +433,10 @@ export const FileAttachments = ({
                     borderRadius: 1,
                     bgcolor: 'hsl(var(--muted) / 0.35)',
                     border: '1px solid hsl(var(--border))',
-                    cursor: 'pointer',
-                    '&:hover': { bgcolor: 'hsl(var(--muted) / 0.55)' },
+                    cursor: isDeleting ? 'default' : 'pointer',
+                    opacity: isDeleting ? 0.6 : 1,
+                    transition: 'opacity 0.2s ease',
+                    '&:hover': { bgcolor: isDeleting ? 'hsl(var(--muted) / 0.35)' : 'hsl(var(--muted) / 0.55)' },
                   }}
                 >
                   <Box sx={{ color: 'text.secondary' }}>
@@ -418,7 +456,7 @@ export const FileAttachments = ({
                       {attachment.filename}
                     </Typography>
                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                      {formatFileSize(attachment.filesize)}
+                      {isDeleting ? 'Deleting…' : formatFileSize(attachment.filesize)}
                     </Typography>
                   </Box>
                   
@@ -426,26 +464,31 @@ export const FileAttachments = ({
                     <IconButton 
                       size="small" 
                       onClick={(e) => { e.stopPropagation(); handleDownload(attachment); }}
+                      disabled={isDeleting}
                       sx={{ color: 'text.secondary' }}
                     >
                       <DownloadIcon size={16} />
                     </IconButton>
                   </Tooltip>
                   
-                  <Tooltip title="Delete">
-                    <IconButton 
-                      size="small" 
-                      onClick={(e) => { e.stopPropagation(); handleDelete(attachment); }}
-                      sx={{ 
-                        color: 'text.disabled',
-                        '&:hover': { color: 'hsl(var(--destructive))' },
-                      }}
-                    >
-                      <DeleteIcon size={16} />
-                    </IconButton>
+                  <Tooltip title={isDeleting ? 'Deleting…' : 'Delete'}>
+                    <span>
+                      <IconButton 
+                        size="small" 
+                        onClick={(e) => { e.stopPropagation(); handleDelete(attachment); }}
+                        disabled={isDeleting}
+                        sx={{ 
+                          color: 'text.disabled',
+                          '&:hover': { color: 'hsl(var(--destructive))' },
+                        }}
+                      >
+                        {isDeleting ? <CircularProgress size={14} sx={{ color: 'text.secondary' }} /> : <DeleteIcon size={16} />}
+                      </IconButton>
+                    </span>
                   </Tooltip>
                 </Box>
-              ))}
+                );
+              })}
           </Box>
         </Box>
       )}
