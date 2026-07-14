@@ -34,8 +34,11 @@
     --muted: 0 0% 94%;
     --muted-foreground: 0 0% 45%;
 
-    --accent: 24 100% 50%;
-    --accent-foreground: 0 0% 100%;
+    /* Accent = subtle hover surface (NOT orange). Orange lives in --primary.
+       Keeping accent neutral prevents statically-colored text/icons from
+       disappearing when hovered over shadcn ghost/outline surfaces. */
+    --accent: 0 0% 92%;
+    --accent-foreground: 0 0% 9%;
 
     /* Severity colors */
     --severity-critical: 0 84% 60%;
