@@ -571,11 +571,6 @@ export const DEFAULT_USECASES: Usecase[] = [
     description: 'Route incoming incidents to the right sub-tenant based on tenant, source, severity, observables, or any field in the incident payload. Keeps multi-tenant environments tidy and ensures the right team owns each incident from the start.',
     agenticDescription: 'An agent evaluates each new incident against your rules, decides which sub-tenant should own it, and either suggests or executes the move with full audit trail.',
     automationArea: 'correlation',
-    customAction: {
-      label: 'Configure Routing Rules',
-      href: '/preferences?tab=routing',
-      description: 'Open Tenant Preferences to manage incident rules.',
-    },
   },
   {
     id: 'asset_management_case_management_vuln_1', phase: 'ingest', source: 'asset_management', target: 'case_management',
