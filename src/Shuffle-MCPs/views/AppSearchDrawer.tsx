@@ -5,11 +5,12 @@
 
 import { useState, useEffect } from 'react';
 import {
-  X as CloseIcon
+  X as CloseIcon,
+  Plus as PlusIcon,
 } from 'lucide-react';
-import { Box, Typography, IconButton, Drawer, Avatar, Tooltip } from '@mui/material';
+import { Box, Typography, IconButton, Drawer, Avatar, Tooltip, Button } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShuffleMCP, AppDetailDrawer } from '@/Shuffle-MCPs';
+import { ShuffleMCP, AppDetailDrawer, AddAppModal } from '@/Shuffle-MCPs';
 import type { AppSelectedEvent } from '@/Shuffle-MCPs';
 import { API_CONFIG } from '@/Shuffle-MCPs/api';
 import { ShufflePipelinesBanner } from '@/Shuffle-MCPs/components/ShufflePipelinesBanner';
