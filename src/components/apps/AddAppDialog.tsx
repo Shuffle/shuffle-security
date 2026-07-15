@@ -26,6 +26,7 @@ interface ExistingMatch {
 
 const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
 const looksLikeUrl = (s: string) => /^https?:\/\//i.test(s) || /\/|\.[a-z]{2,}(\/|$)/i.test(s);
+const displayName = (name?: string) => (name ? name.replace(/_/g, ' ') : '');
 
 /** Semi-exact match: normalized names equal, or one contains the other and is
  *  at least 4 chars, so "gmail" matches "Gmail" and "sentinelone" matches
