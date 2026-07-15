@@ -508,10 +508,15 @@ const CategorySection = ({
                       height: 32,
                       px: 1.5,
                       borderRadius: 999,
-                      color: 'hsl(var(--primary))',
-                      border: '1px solid hsl(var(--primary))',
+                      color: 'hsl(var(--muted-foreground))',
+                      border: '1px solid hsl(var(--border))',
                       bgcolor: 'transparent',
-                      '&:hover': { bgcolor: 'hsla(var(--primary) / 0.08)' },
+                      '& .MuiButton-startIcon': { color: 'hsl(var(--primary))' },
+                      '&:hover': {
+                        bgcolor: 'hsl(var(--muted) / 0.5)',
+                        borderColor: 'hsl(var(--primary) / 0.5)',
+                        color: 'hsl(var(--foreground))',
+                      },
                     }}
                   >
                     Try building "{query}" as a new app
