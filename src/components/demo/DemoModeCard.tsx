@@ -151,7 +151,14 @@ export const DemoModeCard = ({ compact = false }: { compact?: boolean } = {}) =>
         </Box>
 
         {/* Actions */}
-        <Box sx={{ display: 'flex', gap: 1, flexShrink: 0, flexWrap: 'wrap', width: { xs: '100%', md: 'auto' } }}>
+        <Box sx={{
+          display: 'flex',
+          gap: 1,
+          flexShrink: 0,
+          flexWrap: 'wrap',
+          justifyContent: compact ? 'center' : 'flex-start',
+          width: compact ? 'auto' : { xs: '100%', md: 'auto' },
+        }}>
           {active ? (
             <>
               <Button
