@@ -123,8 +123,14 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
             {webhook && (
               <WebhookIngestionButton webhook={webhook} onToggled={onIngestionToggled} />
             )}
-            {ingestionApps.map(app => (
-              <IngestionSourceButton key={app.name} app={app} onToggle={onToggleApp || (() => {})} enableOnClick={!app.enabled} />
+            {ingestionApps.map((app, index) => (
+              <IngestionSourceButton
+                key={app.name}
+                app={app}
+                onToggle={onToggleApp || (() => {})}
+                enableOnClick={!app.enabled}
+                highlighted={index === ingestionApps.findIndex(a => !a.enabled)}
+              />
             ))}
             <Tooltip title="Add ingestion source" placement="bottom">
               <IconButton

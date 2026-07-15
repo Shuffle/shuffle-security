@@ -13,9 +13,12 @@ interface IngestionSourceButtonProps {
    *  opening the action popover. Used by empty states where the only wanted
    *  action is "turn this on". */
   enableOnClick?: boolean;
+  /** When true, draw the primary orange border around the icon to guide the
+   *  user's eye — used on the "No incidents yet" empty state. */
+  highlighted?: boolean;
 }
 
-export const IngestionSourceButton = ({ app, onToggle, incidentCount = 0, variant = 'ingest', enableOnClick = false }: IngestionSourceButtonProps) => {
+export const IngestionSourceButton = ({ app, onToggle, incidentCount = 0, variant = 'ingest', enableOnClick = false, highlighted = false }: IngestionSourceButtonProps) => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [optimisticEnabled, setOptimisticEnabled] = useState<boolean | null>(null);
   const popoverOpen = Boolean(anchorEl);
@@ -63,22 +66,33 @@ export const IngestionSourceButton = ({ app, onToggle, incidentCount = 0, varian
             width: 30,
             height: 30,
             border: '1px solid',
-            borderColor: isEnabled
-              ? (app.validated ? 'hsl(var(--severity-low) / 0.20)' : 'hsl(var(--severity-medium) / 0.25)')
-              : 'transparent',
-            bgcolor: isEnabled
-              ? (app.validated ? 'hsl(var(--severity-low) / 0.10)' : 'hsl(var(--severity-medium) / 0.12)')
-              : 'transparent',
+            borderColor: highlighted
+              ? 'hsl(var(--primary) / 0.5)'
+              : isEnabled
+                ? (app.validated ? 'hsl(var(--severity-low) / 0.20)' : 'hsl(var(--severity-medium) / 0.25)')
+                : 'transparent',
+            bgcolor: highlighted
+              ? 'hsl(var(--primary) / 0.08)'
+              : isEnabled
+                ? (app.validated ? 'hsl(var(--severity-low) / 0.10)' : 'hsl(var(--severity-medium) / 0.12)')
+                : 'transparent',
             borderRadius: 1,
             opacity: isEnabled ? 1 : 0.35,
             filter: isEnabled ? 'none' : 'grayscale(1)',
-            transition: 'transform 0.2s ease, opacity 0.15s ease, filter 0.15s ease',
+            transition: 'transform 0.2s ease, opacity 0.15s ease, filter 0.15s ease, background-color 0.15s ease, border-color 0.15s ease',
             '&:hover': {
               transform: 'scale(1.2)',
-              bgcolor: isEnabled
-                ? (app.validated ? 'hsl(var(--severity-low) / 0.18)' : 'hsl(var(--severity-medium) / 0.20)')
-                : 'rgba(255,255,255,0.1)',
-              opacity: isEnabled ? 1 : 0.7,
+              borderColor: highlighted
+                ? 'hsl(var(--primary) / 0.7)'
+                : isEnabled
+                  ? (app.validated ? 'hsl(var(--severity-low) / 0.30)' : 'hsl(var(--severity-medium) / 0.35)')
+                  : 'transparent',
+              bgcolor: highlighted
+                ? 'hsl(var(--primary) / 0.14)'
+                : isEnabled
+                  ? (app.validated ? 'hsl(var(--severity-low) / 0.18)' : 'hsl(var(--severity-medium) / 0.20)')
+                  : 'rgba(255,255,255,0.1)',
+              opacity: 1,
               filter: 'none',
             },
           }}
