@@ -252,7 +252,7 @@ export const DemoModeCard = ({ compact = false }: { compact?: boolean } = {}) =>
                       py: 1,
                       boxShadow: 'none',
                       whiteSpace: 'nowrap',
-                      width: { xs: '100%', md: 'auto' },
+                      width: compact ? 'auto' : { xs: '100%', md: 'auto' },
                       '&:hover': { backgroundColor: 'hsl(var(--primary) / 0.9)', boxShadow: 'none' },
                       '&.Mui-disabled': {
                         backgroundColor: 'hsl(var(--muted))',
