@@ -348,11 +348,11 @@ export const AddAppDialog = ({
           <Plus size={24} style={{ color: 'hsl(var(--primary))' }} />
         </Box>
         <Typography sx={{ fontSize: 20, fontWeight: 700 }}>
-          New app
+          Can't find the app you are looking for?
         </Typography>
         <Typography sx={{ fontSize: 13, fontWeight: 400, color: 'hsl(var(--muted-foreground))', textAlign: 'center', maxWidth: 460 }}>
-          Type any app name (min. 3 characters) and we will search for its public API,
-          or paste a link to the app's API documentation and we will generate the integration from it.
+          Type any app name (minimum 3 characters) and we will hunt down its public API,
+          or paste a link to the API docs and we will build the integration for you.
         </Typography>
       </DialogTitle>
 
@@ -392,9 +392,9 @@ export const AddAppDialog = ({
                     <Box
                       sx={{
                         width: '100%',
+                        maxHeight: 240,
+                        overflowY: 'auto',
                         borderRadius: 1,
-                        overflow: 'hidden',
-                        border: '1px solid hsl(var(--border))',
                         boxSizing: 'border-box',
                       }}
                     >
@@ -415,13 +415,16 @@ export const AddAppDialog = ({
                             minWidth: 0,
                             px: 1.5,
                             py: 1,
+                            mb: 0.5,
                             background: 'transparent',
-                            border: 0,
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: 1,
                             cursor: 'pointer',
                             textAlign: 'left',
                             color: 'inherit',
-                            transition: 'background 0.15s',
-                            '&:hover': { background: 'hsl(var(--accent))' },
+                            transition: 'border-color 0.15s',
+                            '&:hover': { borderColor: 'hsl(var(--primary))' },
+                            '&:last-child': { mb: 0 },
                           }}
                         >
                           {hit.image_url ? (
