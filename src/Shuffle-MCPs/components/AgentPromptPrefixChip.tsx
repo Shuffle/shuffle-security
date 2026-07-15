@@ -111,7 +111,7 @@ export const AgentPromptPrefixChip = ({
               lineHeight: 'inherit',
             }}
           >
-            @{displayLabel}
+          {displayLabel}
           </Typography>
         </Box>
       </Tooltip>
