@@ -2,9 +2,9 @@
  * AgentPresets — compact "+ Presets" trigger shown above the AgentUI textbox.
  *
  * Opens a menu of preset agent configurations (Build Workflows, Incident
- * Response, App Builder, Support, Vulnerability, Detection). Presets are
- * placeholders — items are disabled but their descriptions are visible so the
- * intent is discoverable while the load-into-prompt behavior is designed.
+ * Response, Support, Vulnerability, Detection, Host Monitor Control). Enabled
+ * presets seed the prompt and pre-select tools; disabled ones are discoverable
+ * placeholders.
  */
 import { useState } from 'react';
 import { Box, Button, Menu, MenuItem, Typography } from '@mui/material';
