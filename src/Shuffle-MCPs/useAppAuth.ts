@@ -64,7 +64,7 @@ export function useAppAuth() {
 
   // Load authenticated apps on mount
   const fetchAuthenticatedApps = useCallback(async () => {
-    
+    setLoading(true);
     try {
       const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {
         credentials: 'include',
@@ -83,6 +83,7 @@ export function useAppAuth() {
       setLoading(false);
     }
   }, []);
+
 
   useEffect(() => {
     fetchAuthenticatedApps();
