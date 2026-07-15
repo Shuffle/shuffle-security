@@ -242,7 +242,11 @@ export const AddAppDialog = ({
   const handleGenerate = async () => {
     const value = input.trim();
     if (!value) {
-      toast.error('Enter a name or documentation URL');
+      toast.error('Enter an app name or documentation URL');
+      return;
+    }
+    if (!looksLikeUrl(value) && value.length < 3) {
+      toast.error('App name must be at least 3 characters');
       return;
     }
 
