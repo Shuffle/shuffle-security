@@ -10,7 +10,8 @@ import {
 } from 'lucide-react';
 import { Box, Typography, IconButton, Drawer, Avatar, Tooltip, Button } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShuffleMCP, AppDetailDrawer, AddAppModal } from '@/Shuffle-MCPs';
+import { ShuffleMCP, AppDetailDrawer } from '@/Shuffle-MCPs';
+import { AddAppDialog } from '@/Shuffle-Core/components/AddAppDialog';
 import type { AppSelectedEvent } from '@/Shuffle-MCPs';
 import { API_CONFIG } from '@/Shuffle-MCPs/api';
 import { ShufflePipelinesBanner } from '@/Shuffle-MCPs/components/ShufflePipelinesBanner';
@@ -547,7 +548,7 @@ export default function AppSearchDrawer({
                   },
                 }}
               >
-                Add App
+                New App
               </Button>
             </Box>
             <AnimatePresence mode="wait">
