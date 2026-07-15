@@ -152,6 +152,7 @@ const DotsLoader = ({ message, tips }: { message: string; tips?: string[] }) => 
       </Typography>
       {tips && tips.length > 0 && (
         <Typography
+          key={tipIndex}
           variant="caption"
           sx={{
             maxWidth: 420,
