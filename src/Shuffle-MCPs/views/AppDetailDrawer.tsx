@@ -55,11 +55,13 @@ interface AppInfo {
   description: string;
   large_image?: string;
   categories?: string[];
+  actions?: unknown[];
   authentication?: {
     type?: string;
     parameters?: { id: string; name: string; description: string; example: string; required: boolean }[];
   };
 }
+
 
 /** Collapsible markdown description */
 const CollapsibleDescription = ({ description }: { description: string }) => {
@@ -512,10 +514,27 @@ export default function AppDetailDrawer({
           flexShrink: 0,
         }}
       >
-        <Box sx={{ flex: 1 }}>
-          <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 700, fontSize: '1rem', lineHeight: 1.2, textTransform: 'capitalize' }}>
-            {isLoadingAll ? <Skeleton width={140} /> : displayName}
-          </Typography>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+            <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 700, fontSize: '1rem', lineHeight: 1.2, textTransform: 'capitalize' }}>
+              {isLoadingAll ? <Skeleton width={140} /> : displayName}
+            </Typography>
+            {!isLoadingAll && typeof appInfo?.actions?.length === 'number' && appInfo.actions.length > 0 && (
+              <Chip
+                size="small"
+                label={`${appInfo.actions.length} action${appInfo.actions.length === 1 ? '' : 's'}`}
+                sx={{
+                  height: 20,
+                  fontSize: '0.65rem',
+                  fontWeight: 600,
+                  bgcolor: 'hsl(var(--primary) / 0.12)',
+                  color: 'hsl(var(--primary))',
+                  border: '1px solid hsl(var(--primary) / 0.3)',
+                  '& .MuiChip-label': { px: 0.75 },
+                }}
+              />
+            )}
+          </Box>
           <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem' }}>
             App configuration
           </Typography>
@@ -533,15 +552,37 @@ export default function AppDetailDrawer({
       <Box sx={{ flex: 1, overflowY: 'auto', p: 3 }}>
         {isLoadingAll ? (
           <Box>
-            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-              <Skeleton variant="circular" width={56} height={56} />
+            {/* App header skeleton */}
+            <Box sx={{ display: 'flex', gap: 2, mb: 3, alignItems: 'center' }}>
+              <Skeleton variant="rounded" width={56} height={56} sx={{ borderRadius: 2 }} />
               <Box sx={{ flex: 1 }}>
-                <Skeleton width={180} height={28} />
-                <Skeleton width={260} height={18} sx={{ mt: 0.5 }} />
+                <Skeleton width="60%" height={24} />
+                <Box sx={{ display: 'flex', gap: 0.75, mt: 0.75 }}>
+                  <Skeleton variant="rounded" width={64} height={18} />
+                  <Skeleton variant="rounded" width={48} height={18} />
+                </Box>
               </Box>
+              <Skeleton variant="rounded" width={90} height={32} sx={{ borderRadius: 1 }} />
             </Box>
-            <Skeleton variant="rectangular" height={160} sx={{ borderRadius: 2 }} />
+
+            {/* Description skeleton */}
+            <Skeleton width="100%" height={14} sx={{ mb: 0.5 }} />
+            <Skeleton width="90%" height={14} sx={{ mb: 0.5 }} />
+            <Skeleton width="70%" height={14} sx={{ mb: 3 }} />
+
+            {/* Authentication section skeleton */}
+            <Skeleton variant="rectangular" height={64} sx={{ borderRadius: 2, mb: 2 }} />
+
+            {/* Try individual actions skeleton */}
+            <Skeleton width={160} height={20} sx={{ mb: 1.5 }} />
+            <Box sx={{ display: 'flex', gap: 0.75, mb: 2, flexWrap: 'wrap' }}>
+              {[92, 76, 108, 84, 96].map((w, i) => (
+                <Skeleton key={i} variant="rounded" width={w} height={28} sx={{ borderRadius: 999 }} />
+              ))}
+            </Box>
+            <Skeleton variant="rectangular" height={180} sx={{ borderRadius: 2 }} />
           </Box>
+
         ) : (
           <>
             {/* App header */}
