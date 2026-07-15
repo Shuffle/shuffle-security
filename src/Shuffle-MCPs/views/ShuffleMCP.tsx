@@ -718,22 +718,24 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
           )}
         </div>
 
-        {/* Source filter — only shown when private apps are loaded */}
-        {showSourceFilter && privateApps.length > 0 && (
+        {/* Source filter — shown immediately; per-tab counts fall back to a
+            spinner glyph while private/authenticated data is still loading. */}
+        {showSourceFilter && (
           <div style={{ margin: '12px 0 8px' }}>
             <SegmentedControl
               ariaLabel="Filter by app source"
               value={sourceFilter}
               onChange={(v) => setSourceFilter(v as typeof sourceFilter)}
               options={[
-                { value: 'all', label: 'All', count: (results.length >= hitsPerPage ? `${results.length + filteredPrivateApps.length}+` : results.length + filteredPrivateApps.length), title: 'All available apps — both the public catalog and your private apps.' },
+                { value: 'all', label: 'All', count: privateAppsLoading ? '…' : (results.length >= hitsPerPage ? `${results.length + filteredPrivateApps.length}+` : results.length + filteredPrivateApps.length), title: 'All available apps — both the public catalog and your private apps.' },
                 { value: 'public', label: 'Public', count: (results.length >= hitsPerPage ? `${results.length}+` : results.length), title: 'Public apps from the Shuffle catalog (powered by Algolia).' },
-                { value: 'private', label: 'Private', count: filteredPrivateApps.length, title: 'Private apps are apps you have activated in your organization, or your own custom apps — not just from the public Algolia catalog.' },
-                { value: 'authenticated', label: 'Authenticated', count: [...filteredPrivateApps, ...results].filter((a, i, arr) => arr.findIndex(x => x.name?.toLowerCase() === a.name?.toLowerCase()) === i).filter(isAppConfigured).length, title: 'Apps you have authenticated and that are ready to use.' },
+                { value: 'private', label: 'Private', count: privateAppsLoading ? '…' : filteredPrivateApps.length, title: 'Private apps are apps you have activated in your organization, or your own custom apps — not just from the public Algolia catalog.' },
+                { value: 'authenticated', label: 'Authenticated', count: (privateAppsLoading || authenticatedAppsLoading) ? '…' : [...filteredPrivateApps, ...results].filter((a, i, arr) => arr.findIndex(x => x.name?.toLowerCase() === a.name?.toLowerCase()) === i).filter(isAppConfigured).length, title: 'Apps you have authenticated and that are ready to use.' },
               ]}
             />
           </div>
         )}
+
 
         {/* Inline Results Container */}
         {inline && (
