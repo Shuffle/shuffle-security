@@ -245,7 +245,10 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[420px] w-full p-8">
+      <DialogContent
+        className="!max-w-[420px] w-[calc(100vw-2rem)] min-w-0 overflow-hidden p-8"
+        style={{ boxSizing: 'border-box' }}
+      >
         <DialogHeader className="items-center text-center mb-2">
           <DialogTitle className="flex items-center gap-2">
             <Plus size={18} style={{ color: 'hsl(var(--primary))' }} />
@@ -254,7 +257,7 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
         </DialogHeader>
 
         {stage === 'idle' && (
-          <div className="py-4 space-y-3">
+          <div className="min-w-0 py-4 space-y-3">
             <Input
               autoFocus
               placeholder="App name or docs URL"
@@ -262,34 +265,35 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
               maxLength={1024}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleGenerate(); }}
-              className="h-11 text-center border border-border"
+              className="h-11 max-w-full min-w-0 text-center border border-border"
+              style={{ boxSizing: 'border-box', width: '100%' }}
             />
             {input.trim() && !looksLikeUrl(input.trim()) && (
-              <div className="min-h-[40px]">
+              <div className="min-h-[40px] min-w-0 max-w-full overflow-hidden">
                 {liveHits.length > 0 ? (
-                  <div className="space-y-1">
+                  <div className="min-w-0 max-w-full space-y-1">
                     <div className="text-xs px-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
                       Existing matches
                     </div>
-                    <div className="rounded-md overflow-hidden" style={{ border: '1px solid hsl(var(--border))' }}>
+                    <div className="w-full max-w-full rounded-md overflow-hidden" style={{ border: '1px solid hsl(var(--border))', boxSizing: 'border-box' }}>
                       {liveHits.map((hit) => (
                         <button
                           key={hit.objectID}
                           type="button"
                           onClick={() => { onCreated?.(hit.objectID); onOpenChange(false); }}
-                          className="w-full flex items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-accent"
+                          className="w-full min-w-0 max-w-full flex items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-accent"
                         >
                           {hit.image_url ? (
-                            <img src={hit.image_url} alt="" className="w-6 h-6 rounded object-contain" />
+                            <img src={hit.image_url} alt="" className="w-6 h-6 shrink-0 rounded object-contain" />
                           ) : (
-                            <div className="w-6 h-6 rounded" style={{ background: 'hsl(var(--muted))' }} />
+                            <div className="w-6 h-6 shrink-0 rounded" style={{ background: 'hsl(var(--muted))' }} />
                           )}
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm truncate" style={{ color: 'hsl(var(--foreground))' }}>
+                            <div className="text-sm truncate" style={{ color: 'hsl(var(--foreground))', maxWidth: '100%' }}>
                               {hit.name}
                             </div>
                             {hit.description && (
-                              <div className="text-xs truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                              <div className="text-xs truncate" style={{ color: 'hsl(var(--muted-foreground))', maxWidth: '100%' }}>
                                 {hit.description}
                               </div>
                             )}
