@@ -50,7 +50,7 @@ export const IngestionSourceButton = ({ app, onToggle, incidentCount = 0, varian
     <Box sx={{ position: 'relative' }} data-tour={`ingestion-source-${app.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>
       <Tooltip title={displayName} placement="bottom">
         <IconButton
-          onClick={(e) => setAnchorEl(e.currentTarget)}
+          onClick={handleIconClick}
           size="small"
           sx={{
             width: 30,
