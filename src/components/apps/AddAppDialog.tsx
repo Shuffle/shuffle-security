@@ -291,7 +291,7 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
                           )}
                           <div className="flex-1 min-w-0">
                             <div className="text-sm truncate" style={{ color: 'hsl(var(--foreground))', maxWidth: '100%' }}>
-                              {hit.name}
+                              {displayName(hit.name)}
                             </div>
                             {hit.description && (
                               <div className="text-xs truncate" style={{ color: 'hsl(var(--muted-foreground))', maxWidth: '100%' }}>
