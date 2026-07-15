@@ -3472,6 +3472,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                           }
                         : undefined
                     }
+                    onRemove={() => setSelectedPreset(null)}
                   />
                 </Box>
               )}
