@@ -493,6 +493,22 @@ export interface AgentUIProps {
   sx?: SxProps<Theme>;
   /** Style overrides for the inner content card (the column under the run-switcher). */
   contentSx?: SxProps<Theme>;
+  /**
+   * Storage key for the per-user prompt-prefix chip. Typically the current
+   * Shuffle user id. When omitted, the prefix persists under `"default"`
+   * (shared across all users on this browser).
+   */
+  userId?: string;
+  /** Hide the "+ Presets" trigger next to the input. */
+  hidePresets?: boolean;
+  /** Override the built-in preset list surfaced by the "+ Presets" trigger. */
+  presets?: AgentPreset[];
+  /** Called when the user picks a preset. Overrides the built-in seed behavior. */
+  onSelectPreset?: (preset: AgentPreset) => void;
+  /** Hide the "Shuffle Tools MCP" prompt-prefix chip at the start of the input. */
+  hidePromptPrefixChip?: boolean;
+  /** Label shown on the prompt-prefix chip. Defaults to "Shuffle Tools MCP". */
+  promptPrefixLabel?: string;
 }
 
 interface ExecutionData {
