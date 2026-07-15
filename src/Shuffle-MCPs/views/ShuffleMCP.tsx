@@ -733,7 +733,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
                     <span style={{ fontSize: 12, color: 'hsl(var(--muted-foreground))' }}>{searchError.message}</span>
                   </div>
                 ) : renderEmptyState ? (
-                  renderEmptyState()
+                  renderEmptyState(query)
                 ) : (
                   <>No integrations match "{query}". Try searching for a different app or category.</>
                 )}
@@ -783,7 +783,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
                     <span style={{ fontSize: 12, color: 'hsl(var(--muted-foreground))' }}>{searchError.message}</span>
                   </div>
                 ) : renderEmptyState ? (
-                  renderEmptyState()
+                  renderEmptyState(query)
                 ) : (
                   <>No apps found for "{query}"</>
                 )}
