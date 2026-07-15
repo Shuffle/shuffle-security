@@ -639,6 +639,7 @@ export default function AppSearchDrawer({
                         </Button>
                       </Box>
                     )}
+                  />
                 ) : (
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, height: '100%' }}>
                     {/* Search input skeleton */}
