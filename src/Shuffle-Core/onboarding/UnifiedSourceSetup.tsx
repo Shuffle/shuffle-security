@@ -32,7 +32,7 @@ import type {
   IngestionCategory,
   ShuffleHostProps,
 } from '@shuffleio/shuffle-mcps';
-import { AddAppButton } from '@/Shuffle-Core/components/AddAppDialog';
+import { AddAppButton, AddAppDialog } from '@/Shuffle-Core/components/AddAppDialog';
 
 /** Fire-and-forget activate call for a newly selected app. Refreshes the
  *  Integrations bar so the icon flips to "enabled" immediately. */
