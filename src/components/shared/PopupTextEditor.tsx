@@ -75,6 +75,14 @@ export interface PopupTextEditorProps {
   className?: string;
   /** Hide the expand icon (rare — opts out of popup). */
   hideExpandButton?: boolean;
+  /** When false, don't render the inline TextField — only the popup Dialog.
+   *  Combine with `open`/`onOpenChange` to control the popup from a custom trigger
+   *  (e.g. a chip button). Defaults to true. */
+  renderInline?: boolean;
+  /** Controlled open state for the popup. If provided, PopupTextEditor becomes controlled. */
+  open?: boolean;
+  /** Controlled open change handler. Required when `open` is provided. */
+  onOpenChange?: (open: boolean) => void;
 }
 
 const monoFont = 'ui-monospace, SFMono-Regular, Menlo, monospace';
