@@ -303,6 +303,7 @@ const AgentsView = ({
           onSchedule={effectiveSchedule}
           apiKey={apiKey}
           orgId={orgId}
+          userId={userdata?.id}
           onChooseLLM={handleChooseLLM}
           hideChooseLLM={hideChooseLLM}
           defaultInput={prefill.input}
