@@ -639,6 +639,32 @@ export default function AppSearchDrawer({
                         </Button>
                       </Box>
                     )}
+                    renderEndOfResults={() => (
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, py: 1 }}>
+                        <Typography sx={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))' }}>
+                          Cannot find what you are looking for?
+                        </Typography>
+                        <Button
+                          size="small"
+                          onClick={() => { setAddAppQuery(''); setAddAppOpen(true); onClose(); }}
+                          startIcon={<PlusIcon size={14} />}
+                          sx={{
+                            textTransform: 'none',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            height: 30,
+                            px: 1.5,
+                            borderRadius: 999,
+                            color: 'hsl(var(--primary))',
+                            border: '1px solid hsl(var(--primary))',
+                            bgcolor: 'transparent',
+                            '&:hover': { bgcolor: 'hsla(var(--primary) / 0.08)' },
+                          }}
+                        >
+                          New App
+                        </Button>
+                      </Box>
+                    )}
                   />
                 ) : (
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, height: '100%' }}>
