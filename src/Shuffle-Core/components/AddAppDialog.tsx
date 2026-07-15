@@ -151,6 +151,13 @@ export const AddAppDialog = ({
   const [liveHits, setLiveHits] = useState<ExistingMatch[]>([]);
   const [liveSearching, setLiveSearching] = useState(false);
 
+  // Seed the input with the initial value each time the dialog opens.
+  useEffect(() => {
+    if (open) setInput(initialInput);
+  }, [open, initialInput]);
+
+
+
   const title = spec?.info?.title || '';
 
   // Live Algolia search while the user types (idle stage only).
