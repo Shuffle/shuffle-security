@@ -1342,14 +1342,27 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // Editable per-user prompt prefix rendered as a chip at the start of the
   // input. Prepended to the submitted text so it feels like the user is
   // "typing to" the Shuffle Tools MCP without the prefix filling the box.
-  const { prompt: promptPrefix } = useAgentPromptPrefix({ userId });
+  //
+  // Presets swap the chip's active label + prefix (they do NOT fill the
+  // visible input). When no preset is selected, the chip falls back to the
+  // user's saved default prefix.
+  const { prompt: savedPromptPrefix } = useAgentPromptPrefix({ userId });
+  const [selectedPreset, setSelectedPreset] = useState<AgentPreset | null>(null);
+  // Local (in-memory) overrides for preset prompts. Editing the chip while a
+  // preset is active updates the preset's prompt without touching the user's
+  // saved default. Not persisted — presets ship with their own defaults.
+  const [presetPromptOverrides, setPresetPromptOverrides] = useState<Record<string, string>>({});
+  const activePromptLabel = selectedPreset?.label ?? 'Shuffle Tools';
+  const activePromptPrefix = selectedPreset
+    ? (presetPromptOverrides[selectedPreset.id] ?? selectedPreset.defaultPrompt)
+    : savedPromptPrefix;
   const composeSubmitInput = useCallback(
     (raw: string) => {
-      const trimmedPrefix = (promptPrefix || '').trim();
+      const trimmedPrefix = (activePromptPrefix || '').trim();
       if (!trimmedPrefix) return raw;
       return `${trimmedPrefix}\n\n${raw}`;
     },
-    [promptPrefix],
+    [activePromptPrefix],
   );
   // ── Prompt autocomplete ─────────────────────────────────────────
   // Google-style suggestion list under the starter input. Only shows when
@@ -3446,8 +3459,20 @@ const AgentUI: React.FC<AgentUIProps> = ({
               )}
               <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, width: '100%' }}>
               {!hidePromptPrefixChip && (
-                <Box sx={{ alignSelf: 'flex-start', pt: 0.5, flexShrink: 0 }}>
-                  <AgentPromptPrefixChip userId={userId} label={promptPrefixLabel} />
+                <Box sx={{ alignSelf: 'flex-start', pt: '10px', flexShrink: 0 }}>
+                  <AgentPromptPrefixChip
+                    userId={userId}
+                    label={promptPrefixLabel ?? activePromptLabel}
+                    value={selectedPreset ? activePromptPrefix : undefined}
+                    onChange={
+                      selectedPreset
+                        ? (next) => {
+                            const id = selectedPreset.id;
+                            setPresetPromptOverrides((prev) => ({ ...prev, [id]: next }));
+                          }
+                        : undefined
+                    }
+                  />
                 </Box>
               )}
               <InputBase
@@ -3503,18 +3528,15 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       onSelectPreset(preset);
                       return;
                     }
-                    setActionInput(preset.defaultPrompt);
+                    // Chosen preset drives the chip label + hidden prefix.
+                    // The visible input is left alone so the user just keeps typing.
+                    setSelectedPreset(preset);
                     if (preset.defaultApps?.length) {
                       setChosenApps(preset.defaultApps);
                     }
-                    // Focus the textarea and move caret to the end so the user can type on.
                     setTimeout(() => {
                       const el = inputRef.current as HTMLTextAreaElement | HTMLInputElement | null;
-                      if (el) {
-                        el.focus();
-                        const len = preset.defaultPrompt.length;
-                        try { el.setSelectionRange(len, len); } catch { /* ignore */ }
-                      }
+                      try { el?.focus(); } catch { /* ignore */ }
                     }, 0);
                   }}
                 />

@@ -74,6 +74,11 @@ export const AgentPromptPrefixChip = ({
     setOpen(false);
   };
 
+  // Cap the visible chip label at 15 characters so the prompt-prefix chip
+  // never crowds the input — long preset names get truncated with an ellipsis.
+  const MAX_LABEL_CHARS = 15;
+  const displayLabel = label.length > MAX_LABEL_CHARS ? `${label.slice(0, MAX_LABEL_CHARS - 1).trimEnd()}…` : label;
+
   return (
     <>
       <Tooltip title="Click to edit the default prompt sent with your message" placement="top" arrow>
@@ -84,12 +89,9 @@ export const AgentPromptPrefixChip = ({
           onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleOpen(); } }}
           sx={{
             display: 'inline-flex',
-            alignItems: 'center',
-            gap: 0.75,
-            height: 28,
-            pl: 0.5,
-            pr: 1.25,
-            borderRadius: 999,
+            alignItems: 'baseline',
+            px: 0.5,
+            borderRadius: 0.5,
             bgcolor: 'transparent',
             cursor: 'pointer',
             flexShrink: 0,
@@ -99,34 +101,17 @@ export const AgentPromptPrefixChip = ({
           }}
           aria-label={`Edit default prompt for ${label}`}
         >
-          <Box
-            sx={{
-              width: 22,
-              height: 22,
-              borderRadius: 1,
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'linear-gradient(135deg, #FF8544 0%, #EC517C 55%, #9C5AF2 100%)',
-              color: '#fff',
-              fontSize: '0.72rem',
-              fontWeight: 700,
-              lineHeight: 1,
-              flexShrink: 0,
-            }}
-            aria-hidden
-          >
-            S
-          </Box>
           <Typography
+            component="span"
             sx={{
-              fontSize: '0.9rem',
-              fontWeight: 500,
+              fontSize: '1rem',
+              fontWeight: 600,
               color: 'hsl(var(--primary))',
               whiteSpace: 'nowrap',
+              lineHeight: 'inherit',
             }}
           >
-            {label}
+            @{displayLabel}
           </Typography>
         </Box>
       </Tooltip>
