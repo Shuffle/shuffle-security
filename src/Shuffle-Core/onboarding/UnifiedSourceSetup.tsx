@@ -511,6 +511,9 @@ const CategorySection = ({
                       border: '1px solid hsl(var(--border))',
                       bgcolor: 'transparent',
                       maxWidth: '100%',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
                       '& .MuiButton-startIcon': { color: 'hsl(var(--primary))' },
                       '&:hover': {
                         bgcolor: 'hsl(var(--muted) / 0.5)',
