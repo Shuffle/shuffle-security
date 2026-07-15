@@ -198,9 +198,9 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
       const client = algoliasearch('JNSS5CFDZZ', '33e4e3564f4f060e96e0531957bed552');
       const res = await client.searchSingleIndex({
         indexName: 'appsearch',
-        searchParams: { query: value, hitsPerPage: 5 },
+        searchParams: { query: value, hitsPerPage: 3 },
       });
-      const hits = ((res.hits as unknown[]) || []) as ExistingMatch[];
+      const hits = (((res.hits as unknown[]) || []).slice(0, 3)) as ExistingMatch[];
       const match = hits.find((h) => isSemiExactMatch(value, h?.name || ''));
       if (match) {
         setExisting(match);
