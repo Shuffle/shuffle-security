@@ -643,7 +643,7 @@ export const AddAppDialog = ({
         )}
         {(stage === 'checking' || stage === 'generating' || stage === 'verifying') && (
           <Button variant="text" disabled>
-            Working…
+            Working — this can take up to 5 minutes…
           </Button>
         )}
         {stage === 'existing' && existing && (
