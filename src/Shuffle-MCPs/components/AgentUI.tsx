@@ -73,6 +73,8 @@ import {
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import AgentPresets from '@/components/agent/AgentPresets';
+import AgentPromptPrefixChip from '@/components/agent/AgentPromptPrefixChip';
+import { useAgentPromptPrefix } from '@/hooks/useAgentPromptPrefix';
 
 // Normalize agent answer text so react-markdown renders it correctly:
 // - Decode literal escape sequences ("\n", "\t", "\r") that come back
@@ -1315,6 +1317,18 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const hasApiKey = !!apiKey || !!API_CONFIG.apiKey;
   const navigate = useNavigate();
   const [actionInput, setActionInput] = useState(defaultInput);
+  // Editable per-user prompt prefix rendered as a chip at the start of the
+  // input. Prepended to the submitted text so it feels like the user is
+  // "typing to" the Shuffle Tools MCP without the prefix filling the box.
+  const { prompt: promptPrefix } = useAgentPromptPrefix();
+  const composeSubmitInput = useCallback(
+    (raw: string) => {
+      const trimmedPrefix = (promptPrefix || '').trim();
+      if (!trimmedPrefix) return raw;
+      return `${trimmedPrefix}\n\n${raw}`;
+    },
+    [promptPrefix],
+  );
   // ── Prompt autocomplete ─────────────────────────────────────────
   // Google-style suggestion list under the starter input. Only shows when
   // the user has typed something AND there are substring matches in the
@@ -2626,12 +2640,13 @@ const AgentUI: React.FC<AgentUIProps> = ({
     });
 
   const handlePrimarySubmit = useCallback(() => {
+    const composed = composeSubmitInput(actionInput);
     if (submitOverride) {
-      submitOverride({ input: actionInput, apps: chosenApps });
+      submitOverride({ input: composed, apps: chosenApps });
     } else {
-      submitInput(actionInput);
+      submitInput(composed);
     }
-  }, [submitOverride, actionInput, chosenApps, submitInput]);
+  }, [submitOverride, actionInput, chosenApps, submitInput, composeSubmitInput]);
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     // Autocomplete navigation takes priority over the normal submit shortcut
@@ -3408,6 +3423,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 </Box>
               )}
               <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, width: '100%' }}>
+              <Box sx={{ alignSelf: 'flex-start', pt: 0.5, flexShrink: 0 }}>
+                <AgentPromptPrefixChip />
+              </Box>
               <InputBase
                 inputRef={inputRef}
                 autoFocus
@@ -3553,7 +3571,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       <Tooltip title="Try this prompt without saving" placement="top" arrow>
                         <IconButton
                           type="button"
-                          onClick={() => submitInput(actionInput)}
+                          onClick={() => submitInput(composeSubmitInput(actionInput))}
                           disabled={actionInput.trim().length < 1 || agentRequestLoading}
                           sx={{
                             width: 36, height: 36,

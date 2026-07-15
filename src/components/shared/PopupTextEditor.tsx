@@ -75,6 +75,14 @@ export interface PopupTextEditorProps {
   className?: string;
   /** Hide the expand icon (rare — opts out of popup). */
   hideExpandButton?: boolean;
+  /** When false, don't render the inline TextField — only the popup Dialog.
+   *  Combine with `open`/`onOpenChange` to control the popup from a custom trigger
+   *  (e.g. a chip button). Defaults to true. */
+  renderInline?: boolean;
+  /** Controlled open state for the popup. If provided, PopupTextEditor becomes controlled. */
+  open?: boolean;
+  /** Controlled open change handler. Required when `open` is provided. */
+  onOpenChange?: (open: boolean) => void;
 }
 
 const monoFont = 'ui-monospace, SFMono-Regular, Menlo, monospace';
@@ -104,8 +112,17 @@ export const PopupTextEditor: React.FC<PopupTextEditorProps> = ({
   inlineTextFieldProps,
   className,
   hideExpandButton = false,
+  renderInline = true,
+  open: controlledOpen,
+  onOpenChange,
 }) => {
-  const [open, setOpen] = useState(false);
+  const isControlled = typeof controlledOpen === 'boolean';
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = isControlled ? (controlledOpen as boolean) : internalOpen;
+  const setOpen = (next: boolean) => {
+    if (isControlled) onOpenChange?.(next);
+    else setInternalOpen(next);
+  };
   const [draft, setDraft] = useState(value);
 
   // Sync draft when popup opens (so we always start from the latest committed value)
@@ -148,35 +165,37 @@ export const PopupTextEditor: React.FC<PopupTextEditorProps> = ({
 
   return (
     <Box className={className} sx={{ width: '100%' }}>
-      <TextField
-        size={size}
-        fullWidth
-        disabled={disabled}
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        multiline={mode === 'multiline'}
-        minRows={mode === 'multiline' ? inlineRows : undefined}
-        maxRows={mode === 'multiline' ? inlineMaxRows : undefined}
-        {...inlineTextFieldProps}
-        InputProps={{
-          ...(inlineTextFieldProps?.InputProps || {}),
-          endAdornment: (
-            <>
-              {inlineTextFieldProps?.InputProps?.endAdornment}
-              {expandButton}
-            </>
-          ),
-        }}
-        sx={{
-          '& .MuiOutlinedInput-root': {
-            bgcolor: 'hsl(var(--background))',
-            fontSize: '0.85rem',
-            ...(useMono && mode === 'multiline' ? { fontFamily: monoFont } : {}),
-          },
-          ...(inlineTextFieldProps?.sx as object || {}),
-        }}
-      />
+      {renderInline && (
+        <TextField
+          size={size}
+          fullWidth
+          disabled={disabled}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          multiline={mode === 'multiline'}
+          minRows={mode === 'multiline' ? inlineRows : undefined}
+          maxRows={mode === 'multiline' ? inlineMaxRows : undefined}
+          {...inlineTextFieldProps}
+          InputProps={{
+            ...(inlineTextFieldProps?.InputProps || {}),
+            endAdornment: (
+              <>
+                {inlineTextFieldProps?.InputProps?.endAdornment}
+                {expandButton}
+              </>
+            ),
+          }}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              bgcolor: 'hsl(var(--background))',
+              fontSize: '0.85rem',
+              ...(useMono && mode === 'multiline' ? { fontFamily: monoFont } : {}),
+            },
+            ...(inlineTextFieldProps?.sx as object || {}),
+          }}
+        />
+      )}
 
       <Dialog
         open={open}
