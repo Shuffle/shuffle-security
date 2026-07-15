@@ -94,8 +94,40 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [createdAppId, setCreatedAppId] = useState<string>('');
   const [existing, setExisting] = useState<ExistingMatch | null>(null);
+  const [liveHits, setLiveHits] = useState<ExistingMatch[]>([]);
+  const [liveSearching, setLiveSearching] = useState(false);
 
   const title = spec?.info?.title || '';
+
+  // Live Algolia search as the user types (idle stage only).
+  useEffect(() => {
+    if (stage !== 'idle') return;
+    const q = input.trim();
+    if (!q || looksLikeUrl(q)) {
+      setLiveHits([]);
+      setLiveSearching(false);
+      return;
+    }
+    setLiveSearching(true);
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      try {
+        const { algoliasearch } = await import('algoliasearch');
+        const client = algoliasearch('JNSS5CFDZZ', '33e4e3564f4f060e96e0531957bed552');
+        const res = await client.searchSingleIndex({
+          indexName: 'appsearch',
+          searchParams: { query: q, hitsPerPage: 5 },
+        });
+        if (cancelled) return;
+        setLiveHits(((res.hits as unknown[]) || []) as ExistingMatch[]);
+      } catch {
+        if (!cancelled) setLiveHits([]);
+      } finally {
+        if (!cancelled) setLiveSearching(false);
+      }
+    }, 220);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [input, stage]);
 
   const reset = useCallback(() => {
     setInput('');
