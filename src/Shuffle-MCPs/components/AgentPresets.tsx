@@ -1,10 +1,13 @@
 /**
  * AgentPresets — compact "+ Presets" trigger shown above the AgentUI textbox.
  *
- * Opens a menu of preset agent configurations (Build Workflows, Incident
- * Response, Support, Vulnerability, Detection, Host Monitor Control). Enabled
- * presets seed the prompt and pre-select tools; disabled ones are discoverable
- * placeholders.
+ * Self-contained: no host-app `@/` imports. Consumers can override the preset
+ * list via the `presets` prop; otherwise the built-in {@link AGENT_PRESETS}
+ * list is used.
+ *
+ * Enabled presets seed the prompt (and optionally pre-select tools) via the
+ * `onSelectPreset` callback. Disabled presets render with a "coming soon"
+ * chip and are not clickable.
  */
 import { useState } from 'react';
 import { Box, Button, Menu, MenuItem, Typography } from '@mui/material';
@@ -75,11 +78,14 @@ export interface AgentPresetsProps {
   variant?: 'default' | 'inline';
   /** Called when the user picks a preset — receives the preset's default prompt seed. */
   onSelectPreset?: (preset: AgentPreset) => void;
+  /** Override the built-in preset list. */
+  presets?: AgentPreset[];
 }
 
-export const AgentPresets = ({ variant = 'default', onSelectPreset }: AgentPresetsProps) => {
+export const AgentPresets = ({ variant = 'default', onSelectPreset, presets }: AgentPresetsProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+  const list = presets && presets.length > 0 ? presets : AGENT_PRESETS;
 
   const trigger = (
     <Button
@@ -135,7 +141,7 @@ export const AgentPresets = ({ variant = 'default', onSelectPreset }: AgentPrese
           Click a preset to seed the prompt. More coming soon.
         </Typography>
       </Box>
-      {AGENT_PRESETS.map((p) => (
+      {list.map((p) => (
         <MenuItem
           key={p.id}
           disabled={!p.enabled}

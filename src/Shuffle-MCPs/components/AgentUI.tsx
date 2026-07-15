@@ -72,9 +72,9 @@ import {
 } from './agentPromptSuggestions';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
-import AgentPresets from '@/components/agent/AgentPresets';
-import AgentPromptPrefixChip from '@/components/agent/AgentPromptPrefixChip';
-import { useAgentPromptPrefix } from '@/hooks/useAgentPromptPrefix';
+import AgentPresets, { type AgentPreset } from '@/Shuffle-MCPs/components/AgentPresets';
+import AgentPromptPrefixChip from '@/Shuffle-MCPs/components/AgentPromptPrefixChip';
+import { useAgentPromptPrefix } from '@/Shuffle-MCPs/useAgentPromptPrefix';
 
 // Normalize agent answer text so react-markdown renders it correctly:
 // - Decode literal escape sequences ("\n", "\t", "\r") that come back
@@ -493,6 +493,22 @@ export interface AgentUIProps {
   sx?: SxProps<Theme>;
   /** Style overrides for the inner content card (the column under the run-switcher). */
   contentSx?: SxProps<Theme>;
+  /**
+   * Storage key for the per-user prompt-prefix chip. Typically the current
+   * Shuffle user id. When omitted, the prefix persists under `"default"`
+   * (shared across all users on this browser).
+   */
+  userId?: string;
+  /** Hide the "+ Presets" trigger next to the input. */
+  hidePresets?: boolean;
+  /** Override the built-in preset list surfaced by the "+ Presets" trigger. */
+  presets?: AgentPreset[];
+  /** Called when the user picks a preset. Overrides the built-in seed behavior. */
+  onSelectPreset?: (preset: AgentPreset) => void;
+  /** Hide the "Shuffle Tools MCP" prompt-prefix chip at the start of the input. */
+  hidePromptPrefixChip?: boolean;
+  /** Label shown on the prompt-prefix chip. Defaults to "Shuffle Tools MCP". */
+  promptPrefixLabel?: string;
 }
 
 interface ExecutionData {
@@ -1299,6 +1315,12 @@ const AgentUI: React.FC<AgentUIProps> = ({
   className,
   sx,
   contentSx,
+  userId,
+  hidePresets = false,
+  presets,
+  onSelectPreset,
+  hidePromptPrefixChip = false,
+  promptPrefixLabel,
 }) => {
   // Per-instance API target. Props win over the shared API_CONFIG so the
   // component can be embedded against a different Shuffle backend without
@@ -1320,7 +1342,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // Editable per-user prompt prefix rendered as a chip at the start of the
   // input. Prepended to the submitted text so it feels like the user is
   // "typing to" the Shuffle Tools MCP without the prefix filling the box.
-  const { prompt: promptPrefix } = useAgentPromptPrefix();
+  const { prompt: promptPrefix } = useAgentPromptPrefix({ userId });
   const composeSubmitInput = useCallback(
     (raw: string) => {
       const trimmedPrefix = (promptPrefix || '').trim();
@@ -3423,9 +3445,11 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 </Box>
               )}
               <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, width: '100%' }}>
-              <Box sx={{ alignSelf: 'flex-start', pt: 0.5, flexShrink: 0 }}>
-                <AgentPromptPrefixChip />
-              </Box>
+              {!hidePromptPrefixChip && (
+                <Box sx={{ alignSelf: 'flex-start', pt: 0.5, flexShrink: 0 }}>
+                  <AgentPromptPrefixChip userId={userId} label={promptPrefixLabel} />
+                </Box>
+              )}
               <InputBase
                 inputRef={inputRef}
                 autoFocus
@@ -3470,24 +3494,31 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   if (e.target) e.target.value = '';
                 }}
               />
-              <AgentPresets
-                variant="inline"
-                onSelectPreset={(preset) => {
-                  setActionInput(preset.defaultPrompt);
-                  if (preset.defaultApps?.length) {
-                    setChosenApps(preset.defaultApps);
-                  }
-                  // Focus the textarea and move caret to the end so the user can type on.
-                  setTimeout(() => {
-                    const el = inputRef.current as HTMLTextAreaElement | HTMLInputElement | null;
-                    if (el) {
-                      el.focus();
-                      const len = preset.defaultPrompt.length;
-                      try { el.setSelectionRange(len, len); } catch { /* ignore */ }
+              {!hidePresets && (
+                <AgentPresets
+                  variant="inline"
+                  presets={presets}
+                  onSelectPreset={(preset) => {
+                    if (onSelectPreset) {
+                      onSelectPreset(preset);
+                      return;
                     }
-                  }, 0);
-                }}
-              />
+                    setActionInput(preset.defaultPrompt);
+                    if (preset.defaultApps?.length) {
+                      setChosenApps(preset.defaultApps);
+                    }
+                    // Focus the textarea and move caret to the end so the user can type on.
+                    setTimeout(() => {
+                      const el = inputRef.current as HTMLTextAreaElement | HTMLInputElement | null;
+                      if (el) {
+                        el.focus();
+                        const len = preset.defaultPrompt.length;
+                        try { el.setSelectionRange(len, len); } catch { /* ignore */ }
+                      }
+                    }, 0);
+                  }}
+                />
+              )}
               {(() => {
                 const allowWithoutExecution = showStarter;
                 const promptTooShort = showStarter && (actionInput || '').trim().length < 1;

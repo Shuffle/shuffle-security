@@ -1,20 +1,18 @@
 /**
- * useAgentPromptPrefix — per-user default prompt prefix shown as a chip at the
- * start of the AgentUI input. The chip is a visual affordance ("you are typing
- * to Shuffle Tools MCP") and its underlying prompt text is prepended to the
- * user's message on submit.
+ * useAgentPromptPrefix — per-user default prompt prefix rendered as a chip
+ * at the start of the AgentUI input. Prepended to the submitted text so it
+ * feels like the user is "typing to" the Shuffle Tools MCP without the
+ * prefix filling the box.
  *
- * Storage: Shuffle datastore, category `agent-prompt-prefix`.
- * Key:     current user id (from useAuth). Falls back to `default` when the
- *          user id is not yet available.
- * Value:   { prompt: string } — plain JSON.
+ * Self-contained inside `@/Shuffle-MCPs`. Storage uses this library's own
+ * datastore helper, keyed by the caller-supplied `userId` (or `"default"`
+ * when omitted). The datastore is already org-scoped internally.
  *
- * The datastore itself is org-scoped, so the prefix is effectively
- * per-user-per-org without extra wiring.
+ * Category: {@link AGENT_PROMPT_PREFIX_CATEGORY}
+ * Value:    `{ prompt: string }` JSON payload.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getDatastoreItem, setDatastoreItem } from '@/Shuffle-MCPs/datastore';
-import { useAuth } from '@/context/AuthContext';
 
 export const AGENT_PROMPT_PREFIX_CATEGORY = 'agent-prompt-prefix';
 
@@ -31,7 +29,6 @@ const decodePrompt = (raw: unknown): string | null => {
         return parsed.prompt;
       }
     } catch { /* fall through */ }
-    // Legacy: raw string stored directly.
     return raw;
   }
   if (typeof raw === 'object') {
@@ -48,21 +45,31 @@ const decodePrompt = (raw: unknown): string | null => {
   return null;
 };
 
-export const useAgentPromptPrefix = () => {
-  const { userInfo } = useAuth();
-  const userId = userInfo?.id || 'default';
-  const [prompt, setPrompt] = useState<string>(DEFAULT_AGENT_PROMPT_PREFIX);
+export interface UseAgentPromptPrefixOptions {
+  /** Storage key — typically the current user id. Falls back to `"default"`. */
+  userId?: string;
+  /** Override the seed shown until the user saves their own. */
+  defaultPrompt?: string;
+  /** When false, disables datastore reads/writes entirely (in-memory only). */
+  persist?: boolean;
+}
+
+export const useAgentPromptPrefix = (options: UseAgentPromptPrefixOptions = {}) => {
+  const { userId, defaultPrompt = DEFAULT_AGENT_PROMPT_PREFIX, persist = true } = options;
+  const key = userId || 'default';
+  const [prompt, setPrompt] = useState<string>(defaultPrompt);
   const [hasFetched, setHasFetched] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const fetchedForUser = useRef<string | null>(null);
+  const fetchedForKey = useRef<string | null>(null);
 
   useEffect(() => {
-    if (fetchedForUser.current === userId) return;
-    fetchedForUser.current = userId;
+    if (!persist) { setHasFetched(true); return; }
+    if (fetchedForKey.current === key) return;
+    fetchedForKey.current = key;
     let cancelled = false;
     (async () => {
       try {
-        const res = await getDatastoreItem(userId, AGENT_PROMPT_PREFIX_CATEGORY);
+        const res = await getDatastoreItem(key, AGENT_PROMPT_PREFIX_CATEGORY);
         if (cancelled) return;
         if (res.success && res.item) {
           const parsed = decodePrompt(res.item.value ?? res.item);
@@ -77,14 +84,15 @@ export const useAgentPromptPrefix = () => {
       }
     })();
     return () => { cancelled = true; };
-  }, [userId]);
+  }, [key, persist]);
 
   const savePrompt = useCallback(async (next: string): Promise<boolean> => {
-    setIsSaving(true);
     const prev = prompt;
     setPrompt(next); // optimistic
+    if (!persist) return true;
+    setIsSaving(true);
     try {
-      const res = await setDatastoreItem(userId, { prompt: next }, AGENT_PROMPT_PREFIX_CATEGORY);
+      const res = await setDatastoreItem(key, { prompt: next }, AGENT_PROMPT_PREFIX_CATEGORY);
       if (!res.success) {
         setPrompt(prev);
         return false;
@@ -96,7 +104,7 @@ export const useAgentPromptPrefix = () => {
     } finally {
       setIsSaving(false);
     }
-  }, [prompt, userId]);
+  }, [prompt, key, persist]);
 
   return { prompt, savePrompt, hasFetched, isSaving };
 };
