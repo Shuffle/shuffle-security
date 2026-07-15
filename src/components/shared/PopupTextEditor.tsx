@@ -112,8 +112,17 @@ export const PopupTextEditor: React.FC<PopupTextEditorProps> = ({
   inlineTextFieldProps,
   className,
   hideExpandButton = false,
+  renderInline = true,
+  open: controlledOpen,
+  onOpenChange,
 }) => {
-  const [open, setOpen] = useState(false);
+  const isControlled = typeof controlledOpen === 'boolean';
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = isControlled ? (controlledOpen as boolean) : internalOpen;
+  const setOpen = (next: boolean) => {
+    if (isControlled) onOpenChange?.(next);
+    else setInternalOpen(next);
+  };
   const [draft, setDraft] = useState(value);
 
   // Sync draft when popup opens (so we always start from the latest committed value)
