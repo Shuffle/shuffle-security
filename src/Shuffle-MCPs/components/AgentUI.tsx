@@ -1342,7 +1342,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // Editable per-user prompt prefix rendered as a chip at the start of the
   // input. Prepended to the submitted text so it feels like the user is
   // "typing to" the Shuffle Tools MCP without the prefix filling the box.
-  const { prompt: promptPrefix } = useAgentPromptPrefix();
+  const { prompt: promptPrefix } = useAgentPromptPrefix({ userId });
   const composeSubmitInput = useCallback(
     (raw: string) => {
       const trimmedPrefix = (promptPrefix || '').trim();
