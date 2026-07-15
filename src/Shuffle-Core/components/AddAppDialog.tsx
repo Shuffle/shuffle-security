@@ -242,7 +242,11 @@ export const AddAppDialog = ({
   const handleGenerate = async () => {
     const value = input.trim();
     if (!value) {
-      toast.error('Enter a name or documentation URL');
+      toast.error('Enter an app name or documentation URL');
+      return;
+    }
+    if (!looksLikeUrl(value) && value.length < 3) {
+      toast.error('App name must be at least 3 characters');
       return;
     }
 
@@ -347,7 +351,8 @@ export const AddAppDialog = ({
           New app
         </Typography>
         <Typography sx={{ fontSize: 13, fontWeight: 400, color: 'hsl(var(--muted-foreground))', textAlign: 'center', maxWidth: 460 }}>
-          Type an app name to pick from the catalog, or paste a link to its API documentation and we will build the integration for you.
+          Type any app name (min. 3 characters) and we will search for its public API,
+          or paste a link to the app's API documentation and we will generate the integration from it.
         </Typography>
       </DialogTitle>
 
@@ -565,8 +570,16 @@ export const AddAppDialog = ({
             <Button variant="text" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button variant="contained" onClick={handleGenerate} disabled={!input.trim()}>
-              Add
+            <Button
+              variant="contained"
+              onClick={handleGenerate}
+              disabled={
+                !input.trim() ||
+                (!looksLikeUrl(input.trim()) && input.trim().length < 3)
+              }
+              sx={{ minWidth: 140 }}
+            >
+              {looksLikeUrl(input.trim()) ? 'Generate from URL' : 'Find API'}
             </Button>
           </>
         )}
