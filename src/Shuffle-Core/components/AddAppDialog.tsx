@@ -666,7 +666,13 @@ export const AddAppDialog = ({
             <Button
               variant="contained"
               onClick={() => {
-                if (existing.objectID) onCreated?.(existing.objectID);
+                if (existing.objectID) {
+                  onCreated?.(existing.objectID, {
+                    name: existing.name,
+                    image_url: existing.image_url,
+                    categories: existing.categories,
+                  });
+                }
                 onOpenChange(false);
               }}
             >
