@@ -126,7 +126,7 @@ const DotsLoader = ({ message, tips }: { message: string; tips?: string[] }) => 
     if (!tips || tips.length === 0) return;
     const interval = setInterval(() => {
       setTipIndex((i) => (i + 1) % tips.length);
-    }, 5000);
+    }, 8000);
     return () => clearInterval(interval);
   }, [tips]);
 
