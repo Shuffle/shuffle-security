@@ -153,12 +153,11 @@ const DotsLoader = ({ message, tips }: { message: string; tips?: string[] }) => 
       {tips && tips.length > 0 && (
         <Typography
           variant="caption"
-          key={tipIndex}
           sx={{
             maxWidth: 420,
             minHeight: 36,
             color: 'hsl(var(--muted-foreground))',
-            transition: 'opacity 0.4s ease',
+            animation: 'shuffle-addapp-tip-fade 0.5s ease',
           }}
         >
           {tips[tipIndex]}
