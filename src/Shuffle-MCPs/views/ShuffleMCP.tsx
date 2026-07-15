@@ -19,6 +19,9 @@ const DEFAULT_ALGOLIA_APP_ID = 'JNSS5CFDZZ';
 const DEFAULT_ALGOLIA_API_KEY = '33e4e3564f4f060e96e0531957bed552';
 const DEFAULT_ALGOLIA_INDEX = 'appsearch';
 const EMPTY_SELECTED_APPS: AlgoliaSearchApp[] = [];
+// Hard ceiling on public Algolia results so infinite scroll does not load
+// the entire catalog. We surface a CTA to narrow the search or create a new app.
+const MAX_RESULTS = 250;
 
 // Skeleton row(s) rendered at the bottom of an infinite-scrolling result list
 // while the next page is being fetched from Algolia.
@@ -111,6 +114,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
   onAppSelected,
   onSelectionChange,
   onSearchChange,
+  onCreateNewApp,
   globalUrl,
 }, ref) => {
   // Forward host-injected globalUrl into the runtime so all internal fetches
@@ -321,6 +325,12 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
     }
 
     const isAppend = pageIndex > 0;
+    // Hard stop: never load more than MAX_RESULTS public Algolia hits.
+    if (isAppend && results.length >= MAX_RESULTS) {
+      setHasMore(false);
+      return;
+    }
+
     if (isAppend) {
       setIsLoadingMore(true);
     } else {
@@ -343,9 +353,11 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
 
       const hits = (searchResult.hits as AlgoliaSearchApp[]).map(h => ({ ...h, source: 'public' as const }));
       const totalPages = (searchResult as any).nbPages ?? 1;
-      setHasMore(pageIndex + 1 < totalPages);
+      const nextResults = isAppend ? [...results, ...hits] : hits;
+      const cappedResults = nextResults.slice(0, MAX_RESULTS);
+      setHasMore(pageIndex + 1 < totalPages && cappedResults.length < MAX_RESULTS);
       setPage(pageIndex);
-      setResults(prev => (isAppend ? [...prev, ...hits] : hits));
+      setResults(cappedResults);
       setSearchError(null);
       // Open dropdown if we got Algolia hits OR we have private apps to show
       if (!isAppend) {
@@ -374,17 +386,17 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
       if (isAppend) setIsLoadingMore(false);
       else setIsLoading(false);
     }
-  }, [hitsPerPage, algoliaIndexName, privateApps.length]);
+  }, [hitsPerPage, algoliaIndexName, privateApps.length, results.length]);
 
   // Infinite scroll: load next page when scrolled near bottom of results
   const handleResultsScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    if (!hasMore || isLoading || isLoadingMore) return;
+    if (!hasMore || isLoading || isLoadingMore || results.length >= MAX_RESULTS) return;
     const el = e.currentTarget;
     const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
     if (distanceFromBottom < 200) {
       performSearch(activeQueryRef.current, page + 1);
     }
-  }, [hasMore, isLoading, isLoadingMore, page, performSearch]);
+  }, [hasMore, isLoading, isLoadingMore, page, performSearch, results.length]);
 
   // Expose imperative methods via ref
   useImperativeHandle(ref, () => ({
@@ -666,6 +678,63 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
     );
   };
 
+  // Footer shown at the end of the result list. When we hit the hard result
+  // ceiling, we give the user a clear path forward: refine the query or make
+  // a new app.
+  const renderEndOfResultsFooter = () => {
+    if (renderEndOfResults) return renderEndOfResults();
+    const capped = results.length >= MAX_RESULTS;
+    return (
+      <div className="singul-end-of-results" style={{
+        padding: '10px 16px 28px',
+        textAlign: 'center' as const,
+        gridColumn: '1 / -1',
+      }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>
+          <span style={{ color: 'hsl(var(--foreground) / 0.4)', fontSize: '11px', lineHeight: 1.4 }}>
+            {capped
+              ? `Showing the top ${MAX_RESULTS} results. Try a more specific search to narrow it down.`
+              : "Can't find what you're looking for? Try a different search term."}
+          </span>
+          {capped && onCreateNewApp && (
+            <button
+              type="button"
+              onClick={onCreateNewApp}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: '11px',
+                fontWeight: 600,
+                color: 'hsl(var(--primary))',
+                background: 'hsl(var(--primary) / 0.08)',
+                border: '1px solid hsl(var(--primary) / 0.25)',
+                borderRadius: '6px',
+                padding: '6px 12px',
+                cursor: 'pointer',
+                transition: 'background 0.2s ease, border-color 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'hsl(var(--primary) / 0.14)';
+                e.currentTarget.style.borderColor = 'hsl(var(--primary) / 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'hsl(var(--primary) / 0.08)';
+                e.currentTarget.style.borderColor = 'hsl(var(--primary) / 0.25)';
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              New app
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div
       ref={containerRef}
@@ -770,19 +839,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
                 {isLoadingMore && (
                   <InfiniteScrollSkeleton layout={layout} gridColumns={typeof gridColumns === 'number' ? gridColumns : (gridColumns.md || 3)} />
                 )}
-                {!hasMore && !isLoadingMore && (
-                  <div className="singul-end-of-results" style={{
-                    padding: '10px 16px 28px',
-                    textAlign: 'center' as const,
-                    gridColumn: '1 / -1',
-                  }}>
-                    {renderEndOfResults ? renderEndOfResults() : (
-                      <span style={{ color: 'hsl(var(--foreground) / 0.3)', fontSize: '11px' }}>
-                        Can't find what you're looking for? Try a different search term.
-                      </span>
-                    )}
-                  </div>
-                )}
+                {!hasMore && !isLoadingMore && renderEndOfResultsFooter()}
               </>
             ) : query.trim() ? (
               <div className="singul-empty-state" style={customStyles.emptyState}>
@@ -833,6 +890,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
                 {isLoadingMore && (
                   <InfiniteScrollSkeleton layout={layout} gridColumns={typeof gridColumns === 'number' ? gridColumns : (gridColumns.md || 3)} />
                 )}
+                {!hasMore && !isLoadingMore && renderEndOfResultsFooter()}
               </>
             ) : (
               <div className="singul-empty-state" style={customStyles.emptyState}>

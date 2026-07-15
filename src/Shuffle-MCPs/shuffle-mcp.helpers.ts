@@ -193,9 +193,11 @@ export interface ShuffleMCPProps extends ShuffleHostProps {
    *  Useful for injecting context-aware CTAs (e.g. a "New App" chip that
    *  seeds the AddAppDialog with the current category). */
   renderInputEndAdornment?: () => React.ReactNode;
-  
+
   // Events
   onAppSelected?: (detail: AppSelectedEvent) => void;
   onSelectionChange?: (apps: AlgoliaSearchApp[]) => void;
   onSearchChange?: (query: string) => void;
+  /** Called when the user clicks the "New app" CTA at the end of results. */
+  onCreateNewApp?: () => void;
 }
