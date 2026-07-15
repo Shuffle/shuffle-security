@@ -26,6 +26,7 @@ interface ExistingMatch {
 
 const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
 const looksLikeUrl = (s: string) => /^https?:\/\//i.test(s) || /\/|\.[a-z]{2,}(\/|$)/i.test(s);
+const displayName = (name?: string) => (name ? name.replace(/_/g, ' ') : '');
 
 /** Semi-exact match: normalized names equal, or one contains the other and is
  *  at least 4 chars, so "gmail" matches "Gmail" and "sentinelone" matches
@@ -116,10 +117,10 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
         const client = algoliasearch('JNSS5CFDZZ', '33e4e3564f4f060e96e0531957bed552');
         const res = await client.searchSingleIndex({
           indexName: 'appsearch',
-          searchParams: { query: q, hitsPerPage: 5 },
+          searchParams: { query: q, hitsPerPage: 3 },
         });
         if (cancelled) return;
-        setLiveHits(((res.hits as unknown[]) || []) as ExistingMatch[]);
+        setLiveHits(((res.hits as unknown[]) || []).slice(0, 3) as ExistingMatch[]);
       } catch {
         if (!cancelled) setLiveHits([]);
       } finally {
@@ -198,9 +199,9 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
       const client = algoliasearch('JNSS5CFDZZ', '33e4e3564f4f060e96e0531957bed552');
       const res = await client.searchSingleIndex({
         indexName: 'appsearch',
-        searchParams: { query: value, hitsPerPage: 5 },
+        searchParams: { query: value, hitsPerPage: 3 },
       });
-      const hits = ((res.hits as unknown[]) || []) as ExistingMatch[];
+      const hits = (((res.hits as unknown[]) || []).slice(0, 3)) as ExistingMatch[];
       const match = hits.find((h) => isSemiExactMatch(value, h?.name || ''));
       if (match) {
         setExisting(match);
@@ -290,7 +291,7 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
                           )}
                           <div className="flex-1 min-w-0">
                             <div className="text-sm truncate" style={{ color: 'hsl(var(--foreground))', maxWidth: '100%' }}>
-                              {hit.name}
+                              {displayName(hit.name)}
                             </div>
                             {hit.description && (
                               <div className="text-xs truncate" style={{ color: 'hsl(var(--muted-foreground))', maxWidth: '100%' }}>
@@ -320,7 +321,7 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
         {stage === 'existing' && existing && (
           <div className="py-4 text-center space-y-2">
             <div className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>
-              <span style={{ color: 'hsl(var(--foreground))' }}>{existing.name}</span> already exists.
+              <span style={{ color: 'hsl(var(--foreground))' }}>{displayName(existing.name)}</span> already exists.
             </div>
             <div className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
               Use it or generate a new version.
