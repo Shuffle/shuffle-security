@@ -252,8 +252,10 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
   useEffect(() => {
     if (externalAuthenticatedApps) {
       setAuthenticatedApps(externalAuthenticatedApps);
+      setAuthenticatedAppsLoading(false);
     }
   }, [externalAuthenticatedApps]);
+
 
   // Initialize Algolia client and run initial search
   useEffect(() => {
