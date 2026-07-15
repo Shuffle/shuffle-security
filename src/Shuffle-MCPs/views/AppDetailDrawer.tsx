@@ -55,11 +55,13 @@ interface AppInfo {
   description: string;
   large_image?: string;
   categories?: string[];
+  actions?: unknown[];
   authentication?: {
     type?: string;
     parameters?: { id: string; name: string; description: string; example: string; required: boolean }[];
   };
 }
+
 
 /** Collapsible markdown description */
 const CollapsibleDescription = ({ description }: { description: string }) => {
