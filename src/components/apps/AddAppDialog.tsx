@@ -245,7 +245,7 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px] p-8">
+      <DialogContent className="max-w-[420px] w-full p-8">
         <DialogHeader className="items-center text-center mb-2">
           <DialogTitle className="flex items-center gap-2">
             <Plus size={18} style={{ color: 'hsl(var(--primary))' }} />
@@ -261,7 +261,7 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleGenerate(); }}
-              className="h-11 text-center"
+              className="h-11 text-center border border-border"
             />
             {input.trim() && !looksLikeUrl(input.trim()) && (
               <div className="min-h-[40px]">
