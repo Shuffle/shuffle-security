@@ -3528,18 +3528,15 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       onSelectPreset(preset);
                       return;
                     }
-                    setActionInput(preset.defaultPrompt);
+                    // Chosen preset drives the chip label + hidden prefix.
+                    // The visible input is left alone so the user just keeps typing.
+                    setSelectedPreset(preset);
                     if (preset.defaultApps?.length) {
                       setChosenApps(preset.defaultApps);
                     }
-                    // Focus the textarea and move caret to the end so the user can type on.
                     setTimeout(() => {
                       const el = inputRef.current as HTMLTextAreaElement | HTMLInputElement | null;
-                      if (el) {
-                        el.focus();
-                        const len = preset.defaultPrompt.length;
-                        try { el.setSelectionRange(len, len); } catch { /* ignore */ }
-                      }
+                      try { el?.focus(); } catch { /* ignore */ }
                     }, 0);
                   }}
                 />
