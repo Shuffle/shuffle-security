@@ -3453,8 +3453,13 @@ const AgentUI: React.FC<AgentUIProps> = ({
               )}
               <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, width: '100%' }}>
               {!hidePromptPrefixChip && (
-                <Box sx={{ alignSelf: 'flex-start', pt: 0.5, flexShrink: 0 }}>
-                  <AgentPromptPrefixChip userId={userId} label={promptPrefixLabel} />
+                <Box sx={{ alignSelf: 'flex-start', pt: '10px', flexShrink: 0 }}>
+                  <AgentPromptPrefixChip
+                    userId={userId}
+                    label={promptPrefixLabel ?? activePromptLabel}
+                    value={selectedPreset ? activePromptPrefix : undefined}
+                    onChange={selectedPreset ? undefined : undefined}
+                  />
                 </Box>
               )}
               <InputBase
