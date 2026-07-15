@@ -144,7 +144,11 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
 
   // Fetch authenticated apps when apiKey is provided
   const fetchAuthenticatedApps = useCallback(async () => {
-    if (!apiKey) return;
+    if (!apiKey) {
+      setAuthenticatedAppsLoading(false);
+      return;
+    }
+    setAuthenticatedAppsLoading(true);
     try {
       const response = await fetch(`${apiBaseUrl}${authPath}`, {
         headers: {
@@ -161,12 +165,15 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
       }
     } catch (error) {
       console.error('Failed to fetch authenticated apps:', error);
+    } finally {
+      setAuthenticatedAppsLoading(false);
     }
   }, [apiKey, apiBaseUrl, authPath, orgId]);
 
   useEffect(() => {
     fetchAuthenticatedApps();
   }, [fetchAuthenticatedApps]);
+
 
   // Fetch the user's private apps from /api/v1/apps when apiKey is provided.
   // These get merged into search results so users can find their own apps too.
