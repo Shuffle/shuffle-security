@@ -458,7 +458,11 @@ export const AddAppDialog = ({
                           component="button"
                           type="button"
                           onClick={() => {
-                            onCreated?.(hit.objectID);
+                            onCreated?.(hit.objectID, {
+                              name: hit.name,
+                              image_url: hit.image_url,
+                              categories: hit.categories,
+                            });
                             onOpenChange(false);
                           }}
                           sx={{
