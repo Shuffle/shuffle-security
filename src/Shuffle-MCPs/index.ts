@@ -94,6 +94,16 @@ export type { TryMcpSectionProps } from '@/Shuffle-MCPs/views/TryMcpSection';
 export const SingulActionsPreview = withMcpTheme(SingulActionsPreviewRaw as React.ComponentType<any>, 'SingulActionsPreview');
 export const AgentUI = withMcpTheme(AgentUIRaw as React.ComponentType<any>, 'AgentUI');
 export type { AgentUIProps, AgentUIApp } from '@/Shuffle-MCPs/components/AgentUI';
+export { AgentPresets, AGENT_PRESETS } from '@/Shuffle-MCPs/components/AgentPresets';
+export type { AgentPreset, AgentPresetsProps } from '@/Shuffle-MCPs/components/AgentPresets';
+export { AgentPromptPrefixChip } from '@/Shuffle-MCPs/components/AgentPromptPrefixChip';
+export type { AgentPromptPrefixChipProps } from '@/Shuffle-MCPs/components/AgentPromptPrefixChip';
+export {
+  useAgentPromptPrefix,
+  AGENT_PROMPT_PREFIX_CATEGORY,
+  DEFAULT_AGENT_PROMPT_PREFIX,
+} from '@/Shuffle-MCPs/useAgentPromptPrefix';
+export type { UseAgentPromptPrefixOptions } from '@/Shuffle-MCPs/useAgentPromptPrefix';
 export const AgentRunDrawer = withMcpTheme(AgentRunDrawerRaw as React.ComponentType<any>, 'AgentRunDrawer');
 export type { AgentRunDrawerProps, AgentRunDrawerTab } from '@/Shuffle-MCPs/components/AgentRunDrawer';
 export const AgentActivityList = withMcpTheme(AgentActivityListRaw as React.ComponentType<any>, 'AgentActivityList');
