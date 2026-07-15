@@ -706,7 +706,7 @@ export default function AppSearchDrawer({
       <AddAppModal
         open={addAppOpen}
         onClose={() => setAddAppOpen(false)}
-        initialQuery={initialQuery}
+        initialQuery={addAppQuery || initialQuery}
         categoryLabel={title}
       />
     </>
