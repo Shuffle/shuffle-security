@@ -570,8 +570,16 @@ export const AddAppDialog = ({
             <Button variant="text" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button variant="contained" onClick={handleGenerate} disabled={!input.trim()}>
-              Add
+            <Button
+              variant="contained"
+              onClick={handleGenerate}
+              disabled={
+                !input.trim() ||
+                (!looksLikeUrl(input.trim()) && input.trim().length < 3)
+              }
+              sx={{ minWidth: 140 }}
+            >
+              {looksLikeUrl(input.trim()) ? 'Generate from URL' : 'Find API'}
             </Button>
           </>
         )}
