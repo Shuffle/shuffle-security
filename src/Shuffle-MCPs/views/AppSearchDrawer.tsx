@@ -182,6 +182,7 @@ export default function AppSearchDrawer({
   const [detailAppName, setDetailAppName] = useState<string | null>(null);
   const [detailAppId, setDetailAppId] = useState<string | null>(null);
   const [addAppOpen, setAddAppOpen] = useState(false);
+  const [addAppQuery, setAddAppQuery] = useState<string>('');
   const [highlightActive, setHighlightActive] = useState(false);
   // Defer mounting the heavy <ShuffleMCP> (Algolia) widget so the Drawer
   // slide-in paints immediately. Without this, clicking "Select Apps" feels
