@@ -587,6 +587,7 @@ export default function AppSearchDrawer({
                       verified: true,
                     }))}
                     customStyles={singulStyles}
+                    onCreateNewApp={() => { setAddAppQuery(''); setAddAppOpen(true); onClose(); }}
                     renderInputEndAdornment={() => (
                       <Button
                         size="small"
