@@ -189,6 +189,10 @@ export interface ShuffleMCPProps extends ShuffleHostProps {
   renderLoadingState?: () => React.ReactNode;
   /** Custom footer shown when the user has scrolled through all results */
   renderEndOfResults?: () => React.ReactNode;
+  /** Optional element rendered inside the search field, on its right edge.
+   *  Useful for injecting context-aware CTAs (e.g. a "New App" chip that
+   *  seeds the AddAppDialog with the current category). */
+  renderInputEndAdornment?: () => React.ReactNode;
   
   // Events
   onAppSelected?: (detail: AppSelectedEvent) => void;
