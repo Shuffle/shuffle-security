@@ -609,7 +609,36 @@ export default function AppSearchDrawer({
                       verified: true,
                     }))}
                     customStyles={singulStyles}
-                  />
+                    renderEmptyState={(query) => (
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.25, py: 2 }}>
+                        <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', textAlign: 'center' }}>
+                          No integrations match "{query}".
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.75rem', color: 'hsl(var(--muted-foreground) / 0.8)', textAlign: 'center' }}>
+                          Build it on the fly — we will search the web and configure it for you.
+                        </Typography>
+                        <Button
+                          size="small"
+                          onClick={() => { setAddAppQuery(query); setAddAppOpen(true); }}
+                          startIcon={<PlusIcon size={14} />}
+                          sx={{
+                            mt: 0.5,
+                            textTransform: 'none',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            height: 32,
+                            px: 1.5,
+                            borderRadius: 999,
+                            color: 'hsl(var(--primary))',
+                            border: '1px solid hsl(var(--primary))',
+                            bgcolor: 'transparent',
+                            '&:hover': { bgcolor: 'hsla(var(--primary) / 0.08)' },
+                          }}
+                        >
+                          Add "{query.length > 24 ? query.slice(0, 24) + '…' : query}"
+                        </Button>
+                      </Box>
+                    )}
                 ) : (
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, height: '100%' }}>
                     {/* Search input skeleton */}
