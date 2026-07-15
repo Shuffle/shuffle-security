@@ -615,7 +615,7 @@ export default function AppSearchDrawer({
                       </Button>
                     )}
                     renderEmptyState={(query) => (
-                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.25, py: 2 }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.25, width: '100%' }}>
                         <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', textAlign: 'center' }}>
                           No integrations match "{query}".
                         </Typography>
@@ -624,7 +624,6 @@ export default function AppSearchDrawer({
                           onClick={() => { setAddAppQuery(query); setAddAppOpen(true); onClose(); }}
                           startIcon={<PlusIcon size={14} />}
                           sx={{
-                            mt: 0.5,
                             textTransform: 'none',
                             fontSize: '0.75rem',
                             fontWeight: 600,
@@ -634,6 +633,7 @@ export default function AppSearchDrawer({
                             color: 'hsl(var(--muted-foreground))',
                             border: '1px solid hsl(var(--border))',
                             bgcolor: 'transparent',
+                            maxWidth: '100%',
                             '& .MuiButton-startIcon': { color: 'hsl(var(--primary))' },
                             '&:hover': {
                               bgcolor: 'hsl(var(--muted) / 0.5)',
