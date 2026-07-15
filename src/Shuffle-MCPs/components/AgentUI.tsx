@@ -3458,7 +3458,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 </Box>
               )}
               <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, width: '100%' }}>
-              {!hidePromptPrefixChip && (
+              {!hidePromptPrefixChip && selectedPreset && (
                 <Box sx={{ alignSelf: 'flex-start', pt: '10px', flexShrink: 0 }}>
                   <AgentPromptPrefixChip
                     userId={userId}
