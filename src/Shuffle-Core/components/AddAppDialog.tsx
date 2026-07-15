@@ -392,9 +392,9 @@ export const AddAppDialog = ({
                     <Box
                       sx={{
                         width: '100%',
+                        maxHeight: 240,
+                        overflowY: 'auto',
                         borderRadius: 1,
-                        overflow: 'hidden',
-                        border: '1px solid hsl(var(--border))',
                         boxSizing: 'border-box',
                       }}
                     >
@@ -415,13 +415,16 @@ export const AddAppDialog = ({
                             minWidth: 0,
                             px: 1.5,
                             py: 1,
+                            mb: 0.5,
                             background: 'transparent',
-                            border: 0,
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: 1,
                             cursor: 'pointer',
                             textAlign: 'left',
                             color: 'inherit',
-                            transition: 'background 0.15s',
-                            '&:hover': { background: 'hsl(var(--accent))' },
+                            transition: 'border-color 0.15s',
+                            '&:hover': { borderColor: 'hsl(var(--primary))' },
+                            '&:last-child': { mb: 0 },
                           }}
                         >
                           {hit.image_url ? (
