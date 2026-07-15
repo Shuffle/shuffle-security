@@ -566,8 +566,9 @@ export const AddAppDialog = ({
         )}
 
         {stage === 'checking' && <DotsLoader message="Checking existing apps…" />}
-        {stage === 'generating' && <DotsLoader message={`Generating app for ${input.trim() || 'this tool'}…`} tips={GENERATION_TIPS} />}
-        {stage === 'verifying' && <DotsLoader message="Finishing up…" />}
+        {stage === 'generating' && <DotsLoader message={`Building app for ${input.trim() || 'this tool'}…`} tips={GENERATION_TIPS} />}
+        {stage === 'verifying' && <DotsLoader message={`Finishing ${title || input.trim() || 'app'}…`} />}
+
 
         {stage === 'existing' && existing && (
           <Box sx={{ textAlign: 'center', py: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
