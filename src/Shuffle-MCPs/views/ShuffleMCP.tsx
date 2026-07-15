@@ -180,9 +180,11 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
   useEffect(() => {
     if (disablePrivateApps) {
       setPrivateApps([]);
+      setPrivateAppsLoading(false);
       return;
     }
     const fetchPrivateApps = async () => {
+      setPrivateAppsLoading(true);
       try {
         const apps = await fetchApps({
           baseUrl: apiBaseUrl,
@@ -214,10 +216,13 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
         setPrivateApps(normalized);
       } catch (error) {
         console.error('Failed to fetch private apps:', error);
+      } finally {
+        setPrivateAppsLoading(false);
       }
     };
     fetchPrivateApps();
   }, [apiKey, apiBaseUrl, privateAppsPath, disablePrivateApps, orgId]);
+
 
   // Auto-select validated apps when they're loaded (validated = tests ran successfully)
   useEffect(() => {
