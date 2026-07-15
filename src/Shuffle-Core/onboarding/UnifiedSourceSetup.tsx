@@ -488,6 +488,34 @@ const CategorySection = ({
               selectedApps={allSelectedApps}
               onSelectionChange={onAppsChange}
               customStyles={singulStyles}
+              renderInputEndAdornment={renderNewAppChip}
+              renderEmptyState={(query) => (
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.25, py: 2 }}>
+                  <Typography sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', textAlign: 'center' }}>
+                    No integrations match "{query}".
+                  </Typography>
+                  <Button
+                    size="small"
+                    onClick={() => { setAddSeed(query); setAddOpen(true); }}
+                    startIcon={<PlusIcon size={14} />}
+                    sx={{
+                      mt: 0.5,
+                      textTransform: 'none',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      height: 32,
+                      px: 1.5,
+                      borderRadius: 999,
+                      color: 'hsl(var(--primary))',
+                      border: '1px solid hsl(var(--primary))',
+                      bgcolor: 'transparent',
+                      '&:hover': { bgcolor: 'hsla(var(--primary) / 0.08)' },
+                    }}
+                  >
+                    Try building "{query}" as a new app
+                  </Button>
+                </Box>
+              )}
               renderEndOfResults={() => (
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5, py: 1 }}>
                   <Typography sx={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))' }}>
@@ -496,15 +524,16 @@ const CategorySection = ({
                   <AddAppButton
                     size="small"
                     label="Generate the app"
-                    onCreated={(appId) => {
-                      activateApp(appId);
-                      invalidateAppsCache();
-                      refreshAllIntegrationStatus();
-                      setSingulKey((k) => k + 1);
-                    }}
+                    onCreated={handleAppCreated}
                   />
                 </Box>
               )}
+            />
+            <AddAppDialog
+              open={addOpen}
+              onOpenChange={setAddOpen}
+              initialInput={addSeed}
+              onCreated={handleAppCreated}
             />
           </Box>
         </Collapse>
