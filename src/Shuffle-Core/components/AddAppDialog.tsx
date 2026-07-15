@@ -257,6 +257,45 @@ export const AddAppDialog = ({
     }
   }, [open, reset]);
 
+  const verifyAndCreate = useCallback(
+    async (openapiSpec: OpenApiSpec) => {
+      setStage('verifying');
+      setErrorMsg('');
+      try {
+        const res = await fetch(getApiUrl(verifyOpenapiPath), {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeader(),
+          },
+          body: JSON.stringify(openapiSpec),
+        });
+        if (!res.ok) throw new Error(`Verification failed (${res.status})`);
+        const data = await res.json();
+        if (!data?.success) throw new Error(data?.reason || 'Verification failed');
+        setCreatedAppId(data.id || '');
+        setStage('done');
+        toast.success('App created');
+        if (data.id) {
+          const image = (openapiSpec?.info as any)?.['x-image'] as string | undefined;
+          onCreated?.(data.id, {
+            name: openapiSpec?.info?.title || '',
+            image_url: image,
+            categories: [],
+          });
+          // Close automatically so the caller's onSelect flow can take over.
+          setTimeout(() => onOpenChange(false), 600);
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Unknown error';
+        setErrorMsg(msg);
+        setStage('error');
+      }
+    },
+    [verifyOpenapiPath, onCreated, onOpenChange],
+  );
+
   const runGeneration = useCallback(
     async (value: string) => {
       setStage('generating');
@@ -277,14 +316,16 @@ export const AddAppDialog = ({
           throw new Error('No OpenAPI spec returned');
         }
         setSpec(openapiSpec);
-        setStage('preview');
+        // Auto-create instead of stopping at a preview step — the caller
+        // handles selection via onCreated.
+        await verifyAndCreate(openapiSpec);
       } catch (err) {
         const msg = err instanceof Error ? err.message : 'Unknown error';
         setErrorMsg(msg);
         setStage('error');
       }
     },
-    [docToOpenApiUrl],
+    [docToOpenApiUrl, verifyAndCreate],
   );
 
   const handleGenerate = async () => {
@@ -327,34 +368,9 @@ export const AddAppDialog = ({
 
   const handleCreate = async () => {
     if (!spec) return;
-    setStage('verifying');
-    setErrorMsg('');
-    try {
-      const res = await fetch(getApiUrl(verifyOpenapiPath), {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          ...getAuthHeader(),
-        },
-        body: JSON.stringify(spec),
-      });
-      if (!res.ok) throw new Error(`Verification failed (${res.status})`);
-      const data = await res.json();
-      if (!data?.success) throw new Error(data?.reason || 'Verification failed');
-      setCreatedAppId(data.id || '');
-      setStage('done');
-      toast.success('App created');
-      if (data.id) {
-        const image = (spec?.info as any)?.['x-image'] as string | undefined;
-        onCreated?.(data.id, { name: title, image_url: image, categories: [] });
-      }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Unknown error';
-      setErrorMsg(msg);
-      setStage('error');
-    }
+    await verifyAndCreate(spec);
   };
+
 
   return (
     <Dialog
@@ -550,8 +566,9 @@ export const AddAppDialog = ({
         )}
 
         {stage === 'checking' && <DotsLoader message="Checking existing apps…" />}
-        {stage === 'generating' && <DotsLoader message={`Generating app for ${input.trim() || 'this tool'}…`} tips={GENERATION_TIPS} />}
-        {stage === 'verifying' && <DotsLoader message="Finishing up…" />}
+        {stage === 'generating' && <DotsLoader message={`Building app for ${input.trim() || 'this tool'}…`} tips={GENERATION_TIPS} />}
+        {stage === 'verifying' && <DotsLoader message={`Finishing ${title || input.trim() || 'app'}…`} />}
+
 
         {stage === 'existing' && existing && (
           <Box sx={{ textAlign: 'center', py: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -576,31 +593,58 @@ export const AddAppDialog = ({
           </Box>
         )}
 
-        {stage === 'done' && (
-          <Box
-            sx={{
-              py: 3,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 1.5,
-              textAlign: 'center',
-            }}
-          >
-            <CheckCircle2 size={44} style={{ color: 'hsl(var(--primary))' }} />
-            <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-              {title || 'App'} created
-            </Typography>
-            {createdAppId && (
-              <Typography
-                variant="caption"
-                sx={{ fontFamily: 'monospace', color: 'hsl(var(--muted-foreground))' }}
-              >
-                ID: {createdAppId}
+        {stage === 'done' && (() => {
+          const image = (spec?.info as any)?.['x-image'] as string | undefined;
+          return (
+            <Box
+              sx={{
+                py: 3,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 1.5,
+                textAlign: 'center',
+              }}
+            >
+              {image ? (
+                <Box
+                  sx={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 1.5,
+                    background: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    p: 1,
+                  }}
+                >
+                  <img
+                    src={image}
+                    alt=""
+                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                  />
+                </Box>
+              ) : (
+                <CheckCircle2 size={44} style={{ color: 'hsl(var(--primary))' }} />
+              )}
+              <Typography sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                {title || 'App'} created
               </Typography>
-            )}
-          </Box>
-        )}
+              {createdAppId && (
+                <Typography
+                  variant="caption"
+                  sx={{ fontFamily: 'monospace', color: 'hsl(var(--muted-foreground))' }}
+                >
+                  ID: {createdAppId}
+                </Typography>
+              )}
+            </Box>
+          );
+        })()}
+
 
         {stage === 'error' && (
           <Box
