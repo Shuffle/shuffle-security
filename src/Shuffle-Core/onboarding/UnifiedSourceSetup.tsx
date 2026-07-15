@@ -542,7 +542,34 @@ export const UnifiedSourceSetup = ({
             Choose the tools you use in each category. You will configure credentials in the next step.
           </Typography>
         </Box>
-        <AddAppButton />
+        <AddAppButton
+          onCreated={(appId, app) => {
+            activateApp(appId);
+            const already = selectedApps.some((a) => a.objectID === appId);
+            if (!already) {
+              const next: AlgoliaSearchApp = {
+                objectID: appId,
+                name: app?.name || appId,
+                image_url: app?.image_url || '',
+                description: '',
+                categories: app?.categories || [],
+                creator: '',
+                app_version: '1.0.0',
+                time_edited: 0,
+                generated: false,
+                invalid: false,
+                priority: 0,
+                actions: 0,
+                tags: [],
+                accessible_by: [],
+                action_labels: [],
+                triggers: [],
+                verified: true,
+              } as any;
+              handleAppsChange([...selectedApps, next]);
+            }
+          }}
+        />
       </Box>
 
       {/* Category Sections — vertical stepper */}
