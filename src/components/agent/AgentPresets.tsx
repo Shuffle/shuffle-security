@@ -1,7 +1,7 @@
 /**
  * AgentPresets — compact "+ Presets" trigger shown above the AgentUI textbox.
  *
- * Opens a menu of preset agent configurations (Workflow Builder, Incident
+ * Opens a menu of preset agent configurations (Build Workflows, Incident
  * Response, App Builder, Support, Vulnerability, Detection). Presets are
  * placeholders — items are disabled but their descriptions are visible so the
  * intent is discoverable while the load-into-prompt behavior is designed.
@@ -19,16 +19,19 @@ export interface AgentPreset {
   icon: React.ReactNode;
   /** When true, the preset is clickable and pre-fills the prompt. Others are placeholders. */
   enabled?: boolean;
+  /** Optional tools/apps to pre-select when this preset is clicked. */
+  defaultApps?: Array<{ name: string; id?: string; icon?: string }>;
 }
 
 export const AGENT_PRESETS: AgentPreset[] = [
   {
-    id: 'workflow-builder',
-    label: 'Workflow Builder Agent',
+    id: 'build-workflows',
+    label: 'Build Workflows',
     description: 'Designs and edits Shuffle workflows for you — pick apps, wire actions, and iterate on automations from a description.',
     defaultPrompt: 'Build a Shuffle workflow that ',
     icon: <Workflow size={16} />,
     enabled: true,
+    defaultApps: [{ name: 'shuffle_workflows' }],
   },
   {
     id: 'incident-response',
