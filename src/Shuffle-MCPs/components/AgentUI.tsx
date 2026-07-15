@@ -3445,9 +3445,11 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 </Box>
               )}
               <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, width: '100%' }}>
-              <Box sx={{ alignSelf: 'flex-start', pt: 0.5, flexShrink: 0 }}>
-                <AgentPromptPrefixChip />
-              </Box>
+              {!hidePromptPrefixChip && (
+                <Box sx={{ alignSelf: 'flex-start', pt: 0.5, flexShrink: 0 }}>
+                  <AgentPromptPrefixChip userId={userId} label={promptPrefixLabel} />
+                </Box>
+              )}
               <InputBase
                 inputRef={inputRef}
                 autoFocus
