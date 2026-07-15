@@ -1342,14 +1342,21 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // Editable per-user prompt prefix rendered as a chip at the start of the
   // input. Prepended to the submitted text so it feels like the user is
   // "typing to" the Shuffle Tools MCP without the prefix filling the box.
-  const { prompt: promptPrefix } = useAgentPromptPrefix({ userId });
+  //
+  // Presets swap the chip's active label + prefix (they do NOT fill the
+  // visible input). When no preset is selected, the chip falls back to the
+  // user's saved default prefix.
+  const { prompt: savedPromptPrefix } = useAgentPromptPrefix({ userId });
+  const [selectedPreset, setSelectedPreset] = useState<AgentPreset | null>(null);
+  const activePromptLabel = selectedPreset?.label ?? 'Shuffle Tools';
+  const activePromptPrefix = selectedPreset ? selectedPreset.defaultPrompt : savedPromptPrefix;
   const composeSubmitInput = useCallback(
     (raw: string) => {
-      const trimmedPrefix = (promptPrefix || '').trim();
+      const trimmedPrefix = (activePromptPrefix || '').trim();
       if (!trimmedPrefix) return raw;
       return `${trimmedPrefix}\n\n${raw}`;
     },
-    [promptPrefix],
+    [activePromptPrefix],
   );
   // ── Prompt autocomplete ─────────────────────────────────────────
   // Google-style suggestion list under the starter input. Only shows when
