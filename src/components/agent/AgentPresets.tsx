@@ -129,14 +129,18 @@ export const AgentPresets = ({ variant = 'default', onSelectPreset }: AgentPrese
           Agent presets
         </Typography>
         <Typography sx={{ fontSize: '0.7rem', color: 'hsl(var(--muted-foreground))', opacity: 0.7, mt: 0.25 }}>
-          Coming soon — will pre-fill the prompt, apps and LLM.
+          Click a preset to seed the prompt. More coming soon.
         </Typography>
       </Box>
       {AGENT_PRESETS.map((p) => (
         <MenuItem
           key={p.id}
-          disabled
-          aria-disabled="true"
+          disabled={!p.enabled}
+          aria-disabled={!p.enabled}
+          onClick={p.enabled ? () => {
+            onSelectPreset?.(p);
+            setAnchorEl(null);
+          } : undefined}
           sx={{
             alignItems: 'flex-start',
             gap: 1.25,
@@ -144,7 +148,7 @@ export const AgentPresets = ({ variant = 'default', onSelectPreset }: AgentPrese
             px: 1.5,
             opacity: '1 !important',
             '&.Mui-disabled': { opacity: 1 },
-            cursor: 'not-allowed',
+            cursor: p.enabled ? 'pointer' : 'not-allowed',
             whiteSpace: 'normal',
           }}
         >
