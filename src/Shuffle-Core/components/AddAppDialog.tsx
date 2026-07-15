@@ -305,9 +305,11 @@ export const AddAppDialog = ({
     <Dialog
       open={open}
       onClose={() => onOpenChange(false)}
+      fullWidth
+      maxWidth="sm"
       PaperProps={{
         sx: {
-          maxWidth: 420,
+          maxWidth: 640,
           width: 'calc(100vw - 32px)',
           background: 'hsl(var(--card))',
           color: 'hsl(var(--foreground))',
@@ -320,17 +322,33 @@ export const AddAppDialog = ({
       <DialogTitle
         sx={{
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 1,
-          fontSize: 16,
-          fontWeight: 600,
-          pt: 3,
+          gap: 0.75,
+          pt: 4,
           pb: 1,
         }}
       >
-        <Plus size={18} style={{ color: 'hsl(var(--primary))' }} />
-        New app
+        <Box sx={{
+          width: 48,
+          height: 48,
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'hsla(var(--primary) / 0.1)',
+          border: '1px solid hsla(var(--primary) / 0.3)',
+          mb: 0.5,
+        }}>
+          <Plus size={24} style={{ color: 'hsl(var(--primary))' }} />
+        </Box>
+        <Typography sx={{ fontSize: 20, fontWeight: 700 }}>
+          New app
+        </Typography>
+        <Typography sx={{ fontSize: 13, fontWeight: 400, color: 'hsl(var(--muted-foreground))', textAlign: 'center', maxWidth: 460 }}>
+          Type an app name to pick from the catalog, or paste a link to its API documentation and we will build the integration for you.
+        </Typography>
       </DialogTitle>
 
       <DialogContent sx={{ px: 4, py: 2, minWidth: 0, boxSizing: 'border-box' }}>
@@ -339,9 +357,9 @@ export const AddAppDialog = ({
             <TextField
               autoFocus
               fullWidth
-              placeholder="App name or docs URL"
+              placeholder="e.g. Jira, or https://api.example.com/docs"
               value={input}
-              inputProps={{ maxLength, style: { textAlign: 'center' } }}
+              inputProps={{ maxLength, style: { textAlign: 'center', fontSize: 15 } }}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleGenerate();
@@ -350,10 +368,12 @@ export const AddAppDialog = ({
                 '& .MuiOutlinedInput-root': {
                   background: 'hsl(var(--background))',
                   color: 'hsl(var(--foreground))',
+                  minHeight: 52,
                   '& fieldset': { borderColor: 'hsl(var(--border))' },
                 },
               }}
             />
+
             {input.trim() && !looksLikeUrl(input.trim()) && (
               <Box sx={{ minHeight: 40, minWidth: 0, maxWidth: '100%', overflow: 'hidden' }}>
                 {liveHits.length > 0 ? (
