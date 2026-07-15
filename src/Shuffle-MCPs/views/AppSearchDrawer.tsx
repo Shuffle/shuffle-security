@@ -513,6 +513,42 @@ export default function AppSearchDrawer({
               } : {}),
             }}
           >
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 1.5,
+                mb: 1.5,
+                flexShrink: 0,
+              }}
+            >
+              <Typography sx={{ fontSize: '0.7rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Search integrations
+              </Typography>
+              <Button
+                size="small"
+                onClick={() => setAddAppOpen(true)}
+                startIcon={<PlusIcon size={14} />}
+                sx={{
+                  textTransform: 'none',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  height: 28,
+                  px: 1.25,
+                  borderRadius: 999,
+                  color: 'hsl(var(--primary))',
+                  borderColor: 'hsl(var(--primary))',
+                  bgcolor: 'transparent',
+                  border: '1px solid hsl(var(--primary))',
+                  '&:hover': {
+                    bgcolor: 'hsla(var(--primary) / 0.08)',
+                  },
+                }}
+              >
+                Add App
+              </Button>
+            </Box>
             <AnimatePresence mode="wait">
               <motion.div
                 key="search"
