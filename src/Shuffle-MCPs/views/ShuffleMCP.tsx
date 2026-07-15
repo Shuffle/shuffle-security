@@ -511,7 +511,8 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
     );
   }, [privateApps, query]);
 
-  // Merge private + public apps, apply source filter, prepend pinned, dedupe by name.
+  // Merge private + public apps, apply source filter, sort pre-selected apps to
+  // the top on initial load, prepend pinned, and dedupe by name.
   const displayResults = useMemo(() => {
     const norm = (n: string) => (n || '').toLowerCase().replace(/[\s_\-]+/g, '');
 
@@ -531,10 +532,24 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
       merged = [...filteredPrivateApps, ...publicOnly];
     }
 
-    if (!pinnedApps || pinnedApps.length === 0) return merged;
+    // Float pre-selected apps to the top so it's obvious which tools are
+    // already chosen. The sort uses the controlled selection prop and stays
+    // stable for items with the same selected status, so live toggles don't
+    // continuously reorder the list.
+    const selectedNames = new Set(selectedApps.map(a => norm(a.name)));
+    const selectedObjectIDs = new Set(selectedApps.map(a => a.objectID).filter(Boolean));
+    const sorted = [...merged].sort((a, b) => {
+      const aSelected = selectedObjectIDs.has(a.objectID) || selectedNames.has(norm(a.name));
+      const bSelected = selectedObjectIDs.has(b.objectID) || selectedNames.has(norm(b.name));
+      if (aSelected && !bSelected) return -1;
+      if (!aSelected && bSelected) return 1;
+      return 0;
+    });
+
+    if (!pinnedApps || pinnedApps.length === 0) return sorted;
     const pinnedNames = new Set(pinnedApps.map(a => norm(a.name)));
-    return [...pinnedApps, ...merged.filter(a => !pinnedNames.has(norm(a.name)))];
-  }, [pinnedApps, results, filteredPrivateApps, sourceFilter, isAppConfigured]);
+    return [...pinnedApps, ...sorted.filter(a => !pinnedNames.has(norm(a.name)))];
+  }, [pinnedApps, results, filteredPrivateApps, sourceFilter, isAppConfigured, selectedApps]);
 
   // Get grid columns style
   const getGridColumnsStyle = useMemo(() => {
