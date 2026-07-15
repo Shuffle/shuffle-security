@@ -127,3 +127,12 @@ import { OnboardingFlow as OnboardingFlowRaw, ProductChoiceStep as ProductChoice
 export const OnboardingFlow = withTheme(OnboardingFlowRaw, 'OnboardingFlow');
 export const ProductChoiceStep = withTheme(ProductChoiceStepRaw, 'ProductChoiceStep');
 export type { OnboardingFlowProps, OnboardingProduct } from './onboarding';
+
+// Add-app modal — shared between Shuffle Core and Shuffle Security.
+import {
+  AddAppDialog as AddAppDialogRaw,
+  AddAppButton as AddAppButtonRaw,
+} from './components/AddAppDialog';
+export const AddAppDialog = withTheme(AddAppDialogRaw, 'AddAppDialog');
+export const AddAppButton = withTheme(AddAppButtonRaw, 'AddAppButton');
+export type { AddAppDialogProps, AddAppButtonProps } from './components/AddAppDialog';

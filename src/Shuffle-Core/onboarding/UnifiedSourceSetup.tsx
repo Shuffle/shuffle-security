@@ -424,7 +424,7 @@ const CategorySection = ({
                     Cannot find what you are looking for?
                   </Typography>
                   <AddAppButton
-                    size="sm"
+                    size="small"
                     label="Generate the app"
                     onCreated={(appId) => {
                       activateApp(appId);
