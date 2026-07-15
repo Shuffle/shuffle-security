@@ -86,36 +86,60 @@ export const AgentPromptPrefixChip = ({
     <>
       <Tooltip title="Click to edit the default prompt sent with your message" placement="top" arrow>
         <Box
-          onClick={handleOpen}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleOpen(); } }}
           sx={{
             display: 'inline-flex',
-            alignItems: 'baseline',
+            alignItems: 'center',
+            gap: 0.25,
             px: 0.5,
             borderRadius: 0.5,
             bgcolor: 'transparent',
-            cursor: 'pointer',
             flexShrink: 0,
             userSelect: 'none',
             transition: 'background-color 0.15s ease',
             '&:hover': { bgcolor: 'hsl(var(--muted))' },
           }}
-          aria-label={`Edit default prompt for ${label}`}
         >
-          <Typography
-            component="span"
+          <Box
+            onClick={handleOpen}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleOpen(); } }}
             sx={{
-              fontSize: '1rem',
-              fontWeight: 600,
-              color: 'hsl(var(--primary))',
-              whiteSpace: 'nowrap',
-              lineHeight: 'inherit',
+              display: 'inline-flex',
+              alignItems: 'baseline',
+              cursor: 'pointer',
             }}
+            aria-label={`Edit default prompt for ${label}`}
           >
-          {displayLabel}
-          </Typography>
+            <Typography
+              component="span"
+              sx={{
+                fontSize: '1rem',
+                fontWeight: 600,
+                color: 'hsl(var(--primary))',
+                whiteSpace: 'nowrap',
+                lineHeight: 'inherit',
+              }}
+            >
+              {displayLabel}
+            </Typography>
+          </Box>
+          {onRemove && (
+            <IconButton
+              size="small"
+              onClick={(e) => { e.stopPropagation(); onRemove(); }}
+              sx={{
+                p: 0.25,
+                width: 18,
+                height: 18,
+                color: 'hsl(var(--muted-foreground))',
+                '&:hover': { color: 'hsl(var(--destructive))', bgcolor: 'transparent' },
+              }}
+              aria-label={`Remove ${label} preset`}
+            >
+              <CloseIcon size={12} />
+            </IconButton>
+          )}
         </Box>
       </Tooltip>
 
