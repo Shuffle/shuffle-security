@@ -3464,7 +3464,14 @@ const AgentUI: React.FC<AgentUIProps> = ({
                     userId={userId}
                     label={promptPrefixLabel ?? activePromptLabel}
                     value={selectedPreset ? activePromptPrefix : undefined}
-                    onChange={selectedPreset ? undefined : undefined}
+                    onChange={
+                      selectedPreset
+                        ? (next) => {
+                            const id = selectedPreset.id;
+                            setPresetPromptOverrides((prev) => ({ ...prev, [id]: next }));
+                          }
+                        : undefined
+                    }
                   />
                 </Box>
               )}
