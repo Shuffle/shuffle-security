@@ -133,6 +133,6 @@ import {
   AddAppDialog as AddAppDialogRaw,
   AddAppButton as AddAppButtonRaw,
 } from './components/AddAppDialog';
-export const AddAppDialog = withTheme(AddAppDialogRaw as any, 'AddAppDialog');
-export const AddAppButton = withTheme(AddAppButtonRaw as any, 'AddAppButton');
+export const AddAppDialog = withTheme(AddAppDialogRaw, 'AddAppDialog');
+export const AddAppButton = withTheme(AddAppButtonRaw, 'AddAppButton');
 export type { AddAppDialogProps, AddAppButtonProps } from './components/AddAppDialog';
