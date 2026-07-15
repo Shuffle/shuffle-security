@@ -646,7 +646,10 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
             ref={inputRef}
             type="text"
             className="singul-search-input"
-            style={customStyles.input}
+            style={{
+              ...customStyles.input,
+              ...(renderInputEndAdornment ? { paddingRight: 148 } : null),
+            }}
             placeholder={placeholder}
             value={query}
             onChange={handleInputChange}
@@ -658,14 +661,37 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
             onKeyDown={handleKeyDown}
             autoComplete="off"
           />
-          <div className="singul-search-icon" style={customStyles.searchIcon}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.35-4.35" />
-            </svg>
-          </div>
+          {!renderInputEndAdornment && (
+            <div className="singul-search-icon" style={customStyles.searchIcon}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+            </div>
+          )}
+          {renderInputEndAdornment && (
+            <div
+              style={{
+                position: 'absolute',
+                right: 8,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 3,
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
+              {renderInputEndAdornment()}
+            </div>
+          )}
           {isLoading && (
-            <div className="singul-loading-spinner" style={customStyles.loadingSpinner}>
+            <div
+              className="singul-loading-spinner"
+              style={{
+                ...customStyles.loadingSpinner,
+                ...(renderInputEndAdornment ? { right: 152 } : null),
+              }}
+            >
               {renderLoadingState ? (
                 renderLoadingState()
               ) : (
