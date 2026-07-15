@@ -321,7 +321,7 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
         {stage === 'existing' && existing && (
           <div className="py-4 text-center space-y-2">
             <div className="text-sm" style={{ color: 'hsl(var(--muted-foreground))' }}>
-              <span style={{ color: 'hsl(var(--foreground))' }}>{existing.name}</span> already exists.
+              <span style={{ color: 'hsl(var(--foreground))' }}>{displayName(existing.name)}</span> already exists.
             </div>
             <div className="text-xs" style={{ color: 'hsl(var(--muted-foreground))' }}>
               Use it or generate a new version.
