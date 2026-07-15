@@ -348,7 +348,10 @@ export const AddAppDialog = ({
       setCreatedAppId(data.id || '');
       setStage('done');
       toast.success('App created');
-      if (data.id) onCreated?.(data.id);
+      if (data.id) {
+        const image = (spec?.info as any)?.['x-image'] as string | undefined;
+        onCreated?.(data.id, { name: title, image_url: image, categories: [] });
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
       setErrorMsg(msg);
