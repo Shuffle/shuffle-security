@@ -36,6 +36,8 @@ export interface AgentPromptPrefixChipProps {
   value?: string;
   /** Called when the user saves an edit in controlled mode. */
   onChange?: (next: string) => void | Promise<void>;
+  /** Called when the user clicks the remove (X) button. */
+  onRemove?: () => void;
   /** Override the built-in default prompt seed. */
   defaultPrompt?: string;
   /** Dialog title override. */
@@ -47,6 +49,7 @@ export const AgentPromptPrefixChip = ({
   userId,
   value,
   onChange,
+  onRemove,
   defaultPrompt,
   dialogTitle,
 }: AgentPromptPrefixChipProps) => {
