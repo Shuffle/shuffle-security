@@ -94,8 +94,40 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [createdAppId, setCreatedAppId] = useState<string>('');
   const [existing, setExisting] = useState<ExistingMatch | null>(null);
+  const [liveHits, setLiveHits] = useState<ExistingMatch[]>([]);
+  const [liveSearching, setLiveSearching] = useState(false);
 
   const title = spec?.info?.title || '';
+
+  // Live Algolia search as the user types (idle stage only).
+  useEffect(() => {
+    if (stage !== 'idle') return;
+    const q = input.trim();
+    if (!q || looksLikeUrl(q)) {
+      setLiveHits([]);
+      setLiveSearching(false);
+      return;
+    }
+    setLiveSearching(true);
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      try {
+        const { algoliasearch } = await import('algoliasearch');
+        const client = algoliasearch('JNSS5CFDZZ', '33e4e3564f4f060e96e0531957bed552');
+        const res = await client.searchSingleIndex({
+          indexName: 'appsearch',
+          searchParams: { query: q, hitsPerPage: 5 },
+        });
+        if (cancelled) return;
+        setLiveHits(((res.hits as unknown[]) || []) as ExistingMatch[]);
+      } catch {
+        if (!cancelled) setLiveHits([]);
+      } finally {
+        if (!cancelled) setLiveSearching(false);
+      }
+    }, 220);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [input, stage]);
 
   const reset = useCallback(() => {
     setInput('');
@@ -213,8 +245,8 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[420px]">
-        <DialogHeader className="items-center text-center">
+      <DialogContent className="sm:max-w-[480px] p-8">
+        <DialogHeader className="items-center text-center mb-2">
           <DialogTitle className="flex items-center gap-2">
             <Plus size={18} style={{ color: 'hsl(var(--primary))' }} />
             Add app
@@ -222,7 +254,7 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
         </DialogHeader>
 
         {stage === 'idle' && (
-          <div className="py-4">
+          <div className="py-4 space-y-3">
             <Input
               autoFocus
               placeholder="App name or docs URL"
@@ -231,8 +263,50 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
               onKeyDown={(e) => { if (e.key === 'Enter') handleGenerate(); }}
               className="h-11 text-center"
             />
+            {input.trim() && !looksLikeUrl(input.trim()) && (
+              <div className="min-h-[40px]">
+                {liveHits.length > 0 ? (
+                  <div className="space-y-1">
+                    <div className="text-xs px-1" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                      Existing matches
+                    </div>
+                    <div className="rounded-md overflow-hidden" style={{ border: '1px solid hsl(var(--border))' }}>
+                      {liveHits.map((hit) => (
+                        <button
+                          key={hit.objectID}
+                          type="button"
+                          onClick={() => { onCreated?.(hit.objectID); onOpenChange(false); }}
+                          className="w-full flex items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-accent"
+                        >
+                          {hit.image_url ? (
+                            <img src={hit.image_url} alt="" className="w-6 h-6 rounded object-contain" />
+                          ) : (
+                            <div className="w-6 h-6 rounded" style={{ background: 'hsl(var(--muted))' }} />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm truncate" style={{ color: 'hsl(var(--foreground))' }}>
+                              {hit.name}
+                            </div>
+                            {hit.description && (
+                              <div className="text-xs truncate" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                                {hit.description}
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-xs text-center" style={{ color: 'hsl(var(--muted-foreground))' }}>
+                    {liveSearching ? 'Searching existing apps…' : 'No existing matches — a new app will be generated.'}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
+
 
         {stage === 'checking' && <DotsLoader message="Checking existing apps…" />}
         {stage === 'generating' && <DotsLoader message="Generating app…" />}
