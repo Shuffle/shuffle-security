@@ -259,6 +259,7 @@ export const AddAppDialog = ({ open, onOpenChange, onCreated }: AddAppDialogProp
               autoFocus
               placeholder="App name or docs URL"
               value={input}
+              maxLength={1024}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') handleGenerate(); }}
               className="h-11 text-center border border-border"
