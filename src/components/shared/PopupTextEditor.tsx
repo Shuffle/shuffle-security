@@ -165,35 +165,37 @@ export const PopupTextEditor: React.FC<PopupTextEditorProps> = ({
 
   return (
     <Box className={className} sx={{ width: '100%' }}>
-      <TextField
-        size={size}
-        fullWidth
-        disabled={disabled}
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        multiline={mode === 'multiline'}
-        minRows={mode === 'multiline' ? inlineRows : undefined}
-        maxRows={mode === 'multiline' ? inlineMaxRows : undefined}
-        {...inlineTextFieldProps}
-        InputProps={{
-          ...(inlineTextFieldProps?.InputProps || {}),
-          endAdornment: (
-            <>
-              {inlineTextFieldProps?.InputProps?.endAdornment}
-              {expandButton}
-            </>
-          ),
-        }}
-        sx={{
-          '& .MuiOutlinedInput-root': {
-            bgcolor: 'hsl(var(--background))',
-            fontSize: '0.85rem',
-            ...(useMono && mode === 'multiline' ? { fontFamily: monoFont } : {}),
-          },
-          ...(inlineTextFieldProps?.sx as object || {}),
-        }}
-      />
+      {renderInline && (
+        <TextField
+          size={size}
+          fullWidth
+          disabled={disabled}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          multiline={mode === 'multiline'}
+          minRows={mode === 'multiline' ? inlineRows : undefined}
+          maxRows={mode === 'multiline' ? inlineMaxRows : undefined}
+          {...inlineTextFieldProps}
+          InputProps={{
+            ...(inlineTextFieldProps?.InputProps || {}),
+            endAdornment: (
+              <>
+                {inlineTextFieldProps?.InputProps?.endAdornment}
+                {expandButton}
+              </>
+            ),
+          }}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              bgcolor: 'hsl(var(--background))',
+              fontSize: '0.85rem',
+              ...(useMono && mode === 'multiline' ? { fontFamily: monoFont } : {}),
+            },
+            ...(inlineTextFieldProps?.sx as object || {}),
+          }}
+        />
+      )}
 
       <Dialog
         open={open}
