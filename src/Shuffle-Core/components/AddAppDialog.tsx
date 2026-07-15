@@ -84,7 +84,10 @@ export interface AddAppDialogProps extends ShuffleCoreHostProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Fires with the created / picked app's canonical `objectID`. */
-  onCreated?: (appId: string) => void;
+  onCreated?: (
+    appId: string,
+    app?: { name: string; image_url?: string; categories?: string[] },
+  ) => void;
   /** URL of the doc-to-openapi service. Override for self-hosted deployments. */
   docToOpenApiUrl?: string;
   /** Path (relative to the host API) used to verify + persist the OpenAPI spec. */
@@ -345,7 +348,10 @@ export const AddAppDialog = ({
       setCreatedAppId(data.id || '');
       setStage('done');
       toast.success('App created');
-      if (data.id) onCreated?.(data.id);
+      if (data.id) {
+        const image = (spec?.info as any)?.['x-image'] as string | undefined;
+        onCreated?.(data.id, { name: title, image_url: image, categories: [] });
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error';
       setErrorMsg(msg);
@@ -452,7 +458,11 @@ export const AddAppDialog = ({
                           component="button"
                           type="button"
                           onClick={() => {
-                            onCreated?.(hit.objectID);
+                            onCreated?.(hit.objectID, {
+                              name: hit.name,
+                              image_url: hit.image_url,
+                              categories: hit.categories,
+                            });
                             onOpenChange(false);
                           }}
                           sx={{
@@ -656,7 +666,13 @@ export const AddAppDialog = ({
             <Button
               variant="contained"
               onClick={() => {
-                if (existing.objectID) onCreated?.(existing.objectID);
+                if (existing.objectID) {
+                  onCreated?.(existing.objectID, {
+                    name: existing.name,
+                    image_url: existing.image_url,
+                    categories: existing.categories,
+                  });
+                }
                 onOpenChange(false);
               }}
             >

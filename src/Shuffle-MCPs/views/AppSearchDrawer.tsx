@@ -708,6 +708,35 @@ export default function AppSearchDrawer({
         globalUrl={globalUrl}
         theme={theme}
         colorMode={colorMode}
+        onCreated={(appId, app) => {
+          // Route the picked / generated app through the SAME selection
+          // pipeline as a normal search result so it lands wherever the
+          // caller expects (agent canvas, onboarding source list,
+          // ingestion sources, quick-select handlers, etc.).
+          handleAppSelected({
+            app: {
+              objectID: appId,
+              name: app?.name || appId,
+              image_url: app?.image_url || '',
+              description: '',
+              categories: app?.categories || [],
+              creator: '',
+              app_version: '1.0.0',
+              time_edited: 0,
+              generated: false,
+              invalid: false,
+              priority: 0,
+              actions: 0,
+              tags: [],
+              accessible_by: [],
+              action_labels: [],
+              triggers: [],
+              verified: true,
+            } as any,
+            authUrl: '',
+          });
+          setAddAppOpen(false);
+        }}
       />
     </>
   );
