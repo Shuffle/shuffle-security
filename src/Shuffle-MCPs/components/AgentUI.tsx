@@ -1317,6 +1317,18 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const hasApiKey = !!apiKey || !!API_CONFIG.apiKey;
   const navigate = useNavigate();
   const [actionInput, setActionInput] = useState(defaultInput);
+  // Editable per-user prompt prefix rendered as a chip at the start of the
+  // input. Prepended to the submitted text so it feels like the user is
+  // "typing to" the Shuffle Tools MCP without the prefix filling the box.
+  const { prompt: promptPrefix } = useAgentPromptPrefix();
+  const composeSubmitInput = useCallback(
+    (raw: string) => {
+      const trimmedPrefix = (promptPrefix || '').trim();
+      if (!trimmedPrefix) return raw;
+      return `${trimmedPrefix}\n\n${raw}`;
+    },
+    [promptPrefix],
+  );
   // ── Prompt autocomplete ─────────────────────────────────────────
   // Google-style suggestion list under the starter input. Only shows when
   // the user has typed something AND there are substring matches in the
