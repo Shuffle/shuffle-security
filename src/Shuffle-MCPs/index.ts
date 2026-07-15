@@ -71,6 +71,7 @@ import AgentExecutionDrawerRaw from '@/Shuffle-MCPs/components/AgentExecutionDra
 import AgentsViewRaw from '@/Shuffle-MCPs/views/AgentsView';
 import AgentRunDiagnosisBannerRaw from '@/Shuffle-MCPs/components/AgentRunDiagnosisBanner';
 import LocalLLMConfigRaw from '@/Shuffle-MCPs/components/LocalLLMConfig';
+import AddAppModalRaw from '@/Shuffle-MCPs/components/AddAppModal';
 
 export { ShuffleMcpThemeProvider } from '@/Shuffle-MCPs/ShuffleMcpThemeProvider';
 export type { ShuffleMcpColorMode, ShuffleMcpThemeProviderProps } from '@/Shuffle-MCPs/ShuffleMcpThemeProvider';
@@ -115,6 +116,9 @@ export type { AgentsViewProps } from '@/Shuffle-MCPs/views/AgentsView';
 export const AgentRunDiagnosisBanner = withMcpTheme(AgentRunDiagnosisBannerRaw as React.ComponentType<any>, 'AgentRunDiagnosisBanner');
 export const LocalLLMConfig = withMcpTheme(LocalLLMConfigRaw as React.ComponentType<any>, 'LocalLLMConfig');
 export type { LocalLLMConfigProps, AgentLocalModel, LocalLLMTestResult } from '@/Shuffle-MCPs/components/LocalLLMConfig';
+export const AddAppModal = withMcpTheme(AddAppModalRaw as React.ComponentType<any>, 'AddAppModal');
+export type { AddAppModalProps } from '@/Shuffle-MCPs/components/AddAppModal';
+export { useAppAuthFlow } from '@/Shuffle-MCPs/useAppAuthFlow';
 export {
   parseRunResult,
   getFailureInfo,
