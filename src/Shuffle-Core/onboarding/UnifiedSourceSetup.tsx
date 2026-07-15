@@ -183,6 +183,74 @@ const CategorySection = ({
 }: CategorySectionProps) => {
   const singulRef = useRef<ShuffleMCPHandle>(null);
   const [singulKey, setSingulKey] = useState(0);
+  const [addOpen, setAddOpen] = useState(false);
+  const [addSeed, setAddSeed] = useState('');
+
+  const handleAppCreated = useCallback(
+    (
+      appId: string,
+      app?: { name?: string; image_url?: string; categories?: string[] },
+    ) => {
+      activateApp(appId);
+      invalidateAppsCache();
+      refreshAllIntegrationStatus();
+      const already = allSelectedApps.some((a) => a.objectID === appId);
+      if (!already) {
+        const next: AlgoliaSearchApp = {
+          objectID: appId,
+          name: app?.name || appId,
+          image_url: app?.image_url || '',
+          description: '',
+          categories: app?.categories || [],
+          creator: '',
+          app_version: '1.0.0',
+          time_edited: 0,
+          generated: false,
+          invalid: false,
+          priority: 0,
+          actions: 0,
+          tags: [],
+          accessible_by: [],
+          action_labels: [],
+          triggers: [],
+          verified: true,
+        } as any;
+        onAppsChange([...allSelectedApps, next]);
+      }
+      setSingulKey((k) => k + 1);
+    },
+    [allSelectedApps, onAppsChange],
+  );
+
+  const renderNewAppChip = () => (
+    <Button
+      size="small"
+      onClick={(e) => {
+        e.stopPropagation();
+        setAddSeed('');
+        setAddOpen(true);
+      }}
+      startIcon={<PlusIcon size={12} />}
+      sx={{
+        textTransform: 'none',
+        fontSize: '0.72rem',
+        fontWeight: 600,
+        height: 26,
+        minHeight: 26,
+        px: 1.25,
+        borderRadius: 999,
+        color: 'hsl(var(--primary))',
+        bgcolor: 'hsla(var(--primary) / 0.08)',
+        border: '1px solid hsla(var(--primary) / 0.35)',
+        '&:hover': {
+          bgcolor: 'hsla(var(--primary) / 0.16)',
+          borderColor: 'hsl(var(--primary))',
+        },
+      }}
+    >
+      New App
+    </Button>
+  );
 
   const Icon = category.icon;
   const hasSelections = selectedApps.length > 0;
