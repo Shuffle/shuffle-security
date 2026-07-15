@@ -3452,7 +3452,21 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   if (e.target) e.target.value = '';
                 }}
               />
-              <AgentPresets variant="inline" />
+              <AgentPresets
+                variant="inline"
+                onSelectPreset={(preset) => {
+                  setActionInput(preset.defaultPrompt);
+                  // Focus the textarea and move caret to the end so the user can type on.
+                  setTimeout(() => {
+                    const el = inputRef.current as HTMLTextAreaElement | HTMLInputElement | null;
+                    if (el) {
+                      el.focus();
+                      const len = preset.defaultPrompt.length;
+                      try { el.setSelectionRange(len, len); } catch { /* ignore */ }
+                    }
+                  }, 0);
+                }}
+              />
               {(() => {
                 const allowWithoutExecution = showStarter;
                 const promptTooShort = showStarter && (actionInput || '').trim().length < 1;
