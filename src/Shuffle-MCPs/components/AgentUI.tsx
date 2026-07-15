@@ -73,6 +73,8 @@ import {
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import AgentPresets from '@/components/agent/AgentPresets';
+import AgentPromptPrefixChip from '@/components/agent/AgentPromptPrefixChip';
+import { useAgentPromptPrefix } from '@/hooks/useAgentPromptPrefix';
 
 // Normalize agent answer text so react-markdown renders it correctly:
 // - Decode literal escape sequences ("\n", "\t", "\r") that come back
