@@ -172,9 +172,30 @@ export const AgentPresets = ({ variant = 'default', onSelectPreset }: AgentPrese
             {p.icon}
           </Box>
           <Box sx={{ minWidth: 0 }}>
-            <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
-              {p.label}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
+              <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+                {p.label}
+              </Typography>
+              {!p.enabled && (
+                <Typography
+                  sx={{
+                    fontSize: '0.65rem',
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.5,
+                    color: 'hsl(var(--muted-foreground))',
+                    bgcolor: 'hsl(var(--muted))',
+                    px: 0.75,
+                    py: 0.25,
+                    borderRadius: 999,
+                    lineHeight: 1,
+                    flexShrink: 0,
+                  }}
+                >
+                  coming soon
+                </Typography>
+              )}
+            </Box>
             <Typography sx={{ fontSize: '0.72rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.4, mt: 0.25 }}>
               {p.description}
             </Typography>
