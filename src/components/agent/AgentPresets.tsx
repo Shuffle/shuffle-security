@@ -70,9 +70,11 @@ export const AGENT_PRESETS: AgentPreset[] = [
 export interface AgentPresetsProps {
   /** Inline variant sits inside the prompt input row alongside action buttons. */
   variant?: 'default' | 'inline';
+  /** Called when the user picks a preset — receives the preset's default prompt seed. */
+  onSelectPreset?: (preset: AgentPreset) => void;
 }
 
-export const AgentPresets = ({ variant = 'default' }: AgentPresetsProps) => {
+export const AgentPresets = ({ variant = 'default', onSelectPreset }: AgentPresetsProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
