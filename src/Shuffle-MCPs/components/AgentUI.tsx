@@ -73,7 +73,7 @@ import {
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import AgentPresets, { type AgentPreset } from '@/Shuffle-MCPs/components/AgentPresets';
-import AgentPromptPrefixChip from '@/Shuffle-MCPs/components/AgentPromptPrefixChip';
+
 import { useAgentPromptPrefix } from '@/Shuffle-MCPs/useAgentPromptPrefix';
 
 // Normalize agent answer text so react-markdown renders it correctly:
@@ -506,10 +506,6 @@ export interface AgentUIProps {
   presets?: AgentPreset[];
   /** Called when the user picks a preset. Overrides the built-in seed behavior. */
   onSelectPreset?: (preset: AgentPreset) => void;
-  /** Hide the "Shuffle Tools MCP" prompt-prefix chip at the start of the input. */
-  hidePromptPrefixChip?: boolean;
-  /** Label shown on the prompt-prefix chip. Defaults to "Shuffle Tools MCP". */
-  promptPrefixLabel?: string;
 }
 
 interface ExecutionData {
@@ -1320,8 +1316,6 @@ const AgentUI: React.FC<AgentUIProps> = ({
   hidePresets = false,
   presets,
   onSelectPreset,
-  hidePromptPrefixChip = false,
-  promptPrefixLabel,
 }) => {
   // Per-instance API target. Props win over the shared API_CONFIG so the
   // component can be embedded against a different Shuffle backend without
@@ -1349,7 +1343,6 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // still prepended when no preset is selected.
   const { prompt: savedPromptPrefix } = useAgentPromptPrefix({ userId });
   const [selectedPreset, setSelectedPreset] = useState<AgentPreset | null>(null);
-  const activePromptLabel = selectedPreset?.label ?? 'Shuffle Tools';
   const activePromptPrefix = savedPromptPrefix;
   const composeSubmitInput = useCallback(
     (raw: string) => {
@@ -3456,14 +3449,27 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 </Box>
               )}
               <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, width: '100%' }}>
-              {!hidePromptPrefixChip && selectedPreset && (
+              {!hidePresets && (
                 <Box sx={{ alignSelf: 'flex-start', pt: '10px', flexShrink: 0 }}>
-                  <AgentPromptPrefixChip
-                    userId={userId}
-                    label={promptPrefixLabel ?? activePromptLabel}
-                    value={savedPromptPrefix}
-                    readOnly
-                    onRemove={() => setSelectedPreset(null)}
+                  <AgentPresets
+                    variant="inline"
+                    presets={presets}
+                    selectedPreset={selectedPreset}
+                    onRemoveSelected={() => setSelectedPreset(null)}
+                    onSelectPreset={(preset) => {
+                      if (onSelectPreset) {
+                        onSelectPreset(preset);
+                        return;
+                      }
+                      // The preset is only tracked locally so its ID can be sent
+                      // to the backend. Prompt seeding and tool pre-selection are
+                      // now handled server-side.
+                      setSelectedPreset(preset);
+                      setTimeout(() => {
+                        const el = inputRef.current as HTMLTextAreaElement | HTMLInputElement | null;
+                        try { el?.focus(); } catch { /* ignore */ }
+                      }, 0);
+                    }}
                   />
                 </Box>
               )}
@@ -3511,26 +3517,6 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   if (e.target) e.target.value = '';
                 }}
               />
-              {!hidePresets && (
-                <AgentPresets
-                  variant="inline"
-                  presets={presets}
-                  onSelectPreset={(preset) => {
-                    if (onSelectPreset) {
-                      onSelectPreset(preset);
-                      return;
-                    }
-                    // The preset is only tracked locally so its ID can be sent
-                    // to the backend. Prompt seeding and tool pre-selection are
-                    // now handled server-side.
-                    setSelectedPreset(preset);
-                    setTimeout(() => {
-                      const el = inputRef.current as HTMLTextAreaElement | HTMLInputElement | null;
-                      try { el?.focus(); } catch { /* ignore */ }
-                    }, 0);
-                  }}
-                />
-              )}
               {(() => {
                 const allowWithoutExecution = showStarter;
                 const promptTooShort = showStarter && (actionInput || '').trim().length < 1;

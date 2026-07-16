@@ -12,7 +12,7 @@
  */
 import { useState } from 'react';
 import { Box, Button, Menu, MenuItem, Typography } from '@mui/material';
-import { Workflow, ShieldAlert, LifeBuoy, Bug, Radar, Monitor, Plus } from 'lucide-react';
+import { Workflow, ShieldAlert, LifeBuoy, Bug, Radar, Monitor, Plus, X as CloseIcon } from 'lucide-react';
 
 export interface AgentPreset {
   id: string;
@@ -79,20 +79,43 @@ export interface AgentPresetsProps {
   variant?: 'default' | 'inline';
   /** Called when the user picks a preset — receives the preset's default prompt seed. */
   onSelectPreset?: (preset: AgentPreset) => void;
+  /** Optional currently selected preset — turns the trigger into a chip showing the preset label. */
+  selectedPreset?: AgentPreset | null;
+  /** Called when the user clicks the remove (X) button on a selected preset chip. */
+  onRemoveSelected?: () => void;
   /** Override the built-in preset list. */
   presets?: AgentPreset[];
 }
 
-export const AgentPresets = ({ variant = 'default', onSelectPreset, presets }: AgentPresetsProps) => {
+export const AgentPresets = ({ variant = 'default', onSelectPreset, selectedPreset, onRemoveSelected, presets }: AgentPresetsProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const list = presets && presets.length > 0 ? presets : AGENT_PRESETS;
+
+  const MAX_LABEL_CHARS = 18;
+  const displayLabel = selectedPreset
+    ? (selectedPreset.label.length > MAX_LABEL_CHARS ? `${selectedPreset.label.slice(0, MAX_LABEL_CHARS - 1).trimEnd()}…` : selectedPreset.label)
+    : 'Presets';
 
   const trigger = (
     <Button
       size="small"
       onClick={(e) => setAnchorEl(e.currentTarget)}
-      startIcon={<Plus size={14} />}
+      startIcon={selectedPreset ? (selectedPreset.icon ?? undefined) : <Plus size={14} />}
+      endIcon={
+        selectedPreset ? (
+          <Box
+            component="span"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemoveSelected?.();
+            }}
+            sx={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', ml: 0.25 }}
+          >
+            <CloseIcon size={14} />
+          </Box>
+        ) : undefined
+      }
       sx={{
         textTransform: 'none',
         fontSize: '0.78rem',
@@ -100,18 +123,18 @@ export const AgentPresets = ({ variant = 'default', onSelectPreset, presets }: A
         height: variant === 'inline' ? 36 : 30,
         px: variant === 'inline' ? 1.5 : 1.25,
         borderRadius: 999,
-        color: 'hsl(var(--muted-foreground))',
+        color: selectedPreset ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
         border: '1px solid hsl(var(--border))',
-        bgcolor: 'transparent',
+        bgcolor: selectedPreset ? 'hsl(var(--primary) / 0.08)' : 'transparent',
         flexShrink: 0,
         '&:hover': {
-          bgcolor: 'hsl(var(--muted))',
-          color: 'hsl(var(--foreground))',
+          bgcolor: selectedPreset ? 'hsl(var(--primary) / 0.12)' : 'hsl(var(--muted))',
+          color: selectedPreset ? 'hsl(var(--primary))' : 'hsl(var(--foreground))',
           borderColor: 'hsl(var(--border))',
         },
       }}
     >
-      Presets
+      {displayLabel}
     </Button>
   );
 
