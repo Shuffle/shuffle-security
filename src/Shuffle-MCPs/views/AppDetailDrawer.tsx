@@ -198,11 +198,22 @@ export default function AppDetailDrawer({
     const normalizedName = appName.toLowerCase().replace(/[\s_\-]+/g, '_');
     const searchName = appName.replace(/_/g, ' ');
 
-    (async () => {
-      // Algolia lookup — also runs when caller passed an appId, so we still get
-      // the image/description/categories that the caller didn't have.
-      let algoliaId: string | null = appId || null;
-      let foundMatch = false;
+    // Fast path: when the caller already supplied the Algolia objectID we can
+    // hit `/api/v1/apps/{id}/config` directly and paint the drawer immediately.
+    // Algolia (for image/categories) and the apps list (for activation status)
+    // are fired in parallel but don't block the initial render.
+    let cancelled = false;
+
+    const configPromise = (API_CONFIG.apiKey && appId)
+      ? fetch(
+          getApiUrl(`/api/v1/apps/${encodeURIComponent(appId)}/config`),
+          { credentials: 'include', headers: { ...getAuthHeader() } }
+        )
+          .then(r => (r.ok ? r.json() : null))
+          .catch(() => null)
+      : Promise.resolve(null);
+
+    const algoliaPromise = (async () => {
       try {
         const { algoliasearch } = await import('algoliasearch');
         const client = algoliasearch('JNSS5CFDZZ', '33e4e3564f4f060e96e0531957bed552');
@@ -210,39 +221,64 @@ export default function AppDetailDrawer({
           requests: [{ indexName: 'appsearch', query: searchName, hitsPerPage: 10 }],
         });
         const hits = (res as any)?.results?.[0]?.hits || [];
-        const match =
-          (algoliaId && hits.find((h: any) => h.objectID === algoliaId)) ||
+        return (
+          (appId && hits.find((h: any) => h.objectID === appId)) ||
           hits.find((h: any) =>
             h.name?.toLowerCase().replace(/[\s_\-]+/g, '_') === normalizedName
           ) ||
-          (hits.length > 0 ? hits[0] : null);
+          (hits.length > 0 ? hits[0] : null)
+        );
+      } catch {
+        return null;
+      }
+    })();
 
-        if (match) {
-          foundMatch = true;
-          if (!algoliaId) {
-            algoliaId = match.objectID;
-            setResolvedAlgoliaId(algoliaId);
-          }
-          setAppInfo({
-            name: match.name || searchName,
-            description: match.description || '',
-            large_image: match.image_url || '',
-            categories: match.categories || [],
-          });
-        }
-      } catch {}
+    const appsListPromise = API_CONFIG.apiKey
+      ? fetchAppsViaApiConfig().catch(() => null)
+      : Promise.resolve(null);
 
-      // Fallback: if Algolia didn't resolve an id, look it up via /api/v1/apps
-      // This also doubles as our activation check below.
-      let appsList: any[] | null = null;
-      if (API_CONFIG.apiKey) {
-        try {
-          const apps = await fetchAppsViaApiConfig();
-          if (Array.isArray(apps)) appsList = apps;
-        } catch {}
+    (async () => {
+      let algoliaId: string | null = appId || null;
+      let foundMatch = false;
+
+      // Race: paint from whichever resolves first (config on fast path, algolia otherwise).
+      const configData = await configPromise;
+      if (cancelled) return;
+      if (configData?.name) {
+        foundMatch = true;
+        setAppInfo(prev => ({
+          ...(prev || {}),
+          ...configData,
+          large_image: configData.large_image || prev?.large_image || '',
+        }));
+        setAppLoading(false);
       }
 
-      if (!algoliaId && appsList) {
+      // Merge in Algolia results for image/categories (and objectID if we didn't have one)
+      const match = await algoliaPromise;
+      if (cancelled) return;
+      if (match) {
+        foundMatch = true;
+        if (!algoliaId) {
+          algoliaId = match.objectID;
+          setResolvedAlgoliaId(match.objectID);
+        }
+        setAppInfo(prev => ({
+          name: prev?.name || match.name || searchName,
+          description: prev?.description || match.description || '',
+          large_image: prev?.large_image || match.image_url || '',
+          categories: prev?.categories?.length ? prev.categories : (match.categories || []),
+          actions: prev?.actions,
+          authentication: prev?.authentication,
+        }));
+        setAppLoading(false);
+      }
+
+      // If we still have no id, use the apps list to resolve one, then fetch config
+      const appsList = await appsListPromise;
+      if (cancelled) return;
+
+      if (!algoliaId && Array.isArray(appsList)) {
         const localMatch = appsList.find((a: any) =>
           (a.name || '').toLowerCase().replace(/[\s_\-]+/g, '_') === normalizedName
         );
@@ -260,8 +296,8 @@ export default function AppDetailDrawer({
         }
       }
 
-      // Config API — only available when we have an id
-      if (API_CONFIG.apiKey && algoliaId) {
+      // Late config fetch only if fast path didn't run (no appId prop)
+      if (API_CONFIG.apiKey && algoliaId && !configData) {
         try {
           const response = await fetch(
             getApiUrl(`/api/v1/apps/${encodeURIComponent(algoliaId)}/config`),
@@ -269,15 +305,17 @@ export default function AppDetailDrawer({
           );
           if (response.ok) {
             const data = await response.json();
-            if (data?.name) {
+            if (!cancelled && data?.name) {
               setAppInfo(prev => ({ ...prev, ...data, large_image: data.large_image || prev?.large_image || '' }));
             }
           }
         } catch {}
       }
 
-      // Activation status from the same /api/v1/apps response
-      if (appsList) {
+      if (cancelled) return;
+
+      // Activation status
+      if (Array.isArray(appsList)) {
         const activeMatch = appsList.find((a: any) =>
           (a.name || '').toLowerCase().replace(/[\s_\-]+/g, '_') === normalizedName && a.activated
         );
@@ -287,7 +325,6 @@ export default function AppDetailDrawer({
         setIsActivated(false);
       }
 
-      // Last-resort: if we still have no appInfo, seed from the name so the drawer renders
       setAppInfo(prev => prev ?? {
         name: searchName,
         description: '',
@@ -298,6 +335,8 @@ export default function AppDetailDrawer({
       setAppNotFound(!foundMatch);
       setAppLoading(false);
     })();
+
+    return () => { cancelled = true; };
   }, [open, appName, appId]);
 
   // Fetch incident stats for this app
