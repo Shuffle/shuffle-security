@@ -192,6 +192,7 @@ export default function AppDetailDrawer({
     setAppInfo(null);
     setIsActivated(null);
     setAppNotFound(false);
+    setConfigError(null);
     // Seed from caller-provided id (e.g. AppSearchDrawer already has the Algolia hit)
     setResolvedAlgoliaId(appId || null);
     // Always refresh auth when opening a different app
@@ -204,15 +205,12 @@ export default function AppDetailDrawer({
     // hit `/api/v1/apps/{id}/config` directly and paint the drawer immediately.
     // Algolia (for image/categories) and the apps list (for activation status)
     // are fired in parallel but don't block the initial render.
+    // The shared `fetchAppConfig` helper negative-caches 401/403/404 so a
+    // known-bad id is never re-requested this session.
     let cancelled = false;
 
     const configPromise = (API_CONFIG.apiKey && appId)
-      ? fetch(
-          getApiUrl(`/api/v1/apps/${encodeURIComponent(appId)}/config`),
-          { credentials: 'include', headers: { ...getAuthHeader() } }
-        )
-          .then(r => (r.ok ? r.json() : null))
-          .catch(() => null)
+      ? fetchAppConfig(appId)
       : Promise.resolve(null);
 
     const algoliaPromise = (async () => {
