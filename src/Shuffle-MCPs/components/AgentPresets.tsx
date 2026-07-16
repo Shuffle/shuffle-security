@@ -79,6 +79,10 @@ export interface AgentPresetsProps {
   variant?: 'default' | 'inline';
   /** Called when the user picks a preset — receives the preset's default prompt seed. */
   onSelectPreset?: (preset: AgentPreset) => void;
+  /** Optional currently selected preset — turns the trigger into a chip showing the preset label. */
+  selectedPreset?: AgentPreset | null;
+  /** Called when the user clicks the remove (X) button on a selected preset chip. */
+  onRemoveSelected?: () => void;
   /** Override the built-in preset list. */
   presets?: AgentPreset[];
 }
