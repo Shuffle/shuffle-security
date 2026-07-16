@@ -3525,7 +3525,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 </Box>
               )}
               {!hidePresets && (
-                <Box sx={{ position: 'absolute', left: 2.25, top: '6px', height: 'calc(0.9rem * 1.45)', display: 'flex', alignItems: 'center', zIndex: 1 }}>
+                <Box sx={{ position: 'absolute', left: 2.25, top: '11px', height: 'calc(0.9rem * 1.45)', display: 'flex', alignItems: 'center', zIndex: 1 }}>
                   <AgentPresets
                     variant="floating"
                     chipRef={presetsChipRef}
@@ -3586,7 +3586,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   color: 'hsl(var(--foreground))',
                   py: 0,
                   '& .MuiInputBase-input': {
-                    py: 0,
+                    pt: '5px',
+                    pb: 0,
                     lineHeight: 1.45,
                     textIndent: !hidePresets ? `${presetsChipWidth + 8}px` : 0,
                   },
