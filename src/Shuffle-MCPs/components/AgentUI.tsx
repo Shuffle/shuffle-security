@@ -1342,7 +1342,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // input. Prepended to the submitted text so it feels like the user is
   // "typing to" the Shuffle Tools MCP without the prefix filling the box.
   //
-  // Presets only swap the chip's visible label; the actual prompt and tool
+  // Templates only swap the chip's visible label; the actual prompt and tool
   // selection are handled by the backend. The user's saved default prefix is
   // still prepended when no preset is selected.
   const { prompt: savedPromptPrefix } = useAgentPromptPrefix({ userId });
