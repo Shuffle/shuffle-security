@@ -277,9 +277,9 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
               <li {...props} key={option}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, width: '100%', minWidth: 0 }}>
                   <ProviderLogo label={option} url={preset?.url} />
-                  <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--popover-foreground))' }}>{option}</Typography>
+                  <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--popover-foreground))', flexShrink: 0 }}>{option}</Typography>
                   {preset?.url && (
-                    <Typography component="span" sx={{ ml: 'auto', color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <Typography component="span" sx={{ ml: 'auto', minWidth: 0, flex: '0 1 auto', color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {preset.url}
                     </Typography>
                   )}
@@ -307,8 +307,9 @@ const LocalLLMConfig = ({ compact, globalUrl, userdata, isLoaded, isLoggedIn, se
             );
           }}
           slotProps={{
-            paper: { sx: { bgcolor: 'hsl(var(--popover))', color: 'hsl(var(--popover-foreground))', border: '1px solid hsl(var(--border))', minWidth: 580 } },
-            popper: { sx: { zIndex: 9999 } },
+            paper: { sx: { bgcolor: 'hsl(var(--popover))', color: 'hsl(var(--popover-foreground))', border: '1px solid hsl(var(--border))', maxWidth: '100vw', overflow: 'hidden' } },
+            listbox: { sx: { maxWidth: '100%', '& li': { minWidth: 0 } } },
+            popper: { sx: { zIndex: 9999, maxWidth: '100vw' } },
           }}
         />
       </Box>
