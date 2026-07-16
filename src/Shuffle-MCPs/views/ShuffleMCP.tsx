@@ -145,6 +145,10 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchClient = useRef<SearchClient | null>(null);
   const activeQueryRef = useRef<string>('');
+  // Snapshot the selection at mount so the result list order stays static
+  // while the user toggles tools in the drawer. Only the initial selection
+  // is used to float already-chosen apps to the top.
+  const initialSelectedAppsRef = useRef<AlgoliaSearchApp[]>(selectedApps);
 
   // Fetch authenticated apps when apiKey is provided
   const fetchAuthenticatedApps = useCallback(async () => {
@@ -544,12 +548,12 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
       merged = [...filteredPrivateApps, ...publicOnly];
     }
 
-    // Float pre-selected apps to the top so it's obvious which tools are
-    // already chosen. The sort uses the controlled selection prop and stays
-    // stable for items with the same selected status, so live toggles don't
-    // continuously reorder the list.
-    const selectedNames = new Set(selectedApps.map(a => norm(a.name)));
-    const selectedObjectIDs = new Set(selectedApps.map(a => a.objectID).filter(Boolean));
+    // Float pre-selected apps to the top on initial mount so it's obvious
+    // which tools are already chosen. The snapshot stays static while the
+    // user toggles selections, so selecting a new tool does not reorder the list.
+    const initialSelection = initialSelectedAppsRef.current;
+    const selectedNames = new Set(initialSelection.map(a => norm(a.name)));
+    const selectedObjectIDs = new Set(initialSelection.map(a => a.objectID).filter(Boolean));
     const sorted = [...merged].sort((a, b) => {
       const aSelected = selectedObjectIDs.has(a.objectID) || selectedNames.has(norm(a.name));
       const bSelected = selectedObjectIDs.has(b.objectID) || selectedNames.has(norm(b.name));
@@ -561,7 +565,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
     if (!pinnedApps || pinnedApps.length === 0) return sorted;
     const pinnedNames = new Set(pinnedApps.map(a => norm(a.name)));
     return [...pinnedApps, ...sorted.filter(a => !pinnedNames.has(norm(a.name)))];
-  }, [pinnedApps, results, filteredPrivateApps, sourceFilter, isAppConfigured, selectedApps]);
+  }, [pinnedApps, results, filteredPrivateApps, sourceFilter, isAppConfigured]);
 
   // Get grid columns style
   const getGridColumnsStyle = useMemo(() => {
