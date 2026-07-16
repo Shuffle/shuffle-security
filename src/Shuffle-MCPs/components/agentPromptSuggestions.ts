@@ -200,3 +200,11 @@ export const matchAgentPromptSuggestions = (
 
 /** The default continuous-task placeholder for the AgentUI prompt. */
 export const DEFAULT_AGENT_PROMPT_PLACEHOLDER = 'What do you want to do?';
+
+/** Pick a random autocomplete suggestion and clamp it to one input line. */
+export const getRandomAgentPromptPlaceholder = (): string => {
+  const suggestion = AGENT_PROMPT_SUGGESTIONS[Math.floor(Math.random() * AGENT_PROMPT_SUGGESTIONS.length)];
+  const MAX_CHARS = 50;
+  if (suggestion.length <= MAX_CHARS) return suggestion;
+  return `${suggestion.slice(0, MAX_CHARS - 1).trimEnd()}…`;
+};
