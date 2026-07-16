@@ -3476,15 +3476,19 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   ))}
                 </Box>
               )}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
               {!hidePresets && (
-                <Box sx={{ flexShrink: 0 }}>
+                <Box sx={{ position: 'absolute', left: 2.25, top: 1.25, zIndex: 1 }}>
                   <AgentPresets
-                    variant="inline"
+                    variant="floating"
+                    chipRef={presetsChipRef}
                     presets={presets}
                     selectedPreset={selectedPreset}
-                    onRemoveSelected={() => setSelectedPreset(null)}
+                    onRemoveSelected={() => {
+                      try { localStorage.removeItem(LAST_PRESET_STORAGE_KEY); } catch { /* ignore */ }
+                      setSelectedPreset(null);
+                    }}
                     onSelectPreset={(preset) => {
+                      try { localStorage.setItem(LAST_PRESET_STORAGE_KEY, preset.id); } catch { /* ignore */ }
                       if (onSelectPreset) {
                         onSelectPreset(preset);
                         return;
@@ -3501,6 +3505,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   />
                 </Box>
               )}
+              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, width: '100%', position: 'relative' }}>
               <InputBase
                 inputRef={inputRef}
                 autoFocus
