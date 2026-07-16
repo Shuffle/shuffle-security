@@ -18,7 +18,7 @@
  * {@link toast} facade for notifications.
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   Plus as AddIcon,
   Paperclip as AttachFileIcon,
