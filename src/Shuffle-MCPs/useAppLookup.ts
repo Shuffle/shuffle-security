@@ -13,7 +13,7 @@
  */
 
 import { useEffect, useMemo, useState } from 'react';
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
+import { API_CONFIG } from '@/Shuffle-MCPs/api';
 import { fetchAppsViaApiConfig } from '@/Shuffle-MCPs/appsCache';
 import { fetchAppConfig } from '@/Shuffle-MCPs/appConfigFetch';
 import { useAppAuth } from '@/Shuffle-MCPs/useAppAuth';
