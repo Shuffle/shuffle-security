@@ -1316,8 +1316,6 @@ const AgentUI: React.FC<AgentUIProps> = ({
   hidePresets = false,
   presets,
   onSelectPreset,
-  hidePromptPrefixChip = false,
-  promptPrefixLabel,
 }) => {
   // Per-instance API target. Props win over the shared API_CONFIG so the
   // component can be embedded against a different Shuffle backend without
