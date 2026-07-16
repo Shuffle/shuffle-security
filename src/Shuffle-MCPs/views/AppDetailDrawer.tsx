@@ -173,6 +173,7 @@ export default function AppDetailDrawer({
   const lastValidAuthRef = useRef<boolean | null>(null);
   const [incidentStats, setIncidentStats] = useState<{ ingested: number; forwarded: number } | null>(null);
   const [appNotFound, setAppNotFound] = useState(false);
+  const [configError, setConfigError] = useState<{ status: number; message: string } | null>(null);
 
   const {
     authStates,
