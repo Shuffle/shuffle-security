@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
+import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import type { AppAuthState, AuthStatus, ApiAuthEntry } from '@/Shuffle-MCPs/components/AppAuthConfig';
 import { refreshAllIntegrationStatus } from '@/Shuffle-MCPs/components/IntegrationStatus';
 import {
