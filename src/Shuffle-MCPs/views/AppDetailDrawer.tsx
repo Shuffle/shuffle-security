@@ -598,8 +598,8 @@ export default function AppDetailDrawer({
               />
             )}
           </Box>
-          <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem' }}>
-            {appLoading ? <Skeleton width={100} /> : (appNotFound ? 'App not found in catalog' : 'App configuration')}
+          <Typography sx={{ color: configError ? 'hsl(var(--destructive))' : 'hsl(var(--muted-foreground))', fontSize: '0.75rem' }}>
+            {appLoading ? <Skeleton width={100} /> : (configError ? `Error ${configError.status || ''}`.trim() : (appNotFound ? 'App not found in catalog' : 'App configuration'))}
           </Typography>
         </Box>
         <IconButton
