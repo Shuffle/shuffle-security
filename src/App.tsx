@@ -56,7 +56,7 @@ import AdminPage from '@/pages/dashboard/AdminPage';
 import OrganizationsPage from '@/pages/dashboard/OrganizationsPage';
 import SettingsPage from '@/pages/dashboard/SettingsPage';
 import OrgPreferencesPage from '@/pages/dashboard/OrgPreferencesPage';
-import AgentActivityPage from '@/pages/dashboard/AgentActivityPage';
+
 import { AgentsView } from '@/Shuffle-MCPs';
 import PermissionsPanel from '@/components/agent/PermissionsPanel';
 import InfrastructurePage from '@/pages/dashboard/InfrastructurePage';
