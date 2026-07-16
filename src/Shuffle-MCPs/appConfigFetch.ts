@@ -28,11 +28,29 @@ interface CacheEntry {
 }
 
 const OK_TTL_MS = 5 * 60_000;
+const FAIL_TTL_MS = 30_000;
 const cache = new Map<string, CacheEntry>();
 
 // Statuses we consider permanent for the session (no point retrying on the
 // same id — the user has to reauth or the app really doesn't exist).
 const HARD_FAIL_STATUSES = new Set([401, 403, 404]);
+
+const decodeAppConfigPayload = (payload: any): any => {
+  if (!payload || typeof payload !== 'object' || typeof payload.app !== 'string') {
+    return payload;
+  }
+
+  try {
+    const decoded = JSON.parse(atob(payload.app));
+    return {
+      ...decoded,
+      openapi: payload.openapi,
+      success: payload.success,
+    };
+  } catch {
+    return payload;
+  }
+};
 
 const doFetch = async (appId: string): Promise<AppConfigFetchResult> => {
   try {
@@ -43,7 +61,8 @@ const doFetch = async (appId: string): Promise<AppConfigFetchResult> => {
     if (!response.ok) {
       return { ok: false, status: response.status, data: null };
     }
-    const data = await response.json().catch(() => null);
+    const rawData = await response.json().catch(() => null);
+    const data = decodeAppConfigPayload(rawData);
     return { ok: true, status: response.status, data };
   } catch {
     return { ok: false, status: 0, data: null };
@@ -57,6 +76,11 @@ export const fetchAppConfig = (appId: string): Promise<AppConfigFetchResult> => 
 
   // Hard-fail: never retry a known-bad id during the session.
   if (entry.result && !entry.result.ok && HARD_FAIL_STATUSES.has(entry.result.status)) {
+    return Promise.resolve(entry.result);
+  }
+  // Transient failure cooldown. Even non-permanent failures should not be
+  // retried in a render loop; allow a later explicit retry after the cooldown.
+  if (entry.result && !entry.result.ok && entry.at && Date.now() - entry.at < FAIL_TTL_MS) {
     return Promise.resolve(entry.result);
   }
   // Fresh success within TTL.
