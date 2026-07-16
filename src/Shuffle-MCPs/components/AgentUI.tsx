@@ -3448,6 +3448,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
               bgcolor: 'hsl(var(--card))',
               px: 2.25,
               py: 1.25,
+              position: 'relative',
               transition: 'border-color 0.15s ease, box-shadow 0.15s ease, border-radius 0.15s ease',
               '&:focus-within': {
                 borderColor: 'hsl(var(--primary))',
