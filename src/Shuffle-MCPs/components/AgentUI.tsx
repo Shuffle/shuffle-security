@@ -1547,6 +1547,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // execution_id, so the "Agent is working… Xs" counter starts ticking
   // immediately — even before the backend echoes `started_at` back to us.
   const [localRunStart, setLocalRunStart] = useState<number | null>(null);
+  const chipBarRef = useRef<HTMLDivElement>(null);
+  const [chipBarMultiline, setChipBarMultiline] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Tracks the execution_id we currently want to display. Used to discard
   // stale poll responses from a previous run after the user has started a
@@ -1586,6 +1588,19 @@ const AgentUI: React.FC<AgentUIProps> = ({
   stateRef.current.continuationText = continuationText;
   stateRef.current.localRunStart = localRunStart;
   stateRef.current.showStarter = showStarter;
+
+  // The app-picker chip bar uses a pill radius when it fits on one line, but
+  // when it wraps to multiple lines the 999px radius becomes comically large.
+  // Measure the rendered height and switch to a fixed corner radius.
+  useLayoutEffect(() => {
+    const el = chipBarRef.current;
+    if (!el) return;
+    const update = () => setChipBarMultiline(el.clientHeight > 44);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Reset / capture the local run start. Seed as soon as the user submits
   // (so the counter ticks from t=0 even before /agent returns), and keep it
@@ -3805,14 +3820,17 @@ const AgentUI: React.FC<AgentUIProps> = ({
 
             {!hideAppPicker && (
             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-              <Box sx={{
-                display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.5,
-                p: 0.5,
-                borderRadius: 999,
-                border: '1px solid hsl(var(--border))',
-                bgcolor: 'hsl(var(--card))',
-                maxWidth: '100%',
-              }}>
+              <Box
+                ref={chipBarRef}
+                sx={{
+                  display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.5,
+                  p: 0.5,
+                  borderRadius: chipBarMultiline ? '18px' : 999,
+                  border: '1px solid hsl(var(--border))',
+                  bgcolor: 'hsl(var(--card))',
+                  maxWidth: '100%',
+                }}
+              >
                 {!hideChooseLLM && (
                 <Tooltip title="Configure the local LLM used for this agent">
                   <Box
