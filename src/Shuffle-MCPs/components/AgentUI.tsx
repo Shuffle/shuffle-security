@@ -69,6 +69,7 @@ import Markdown from 'react-markdown';
 import {
   DEFAULT_AGENT_PROMPT_PLACEHOLDER,
   getRandomAgentPromptPlaceholder,
+  getRandomAgentPromptPlaceholderForWidth,
   matchAgentPromptSuggestions,
 } from './agentPromptSuggestions';
 import remarkGfm from 'remark-gfm';
