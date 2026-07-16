@@ -247,6 +247,7 @@ export default function AppDetailDrawer({
           (a.name || '').toLowerCase().replace(/[\s_\-]+/g, '_') === normalizedName
         );
         if (localMatch?.id) {
+          foundMatch = true;
           algoliaId = localMatch.id;
           setResolvedAlgoliaId(localMatch.id);
           setAppInfo(prev => prev ?? {
