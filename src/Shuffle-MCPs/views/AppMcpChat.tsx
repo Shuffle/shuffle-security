@@ -412,6 +412,12 @@ const AppMcpChat = ({ appName, appIcon, appId, categories, globalUrl }: AppMcpCh
                   sx={{
                     fontSize: '0.82rem',
                     color: 'hsl(var(--foreground))',
+                    display: 'flex',
+                    alignItems: 'center',
+                    '& input': {
+                      py: 0,
+                      lineHeight: 1,
+                    },
                     '& input::placeholder': {
                       color: 'hsl(var(--muted-foreground))',
                       opacity: 0.7,
