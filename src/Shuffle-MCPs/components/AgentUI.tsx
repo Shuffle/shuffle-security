@@ -1343,7 +1343,6 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // still prepended when no preset is selected.
   const { prompt: savedPromptPrefix } = useAgentPromptPrefix({ userId });
   const [selectedPreset, setSelectedPreset] = useState<AgentPreset | null>(null);
-  const activePromptLabel = selectedPreset?.label ?? 'Shuffle Tools';
   const activePromptPrefix = savedPromptPrefix;
   const composeSubmitInput = useCallback(
     (raw: string) => {
