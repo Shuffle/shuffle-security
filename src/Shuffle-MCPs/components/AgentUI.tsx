@@ -3542,7 +3542,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 fullWidth
                 value={actionInput}
                 onChange={(e) => setActionInput(e.target.value)}
-                placeholder={placeholder}
+                placeholder={typedPlaceholder}
                 onKeyDown={onKeyDown}
                 onPaste={(e) => {
                   const items = e.clipboardData?.items;
