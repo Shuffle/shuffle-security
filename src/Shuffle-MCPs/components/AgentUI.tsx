@@ -504,9 +504,9 @@ export interface AgentUIProps {
    * (shared across all users on this browser).
    */
   userId?: string;
-  /** Hide the "+ Presets" trigger next to the input. */
+  /** Hide the "+ Templates" trigger next to the input. */
   hidePresets?: boolean;
-  /** Override the built-in preset list surfaced by the "+ Presets" trigger. */
+  /** Override the built-in template list surfaced by the "+ Templates" trigger. */
   presets?: AgentPreset[];
   /** Called when the user picks a preset. Overrides the built-in seed behavior. */
   onSelectPreset?: (preset: AgentPreset) => void;
