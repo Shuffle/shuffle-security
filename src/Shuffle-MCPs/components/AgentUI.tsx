@@ -3503,6 +3503,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 sx={{
                   fontSize: '0.9rem',
                   color: 'hsl(var(--foreground))',
+                  py: 0,
+                  '& .MuiInputBase-input': { py: 0, lineHeight: 1.5 },
                   '& textarea::placeholder': { color: 'hsl(var(--muted-foreground))', opacity: 0.7 },
                 }}
               />
