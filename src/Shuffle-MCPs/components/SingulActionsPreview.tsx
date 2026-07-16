@@ -467,13 +467,8 @@ const SingulActionsPreview = ({
     <Box sx={{ mt: 5, mb: 3, opacity: isDisabled ? 0.55 : 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
         <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, fontSize: '0.95rem' }}>
-          Try individual actions
+          Try individual actions ({sortedActions.length})
         </Typography>
-        <Chip
-          label="Preview"
-          size="small"
-          sx={{ height: 18, fontSize: '0.6rem', fontWeight: 500, backgroundColor: 'hsl(var(--muted))', color: 'hsl(var(--muted-foreground))' }}
-        />
       </Box>
 
       <Box
