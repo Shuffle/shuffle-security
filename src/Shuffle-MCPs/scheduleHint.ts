@@ -147,6 +147,40 @@ export const parseScheduleHint = (input: string): ScheduleHint | null => {
 
   // Future word — "next monday at 2am" is treated as weekly Monday.
   if (/\bnext\b/.test(text)) hits.push('next');
+
+  // ── Near-future one-off phrases ────────────────────────────────────────
+  // "in 15 minutes", "in 2 hours" — schedule once at now + offset.
+  const inMin = text.match(/\bin\s+(\d+)\s*(?:m|min|mins|minute|minutes)\b/);
+  const inHr = !inMin ? text.match(/\bin\s+(\d+)\s*(?:h|hr|hrs|hour|hours)\b/) : null;
+  if (inMin || inHr) {
+    const offsetMs = inMin
+      ? parseInt(inMin[1], 10) * 60_000
+      : parseInt(inHr![1], 10) * 3_600_000;
+    const target = new Date(Date.now() + offsetMs);
+    const th = target.getHours();
+    const tm = target.getMinutes();
+    return {
+      cron: `${tm} ${th} * * *`,
+      label: `Today at ${fmtTime(th, tm)}`,
+      confidence: 'high',
+      matchedText: (inMin || inHr)![0],
+    };
+  }
+
+  // "later today", "later", "soon", "shortly", "in a bit" — ~2 hours out.
+  const laterMatch = text.match(/\b(later\s+today|later\s+tonight|later\s+this\s+(?:morning|afternoon|evening)|later|soon|shortly|in\s+a\s+bit|in\s+a\s+while|in\s+a\s+moment)\b/);
+  if (laterMatch && hour === null) {
+    const target = new Date(Date.now() + 2 * 3_600_000);
+    const th = target.getHours();
+    const tm = target.getMinutes();
+    return {
+      cron: `${tm} ${th} * * *`,
+      label: `Today at ${fmtTime(th, tm)}`,
+      confidence: 'medium',
+      matchedText: laterMatch[0],
+    };
+  }
+
   if (/\btonight\b/.test(text) && hour === null) {
     return { cron: '0 21 * * *', label: 'Daily at 9:00 PM (tonight)', confidence: 'medium', matchedText: 'tonight' };
   }
@@ -158,6 +192,7 @@ export const parseScheduleHint = (input: string): ScheduleHint | null => {
       matchedText: hits.join(' '),
     };
   }
+
 
   // ── 5. Build cron from collected pieces ─────────────────────────────────
   if (day && hour !== null) {
