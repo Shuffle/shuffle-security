@@ -72,7 +72,7 @@ import {
 } from './agentPromptSuggestions';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
-import AgentPresets, { type AgentPreset } from '@/Shuffle-MCPs/components/AgentPresets';
+import AgentPresets, { AGENT_PRESETS, type AgentPreset } from '@/Shuffle-MCPs/components/AgentPresets';
 
 import { useAgentPromptPrefix } from '@/Shuffle-MCPs/useAgentPromptPrefix';
 
