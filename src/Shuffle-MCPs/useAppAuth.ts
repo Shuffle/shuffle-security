@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import type { AppAuthState, AuthStatus, ApiAuthEntry } from '@/Shuffle-MCPs/components/AppAuthConfig';
 import { refreshAllIntegrationStatus } from '@/Shuffle-MCPs/components/IntegrationStatus';
@@ -65,16 +65,18 @@ export function useAppAuth() {
   const [authStates, setAuthStates] = useState<Record<string, AppAuthState>>({});
   const [authenticatedApps, setAuthenticatedApps] = useState<ApiAuthEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const hasLoadedAuthRef = useRef(false);
 
   // Load authenticated apps on mount
   const fetchAuthenticatedApps = useCallback(async () => {
-    setLoading(true);
+    if (!hasLoadedAuthRef.current) setLoading(true);
     try {
       const authData = await fetchSharedAuthenticatedApps();
       setAuthenticatedApps(processAuthData(authData as ApiAuthEntry[]));
     } catch (error) {
       console.error('Failed to fetch auth data:', error);
     } finally {
+      hasLoadedAuthRef.current = true;
       setLoading(false);
     }
   }, []);
