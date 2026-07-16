@@ -3415,12 +3415,12 @@ const AgentUI: React.FC<AgentUIProps> = ({
               width: '100%',
               display: 'flex',
               flexDirection: 'column',
-              gap: 1,
-              borderRadius: attachedImages.length > 0 ? 4 : '28px',
+              gap: 0.5,
+              borderRadius: attachedImages.length > 0 ? 4 : '20px',
               border: '1.5px solid hsl(var(--border))',
               bgcolor: 'hsl(var(--card))',
-              px: 3,
-              py: 1.75,
+              px: 2.5,
+              py: 1,
               transition: 'border-color 0.15s ease, box-shadow 0.15s ease, border-radius 0.15s ease',
               '&:focus-within': {
                 borderColor: 'hsl(var(--primary))',
@@ -3450,7 +3450,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
               )}
               <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, width: '100%' }}>
               {!hidePresets && (
-                <Box sx={{ alignSelf: 'flex-start', pt: '10px', flexShrink: 0 }}>
+                <Box sx={{ alignSelf: 'flex-start', pt: '8px', flexShrink: 0 }}>
                   <AgentPresets
                     variant="inline"
                     presets={presets}
@@ -3501,7 +3501,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 }}
                 disabled={agentRequestLoading}
                 sx={{
-                  fontSize: '1rem',
+                  fontSize: '0.9rem',
                   color: 'hsl(var(--foreground))',
                   '& textarea::placeholder': { color: 'hsl(var(--muted-foreground))', opacity: 0.7 },
                 }}

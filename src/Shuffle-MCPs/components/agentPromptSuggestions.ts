@@ -199,5 +199,4 @@ export const matchAgentPromptSuggestions = (
 };
 
 /** The default continuous-task placeholder for the AgentUI prompt. */
-export const DEFAULT_AGENT_PROMPT_PLACEHOLDER =
-  'Take care of my emails by pretending to be me and answering them';
+export const DEFAULT_AGENT_PROMPT_PLACEHOLDER = 'What do you want to do?';
