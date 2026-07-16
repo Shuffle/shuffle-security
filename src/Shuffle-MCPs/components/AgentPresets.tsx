@@ -35,7 +35,7 @@ export const AGENT_PRESETS: AgentPreset[] = [
     defaultPrompt: 'Build a Shuffle workflow that ',
     icon: <Workflow size={16} />,
     enabled: true,
-    defaultApps: [{ name: 'shuffle_workflows' }, { name: 'shuffle_app_management' }],
+    defaultApps: [{ name: 'shuffle_workflows' }, { name: 'shuffles_app_management' }],
   },
   {
     id: 'incident-response',
