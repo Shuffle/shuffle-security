@@ -42,6 +42,7 @@ import type { AlgoliaSearchApp } from '@/Shuffle-MCPs/shuffle-mcp.helpers';
 import { useAppAuth } from '@/Shuffle-MCPs/useAppAuth';
 import { API_CONFIG, getApiUrl, getAuthHeader, getTrackedOrgId } from '@/Shuffle-MCPs/api';
 import { fetchAppsViaApiConfig } from '@/Shuffle-MCPs/appsCache';
+import { fetchAppConfig } from '@/Shuffle-MCPs/appConfigFetch';
 import AppTitleHeader from '@/Shuffle-MCPs/components/AppTitleHeader';
 import AppAuthSection from '@/Shuffle-MCPs/components/AppAuthSection';
 import TryMcpSection from '@/Shuffle-MCPs/views/TryMcpSection';
@@ -172,6 +173,7 @@ export default function AppDetailDrawer({
   const lastValidAuthRef = useRef<boolean | null>(null);
   const [incidentStats, setIncidentStats] = useState<{ ingested: number; forwarded: number } | null>(null);
   const [appNotFound, setAppNotFound] = useState(false);
+  const [configError, setConfigError] = useState<{ status: number; message: string } | null>(null);
 
   const {
     authStates,
@@ -190,6 +192,7 @@ export default function AppDetailDrawer({
     setAppInfo(null);
     setIsActivated(null);
     setAppNotFound(false);
+    setConfigError(null);
     // Seed from caller-provided id (e.g. AppSearchDrawer already has the Algolia hit)
     setResolvedAlgoliaId(appId || null);
     // Always refresh auth when opening a different app
@@ -202,15 +205,12 @@ export default function AppDetailDrawer({
     // hit `/api/v1/apps/{id}/config` directly and paint the drawer immediately.
     // Algolia (for image/categories) and the apps list (for activation status)
     // are fired in parallel but don't block the initial render.
+    // The shared `fetchAppConfig` helper negative-caches 401/403/404 so a
+    // known-bad id is never re-requested this session.
     let cancelled = false;
 
     const configPromise = (API_CONFIG.apiKey && appId)
-      ? fetch(
-          getApiUrl(`/api/v1/apps/${encodeURIComponent(appId)}/config`),
-          { credentials: 'include', headers: { ...getAuthHeader() } }
-        )
-          .then(r => (r.ok ? r.json() : null))
-          .catch(() => null)
+      ? fetchAppConfig(appId)
       : Promise.resolve(null);
 
     const algoliaPromise = (async () => {
@@ -242,8 +242,22 @@ export default function AppDetailDrawer({
       let foundMatch = false;
 
       // Race: paint from whichever resolves first (config on fast path, algolia otherwise).
-      const configData = await configPromise;
+      const configResult = await configPromise;
       if (cancelled) return;
+      const configData = configResult?.ok ? configResult.data : null;
+      if (configResult && !configResult.ok) {
+        // Surface hard failures (401/403/404) so the drawer shows an error
+        // instead of silently sitting on "not found" while the negative cache
+        // blocks any further requests.
+        const status = configResult.status;
+        const message =
+          status === 401 ? 'You are not authorized to load this app configuration. Please sign in again.'
+          : status === 403 ? 'You do not have permission to view this app configuration.'
+          : status === 404 ? 'This app configuration was not found.'
+          : status === 0 ? 'Could not reach the Shuffle API. Check your connection and try again.'
+          : `Failed to load app configuration (HTTP ${status}).`;
+        setConfigError({ status, message });
+      }
       if (configData?.name) {
         foundMatch = true;
         setAppInfo(prev => ({
@@ -296,20 +310,24 @@ export default function AppDetailDrawer({
         }
       }
 
-      // Late config fetch only if fast path didn't run (no appId prop)
+      // Late config fetch only if fast path didn't run (no appId prop).
+      // Goes through the shared negative-caching helper, so a 401 here also
+      // stops any sibling component from re-hitting the same endpoint.
       if (API_CONFIG.apiKey && algoliaId && !configData) {
-        try {
-          const response = await fetch(
-            getApiUrl(`/api/v1/apps/${encodeURIComponent(algoliaId)}/config`),
-            { credentials: 'include', headers: { ...getAuthHeader() } }
-          );
-          if (response.ok) {
-            const data = await response.json();
-            if (!cancelled && data?.name) {
-              setAppInfo(prev => ({ ...prev, ...data, large_image: data.large_image || prev?.large_image || '' }));
-            }
-          }
-        } catch {}
+        const late = await fetchAppConfig(algoliaId);
+        if (cancelled) return;
+        if (late.ok && late.data?.name) {
+          setAppInfo(prev => ({ ...prev, ...late.data, large_image: late.data.large_image || prev?.large_image || '' }));
+        } else if (!late.ok && !configError) {
+          const status = late.status;
+          const message =
+            status === 401 ? 'You are not authorized to load this app configuration. Please sign in again.'
+            : status === 403 ? 'You do not have permission to view this app configuration.'
+            : status === 404 ? 'This app configuration was not found.'
+            : status === 0 ? 'Could not reach the Shuffle API. Check your connection and try again.'
+            : `Failed to load app configuration (HTTP ${status}).`;
+          setConfigError({ status, message });
+        }
       }
 
       if (cancelled) return;
@@ -580,8 +598,8 @@ export default function AppDetailDrawer({
               />
             )}
           </Box>
-          <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem' }}>
-            {appLoading ? <Skeleton width={100} /> : (appNotFound ? 'App not found in catalog' : 'App configuration')}
+          <Typography sx={{ color: configError ? 'hsl(var(--destructive))' : 'hsl(var(--muted-foreground))', fontSize: '0.75rem' }}>
+            {appLoading ? <Skeleton width={100} /> : (configError ? `Error ${configError.status || ''}`.trim() : (appNotFound ? 'App not found in catalog' : 'App configuration'))}
           </Typography>
         </Box>
         <IconButton
@@ -630,6 +648,30 @@ export default function AppDetailDrawer({
 
         ) : (
           <>
+            {configError && (
+              <Box
+                sx={{
+                  mb: 2,
+                  p: 1.5,
+                  borderRadius: 2,
+                  border: '1px solid hsl(var(--destructive) / 0.4)',
+                  bgcolor: 'hsl(var(--destructive) / 0.08)',
+                  display: 'flex',
+                  gap: 1,
+                  alignItems: 'flex-start',
+                }}
+              >
+                <ErrorOutlineIcon size={16} style={{ color: 'hsl(var(--destructive))', marginTop: 2, flexShrink: 0 }} />
+                <Box sx={{ flex: 1 }}>
+                  <Typography sx={{ color: 'hsl(var(--destructive))', fontSize: '0.78rem', fontWeight: 600 }}>
+                    {configError.status === 401 ? 'Unauthorized' : configError.status === 403 ? 'Forbidden' : configError.status === 404 ? 'Not found' : 'Failed to load configuration'}
+                  </Typography>
+                  <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.72rem', mt: 0.25 }}>
+                    {configError.message}
+                  </Typography>
+                </Box>
+              </Box>
+            )}
             {/* App header */}
             <AppTitleHeader
               name={displayName}
