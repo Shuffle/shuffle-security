@@ -3537,7 +3537,11 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   fontSize: '0.9rem',
                   color: 'hsl(var(--foreground))',
                   py: 0,
-                  '& .MuiInputBase-input': { py: 0, lineHeight: 1.5 },
+                  '& .MuiInputBase-input': {
+                    py: 0,
+                    lineHeight: 1.67,
+                    textIndent: !hidePresets ? `${presetsChipWidth + 8}px` : 0,
+                  },
                   '& textarea::placeholder': { color: 'hsl(var(--muted-foreground))', opacity: 0.7 },
                 }}
               />
