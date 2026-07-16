@@ -101,9 +101,10 @@ export const AgentPresets = ({ variant = 'default', onSelectPreset, selectedPres
 
   const trigger = (
     <Button
+      ref={chipRef}
       size="small"
       onClick={(e) => setAnchorEl(e.currentTarget)}
-      startIcon={selectedPreset ? (selectedPreset.icon ?? undefined) : <Plus size={14} />}
+      startIcon={selectedPreset ? (selectedPreset.icon ?? undefined) : <Plus size={variant === 'floating' ? 12 : 14} />}
       endIcon={
         selectedPreset ? (
           <Box
@@ -114,16 +115,16 @@ export const AgentPresets = ({ variant = 'default', onSelectPreset, selectedPres
             }}
             sx={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', ml: 0.25 }}
           >
-            <CloseIcon size={14} />
+            <CloseIcon size={variant === 'floating' ? 12 : 14} />
           </Box>
         ) : undefined
       }
       sx={{
         textTransform: 'none',
-        fontSize: '0.78rem',
+        fontSize: variant === 'floating' ? '0.72rem' : '0.78rem',
         fontWeight: 500,
-        height: variant === 'inline' ? 32 : 30,
-        px: variant === 'inline' ? 1.25 : 1.25,
+        height: variant === 'floating' ? 24 : variant === 'inline' ? 32 : 30,
+        px: variant === 'floating' ? 0.875 : 1.25,
         borderRadius: 999,
         color: selectedPreset ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
         border: '1px solid hsl(var(--border))',
