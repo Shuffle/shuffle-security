@@ -3541,10 +3541,10 @@ const AgentUI: React.FC<AgentUIProps> = ({
                         onClick={(e) => { if (canSchedule) setScheduleAnchor(e.currentTarget); }}
                         disabled={!canSchedule || agentRequestLoading}
                         sx={{
-                          height: 36,
-                          minWidth: 36,
+                          height: 32,
+                          minWidth: 32,
                           px: hintActive ? 1.25 : 0,
-                          width: hintActive ? 'auto' : 36,
+                          width: hintActive ? 'auto' : 32,
                           borderRadius: hintActive ? 999 : '50%',
                           gap: hintActive ? 0.75 : 0,
                           color: hintActive ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
