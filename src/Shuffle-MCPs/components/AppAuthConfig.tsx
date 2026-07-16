@@ -515,29 +515,51 @@ export const AppAuthCard = ({
   useEffect(() => {
     const fetchAppConfig = async () => {
       if (!isExpanded || appConfig) return;
-      
+
+      // Skip synthetic fallback ids (e.g. "name:shuffle_workflows") — these
+      // are placeholders for built-in tools that don't exist in the backend
+      // app catalog, so the request will always 401 with "App doesn't exist"
+      // and would spam the network tab as the drawer re-renders.
+      if (!app.objectID || app.objectID.startsWith('name:')) {
+        setLoading(false);
+        setError(null);
+        return;
+      }
+
       setLoading(true);
       setError(null);
-      
+
       try {
-        const response = await fetch(getApiUrl(`/api/v1/apps/${app.objectID}/config`), {
-          credentials: 'include',
-          headers: {
-            ...getAuthHeader(),
+        const response = await fetch(
+          getApiUrl(`/api/v1/apps/${encodeURIComponent(app.objectID)}/config`),
+          {
+            credentials: 'include',
+            headers: {
+              ...getAuthHeader(),
+            },
           },
-        });
-        
+        );
+
         if (!response.ok) {
-          throw new Error('Failed to fetch app configuration');
+          // Cache an empty config so the effect does not keep re-firing on
+          // every render while `appConfig` stays null. Users see a clear
+          // error message instead of an infinite skeleton + request loop.
+          setAppConfig({ authentication: undefined } as unknown as DecodedApp);
+          throw new Error(
+            response.status === 401 ? 'You are not authorized to load this app configuration.'
+            : response.status === 404 ? 'App configuration not found.'
+            : `Failed to fetch app configuration (HTTP ${response.status}).`,
+          );
         }
-        
+
         const data = await response.json();
-        
+
         if (data.success && data.app) {
           const decodedAppString = atob(data.app);
           const decodedApp = JSON.parse(decodedAppString) as DecodedApp;
           setAppConfig(decodedApp);
         } else {
+          setAppConfig({ authentication: undefined } as unknown as DecodedApp);
           throw new Error('Invalid response format');
         }
       } catch (err) {
@@ -546,7 +568,7 @@ export const AppAuthCard = ({
         setLoading(false);
       }
     };
-    
+
     fetchAppConfig();
   }, [isExpanded, app.objectID, appConfig]);
 
