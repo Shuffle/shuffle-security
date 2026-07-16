@@ -242,8 +242,22 @@ export default function AppDetailDrawer({
       let foundMatch = false;
 
       // Race: paint from whichever resolves first (config on fast path, algolia otherwise).
-      const configData = await configPromise;
+      const configResult = await configPromise;
       if (cancelled) return;
+      const configData = configResult?.ok ? configResult.data : null;
+      if (configResult && !configResult.ok) {
+        // Surface hard failures (401/403/404) so the drawer shows an error
+        // instead of silently sitting on "not found" while the negative cache
+        // blocks any further requests.
+        const status = configResult.status;
+        const message =
+          status === 401 ? 'You are not authorized to load this app configuration. Please sign in again.'
+          : status === 403 ? 'You do not have permission to view this app configuration.'
+          : status === 404 ? 'This app configuration was not found.'
+          : status === 0 ? 'Could not reach the Shuffle API. Check your connection and try again.'
+          : `Failed to load app configuration (HTTP ${status}).`;
+        setConfigError({ status, message });
+      }
       if (configData?.name) {
         foundMatch = true;
         setAppInfo(prev => ({
@@ -296,20 +310,24 @@ export default function AppDetailDrawer({
         }
       }
 
-      // Late config fetch only if fast path didn't run (no appId prop)
+      // Late config fetch only if fast path didn't run (no appId prop).
+      // Goes through the shared negative-caching helper, so a 401 here also
+      // stops any sibling component from re-hitting the same endpoint.
       if (API_CONFIG.apiKey && algoliaId && !configData) {
-        try {
-          const response = await fetch(
-            getApiUrl(`/api/v1/apps/${encodeURIComponent(algoliaId)}/config`),
-            { credentials: 'include', headers: { ...getAuthHeader() } }
-          );
-          if (response.ok) {
-            const data = await response.json();
-            if (!cancelled && data?.name) {
-              setAppInfo(prev => ({ ...prev, ...data, large_image: data.large_image || prev?.large_image || '' }));
-            }
-          }
-        } catch {}
+        const late = await fetchAppConfig(algoliaId);
+        if (cancelled) return;
+        if (late.ok && late.data?.name) {
+          setAppInfo(prev => ({ ...prev, ...late.data, large_image: late.data.large_image || prev?.large_image || '' }));
+        } else if (!late.ok && !configError) {
+          const status = late.status;
+          const message =
+            status === 401 ? 'You are not authorized to load this app configuration. Please sign in again.'
+            : status === 403 ? 'You do not have permission to view this app configuration.'
+            : status === 404 ? 'This app configuration was not found.'
+            : status === 0 ? 'Could not reach the Shuffle API. Check your connection and try again.'
+            : `Failed to load app configuration (HTTP ${status}).`;
+          setConfigError({ status, message });
+        }
       }
 
       if (cancelled) return;
