@@ -3820,14 +3820,17 @@ const AgentUI: React.FC<AgentUIProps> = ({
 
             {!hideAppPicker && (
             <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-              <Box sx={{
-                display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.5,
-                p: 0.5,
-                borderRadius: 999,
-                border: '1px solid hsl(var(--border))',
-                bgcolor: 'hsl(var(--card))',
-                maxWidth: '100%',
-              }}>
+              <Box
+                ref={chipBarRef}
+                sx={{
+                  display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.5,
+                  p: 0.5,
+                  borderRadius: chipBarMultiline ? '18px' : 999,
+                  border: '1px solid hsl(var(--border))',
+                  bgcolor: 'hsl(var(--card))',
+                  maxWidth: '100%',
+                }}
+              >
                 {!hideChooseLLM && (
                 <Tooltip title="Configure the local LLM used for this agent">
                   <Box
