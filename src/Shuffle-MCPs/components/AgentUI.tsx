@@ -1345,6 +1345,31 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // still prepended when no preset is selected.
   const { prompt: savedPromptPrefix } = useAgentPromptPrefix({ userId });
   const [selectedPreset, setSelectedPreset] = useState<AgentPreset | null>(null);
+  const presetsChipRef = useRef<HTMLButtonElement>(null);
+  const [presetsChipWidth, setPresetsChipWidth] = useState(0);
+
+  // Restore the last used preset from localStorage so the choice survives
+  // reloads, matching how assigned agent tools are remembered.
+  useEffect(() => {
+    try {
+      const lastId = localStorage.getItem(LAST_PRESET_STORAGE_KEY);
+      if (!lastId) return;
+      const list = presets && presets.length > 0 ? presets : AGENT_PRESETS;
+      const match = list.find((p) => p.id === lastId);
+      if (match) setSelectedPreset(match);
+    } catch {
+      /* ignore storage errors */
+    }
+  }, [presets]);
+
+  // Keep the input's first-line text-indent in sync with the actual chip width
+  // so wrapping text starts at the left edge below the chip.
+  useLayoutEffect(() => {
+    if (presetsChipRef.current) {
+      setPresetsChipWidth(presetsChipRef.current.getBoundingClientRect().width);
+    }
+  }, [selectedPreset, hidePresets, presets]);
+
   const activePromptPrefix = savedPromptPrefix;
   const composeSubmitInput = useCallback(
     (raw: string) => {
