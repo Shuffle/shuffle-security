@@ -583,6 +583,7 @@ const AGENT_NO_AUTH_APPS = new Set<string>([
   'shuffle_apps',
   'shuffle_detection',
   'shuffle_files',
+  'shuffles_app_management',
 ]);
 
 const normalizeAgentAppName = (name: string) => name.toLowerCase().replace(/[\s-]+/g, '_');
