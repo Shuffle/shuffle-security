@@ -3586,7 +3586,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 disabled={agentRequestLoading}
                 title={attachedImages.length > 0 ? `Add image (${attachedImages.length} attached)` : 'Attach image'}
                 sx={{
-                  width: 36, height: 36,
+                  width: 32, height: 32,
                   color: attachedImages.length > 0 ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
                   bgcolor: attachedImages.length > 0 ? 'hsla(var(--primary) / 0.1)' : 'transparent',
                   '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted))' },
