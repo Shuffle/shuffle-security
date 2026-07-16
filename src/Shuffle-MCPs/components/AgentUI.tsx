@@ -3450,14 +3450,27 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 </Box>
               )}
               <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, width: '100%' }}>
-              {!hidePromptPrefixChip && selectedPreset && (
+              {!hidePresets && (
                 <Box sx={{ alignSelf: 'flex-start', pt: '10px', flexShrink: 0 }}>
-                  <AgentPromptPrefixChip
-                    userId={userId}
-                    label={promptPrefixLabel ?? activePromptLabel}
-                    value={savedPromptPrefix}
-                    readOnly
-                    onRemove={() => setSelectedPreset(null)}
+                  <AgentPresets
+                    variant="inline"
+                    presets={presets}
+                    selectedPreset={selectedPreset}
+                    onRemoveSelected={() => setSelectedPreset(null)}
+                    onSelectPreset={(preset) => {
+                      if (onSelectPreset) {
+                        onSelectPreset(preset);
+                        return;
+                      }
+                      // The preset is only tracked locally so its ID can be sent
+                      // to the backend. Prompt seeding and tool pre-selection are
+                      // now handled server-side.
+                      setSelectedPreset(preset);
+                      setTimeout(() => {
+                        const el = inputRef.current as HTMLTextAreaElement | HTMLInputElement | null;
+                        try { el?.focus(); } catch { /* ignore */ }
+                      }, 0);
+                    }}
                   />
                 </Box>
               )}
