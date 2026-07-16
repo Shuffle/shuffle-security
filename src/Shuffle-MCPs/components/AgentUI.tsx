@@ -3587,7 +3587,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   py: 0,
                   '& .MuiInputBase-input': {
                     py: 0,
-                    lineHeight: 1.67,
+                    lineHeight: 1.45,
                     textIndent: !hidePresets ? `${presetsChipWidth + 8}px` : 0,
                   },
                   '& textarea::placeholder': { color: 'hsl(var(--muted-foreground))', opacity: 0.7, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
