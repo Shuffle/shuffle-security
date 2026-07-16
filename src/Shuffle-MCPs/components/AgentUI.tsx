@@ -3416,11 +3416,11 @@ const AgentUI: React.FC<AgentUIProps> = ({
               display: 'flex',
               flexDirection: 'column',
               gap: 0.5,
-              borderRadius: attachedImages.length > 0 ? 4 : '20px',
+              borderRadius: attachedImages.length > 0 ? 4 : '18px',
               border: '1.5px solid hsl(var(--border))',
               bgcolor: 'hsl(var(--card))',
-              px: 2.5,
-              py: 1,
+              px: 2.25,
+              py: 0.5,
               transition: 'border-color 0.15s ease, box-shadow 0.15s ease, border-radius 0.15s ease',
               '&:focus-within': {
                 borderColor: 'hsl(var(--primary))',
@@ -3448,9 +3448,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   ))}
                 </Box>
               )}
-              <Box sx={{ display: 'flex', alignItems: 'flex-end', gap: 1, width: '100%' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
               {!hidePresets && (
-                <Box sx={{ alignSelf: 'flex-start', pt: '8px', flexShrink: 0 }}>
+                <Box sx={{ flexShrink: 0 }}>
                   <AgentPresets
                     variant="inline"
                     presets={presets}
@@ -3503,6 +3503,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 sx={{
                   fontSize: '0.9rem',
                   color: 'hsl(var(--foreground))',
+                  py: 0,
+                  '& .MuiInputBase-input': { py: 0, lineHeight: 1.5 },
                   '& textarea::placeholder': { color: 'hsl(var(--muted-foreground))', opacity: 0.7 },
                 }}
               />
@@ -3539,10 +3541,10 @@ const AgentUI: React.FC<AgentUIProps> = ({
                         onClick={(e) => { if (canSchedule) setScheduleAnchor(e.currentTarget); }}
                         disabled={!canSchedule || agentRequestLoading}
                         sx={{
-                          height: 36,
-                          minWidth: 36,
+                          height: 32,
+                          minWidth: 32,
                           px: hintActive ? 1.25 : 0,
-                          width: hintActive ? 'auto' : 36,
+                          width: hintActive ? 'auto' : 32,
                           borderRadius: hintActive ? 999 : '50%',
                           gap: hintActive ? 0.75 : 0,
                           color: hintActive ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
@@ -3584,7 +3586,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 disabled={agentRequestLoading}
                 title={attachedImages.length > 0 ? `Add image (${attachedImages.length} attached)` : 'Attach image'}
                 sx={{
-                  width: 36, height: 36,
+                  width: 32, height: 32,
                   color: attachedImages.length > 0 ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
                   bgcolor: attachedImages.length > 0 ? 'hsla(var(--primary) / 0.1)' : 'transparent',
                   '&:hover': { color: 'hsl(var(--foreground))', bgcolor: 'hsl(var(--muted))' },
@@ -3603,7 +3605,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                           onClick={() => submitInput(composeSubmitInput(actionInput))}
                           disabled={actionInput.trim().length < 1 || agentRequestLoading}
                           sx={{
-                            width: 36, height: 36,
+                            width: 32, height: 32,
                             bgcolor: 'transparent',
                             border: '1px solid hsl(var(--border))',
                             color: 'hsl(var(--foreground))',
@@ -3620,7 +3622,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                         disabled={actionInput.trim().length < 1 || agentRequestLoading}
                         startIcon={agentRequestLoading ? <CircularProgress size={14} sx={{ color: 'inherit' }} /> : null}
                         sx={{
-                          height: 36,
+                          height: 32,
                           px: 2,
                           textTransform: 'none',
                           fontSize: '0.85rem',
@@ -3640,7 +3642,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       type="submit"
                       disabled={actionInput.trim().length < 1 || agentRequestLoading}
                       sx={{
-                        width: 36, height: 36,
+                        width: 32, height: 32,
                         bgcolor: actionInput.trim().length >= 1 ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
                         color: actionInput.trim().length >= 1 ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))',
                         '&:hover': actionInput.trim().length >= 1 ? { filter: 'brightness(1.1)', bgcolor: 'hsl(var(--primary))' } : {},
