@@ -171,6 +171,7 @@ export default function AppDetailDrawer({
   // Only fires when validity flips, so user manual toggles are preserved.
   const lastValidAuthRef = useRef<boolean | null>(null);
   const [incidentStats, setIncidentStats] = useState<{ ingested: number; forwarded: number } | null>(null);
+  const [appNotFound, setAppNotFound] = useState(false);
 
   const {
     authStates,
@@ -188,6 +189,7 @@ export default function AppDetailDrawer({
     setAppLoading(true);
     setAppInfo(null);
     setIsActivated(null);
+    setAppNotFound(false);
     // Seed from caller-provided id (e.g. AppSearchDrawer already has the Algolia hit)
     setResolvedAlgoliaId(appId || null);
     // Always refresh auth when opening a different app
@@ -200,6 +202,7 @@ export default function AppDetailDrawer({
       // Algolia lookup — also runs when caller passed an appId, so we still get
       // the image/description/categories that the caller didn't have.
       let algoliaId: string | null = appId || null;
+      let foundMatch = false;
       try {
         const { algoliasearch } = await import('algoliasearch');
         const client = algoliasearch('JNSS5CFDZZ', '33e4e3564f4f060e96e0531957bed552');
@@ -215,6 +218,7 @@ export default function AppDetailDrawer({
           (hits.length > 0 ? hits[0] : null);
 
         if (match) {
+          foundMatch = true;
           if (!algoliaId) {
             algoliaId = match.objectID;
             setResolvedAlgoliaId(algoliaId);
@@ -243,6 +247,7 @@ export default function AppDetailDrawer({
           (a.name || '').toLowerCase().replace(/[\s_\-]+/g, '_') === normalizedName
         );
         if (localMatch?.id) {
+          foundMatch = true;
           algoliaId = localMatch.id;
           setResolvedAlgoliaId(localMatch.id);
           setAppInfo(prev => prev ?? {
@@ -290,6 +295,7 @@ export default function AppDetailDrawer({
         categories: [],
       });
 
+      setAppNotFound(!foundMatch);
       setAppLoading(false);
     })();
   }, [open, appName, appId]);
@@ -517,9 +523,9 @@ export default function AppDetailDrawer({
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
             <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 700, fontSize: '1rem', lineHeight: 1.2, textTransform: 'capitalize' }}>
-              {isLoadingAll ? <Skeleton width={140} /> : displayName}
+              {appLoading ? <Skeleton width={140} /> : displayName}
             </Typography>
-            {!isLoadingAll && typeof appInfo?.actions?.length === 'number' && appInfo.actions.length > 0 && (
+            {!appLoading && typeof appInfo?.actions?.length === 'number' && appInfo.actions.length > 0 && (
               <Chip
                 size="small"
                 label={`${appInfo.actions.length} action${appInfo.actions.length === 1 ? '' : 's'}`}
@@ -536,7 +542,7 @@ export default function AppDetailDrawer({
             )}
           </Box>
           <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem' }}>
-            App configuration
+            {appLoading ? <Skeleton width={100} /> : (appNotFound ? 'App not found in catalog' : 'App configuration')}
           </Typography>
         </Box>
         <IconButton
