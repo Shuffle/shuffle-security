@@ -56,7 +56,7 @@ import AdminPage from '@/pages/dashboard/AdminPage';
 import OrganizationsPage from '@/pages/dashboard/OrganizationsPage';
 import SettingsPage from '@/pages/dashboard/SettingsPage';
 import OrgPreferencesPage from '@/pages/dashboard/OrgPreferencesPage';
-import AgentActivityPage from '@/pages/dashboard/AgentActivityPage';
+
 import { AgentsView } from '@/Shuffle-MCPs';
 import PermissionsPanel from '@/components/agent/PermissionsPanel';
 import InfrastructurePage from '@/pages/dashboard/InfrastructurePage';
@@ -278,7 +278,7 @@ const ThemedApp = () => {
               <Route path="/incidents/custom-fields" element={<CustomFieldsPage />} />
               <Route path="/monitors/response" element={<SupportOnly><ResponseActionsPage /></SupportOnly>} />
               <Route path="/incidents/response-actions" element={<Navigate to="/monitors/response" replace />} />
-              <Route path="/agent" element={<AgentActivityPage />} />
+              <Route path="/agent" element={<Navigate to="/agents" replace />} />
               <Route path="/agents" element={<AgentsRoute theme={resolvedTheme} />} />
               <Route path="/agents/:executionId" element={<AgentsRoute theme={resolvedTheme} />} />
 

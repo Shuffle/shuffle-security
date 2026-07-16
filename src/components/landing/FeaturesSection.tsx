@@ -679,7 +679,7 @@ const features: Omit<FeatureSectionProps, 'reverse'>[] = [
     ],
     color: '#FF6600',
     visual: <AIAgentVisual />,
-    link: '/agent',
+    link: '/agents',
     linkLabel: 'See the AI Agent',
   },
   {
