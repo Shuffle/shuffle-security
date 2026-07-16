@@ -466,6 +466,7 @@ export interface AgentUIProps {
     cron: string;
     input: string;
     apps?: Array<{ name: string; id?: string; icon?: string }>;
+    presetId?: string;
     onStep?: (event: { id: 'name' | 'workflow' | 'schedule'; state: 'active' | 'done' | 'error'; detail?: string }) => void;
   }) => void | Promise<void>;
   /**
@@ -1343,19 +1344,13 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // input. Prepended to the submitted text so it feels like the user is
   // "typing to" the Shuffle Tools MCP without the prefix filling the box.
   //
-  // Presets swap the chip's active label + prefix (they do NOT fill the
-  // visible input). When no preset is selected, the chip falls back to the
-  // user's saved default prefix.
+  // Presets only swap the chip's visible label; the actual prompt and tool
+  // selection are handled by the backend. The user's saved default prefix is
+  // still prepended when no preset is selected.
   const { prompt: savedPromptPrefix } = useAgentPromptPrefix({ userId });
   const [selectedPreset, setSelectedPreset] = useState<AgentPreset | null>(null);
-  // Local (in-memory) overrides for preset prompts. Editing the chip while a
-  // preset is active updates the preset's prompt without touching the user's
-  // saved default. Not persisted — presets ship with their own defaults.
-  const [presetPromptOverrides, setPresetPromptOverrides] = useState<Record<string, string>>({});
   const activePromptLabel = selectedPreset?.label ?? 'Shuffle Tools';
-  const activePromptPrefix = selectedPreset
-    ? (presetPromptOverrides[selectedPreset.id] ?? selectedPreset.defaultPrompt)
-    : savedPromptPrefix;
+  const activePromptPrefix = savedPromptPrefix;
   const composeSubmitInput = useCallback(
     (raw: string) => {
       const trimmedPrefix = (activePromptPrefix || '').trim();
@@ -2174,6 +2169,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
       // `app:<objectID>:<slug>,app:<objectID>:<slug>` so the backend resolves
       // the exact app versions instead of guessing by slug.
       ...(chosenApps.length > 0 ? { toolName: buildToolName(chosenApps) } : {}),
+      // Pass the selected preset so the backend can apply its prompt/tools.
+      ...(selectedPreset ? { presetId: selectedPreset.id } : {}),
       ...(attachedImages.length > 0 ? { images: attachedImages.map((img) => {
         const m = /^data:([^;]+);base64,(.*)$/.exec(img.dataUrl);
         return m ? { mimeType: m[1], data: m[2], name: img.name } : { mimeType: 'image/png', data: img.dataUrl, name: img.name };
@@ -3335,6 +3332,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                     cron,
                     input: actionInput || '',
                     apps: chosenApps.filter((a) => !!a?.name).map((a) => ({ name: a.name, id: a.id, icon: a.icon })),
+                    ...(selectedPreset ? { presetId: selectedPreset.id } : {}),
                     onStep: (ev) => {
                       setScheduleSteps((prev) => prev.map((p) => p.id === ev.id ? { ...p, state: ev.state, detail: ev.detail } : p));
                     },
@@ -3463,15 +3461,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   <AgentPromptPrefixChip
                     userId={userId}
                     label={promptPrefixLabel ?? activePromptLabel}
-                    value={selectedPreset ? activePromptPrefix : undefined}
-                    onChange={
-                      selectedPreset
-                        ? (next) => {
-                            const id = selectedPreset.id;
-                            setPresetPromptOverrides((prev) => ({ ...prev, [id]: next }));
-                          }
-                        : undefined
-                    }
+                    value={savedPromptPrefix}
+                    readOnly
                     onRemove={() => setSelectedPreset(null)}
                   />
                 </Box>
@@ -3529,12 +3520,10 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       onSelectPreset(preset);
                       return;
                     }
-                    // Chosen preset drives the chip label + hidden prefix.
-                    // The visible input is left alone so the user just keeps typing.
+                    // The preset is only tracked locally so its ID can be sent
+                    // to the backend. Prompt seeding and tool pre-selection are
+                    // now handled server-side.
                     setSelectedPreset(preset);
-                    if (preset.defaultApps?.length) {
-                      setChosenApps(preset.defaultApps);
-                    }
                     setTimeout(() => {
                       const el = inputRef.current as HTMLTextAreaElement | HTMLInputElement | null;
                       try { el?.focus(); } catch { /* ignore */ }

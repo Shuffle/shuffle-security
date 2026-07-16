@@ -42,6 +42,7 @@ export interface ScheduleAgentRunArgs {
   cron: string;
   input: string;
   apps?: Array<{ name: string; id?: string; icon?: string }>;
+  presetId?: string;
   onStep?: (event: ScheduleStepEvent) => void;
 }
 
@@ -54,7 +55,7 @@ const buildAppNameValue = (apps: Array<{ name: string }>): string => {
 };
 
 export const useScheduleAgentRun = () => {
-  return useCallback(async ({ cron, input, apps, onStep }: ScheduleAgentRunArgs) => {
+  return useCallback(async ({ cron, input, apps, presetId, onStep }: ScheduleAgentRunArgs) => {
     const step = (id: ScheduleStepId, state: ScheduleStepState, detail?: string) => {
       try { onStep?.({ id, state, detail }); } catch { /* ignore */ }
     };
@@ -178,6 +179,14 @@ export const useScheduleAgentRun = () => {
           multiline: true,
           description: 'The input data for the LLM query',
         },
+        ...(presetId
+          ? [{
+              name: 'preset_id',
+              value: presetId,
+              required: false,
+              description: 'Agent preset to apply on the backend.',
+            }]
+          : []),
       ],
       isStartNode: true,
       run_magic_output: false,

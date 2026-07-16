@@ -42,6 +42,8 @@ export interface AgentPromptPrefixChipProps {
   defaultPrompt?: string;
   /** Dialog title override. */
   dialogTitle?: string;
+  /** When true, the chip is not clickable and the edit dialog is suppressed. */
+  readOnly?: boolean;
 }
 
 export const AgentPromptPrefixChip = ({
@@ -52,6 +54,7 @@ export const AgentPromptPrefixChip = ({
   onRemove,
   defaultPrompt,
   dialogTitle,
+  readOnly,
 }: AgentPromptPrefixChipProps) => {
   const controlled = value !== undefined;
   const managed = useAgentPromptPrefix({ userId, defaultPrompt, persist: !controlled });
@@ -64,6 +67,7 @@ export const AgentPromptPrefixChip = ({
   useEffect(() => { if (!open) setDraft(prompt); }, [prompt, open]);
 
   const handleOpen = () => {
+    if (readOnly) return;
     setDraft(prompt);
     setOpen(true);
   };
@@ -84,7 +88,7 @@ export const AgentPromptPrefixChip = ({
 
   return (
     <>
-      <Tooltip title="Click to edit the default prompt sent with your message" placement="top" arrow>
+      <Tooltip title={readOnly ? `${label} — preset handled by the backend` : "Click to edit the default prompt sent with your message"} placement="top" arrow>
         <Box
           sx={{
             display: 'inline-flex',
@@ -96,20 +100,20 @@ export const AgentPromptPrefixChip = ({
             flexShrink: 0,
             userSelect: 'none',
             transition: 'background-color 0.15s ease',
-            '&:hover': { bgcolor: 'hsl(var(--muted))' },
+            '&:hover': readOnly ? undefined : { bgcolor: 'hsl(var(--muted))' },
           }}
         >
           <Box
             onClick={handleOpen}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleOpen(); } }}
+            role={readOnly ? undefined : 'button'}
+            tabIndex={readOnly ? undefined : 0}
+            onKeyDown={readOnly ? undefined : (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleOpen(); } }}
             sx={{
               display: 'inline-flex',
               alignItems: 'baseline',
-              cursor: 'pointer',
+              cursor: readOnly ? 'default' : 'pointer',
             }}
-            aria-label={`Edit default prompt for ${label}`}
+            aria-label={readOnly ? `${label} preset selected` : `Edit default prompt for ${label}`}
           >
             <Typography
               component="span"

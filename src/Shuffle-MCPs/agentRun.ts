@@ -39,6 +39,11 @@ export interface AgentRunRequest {
   /** @deprecated Use `images`. Single base64 data URL kept for back-compat. */
   image?: string;
   /**
+   * Optional: identifier of a selected agent preset. The backend applies the
+   * preset's prompt and tool selection instead of the frontend doing it locally.
+   */
+  presetId?: string;
+  /**
    * If true, return the initial response immediately without polling for the
    * final execution result. The caller is then responsible for polling
    * `/api/v1/streams/results` itself (e.g. AgentUI's live timeline).
@@ -285,6 +290,11 @@ export const runAgent = async (request: AgentRunRequest): Promise<AgentRunRespon
   }
   if (request.toolIds && request.toolIds.length > 0) {
     params.tool_ids = request.toolIds;
+  }
+
+  // Pass selected preset to the backend so it can apply the prompt and tools.
+  if (request.presetId) {
+    params.preset_id = request.presetId;
   }
 
   const payload = {
