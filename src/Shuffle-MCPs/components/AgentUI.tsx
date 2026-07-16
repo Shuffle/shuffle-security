@@ -3903,11 +3903,11 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   return (
                   <Tooltip
                     key={`${app.name}-${i}`}
-                    title={needsAuth ? `${(app.name || '').replace(/_/g, ' ')} is not authenticated yet — click to set it up` : ''}
+                    title={needsAuth ? `${(app.name || '').replace(/_/g, ' ')} is not authenticated yet — click to set it up` : `Open ${(app.name || '').replace(/_/g, ' ')}`}
                     arrow
                   >
                   <Box
-                    onClick={needsAuth && !agentRequestLoading ? () => setAuthDrawerApp({ name: app.name, id: app.id || null }) : undefined}
+                    onClick={!agentRequestLoading ? () => setAuthDrawerApp({ name: app.name, id: app.id || null }) : undefined}
                     sx={{
                       display: 'inline-flex', alignItems: 'center', gap: 0.5,
                       pl: 0.5, pr: 0.75, py: 0.25,
@@ -3916,9 +3916,9 @@ const AgentUI: React.FC<AgentUIProps> = ({
                       border: needsAuth ? '1px solid hsl(var(--severity-medium) / 0.55)' : '1px solid transparent',
                       fontSize: '0.8rem',
                       color: 'hsl(var(--foreground))',
-                      cursor: needsAuth && !agentRequestLoading ? 'pointer' : 'default',
+                      cursor: !agentRequestLoading ? 'pointer' : 'default',
                       transition: 'background-color 0.12s ease',
-                      '&:hover': needsAuth && !agentRequestLoading ? { bgcolor: 'hsl(var(--severity-medium) / 0.18)' } : {},
+                      '&:hover': !agentRequestLoading ? { bgcolor: needsAuth ? 'hsl(var(--severity-medium) / 0.18)' : 'hsl(var(--muted) / 0.9)' } : {},
                     }}
                   >
                     <Avatar
