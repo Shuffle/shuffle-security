@@ -2,6 +2,10 @@ import { useState, useCallback, useEffect } from 'react';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import type { AppAuthState, AuthStatus, ApiAuthEntry } from '@/Shuffle-MCPs/components/AppAuthConfig';
 import { refreshAllIntegrationStatus } from '@/Shuffle-MCPs/components/IntegrationStatus';
+import {
+  fetchAuthenticatedApps as fetchSharedAuthenticatedApps,
+  invalidateAuthenticatedAppsCache,
+} from '@/Shuffle-MCPs/authenticatedApps';
 
 // Helper to process auth data and invalidate entries older than 30 days
 const processAuthData = (authData: ApiAuthEntry[]): ApiAuthEntry[] => {
@@ -66,17 +70,8 @@ export function useAppAuth() {
   const fetchAuthenticatedApps = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(getApiUrl('/api/v1/apps/authentication'), {
-        credentials: 'include',
-        headers: { ...getAuthHeader() },
-      });
-      if (response.ok) {
-        const result = await response.json();
-        const authData = result.data || result;
-        if (Array.isArray(authData)) {
-          setAuthenticatedApps(processAuthData(authData));
-        }
-      }
+      const authData = await fetchSharedAuthenticatedApps();
+      setAuthenticatedApps(processAuthData(authData as ApiAuthEntry[]));
     } catch (error) {
       console.error('Failed to fetch auth data:', error);
     } finally {
@@ -270,6 +265,7 @@ export function useAppAuth() {
       });
 
       if (response.ok) {
+        invalidateAuthenticatedAppsCache();
         await fetchAuthenticatedApps();
         refreshAllIntegrationStatus();
         return true;
