@@ -278,7 +278,7 @@ const ThemedApp = () => {
               <Route path="/incidents/custom-fields" element={<CustomFieldsPage />} />
               <Route path="/monitors/response" element={<SupportOnly><ResponseActionsPage /></SupportOnly>} />
               <Route path="/incidents/response-actions" element={<Navigate to="/monitors/response" replace />} />
-              <Route path="/agent" element={<AgentActivityPage />} />
+              <Route path="/agent" element={<Navigate to="/agents" replace />} />
               <Route path="/agents" element={<AgentsRoute theme={resolvedTheme} />} />
               <Route path="/agents/:executionId" element={<AgentsRoute theme={resolvedTheme} />} />
 
