@@ -523,9 +523,9 @@ export default function AppDetailDrawer({
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
             <Typography sx={{ color: 'hsl(var(--foreground))', fontWeight: 700, fontSize: '1rem', lineHeight: 1.2, textTransform: 'capitalize' }}>
-              {isLoadingAll ? <Skeleton width={140} /> : displayName}
+              {appLoading ? <Skeleton width={140} /> : displayName}
             </Typography>
-            {!isLoadingAll && typeof appInfo?.actions?.length === 'number' && appInfo.actions.length > 0 && (
+            {!appLoading && typeof appInfo?.actions?.length === 'number' && appInfo.actions.length > 0 && (
               <Chip
                 size="small"
                 label={`${appInfo.actions.length} action${appInfo.actions.length === 1 ? '' : 's'}`}
@@ -542,7 +542,7 @@ export default function AppDetailDrawer({
             )}
           </Box>
           <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.75rem' }}>
-            App configuration
+            {appLoading ? <Skeleton width={100} /> : (appNotFound ? 'App not found in catalog' : 'App configuration')}
           </Typography>
         </Box>
         <IconButton
