@@ -97,7 +97,7 @@ export const AgentPresets = ({ variant = 'default', onSelectPreset, selectedPres
   const MAX_LABEL_CHARS = 18;
   const displayLabel = selectedPreset
     ? (selectedPreset.label.length > MAX_LABEL_CHARS ? `${selectedPreset.label.slice(0, MAX_LABEL_CHARS - 1).trimEnd()}…` : selectedPreset.label)
-    : 'Presets';
+    : 'Templates';
 
   const trigger = (
     <Button
