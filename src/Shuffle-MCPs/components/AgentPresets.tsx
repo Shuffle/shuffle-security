@@ -76,7 +76,7 @@ export const AGENT_PRESETS: AgentPreset[] = [
 
 export interface AgentPresetsProps {
   /** Inline variant sits inside the prompt input row alongside action buttons. */
-  variant?: 'default' | 'inline';
+  variant?: 'default' | 'inline' | 'floating';
   /** Called when the user picks a preset — receives the preset's default prompt seed. */
   onSelectPreset?: (preset: AgentPreset) => void;
   /** Optional currently selected preset — turns the trigger into a chip showing the preset label. */
@@ -85,9 +85,11 @@ export interface AgentPresetsProps {
   onRemoveSelected?: () => void;
   /** Override the built-in preset list. */
   presets?: AgentPreset[];
+  /** Ref forwarded to the trigger button so the host can measure its width. */
+  chipRef?: React.Ref<HTMLButtonElement>;
 }
 
-export const AgentPresets = ({ variant = 'default', onSelectPreset, selectedPreset, onRemoveSelected, presets }: AgentPresetsProps) => {
+export const AgentPresets = ({ variant = 'default', onSelectPreset, selectedPreset, onRemoveSelected, presets, chipRef }: AgentPresetsProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const list = presets && presets.length > 0 ? presets : AGENT_PRESETS;
@@ -99,9 +101,10 @@ export const AgentPresets = ({ variant = 'default', onSelectPreset, selectedPres
 
   const trigger = (
     <Button
+      ref={chipRef}
       size="small"
       onClick={(e) => setAnchorEl(e.currentTarget)}
-      startIcon={selectedPreset ? (selectedPreset.icon ?? undefined) : <Plus size={14} />}
+      startIcon={selectedPreset ? (selectedPreset.icon ?? undefined) : <Plus size={variant === 'floating' ? 12 : 14} />}
       endIcon={
         selectedPreset ? (
           <Box
@@ -112,16 +115,16 @@ export const AgentPresets = ({ variant = 'default', onSelectPreset, selectedPres
             }}
             sx={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', ml: 0.25 }}
           >
-            <CloseIcon size={14} />
+            <CloseIcon size={variant === 'floating' ? 12 : 14} />
           </Box>
         ) : undefined
       }
       sx={{
         textTransform: 'none',
-        fontSize: '0.78rem',
+        fontSize: variant === 'floating' ? '0.72rem' : '0.78rem',
         fontWeight: 500,
-        height: variant === 'inline' ? 32 : 30,
-        px: variant === 'inline' ? 1.25 : 1.25,
+        height: variant === 'floating' ? 24 : variant === 'inline' ? 32 : 30,
+        px: variant === 'floating' ? 0.875 : 1.25,
         borderRadius: 999,
         color: selectedPreset ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
         border: '1px solid hsl(var(--border))',

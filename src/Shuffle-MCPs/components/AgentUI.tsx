@@ -18,7 +18,7 @@
  * {@link toast} facade for notifications.
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   Plus as AddIcon,
   Paperclip as AttachFileIcon,
@@ -72,7 +72,7 @@ import {
 } from './agentPromptSuggestions';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
-import AgentPresets, { type AgentPreset } from '@/Shuffle-MCPs/components/AgentPresets';
+import AgentPresets, { AGENT_PRESETS, type AgentPreset } from '@/Shuffle-MCPs/components/AgentPresets';
 
 import { useAgentPromptPrefix } from '@/Shuffle-MCPs/useAgentPromptPrefix';
 
@@ -97,6 +97,8 @@ const normalizeMarkdown = (raw: unknown): string => {
 import JsonView from 'react18-json-view';
 import 'react18-json-view/src/style.css';
 import 'react18-json-view/src/dark.css';
+
+const LAST_PRESET_STORAGE_KEY = 'agent_last_preset_id';
 
 /** Recursively parse JSON-looking strings into objects/arrays so JsonView can collapse them. */
 const deepParseJsonStrings = (obj: any, depth = 0): any => {
@@ -1343,6 +1345,31 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // still prepended when no preset is selected.
   const { prompt: savedPromptPrefix } = useAgentPromptPrefix({ userId });
   const [selectedPreset, setSelectedPreset] = useState<AgentPreset | null>(null);
+  const presetsChipRef = useRef<HTMLButtonElement>(null);
+  const [presetsChipWidth, setPresetsChipWidth] = useState(0);
+
+  // Restore the last used preset from localStorage so the choice survives
+  // reloads, matching how assigned agent tools are remembered.
+  useEffect(() => {
+    try {
+      const lastId = localStorage.getItem(LAST_PRESET_STORAGE_KEY);
+      if (!lastId) return;
+      const list = presets && presets.length > 0 ? presets : AGENT_PRESETS;
+      const match = list.find((p) => p.id === lastId);
+      if (match) setSelectedPreset(match);
+    } catch {
+      /* ignore storage errors */
+    }
+  }, [presets]);
+
+  // Keep the input's first-line text-indent in sync with the actual chip width
+  // so wrapping text starts at the left edge below the chip.
+  useLayoutEffect(() => {
+    if (presetsChipRef.current) {
+      setPresetsChipWidth(presetsChipRef.current.getBoundingClientRect().width);
+    }
+  }, [selectedPreset, hidePresets, presets]);
+
   const activePromptPrefix = savedPromptPrefix;
   const composeSubmitInput = useCallback(
     (raw: string) => {
@@ -3421,6 +3448,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
               bgcolor: 'hsl(var(--card))',
               px: 2.25,
               py: 1.25,
+              position: 'relative',
               transition: 'border-color 0.15s ease, box-shadow 0.15s ease, border-radius 0.15s ease',
               '&:focus-within': {
                 borderColor: 'hsl(var(--primary))',
@@ -3448,15 +3476,19 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   ))}
                 </Box>
               )}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
               {!hidePresets && (
-                <Box sx={{ flexShrink: 0 }}>
+                <Box sx={{ position: 'absolute', left: 2.25, top: 1.25, zIndex: 1 }}>
                   <AgentPresets
-                    variant="inline"
+                    variant="floating"
+                    chipRef={presetsChipRef}
                     presets={presets}
                     selectedPreset={selectedPreset}
-                    onRemoveSelected={() => setSelectedPreset(null)}
+                    onRemoveSelected={() => {
+                      try { localStorage.removeItem(LAST_PRESET_STORAGE_KEY); } catch { /* ignore */ }
+                      setSelectedPreset(null);
+                    }}
                     onSelectPreset={(preset) => {
+                      try { localStorage.setItem(LAST_PRESET_STORAGE_KEY, preset.id); } catch { /* ignore */ }
                       if (onSelectPreset) {
                         onSelectPreset(preset);
                         return;
@@ -3473,6 +3505,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   />
                 </Box>
               )}
+              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, width: '100%', position: 'relative' }}>
               <InputBase
                 inputRef={inputRef}
                 autoFocus
@@ -3504,7 +3537,11 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   fontSize: '0.9rem',
                   color: 'hsl(var(--foreground))',
                   py: 0,
-                  '& .MuiInputBase-input': { py: 0, lineHeight: 1.5 },
+                  '& .MuiInputBase-input': {
+                    py: 0,
+                    lineHeight: 1.67,
+                    textIndent: !hidePresets ? `${presetsChipWidth + 8}px` : 0,
+                  },
                   '& textarea::placeholder': { color: 'hsl(var(--muted-foreground))', opacity: 0.7 },
                 }}
               />
