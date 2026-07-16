@@ -145,6 +145,10 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchClient = useRef<SearchClient | null>(null);
   const activeQueryRef = useRef<string>('');
+  // Snapshot the selection at mount so the result list order stays static
+  // while the user toggles tools in the drawer. Only the initial selection
+  // is used to float already-chosen apps to the top.
+  const initialSelectedAppsRef = useRef<AlgoliaSearchApp[]>(selectedApps);
 
   // Fetch authenticated apps when apiKey is provided
   const fetchAuthenticatedApps = useCallback(async () => {
