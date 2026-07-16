@@ -69,6 +69,7 @@ import Markdown from 'react-markdown';
 import {
   DEFAULT_AGENT_PROMPT_PLACEHOLDER,
   getRandomAgentPromptPlaceholder,
+  getRandomAgentPromptPlaceholderForWidth,
   matchAgentPromptSuggestions,
 } from './agentPromptSuggestions';
 import remarkGfm from 'remark-gfm';
@@ -1348,6 +1349,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const [selectedPreset, setSelectedPreset] = useState<AgentPreset | null>(null);
   const presetsChipRef = useRef<HTMLButtonElement>(null);
   const [presetsChipWidth, setPresetsChipWidth] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Restore the last used preset from localStorage so the choice survives
   // reloads, matching how assigned agent tools are remembered.
@@ -1374,11 +1376,31 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // Pick ONE random autocomplete suggestion on mount and keep it stable, so
   // the placeholder does not rotate every render. If the caller supplied an
   // explicit placeholder, use that verbatim (no typewriter).
-  const fullPlaceholder = useMemo(
-    () => placeholder ?? getRandomAgentPromptPlaceholder(),
-    [placeholder],
-  );
   const shouldTypewrite = placeholder === undefined;
+  const [fullPlaceholder, setFullPlaceholder] = useState<string>(
+    () => placeholder ?? getRandomAgentPromptPlaceholder(),
+  );
+  // Once the textarea has mounted, measure the actual available width for a
+  // one-line placeholder (accounting for the Presets chip's text-indent) and
+  // pick a suggestion that fully fits — no arbitrary character cutoff.
+  useLayoutEffect(() => {
+    if (!shouldTypewrite) return;
+    const el = inputRef.current as HTMLTextAreaElement | HTMLInputElement | null;
+    if (!el) return;
+    const cs = window.getComputedStyle(el);
+    const font = cs.font && cs.font.trim().length > 0
+      ? cs.font
+      : `${cs.fontStyle} ${cs.fontVariant} ${cs.fontWeight} ${cs.fontSize} / ${cs.lineHeight} ${cs.fontFamily}`;
+    const contentWidth = el.clientWidth
+      - parseFloat(cs.paddingLeft || '0')
+      - parseFloat(cs.paddingRight || '0')
+      - parseFloat(cs.textIndent || '0');
+    const picked = getRandomAgentPromptPlaceholderForWidth(Math.max(0, contentWidth - 4), font);
+    setFullPlaceholder(picked);
+    // Re-run when the chip width changes (affects text-indent, and therefore
+    // the available room for the placeholder on line 1).
+  }, [shouldTypewrite, presetsChipWidth, hidePresets]);
+
   const [typedPlaceholder, setTypedPlaceholder] = useState(
     shouldTypewrite ? '' : fullPlaceholder,
   );
@@ -1524,7 +1546,6 @@ const AgentUI: React.FC<AgentUIProps> = ({
   // execution_id, so the "Agent is working… Xs" counter starts ticking
   // immediately — even before the backend echoes `started_at` back to us.
   const [localRunStart, setLocalRunStart] = useState<number | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Tracks the execution_id we currently want to display. Used to discard
   // stale poll responses from a previous run after the user has started a
@@ -3504,7 +3525,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 </Box>
               )}
               {!hidePresets && (
-                <Box sx={{ position: 'absolute', left: 2.25, top: 0.85, zIndex: 1 }}>
+                <Box sx={{ position: 'absolute', left: 2.25, top: 0, height: '38px', display: 'flex', alignItems: 'center', zIndex: 1 }}>
                   <AgentPresets
                     variant="floating"
                     chipRef={presetsChipRef}
