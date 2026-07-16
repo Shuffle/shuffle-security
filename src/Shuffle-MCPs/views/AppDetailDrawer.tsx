@@ -171,6 +171,7 @@ export default function AppDetailDrawer({
   // Only fires when validity flips, so user manual toggles are preserved.
   const lastValidAuthRef = useRef<boolean | null>(null);
   const [incidentStats, setIncidentStats] = useState<{ ingested: number; forwarded: number } | null>(null);
+  const [appNotFound, setAppNotFound] = useState(false);
 
   const {
     authStates,
