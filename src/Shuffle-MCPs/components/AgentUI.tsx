@@ -1276,7 +1276,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
   autoLoadApps = true,
   title = 'What do you want to do?',
   subtitle,
-  placeholder = getRandomAgentPromptPlaceholder(),
+  placeholder,
   defaultInput = '',
   autoSubmit = false,
   hideHeroIcon = false,
@@ -1370,6 +1370,32 @@ const AgentUI: React.FC<AgentUIProps> = ({
       setPresetsChipWidth(presetsChipRef.current.getBoundingClientRect().width);
     }
   }, [selectedPreset, hidePresets, presets]);
+
+  // Pick ONE random autocomplete suggestion on mount and keep it stable, so
+  // the placeholder does not rotate every render. If the caller supplied an
+  // explicit placeholder, use that verbatim (no typewriter).
+  const fullPlaceholder = useMemo(
+    () => placeholder ?? getRandomAgentPromptPlaceholder(),
+    [placeholder],
+  );
+  const shouldTypewrite = placeholder === undefined;
+  const [typedPlaceholder, setTypedPlaceholder] = useState(
+    shouldTypewrite ? '' : fullPlaceholder,
+  );
+  useEffect(() => {
+    if (!shouldTypewrite) {
+      setTypedPlaceholder(fullPlaceholder);
+      return;
+    }
+    setTypedPlaceholder('');
+    let i = 0;
+    const id = window.setInterval(() => {
+      i += 1;
+      setTypedPlaceholder(fullPlaceholder.slice(0, i));
+      if (i >= fullPlaceholder.length) window.clearInterval(id);
+    }, 22);
+    return () => window.clearInterval(id);
+  }, [fullPlaceholder, shouldTypewrite]);
 
   const activePromptPrefix = savedPromptPrefix;
   const composeSubmitInput = useCallback(
@@ -3448,7 +3474,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
               border: '1.5px solid hsl(var(--border))',
               bgcolor: 'hsl(var(--card))',
               px: 2.25,
-              py: 1.25,
+              py: 0.85,
               position: 'relative',
               transition: 'border-color 0.15s ease, box-shadow 0.15s ease, border-radius 0.15s ease',
               '&:focus-within': {
@@ -3478,7 +3504,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 </Box>
               )}
               {!hidePresets && (
-                <Box sx={{ position: 'absolute', left: 2.25, top: 1.25, zIndex: 1 }}>
+                <Box sx={{ position: 'absolute', left: 2.25, top: 0.85, zIndex: 1 }}>
                   <AgentPresets
                     variant="floating"
                     chipRef={presetsChipRef}
@@ -3516,7 +3542,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 fullWidth
                 value={actionInput}
                 onChange={(e) => setActionInput(e.target.value)}
-                placeholder={placeholder}
+                placeholder={typedPlaceholder}
                 onKeyDown={onKeyDown}
                 onPaste={(e) => {
                   const items = e.clipboardData?.items;
