@@ -3586,7 +3586,8 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   color: 'hsl(var(--foreground))',
                   py: 0,
                   '& .MuiInputBase-input': {
-                    py: 0,
+                    pt: '5px',
+                    pb: 0,
                     lineHeight: 1.45,
                     textIndent: !hidePresets ? `${presetsChipWidth + 8}px` : 0,
                   },
