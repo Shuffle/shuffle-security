@@ -295,6 +295,7 @@ export default function AppDetailDrawer({
         categories: [],
       });
 
+      setAppNotFound(!foundMatch);
       setAppLoading(false);
     })();
   }, [open, appName, appId]);
