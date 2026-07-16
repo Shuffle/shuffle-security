@@ -47,6 +47,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { ShuffleHostProps } from '@/Shuffle-MCPs/host-props';
 import { fetchAppConfig as fetchSharedAppConfig } from '@/Shuffle-MCPs/appConfigFetch';
+import { invalidateAuthenticatedAppsCache } from '@/Shuffle-MCPs/authenticatedApps';
 
 export type AuthStatus = 'pending' | 'testing' | 'connected' | 'error';
 
@@ -303,6 +304,7 @@ export const AppAuthCard = ({
           setSelectedAuthId(ADD_NEW_AUTH);
           setUserHasSelected(false);
         }
+        invalidateAuthenticatedAppsCache();
         if (onRefreshAuth) await onRefreshAuth();
       }
     } catch (err) {
@@ -657,6 +659,7 @@ export const AppAuthCard = ({
 
       if (response.ok) {
         setEditingLabel(false);
+        invalidateAuthenticatedAppsCache();
         if (onRefreshAuth) await onRefreshAuth();
         toast({ title: 'Label updated', description: `Renamed to "${editLabelValue.trim()}"` });
       } else {
@@ -2103,6 +2106,7 @@ export const AppAuthCard = ({
                                   console.error('[AppAuthCard] Failed to delete stale auth on Save anyway:', err);
                                 }
                               }));
+                              invalidateAuthenticatedAppsCache();
                               if (onRefreshAuth) await onRefreshAuth();
                               if (onSelectAuth) onSelectAuth(app.objectID, acceptId);
                               // Tell anyone listening (AgentUI's "Choose LLM"
