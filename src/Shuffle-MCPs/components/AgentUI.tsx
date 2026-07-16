@@ -3825,7 +3825,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 sx={{
                   display: 'inline-flex', flexWrap: 'wrap', alignItems: 'center', gap: 0.5,
                   p: 0.5,
-                  borderRadius: chipBarMultiline ? '18px' : 999,
+                  borderRadius: chipBarMultiline ? '12px' : 999,
                   border: '1px solid hsl(var(--border))',
                   bgcolor: 'hsl(var(--card))',
                   maxWidth: '100%',
