@@ -201,10 +201,50 @@ export const matchAgentPromptSuggestions = (
 /** The default continuous-task placeholder for the AgentUI prompt. */
 export const DEFAULT_AGENT_PROMPT_PLACEHOLDER = 'What do you want to do?';
 
-/** Pick a random autocomplete suggestion and clamp it to one input line. */
+/** Pick a random autocomplete suggestion (fallback ~50 chars, no width awareness). */
 export const getRandomAgentPromptPlaceholder = (): string => {
   const suggestion = AGENT_PROMPT_SUGGESTIONS[Math.floor(Math.random() * AGENT_PROMPT_SUGGESTIONS.length)];
   const MAX_CHARS = 50;
   if (suggestion.length <= MAX_CHARS) return suggestion;
   return `${suggestion.slice(0, MAX_CHARS - 1).trimEnd()}…`;
+};
+
+/**
+ * Pick a random suggestion that fully fits on one line of `availableWidthPx`
+ * for the given CSS font. Tries suggestions in random order and returns the
+ * first one whose measured width fits; falls back to a truncated one with
+ * ellipsis when nothing fits. Runs in the browser only (uses <canvas>).
+ */
+export const getRandomAgentPromptPlaceholderForWidth = (
+  availableWidthPx: number,
+  font: string,
+): string => {
+  if (typeof document === 'undefined' || !availableWidthPx || availableWidthPx <= 0) {
+    return getRandomAgentPromptPlaceholder();
+  }
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return getRandomAgentPromptPlaceholder();
+  ctx.font = font;
+  const measure = (t: string) => ctx.measureText(t).width;
+
+  // Shuffle a copy so we do not always return the same short entries.
+  const order = AGENT_PROMPT_SUGGESTIONS.map((s, i) => ({ s, i, r: Math.random() }))
+    .sort((a, b) => a.r - b.r)
+    .map((x) => x.s);
+
+  for (const s of order) {
+    if (measure(s) <= availableWidthPx) return s;
+  }
+  // Nothing fits — take a random one and truncate to fit with an ellipsis.
+  const pick = order[0];
+  let lo = 1;
+  let hi = pick.length;
+  while (lo < hi) {
+    const mid = Math.floor((lo + hi + 1) / 2);
+    const candidate = `${pick.slice(0, mid).trimEnd()}…`;
+    if (measure(candidate) <= availableWidthPx) lo = mid;
+    else hi = mid - 1;
+  }
+  return `${pick.slice(0, lo).trimEnd()}…`;
 };
