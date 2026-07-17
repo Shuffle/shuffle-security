@@ -2120,6 +2120,7 @@ const InfrastructureContent = () => {
   usePageMeta({ title: 'Infrastructure', description: 'Security tool integrations and data flow visualization' });
   const reactFlowInstance = useReactFlow();
   const { userInfo } = useAuth();
+  const { resolvedTheme } = useTheme();
   const { driftMap, hasDrift, apiLoaded, isLoading: usecasesLoading } = useUsecases();
   const isSupport = userInfo?.support === true;
   const [selectedId, setSelectedId] = useState<string | null>(null);
