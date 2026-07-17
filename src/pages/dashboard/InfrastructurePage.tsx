@@ -47,6 +47,8 @@ import {
   type Usecase,
 } from '@/config/usecases';
 import { useAuth } from '@/context/AuthContext';
+import { useTheme } from '@/context/ThemeContext';
+import { UsecaseDrawer } from '@/Shuffle-Core';
 import { useUsecases, type UsecaseDrift } from '@/hooks/useUsecases';
 
 // Re-export for any external consumers
