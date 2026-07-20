@@ -199,7 +199,10 @@ interface OutlookMessage {
   body?: { contentType?: string; content?: string };
   conversationId?: string;
   internetMessageId?: string;
+  isDraft?: boolean;
+  parentFolderId?: string;
 }
+
 
 const isOutlookPayload = (raw: any): boolean => {
   if (!raw || typeof raw !== 'object') return false;
