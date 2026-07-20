@@ -4553,7 +4553,8 @@ const IncidentDetailPage = () => {
         {([
           { key: 'revisions' as const, label: 'Changes', count: revisions.length },
           { key: 'agent' as const, label: 'Agent', count: agentRuns.length },
-          { key: 'manual' as const, label: 'Comments', count: activity.length },
+          { key: 'manual' as const, label: 'Comments', count: commentActivity.length },
+          { key: 'merges' as const, label: 'Threading', count: mergeActivity.length },
           { key: 'tasks' as const, label: 'Tasks', count: visibleTasks.length },
           { key: 'observables' as const, label: 'Observables', count: visibleObservablesCount },
           { key: 'correlations' as const, label: 'Correlations', count: visibleCorrelations.length },
