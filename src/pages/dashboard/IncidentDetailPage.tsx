@@ -8913,8 +8913,27 @@ const IncidentDetailPage = () => {
               />
             )}
             {/* Show / hide ignored observables — per-org list of indicators
-                the user has marked as uninteresting. Hidden by default. */}
-            {ignoredObs.ignoredKeys.size > 0 && (
+                the user has marked as uninteresting. Count reflects only the
+                ignored entries actually present in THIS incident, not the
+                full org-wide ignore list. */}
+            {(() => {
+              const seen = new Set<string>();
+              for (const o of editedObservables) {
+                if ((o as any).archived) continue;
+                if (ignoredObs.isIgnored(o.type, o.value)) {
+                  seen.add(`${(o.type || '').toLowerCase()}::${(o.value || '').toLowerCase()}`);
+                }
+              }
+              for (const e of enrichments) {
+                const t = e.type || 'unknown';
+                const v = (e as any).value || (e as any).data || '';
+                if (ignoredObs.isIgnored(t, v)) {
+                  seen.add(`${t.toLowerCase()}::${String(v).toLowerCase()}`);
+                }
+              }
+              const relevantCount = seen.size;
+              if (relevantCount === 0) return null;
+              return (
               <Tooltip
                 title={showIgnoredObs
                   ? 'Hide observables you have marked as ignored'
@@ -8926,8 +8945,8 @@ const IncidentDetailPage = () => {
                     ? <VisibilityIcon size={12} />
                     : <VisibilityOffIcon size={12} />}
                   label={showIgnoredObs
-                    ? `Hide ignored (${ignoredObs.ignoredKeys.size})`
-                    : `Show ignored (${ignoredObs.ignoredKeys.size})`}
+                    ? `Hide ignored (${relevantCount})`
+                    : `Show ignored (${relevantCount})`}
                   size="small"
                   onClick={() => setShowIgnoredObs(s => !s)}
                   sx={{
@@ -8943,7 +8962,8 @@ const IncidentDetailPage = () => {
                   }}
                 />
               </Tooltip>
-            )}
+              );
+            })()}
           </Box>
 
           {/* Unified observables list (manual + enrichments) */}
