@@ -49,10 +49,48 @@ const ROOT_ALIASES: Record<string, string[]> = {
 const looksLikeTranslationExpr = (s: string): boolean => {
   if (!s || typeof s !== 'string') return false;
   const t = s.trim();
-  if (t.length < 3 || t.length > 512) return false;
+  if (t.length < 3) return false;
   if (t[0] !== '$') return false;
   // Must contain a path operator to avoid matching accidental "$foo" text.
   return /[.\[]/.test(t);
+};
+
+/**
+ * Detect the "hybrid" failure mode where the translator serialised the
+ * resolved prefix (a JSON array of header dicts) and appended the raw,
+ * unevaluated filter suffix, e.g.:
+ *   `[{"name":"Subject","value":"X"},...][?(@.name==Subject)].value`
+ * Returns the parsed array + filter parameters when the shape matches.
+ */
+const parseHybridHeaderFailure = (
+  s: string,
+): { array: Json[]; headerName: string; pickKey: string } | null => {
+  if (typeof s !== 'string') return null;
+  const trimmed = s.trim();
+  if (!trimmed.startsWith('[')) return null;
+  // Filter suffix: [?(@.name==Foo)].value  — value may be quoted or bare.
+  const suffixMatch = trimmed.match(
+    /\[\?\(\s*@\.(\w+)\s*==\s*(?:"([^"]+)"|'([^']+)'|([^)\s]+))\s*\)\]\.(\w+)\s*$/,
+  );
+  if (!suffixMatch) return null;
+  const filterField = suffixMatch[1]; // e.g. "name"
+  const headerName = suffixMatch[2] ?? suffixMatch[3] ?? suffixMatch[4]; // e.g. "Subject"
+  const pickKey = suffixMatch[5]; // e.g. "value"
+  const arrayPart = trimmed.slice(0, suffixMatch.index).trim();
+  let parsed: Json;
+  try {
+    parsed = JSON.parse(arrayPart);
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(parsed)) return null;
+  // Verify it looks like a header list: every item is an object with the
+  // filter field present as a string.
+  const looksLikeHeaders = parsed.every(
+    (it) => it && typeof it === 'object' && typeof (it as any)[filterField] === 'string',
+  );
+  if (!looksLikeHeaders) return null;
+  return { array: parsed, headerName, pickKey };
 };
 
 const readDotted = (container: Json, dotted: string): Json => {
