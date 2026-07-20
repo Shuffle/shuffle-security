@@ -225,21 +225,55 @@ export const linkMergePair = async ({
     previous_status_id: prevStatusId,
   };
 
+  // If the source was itself the primary of a prior merge, it already
+  // owns a set of transitively-linked children. Re-parent them to the
+  // NEW primary so the chain flattens instead of forming A -> B -> C.
+  const transitiveChildPointers = getRelatedIncidents(sourceRaw)
+    .filter(p => p.relation === 'merged' && !p.primary && p.id !== primaryId);
+  const childRaws: Array<{ id: string; raw: any; pointer: RelatedIncidentPointer }> = [];
+  for (const cp of transitiveChildPointers) {
+    try {
+      const r = await getDatastoreItem(cp.id, DATASTORE_CATEGORIES.INCIDENTS);
+      if (r.success && r.item) {
+        childRaws.push({ id: cp.id, raw: JSON.parse(r.item.value), pointer: cp });
+      }
+    } catch { /* non-fatal — child stays parented to source, repairable */ }
+  }
+
   // Fold the source's data (observables, correlations, activity, tasks,
   // email_thread, iocs, stakeholders, ...) into the primary BEFORE
   // writing. Identity fields on the primary are preserved. This is the
   // core of the merge overhaul: the primary keeps everything the source
-  // contributed, so no data is lost when the analyst lands on it.
-  const foldedPrimaryData = foldSourceIntoPrimary(primaryRaw, sourceRaw);
-  const nextPrimary: any = upsertPointer(foldedPrimaryData, primaryPointer);
+  // (and its transitive children) contributed.
+  let foldedPrimaryData: any = foldSourceIntoPrimary(primaryRaw, sourceRaw);
+  for (const c of childRaws) {
+    foldedPrimaryData = foldSourceIntoPrimary(foldedPrimaryData, c.raw);
+  }
+
+  let nextPrimary: any = upsertPointer(foldedPrimaryData, primaryPointer);
+  // Also add direct pointers to every re-parented grandchild so the
+  // primary lists them alongside the source in the Correlations tab.
+  for (const c of childRaws) {
+    nextPrimary = upsertPointer(nextPrimary, {
+      id: c.id,
+      relation: 'merged',
+      primary: false,
+      linked_at: now,
+      linked_by: linkedBy || 'chain-reparent',
+    });
+  }
   // Track which sources have been folded, for debugging / repair tooling.
   const foldedFrom = Array.isArray(nextPrimary._merged_data_from) ? nextPrimary._merged_data_from : [];
-  if (!foldedFrom.includes(sourceId)) {
-    nextPrimary._merged_data_from = [...foldedFrom, sourceId];
-  }
-  // Attach an audit entry to the primary's activity so the timeline
-  // shows the fold happened.
+  const foldedSet = new Set<string>(foldedFrom);
+  foldedSet.add(sourceId);
+  childRaws.forEach(c => foldedSet.add(c.id));
+  nextPrimary._merged_data_from = Array.from(foldedSet);
+
+  // Attach a single audit entry summarising the fold.
   const primaryActivity = Array.isArray(nextPrimary.activity) ? nextPrimary.activity : [];
+  const foldedLabel = childRaws.length > 0
+    ? `Merged data from "${sourceTitle || sourceId}" (+${childRaws.length} chained)`
+    : `Merged data from "${sourceTitle || sourceId}"`;
   nextPrimary.activity = [
     ...primaryActivity,
     {
@@ -247,12 +281,18 @@ export const linkMergePair = async ({
       type: 'system',
       user: linkedBy || 'System',
       timestamp: now,
-      content: `Merged data from "${sourceTitle || sourceId}"`,
+      content: foldedLabel,
     },
   ];
 
-  const nextSource: any = {
-    ...upsertPointer(sourceRaw, sourcePointer),
+  // The source now points at the new primary and drops its own children
+  // pointers (they belong to the new primary now).
+  let nextSource: any = upsertPointer(sourceRaw, sourcePointer);
+  for (const c of childRaws) {
+    nextSource = removePointer(nextSource, c.id);
+  }
+  nextSource = {
+    ...nextSource,
     status_id: MERGED_STATUS_ID,
     status: MERGED_STATUS_LABEL,
     merged_into: primaryId,           // legacy field for backwards compat
@@ -272,8 +312,10 @@ export const linkMergePair = async ({
     },
   ];
 
-  // Write both rows. If the second fails we leave the first in place —
-  // the UI can detect a one-sided pointer and offer a repair button.
+  // Write primary + source first. Grandchild re-parenting is best-effort:
+  // if it fails, the child stays pointing at the old source, which itself
+  // now points at the new primary — the "Open primary" CTA still resolves
+  // correctly, just via one extra hop until a repair pass runs.
   const r1 = await setDatastoreItem(
     primaryId,
     JSON.stringify(nextPrimary),
@@ -288,8 +330,35 @@ export const linkMergePair = async ({
   );
   if (!r2.success) return { success: false, error: r2.error || 'Failed to update source' };
 
+  // Re-parent each grandchild: drop pointer to source, add pointer to
+  // new primary. Errors are non-fatal.
+  for (const c of childRaws) {
+    try {
+      let rehomed: any = removePointer(c.raw, sourceId);
+      rehomed = upsertPointer(rehomed, {
+        id: primaryId,
+        relation: 'merged',
+        primary: true,
+        linked_at: now,
+        linked_by: linkedBy || 'chain-reparent',
+        previous_status: c.pointer.previous_status,
+        previous_status_id: c.pointer.previous_status_id,
+      });
+      rehomed.merged_into = primaryId;
+      rehomed.merged_at = now;
+      rehomed.status_id = MERGED_STATUS_ID;
+      rehomed.status = MERGED_STATUS_LABEL;
+      await setDatastoreItem(
+        c.id,
+        JSON.stringify(rehomed),
+        DATASTORE_CATEGORIES.INCIDENTS,
+      );
+    } catch { /* leave the old pointer; the primary chain still resolves */ }
+  }
+
   return { success: true, foldedPrimary: nextPrimary };
 };
+
 
 
 interface UnlinkArgs {
