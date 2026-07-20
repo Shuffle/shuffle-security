@@ -932,12 +932,12 @@ const IncidentDetailPage = () => {
   // localStorage so the same set is restored across page loads. Substep
   // filters (`tasks`, `observables`, `correlations`) split the legacy
   // "steps" bucket so each artefact type can be hidden individually.
-  type TimelineFilterKey = 'revisions' | 'agent' | 'manual' | 'tasks' | 'observables' | 'correlations';
-  const ALL_TIMELINE_FILTERS: TimelineFilterKey[] = ['revisions', 'agent', 'manual', 'tasks', 'observables', 'correlations'];
-  const DEFAULT_TIMELINE_FILTERS: TimelineFilterKey[] = ['agent', 'manual', 'tasks', 'observables', 'correlations'];
+  type TimelineFilterKey = 'revisions' | 'agent' | 'manual' | 'merges' | 'tasks' | 'observables' | 'correlations';
+  const ALL_TIMELINE_FILTERS: TimelineFilterKey[] = ['revisions', 'agent', 'manual', 'merges', 'tasks', 'observables', 'correlations'];
+  const DEFAULT_TIMELINE_FILTERS: TimelineFilterKey[] = ['agent', 'manual', 'merges', 'tasks', 'observables', 'correlations'];
   // Bumped when the default set changes so existing localStorage entries
   // re-default rather than persist the old "all on" baseline.
-  const TIMELINE_FILTER_STORAGE_KEY = 'shuffle-incident-timeline-filters-v2';
+  const TIMELINE_FILTER_STORAGE_KEY = 'shuffle-incident-timeline-filters-v3';
   const [activeTimelineFilters, setActiveTimelineFilters] = useState<Set<TimelineFilterKey>>(() => {
     if (typeof window === 'undefined') return new Set(DEFAULT_TIMELINE_FILTERS);
     try {
@@ -965,6 +965,21 @@ const IncidentDetailPage = () => {
     });
   };
   const isFilterActive = (key: TimelineFilterKey) => activeTimelineFilters.has(key);
+  // Merge/threading audit entries live inside `activity` but should be
+  // filed under their own "Threading" filter — they are not user comments.
+  // Emitted by src/lib/incidentRelations.ts as { type: 'system', id: 'merge-…' | 'merge-in-…' }.
+  const isMergeActivityItem = (item: any): boolean => {
+    if (!item) return false;
+    if (item.type === 'system') {
+      const id = String(item.id || '');
+      if (id.startsWith('merge-') || id.startsWith('merge-in-')) return true;
+      const content = String(item.content || '');
+      if (/^Merged (data )?(from|into) /i.test(content)) return true;
+    }
+    return false;
+  };
+  const mergeActivity = activity.filter(isMergeActivityItem);
+  const commentActivity = activity.filter((a) => !isMergeActivityItem(a));
   // Legacy compatibility shim — a few render branches used to special-case
   // the single-select "revisions" tab to relabel the oldest revision as
   // "Incident created". The equivalent in the new multi-select model is
@@ -4451,7 +4466,8 @@ const IncidentDetailPage = () => {
     const filterDefs = [
       { key: 'revisions' as const, label: 'Changes', count: revisions.length },
       { key: 'agent' as const, label: 'Agent', count: agentRuns.length },
-      { key: 'manual' as const, label: 'Comments', count: activity.length },
+      { key: 'manual' as const, label: 'Comments', count: commentActivity.length },
+      { key: 'merges' as const, label: 'Threading', count: mergeActivity.length },
       { key: 'tasks' as const, label: 'Tasks', count: visibleTasks.length },
       { key: 'observables' as const, label: 'Observables', count: visibleObservablesCount },
       { key: 'correlations' as const, label: 'Correlations', count: visibleCorrelations.length },
@@ -4537,7 +4553,8 @@ const IncidentDetailPage = () => {
         {([
           { key: 'revisions' as const, label: 'Changes', count: revisions.length },
           { key: 'agent' as const, label: 'Agent', count: agentRuns.length },
-          { key: 'manual' as const, label: 'Comments', count: activity.length },
+          { key: 'manual' as const, label: 'Comments', count: commentActivity.length },
+          { key: 'merges' as const, label: 'Threading', count: mergeActivity.length },
           { key: 'tasks' as const, label: 'Tasks', count: visibleTasks.length },
           { key: 'observables' as const, label: 'Observables', count: visibleObservablesCount },
           { key: 'correlations' as const, label: 'Correlations', count: visibleCorrelations.length },
@@ -5013,11 +5030,14 @@ const IncidentDetailPage = () => {
 
 
 
-    if (isFilterActive('manual')) {
-      activity.forEach((item) => {
-        items.push({ type: 'manual', timestamp: normalizeToMs(item.timestamp), data: item });
-      });
-    }
+    // Comments (user-authored activity) and merge/threading audit entries
+    // are stored in the same `activity` array but gate on separate filters
+    // so users can hide auto-merge noise without also hiding conversation.
+    activity.forEach((item) => {
+      const isMerge = isMergeActivityItem(item);
+      if (isMerge ? !isFilterActive('merges') : !isFilterActive('manual')) return;
+      items.push({ type: 'manual', timestamp: normalizeToMs(item.timestamp), data: item });
+    });
 
     // ── Step injection ─────────────────────────────────────────────────────
     // Render Tasks, Observables and Correlations as small "step" markers in
