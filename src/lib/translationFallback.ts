@@ -1,0 +1,207 @@
+/**
+ * translationFallback — auto-corrects failed OCSF field translations.
+ *
+ * Background: the ingestion translator maps raw provider payloads onto OCSF
+ * fields via JSONPath-ish expressions like:
+ *
+ *   "$payload.headers[?(@.name==\"Subject\")].value"
+ *
+ * The upstream translator only supports simple dotted paths, so filter
+ * predicates (`[?(@.name=="X")]`) silently degrade to the prefix path —
+ * dumping the entire `$payload.headers` array into the OCSF field. The
+ * literal expression sometimes even survives as the field value.
+ *
+ * This module detects both failure modes and evaluates the expression
+ * against the raw payload stored on the incident (`unmapped_original` or
+ * `payload`), so the UI shows the actual scalar the mapping intended.
+ *
+ * The evaluator is deliberately minimal — it is a safety net, not a full
+ * jq/JSONPath implementation. Supported syntax:
+ *   $root                     — root reference (e.g. $payload)
+ *   .field                    — object property
+ *   ['field'] / ["field"]     — bracketed property
+ *   [0]                       — array index
+ *   [*]                       — every array element (flattens one level)
+ *   [?(@.name=="X")]          — filter: keep items whose child matches
+ *                               operators: == != (string / number literal)
+ *   .value                    — chained after any of the above
+ */
+
+type Json = any;
+
+const ROOT_ALIASES: Record<string, string[]> = {
+  // JSONPath-ish root -> keys to try on the incident payload container
+  $payload: ['unmapped_original', 'payload', 'raw', 'original'],
+  $raw: ['unmapped_original', 'raw'],
+  $original: ['unmapped_original', 'original'],
+  $unmapped: ['unmapped_original'],
+};
+
+const looksLikeTranslationExpr = (s: string): boolean => {
+  if (!s || typeof s !== 'string') return false;
+  const t = s.trim();
+  if (t.length < 3 || t.length > 512) return false;
+  if (t[0] !== '$') return false;
+  // Must contain a path operator to avoid matching accidental "$foo" text.
+  return /[.\[]/.test(t);
+};
+
+const resolveRoot = (expr: string, container: Json): { rest: string; root: Json } | null => {
+  const m = expr.match(/^(\$[A-Za-z_][\w]*)/);
+  if (!m) return null;
+  const alias = m[1];
+  const rest = expr.slice(alias.length);
+  const candidates = ROOT_ALIASES[alias] || [alias.slice(1)];
+  for (const key of candidates) {
+    if (container && typeof container === 'object' && key in container) {
+      return { rest, root: (container as any)[key] };
+    }
+  }
+  // Fall back to the container itself — the caller passed us the payload
+  // wrapper, so treat `$payload` as "this object" if none of the aliases hit.
+  return { rest, root: container };
+};
+
+interface Segment {
+  type: 'prop' | 'index' | 'wildcard' | 'filter';
+  key?: string;
+  index?: number;
+  predicate?: { path: string; op: '==' | '!='; value: string | number };
+}
+
+const parseSegments = (rest: string): Segment[] | null => {
+  const segments: Segment[] = [];
+  let i = 0;
+  const len = rest.length;
+  while (i < len) {
+    const ch = rest[i];
+    if (ch === '.') {
+      i++;
+      let end = i;
+      while (end < len && /[A-Za-z0-9_-]/.test(rest[end])) end++;
+      if (end === i) return null;
+      segments.push({ type: 'prop', key: rest.slice(i, end) });
+      i = end;
+      continue;
+    }
+    if (ch === '[') {
+      const close = rest.indexOf(']', i);
+      if (close === -1) return null;
+      const inner = rest.slice(i + 1, close).trim();
+      i = close + 1;
+      if (inner === '*') {
+        segments.push({ type: 'wildcard' });
+        continue;
+      }
+      if (/^-?\d+$/.test(inner)) {
+        segments.push({ type: 'index', index: parseInt(inner, 10) });
+        continue;
+      }
+      const quoted = inner.match(/^['"](.+)['"]$/);
+      if (quoted) {
+        segments.push({ type: 'prop', key: quoted[1] });
+        continue;
+      }
+      // Filter: ?(@.path OP "value") or ?(@.path OP number)
+      const filter = inner.match(/^\?\(\s*@\.([\w.]+)\s*(==|!=)\s*(?:"([^"]*)"|'([^']*)'|(-?\d+(?:\.\d+)?))\s*\)$/);
+      if (filter) {
+        const path = filter[1];
+        const op = filter[2] as '==' | '!=';
+        const raw = filter[3] ?? filter[4] ?? filter[5];
+        const value = filter[5] !== undefined ? Number(filter[5]) : raw;
+        segments.push({ type: 'filter', predicate: { path, op, value } });
+        continue;
+      }
+      return null;
+    }
+    // Unknown token — bail so we degrade gracefully instead of crashing.
+    return null;
+  }
+  return segments;
+};
+
+const readPath = (node: Json, path: string): Json => {
+  const parts = path.split('.');
+  let cur: Json = node;
+  for (const p of parts) {
+    if (cur == null || typeof cur !== 'object') return undefined;
+    cur = (cur as any)[p];
+  }
+  return cur;
+};
+
+const applySegment = (node: Json, seg: Segment): Json => {
+  if (node == null) return undefined;
+  switch (seg.type) {
+    case 'prop':
+      return typeof node === 'object' ? (node as any)[seg.key!] : undefined;
+    case 'index':
+      if (!Array.isArray(node)) return undefined;
+      return seg.index! < 0 ? node[node.length + seg.index!] : node[seg.index!];
+    case 'wildcard':
+      return Array.isArray(node) ? node.slice() : undefined;
+    case 'filter': {
+      if (!Array.isArray(node)) return undefined;
+      const { path, op, value } = seg.predicate!;
+      return node.filter(item => {
+        const got = readPath(item, path);
+        if (op === '==') return got == value; // eslint-disable-line eqeqeq
+        return got != value; // eslint-disable-line eqeqeq
+      });
+    }
+  }
+};
+
+/**
+ * Evaluate a translation-style expression against a raw payload container.
+ * Returns undefined when the expression doesn't apply or resolves to nothing.
+ */
+export const evaluateTranslationExpression = (expr: string, container: Json): Json => {
+  if (!looksLikeTranslationExpr(expr)) return undefined;
+  const root = resolveRoot(expr.trim(), container);
+  if (!root) return undefined;
+  const segments = parseSegments(root.rest);
+  if (!segments) return undefined;
+
+  let nodes: Json[] = [root.root];
+  for (const seg of segments) {
+    const next: Json[] = [];
+    for (const n of nodes) {
+      const applied = applySegment(n, seg);
+      if (applied === undefined) continue;
+      if (seg.type === 'wildcard' || seg.type === 'filter') {
+        if (Array.isArray(applied)) next.push(...applied);
+      } else {
+        next.push(applied);
+      }
+    }
+    nodes = next;
+    if (nodes.length === 0) return undefined;
+  }
+  if (nodes.length === 1) return nodes[0];
+  return nodes;
+};
+
+/**
+ * If `value` looks like an unresolved translation expression, try to
+ * evaluate it against the raw payload container (typically the parsed
+ * datastore item). Returns the resolved scalar (stringified when needed)
+ * or the original value when no correction applies.
+ */
+export const autoCorrectTranslatedString = (
+  value: unknown,
+  container: Json,
+): string | undefined => {
+  if (typeof value !== 'string' || !looksLikeTranslationExpr(value)) {
+    return typeof value === 'string' ? value : undefined;
+  }
+  const resolved = evaluateTranslationExpression(value, container);
+  if (resolved == null) return value;
+  if (typeof resolved === 'string') return resolved;
+  if (typeof resolved === 'number' || typeof resolved === 'boolean') return String(resolved);
+  try {
+    return JSON.stringify(resolved);
+  } catch {
+    return value;
+  }
+};
