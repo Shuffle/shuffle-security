@@ -290,12 +290,12 @@ export const unlinkMergePair = async ({
 export const maybeMigrateLegacyMerge = async (
   incidentId: string,
   raw: any,
-): Promise<void> => {
-  if (!raw || typeof raw !== 'object') return;
+): Promise<boolean> => {
+  if (!raw || typeof raw !== 'object') return false;
   const legacyPrimary: string | undefined = raw.merged_into;
-  if (!legacyPrimary) return;
+  if (!legacyPrimary) return false;
   const alreadyMigrated = getPrimaryPointer(raw);
-  if (alreadyMigrated && raw.status_id === MERGED_STATUS_ID) return;
+  if (alreadyMigrated && raw.status_id === MERGED_STATUS_ID) return false;
 
   const pointer: RelatedIncidentPointer = {
     id: legacyPrimary,
