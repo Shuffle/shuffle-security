@@ -7349,7 +7349,9 @@ const IncidentDetailPage = () => {
               >
                 Ask agent
               </Button>
+              </span>
             </Tooltip>
+
             <Popover
               open={Boolean(askAgentAnchor)}
               anchorEl={askAgentAnchor}
