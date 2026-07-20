@@ -319,7 +319,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       
       return {
         id: item.key, // Always use datastore key as the canonical ID
-        title: meaningfulString(ocsf.title) || meaningfulString(ocsf.supporting_data) || meaningfulString(ocsf.desc),
+        title: resolveTitle(ocsf.title, data, ocsf.supporting_data, ocsf.desc),
         source: normalizeSourceLabel(meaningfulString(ocsf.product?.name) || meaningfulString(ocsf.types?.[0])),
         severity: mapOCSFSeverity(ocsf.severity_id || 3),
         status: normalizeStatus(ocsf.status || mapOCSFStatus(ocsf.status_id || 1)),
@@ -349,7 +349,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       
       return {
         id: item.key, // Always use datastore key as the canonical ID
-        title: meaningfulString(findingInfo?.title) || meaningfulString(legacyData.supporting_data) || meaningfulString(legacyData.desc) || meaningfulString(legacyData.message),
+        title: resolveTitle(findingInfo?.title, legacyData, legacyData.supporting_data, legacyData.desc, legacyData.message),
         source: normalizeSourceLabel(meaningfulString(legacyData.metadata?.product?.name) || meaningfulString(findingInfo?.types?.[0])),
         severity: mapOCSFSeverity(legacyData.severity_id),
         status: normalizeStatus(legacyData.status || mapOCSFStatus(legacyData.status_id)),
@@ -373,7 +373,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       const tasks = data.tasks || [];
       return {
         id: item.key, // Always use datastore key as the canonical ID
-        title: meaningfulString(data.title) || meaningfulString(data.supporting_data) || meaningfulString(data.desc) || meaningfulString(data.message),
+        title: resolveTitle(data.title, data, data.supporting_data, data.desc, data.message),
         source: normalizeSourceLabel(meaningfulString(data.source)),
         severity: (data.severity || 'medium').toLowerCase(),
         status: normalizeStatus(data.status),
