@@ -40,6 +40,7 @@ import { CategoryAutomationsDialog } from '@/components/incidents/CategoryAutoma
 import { extractValidatedIngestionApps, ValidatedIngestionApp, findIngestTicketsWorkflow, findForwardTicketsWorkflow, extractWorkflowAppNames, normalizeAppName, isWorkflowScheduleStopped } from '@/Shuffle-MCPs/ingestionDetection';
 import { API_CONFIG, getApiUrl, getAuthHeader, isDevEnvironment } from '@/Shuffle-MCPs/api';
 import { IncidentCardView } from '@/components/incidents/IncidentCardView';
+import { useBackgroundThreadContinuation } from '@/hooks/useBackgroundThreadContinuation';
 import { IncidentStatsCards } from '@/components/incidents/IncidentStatsCards';
 import { ScheduleHealthBanner } from '@/components/users/ScheduleHealthBanner';
 import { IncidentsEmptyState } from '@/components/incidents/IncidentsEmptyState';
@@ -1638,6 +1639,12 @@ const IncidentsPage = () => {
 
   // Determine if all selected incidents are already resolved
   const selectedIncidentsList = useMemo(() => incidents.filter(i => selectedIds.has(i.id)), [incidents, selectedIds]);
+
+  // Continue existing merge threads silently: if an incident already has
+  // merges under it and carries a thread_id, fold any newly-arrived thread
+  // siblings into it. Only touches existing threads — never starts new ones.
+  useBackgroundThreadContinuation(incidents, () => { void fetchItems(); });
+
   const allSelectedResolved = selectedIds.size > 0 && selectedIncidentsList.every(i => i.status.toLowerCase() === 'resolved');
   const someSelectedResolved = selectedIds.size > 0 && selectedIncidentsList.some(i => i.status.toLowerCase() === 'resolved');
 
