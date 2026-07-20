@@ -208,6 +208,41 @@ const meaningfulString = (val: unknown): string | undefined => {
   return decodeHtmlEntities(trimmed);
 };
 
+// A title looks "bad" when the OCSF translator failed and left an unresolved
+// JSONPath expression or dumped a raw header array into the field. Detect the
+// common shapes so we can auto-correct via the translation fallback.
+const looksLikeBadTitle = (val: unknown): boolean => {
+  if (Array.isArray(val)) return true;
+  if (typeof val !== 'string') return false;
+  const t = val.trim();
+  if (!t) return false;
+  // Unresolved translation expression: e.g. `$payload.headers[?(@.name=="Subject")].value`
+  if (t.startsWith('$') && /[.\[]/.test(t)) return true;
+  // Serialized header array (with or without appended filter suffix).
+  if (t.startsWith('[{') && /"name"\s*:/.test(t)) return true;
+  // Hybrid failure suffix leaked in without a leading `[{`.
+  if (/\[\?\(\s*@\./.test(t)) return true;
+  return false;
+};
+
+// Resolve a title from OCSF data, auto-correcting when the translator left
+// behind a broken JSONPath expression or a raw header array (see
+// looksLikeBadTitle). The auto-correction pulls the intended header value
+// from the raw payload container (unmapped_original / payload).
+const resolveTitle = (rawTitle: unknown, container: any, ...fallbacks: unknown[]): string | undefined => {
+  if (looksLikeBadTitle(rawTitle)) {
+    const fixed = autoCorrectTranslatedString(rawTitle, container, 'Subject');
+    if (fixed && !looksLikeBadTitle(fixed)) return meaningfulString(fixed);
+  }
+  const primary = meaningfulString(rawTitle);
+  if (primary && !looksLikeBadTitle(primary)) return primary;
+  for (const fb of fallbacks) {
+    const s = meaningfulString(fb);
+    if (s && !looksLikeBadTitle(s)) return s;
+  }
+  return undefined;
+};
+
 // Normalize source labels so equivalent values render consistently in filters/charts.
 // e.g. legacy payloads use "Manual Entry" while the modern create flow uses "Manual".
 const normalizeSourceLabel = (val: string | undefined): string | undefined => {
