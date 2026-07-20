@@ -25,6 +25,71 @@ import {
   DATASTORE_CATEGORIES,
 } from '@/Shuffle-MCPs/datastore';
 import { statusConfig } from '@/config/incidentConfig';
+import { deepMergeIncidents } from '@/lib/utils';
+
+/**
+ * Identity fields that MUST stay owned by the primary during a fold.
+ * Without this list the source could overwrite the primary's title /
+ * status / severity whenever it happens to carry a newer timestamp.
+ */
+const PRIMARY_IDENTITY_KEYS = [
+  'id', 'finding_uid', 'uid',
+  'title', 'message',
+  'status', 'status_id',
+  'severity', 'severity_id',
+  'created_time', 'created_time_dt',
+  'event_time', 'time', 'time_dt',
+  'finding_info', 'finding_info_list',
+  'assignee', 'product',
+  'related_incidents', 'merged_into', 'merged_at',
+];
+
+const extractIncidentTs = (raw: any): number => {
+  if (!raw || typeof raw !== 'object') return 0;
+  const candidates: unknown[] = [
+    raw.modified_time_dt, raw.updated_time_dt, raw.updated_at, raw.modified_at,
+    raw.time_dt, raw.time, raw.event_time,
+    raw.created_time_dt, raw.created_time, raw.created_at,
+  ];
+  for (const c of candidates) {
+    if (typeof c === 'number' && Number.isFinite(c) && c > 0) {
+      return c < 1e12 ? c * 1000 : c;
+    }
+    if (typeof c === 'string' && c) {
+      const parsed = Date.parse(c);
+      if (Number.isFinite(parsed) && parsed > 0) return parsed;
+    }
+  }
+  return 0;
+};
+
+/**
+ * Non-destructively fold the source's *data* fields (observables,
+ * correlations, activity, tasks, email_thread, iocs, stakeholders,
+ * labels, references, custom_attributes, ...) INTO the primary while
+ * preserving the primary's identity. This is what keeps timelines,
+ * observables and correlations intact after an auto-merge: the primary
+ * row becomes the union of every merged sibling.
+ */
+const foldSourceIntoPrimary = (primaryRaw: any, sourceRaw: any): any => {
+  const pTs = extractIncidentTs(primaryRaw);
+  const sTs = extractIncidentTs(sourceRaw);
+  const folded: any = deepMergeIncidents(
+    primaryRaw || {},
+    sourceRaw || {},
+    pTs,
+    sTs,
+  );
+  for (const key of PRIMARY_IDENTITY_KEYS) {
+    if (primaryRaw && Object.prototype.hasOwnProperty.call(primaryRaw, key)) {
+      folded[key] = primaryRaw[key];
+    } else {
+      delete folded[key];
+    }
+  }
+  return folded;
+};
+
 
 export type IncidentRelation = 'merged' | 'duplicate' | 'related';
 
@@ -130,7 +195,7 @@ export const linkMergePair = async ({
   sourceRaw,
   sourceTitle,
   linkedBy,
-}: LinkArgs): Promise<{ success: boolean; error?: string }> => {
+}: LinkArgs): Promise<{ success: boolean; error?: string; foldedPrimary?: any }> => {
   const now = Date.now();
 
   // Snapshot the source's current status so unmerge can restore it.
@@ -160,8 +225,33 @@ export const linkMergePair = async ({
     previous_status_id: prevStatusId,
   };
 
-  const nextPrimary = upsertPointer(primaryRaw, primaryPointer);
-  const nextSource = {
+  // Fold the source's data (observables, correlations, activity, tasks,
+  // email_thread, iocs, stakeholders, ...) into the primary BEFORE
+  // writing. Identity fields on the primary are preserved. This is the
+  // core of the merge overhaul: the primary keeps everything the source
+  // contributed, so no data is lost when the analyst lands on it.
+  const foldedPrimaryData = foldSourceIntoPrimary(primaryRaw, sourceRaw);
+  const nextPrimary: any = upsertPointer(foldedPrimaryData, primaryPointer);
+  // Track which sources have been folded, for debugging / repair tooling.
+  const foldedFrom = Array.isArray(nextPrimary._merged_data_from) ? nextPrimary._merged_data_from : [];
+  if (!foldedFrom.includes(sourceId)) {
+    nextPrimary._merged_data_from = [...foldedFrom, sourceId];
+  }
+  // Attach an audit entry to the primary's activity so the timeline
+  // shows the fold happened.
+  const primaryActivity = Array.isArray(nextPrimary.activity) ? nextPrimary.activity : [];
+  nextPrimary.activity = [
+    ...primaryActivity,
+    {
+      id: `merge-in-${sourceId}-${now}`,
+      type: 'system',
+      user: linkedBy || 'System',
+      timestamp: now,
+      content: `Merged data from "${sourceTitle || sourceId}"`,
+    },
+  ];
+
+  const nextSource: any = {
     ...upsertPointer(sourceRaw, sourcePointer),
     status_id: MERGED_STATUS_ID,
     status: MERGED_STATUS_LABEL,
@@ -198,8 +288,9 @@ export const linkMergePair = async ({
   );
   if (!r2.success) return { success: false, error: r2.error || 'Failed to update source' };
 
-  return { success: true };
+  return { success: true, foldedPrimary: nextPrimary };
 };
+
 
 interface UnlinkArgs {
   primaryId: string;

@@ -1730,10 +1730,15 @@ const IncidentDetailPage = () => {
     setAutoMergeBusy(true);
     try {
       let failed = 0;
+      // Chain the folded primary through each iteration so successive
+      // sources fold on top of the already-enriched primary. Without
+      // this, iteration N would clobber the fold from iteration N-1
+      // because primaryRaw would still be the pre-merge snapshot.
+      let currentPrimaryRaw = primary.raw;
       for (const src of sources) {
         const res = await linkMergePair({
           primaryId: primary.id,
-          primaryRaw: primary.raw,
+          primaryRaw: currentPrimaryRaw,
           primaryTitle: primary.title,
           sourceId: src.id,
           sourceRaw: src.raw,
@@ -1741,7 +1746,9 @@ const IncidentDetailPage = () => {
           linkedBy: 'thread-auto-merge',
         });
         if (!res.success) failed += 1;
+        else if (res.foldedPrimary) currentPrimaryRaw = res.foldedPrimary;
       }
+
 
       if (failed === 0) {
         toast.success(
@@ -4569,8 +4576,34 @@ const IncidentDetailPage = () => {
           while the incident is fresh, just after a comment, or while the
           user is typing a new comment. */}
       {showEnrichmentInlineCTA && renderEnrichmentInlineCTA()}
-      {/* Comment Input */}
+      {/* Comment Input — hidden on merged incidents. Comments and AI
+          interactions belong on the primary; leaving them enabled here
+          would fragment the conversation across incidents that share a
+          single primary. */}
+      {primaryPointer ? (
+        <Box sx={{
+          p: 2,
+          borderBottom: '1px solid hsl(var(--border-subtle))',
+          bgcolor: 'hsl(var(--muted) / 0.25)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+        }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', flex: 1 }}>
+            Comments and AI actions are disabled on merged incidents. Open the primary to continue the conversation.
+          </Typography>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => navigate(`/incidents/${encodeURIComponent(primaryPointer.id)}`)}
+            sx={{ textTransform: 'none', fontSize: '0.7rem', height: 26 }}
+          >
+            Open primary
+          </Button>
+        </Box>
+      ) : (
       <Box sx={{ p: 2, borderBottom: '1px solid hsl(var(--border-subtle))' }}>
+
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Avatar sx={{ width: 28, height: 28, bgcolor: 'hsl(var(--primary) / 0.2)' }}>
             <PersonIcon size={16} style={{ color: 'hsl(var(--primary))' }} />
@@ -4739,6 +4772,8 @@ const IncidentDetailPage = () => {
           </Box>
         </Box>
       </Box>
+      )}
+
 
       {/* Unified Timeline Feed — when inline, render with a vertical rail behind the items */}
       <Box sx={{
@@ -7288,19 +7323,25 @@ const IncidentDetailPage = () => {
             )}
             
             {/* Ask the AI agent — quick popover that posts an @AIAgent comment
-                into the Timeline. The existing agent handler picks it up. */}
+                into the Timeline. The existing agent handler picks it up.
+                Disabled on merged incidents — the primary is the writable one. */}
             <Tooltip title={
-              agentReadiness.isLoading
-                ? 'Checking AI agent status…'
-                : agentReadiness.active
-                  ? 'Ask the AI agent'
-                  : 'AI agent is not enabled — click to set it up'
+              primaryPointer
+                ? 'This incident is merged — open the primary to interact with the AI agent'
+                : agentReadiness.isLoading
+                  ? 'Checking AI agent status…'
+                  : agentReadiness.active
+                    ? 'Ask the AI agent'
+                    : 'AI agent is not enabled — click to set it up'
             }>
+              <span>
               <Button
                 size="small"
                 variant="outlined"
+                disabled={!!primaryPointer}
                 onClick={(e) => setAskAgentAnchor(e.currentTarget)}
                 startIcon={<AgentIcon size={14} />}
+
                 endIcon={
                   !agentReadiness.isLoading ? (
                     <Box
@@ -7336,7 +7377,9 @@ const IncidentDetailPage = () => {
               >
                 Ask agent
               </Button>
+              </span>
             </Tooltip>
+
             <Popover
               open={Boolean(askAgentAnchor)}
               anchorEl={askAgentAnchor}
