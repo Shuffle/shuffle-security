@@ -52,77 +52,69 @@ export const IncidentCorrelationPreview = ({
     setPreview(null);
     setNotFound(false);
     (async () => {
-      try {
-        const result = await getDatastoreItem(incidentKey, category);
-        if (cancelled) return;
-        // The datastore returns { success: true, item: undefined } when the key
-        // is missing (HTTP 404 or API-level "not found"). Correlations can
-        // outlive their referenced incident — surface this explicitly instead
-        // of pretending the load succeeded with empty data.
-        if (!result?.success) {
-          setError(result?.error || 'Failed to load incident');
-          return;
-        }
-        if (!result.item || result.item.value === undefined || result.item.value === null || result.item.value === '') {
-          setNotFound(true);
-          return;
-        }
-        const raw = result.item.value;
-        let parsed: Record<string, unknown> | undefined;
-        if (typeof raw === 'string') {
-          try { parsed = JSON.parse(raw); } catch { /* ignore */ }
-        } else if (raw && typeof raw === 'object') {
-          parsed = raw as Record<string, unknown>;
-        }
-        // If the value parsed but contained nothing recognisable, treat as not-found
-        // so we don't render an empty card pretending the incident is healthy.
-        if (!parsed || (typeof parsed === 'object' && Object.keys(parsed).length === 0)) {
-          setNotFound(true);
-          return;
-        }
-        // Try a handful of well-known shapes (raw OCSF, custom_attributes, etc.)
-        const findings = (parsed?.finding_info as Record<string, unknown> | undefined)
-          || (parsed as Record<string, unknown> | undefined);
-        const customAttrs = ((parsed?.metadata as Record<string, unknown> | undefined)?.extensions as Record<string, unknown> | undefined)?.custom_attributes as Record<string, unknown> | undefined;
-        const title = (findings?.title as string | undefined)
-          || (parsed?.title as string | undefined)
-          || (customAttrs?.title as string | undefined)
-          || incidentKey;
-        const status = (parsed?.status as string | undefined)
-          || ((parsed?.status_id as { id?: number; name?: string } | string)
-            ? typeof parsed?.status_id === 'string' ? parsed.status_id as string : (parsed?.status_id as { name?: string })?.name
-            : undefined)
-          || (customAttrs?.status as string | undefined);
-        const severity = (parsed?.severity as string | undefined)
-          || ((parsed?.severity_id as { name?: string } | undefined)?.name as string | undefined)
-          || (customAttrs?.severity as string | undefined);
-        const description = (findings?.desc as string | undefined)
-          || (parsed?.description as string | undefined)
-          || (customAttrs?.description as string | undefined);
-        const createdTs = (parsed?.created as number | undefined)
-          || (result?.item?.created as number | undefined);
-        const observables = (customAttrs?.observables as unknown[] | undefined)
-          || (parsed?.observables as unknown[] | undefined);
-        const tasks = (customAttrs?.tasks as unknown[] | undefined)
-          || (parsed?.tasks as unknown[] | undefined);
-        setPreview({
-          title,
-          status: typeof status === 'string' ? status : undefined,
-          severity: typeof severity === 'string' ? severity : undefined,
-          description: typeof description === 'string' ? description : undefined,
-          createdTs: typeof createdTs === 'number' ? createdTs : undefined,
-          observableCount: Array.isArray(observables) ? observables.length : undefined,
-          taskCount: Array.isArray(tasks) ? tasks.length : undefined,
-          raw: parsed,
-        });
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load incident');
-      } finally {
-        if (!cancelled) setLoading(false);
+      const result = await lookupIncidentCached(incidentKey, category);
+      if (cancelled) return;
+      if (result.status === 'error') {
+        setError(result.error);
+        setLoading(false);
+        return;
       }
+      if (result.status === 'not_found') {
+        setNotFound(true);
+        setLoading(false);
+        return;
+      }
+      const raw = result.raw;
+      let parsed: Record<string, unknown> | undefined;
+      if (typeof raw === 'string') {
+        try { parsed = JSON.parse(raw); } catch { /* ignore */ }
+      } else if (raw && typeof raw === 'object') {
+        parsed = raw as Record<string, unknown>;
+      }
+      if (!parsed || (typeof parsed === 'object' && Object.keys(parsed).length === 0)) {
+        setNotFound(true);
+        setLoading(false);
+        return;
+      }
+      const findings = (parsed?.finding_info as Record<string, unknown> | undefined)
+        || (parsed as Record<string, unknown> | undefined);
+      const customAttrs = ((parsed?.metadata as Record<string, unknown> | undefined)?.extensions as Record<string, unknown> | undefined)?.custom_attributes as Record<string, unknown> | undefined;
+      const title = (findings?.title as string | undefined)
+        || (parsed?.title as string | undefined)
+        || (customAttrs?.title as string | undefined)
+        || incidentKey;
+      const status = (parsed?.status as string | undefined)
+        || ((parsed?.status_id as { id?: number; name?: string } | string)
+          ? typeof parsed?.status_id === 'string' ? parsed.status_id as string : (parsed?.status_id as { name?: string })?.name
+          : undefined)
+        || (customAttrs?.status as string | undefined);
+      const severity = (parsed?.severity as string | undefined)
+        || ((parsed?.severity_id as { name?: string } | undefined)?.name as string | undefined)
+        || (customAttrs?.severity as string | undefined);
+      const description = (findings?.desc as string | undefined)
+        || (parsed?.description as string | undefined)
+        || (customAttrs?.description as string | undefined);
+      const createdTs = (parsed?.created as number | undefined)
+        || (result.item?.created as number | undefined);
+      const observables = (customAttrs?.observables as unknown[] | undefined)
+        || (parsed?.observables as unknown[] | undefined);
+      const tasks = (customAttrs?.tasks as unknown[] | undefined)
+        || (parsed?.tasks as unknown[] | undefined);
+      setPreview({
+        title,
+        status: typeof status === 'string' ? status : undefined,
+        severity: typeof severity === 'string' ? severity : undefined,
+        description: typeof description === 'string' ? description : undefined,
+        createdTs: typeof createdTs === 'number' ? createdTs : undefined,
+        observableCount: Array.isArray(observables) ? observables.length : undefined,
+        taskCount: Array.isArray(tasks) ? tasks.length : undefined,
+        raw: parsed,
+      });
+      setLoading(false);
     })();
     return () => { cancelled = true; };
   }, [incidentKey, category]);
+
 
   const targetUrl = `/incidents/${incidentKey}?tab=correlations&correlation=${encodeURIComponent(correlationKey)}${currentIncidentId ? `&focus=${encodeURIComponent(currentIncidentId)}` : ''}`;
 
