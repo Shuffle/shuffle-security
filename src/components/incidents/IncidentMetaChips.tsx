@@ -102,7 +102,11 @@ export const IncidentMetaChips = ({
             },
           }}
         >
-          {Object.entries(statusConfig).map(([key, cfg]) => {
+          {Object.entries(statusConfig)
+            // "Merged" is set only by the auto-merge action — never let a user
+            // pick it manually from the status dropdown.
+            .filter(([key]) => key !== 'merged')
+            .map(([key, cfg]) => {
             const isDisabled = key === 'on_hold' || key === 'escalated';
             return (
               <MenuItem

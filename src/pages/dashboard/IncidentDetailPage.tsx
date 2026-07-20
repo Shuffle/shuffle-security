@@ -6678,16 +6678,30 @@ const IncidentDetailPage = () => {
 
       {/* Thread-correlated incidents — any other incidents that share the
           same thread_id, pulled in live via the correlations API. */}
-      {!isPublicView && incident?.id && (
-        <ThreadCorrelatedBanner
-          threadId={threadCorrelated.threadId}
-          incidents={threadCorrelated.incidents}
-          invisibleCount={threadCorrelated.invisibleCount}
-          loading={threadCorrelated.loading}
-          onAutoMerge={handleAutoMergeThread}
-          autoMergeBusy={autoMergeBusy}
-        />
-      )}
+      {!isPublicView && incident?.id && (() => {
+        // Hide siblings that are already surfaced by the merge banners
+        // (primary or linked sources) and anything already in Merged status,
+        // so we don't double-list the same incident.
+        const excluded = new Set<string>();
+        if (relatedIncidents.primary?.id) excluded.add(relatedIncidents.primary.id.toLowerCase());
+        relatedIncidents.linked.forEach((l) => excluded.add(l.id.toLowerCase()));
+        const filtered = threadCorrelated.incidents.filter((inc) => {
+          if (excluded.has(inc.id.toLowerCase())) return false;
+          const s = String(inc.status || '').toLowerCase();
+          if (s === 'merged' || inc.status_id === 6) return false;
+          return true;
+        });
+        return (
+          <ThreadCorrelatedBanner
+            threadId={threadCorrelated.threadId}
+            incidents={filtered}
+            invisibleCount={threadCorrelated.invisibleCount}
+            loading={threadCorrelated.loading}
+            onAutoMerge={handleAutoMergeThread}
+            autoMergeBusy={autoMergeBusy}
+          />
+        );
+      })()}
 
 
       {/* Possible duplicates / merge suggestions banner — surfaces past
