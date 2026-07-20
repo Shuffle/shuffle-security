@@ -131,7 +131,7 @@ const isGmailPayload = (raw: any): boolean => {
   return false;
 };
 
-const gmailMessageToEmail = (msg: GmailMessage, idx: number, total: number): EmailMessage => {
+const gmailMessageToEmail = (msg: GmailMessage, idx: number, total: number, forceDraft?: boolean): EmailMessage => {
   const headers = msg.payload?.headers;
   const from = getHeader(headers, 'From');
   const to = getHeader(headers, 'To');
@@ -140,6 +140,7 @@ const gmailMessageToEmail = (msg: GmailMessage, idx: number, total: number): Ema
   const date = getHeader(headers, 'Date');
   const { text, html } = extractGmailBodies(msg.payload);
   const fromMatch = from.match(/^(.*?)\s*<([^>]+)>\s*$/);
+  const isDraft = forceDraft || gmailIsDraft(msg.labelIds) || msg.isDraft === true;
   return {
     id: msg.id || `gmail-${idx}`,
     from: fromMatch ? (fromMatch[1].trim() || fromMatch[2]) : (from || `Message ${idx + 1}`),
@@ -150,11 +151,11 @@ const gmailMessageToEmail = (msg: GmailMessage, idx: number, total: number): Ema
     date: date || (msg.internalDate ? new Date(parseInt(msg.internalDate, 10)).toUTCString() : undefined),
     body: text || msg.snippet || '',
     bodyHtml: html || undefined,
-    isLatest: idx === 0,
+    isDraft,
   };
 };
 
-const gmailToEmailThread = (raw: any): EmailMessage[] => {
+const gmailToEmailThread = (raw: any, forceDraft?: boolean): EmailMessage[] => {
   const rawMessages: GmailMessage[] = Array.isArray(raw?.messages) ? raw.messages : [raw];
   // Gmail returns oldest-first in threads.get — we want newest-first.
   const sorted = [...rawMessages].sort((a, b) => {
@@ -162,8 +163,9 @@ const gmailToEmailThread = (raw: any): EmailMessage[] => {
     const tb = parseInt(b.internalDate || '0', 10);
     return tb - ta;
   });
-  return sorted.map((m, i) => gmailMessageToEmail(m, i, sorted.length));
+  return assignLatest(sorted.map((m, i) => gmailMessageToEmail(m, i, sorted.length, forceDraft)));
 };
+
 
 // ---------------------------------------------------------------------------
 // Outlook / Microsoft Graph adapter
