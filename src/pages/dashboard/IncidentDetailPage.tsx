@@ -7295,19 +7295,25 @@ const IncidentDetailPage = () => {
             )}
             
             {/* Ask the AI agent — quick popover that posts an @AIAgent comment
-                into the Timeline. The existing agent handler picks it up. */}
+                into the Timeline. The existing agent handler picks it up.
+                Disabled on merged incidents — the primary is the writable one. */}
             <Tooltip title={
-              agentReadiness.isLoading
-                ? 'Checking AI agent status…'
-                : agentReadiness.active
-                  ? 'Ask the AI agent'
-                  : 'AI agent is not enabled — click to set it up'
+              primaryPointer
+                ? 'This incident is merged — open the primary to interact with the AI agent'
+                : agentReadiness.isLoading
+                  ? 'Checking AI agent status…'
+                  : agentReadiness.active
+                    ? 'Ask the AI agent'
+                    : 'AI agent is not enabled — click to set it up'
             }>
+              <span>
               <Button
                 size="small"
                 variant="outlined"
+                disabled={!!primaryPointer}
                 onClick={(e) => setAskAgentAnchor(e.currentTarget)}
                 startIcon={<AgentIcon size={14} />}
+
                 endIcon={
                   !agentReadiness.isLoading ? (
                     <Box
