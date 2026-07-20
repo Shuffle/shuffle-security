@@ -795,11 +795,24 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
     runFinished && (item.status === 'RUNNING' || item.status === 'WAITING')
       ? 'IGNORED'
       : item.status;
-  const barColor = isProcessing ? 'hsl(var(--muted-foreground) / 0.45)' :
-    effectiveStatus === 'IGNORED' ? STATUS_COLORS.warning :
-    effectiveStatus === 'FINISHED' ? STATUS_COLORS.finished :
-    effectiveStatus === 'FAILURE' || effectiveStatus === 'ABORTED' ? STATUS_COLORS.error :
-    STATUS_COLORS.running;
+  const isFailed = effectiveStatus === 'FAILURE' || effectiveStatus === 'ABORTED';
+  // Default bar color: only failed executions stand out; everything else is
+  // neutral so the timeline does not look like a color parade.
+  const barColor = isProcessing
+    ? 'hsl(var(--muted-foreground) / 0.45)'
+    : isFailed
+      ? STATUS_COLORS.error
+      : 'hsl(var(--muted-foreground) / 0.35)';
+  // On hover we reveal the real status color so context is still one tap away.
+  const hoverBarColor = isProcessing
+    ? 'hsl(var(--muted-foreground) / 0.45)'
+    : effectiveStatus === 'IGNORED'
+      ? STATUS_COLORS.warning
+      : effectiveStatus === 'FINISHED'
+        ? STATUS_COLORS.finished
+        : isFailed
+          ? STATUS_COLORS.error
+          : STATUS_COLORS.running;
 
   return (
     <Box
