@@ -2121,7 +2121,13 @@ const IncidentDetailPage = () => {
     const isEmptyStub = !!(result.success && result.item) && itemKeyEmpty && itemValueLen <= 2;
 
     if (result.success && result.item && !isEmptyStub) {
-      setPublicAuthorization(result.item.public_authorization || '');
+      setPublicAuthorization(
+        result.item.public_authorization
+        || (result.item as { publicAuthorization?: string }).publicAuthorization
+        || (result.item as { PublicAuthorization?: string }).PublicAuthorization
+        || '',
+      );
+
       const itemData = {
         key: result.item.key || id,
         value: result.item.value,

@@ -14,8 +14,15 @@ export interface DatastoreItem {
   created?: number;
   edited?: number;
   public_authorization?: string;
+  // Backend may serialize the public token under alternative casings depending
+  // on which Go handler responds — keep both fallbacks so callers can read
+  // whichever variant arrives without lying to the user that the token is
+  // missing.
+  publicAuthorization?: string;
+  PublicAuthorization?: string;
   enrichments?: Array<{ type: string; value?: string; data?: string }>;
 }
+
 
 export interface CategoryAutomation {
   id?: string;
