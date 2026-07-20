@@ -48,7 +48,20 @@ const BASE_STYLES = `
     font-size: 14px;
     line-height: 1.5;
   }
-  :where(body) { padding: 12px 16px; }
+  /* Center the email column inside the iframe the same way Gmail / Outlook Web
+     do — most templates are designed for a ~600-720px column that sits centered
+     on a white canvas. Zero specificity via :where() so the email's own
+     wrapper widths still win if it ships them. */
+  :where(body) {
+    padding: 16px;
+    max-width: 720px;
+    margin: 0 auto;
+    text-align: center;
+  }
+  /* Re-left-align typical text blocks so paragraphs are not accidentally
+     centered by the body-level rule above. Email templates that need their
+     own alignment override this trivially. */
+  :where(p, li, td, th, blockquote, pre) { text-align: left; }
   :where(img) { max-width: 100%; height: auto; }
   :where(a) { color: #1a73e8; }
   :where(blockquote) {
@@ -59,6 +72,7 @@ const BASE_STYLES = `
   }
   :where(pre) { white-space: pre-wrap; word-break: break-word; }
 `;
+
 
 const sanitize = (dirty: string): string =>
   DOMPurify.sanitize(dirty, {
