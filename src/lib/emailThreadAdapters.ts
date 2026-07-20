@@ -278,12 +278,17 @@ const isGenericEmailEnvelope = (raw: any): boolean => {
   return hasFrom && hasBody && hasSubjectish;
 };
 
-const genericToEmailThread = (raw: any): EmailMessage[] => {
+const genericToEmailThread = (raw: any, forceDraft?: boolean): EmailMessage[] => {
   const fromRaw = raw.from || raw.sender || raw.From || '';
   const fromStr = typeof fromRaw === 'string' ? fromRaw : (fromRaw?.address || fromRaw?.email || JSON.stringify(fromRaw));
   const fromMatch = fromStr.match(/^(.*?)\s*<([^>]+)>\s*$/);
   const html = raw.html || raw.HtmlBody || (raw.body?.html) || '';
   const text = raw.text || raw.TextBody || raw.body || (typeof raw.Body === 'string' ? raw.Body : '') || htmlToText(html);
+  const isDraft = forceDraft
+    || raw.isDraft === true
+    || raw.is_draft === true
+    || (typeof raw.status === 'string' && raw.status.toLowerCase() === 'draft')
+    || raw.draft === true;
   return [{
     id: raw.id || raw.messageId || raw['Message-ID'] || 'generic-0',
     from: fromMatch ? (fromMatch[1].trim() || fromMatch[2]) : (fromStr || 'Sender'),
@@ -295,8 +300,10 @@ const genericToEmailThread = (raw: any): EmailMessage[] => {
     body: typeof text === 'string' ? text : '',
     bodyHtml: typeof html === 'string' && html ? html : undefined,
     isLatest: true,
+    isDraft,
   }];
 };
+
 
 // ---------------------------------------------------------------------------
 // Public entry point
