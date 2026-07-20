@@ -8879,12 +8879,22 @@ const IncidentDetailPage = () => {
 
             // Apply filters
             const filterLower = obsFilterText.toLowerCase();
-            const allObs = allObsRaw.filter(obs => {
+            let allObs = allObsRaw.filter(obs => {
               if (obsFilterTypes.length > 0 && !obsFilterTypes.includes(obs.type)) return false;
               if (filterLower && !obs.value.toLowerCase().includes(filterLower) && !obs.type.toLowerCase().includes(filterLower)) return false;
               if (!showIgnoredObs && ignoredObs.isIgnored(obs.type, obs.value)) return false;
               return true;
             });
+            // When the user has explicitly toggled "Show ignored", surface those
+            // rows at the top of the list. The whole point of revealing them is
+            // to reconsider whether they should stay ignored — burying them at
+            // the bottom (or mixed in dimmed) makes the toggle pointless.
+            if (showIgnoredObs) {
+              const ignored = allObs.filter(o => ignoredObs.isIgnored(o.type, o.value));
+              const rest = allObs.filter(o => !ignoredObs.isIgnored(o.type, o.value));
+              allObs = [...ignored, ...rest];
+            }
+
 
             // Note: we used to render a "Processing observables in the
             // background…" skeleton for any incident created in the last 2
@@ -8950,12 +8960,14 @@ const IncidentDetailPage = () => {
                         gap: mismatch ? 0.5 : 0,
                         p: 1.5,
                         borderRadius: 1,
-                        bgcolor: 'transparent',
                         backgroundImage: 'none',
-                        border: mismatch ? '1px solid hsl(var(--warning, 38 92% 50%) / 0.35)' : isExpanded ? '1px solid hsl(var(--primary) / 0.35)' : '1px solid hsl(var(--border))',
-                        opacity: isThisIgnored ? 0.55 : 1,
+                        border: isThisIgnored
+                          ? '1px dashed hsl(var(--warning, 38 92% 50%) / 0.55)'
+                          : mismatch ? '1px solid hsl(var(--warning, 38 92% 50%) / 0.35)' : isExpanded ? '1px solid hsl(var(--primary) / 0.35)' : '1px solid hsl(var(--border))',
+                        bgcolor: isThisIgnored ? 'hsl(var(--warning, 38 92% 50%) / 0.04)' : 'transparent',
+                        opacity: isThisIgnored ? 0.8 : 1,
                         transition: 'border-color 0.15s ease, background-color 0.15s ease, opacity 0.15s ease',
-                        '&:hover': { bgcolor: 'hsl(var(--muted) / 0.25)', borderColor: 'hsl(var(--primary) / 0.25)', opacity: isThisIgnored ? 0.85 : 1 },
+                        '&:hover': { bgcolor: isThisIgnored ? 'hsl(var(--warning, 38 92% 50%) / 0.08)' : 'hsl(var(--muted) / 0.25)', borderColor: isThisIgnored ? 'hsl(var(--warning, 38 92% 50%) / 0.75)' : 'hsl(var(--primary) / 0.25)', opacity: 1 },
                       }}
                     >
                       <Box
