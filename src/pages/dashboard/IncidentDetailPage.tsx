@@ -1651,6 +1651,17 @@ const IncidentDetailPage = () => {
   // into another) and the incidents that were merged INTO this one.
   const relatedIncidents = useRelatedIncidents(incident?.id, incident?.rawOCSF);
   const primaryPointer = useMemo(() => getPrimaryPointer(incident?.rawOCSF), [incident?.rawOCSF]);
+
+  // Legacy migration: pre-cross-reference merges wrote status_id 99 +
+  // `merged_into` on the source only. On first view, upgrade the record
+  // to the symmetric pointer model so the banners can render.
+  useEffect(() => {
+    if (!incident?.id || !incident.rawOCSF) return;
+    maybeMigrateLegacyMerge(incident.id, incident.rawOCSF).then(migrated => {
+      if (migrated) loadIncident?.(false);
+    }).catch(() => {/* non-fatal */});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incident?.id]);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSaveRef = useRef(false);
   // Track the initial normalized values so auto-save doesn't fire on load
