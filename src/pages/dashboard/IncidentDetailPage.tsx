@@ -4789,6 +4789,14 @@ const IncidentDetailPage = () => {
               // (py: 0.5 = 4px + 12px icon / 2). Dot half-height = 6.
               top: 9,
             },
+            // Quiet rows (e.g. completed executions) should not scream from
+            // the rail. Muted dot by default; parent hover restores accent.
+            '&[data-timeline-quiet="true"]::before': {
+              border: '2px solid hsl(var(--muted-foreground) / 0.35)',
+            },
+            '&[data-timeline-quiet="true"]:hover::before': {
+              border: '2px solid #ff6600',
+            },
           },
         }),
       }}>
