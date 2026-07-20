@@ -22,6 +22,13 @@ import type { EmailMessage } from '@/components/incidents/EmailThreadPanel';
 // Helpers
 // ---------------------------------------------------------------------------
 
+/** Detect draft state from Gmail labelIds (case-insensitive). */
+const gmailIsDraft = (labelIds: unknown): boolean => {
+  if (!Array.isArray(labelIds)) return false;
+  return labelIds.some(l => typeof l === 'string' && l.toUpperCase() === 'DRAFT');
+};
+
+
 /** Decode a base64url string (Gmail uses url-safe base64 for body data). */
 const decodeBase64Url = (input: string): string => {
   if (!input) return '';
