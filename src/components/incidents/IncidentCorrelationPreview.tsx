@@ -2,7 +2,7 @@ import { ExternalLink as OpenInNewIcon, ExternalLink as LaunchIcon, Trash as Del
 import { useEffect, useState } from 'react';
 import { Box, Typography, Chip, CircularProgress, Button, Divider, Alert } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { getDatastoreItem } from '@/Shuffle-MCPs/datastore';
+import { lookupIncidentCached } from './incidentPreviewCache';
 
 interface IncidentCorrelationPreviewProps {
   /** Incident ID for the chip the user clicked. */
