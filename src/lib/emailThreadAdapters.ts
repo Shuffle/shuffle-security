@@ -315,6 +315,34 @@ export interface ResolvedEmailThread {
   source: 'gmail' | 'outlook' | 'generic';
 }
 
+/** Unwrap known draft envelopes, e.g. Gmail `users.drafts.get` -> { id, message: {...} }. */
+const unwrapDraftCandidates = (
+  unmapped: any,
+): Array<{ payload: any; forceDraft: boolean }> => {
+  const out: Array<{ payload: any; forceDraft: boolean }> = [];
+  const push = (p: any, forceDraft: boolean) => {
+    if (p && typeof p === 'object') out.push({ payload: p, forceDraft });
+  };
+  // Non-draft candidates
+  push(unmapped, false);
+  push(unmapped.message, false);
+  push(unmapped.email, false);
+  push(unmapped.data, false);
+  push(unmapped.payload, false);
+  // Explicit draft wrappers: force isDraft on the resulting messages.
+  if (unmapped.draft) {
+    push(unmapped.draft, true);
+    push(unmapped.draft.message, true);
+  }
+  if (Array.isArray(unmapped.drafts)) {
+    for (const d of unmapped.drafts) {
+      push(d, true);
+      push(d?.message, true);
+    }
+  }
+  return out;
+};
+
 /**
  * Try to resolve a structured email thread from rawOCSF.unmapped_original.
  * Returns null when no adapter matches — caller should then fall back to the
@@ -324,22 +352,33 @@ export const resolveEmailThread = (rawOCSF: any): ResolvedEmailThread | null => 
   const unmapped = rawOCSF?.unmapped_original;
   if (!unmapped || typeof unmapped !== 'object') return null;
 
-  // Some pipelines wrap the provider payload one level deeper.
-  const candidates = [unmapped, unmapped.message, unmapped.email, unmapped.data, unmapped.payload].filter(Boolean);
+  const candidates = unwrapDraftCandidates(unmapped);
 
-  for (const candidate of candidates) {
+  for (const { payload: candidate, forceDraft } of candidates) {
     if (isGmailPayload(candidate)) {
-      const msgs = gmailToEmailThread(candidate);
+      const msgs = gmailToEmailThread(candidate, forceDraft);
       if (msgs.length > 0) return { messages: msgs, source: 'gmail' };
     }
     if (isOutlookPayload(candidate)) {
-      const msgs = outlookToEmailThread(candidate);
+      const msgs = outlookToEmailThread(candidate, forceDraft);
       if (msgs.length > 0) return { messages: msgs, source: 'outlook' };
     }
     if (isGenericEmailEnvelope(candidate)) {
-      const msgs = genericToEmailThread(candidate);
+      const msgs = genericToEmailThread(candidate, forceDraft);
       if (msgs.length > 0) return { messages: msgs, source: 'generic' };
     }
   }
   return null;
 };
+
+/**
+ * True when the incident's resolved email thread is composed entirely of
+ * drafts — such an incident should never be used as the source of truth
+ * (e.g. never selected as merge primary, never treated as "latest").
+ */
+export const isDraftOnlyIncident = (rawOCSF: any): boolean => {
+  const resolved = resolveEmailThread(rawOCSF);
+  if (!resolved || resolved.messages.length === 0) return false;
+  return resolved.messages.every(m => m.isDraft === true);
+};
+
