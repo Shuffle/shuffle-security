@@ -1658,7 +1658,7 @@ const IncidentDetailPage = () => {
   useEffect(() => {
     if (!incident?.id || !incident.rawOCSF) return;
     maybeMigrateLegacyMerge(incident.id, incident.rawOCSF).then(migrated => {
-      if (migrated) loadIncident?.(false);
+      if (migrated) { void loadIncident?.(false); }
     }).catch(() => {/* non-fatal */});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [incident?.id]);
