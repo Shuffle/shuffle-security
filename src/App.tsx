@@ -41,7 +41,13 @@ import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
 import ExternalLinkConfirmDialog from '@/components/common/ExternalLinkConfirmDialog';
 import IncidentsPage from '@/pages/dashboard/IncidentsPage';
-import IncidentDetailPage from '@/pages/dashboard/IncidentDetailPage';
+import IncidentDetailPageImpl from '@/pages/dashboard/IncidentDetailPage';
+import { useParams } from 'react-router-dom';
+const IncidentDetailPage = () => {
+  const { id } = useParams<{ id: string }>();
+  // Remount on id change so all internal state/fetches reset cleanly.
+  return <IncidentDetailPageImpl key={id || 'none'} />;
+};
 
 import TemplatesPage from '@/pages/dashboard/TemplatesPage';
 import IOCTypesPage from '@/pages/dashboard/IOCTypesPage';
