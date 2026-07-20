@@ -28,6 +28,20 @@ const gmailIsDraft = (labelIds: unknown): boolean => {
   return labelIds.some(l => typeof l === 'string' && l.toUpperCase() === 'DRAFT');
 };
 
+/**
+ * Pick the newest non-draft message as `isLatest`. Drafts should never be
+ * treated as the source of truth for the thread. If every message is a
+ * draft, fall back to the first (newest overall) so the UI still has a
+ * message expanded by default.
+ */
+const assignLatest = (messages: EmailMessage[]): EmailMessage[] => {
+  if (messages.length === 0) return messages;
+  let latestIdx = messages.findIndex(m => !m.isDraft);
+  if (latestIdx === -1) latestIdx = 0;
+  return messages.map((m, i) => ({ ...m, isLatest: i === latestIdx }));
+};
+
+
 
 /** Decode a base64url string (Gmail uses url-safe base64 for body data). */
 const decodeBase64Url = (input: string): string => {
