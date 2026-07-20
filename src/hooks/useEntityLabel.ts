@@ -16,6 +16,8 @@ export type EntityValue = (typeof ENTITY_OPTIONS)[number]['value'];
 
 const LOCAL_CACHE_KEY = 'shuffle-entity-label';
 const LOCAL_AUTOMATION_KEY = 'shuffle-show-automation';
+const LOCAL_AUTO_MERGE_THREAD_KEY = 'shuffle-auto-merge-thread';
+
 const LOCAL_SIDEBAR_TABS_KEY = 'shuffle-sidebar-tabs';
 const LOCAL_TASK_STATUSES_KEY = 'shuffle-task-statuses';
 const DATASTORE_KEY = 'org_settings';
