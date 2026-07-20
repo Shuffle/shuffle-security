@@ -394,6 +394,17 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
 
   if (messages.length === 0) return null;
 
+  // Draft awareness: some providers deliver unsent drafts (Gmail DRAFT label,
+  // Outlook isDraft, generic status:'draft'). Drafts should never be treated
+  // as the source of truth — we already skip them when picking `isLatest`
+  // inside the adapter, but the header should also make it visible when
+  // the newest message overall is a draft (analyst can then look at the
+  // last sent message instead).
+  const draftCount = messages.filter(m => m.isDraft).length;
+  const allDrafts = draftCount === messages.length;
+  const newestIsDraft = messages[0]?.isDraft === true;
+  const hasNonDraft = messages.some(m => !m.isDraft);
+
   // Header badges (message count + parsed-from chip). Rendered next to the
   // title in IncidentSection's `badge` slot.
   const headerBadge = (
@@ -426,8 +437,34 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
           />
         </Tooltip>
       )}
+      {draftCount > 0 && (
+        <Tooltip
+          title={
+            allDrafts
+              ? 'Every message in this thread is an unsent draft — do not treat it as a source of truth.'
+              : newestIsDraft && hasNonDraft
+                ? 'Newest message is an unsent draft. The last sent message is highlighted as Latest instead.'
+                : `${draftCount} unsent draft${draftCount !== 1 ? 's' : ''} in this thread.`
+          }
+          arrow
+        >
+          <Chip
+            label={allDrafts ? 'Draft only' : `${draftCount} draft${draftCount !== 1 ? 's' : ''}`}
+            size="small"
+            variant="outlined"
+            sx={{
+              height: 18,
+              fontSize: '0.65rem',
+              bgcolor: 'transparent',
+              borderColor: 'hsl(var(--warning) / 0.5)',
+              color: 'hsl(var(--warning))',
+            }}
+          />
+        </Tooltip>
+      )}
     </Box>
   );
+
 
   // Right-side action buttons (reply / forward / popout). Rendered in
   // IncidentSection's `actions` slot.
