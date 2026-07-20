@@ -4772,6 +4772,8 @@ const IncidentDetailPage = () => {
           </Box>
         </Box>
       </Box>
+      )}
+
 
       {/* Unified Timeline Feed — when inline, render with a vertical rail behind the items */}
       <Box sx={{
