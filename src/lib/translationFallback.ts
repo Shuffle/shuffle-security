@@ -49,10 +49,48 @@ const ROOT_ALIASES: Record<string, string[]> = {
 const looksLikeTranslationExpr = (s: string): boolean => {
   if (!s || typeof s !== 'string') return false;
   const t = s.trim();
-  if (t.length < 3 || t.length > 512) return false;
+  if (t.length < 3) return false;
   if (t[0] !== '$') return false;
   // Must contain a path operator to avoid matching accidental "$foo" text.
   return /[.\[]/.test(t);
+};
+
+/**
+ * Detect the "hybrid" failure mode where the translator serialised the
+ * resolved prefix (a JSON array of header dicts) and appended the raw,
+ * unevaluated filter suffix, e.g.:
+ *   `[{"name":"Subject","value":"X"},...][?(@.name==Subject)].value`
+ * Returns the parsed array + filter parameters when the shape matches.
+ */
+const parseHybridHeaderFailure = (
+  s: string,
+): { array: Json[]; headerName: string; pickKey: string } | null => {
+  if (typeof s !== 'string') return null;
+  const trimmed = s.trim();
+  if (!trimmed.startsWith('[')) return null;
+  // Filter suffix: [?(@.name==Foo)].value  — value may be quoted or bare.
+  const suffixMatch = trimmed.match(
+    /\[\?\(\s*@\.(\w+)\s*==\s*(?:"([^"]+)"|'([^']+)'|([^)\s]+))\s*\)\]\.(\w+)\s*$/,
+  );
+  if (!suffixMatch) return null;
+  const filterField = suffixMatch[1]; // e.g. "name"
+  const headerName = suffixMatch[2] ?? suffixMatch[3] ?? suffixMatch[4]; // e.g. "Subject"
+  const pickKey = suffixMatch[5]; // e.g. "value"
+  const arrayPart = trimmed.slice(0, suffixMatch.index).trim();
+  let parsed: Json;
+  try {
+    parsed = JSON.parse(arrayPart);
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(parsed)) return null;
+  // Verify it looks like a header list: every item is an object with the
+  // filter field present as a string.
+  const looksLikeHeaders = parsed.every(
+    (it) => it && typeof it === 'object' && typeof (it as any)[filterField] === 'string',
+  );
+  if (!looksLikeHeaders) return null;
+  return { array: parsed, headerName, pickKey };
 };
 
 const readDotted = (container: Json, dotted: string): Json => {
@@ -215,24 +253,44 @@ export const autoCorrectTranslatedString = (
   container: Json,
   headerName?: string,
 ): string | undefined => {
+  const debug = typeof window !== 'undefined' && (window as any).__DEBUG_TRANSLATION_FALLBACK__;
+
   // Case 1: raw expression string leaked into the field.
   if (typeof value === 'string' && looksLikeTranslationExpr(value)) {
     const resolved = evaluateTranslationExpression(value, container);
+    if (debug) console.log('[translationFallback] case1 raw-expression', { value, resolved });
     if (resolved != null) {
       if (typeof resolved === 'string') return resolved;
       if (typeof resolved === 'number' || typeof resolved === 'boolean') return String(resolved);
-      // If the resolved value is itself a header array, fall through to case 2.
-      value = resolved;
+      value = resolved; // fall through to case 2
     } else {
       return value;
     }
   }
 
-  // Case 2: field already contains an array of `{name, value}` header dicts
-  // (translator dumped the prefix array because it could not evaluate the
-  // filter predicate). Pick the header matching `headerName`.
+  // Case 3 (the common one): hybrid failure — translator serialized the
+  // prefix array and appended the raw filter suffix as a string.
+  if (typeof value === 'string') {
+    const hybrid = parseHybridHeaderFailure(value);
+    if (hybrid) {
+      if (debug) console.log('[translationFallback] case3 hybrid-header', { headerName: hybrid.headerName, pickKey: hybrid.pickKey, arrayLen: hybrid.array.length });
+      const target = hybrid.headerName.toLowerCase();
+      for (const item of hybrid.array) {
+        const n = (item as any).name ?? (item as any).Name ?? (item as any).key;
+        if (typeof n === 'string' && n.toLowerCase() === target) {
+          const v = (item as any)[hybrid.pickKey];
+          if (typeof v === 'string') return v;
+          if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+        }
+      }
+      if (debug) console.warn('[translationFallback] hybrid header not found', hybrid.headerName);
+    }
+  }
+
+  // Case 2: field is a raw array of `{name, value}` header dicts.
   if (Array.isArray(value) && headerName) {
     const target = headerName.toLowerCase();
+    if (debug) console.log('[translationFallback] case2 raw-array', { headerName, len: value.length });
     for (const item of value) {
       if (item && typeof item === 'object') {
         const n = (item as any).name ?? (item as any).Name ?? (item as any).key;
