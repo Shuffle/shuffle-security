@@ -130,6 +130,8 @@ import type { AgentRun } from '@/services/agentActivity';
 import { getAgentSkipInfo } from '@/lib/agentParsers';
 import HighlightedFileEditor from '@/components/incidents/HighlightedFileEditor';
 import EmailThreadPanel, { isEmailContent } from '@/components/incidents/EmailThreadPanel';
+import { isDraftOnlyIncident } from '@/lib/emailThreadAdapters';
+
 import { IncidentSection } from '@/components/incidents/IncidentSection';
 import { useEnrichmentStatus } from '@/hooks/useEnrichmentStatus';
 import { useIsSupport } from '@/hooks/useIsSupport';
@@ -1722,10 +1724,18 @@ const IncidentDetailPage = () => {
       })),
     ];
 
-    // Latest wins. Tiebreaker: incident id string sort (stable).
-    pool.sort((a, b) => (b.ts - a.ts) || b.id.localeCompare(a.id));
+    // Latest wins, but never pick a draft-only incident as primary — drafts
+    // are unsent and must not become the source of truth. Sort non-draft
+    // first, then by newest timestamp, then by id (stable tiebreaker).
+    pool.sort((a, b) => {
+      const ad = isDraftOnlyIncident(a.raw) ? 1 : 0;
+      const bd = isDraftOnlyIncident(b.raw) ? 1 : 0;
+      if (ad !== bd) return ad - bd;
+      return (b.ts - a.ts) || b.id.localeCompare(a.id);
+    });
     const primary = pool[0];
     const sources = pool.slice(1);
+
 
     setAutoMergeBusy(true);
     try {

@@ -22,6 +22,27 @@ import type { EmailMessage } from '@/components/incidents/EmailThreadPanel';
 // Helpers
 // ---------------------------------------------------------------------------
 
+/** Detect draft state from Gmail labelIds (case-insensitive). */
+const gmailIsDraft = (labelIds: unknown): boolean => {
+  if (!Array.isArray(labelIds)) return false;
+  return labelIds.some(l => typeof l === 'string' && l.toUpperCase() === 'DRAFT');
+};
+
+/**
+ * Pick the newest non-draft message as `isLatest`. Drafts should never be
+ * treated as the source of truth for the thread. If every message is a
+ * draft, fall back to the first (newest overall) so the UI still has a
+ * message expanded by default.
+ */
+const assignLatest = (messages: EmailMessage[]): EmailMessage[] => {
+  if (messages.length === 0) return messages;
+  let latestIdx = messages.findIndex(m => !m.isDraft);
+  if (latestIdx === -1) latestIdx = 0;
+  return messages.map((m, i) => ({ ...m, isLatest: i === latestIdx }));
+};
+
+
+
 /** Decode a base64url string (Gmail uses url-safe base64 for body data). */
 const decodeBase64Url = (input: string): string => {
   if (!input) return '';
@@ -88,7 +109,9 @@ interface GmailMessage {
   internalDate?: string;
   labelIds?: string[];
   payload?: GmailPart;
+  isDraft?: boolean;
 }
+
 
 /** Walk Gmail MIME tree and collect first text/plain and text/html bodies. */
 const extractGmailBodies = (part: GmailPart | undefined): { text: string; html: string } => {
@@ -122,7 +145,7 @@ const isGmailPayload = (raw: any): boolean => {
   return false;
 };
 
-const gmailMessageToEmail = (msg: GmailMessage, idx: number, total: number): EmailMessage => {
+const gmailMessageToEmail = (msg: GmailMessage, idx: number, total: number, forceDraft?: boolean): EmailMessage => {
   const headers = msg.payload?.headers;
   const from = getHeader(headers, 'From');
   const to = getHeader(headers, 'To');
@@ -131,6 +154,7 @@ const gmailMessageToEmail = (msg: GmailMessage, idx: number, total: number): Ema
   const date = getHeader(headers, 'Date');
   const { text, html } = extractGmailBodies(msg.payload);
   const fromMatch = from.match(/^(.*?)\s*<([^>]+)>\s*$/);
+  const isDraft = forceDraft || gmailIsDraft(msg.labelIds) || msg.isDraft === true;
   return {
     id: msg.id || `gmail-${idx}`,
     from: fromMatch ? (fromMatch[1].trim() || fromMatch[2]) : (from || `Message ${idx + 1}`),
@@ -141,11 +165,11 @@ const gmailMessageToEmail = (msg: GmailMessage, idx: number, total: number): Ema
     date: date || (msg.internalDate ? new Date(parseInt(msg.internalDate, 10)).toUTCString() : undefined),
     body: text || msg.snippet || '',
     bodyHtml: html || undefined,
-    isLatest: idx === 0,
+    isDraft,
   };
 };
 
-const gmailToEmailThread = (raw: any): EmailMessage[] => {
+const gmailToEmailThread = (raw: any, forceDraft?: boolean): EmailMessage[] => {
   const rawMessages: GmailMessage[] = Array.isArray(raw?.messages) ? raw.messages : [raw];
   // Gmail returns oldest-first in threads.get — we want newest-first.
   const sorted = [...rawMessages].sort((a, b) => {
@@ -153,8 +177,9 @@ const gmailToEmailThread = (raw: any): EmailMessage[] => {
     const tb = parseInt(b.internalDate || '0', 10);
     return tb - ta;
   });
-  return sorted.map((m, i) => gmailMessageToEmail(m, i, sorted.length));
+  return assignLatest(sorted.map((m, i) => gmailMessageToEmail(m, i, sorted.length, forceDraft)));
 };
+
 
 // ---------------------------------------------------------------------------
 // Outlook / Microsoft Graph adapter
@@ -174,7 +199,10 @@ interface OutlookMessage {
   body?: { contentType?: string; content?: string };
   conversationId?: string;
   internetMessageId?: string;
+  isDraft?: boolean;
+  parentFolderId?: string;
 }
+
 
 const isOutlookPayload = (raw: any): boolean => {
   if (!raw || typeof raw !== 'object') return false;
@@ -201,12 +229,15 @@ const formatRecipients = (recipients?: OutlookRecipient[]): string => {
     .join(', ');
 };
 
-const outlookMessageToEmail = (msg: OutlookMessage, idx: number): EmailMessage => {
+const outlookMessageToEmail = (msg: OutlookMessage, idx: number, forceDraft?: boolean): EmailMessage => {
   const fromAddr = msg.from?.emailAddress || msg.sender?.emailAddress;
   const fromName = fromAddr?.name || fromAddr?.address || `Message ${idx + 1}`;
   const isHtml = (msg.body?.contentType || '').toLowerCase() === 'html';
   const html = isHtml ? (msg.body?.content || '') : '';
   const text = isHtml ? htmlToText(msg.body?.content || '') : (msg.body?.content || '');
+  const isDraft = forceDraft
+    || msg.isDraft === true
+    || (typeof msg.parentFolderId === 'string' && /^drafts?$/i.test(msg.parentFolderId));
   return {
     id: msg.id || msg.internetMessageId || `outlook-${idx}`,
     from: fromName,
@@ -217,11 +248,11 @@ const outlookMessageToEmail = (msg: OutlookMessage, idx: number): EmailMessage =
     date: msg.receivedDateTime || msg.sentDateTime || undefined,
     body: text || msg.bodyPreview || '',
     bodyHtml: html || undefined,
-    isLatest: idx === 0,
+    isDraft,
   };
 };
 
-const outlookToEmailThread = (raw: any): EmailMessage[] => {
+const outlookToEmailThread = (raw: any, forceDraft?: boolean): EmailMessage[] => {
   const rawMessages: OutlookMessage[] = Array.isArray(raw?.value) ? raw.value : [raw];
   // Sort newest first by receivedDateTime
   const sorted = [...rawMessages].sort((a, b) => {
@@ -229,8 +260,9 @@ const outlookToEmailThread = (raw: any): EmailMessage[] => {
     const tb = new Date(b.receivedDateTime || b.sentDateTime || 0).getTime();
     return tb - ta;
   });
-  return sorted.map((m, i) => outlookMessageToEmail(m, i));
+  return assignLatest(sorted.map((m, i) => outlookMessageToEmail(m, i, forceDraft)));
 };
+
 
 // ---------------------------------------------------------------------------
 // Generic single-message envelope (covers IMAP/SMTP forwarders that just
@@ -246,12 +278,17 @@ const isGenericEmailEnvelope = (raw: any): boolean => {
   return hasFrom && hasBody && hasSubjectish;
 };
 
-const genericToEmailThread = (raw: any): EmailMessage[] => {
+const genericToEmailThread = (raw: any, forceDraft?: boolean): EmailMessage[] => {
   const fromRaw = raw.from || raw.sender || raw.From || '';
   const fromStr = typeof fromRaw === 'string' ? fromRaw : (fromRaw?.address || fromRaw?.email || JSON.stringify(fromRaw));
   const fromMatch = fromStr.match(/^(.*?)\s*<([^>]+)>\s*$/);
   const html = raw.html || raw.HtmlBody || (raw.body?.html) || '';
   const text = raw.text || raw.TextBody || raw.body || (typeof raw.Body === 'string' ? raw.Body : '') || htmlToText(html);
+  const isDraft = forceDraft
+    || raw.isDraft === true
+    || raw.is_draft === true
+    || (typeof raw.status === 'string' && raw.status.toLowerCase() === 'draft')
+    || raw.draft === true;
   return [{
     id: raw.id || raw.messageId || raw['Message-ID'] || 'generic-0',
     from: fromMatch ? (fromMatch[1].trim() || fromMatch[2]) : (fromStr || 'Sender'),
@@ -263,8 +300,10 @@ const genericToEmailThread = (raw: any): EmailMessage[] => {
     body: typeof text === 'string' ? text : '',
     bodyHtml: typeof html === 'string' && html ? html : undefined,
     isLatest: true,
+    isDraft,
   }];
 };
+
 
 // ---------------------------------------------------------------------------
 // Public entry point
@@ -276,6 +315,34 @@ export interface ResolvedEmailThread {
   source: 'gmail' | 'outlook' | 'generic';
 }
 
+/** Unwrap known draft envelopes, e.g. Gmail `users.drafts.get` -> { id, message: {...} }. */
+const unwrapDraftCandidates = (
+  unmapped: any,
+): Array<{ payload: any; forceDraft: boolean }> => {
+  const out: Array<{ payload: any; forceDraft: boolean }> = [];
+  const push = (p: any, forceDraft: boolean) => {
+    if (p && typeof p === 'object') out.push({ payload: p, forceDraft });
+  };
+  // Non-draft candidates
+  push(unmapped, false);
+  push(unmapped.message, false);
+  push(unmapped.email, false);
+  push(unmapped.data, false);
+  push(unmapped.payload, false);
+  // Explicit draft wrappers: force isDraft on the resulting messages.
+  if (unmapped.draft) {
+    push(unmapped.draft, true);
+    push(unmapped.draft.message, true);
+  }
+  if (Array.isArray(unmapped.drafts)) {
+    for (const d of unmapped.drafts) {
+      push(d, true);
+      push(d?.message, true);
+    }
+  }
+  return out;
+};
+
 /**
  * Try to resolve a structured email thread from rawOCSF.unmapped_original.
  * Returns null when no adapter matches — caller should then fall back to the
@@ -285,22 +352,33 @@ export const resolveEmailThread = (rawOCSF: any): ResolvedEmailThread | null => 
   const unmapped = rawOCSF?.unmapped_original;
   if (!unmapped || typeof unmapped !== 'object') return null;
 
-  // Some pipelines wrap the provider payload one level deeper.
-  const candidates = [unmapped, unmapped.message, unmapped.email, unmapped.data, unmapped.payload].filter(Boolean);
+  const candidates = unwrapDraftCandidates(unmapped);
 
-  for (const candidate of candidates) {
+  for (const { payload: candidate, forceDraft } of candidates) {
     if (isGmailPayload(candidate)) {
-      const msgs = gmailToEmailThread(candidate);
+      const msgs = gmailToEmailThread(candidate, forceDraft);
       if (msgs.length > 0) return { messages: msgs, source: 'gmail' };
     }
     if (isOutlookPayload(candidate)) {
-      const msgs = outlookToEmailThread(candidate);
+      const msgs = outlookToEmailThread(candidate, forceDraft);
       if (msgs.length > 0) return { messages: msgs, source: 'outlook' };
     }
     if (isGenericEmailEnvelope(candidate)) {
-      const msgs = genericToEmailThread(candidate);
+      const msgs = genericToEmailThread(candidate, forceDraft);
       if (msgs.length > 0) return { messages: msgs, source: 'generic' };
     }
   }
   return null;
 };
+
+/**
+ * True when the incident's resolved email thread is composed entirely of
+ * drafts — such an incident should never be used as the source of truth
+ * (e.g. never selected as merge primary, never treated as "latest").
+ */
+export const isDraftOnlyIncident = (rawOCSF: any): boolean => {
+  const resolved = resolveEmailThread(rawOCSF);
+  if (!resolved || resolved.messages.length === 0) return false;
+  return resolved.messages.every(m => m.isDraft === true);
+};
+
