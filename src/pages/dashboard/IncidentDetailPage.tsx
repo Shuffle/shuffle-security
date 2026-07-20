@@ -413,6 +413,27 @@ const meaningfulField = (
   return meaningfulString(corrected ?? (typeof val === 'string' ? val : undefined));
 };
 
+const cleanInitialRevisionText = (
+  val: unknown,
+  container: unknown,
+  headerName?: string,
+): string => {
+  const meaningful = meaningfulField(val, container, headerName);
+  const src = String(meaningful || '');
+  if (!src) return '';
+  const decoded = decodeIfBase64(src);
+  const trimmedDecoded = decoded.trim();
+  const looksLikeBase64Blob =
+    src.length > 120
+    && /^[A-Za-z0-9+/_\-\s=]+$/.test(src)
+    && !/\s/.test(src.trim().slice(0, 200));
+  if (looksLikeBase64Blob && decoded === src) return '';
+  if (/^\s*(Content-Type|MIME-Version|Content-Transfer-Encoding):/im.test(decoded)) return '';
+  if (/^\s*\[\s*\{\s*"name"\s*:/i.test(trimmedDecoded)) return '';
+  if (/\[\?\(\s*@\./.test(trimmedDecoded)) return '';
+  return decoded;
+};
+
 /**
  * Resolve the "created" timestamp for an incident.
  * Priority: value.created_time → item.created (datastore envelope).
@@ -5422,38 +5443,15 @@ const IncidentDetailPage = () => {
 
         const showAsCreation = isFirst && !isOnlyRevisionsFilter;
         const initialTitle = showAsCreation
-          ? (item.parsedCurrent?.title
-              || item.parsedCurrent?.finding_info?.title
-              || item.parsedCurrent?.message
-              || '')
+          ? (cleanInitialRevisionText(item.parsedCurrent?.title, item.parsedCurrent, 'Subject')
+              || cleanInitialRevisionText(item.parsedCurrent?.finding_info?.title, item.parsedCurrent, 'Subject')
+              || cleanInitialRevisionText(item.parsedCurrent?.message, item.parsedCurrent))
           : '';
-        const rawInitialDescription = showAsCreation
-          ? (item.parsedCurrent?.desc
-              || item.parsedCurrent?.description
-              || item.parsedCurrent?.supporting_data
-              || '')
+        const initialDescription = showAsCreation
+          ? (cleanInitialRevisionText(item.parsedCurrent?.desc, item.parsedCurrent)
+              || cleanInitialRevisionText(item.parsedCurrent?.description, item.parsedCurrent)
+              || cleanInitialRevisionText(item.parsedCurrent?.supporting_data, item.parsedCurrent))
           : '';
-        // Gmail/Outlook ingestion sometimes leaves the raw base64url MIME
-        // payload in supporting_data/description. Try to decode it; if the
-        // decoded output still looks like a base64 blob or a MIME header
-        // dump, drop it so the "Incident created" card doesn't render
-        // gibberish. Real prose passes through untouched.
-        const initialDescription = (() => {
-          const src = String(rawInitialDescription || '');
-          if (!src) return '';
-          const decoded = decodeIfBase64(src);
-          const looksLikeBase64Blob =
-            src.length > 120
-            && /^[A-Za-z0-9+/_\-\s=]+$/.test(src)
-            && !/\s/.test(src.trim().slice(0, 200));
-          if (looksLikeBase64Blob && decoded === src) return '';
-          // If the decoded content is a raw MIME dump, skip it — the Email
-          // Thread panel already renders these properly.
-          if (/^\s*(Content-Type|MIME-Version|Content-Transfer-Encoding):/im.test(decoded)) {
-            return '';
-          }
-          return decoded;
-        })();
 
         return (
           <Box
