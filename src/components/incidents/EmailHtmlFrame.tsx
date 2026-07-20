@@ -33,36 +33,10 @@ interface EmailHtmlFrameProps {
   maxHeight?: number;
 }
 
-// Baseline styles injected as a FALLBACK only. We use :where() so specificity
-// is zero — any style the email ships (inline style="" or <style>) wins.
-// Emails are almost universally light-themed and hardcode colors against a
-// white canvas, so we render on white to preserve the sender's intent
-// (this is exactly what Gmail / Outlook Web / Superhuman do).
-const BASE_STYLES = `
-  :where(html, body) {
-    margin: 0;
-    padding: 0;
-    background: #ffffff;
-    color: #202124;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    font-size: 14px;
-    line-height: 1.5;
-  }
-  /* Do NOT constrain body width or force centering. Email templates ship
-     their own outer <table> / wrapper that handles full-bleed backgrounds
-     and a centered inner column (usually ~600-720px). Overriding body width
-     collapses full-bleed headers and mis-sizes hero images. Gmail / Outlook
-     Web do the same: provide a neutral canvas, let the email lay itself out. */
-  :where(img) { max-width: 100%; height: auto; }
-  :where(a) { color: #1a73e8; }
-  :where(blockquote) {
-    border-left: 3px solid #e0e0e0;
-    padding-left: 12px;
-    margin-left: 0;
-    color: #5f6368;
-  }
-  :where(pre) { white-space: pre-wrap; word-break: break-word; }
-`;
+// No base styles are injected — the email's own HTML/CSS renders exactly as
+// its author designed. Any stylesheet we add (even zero-specificity :where())
+// interacts with the template and distorts spacing, image sizing, and layout.
+
 
 
 const sanitize = (dirty: string): string =>
@@ -125,20 +99,21 @@ const ensureHook = () => {
   });
 };
 
-const BASE_STYLE_TAG = `<style>${BASE_STYLES}</style><meta name="referrer" content="no-referrer">`;
+// Only a <meta name="referrer"> is injected — no styles. Real mail clients
+// render the email's own HTML/CSS untouched inside their viewport; adding
+// our own base styles fights the template and distorts sizing/layout.
+const HEAD_INJECT = `<meta name="referrer" content="no-referrer">`;
 
 const buildDocument = (sanitized: string): string => {
   const trimmed = (sanitized || '').trim();
-  // If DOMPurify returned a full document, inject our fallback styles into
-  // <head> (or before </html>) so email-provided styles override ours.
   if (/^<!doctype|^<html[\s>]/i.test(trimmed)) {
     if (/<head[\s>]/i.test(trimmed)) {
-      return trimmed.replace(/<head([^>]*)>/i, `<head$1>${BASE_STYLE_TAG}`);
+      return trimmed.replace(/<head([^>]*)>/i, `<head$1>${HEAD_INJECT}`);
     }
-    return trimmed.replace(/<html([^>]*)>/i, `<html$1><head>${BASE_STYLE_TAG}</head>`);
+    return trimmed.replace(/<html([^>]*)>/i, `<html$1><head>${HEAD_INJECT}</head>`);
   }
-  // Fragment — wrap it.
-  return `<!doctype html><html><head>${BASE_STYLE_TAG}</head><body>${trimmed}</body></html>`;
+  // Fragment — wrap it with an empty head so referrer policy still applies.
+  return `<!doctype html><html><head>${HEAD_INJECT}</head><body>${trimmed}</body></html>`;
 };
 
 const EmailHtmlFrame = ({ html, maxHeight = 4000 }: EmailHtmlFrameProps) => {
@@ -201,14 +176,6 @@ const EmailHtmlFrame = ({ html, maxHeight = 4000 }: EmailHtmlFrameProps) => {
         borderRadius: 1,
         overflow: 'hidden',
         backgroundColor: '#ffffff',
-        // Cap the render column to a typical email viewport (~720px) and
-        // center it on the white canvas. Real mail clients (Gmail, Outlook
-        // Web) render inside a narrow column, so email templates size their
-        // images/headers assuming that width. Letting our iframe span the
-        // full page width makes hero images and logos look drastically
-        // oversized relative to how they were designed.
-        maxWidth: 760,
-        marginX: 'auto',
         boxShadow:
           theme.palette.mode === 'dark'
             ? '0 1px 2px rgba(0,0,0,0.4)'
