@@ -686,7 +686,7 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
           )}
 
           {/* Empty state */}
-          {query.trim() && filteredNav.length === 0 && appResults.length === 0 && correlationResults.length === 0 && workflowResults.length === 0 && !isAnyLoading && (
+          {query.trim() && filteredNav.length === 0 && appResults.length === 0 && correlationResults.length === 0 && workflowResults.length === 0 && incidentResults.length === 0 && !isAnyLoading && (
             <Box sx={{ px: 3, py: 4, textAlign: 'center' }}>
               <Typography sx={{ color: 'hsl(var(--muted-foreground))', fontSize: '0.85rem' }}>
                 No results for "{query}"
