@@ -20,11 +20,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { getDatastoreByCategory, setDatastoreItem, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
+import { getDatastoreByCategory, getDatastoreItem, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import { mapOCSFSeverity, mapOCSFStatus, Observable } from '@/config/ocsfIncidentSchema';
 import { severityColors, statusConfig } from '@/config/incidentConfig';
 import { toast } from '@/lib/toast';
 import { useEntityText } from '@/hooks/useEntityLabel';
+import { linkMergePair, isMergedIncident } from '@/lib/incidentRelations';
+import { useAuth } from '@/context/AuthContext';
 
 interface IncidentSummary {
   id: string;
