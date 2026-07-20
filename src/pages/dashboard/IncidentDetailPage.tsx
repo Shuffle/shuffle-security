@@ -9538,16 +9538,15 @@ const IncidentDetailPage = () => {
       {activeTab === 6 && unmappedOriginal && (
         /* Original Data Tab */
         <Box sx={{
-          bgcolor: 'action.hover',
+          bgcolor: 'rgba(255,255,255,0.02)',
           borderRadius: 2,
-          border: '1px solid',
-          borderColor: 'divider',
+          border: '1px solid hsl(var(--border-subtle))',
           p: 2,
           display: 'flex',
           flexDirection: 'column',
           gap: 1.5,
         }}>
-          <Box sx={{ position: 'sticky', top: 0, zIndex: 10, bgcolor: 'hsl(var(--card))', mx: -2, px: 2, py: 1.5, borderBottom: '1px solid hsl(var(--border))' }}>
+          <Box sx={{ position: 'sticky', top: 0, zIndex: 10, bgcolor: 'hsl(var(--card))', mx: -2, px: 2, py: 1.5, borderBottom: '1px solid hsl(var(--border-subtle))' }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
               <DescriptionIcon size={18} style={{ color: 'primary.main' }} />
               Original Data
