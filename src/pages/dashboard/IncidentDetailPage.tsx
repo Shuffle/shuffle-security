@@ -6530,7 +6530,7 @@ const IncidentDetailPage = () => {
           primary={relatedIncidents.primary}
           primaryPointerId={primaryPointer.id}
           loading={relatedIncidents.loading}
-          onUnlinked={() => fetchIncident?.()}
+          onUnlinked={() => loadIncident(false)}
         />
       )}
 
@@ -6542,7 +6542,7 @@ const IncidentDetailPage = () => {
           linked={relatedIncidents.linked}
           invisibleCount={relatedIncidents.invisibleCount}
           loading={relatedIncidents.loading}
-          onUnlinked={() => fetchIncident?.()}
+          onUnlinked={() => loadIncident(false)}
         />
       )}
 
