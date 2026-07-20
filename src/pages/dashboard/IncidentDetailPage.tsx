@@ -60,6 +60,7 @@ import IncidentReportDialog from '@/components/incidents/IncidentReportDialog';
 import type { GenerateReportInput } from '@/services/incidentReports';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { resyncState } from '@/lib/resyncState';
+import { autoCorrectTranslatedString } from '@/lib/translationFallback';
 import { useUsers } from '@/hooks/useUsers';
 import { useSubOrgs } from '@/hooks/useSubOrgs';
 import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
@@ -396,6 +397,16 @@ const meaningfulString = (val: unknown): string | undefined => {
     }
   }
   return decodeHtmlEntities(trimmed);
+};
+
+/**
+ * Wrap meaningfulString with the translation-expression fallback so fields
+ * that were left as literal JSONPath (e.g. `$payload.headers[?(@.name=="Subject")].value`)
+ * get evaluated against the raw payload instead of leaking to the UI.
+ */
+const meaningfulField = (val: unknown, container: unknown): string | undefined => {
+  const corrected = autoCorrectTranslatedString(val, container);
+  return meaningfulString(corrected ?? val);
 };
 
 /**
