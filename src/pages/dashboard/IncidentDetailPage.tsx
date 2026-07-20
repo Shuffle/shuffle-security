@@ -8962,10 +8962,13 @@ const IncidentDetailPage = () => {
                         borderRadius: 1,
                         bgcolor: 'transparent',
                         backgroundImage: 'none',
-                        border: mismatch ? '1px solid hsl(var(--warning, 38 92% 50%) / 0.35)' : isExpanded ? '1px solid hsl(var(--primary) / 0.35)' : '1px solid hsl(var(--border))',
-                        opacity: isThisIgnored ? 0.55 : 1,
+                        border: isThisIgnored
+                          ? '1px dashed hsl(var(--warning, 38 92% 50%) / 0.55)'
+                          : mismatch ? '1px solid hsl(var(--warning, 38 92% 50%) / 0.35)' : isExpanded ? '1px solid hsl(var(--primary) / 0.35)' : '1px solid hsl(var(--border))',
+                        bgcolor: isThisIgnored ? 'hsl(var(--warning, 38 92% 50%) / 0.04)' : 'transparent',
+                        opacity: isThisIgnored ? 0.8 : 1,
                         transition: 'border-color 0.15s ease, background-color 0.15s ease, opacity 0.15s ease',
-                        '&:hover': { bgcolor: 'hsl(var(--muted) / 0.25)', borderColor: 'hsl(var(--primary) / 0.25)', opacity: isThisIgnored ? 0.85 : 1 },
+                        '&:hover': { bgcolor: isThisIgnored ? 'hsl(var(--warning, 38 92% 50%) / 0.08)' : 'hsl(var(--muted) / 0.25)', borderColor: isThisIgnored ? 'hsl(var(--warning, 38 92% 50%) / 0.75)' : 'hsl(var(--primary) / 0.25)', opacity: 1 },
                       }}
                     >
                       <Box
