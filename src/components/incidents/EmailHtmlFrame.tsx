@@ -33,43 +33,32 @@ interface EmailHtmlFrameProps {
   maxHeight?: number;
 }
 
-// Baseline styles injected into the iframe document so untyped emails still
-// look reasonable. Emails that ship their own styles will override these.
+// Baseline styles injected as a FALLBACK only. We use :where() so specificity
+// is zero — any style the email ships (inline style="" or <style>) wins.
+// Emails are almost universally light-themed and hardcode colors against a
+// white canvas, so we render on white to preserve the sender's intent
+// (this is exactly what Gmail / Outlook Web / Superhuman do).
 const BASE_STYLES = `
-  html, body {
+  :where(html, body) {
     margin: 0;
     padding: 0;
     background: #ffffff;
-    color: #1f1f1f;
+    color: #202124;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    font-size: 13px;
-    line-height: 1.55;
-    word-break: break-word;
+    font-size: 14px;
+    line-height: 1.5;
   }
-  body { padding: 12px 14px; }
-  img { max-width: 100%; height: auto; }
-  a { color: #1a73e8; }
-  blockquote {
+  :where(body) { padding: 12px 16px; }
+  :where(img) { max-width: 100%; height: auto; }
+  :where(a) { color: #1a73e8; }
+  :where(blockquote) {
     border-left: 3px solid #e0e0e0;
     padding-left: 12px;
     margin-left: 0;
     color: #5f6368;
   }
-  table { max-width: 100% !important; }
-  pre { white-space: pre-wrap; word-break: break-word; }
+  :where(pre) { white-space: pre-wrap; word-break: break-word; }
 `;
-
-// Height-reporter script. This runs inside the sandboxed iframe but is
-// scoped to *this document only* — it cannot reach the parent DOM because
-// the sandbox has no `allow-same-origin`. It uses postMessage which is
-// cross-origin-safe by design.
-//
-// NOTE: `allow-scripts` is intentionally OFF, so this script never runs.
-// Instead we measure from the parent using onLoad + a MutationObserver on
-// the iframe's contentDocument — which IS reachable, because a srcDoc
-// iframe *without* allow-same-origin still exposes its document to the
-// embedder for reading. This gives us auto-height without giving the
-// email code any JS execution surface.
 
 const sanitize = (dirty: string): string =>
   DOMPurify.sanitize(dirty, {
@@ -78,22 +67,18 @@ const sanitize = (dirty: string): string =>
       'script', 'object', 'embed', 'iframe',
       'meta', 'link', 'base', 'template', 'portal',
     ],
-    // DOMPurify strips all on* by default. formaction/action/ping/background
-    // are the legacy navigation vectors we also want gone.
     FORBID_ATTR: ['formaction', 'action', 'ping', 'background'],
-    // <style> blocks and inline styles are what make emails look like emails.
-    // They are safe inside our sandboxed iframe — CSS can't run JS.
+    // Preserve <style>, <html>, <head>, <body> so email CSS keeps its
+    // intended scope. The iframe sandbox is what keeps this safe — CSS
+    // cannot execute JS, and the sandbox blocks scripts / forms / same
+    // origin regardless of what tags survive here.
     ADD_TAGS: ['style'],
     ADD_ATTR: ['target', 'rel'],
-    // Allow http(s), mailto, tel, cid, fragments, relative, AND data:image
-    // (mail merges frequently inline logos as data-URI images).
     ALLOWED_URI_REGEXP:
       /^(?:https?:|mailto:|tel:|cid:|#|\/|\.{0,2}\/|data:image\/(?:png|jpe?g|gif|webp|svg\+xml);)/i,
-    // Prevent DOM clobbering (<img name="body"> etc.).
     SANITIZE_DOM: true,
-    // We are wrapping the output in <html><body> below, so ask DOMPurify to
-    // give us just the body fragment.
-    WHOLE_DOCUMENT: false,
+    // Return the full document so <head>/<style>/<body> structure is kept.
+    WHOLE_DOCUMENT: true,
   });
 
 // Belt-and-braces post-hook — installed once per module load. Force every
