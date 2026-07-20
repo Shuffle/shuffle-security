@@ -965,6 +965,21 @@ const IncidentDetailPage = () => {
     });
   };
   const isFilterActive = (key: TimelineFilterKey) => activeTimelineFilters.has(key);
+  // Merge/threading audit entries live inside `activity` but should be
+  // filed under their own "Threading" filter — they are not user comments.
+  // Emitted by src/lib/incidentRelations.ts as { type: 'system', id: 'merge-…' | 'merge-in-…' }.
+  const isMergeActivityItem = (item: any): boolean => {
+    if (!item) return false;
+    if (item.type === 'system') {
+      const id = String(item.id || '');
+      if (id.startsWith('merge-') || id.startsWith('merge-in-')) return true;
+      const content = String(item.content || '');
+      if (/^Merged (data )?(from|into) /i.test(content)) return true;
+    }
+    return false;
+  };
+  const mergeActivity = activity.filter(isMergeActivityItem);
+  const commentActivity = activity.filter((a) => !isMergeActivityItem(a));
   // Legacy compatibility shim — a few render branches used to special-case
   // the single-select "revisions" tab to relabel the oldest revision as
   // "Incident created". The equivalent in the new multi-select model is
