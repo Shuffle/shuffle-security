@@ -120,8 +120,21 @@ const ensureHook = () => {
   });
 };
 
-const buildDocument = (sanitizedBody: string): string =>
-  `<!doctype html><html><head><meta charset="utf-8"><meta name="referrer" content="no-referrer"><style>${BASE_STYLES}</style></head><body>${sanitizedBody}</body></html>`;
+const BASE_STYLE_TAG = `<style>${BASE_STYLES}</style><meta name="referrer" content="no-referrer">`;
+
+const buildDocument = (sanitized: string): string => {
+  const trimmed = (sanitized || '').trim();
+  // If DOMPurify returned a full document, inject our fallback styles into
+  // <head> (or before </html>) so email-provided styles override ours.
+  if (/^<!doctype|^<html[\s>]/i.test(trimmed)) {
+    if (/<head[\s>]/i.test(trimmed)) {
+      return trimmed.replace(/<head([^>]*)>/i, `<head$1>${BASE_STYLE_TAG}`);
+    }
+    return trimmed.replace(/<html([^>]*)>/i, `<html$1><head>${BASE_STYLE_TAG}</head>`);
+  }
+  // Fragment — wrap it.
+  return `<!doctype html><html><head>${BASE_STYLE_TAG}</head><body>${trimmed}</body></html>`;
+};
 
 const EmailHtmlFrame = ({ html, maxHeight = 4000 }: EmailHtmlFrameProps) => {
   const theme = useTheme();
