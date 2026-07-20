@@ -1,4 +1,5 @@
-import { Box, Typography, Chip, Checkbox, Skeleton, Tooltip, CircularProgress } from '@mui/material';
+import { Box, Typography, Chip, Checkbox, Skeleton, Tooltip, CircularProgress, Avatar } from '@mui/material';
+import { getLinkedPointers } from '@/lib/incidentRelations';
 import { Tag, RefreshCw as RefreshIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -476,6 +477,37 @@ export const IncidentCardView = ({
 
                 {/* Status is conveyed by the status chip in the card body —
                     no need for a duplicate badge overlay on the icon. */}
+
+                {/* Threading badge: shows count of merged incidents when this
+                    is a primary that has absorbed others via thread merge. */}
+                {(() => {
+                  if (showCheck) return null;
+                  const linked = getLinkedPointers(incident as any);
+                  const count = linked.length;
+                  if (count === 0) return null;
+                  return (
+                    <Tooltip title={`${count} incident${count !== 1 ? 's' : ''} merged into this thread`} arrow>
+                      <Avatar
+                        sx={{
+                          position: 'absolute',
+                          bottom: -4,
+                          right: -4,
+                          width: 18,
+                          height: 18,
+                          fontSize: '0.6rem',
+                          fontWeight: 700,
+                          bgcolor: 'hsl(var(--primary))',
+                          color: 'hsl(var(--primary-foreground))',
+                          border: '2px solid hsl(var(--background))',
+                          boxSizing: 'border-box',
+                          pointerEvents: 'auto',
+                        }}
+                      >
+                        {count}
+                      </Avatar>
+                    </Tooltip>
+                  );
+                })()}
               </Box>
 
               {/* Content */}
