@@ -1,13 +1,15 @@
 /**
  * EmailHtmlFrame — renders untrusted HTML email bodies safely.
  *
- * Strategy (same pattern Gmail / Outlook Web / Superhuman use):
- *   1. Sanitize the HTML with DOMPurify (script/object/embed/iframe/meta
- *      stripped, all on* attrs and javascript:/vbscript: URIs removed).
- *   2. Wrap the result in a minimal HTML document.
+ * Strategy:
+ *   1. Preserve the email HTML/CSS as-is for rendering fidelity.
+ *   2. Strip only executable/navigation primitives that should never be
+ *      needed for an email preview.
+ *   3. Wrap the result in a minimal HTML document when the payload is a
+ *      fragment.
  *   3. Render it inside a <iframe srcDoc sandbox="..."> — the browser then
  *      enforces the security boundary at the platform level. Even if the
- *      sanitizer misses something exotic, the iframe cannot:
+ *      hardening misses something exotic, the iframe cannot:
  *        - execute JavaScript          (no `allow-scripts`)
  *        - access this page's DOM      (no `allow-same-origin`)
  *        - submit forms                (no `allow-forms`)
@@ -20,12 +22,10 @@
  *      renders inline with the rest of the thread — no scrollbars, no
  *      arbitrary height guess.
  *
- * Result: emails look exactly like they do in Gmail (tables, inline styles,
- * data-URI images, `<style>` blocks all work) while JS is impossible.
+ * Result: emails keep their original sizing/layout CSS while JS is impossible.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, useTheme } from '@mui/material';
-import DOMPurify from 'dompurify';
 
 interface EmailHtmlFrameProps {
   html: string;
@@ -33,70 +33,25 @@ interface EmailHtmlFrameProps {
   maxHeight?: number;
 }
 
-// No base styles are injected — the email's own HTML/CSS renders exactly as
-// its author designed. Any stylesheet we add (even zero-specificity :where())
-// interacts with the template and distorts spacing, image sizing, and layout.
+// No sanitizer allowlist and no base styles are applied here. Allowlist-based
+// sanitizers drop email-specific tags/attributes/classes that templates use
+// for image dimensions and responsive sizing. The sandbox is the primary
+// security boundary; this helper only removes active content before srcDoc.
+const hardenHtmlForSandbox = (dirty: string): string => {
+  let safe = dirty || '';
 
+  safe = safe
+    .replace(/<\s*(script|object|embed|iframe|template|portal)\b[\s\S]*?<\s*\/\s*\1\s*>/gi, '')
+    .replace(/<\s*(script|object|embed|iframe|template|portal)\b[^>]*\/?>/gi, '')
+    .replace(/<\s*meta\b(?=[^>]*http-equiv\s*=\s*(?:"refresh"|'refresh'|refresh))[^>]*>/gi, '');
 
+  safe = safe
+    .replace(/\s+on[a-z0-9_:-]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+    .replace(/\s+(href|src|xlink:href|formaction|action)\s*=\s*"[\t\n\r ]*(?:javascript|vbscript):[^"]*"/gi, '')
+    .replace(/\s+(href|src|xlink:href|formaction|action)\s*=\s*'[\t\n\r ]*(?:javascript|vbscript):[^']*'/gi, '')
+    .replace(/\s+(href|src|xlink:href|formaction|action)\s*=\s*[\t\n\r ]*(?:javascript|vbscript):[^\s>]*/gi, '');
 
-const sanitize = (dirty: string): string =>
-  DOMPurify.sanitize(dirty, {
-    // Kept from previous config: no active content, no navigation hijacks.
-    FORBID_TAGS: [
-      'script', 'object', 'embed', 'iframe',
-      'meta', 'link', 'base', 'template', 'portal',
-    ],
-    FORBID_ATTR: ['formaction', 'action', 'ping', 'background'],
-    // Preserve <style>, <html>, <head>, <body> so email CSS keeps its
-    // intended scope. The iframe sandbox is what keeps this safe — CSS
-    // cannot execute JS, and the sandbox blocks scripts / forms / same
-    // origin regardless of what tags survive here.
-    ADD_TAGS: ['style'],
-    ADD_ATTR: ['target', 'rel'],
-    ALLOWED_URI_REGEXP:
-      /^(?:https?:|mailto:|tel:|cid:|#|\/|\.{0,2}\/|data:image\/(?:png|jpe?g|gif|webp|svg\+xml);)/i,
-    SANITIZE_DOM: true,
-    // Return the full document so <head>/<style>/<body> structure is kept.
-    WHOLE_DOCUMENT: true,
-  });
-
-// Belt-and-braces post-hook — installed once per module load. Force every
-// anchor open in a new tab (survives middle-click / cmd-click) and strip
-// any surviving event-handler attribute or javascript: URI in an exotic
-// namespace DOMPurify may have missed.
-let hookInstalled = false;
-const ensureHook = () => {
-  if (hookInstalled) return;
-  hookInstalled = true;
-  DOMPurify.addHook('afterSanitizeAttributes', (node) => {
-    const el = node as Element;
-    if (!el || !el.attributes) return;
-    if (el.tagName === 'A') {
-      el.setAttribute('target', '_blank');
-      el.setAttribute('rel', 'noopener noreferrer nofollow');
-    }
-    for (let i = el.attributes.length - 1; i >= 0; i--) {
-      const attr = el.attributes[i];
-      const name = attr.name.toLowerCase();
-      if (name.startsWith('on')) {
-        el.removeAttribute(attr.name);
-        continue;
-      }
-      // Block javascript:/vbscript: on any URI attr. `data:image/*` is
-      // whitelisted above via ALLOWED_URI_REGEXP; everything else `data:`
-      // is already rejected by that regex.
-      if (
-        (name === 'href' ||
-          name === 'src' ||
-          name === 'xlink:href' ||
-          name === 'formaction' ||
-          name === 'action') &&
-        /^\s*(?:javascript|vbscript):/i.test(attr.value)
-      ) {
-        el.removeAttribute(attr.name);
-      }
-    }
-  });
+  return safe;
 };
 
 // Only a <meta name="referrer"> is injected — no styles. Real mail clients
@@ -122,8 +77,7 @@ const EmailHtmlFrame = ({ html, maxHeight = 4000 }: EmailHtmlFrameProps) => {
   const [height, setHeight] = useState(80);
 
   const srcDoc = useMemo(() => {
-    ensureHook();
-    return buildDocument(sanitize(html || ''));
+    return buildDocument(hardenHtmlForSandbox(html || ''));
   }, [html]);
 
   useEffect(() => {
