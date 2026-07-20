@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, forwardRef } from 'r
 import DOMPurify from 'dompurify';
 import AgentIcon from '@/Shuffle-MCPs/components/AgentIcon';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { useEntityLabel, useTaskStatuses, useEntityText } from '@/hooks/useEntityLabel';
+import { useEntityLabel, useTaskStatuses, useEntityText, useAutoMergeThread } from '@/hooks/useEntityLabel';
 import {
   Box,
   Typography,
