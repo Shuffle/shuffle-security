@@ -30,8 +30,17 @@
 type Json = any;
 
 const ROOT_ALIASES: Record<string, string[]> = {
-  // JSONPath-ish root -> keys to try on the incident payload container
-  $payload: ['unmapped_original', 'payload', 'raw', 'original'],
+  // JSONPath-ish root -> dotted paths to try on the incident payload container.
+  // Order matters: the translator's `$payload` refers to the provider's raw
+  // payload object (Gmail: `unmapped_original.payload`; Outlook: `unmapped_original`;
+  // some pipelines: bare `payload`). Try each nesting before giving up.
+  $payload: [
+    'unmapped_original.payload',
+    'unmapped_original',
+    'payload',
+    'raw',
+    'original',
+  ],
   $raw: ['unmapped_original', 'raw'],
   $original: ['unmapped_original', 'original'],
   $unmapped: ['unmapped_original'],
@@ -46,19 +55,28 @@ const looksLikeTranslationExpr = (s: string): boolean => {
   return /[.\[]/.test(t);
 };
 
+const readDotted = (container: Json, dotted: string): Json => {
+  const parts = dotted.split('.');
+  let cur: Json = container;
+  for (const p of parts) {
+    if (cur == null || typeof cur !== 'object') return undefined;
+    cur = (cur as any)[p];
+  }
+  return cur;
+};
+
 const resolveRoot = (expr: string, container: Json): { rest: string; root: Json } | null => {
   const m = expr.match(/^(\$[A-Za-z_][\w]*)/);
   if (!m) return null;
   const alias = m[1];
   const rest = expr.slice(alias.length);
   const candidates = ROOT_ALIASES[alias] || [alias.slice(1)];
-  for (const key of candidates) {
-    if (container && typeof container === 'object' && key in container) {
-      return { rest, root: (container as any)[key] };
-    }
+  for (const path of candidates) {
+    const hit = readDotted(container, path);
+    if (hit !== undefined) return { rest, root: hit };
   }
-  // Fall back to the container itself — the caller passed us the payload
-  // wrapper, so treat `$payload` as "this object" if none of the aliases hit.
+  // Fall back to the container itself — the caller may have passed us the
+  // payload object directly.
   return { rest, root: container };
 };
 
