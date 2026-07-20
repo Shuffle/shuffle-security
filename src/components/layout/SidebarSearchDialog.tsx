@@ -58,7 +58,17 @@ interface WorkflowResult {
   workflow: WorkflowItem;
 }
 
-type SearchResult = NavResult | AppResult | CorrelationResult | WorkflowResult;
+interface IncidentItem {
+  id: string;
+  title: string;
+}
+
+interface IncidentResult {
+  type: 'incident';
+  incident: IncidentItem;
+}
+
+type SearchResult = NavResult | AppResult | CorrelationResult | WorkflowResult | IncidentResult;
 
 const navItems: NavResult[] = [
   { type: 'nav', label: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard size={16} /> },
