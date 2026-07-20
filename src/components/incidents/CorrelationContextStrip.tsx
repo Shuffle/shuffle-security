@@ -223,7 +223,7 @@ export const CorrelationContextStrip = ({ incidentKeys, category = 'shuffle-secu
                 )}
                 <Tooltip title={p.whenMs ? new Date(p.whenMs).toLocaleString() : 'Unknown time'} arrow>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25, flexShrink: 0, color: 'hsl(var(--muted-foreground))' }}>
-                    <ScheduleIcon style={{ fontSize: compact ? 10 : 11 }} />
+                    <ScheduleIcon size={compact ? 10 : 11} strokeWidth={2} />
                     <Typography
                       variant="caption"
                       sx={{ fontSize: compact ? '0.6rem' : '0.65rem', fontWeight: 600 }}
