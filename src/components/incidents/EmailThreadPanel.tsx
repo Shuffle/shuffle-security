@@ -327,9 +327,32 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
   );
 
   const messages = useMemo(
-    () => resolved?.messages?.length
-      ? resolved.messages
-      : parseEmailThread(descriptionText, descriptionHtml),
+    () => {
+      const structured = resolved?.messages || [];
+      // If the provider payload only exposed a single message (common with
+      // Gmail/Outlook, which return each message in a thread individually),
+      // the message body itself usually contains the previous replies as
+      // inline-quoted text ("On … wrote:", "From: …"). Fall back to the
+      // legacy regex parser on that body so the thread expands into every
+      // historical message instead of showing just the latest one.
+      if (structured.length === 1) {
+        const only = structured[0];
+        const quoted = parseEmailThread(only.body || '', only.bodyHtml || '');
+        if (quoted.length > 1) {
+          // Replace the first parsed piece with the structured header
+          // (it already has accurate from/to/date/subject/isDraft metadata),
+          // then keep the inline-quoted older messages that follow.
+          const merged: EmailMessage[] = [
+            { ...only, body: quoted[0].body, isLatest: true },
+            ...quoted.slice(1).map((m, i) => ({ ...m, id: `email-quoted-${i}`, isLatest: false })),
+          ];
+          return merged;
+        }
+        return structured;
+      }
+      if (structured.length > 0) return structured;
+      return parseEmailThread(descriptionText, descriptionHtml);
+    },
     [resolved, descriptionText, descriptionHtml],
   );
 
