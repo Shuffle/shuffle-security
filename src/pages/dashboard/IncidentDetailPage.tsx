@@ -6669,8 +6669,10 @@ const IncidentDetailPage = () => {
           `activeTab === 3` block below. */}
 
       {/* Thread-correlated incidents — any other incidents that share the
-          same thread_id, pulled in live via the correlations API. */}
-      {!isPublicView && incident?.id && (() => {
+          same thread_id, pulled in live via the correlations API. Hidden on
+          merged incidents (the MergedIncidentBanner already points at the
+          primary, so this would be redundant/noisy). */}
+      {!isPublicView && incident?.id && !primaryPointer && (() => {
         // Hide siblings that are already surfaced by the merge banners
         // (primary or linked sources) and anything already in Merged status,
         // so we don't double-list the same incident.
@@ -6683,6 +6685,10 @@ const IncidentDetailPage = () => {
           if (s === 'merged' || inc.status_id === 6) return false;
           return true;
         });
+        // Nothing meaningful to show — bail. Reporting only an invisible
+        // count with zero visible siblings ("0 share this thread, 1 not
+        // visible") is confusing and adds no signal.
+        if (filtered.length === 0) return null;
         return (
           <ThreadCorrelatedBanner
             threadId={threadCorrelated.threadId}
@@ -6694,6 +6700,7 @@ const IncidentDetailPage = () => {
           />
         );
       })()}
+
 
 
       {/* Possible duplicates / merge suggestions banner — surfaces past
