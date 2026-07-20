@@ -288,6 +288,9 @@ export function useAutoMergeThread(): boolean {
   }, []);
 
   return value;
+}
+
+
 
 
 /** Returns the preferred entity labels and base path.
