@@ -214,7 +214,11 @@ const EmailHtmlFrame = ({ html, maxHeight = 4000 }: EmailHtmlFrameProps) => {
         //     not itself sandboxed (would break the destination site).
         // Everything else (scripts, forms, same-origin, top-navigation,
         // pointer-lock, modals) is denied by omission.
-        sandbox="allow-popups allow-popups-to-escape-sandbox"
+        // `allow-same-origin` is required for the parent to read
+        // `contentDocument.scrollHeight` for auto-sizing. It is safe here
+        // *only because* `allow-scripts` is omitted — no code inside the
+        // frame can run, so same-origin access grants no attack surface.
+        sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin"
         // `no-referrer` policy stops the iframe from leaking our URL to
         // any resource it loads (tracking pixels, remote images).
         referrerPolicy="no-referrer"
