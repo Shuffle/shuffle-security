@@ -485,8 +485,8 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       
       return {
         id: item.key, // Always use datastore key as the canonical ID
-        title: meaningfulString(ocsf.title) || meaningfulString(ocsf.supporting_data) || meaningfulString(ocsf.desc),
-        source: normalizeSourceLabel(meaningfulString(ocsf.product?.name) || meaningfulString(ocsf.types?.[0])),
+        title: meaningfulField(ocsf.title, data) || meaningfulField(ocsf.supporting_data, data) || meaningfulField(ocsf.desc, data),
+        source: normalizeSourceLabel(meaningfulField(ocsf.product?.name, data) || meaningfulField(ocsf.types?.[0], data)),
         severity: mapOCSFSeverity(ocsf.severity_id || 3),
         status: normalizeStatus(ocsf.status || mapOCSFStatus(ocsf.status_id || 1)),
         assignee: customAttrs?.assignee || (data as any).assignee || null,
@@ -520,8 +520,8 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       
       return {
         id: item.key, // Always use datastore key as the canonical ID
-        title: meaningfulString(findingInfo?.title) || meaningfulString(legacyData.supporting_data) || meaningfulString(legacyData.desc) || meaningfulString(legacyData.message),
-        source: normalizeSourceLabel(meaningfulString(legacyData.metadata?.product?.name) || meaningfulString(findingInfo?.types?.[0])),
+        title: meaningfulField(findingInfo?.title, legacyData) || meaningfulField(legacyData.supporting_data, legacyData) || meaningfulField(legacyData.desc, legacyData) || meaningfulField(legacyData.message, legacyData),
+        source: normalizeSourceLabel(meaningfulField(legacyData.metadata?.product?.name, legacyData) || meaningfulField(findingInfo?.types?.[0], legacyData)),
         severity: mapOCSFSeverity(legacyData.severity_id),
         status: normalizeStatus(legacyData.status || mapOCSFStatus(legacyData.status_id)),
         assignee: legacyData.assignee || null,
@@ -546,8 +546,8 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
     // Non-OCSF format
     return {
       id: item.key, // Always use datastore key as the canonical ID
-      title: meaningfulString(data.title) || meaningfulString(data.supporting_data) || meaningfulString(data.desc) || meaningfulString(data.message),
-      source: normalizeSourceLabel(meaningfulString(data.source)),
+      title: meaningfulField(data.title, data) || meaningfulField(data.supporting_data, data) || meaningfulField(data.desc, data) || meaningfulField(data.message, data),
+      source: normalizeSourceLabel(meaningfulField(data.source, data)),
       severity: data.severity || 'medium',
       status: normalizeStatus(data.status),
       assignee: data.assignee || null,
