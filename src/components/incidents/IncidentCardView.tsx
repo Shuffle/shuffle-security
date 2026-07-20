@@ -482,7 +482,10 @@ export const IncidentCardView = ({
                     is a primary that has absorbed others via thread merge. */}
                 {(() => {
                   if (showCheck) return null;
-                  const linked = getLinkedPointers(incident as any);
+                  const rawSource = (incident as any).related_incidents
+                    ? (incident as any)
+                    : (incident as any).rawOCSF || (incident as any);
+                  const linked = getLinkedPointers(rawSource);
                   const count = linked.length;
                   if (count === 0) return null;
                   return (
