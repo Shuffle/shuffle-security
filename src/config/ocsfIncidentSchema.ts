@@ -129,6 +129,10 @@ export const mapOCSFStatus = (statusId: number): string => {
     case 2: return 'in_progress';
     case 3: return 'resolved';
     case 4: return 'on_hold';
+    case 5: return 'escalated';
+    case 6: return 'merged';
+    // Legacy: 99 was used by the old destructive smartMerge writer.
+    case 99: return 'merged';
     default: return 'new';
   }
 };

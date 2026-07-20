@@ -1,63 +1,97 @@
-## Why this is broken today
+# Cross-reference merging + threading
 
-- `Add Host-Monitors` (`case_management_asset_management_monitors_1`) is configured with `customAction.href = '/monitors?add_host=true'`. The customAction path in `Usecases.tsx` only ever renders a `<Button as={Link} to=...>` — it has no way to open a modal inline in the sidebar drawer, so the user has to leave the page.
-- The route `/monitors` in `src/App.tsx` is actually backed by `src/pages/dashboard/VulnAssetsPage.tsx` (1.7k lines). The page is correctly mounted at `/monitors`, but because the file/component is named "VulnAssets" and the Add Host modal lives inside that file, it looks (and reads, in the code) like the action targets vulnerabilities — not monitors.
-- The Add Host dialog and all monitor UI (host table, host detail panel, terminal, action popovers) live in the host app under `src/pages/dashboard` + `src/components/monitors`, so they can't be reused inside Shuffle-Core (sidebar, dashboards, onboarding, anywhere else).
+Replace the current destructive `smartMerge` (which folds a source into a target and tombstones the source) with a lightweight **pointer-array** model. Incidents stay separate rows; the frontend cross-loads and unions them at render time. Merged incidents get a dedicated status whose detail page redirects to the primary.
 
-## What we will do
+## Data model
 
-### 1. Extract the monitors UI into Shuffle-Core
-Create a self-contained Monitors module in `src/Shuffle-Core/views/monitors/`:
+Each incident gets a new field on its JSON payload:
 
-```text
-src/Shuffle-Core/views/monitors/
-  MonitorsView.tsx          // page-level UI (was VulnAssetsPage body)
-  AddHostDialog.tsx         // standalone Add Host modal (checks + deploy steps)
-  MonitorHostTable.tsx      // moved from src/components/monitors
-  HostDetailPanel.tsx       // moved
-  HostActionPopover.tsx     // moved
-  HostTerminalView.tsx      // moved
-  ActionOutputView.tsx      // moved
-  DisableRceConfirmDialog.tsx
-  hostActionDefinitions.tsx
-  index.ts                  // public exports: MonitorsView, AddHostDialog
+```json
+"related_incidents": [
+  {
+    "id": "abc123",
+    "relation": "merged",         // "merged" | "duplicate" | "related"
+    "primary": true,               // exactly one side of a merge pair is primary
+    "linked_at": "2026-07-20T...",
+    "linked_by": "user@x"
+  }
+]
 ```
 
-Rules during the move:
-- Replace any host-only imports (`@/components/...`, `@/hooks/...`) with either Shuffle-Core equivalents or props/slots. Hooks that talk to the API (`useHostActions`, `useVulnerabilities` host-data parts) move into `src/Shuffle-Core/hooks/` only if they only depend on the existing Shuffle-Core API client; otherwise expose them as injected props on `MonitorsView`.
-- Keep the file naming "Monitor*" everywhere — drop the "Vuln" terminology from the monitors module entirely.
-- Export `MonitorsView` and `AddHostDialog` from `src/Shuffle-Core/index.tsx`.
+- Written symmetrically: merging B into A adds a `{id: B, primary: false}` entry on A and a `{id: A, primary: true}` entry on B.
+- Primary owns status, assignee, SLA, resolution. Non-primary shows read-only.
+- Unmerge = delete the pointer on both sides. No payload rewriting.
 
-### 2. Rewire the host app to the new module
-- `src/pages/dashboard/VulnAssetsPage.tsx` becomes a thin wrapper that renders `<MonitorsView />` from Shuffle-Core and passes any host-only props (auth, navigation helpers, demo mode).
-- Rename the file to `MonitorsPage.tsx` and update the import in `src/App.tsx` (`/monitors` route). `/vulnerabilities` stays on its existing page; nothing about vulnerabilities moves.
-- Delete the moved files under `src/components/monitors/` (or leave one-line re-export shims if anything else still imports them — a quick `rg` will confirm).
+## Merged status
 
-### 3. Make the usecase sidebar embed Add Host inline
-Extend the customAction contract so a usecase can request an inline dialog instead of (or in addition to) a navigation:
+Add `status_id: 5` = "Merged" alongside the existing OCSF status mapping (New/In Progress/Resolved/Closed). Non-primary incidents in a merge pair are flipped to this status when the link is created; unmerge flips them back to their prior status (stored on the pointer as `previous_status`).
 
-```ts
-customAction?: {
-  label: string;
-  description?: string;
-  href?: string;        // existing
-  url?: string;         // existing
-  modal?: 'add-host';   // NEW — typed key, resolved by the host
-};
-```
+- Status chip color: neutral grey with a link icon.
+- List views: filter out `status_id: 5` by default (like Resolved is optionally hidden), with a "Show merged" toggle.
 
-- In `Usecases.tsx`, when `customAction.modal` is set, render the CTA as a `<Button onClick={...}>` that opens the dialog instead of a `Link`.
-- The host wires the actual modal via a new `renderUsecaseActionModal` slot on `<Usecases />` (same pattern already used for `renderEndpointSlot` / `renderUsecaseDetailSlot` in `src/pages/dashboard/UsecasesPage.tsx`). The host returns `<AddHostDialog open={...} onClose={...} />` for the `'add-host'` key.
-- Update the `Add Host-Monitors` usecase entry in both `src/Shuffle-Core/views/Usecases.tsx` and `src/Shuffle-Core/config/usecases.ts` to use `modal: 'add-host'` and drop the `?add_host=true` href.
-- Keep the URL-param auto-open (`?add_host=true`) on `MonitorsView` so any remaining deep links still work.
+## Incident detail behavior when Merged
 
-### 4. Verification
-- `/monitors` still renders the full monitors UI (table, detail, terminal, Add Host).
-- The `Add Host-Monitors` card in the usecase grid + sidebar opens the Add Host dialog inline on the current page.
-- `src/Shuffle-Core/views/monitors/` has no imports from `@/components/monitors`, `@/pages/dashboard`, or vulnerability code.
-- `rg "from '@/components/monitors'"` returns nothing (or only shims).
+If the current incident has `status_id: 5`:
+- Render a compact "This incident was merged into &lt;Primary title&gt;" banner at the top.
+- Primary CTA button: **Open primary incident** (navigates to the primary).
+- Body of the page is dimmed / read-only; comments and observables are still viewable for audit but not editable.
+- Also visible: "Unmerge" button (permission-gated) that clears the link on both sides.
+
+## Primary incident view
+
+When an incident has `related_incidents` entries where it is the primary:
+- Banner listing linked incidents with title + status + unlink button.
+- **Email thread panel** concatenates each linked incident's `resolveEmailThread(...)` output, sorts by date across all sources, tags each message with its source incident id.
+- **Observables / IOCs / correlations tabs** compute a union across primary + linked incidents (dedup by composite key). Each row shows a small "from &lt;incident&gt;" chip when it originates from a linked one.
+- **Activity feed** interleaves timelines from all linked incidents.
+- Tasks stay per-incident (not unioned) — merging shouldn't reshuffle work assignments.
+
+## Fetching
+
+New hook `useRelatedIncidents(incident)`:
+- Reads `related_incidents` from the incident payload.
+- Fires parallel `GET /api/v1/incidents/{id}` for each pointer through the existing coalesced fetch layer.
+- Returns `{ linked: Incident[], primary: Incident | null, loading, error }`.
+- Silently drops incidents the caller cannot see (multi-tenant permission mismatch) and reports the count in the banner ("2 linked incidents, 1 not visible to you").
+
+## Merge flow
+
+`MergeIncidentDialog` (existing) is repurposed:
+- User picks a target ("merge INTO which incident").
+- Confirming issues two PUT requests: primary gets a `{id: source, primary: false}` pointer; source gets a `{id: primary, primary: true}` pointer AND `status_id: 5` with `previous_status` stashed on the pointer.
+- No payload copy, no field union, no tombstone. Existing `smartMerge` util is deleted.
+
+Auto-suggestions from `scoreMergeCandidates` keep working unchanged — they just call the new merge writer.
+
+## Files to change
+
+- `src/config/ocsfIncidentSchema.ts` — add status_id 5 "Merged".
+- `src/config/incidentConfig.ts` — status color + list-filter default.
+- `src/lib/utils.ts` — delete `smartMerge` and `deepMergeIncidents` merge-target logic; keep the cross-tenant view merger unchanged.
+- `src/utils/mergeCandidateScoring.ts` — untouched (scoring still relevant).
+- `src/hooks/useRelatedIncidents.ts` — new.
+- `src/hooks/useMergeCandidates.ts` — call new merge writer.
+- `src/components/incidents/MergeIncidentDialog.tsx` — new pointer writer.
+- `src/components/incidents/MergedIncidentBanner.tsx` — new (the "jump to primary" banner + CTA).
+- `src/components/incidents/RelatedIncidentsBanner.tsx` — new (primary side, list + unlink).
+- `src/components/incidents/EmailThreadPanel.tsx` — accept multiple incident sources, sort union.
+- `src/components/incidents/ObservablesTab.tsx`, `CorrelationsTab.tsx`, `IOCsTab.tsx`, `ActivityFeed.tsx` — union across linked incidents.
+- Incident detail page (`src/pages/dashboard/...`) — mount banners, gate edit UI when `status_id: 5`.
+- List page filter — hide Merged by default with toggle.
+
+## Migration for existing merged incidents
+
+Existing incidents already carry `status_id: 99` + `merged_into` (from old smartMerge). A one-time UI-side reconciliation on load:
+- If `merged_into` is set and no `related_incidents` pointer exists, synthesize a pointer pair and write it back on next interaction (lazy migration — no bulk job).
+- Flip `status_id: 99` → `5` at the same time.
+
+## Downsides accepted
+
+- **N+1 fetches per open** for the primary. Coalesced fetcher + 30s cache absorbs most of it; if it gets heavy we add a batch `?ids=` endpoint later.
+- **List views** won't reflect the union (search on incident B still finds B). Acceptable — B is Merged status, one click to reach primary.
+- **Two mutations per merge** (both sides). If one fails we retry the other; worst case a one-sided pointer remains and the UI shows an "inconsistent link" warning with a repair button.
 
 ## Out of scope
-- No changes to `/vulnerabilities`, CVE pages, or vulnerability data flow.
-- No backend / API changes — same endpoints, same payloads.
-- No visual redesign of the Add Host modal; same two-step (checks → deploy) flow.
+
+- Backend follow-pointer at ingest. Provider keeps overwriting the source incident by thread-id, which is exactly what we want — new replies show up in the primary automatically via the render-time union.
+- Multi-level chains (A → B → C). Merge target must itself be primary or unmerged; the dialog rejects merging into an already-Merged incident.

@@ -20,11 +20,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { getDatastoreByCategory, setDatastoreItem, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
+import { getDatastoreByCategory, getDatastoreItem, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import { mapOCSFSeverity, mapOCSFStatus, Observable } from '@/config/ocsfIncidentSchema';
 import { severityColors, statusConfig } from '@/config/incidentConfig';
 import { toast } from '@/lib/toast';
 import { useEntityText } from '@/hooks/useEntityLabel';
+import { linkMergePair, isMergedIncident } from '@/lib/incidentRelations';
+import { useAuth } from '@/context/AuthContext';
 
 interface IncidentSummary {
   id: string;
@@ -106,83 +108,9 @@ const parseIncidentSummary = (item: { key: string; value: string; created?: numb
   }
 };
 
-/**
- * Smart merge: merge source incident data INTO target incident.
- * Strategy inspired by ServiceNow/Jira:
- * - Observables: deduplicate and append
- * - Tasks: append all source tasks
- * - Activity/Comments: append with merge note
- * - References: deduplicate and append
- * - Labels/types: deduplicate and append
- * - Description: append source description below target
- * - Metadata (severity, assignee, status): keep target's values
- */
-const smartMerge = (targetRaw: any, sourceRaw: any, sourceId: string, sourceTitle: string): any => {
-  const merged = { ...targetRaw };
-
-  // 1. Observables — deduplicate by type+value
-  const targetObs: Observable[] = targetRaw.observables || targetRaw.metadata?.extensions?.custom_attributes?.observables || [];
-  const sourceObs: Observable[] = sourceRaw.observables || sourceRaw.metadata?.extensions?.custom_attributes?.observables || [];
-  const obsSet = new Set(targetObs.map(o => `${o.type}::${o.value}`));
-  const mergedObs = [...targetObs, ...sourceObs.filter(o => !obsSet.has(`${o.type}::${o.value}`))];
-  merged.observables = mergedObs;
-
-  // 2. Tasks — append all with source prefix
-  const targetTasks = targetRaw.tasks || targetRaw.metadata?.extensions?.custom_attributes?.tasks || [];
-  const sourceTasks = (sourceRaw.tasks || sourceRaw.metadata?.extensions?.custom_attributes?.tasks || []).map((t: any) => ({
-    ...t,
-    id: `merged-${sourceId}-${t.id || Date.now()}`,
-    title: t.title,
-    group: t.group || `Merged from ${sourceTitle || sourceId}`,
-  }));
-  merged.tasks = [...targetTasks, ...sourceTasks];
-
-  // 3. Activity — append with merge marker
-  const targetActivity = targetRaw.activity || [];
-  const sourceActivity = (sourceRaw.activity || []).map((a: any) => ({
-    ...a,
-    id: `merged-${sourceId}-${a.id || Date.now()}`,
-  }));
-  const mergeNote = {
-    id: `merge-${Date.now()}`,
-    type: 'system',
-    user: 'System',
-    timestamp: Date.now(),
-    content: `Merged incident "${sourceTitle || sourceId}" (${sourceId}) into this incident`,
-  };
-  merged.activity = [...targetActivity, mergeNote, ...sourceActivity];
-
-  // 4. References — deduplicate
-  const existingFinding = merged.finding_info_list?.[0] || {};
-  const targetRefs: string[] = existingFinding.references || merged.references || [];
-  const sourceRefs: string[] = sourceRaw.finding_info_list?.[0]?.references || sourceRaw.references || [];
-  const allRefs = [...new Set([...targetRefs, ...sourceRefs])];
-  if (merged.finding_info_list?.[0]) {
-    merged.finding_info_list[0].references = allRefs;
-  }
-
-  // 5. Labels/types — deduplicate
-  const targetTypes: string[] = merged.types || [];
-  const sourceTypes: string[] = sourceRaw.types || [];
-  merged.types = [...new Set([...targetTypes, ...sourceTypes])];
-
-  // 6. Description — append source if different
-  const targetDesc = merged.desc || '';
-  const sourceDesc = sourceRaw.desc || sourceRaw.message || '';
-  if (sourceDesc && sourceDesc !== targetDesc) {
-    merged.desc = targetDesc
-      ? `${targetDesc}\n\n--- Merged from ${sourceTitle || sourceId} ---\n${sourceDesc}`
-      : sourceDesc;
-  }
-
-  // 7. Related events — track merged incident
-  const relatedEvents = merged.related_events || [];
-  if (!relatedEvents.includes(sourceId)) {
-    merged.related_events = [...relatedEvents, sourceId];
-  }
-
-  return merged;
-};
+// smartMerge was removed. Merges are now non-destructive: both incidents
+// stay as separate datastore rows and are cross-referenced via
+// `related_incidents` pointers. See src/lib/incidentRelations.ts.
 
 export const MergeIncidentDialog = ({
   open,
@@ -193,6 +121,7 @@ export const MergeIncidentDialog = ({
   preselectedTargetId,
 }: MergeIncidentDialogProps) => {
   const t = useEntityText();
+  const { userInfo } = useAuth();
   const [incidents, setIncidents] = useState<IncidentSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -247,62 +176,35 @@ export const MergeIncidentDialog = ({
     setMerging(true);
 
     try {
-      // The current incident is the SOURCE (being merged into the target)
-      const sourceRaw = incidents.length > 0
-        ? JSON.parse(incidents.find(i => i.id === currentIncidentId)?.rawValue || '{}')
-        : {};
-      
-      // Fetch current incident's raw data fresh
-      const { getDatastoreItem } = await import('@/Shuffle-MCPs/datastore');
+      // Load the source (current incident) fresh so we snapshot its
+      // status accurately for possible unmerge.
       const currentResult = await getDatastoreItem(currentIncidentId, DATASTORE_CATEGORIES.INCIDENTS);
       const currentRaw = currentResult.item ? JSON.parse(currentResult.item.value) : {};
 
-      // Parse target's raw data
+      // Guard: never merge into an already-merged incident. The chain
+      // would leave the analyst chasing pointers.
       const targetRaw = JSON.parse(selectedTarget.rawValue);
-
-      // Perform smart merge: current incident merges INTO target
-      const mergedData = smartMerge(targetRaw, currentRaw, currentIncidentId, currentIncidentTitle);
-
-      // Save the merged target
-      const saveResult = await setDatastoreItem(
-        selectedTarget.id,
-        JSON.stringify(mergedData),
-        DATASTORE_CATEGORIES.INCIDENTS
-      );
-
-      if (!saveResult.success) {
-        toast.error(t('Failed to save merged incident'));
+      if (isMergedIncident(targetRaw)) {
+        toast.error('Target incident is itself merged. Pick a primary incident.');
         setMerging(false);
         return;
       }
 
-      // Mark the source (current) incident as merged
-      const sourceUpdate = {
-        ...currentRaw,
-        status_id: 99, // Custom "merged" status
-        status: 'Merged',
-        merged_into: selectedTarget.id,
-        merged_at: Date.now(),
-      };
+      const res = await linkMergePair({
+        primaryId: selectedTarget.id,
+        primaryRaw: targetRaw,
+        primaryTitle: selectedTarget.title,
+        sourceId: currentIncidentId,
+        sourceRaw: currentRaw,
+        sourceTitle: currentIncidentTitle,
+        linkedBy: userInfo?.username,
+      });
 
-      // Add merge activity to the source incident
-      const sourceActivity = sourceUpdate.activity || [];
-      sourceUpdate.activity = [
-        ...sourceActivity,
-        {
-          id: `merge-${Date.now()}`,
-          type: 'system',
-          user: 'System',
-          timestamp: Date.now(),
-          content: `This incident was merged into "${selectedTarget.title}" (${selectedTarget.id})`,
-        },
-      ];
-
-      await setDatastoreItem(
-        currentIncidentId,
-        JSON.stringify(sourceUpdate),
-        DATASTORE_CATEGORIES.INCIDENTS
-      );
+      if (!res.success) {
+        toast.error(res.error || t('Failed to save merged incident'));
+        setMerging(false);
+        return;
+      }
 
       toast.success(`Merged into "${selectedTarget.title}"`);
       onMergeComplete();
@@ -313,7 +215,7 @@ export const MergeIncidentDialog = ({
     } finally {
       setMerging(false);
     }
-  }, [selectedTarget, currentIncidentId, currentIncidentTitle, onMergeComplete, onClose]);
+  }, [selectedTarget, currentIncidentId, currentIncidentTitle, onMergeComplete, onClose, t, userInfo?.username]);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -495,19 +397,18 @@ export const MergeIncidentDialog = ({
                 </Box>
               </Box>
 
-              {/* What will be merged */}
+              {/* What will happen */}
               <Box sx={{ mt: 2, p: 2, borderRadius: 2, bgcolor: 'hsl(var(--muted) / 0.35)', border: '1px solid hsl(var(--border))' }}>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                  What will be merged:
+                  What will happen:
                 </Typography>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                   {[
-                    'Observables (IOCs) — deduplicated',
-                    'Tasks — appended with source grouping',
-                    'Comments & activity — appended with merge note',
-                    'References — deduplicated',
-                    'Labels — deduplicated',
-                    'Description — appended below target description',
+                    'Both incidents keep their data — nothing is copied or destroyed',
+                    'The current incident is marked "Merged" and links to the target',
+                    'The target incident lists this one as a linked incident',
+                    'Observables and email threads render as a union across both',
+                    'You can unmerge at any time from either side',
                   ].map((item, i) => (
                     <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <CheckCircleIcon size={14} style={{ color: 'hsl(var(--severity-low))' }} />
@@ -517,20 +418,20 @@ export const MergeIncidentDialog = ({
                 </Box>
               </Box>
 
-              {/* Warning */}
+              {/* Note */}
               <Box sx={{
                 mt: 2,
                 p: 1.5,
                 borderRadius: 2,
-                bgcolor: 'hsl(var(--severity-medium) / 0.08)',
-                border: '1px solid hsl(var(--severity-medium) / 0.2)',
+                bgcolor: 'hsl(var(--muted) / 0.4)',
+                border: '1px solid hsl(var(--border))',
                 display: 'flex',
                 alignItems: 'flex-start',
                 gap: 1,
               }}>
-                <WarningAmberIcon size={18} style={{ color: 'hsl(var(--severity-medium))', marginTop: '2px' }} />
-                <Typography variant="caption" sx={{ color: 'hsl(var(--severity-medium))' }}>
-                  The current incident will be marked as "Merged" and will reference the target. The target's severity, assignee, and status will be kept as-is.
+                <WarningAmberIcon size={18} style={{ color: 'hsl(var(--muted-foreground))', marginTop: '2px' }} />
+                <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                  This is a non-destructive cross-reference. Opening the current incident afterwards will offer a jump to the target.
                 </Typography>
               </Box>
             </Box>

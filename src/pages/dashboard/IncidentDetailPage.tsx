@@ -89,6 +89,10 @@ import { normalizeStatus } from '@/config/incidentConfig';
 import { ResolveIncidentDialog, ResolutionData, RESOLUTION_REASONS } from '@/components/incidents/ResolveIncidentDialog';
 import { MergeIncidentDialog } from '@/components/incidents/MergeIncidentDialog';
 import { MergeCandidatesBanner } from '@/components/incidents/MergeCandidatesBanner';
+import { MergedIncidentBanner } from '@/components/incidents/MergedIncidentBanner';
+import { RelatedIncidentsBanner } from '@/components/incidents/RelatedIncidentsBanner';
+import { useRelatedIncidents } from '@/hooks/useRelatedIncidents';
+import { maybeMigrateLegacyMerge, getPrimaryPointer } from '@/lib/incidentRelations';
 import { DemoFallbackAuditBanner } from '@/components/incidents/DemoFallbackAuditBanner';
 import { useMergeCandidates } from '@/hooks/useMergeCandidates';
 import { RoutingRulePreviewBanner } from '@/components/incidents/RoutingRulePreviewBanner';
@@ -1642,6 +1646,22 @@ const IncidentDetailPage = () => {
     currentIocKeys: iocObservableKeys,
     enabled: !!incident?.id && !isPublicView,
   });
+
+  // Cross-referenced merges: fetch the primary (if this incident is merged
+  // into another) and the incidents that were merged INTO this one.
+  const relatedIncidents = useRelatedIncidents(incident?.id, incident?.rawOCSF);
+  const primaryPointer = useMemo(() => getPrimaryPointer(incident?.rawOCSF), [incident?.rawOCSF]);
+
+  // Legacy migration: pre-cross-reference merges wrote status_id 99 +
+  // `merged_into` on the source only. On first view, upgrade the record
+  // to the symmetric pointer model so the banners can render.
+  useEffect(() => {
+    if (!incident?.id || !incident.rawOCSF) return;
+    maybeMigrateLegacyMerge(incident.id, incident.rawOCSF).then(migrated => {
+      if (migrated) { void loadIncident?.(false); }
+    }).catch(() => {/* non-fatal */});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [incident?.id]);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSaveRef = useRef(false);
   // Track the initial normalized values so auto-save doesn't fire on load
@@ -6512,6 +6532,30 @@ const IncidentDetailPage = () => {
           )
         }
       />
+
+      {/* If this incident was merged into another one, surface a jump link
+          at the top so the analyst is not stuck reading a "dead" case. */}
+      {!isPublicView && incident?.id && primaryPointer && (
+        <MergedIncidentBanner
+          currentIncidentId={incident.id}
+          primary={relatedIncidents.primary}
+          primaryPointerId={primaryPointer.id}
+          loading={relatedIncidents.loading}
+          onUnlinked={() => loadIncident(false)}
+        />
+      )}
+
+      {/* If other incidents were merged INTO this one, list them so the
+          analyst can jump back or unmerge from the primary side. */}
+      {!isPublicView && incident?.id && (relatedIncidents.linked.length > 0 || relatedIncidents.invisibleCount > 0) && (
+        <RelatedIncidentsBanner
+          currentIncidentId={incident.id}
+          linked={relatedIncidents.linked}
+          invisibleCount={relatedIncidents.invisibleCount}
+          loading={relatedIncidents.loading}
+          onUnlinked={() => loadIncident(false)}
+        />
+      )}
 
       {/* Possible duplicates / merge suggestions banner — surfaces past
           incidents that share observables, correlations, or known IOCs with
