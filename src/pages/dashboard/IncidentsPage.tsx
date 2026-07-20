@@ -40,6 +40,7 @@ import { CategoryAutomationsDialog } from '@/components/incidents/CategoryAutoma
 import { extractValidatedIngestionApps, ValidatedIngestionApp, findIngestTicketsWorkflow, findForwardTicketsWorkflow, extractWorkflowAppNames, normalizeAppName, isWorkflowScheduleStopped } from '@/Shuffle-MCPs/ingestionDetection';
 import { API_CONFIG, getApiUrl, getAuthHeader, isDevEnvironment } from '@/Shuffle-MCPs/api';
 import { IncidentCardView } from '@/components/incidents/IncidentCardView';
+import { useBackgroundThreadContinuation } from '@/hooks/useBackgroundThreadContinuation';
 import { IncidentStatsCards } from '@/components/incidents/IncidentStatsCards';
 import { ScheduleHealthBanner } from '@/components/users/ScheduleHealthBanner';
 import { IncidentsEmptyState } from '@/components/incidents/IncidentsEmptyState';
