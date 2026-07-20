@@ -908,9 +908,9 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
                 width,
                 height: 8,
                 top: 1,
-                bgcolor: barColor,
+                bgcolor: 'var(--timeline-bar-color)',
                 borderRadius: 1,
-                transition: 'all 0.2s ease',
+                transition: 'all 0.2s ease, background-color 0.15s ease',
               }} />
             )}
           </Box>
