@@ -17,7 +17,7 @@
  *      to avoid re-hitting the correlation endpoint in a loop.
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { linkMergePair, getLinkedPointers, isMergedIncident, getPrimaryPointer } from '@/lib/incidentRelations';
 import { useAutoMergeThread } from '@/hooks/useEntityLabel';
 import { extractThreadId } from '@/hooks/useThreadCorrelatedIncidents';
@@ -54,10 +54,11 @@ const readTs = (raw: any): number => {
 export const useBackgroundThreadContinuation = (
   incidents: IncidentListItem[],
   onDidMerge?: () => void,
-) => {
+): { busy: boolean } => {
   const enabled = useAutoMergeThread();
   const processedRef = useRef<Set<string>>(new Set());
   const busyRef = useRef(false);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!enabled) return;
@@ -85,6 +86,9 @@ export const useBackgroundThreadContinuation = (
     const key = `${threadId}:${candidate.id}`;
     processedRef.current.add(key);
     busyRef.current = true;
+    setBusy(true);
+
+
 
     (async () => {
       try {
@@ -157,8 +161,11 @@ export const useBackgroundThreadContinuation = (
         if (merged > 0) onDidMerge?.();
       } catch { /* silent */ } finally {
         busyRef.current = false;
+        setBusy(false);
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, incidents]);
+
+  return { busy };
 };
