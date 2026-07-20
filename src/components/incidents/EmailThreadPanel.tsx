@@ -428,22 +428,11 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
   const newestIsDraft = messages[0]?.isDraft === true;
   const hasNonDraft = messages.some(m => !m.isDraft);
 
-  // Header badges (message count + parsed-from chip). Rendered next to the
-  // title in IncidentSection's `badge` slot.
+  // Header badges (parsed-from chip only). Rendered next to the title in
+  // IncidentSection's `badge` slot. We intentionally do not show a message
+  // count because the single-item render is the preferred default view.
   const headerBadge = (
     <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}>
-      <Chip
-        label={`${messages.length} message${messages.length !== 1 ? 's' : ''}`}
-        size="small"
-        variant="outlined"
-        sx={{
-          height: 18,
-          fontSize: '0.65rem',
-          bgcolor: 'transparent',
-          borderColor: 'rgba(255, 102, 0, 0.4)',
-          color: '#ff6600',
-        }}
-      />
       {sourceLabel && (
         <Tooltip title={`Parsed from structured ${sourceLabel} payload (unmapped_original)`} arrow>
           <Chip
