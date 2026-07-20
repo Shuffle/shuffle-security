@@ -12,6 +12,9 @@ import {
   useEntityPreference,
   useShowAutomation,
   setShowAutomation,
+  useAutoMergeThread,
+  setAutoMergeThread,
+
   useSidebarTabs,
   setSidebarTabVisibility,
   SidebarTabKey,
