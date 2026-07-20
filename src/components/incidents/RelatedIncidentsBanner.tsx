@@ -52,20 +52,25 @@ export const RelatedIncidentsBanner = ({
         border: '1px solid hsl(var(--border))',
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: linked.length > 0 ? 1 : 0 }}>
         <GitMerge size={16} style={{ color: 'hsl(var(--muted-foreground))' }} />
         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-          {linked.length === 1
-            ? '1 incident merged into this one'
-            : `${linked.length} incidents merged into this one`}
+          {(() => {
+            const total = linked.length + invisibleCount;
+            return total === 1
+              ? '1 incident merged into this one'
+              : `${total} incidents merged into this one`;
+          })()}
         </Typography>
         {loading && <CircularProgress size={12} sx={{ color: 'hsl(var(--muted-foreground))' }} />}
         {invisibleCount > 0 && (
-          <Chip
-            size="small"
-            label={`${invisibleCount} not visible`}
-            sx={{ height: 18, fontSize: '0.65rem' }}
-          />
+          <Tooltip title="Merged sources that could not be loaded (deleted or inaccessible)">
+            <Chip
+              size="small"
+              label={`${invisibleCount} unavailable`}
+              sx={{ height: 18, fontSize: '0.65rem' }}
+            />
+          </Tooltip>
         )}
       </Box>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
