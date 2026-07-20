@@ -343,6 +343,7 @@ export const maybeMigrateLegacyMerge = async (
   } catch {
     /* ignore */
   }
+  return true;
 };
 
 export { MERGED_STATUS_ID, MERGED_STATUS_LABEL };
