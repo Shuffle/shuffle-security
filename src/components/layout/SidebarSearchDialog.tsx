@@ -111,12 +111,15 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
   const [appResults, setAppResults] = useState<AlgoliaSearchApp[]>([]);
   const [correlationResults, setCorrelationResults] = useState<CorrelationItem[]>([]);
   const [workflowResults, setWorkflowResults] = useState<WorkflowItem[]>([]);
+  const [incidentResults, setIncidentResults] = useState<IncidentItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [correlationsLoading, setCorrelationsLoading] = useState(false);
+  const [incidentLoading, setIncidentLoading] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const appDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const corrDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const incidentDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Filter workflows locally by query
   useEffect(() => {
@@ -136,11 +139,26 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
     ? navItems.filter((n) => n.label.toLowerCase().includes(query.toLowerCase()))
     : navItems;
 
-  // Combined results: nav first, then workflows, then correlations, then apps
+  // Split correlations into "direct matches" (key equals or starts-with query)
+  // and everything else. Direct matches are typically a thread_id or an
+  // incident id that the analyst pasted in — surface them above the noisier
+  // observable-value correlations.
+  const qLower = query.trim().toLowerCase();
+  const directMatchCorrelations = qLower
+    ? correlationResults.filter((c) => c.key.toLowerCase() === qLower)
+    : [];
+  const otherCorrelations = correlationResults.filter(
+    (c) => !directMatchCorrelations.includes(c),
+  );
+
+  // Combined results: nav → workflows → incidents → direct-match correlations
+  // → other correlations → apps.
   const results: SearchResult[] = [
     ...filteredNav,
     ...workflowResults.map((w) => ({ type: 'workflow' as const, workflow: w })),
-    ...correlationResults.map((c) => ({ type: 'correlation' as const, correlation: c })),
+    ...incidentResults.map((i) => ({ type: 'incident' as const, incident: i })),
+    ...directMatchCorrelations.map((c) => ({ type: 'correlation' as const, correlation: c })),
+    ...otherCorrelations.map((c) => ({ type: 'correlation' as const, correlation: c })),
     ...appResults.map((app) => ({ type: 'app' as const, app })),
   ];
 
