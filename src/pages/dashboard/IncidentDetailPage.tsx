@@ -404,9 +404,13 @@ const meaningfulString = (val: unknown): string | undefined => {
  * that were left as literal JSONPath (e.g. `$payload.headers[?(@.name=="Subject")].value`)
  * get evaluated against the raw payload instead of leaking to the UI.
  */
-const meaningfulField = (val: unknown, container: unknown): string | undefined => {
-  const corrected = autoCorrectTranslatedString(val, container);
-  return meaningfulString(corrected ?? val);
+const meaningfulField = (
+  val: unknown,
+  container: unknown,
+  headerName?: string,
+): string | undefined => {
+  const corrected = autoCorrectTranslatedString(val, container, headerName);
+  return meaningfulString(corrected ?? (typeof val === 'string' ? val : undefined));
 };
 
 /**
