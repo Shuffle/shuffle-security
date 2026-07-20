@@ -1,7 +1,7 @@
 // Shared incident status and severity configuration
 // Used across IncidentCardView, IncidentsPage, IncidentDetailPage, and IncidentStatsCards
 
-import { Clock, Zap, Flame, CheckCircle, PauseCircle, AlertTriangle, LucideIcon } from 'lucide-react';
+import { Clock, Zap, Flame, CheckCircle, PauseCircle, AlertTriangle, GitMerge, LucideIcon } from 'lucide-react';
 
 export const statusConfig: Record<string, { 
   icon: LucideIcon; 
