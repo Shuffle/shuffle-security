@@ -5406,12 +5406,33 @@ const IncidentDetailPage = () => {
               || item.parsedCurrent?.message
               || '')
           : '';
-        const initialDescription = showAsCreation
+        const rawInitialDescription = showAsCreation
           ? (item.parsedCurrent?.desc
               || item.parsedCurrent?.description
               || item.parsedCurrent?.supporting_data
               || '')
           : '';
+        // Gmail/Outlook ingestion sometimes leaves the raw base64url MIME
+        // payload in supporting_data/description. Try to decode it; if the
+        // decoded output still looks like a base64 blob or a MIME header
+        // dump, drop it so the "Incident created" card doesn't render
+        // gibberish. Real prose passes through untouched.
+        const initialDescription = (() => {
+          const src = String(rawInitialDescription || '');
+          if (!src) return '';
+          const decoded = decodeIfBase64(src);
+          const looksLikeBase64Blob =
+            src.length > 120
+            && /^[A-Za-z0-9+/_\-\s=]+$/.test(src)
+            && !/\s/.test(src.trim().slice(0, 200));
+          if (looksLikeBase64Blob && decoded === src) return '';
+          // If the decoded content is a raw MIME dump, skip it — the Email
+          // Thread panel already renders these properly.
+          if (/^\s*(Content-Type|MIME-Version|Content-Transfer-Encoding):/im.test(decoded)) {
+            return '';
+          }
+          return decoded;
+        })();
 
         return (
           <Box
