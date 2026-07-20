@@ -30,10 +30,17 @@ export const MergedIncidentBanner = ({
   const primaryId = primary?.id || primaryPointerId;
   if (!primaryId) return null;
 
-  const jump = () => {
+  const primaryHref = `/incidents/${encodeURIComponent(primaryId)}`;
+  const jump = (e?: React.MouseEvent) => {
     if (!primaryId) return;
-    navigate(`/incidents/${encodeURIComponent(primaryId)}`);
+    // If a modifier key is held, let the anchor's default behavior (new tab
+    // / new window) run. Otherwise intercept and use client-side nav.
+    if (e && (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1)) return;
+    e?.preventDefault();
+    e?.stopPropagation();
+    navigate(primaryHref);
   };
+
 
   const unmerge = async () => {
     if (!primaryId) return;
