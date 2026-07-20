@@ -28,19 +28,38 @@ import { statusConfig } from '@/config/incidentConfig';
 import { deepMergeIncidents } from '@/lib/utils';
 
 /**
- * Identity fields that MUST stay owned by the primary during a fold.
- * Without this list the source could overwrite the primary's title /
- * status / severity whenever it happens to carry a newer timestamp.
+ * Identity / user-editable fields that MUST stay owned by the primary
+ * during a fold. These are things an analyst may have deliberately set
+ * on the primary (title, severity, priority, assignee, description...)
+ * — a later source folding in must NEVER overwrite them, even if the
+ * source is more recent. Data fields (observables, correlations,
+ * activity, tasks, iocs, stakeholders, email_thread, ...) are still
+ * unioned by the deep merge and are intentionally NOT listed here.
  */
 const PRIMARY_IDENTITY_KEYS = [
+  // identity
   'id', 'finding_uid', 'uid',
-  'title', 'message',
-  'status', 'status_id',
+  // headline / classification (all potentially user-edited)
+  'title', 'message', 'description', 'summary',
+  'status', 'status_id', 'status_detail',
   'severity', 'severity_id',
+  'priority', 'priority_id',
+  'confidence', 'confidence_id', 'confidence_score',
+  'impact', 'impact_id', 'impact_score',
+  'risk_level', 'risk_level_id', 'risk_score',
+  // taxonomy
+  'activity_name', 'activity_id',
+  'category_name', 'category_uid',
+  'class_name', 'class_uid',
+  'type_name', 'type_uid',
+  // times owned by the primary row
   'created_time', 'created_time_dt',
   'event_time', 'time', 'time_dt',
+  // nested finding_info carries title/severity/etc.
   'finding_info', 'finding_info_list',
-  'assignee', 'product',
+  // ownership / routing
+  'assignee', 'assignee_id', 'owner', 'product',
+  // merge bookkeeping
   'related_incidents', 'merged_into', 'merged_at',
 ];
 
