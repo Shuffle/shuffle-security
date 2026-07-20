@@ -7215,10 +7215,12 @@ const IncidentDetailPage = () => {
               )}
             </Box>
             {(() => {
-              const mergedCount = (relatedIncidents?.linked?.length || 0) + (relatedIncidents?.invisibleCount || 0);
+              const mergedCount = relatedIncidents?.linked?.length || 0;
               if (mergedCount === 0) return null;
+              const total = mergedCount + (relatedIncidents?.invisibleCount || 0);
+              const suffix = relatedIncidents?.invisibleCount ? ` (${relatedIncidents.invisibleCount} unavailable)` : '';
               return (
-                <Tooltip title={`${mergedCount} incident${mergedCount !== 1 ? 's' : ''} merged into this thread`} arrow>
+                <Tooltip title={`${total} incident${total !== 1 ? 's' : ''} merged into this thread${suffix}`} arrow>
                   <Avatar
                     sx={{
                       position: 'absolute',
