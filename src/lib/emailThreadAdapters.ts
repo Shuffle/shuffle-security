@@ -229,12 +229,15 @@ const formatRecipients = (recipients?: OutlookRecipient[]): string => {
     .join(', ');
 };
 
-const outlookMessageToEmail = (msg: OutlookMessage, idx: number): EmailMessage => {
+const outlookMessageToEmail = (msg: OutlookMessage, idx: number, forceDraft?: boolean): EmailMessage => {
   const fromAddr = msg.from?.emailAddress || msg.sender?.emailAddress;
   const fromName = fromAddr?.name || fromAddr?.address || `Message ${idx + 1}`;
   const isHtml = (msg.body?.contentType || '').toLowerCase() === 'html';
   const html = isHtml ? (msg.body?.content || '') : '';
   const text = isHtml ? htmlToText(msg.body?.content || '') : (msg.body?.content || '');
+  const isDraft = forceDraft
+    || msg.isDraft === true
+    || (typeof msg.parentFolderId === 'string' && /^drafts?$/i.test(msg.parentFolderId));
   return {
     id: msg.id || msg.internetMessageId || `outlook-${idx}`,
     from: fromName,
@@ -245,11 +248,11 @@ const outlookMessageToEmail = (msg: OutlookMessage, idx: number): EmailMessage =
     date: msg.receivedDateTime || msg.sentDateTime || undefined,
     body: text || msg.bodyPreview || '',
     bodyHtml: html || undefined,
-    isLatest: idx === 0,
+    isDraft,
   };
 };
 
-const outlookToEmailThread = (raw: any): EmailMessage[] => {
+const outlookToEmailThread = (raw: any, forceDraft?: boolean): EmailMessage[] => {
   const rawMessages: OutlookMessage[] = Array.isArray(raw?.value) ? raw.value : [raw];
   // Sort newest first by receivedDateTime
   const sorted = [...rawMessages].sort((a, b) => {
@@ -257,8 +260,9 @@ const outlookToEmailThread = (raw: any): EmailMessage[] => {
     const tb = new Date(b.receivedDateTime || b.sentDateTime || 0).getTime();
     return tb - ta;
   });
-  return sorted.map((m, i) => outlookMessageToEmail(m, i));
+  return assignLatest(sorted.map((m, i) => outlookMessageToEmail(m, i, forceDraft)));
 };
+
 
 // ---------------------------------------------------------------------------
 // Generic single-message envelope (covers IMAP/SMTP forwarders that just
