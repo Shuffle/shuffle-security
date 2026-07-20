@@ -624,7 +624,7 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
           )}
 
           {/* Correlations loading indicator */}
-          {correlationsLoading && correlationResults.length === 0 && query.trim().length >= 2 && (
+          {correlationsLoading && correlationResults.length === 0 && incidentResults.length === 0 && query.trim().length >= 2 && (
             <Box sx={{ px: 1.5, pt: 1.5, pb: 0.5 }}>
               <Typography sx={{ fontSize: '0.65rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: 1, px: 1, mb: 0.5 }}>
                 Correlations
