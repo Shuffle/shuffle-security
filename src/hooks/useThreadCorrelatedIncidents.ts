@@ -90,9 +90,10 @@ const parseSummary = (id: string, value: string): LinkedIncidentSummary | null =
 export const useThreadCorrelatedIncidents = (
   incidentId: string | undefined,
   raw: any,
+  crossOrgHeaders: Record<string, string> = {},
 ): UseThreadCorrelatedIncidentsResult => {
-  const crossOrgHeaders = useCrossOrgHeaders();
   const threadId = useMemo(() => extractThreadId(raw), [raw]);
+
 
   const [incidents, setIncidents] = useState<LinkedIncidentSummary[]>([]);
   const [invisibleCount, setInvisibleCount] = useState(0);
