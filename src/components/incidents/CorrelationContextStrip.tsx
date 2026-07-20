@@ -117,31 +117,24 @@ export const CorrelationContextStrip = ({ incidentKeys, category = 'shuffle-secu
     let cancelled = false;
     setPreviews(stableKeys.map(k => ({ key: k, loading: true })));
     stableKeys.forEach(async (key) => {
-      try {
-        const result = await getDatastoreItem(key, category);
-        if (cancelled) return;
-        if (!result?.success || !result.item || result.item.value === undefined || result.item.value === null || result.item.value === '') {
-          setPreviews(prev => prev.map(p => p.key === key ? { key, loading: false, notFound: true } : p));
-          return;
-        }
-        const raw = result.item.value;
-        const fields = extractPreview(raw);
-        // Datastore wrapper-level created/edited as a final fallback for the timestamp.
-        const wrapperWhen = (result.item as { created?: number; edited?: number })?.edited
-          || (result.item as { created?: number })?.created;
-        const whenMs = fields.whenMs
-          ?? (typeof wrapperWhen === 'number'
-              ? (wrapperWhen > 1e12 ? wrapperWhen : wrapperWhen * 1000)
-              : undefined);
-        setPreviews(prev => prev.map(p => p.key === key ? { key, loading: false, ...fields, whenMs } : p));
-      } catch {
-        if (!cancelled) {
-          setPreviews(prev => prev.map(p => p.key === key ? { key, loading: false, notFound: true } : p));
-        }
+      const result = await lookupIncidentCached(key, category);
+      if (cancelled) return;
+      if (result.status === 'not_found' || result.status === 'error') {
+        setPreviews(prev => prev.map(p => p.key === key ? { key, loading: false, notFound: true } : p));
+        return;
       }
+      const raw = result.raw;
+      const fields = extractPreview(raw);
+      const wrapperWhen = result.item?.edited || result.item?.created;
+      const whenMs = fields.whenMs
+        ?? (typeof wrapperWhen === 'number'
+            ? (wrapperWhen > 1e12 ? wrapperWhen : wrapperWhen * 1000)
+            : undefined);
+      setPreviews(prev => prev.map(p => p.key === key ? { key, loading: false, ...fields, whenMs } : p));
     });
     return () => { cancelled = true; };
   }, [stableKeys, category]);
+
 
   if (incidentKeys.length === 0) return null;
 
