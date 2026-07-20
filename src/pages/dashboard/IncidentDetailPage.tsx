@@ -5474,10 +5474,18 @@ const IncidentDetailPage = () => {
         // Status pill (Skipped / Running / Failed-needs-attention / Needs-attention / clean)
         // is rendered by the shared <AgentRunStatusBadge /> component so the
         // timeline, agent activity list, and drawer all show the same thing.
+        // Completed/clean runs should be "quiet" on the timeline — no loud
+        // orange dot, no grey card background, no bright text — only chats
+        // and truly noteworthy states (failed / needs-attention) stand out.
+        const isFailed = status === 'FAILED' || status === 'ERROR' || status === 'ABORTED';
+        const needsAttention = !!(statusCfg && statusCfg.needsAttention);
+        const isQuiet = !isFailed && !needsAttention && !skip.skipped;
         return (
           <Box
             key={`agent-${run.execution_id}`}
             data-timeline-compact="true"
+            data-timeline-quiet={isQuiet ? 'true' : undefined}
+            data-status-hover="true"
             onClick={() => setSelectedAgentRun(run)}
             sx={{
               position: 'relative',
@@ -5489,13 +5497,17 @@ const IncidentDetailPage = () => {
               borderRadius: 1.5,
               border: skip.skipped
                 ? '1px dashed hsl(var(--border))'
-                : '1px solid hsl(var(--border))',
+                : isQuiet
+                  ? '1px solid transparent'
+                  : '1px solid hsl(var(--border))',
               bgcolor: skip.skipped
                 ? 'hsl(var(--muted) / 0.2)'
-                : 'hsl(var(--card))',
+                : isQuiet
+                  ? 'transparent'
+                  : 'hsl(var(--card))',
               opacity: skip.skipped ? 0.85 : 1,
               cursor: 'pointer',
-              transition: 'border-color 0.15s ease, background-color 0.15s ease',
+              transition: 'border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease',
               '&:hover': {
                 borderColor: 'hsl(var(--muted-foreground) / 0.4)',
                 bgcolor: 'hsl(var(--muted) / 0.3)',
@@ -5519,19 +5531,27 @@ const IncidentDetailPage = () => {
                 />
               </Tooltip>
             )}
-            <Box sx={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0, opacity: skip.skipped ? 0.6 : 1 }}>
+            <Box sx={{ display: 'inline-flex', alignItems: 'center', flexShrink: 0, opacity: skip.skipped ? 0.6 : (isQuiet ? 0.7 : 1) }}>
               <AgentIcon size={14} />
             </Box>
             <Typography
               sx={{
                 fontSize: '0.8125rem',
                 fontWeight: 500,
-                color: skip.skipped ? 'hsl(var(--muted-foreground))' : 'hsl(var(--foreground))',
+                color: skip.skipped
+                  ? 'hsl(var(--muted-foreground))'
+                  : isQuiet
+                    ? 'hsl(var(--muted-foreground))'
+                    : 'hsl(var(--foreground))',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 flexShrink: 1,
                 minWidth: 0,
+                transition: 'color 0.15s ease',
+                '[data-timeline-quiet="true"]:hover &': {
+                  color: 'hsl(var(--foreground))',
+                },
               }}
             >
               {title}
