@@ -2355,10 +2355,18 @@ const IncidentDetailPage = () => {
     setLoading(false);
   }, [id, rawId, isPublicView, publicOrg, publicAuth, crossOrgId, userInfo?.active_org?.id, parentOrg, subOrgs, navigate, entityBasePath]);
 
-  // Initial load
+  // Initial load. Only re-run when the underlying identity of the incident
+  // changes (route id, cross-org override, or public-view auth). Depending on
+  // `loadIncident` directly caused a spurious second fetch: dependencies like
+  // `subOrgs`/`parentOrg` populate asynchronously after the first render and
+  // change the callback identity, retriggering the effect a few seconds after
+  // the initial load.
+  const loadIncidentRef = useRef(loadIncident);
+  useEffect(() => { loadIncidentRef.current = loadIncident; }, [loadIncident]);
   useEffect(() => {
-    loadIncident();
-  }, [loadIncident]);
+    loadIncidentRef.current?.();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, crossOrgId, isPublicView, publicOrg, publicAuth]);
 
   // Cross-org merge: once we know shared orgs and have the primary incident loaded,
   // fetch all other org versions and deep-merge them into the current data.
