@@ -27,11 +27,40 @@ import DOMPurify from 'dompurify';
 // This protects middle-click / cmd-click paths that bypass our React
 // onClick handler — without it, those would still navigate the current
 // tab to whatever the email contained.
+// Harden every element that survives sanitization. Emails are untrusted
+// third-party HTML; the goal is that nothing in a rendered email can
+// execute code, exfiltrate data, or navigate on its own.
 DOMPurify.addHook('afterSanitizeAttributes', (node) => {
-  if (node && (node as Element).tagName === 'A') {
-    const el = node as HTMLAnchorElement;
-    el.setAttribute('target', '_blank');
-    el.setAttribute('rel', 'noopener noreferrer nofollow');
+  const el = node as Element;
+  if (!el || !el.attributes) return;
+
+  // Force anchors to open externally, never in the current tab, and
+  // never leak our referrer or pass link equity.
+  if (el.tagName === 'A') {
+    (el as HTMLAnchorElement).setAttribute('target', '_blank');
+    (el as HTMLAnchorElement).setAttribute('rel', 'noopener noreferrer nofollow');
+  }
+
+  // Belt-and-braces: strip any surviving event-handler attributes
+  // (SVG namespace, mixed case, vendor-prefixed) and any URI attribute
+  // pointing at an active scheme (javascript:, vbscript:, data:).
+  for (let i = el.attributes.length - 1; i >= 0; i--) {
+    const attr = el.attributes[i];
+    const name = attr.name.toLowerCase();
+    if (name.startsWith('on')) {
+      el.removeAttribute(attr.name);
+      continue;
+    }
+    if (
+      (name === 'href' ||
+        name === 'src' ||
+        name === 'xlink:href' ||
+        name === 'formaction' ||
+        name === 'action') &&
+      /^\s*(?:javascript|vbscript|data):/i.test(attr.value)
+    ) {
+      el.removeAttribute(attr.name);
+    }
   }
 });
 import { resolveEmailThread, type ResolvedEmailThread } from '@/lib/emailThreadAdapters';
