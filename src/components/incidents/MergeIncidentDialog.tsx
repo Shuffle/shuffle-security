@@ -397,19 +397,18 @@ export const MergeIncidentDialog = ({
                 </Box>
               </Box>
 
-              {/* What will be merged */}
+              {/* What will happen */}
               <Box sx={{ mt: 2, p: 2, borderRadius: 2, bgcolor: 'hsl(var(--muted) / 0.35)', border: '1px solid hsl(var(--border))' }}>
                 <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 600 }}>
-                  What will be merged:
+                  What will happen:
                 </Typography>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                   {[
-                    'Observables (IOCs) — deduplicated',
-                    'Tasks — appended with source grouping',
-                    'Comments & activity — appended with merge note',
-                    'References — deduplicated',
-                    'Labels — deduplicated',
-                    'Description — appended below target description',
+                    'Both incidents keep their data — nothing is copied or destroyed',
+                    'The current incident is marked "Merged" and links to the target',
+                    'The target incident lists this one as a linked incident',
+                    'Observables and email threads render as a union across both',
+                    'You can unmerge at any time from either side',
                   ].map((item, i) => (
                     <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <CheckCircleIcon size={14} style={{ color: 'hsl(var(--severity-low))' }} />
@@ -419,20 +418,20 @@ export const MergeIncidentDialog = ({
                 </Box>
               </Box>
 
-              {/* Warning */}
+              {/* Note */}
               <Box sx={{
                 mt: 2,
                 p: 1.5,
                 borderRadius: 2,
-                bgcolor: 'hsl(var(--severity-medium) / 0.08)',
-                border: '1px solid hsl(var(--severity-medium) / 0.2)',
+                bgcolor: 'hsl(var(--muted) / 0.4)',
+                border: '1px solid hsl(var(--border))',
                 display: 'flex',
                 alignItems: 'flex-start',
                 gap: 1,
               }}>
-                <WarningAmberIcon size={18} style={{ color: 'hsl(var(--severity-medium))', marginTop: '2px' }} />
-                <Typography variant="caption" sx={{ color: 'hsl(var(--severity-medium))' }}>
-                  The current incident will be marked as "Merged" and will reference the target. The target's severity, assignee, and status will be kept as-is.
+                <WarningAmberIcon size={18} style={{ color: 'hsl(var(--muted-foreground))', marginTop: '2px' }} />
+                <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+                  This is a non-destructive cross-reference. Opening the current incident afterwards will offer a jump to the target.
                 </Typography>
               </Box>
             </Box>
