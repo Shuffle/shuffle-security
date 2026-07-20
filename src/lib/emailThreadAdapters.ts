@@ -95,7 +95,9 @@ interface GmailMessage {
   internalDate?: string;
   labelIds?: string[];
   payload?: GmailPart;
+  isDraft?: boolean;
 }
+
 
 /** Walk Gmail MIME tree and collect first text/plain and text/html bodies. */
 const extractGmailBodies = (part: GmailPart | undefined): { text: string; html: string } => {
