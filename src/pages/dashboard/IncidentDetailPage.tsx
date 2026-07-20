@@ -1730,10 +1730,15 @@ const IncidentDetailPage = () => {
     setAutoMergeBusy(true);
     try {
       let failed = 0;
+      // Chain the folded primary through each iteration so successive
+      // sources fold on top of the already-enriched primary. Without
+      // this, iteration N would clobber the fold from iteration N-1
+      // because primaryRaw would still be the pre-merge snapshot.
+      let currentPrimaryRaw = primary.raw;
       for (const src of sources) {
         const res = await linkMergePair({
           primaryId: primary.id,
-          primaryRaw: primary.raw,
+          primaryRaw: currentPrimaryRaw,
           primaryTitle: primary.title,
           sourceId: src.id,
           sourceRaw: src.raw,
@@ -1741,7 +1746,9 @@ const IncidentDetailPage = () => {
           linkedBy: 'thread-auto-merge',
         });
         if (!res.success) failed += 1;
+        else if (res.foldedPrimary) currentPrimaryRaw = res.foldedPrimary;
       }
+
 
       if (failed === 0) {
         toast.success(
