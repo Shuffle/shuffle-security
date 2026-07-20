@@ -33,36 +33,10 @@ interface EmailHtmlFrameProps {
   maxHeight?: number;
 }
 
-// Baseline styles injected as a FALLBACK only. We use :where() so specificity
-// is zero — any style the email ships (inline style="" or <style>) wins.
-// Emails are almost universally light-themed and hardcode colors against a
-// white canvas, so we render on white to preserve the sender's intent
-// (this is exactly what Gmail / Outlook Web / Superhuman do).
-const BASE_STYLES = `
-  :where(html, body) {
-    margin: 0;
-    padding: 0;
-    background: #ffffff;
-    color: #202124;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    font-size: 14px;
-    line-height: 1.5;
-  }
-  /* Do NOT constrain body width or force centering. Email templates ship
-     their own outer <table> / wrapper that handles full-bleed backgrounds
-     and a centered inner column (usually ~600-720px). Overriding body width
-     collapses full-bleed headers and mis-sizes hero images. Gmail / Outlook
-     Web do the same: provide a neutral canvas, let the email lay itself out. */
-  :where(img) { max-width: 100%; height: auto; }
-  :where(a) { color: #1a73e8; }
-  :where(blockquote) {
-    border-left: 3px solid #e0e0e0;
-    padding-left: 12px;
-    margin-left: 0;
-    color: #5f6368;
-  }
-  :where(pre) { white-space: pre-wrap; word-break: break-word; }
-`;
+// No base styles are injected — the email's own HTML/CSS renders exactly as
+// its author designed. Any stylesheet we add (even zero-specificity :where())
+// interacts with the template and distorts spacing, image sizing, and layout.
+
 
 
 const sanitize = (dirty: string): string =>
