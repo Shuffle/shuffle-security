@@ -121,6 +121,7 @@ export const MergeIncidentDialog = ({
   preselectedTargetId,
 }: MergeIncidentDialogProps) => {
   const t = useEntityText();
+  const { userInfo } = useAuth();
   const [incidents, setIncidents] = useState<IncidentSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
