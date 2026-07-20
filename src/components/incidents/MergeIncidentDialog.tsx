@@ -176,62 +176,35 @@ export const MergeIncidentDialog = ({
     setMerging(true);
 
     try {
-      // The current incident is the SOURCE (being merged into the target)
-      const sourceRaw = incidents.length > 0
-        ? JSON.parse(incidents.find(i => i.id === currentIncidentId)?.rawValue || '{}')
-        : {};
-      
-      // Fetch current incident's raw data fresh
-      const { getDatastoreItem } = await import('@/Shuffle-MCPs/datastore');
+      // Load the source (current incident) fresh so we snapshot its
+      // status accurately for possible unmerge.
       const currentResult = await getDatastoreItem(currentIncidentId, DATASTORE_CATEGORIES.INCIDENTS);
       const currentRaw = currentResult.item ? JSON.parse(currentResult.item.value) : {};
 
-      // Parse target's raw data
+      // Guard: never merge into an already-merged incident. The chain
+      // would leave the analyst chasing pointers.
       const targetRaw = JSON.parse(selectedTarget.rawValue);
-
-      // Perform smart merge: current incident merges INTO target
-      const mergedData = smartMerge(targetRaw, currentRaw, currentIncidentId, currentIncidentTitle);
-
-      // Save the merged target
-      const saveResult = await setDatastoreItem(
-        selectedTarget.id,
-        JSON.stringify(mergedData),
-        DATASTORE_CATEGORIES.INCIDENTS
-      );
-
-      if (!saveResult.success) {
-        toast.error(t('Failed to save merged incident'));
+      if (isMergedIncident(targetRaw)) {
+        toast.error('Target incident is itself merged. Pick a primary incident.');
         setMerging(false);
         return;
       }
 
-      // Mark the source (current) incident as merged
-      const sourceUpdate = {
-        ...currentRaw,
-        status_id: 99, // Custom "merged" status
-        status: 'Merged',
-        merged_into: selectedTarget.id,
-        merged_at: Date.now(),
-      };
+      const res = await linkMergePair({
+        primaryId: selectedTarget.id,
+        primaryRaw: targetRaw,
+        primaryTitle: selectedTarget.title,
+        sourceId: currentIncidentId,
+        sourceRaw: currentRaw,
+        sourceTitle: currentIncidentTitle,
+        linkedBy: userInfo?.username,
+      });
 
-      // Add merge activity to the source incident
-      const sourceActivity = sourceUpdate.activity || [];
-      sourceUpdate.activity = [
-        ...sourceActivity,
-        {
-          id: `merge-${Date.now()}`,
-          type: 'system',
-          user: 'System',
-          timestamp: Date.now(),
-          content: `This incident was merged into "${selectedTarget.title}" (${selectedTarget.id})`,
-        },
-      ];
-
-      await setDatastoreItem(
-        currentIncidentId,
-        JSON.stringify(sourceUpdate),
-        DATASTORE_CATEGORIES.INCIDENTS
-      );
+      if (!res.success) {
+        toast.error(res.error || t('Failed to save merged incident'));
+        setMerging(false);
+        return;
+      }
 
       toast.success(`Merged into "${selectedTarget.title}"`);
       onMergeComplete();
@@ -242,7 +215,7 @@ export const MergeIncidentDialog = ({
     } finally {
       setMerging(false);
     }
-  }, [selectedTarget, currentIncidentId, currentIncidentTitle, onMergeComplete, onClose]);
+  }, [selectedTarget, currentIncidentId, currentIncidentTitle, onMergeComplete, onClose, t, userInfo?.username]);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
