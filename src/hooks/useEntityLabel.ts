@@ -16,6 +16,8 @@ export type EntityValue = (typeof ENTITY_OPTIONS)[number]['value'];
 
 const LOCAL_CACHE_KEY = 'shuffle-entity-label';
 const LOCAL_AUTOMATION_KEY = 'shuffle-show-automation';
+const LOCAL_AUTO_MERGE_THREAD_KEY = 'shuffle-auto-merge-thread';
+
 const LOCAL_SIDEBAR_TABS_KEY = 'shuffle-sidebar-tabs';
 const LOCAL_TASK_STATUSES_KEY = 'shuffle-task-statuses';
 const DATASTORE_KEY = 'org_settings';
@@ -86,6 +88,11 @@ function getAutomationSnapshot(): boolean {
   const val = localStorage.getItem(LOCAL_AUTOMATION_KEY);
   return val === null ? true : val === 'true';
 }
+function getAutoMergeThreadSnapshot(): boolean {
+  const val = localStorage.getItem(LOCAL_AUTO_MERGE_THREAD_KEY);
+  return val === null ? true : val === 'true';
+}
+
 let _cachedSidebarTabs: Record<SidebarTabKey, boolean> = DEFAULT_SIDEBAR_TABS;
 let _cachedSidebarTabsRaw: string | null = null;
 
@@ -180,6 +187,10 @@ export async function loadEntityPreference(): Promise<void> {
         if (data?.show_automation !== undefined) {
           localStorage.setItem(LOCAL_AUTOMATION_KEY, String(data.show_automation));
         }
+        if (data?.auto_merge_thread !== undefined) {
+          localStorage.setItem(LOCAL_AUTO_MERGE_THREAD_KEY, String(data.auto_merge_thread));
+        }
+
         if (data?.sidebar_tabs !== undefined) {
           localStorage.setItem(LOCAL_SIDEBAR_TABS_KEY, JSON.stringify(data.sidebar_tabs));
         }
@@ -250,6 +261,37 @@ export function useShowAutomation(): boolean {
 
   return value;
 }
+
+/** Save auto-merge-thread preference (enabled by default) */
+export async function setAutoMergeThread(enabled: boolean) {
+  localStorage.setItem(LOCAL_AUTO_MERGE_THREAD_KEY, String(enabled));
+  listeners.forEach(cb => cb());
+
+  try {
+    let existing: Record<string, unknown> = {};
+    try {
+      const result = await getDatastoreItem(DATASTORE_KEY, DATASTORE_CATEGORIES.CONFIGURATION);
+      if (result.success && result.item?.value) {
+        existing = typeof result.item.value === 'string' ? JSON.parse(result.item.value) : result.item.value;
+      }
+    } catch { /* empty */ }
+    await setDatastoreItem(DATASTORE_KEY, { ...existing, auto_merge_thread: enabled }, DATASTORE_CATEGORIES.CONFIGURATION);
+  } catch { /* local cache is already set */ }
+}
+
+/** Hook to read auto-merge-thread preference (defaults to true) */
+export function useAutoMergeThread(): boolean {
+  const value = useSyncExternalStore(subscribe, getAutoMergeThreadSnapshot);
+
+  useEffect(() => {
+    if (!_fetchedFromServer) loadEntityPreference();
+  }, []);
+
+  return value;
+}
+
+
+
 
 /** Returns the preferred entity labels and base path.
  *  If currently on an alias route (/alerts, /tickets, /jobs), uses that route's labels instead. */

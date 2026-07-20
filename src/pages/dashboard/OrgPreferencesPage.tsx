@@ -12,6 +12,9 @@ import {
   useEntityPreference,
   useShowAutomation,
   setShowAutomation,
+  useAutoMergeThread,
+  setAutoMergeThread,
+
   useSidebarTabs,
   setSidebarTabVisibility,
   SidebarTabKey,
@@ -176,6 +179,8 @@ const OrgPreferencesPage = () => {
     url: '/preferences',
   });
   const showAutomation = useShowAutomation();
+  const autoMergeThread = useAutoMergeThread();
+
 
   return (
     <Box sx={{ p: 4, maxWidth: 900, width: '100%', mx: 'auto' }}>
@@ -249,7 +254,45 @@ const OrgPreferencesPage = () => {
           />
         </Paper>
 
+        {/* Auto Merge Thread */}
+        <Paper
+          sx={{
+            p: 2.5,
+            bgcolor: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
+            borderRadius: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 2,
+          }}
+        >
+          <Box>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>
+              Auto Merge Thread
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))' }}>
+              Automatically merge incidents that share the same email thread into the latest one, without requiring a click.
+            </Typography>
+          </Box>
+          <Chip
+            label={autoMergeThread ? 'Enabled' : 'Disabled'}
+            onClick={() => setAutoMergeThread(!autoMergeThread)}
+            variant="filled"
+            sx={{
+              fontWeight: 600,
+              bgcolor: autoMergeThread ? 'hsl(var(--primary))' : 'hsl(var(--muted))',
+              color: autoMergeThread ? 'hsl(var(--primary-foreground))' : 'hsl(var(--muted-foreground))',
+              '&:hover': {
+                bgcolor: autoMergeThread ? 'hsl(var(--primary) / 0.9)' : 'hsl(var(--muted) / 0.8)',
+              },
+            }}
+          />
+        </Paper>
+
         {/* Task Statuses (kanban lanes) */}
+
         <Paper
           sx={{
             p: 2.5,

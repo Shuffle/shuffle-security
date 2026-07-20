@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo, useCallback, useRef, forwardRef } from 'r
 import DOMPurify from 'dompurify';
 import AgentIcon from '@/Shuffle-MCPs/components/AgentIcon';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { useEntityLabel, useTaskStatuses, useEntityText } from '@/hooks/useEntityLabel';
+import { useEntityLabel, useTaskStatuses, useEntityText, useAutoMergeThread } from '@/hooks/useEntityLabel';
 import {
   Box,
   Typography,
@@ -1785,6 +1785,55 @@ const IncidentDetailPage = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [incident?.id, incident?.rawOCSF, threadCorrelated.incidents, readIncidentTimestamp]);
+
+  // Auto-invoke thread merging when the org preference is enabled. Runs
+  // silently in the background whenever the current incident has visible
+  // thread siblings that are not already merged/linked. Guarded per
+  // thread_id so a single load only triggers one merge attempt.
+  const autoMergeThreadEnabled = useAutoMergeThread();
+  const autoMergedThreadsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!autoMergeThreadEnabled) return;
+    if (isPublicView) return;
+    if (autoMergeBusy) return;
+    if (!incident?.id || !incident.rawOCSF) return;
+    if (primaryPointer) return; // Already merged into another incident.
+    const threadId = threadCorrelated.threadId;
+    if (!threadId) return;
+    if (threadCorrelated.loading) return;
+
+    // Filter out siblings already surfaced by merge banners or in Merged
+    // status — mirrors the visibility filter used by ThreadCorrelatedBanner.
+    const excluded = new Set<string>();
+    if (relatedIncidents.primary?.id) excluded.add(relatedIncidents.primary.id.toLowerCase());
+    relatedIncidents.linked.forEach((l) => excluded.add(l.id.toLowerCase()));
+    const mergeable = threadCorrelated.incidents.filter((inc) => {
+      if (excluded.has(inc.id.toLowerCase())) return false;
+      const s = String(inc.status || '').toLowerCase();
+      if (s === 'merged' || inc.status_id === 6) return false;
+      return true;
+    });
+    if (mergeable.length === 0) return;
+
+    const key = `${threadId}:${incident.id}`;
+    if (autoMergedThreadsRef.current.has(key)) return;
+    autoMergedThreadsRef.current.add(key);
+    void handleAutoMergeThread();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    autoMergeThreadEnabled,
+    isPublicView,
+    autoMergeBusy,
+    incident?.id,
+    primaryPointer,
+    threadCorrelated.threadId,
+    threadCorrelated.loading,
+    threadCorrelated.incidents,
+    relatedIncidents.primary?.id,
+    relatedIncidents.linked,
+  ]);
+
+
 
 
 
