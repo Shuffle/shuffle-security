@@ -2320,6 +2320,13 @@ const IncidentDetailPage = () => {
           labels: labelsStr,
         };
         console.log(`[Perf] State hydration: ${(performance.now() - stateStart).toFixed(1)}ms`);
+        // Persist any translation-field repairs so the stored OCSF reflects
+        // the corrected values instead of the raw translation expression.
+        if (!isPublicView && repairedRaw && fieldRepairs.length > 0) {
+          console.log('[IncidentDetail] Persisting repaired translation fields:', fieldRepairs);
+          setDatastoreItem(id, repairedRaw, DATASTORE_CATEGORIES.INCIDENTS, crossOrgId || undefined)
+            .catch((err) => console.warn('[IncidentDetail] Failed to persist repaired translation fields:', err));
+        }
         // Details is now tab 0 (default), no auto-switch needed
         // If arriving with ?tab=raw, populate rawJsonText now that data is loaded
         if (showLoading && searchParams.get('tab') === 'raw') {
