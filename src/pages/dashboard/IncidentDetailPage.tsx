@@ -8960,7 +8960,7 @@ const IncidentDetailPage = () => {
                         gap: mismatch ? 0.5 : 0,
                         p: 1.5,
                         borderRadius: 1,
-                        bgcolor: 'transparent',
+                        backgroundImage: 'none',
                         backgroundImage: 'none',
                         border: isThisIgnored
                           ? '1px dashed hsl(var(--warning, 38 92% 50%) / 0.55)'
