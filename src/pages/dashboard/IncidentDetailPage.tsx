@@ -514,7 +514,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
         source: normalizeSourceLabel(meaningfulField(ocsf.product?.name, data) || meaningfulField(ocsf.types?.[0], data)),
         severity: mapOCSFSeverity(ocsf.severity_id || 3),
         status: normalizeStatus(ocsf.status || mapOCSFStatus(ocsf.status_id || 1)),
-        assignee: customAttrs?.assignee || (data as any).assignee || null,
+        assignee: meaningfulField(customAttrs?.assignee, data, 'From') || meaningfulField((data as any).assignee, data, 'From') || null,
         created: formatTimestamp(resolveCreatedTs(data, item.created)),
         createdTs: resolveCreatedTs(data, item.created),
         edited: item.edited ? formatTimestamp(item.edited) : undefined,
