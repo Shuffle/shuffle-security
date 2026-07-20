@@ -45,6 +45,13 @@ export const statusConfig: Record<string, {
     label: 'Escalated',
     id: 5,
   },
+  merged: {
+    icon: GitMerge,
+    color: '#6b7280',
+    bg: 'rgba(107, 114, 128, 0.15)',
+    label: 'Merged',
+    id: 6,
+  },
 };
 
 // ============================================================================
