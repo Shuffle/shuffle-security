@@ -483,13 +483,104 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
             </Box>
           )}
 
-          {/* Correlations section */}
-          {correlationResults.length > 0 && (
+          {/* Incidents section — direct id lookup */}
+          {incidentResults.length > 0 && (
+            <Box sx={{ px: 1.5, pt: 1.5, pb: 0.5 }}>
+              <Typography sx={{ fontSize: '0.65rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: 1, px: 1, mb: 0.5 }}>
+                Incidents
+              </Typography>
+              {incidentResults.map((inc, idx) => {
+                const globalIdx = incidentStartIdx + idx;
+                return (
+                  <Box
+                    key={inc.id}
+                    onClick={() => handleSelect({ type: 'incident', incident: inc })}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1.5,
+                      px: 1.5,
+                      py: 1,
+                      borderRadius: 1,
+                      cursor: 'pointer',
+                      backgroundColor: selectedIndex === globalIdx ? 'hsl(var(--muted))' : 'transparent',
+                      '&:hover': { backgroundColor: 'hsl(var(--muted))', opacity: 0.9 },
+                    }}
+                  >
+                    <Box sx={{ color: 'hsl(var(--primary))', display: 'flex' }}>
+                      <Target size={16} />
+                    </Box>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {inc.title}
+                      </Typography>
+                      <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {inc.id}
+                      </Typography>
+                    </Box>
+                  </Box>
+                );
+              })}
+            </Box>
+          )}
+
+          {/* Direct-match correlations — key equals the query. These are the
+              most useful when analysts paste a thread_id or an identifier. */}
+          {directMatchCorrelations.length > 0 && (
+            <Box sx={{ px: 1.5, pt: 1.5, pb: 0.5 }}>
+              <Typography sx={{ fontSize: '0.65rem', fontWeight: 600, color: 'hsl(var(--primary))', textTransform: 'uppercase', letterSpacing: 1, px: 1, mb: 0.5 }}>
+                Direct match
+              </Typography>
+              {directMatchCorrelations.map((corr, idx) => {
+                const globalIdx = directMatchStartIdx + idx;
+                const refCount = corr.ref?.length || 0;
+                return (
+                  <Box
+                    key={`direct-${corr.key}-${idx}`}
+                    onClick={() => handleSelect({ type: 'correlation', correlation: corr })}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1.5,
+                      px: 1.5,
+                      py: 1,
+                      borderRadius: 1,
+                      cursor: 'pointer',
+                      backgroundColor: selectedIndex === globalIdx ? 'hsl(var(--muted))' : 'transparent',
+                      '&:hover': { backgroundColor: 'hsl(var(--muted))', opacity: 0.9 },
+                    }}
+                  >
+                    <Box sx={{ color: 'hsl(var(--primary))', display: 'flex' }}>
+                      <Link2 size={16} />
+                    </Box>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--foreground))', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {corr.key}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexShrink: 0 }}>
+                      <Typography sx={{ fontSize: '0.65rem', color: 'hsl(var(--muted-foreground))' }}>
+                        {refCount} ref{refCount !== 1 ? 's' : ''}
+                      </Typography>
+                      {corr.amount > 1 && (
+                        <Typography sx={{ fontSize: '0.6rem', color: 'hsl(var(--primary))', fontWeight: 600 }}>
+                          ×{corr.amount}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+                );
+              })}
+            </Box>
+          )}
+
+          {/* Other correlations (observable values, IOCs, etc.) */}
+          {otherCorrelations.length > 0 && (
             <Box sx={{ px: 1.5, pt: 1.5, pb: 0.5 }}>
               <Typography sx={{ fontSize: '0.65rem', fontWeight: 600, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase', letterSpacing: 1, px: 1, mb: 0.5 }}>
                 Correlations
               </Typography>
-              {correlationResults.map((corr, idx) => {
+              {otherCorrelations.map((corr, idx) => {
                 const globalIdx = correlationStartIdx + idx;
                 const refCount = corr.ref?.length || 0;
                 return (
