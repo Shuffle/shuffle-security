@@ -575,7 +575,7 @@ const parseIncidentFromDatastore = (item: { key: string; value: string; created?
       source: normalizeSourceLabel(meaningfulField(data.source, data)),
       severity: data.severity || 'medium',
       status: normalizeStatus(data.status),
-      assignee: data.assignee || null,
+      assignee: meaningfulField(data.assignee, data, 'From') || null,
       created: formatTimestamp(resolveCreatedTs(data, item.created)),
       createdTs: resolveCreatedTs(data, item.created),
       edited: item.edited ? formatTimestamp(item.edited) : undefined,
