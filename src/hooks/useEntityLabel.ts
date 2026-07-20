@@ -187,6 +187,10 @@ export async function loadEntityPreference(): Promise<void> {
         if (data?.show_automation !== undefined) {
           localStorage.setItem(LOCAL_AUTOMATION_KEY, String(data.show_automation));
         }
+        if (data?.auto_merge_thread !== undefined) {
+          localStorage.setItem(LOCAL_AUTO_MERGE_THREAD_KEY, String(data.auto_merge_thread));
+        }
+
         if (data?.sidebar_tabs !== undefined) {
           localStorage.setItem(LOCAL_SIDEBAR_TABS_KEY, JSON.stringify(data.sidebar_tabs));
         }
