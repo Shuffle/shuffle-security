@@ -840,7 +840,6 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
           py: 1.25,
           cursor: isProcessing ? 'default' : 'pointer',
           '--timeline-bar-color': barColor,
-          '--timeline-bar-hover-color': hoverBarColor,
           '&:hover': isProcessing ? {} : {
             bgcolor: 'hsl(var(--muted) / 0.4)',
             '--timeline-bar-color': hoverBarColor,
