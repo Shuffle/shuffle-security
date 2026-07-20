@@ -205,21 +205,52 @@ export const evaluateTranslationExpression = (expr: string, container: Json): Js
  * evaluate it against the raw payload container (typically the parsed
  * datastore item). Returns the resolved scalar (stringified when needed)
  * or the original value when no correction applies.
+ *
+ * Also handles the degraded case where the translator dumped a whole
+ * array of `{name, value}` header dicts into a scalar field. Pass
+ * `headerName` (e.g. "Subject") to pick the matching header value.
  */
 export const autoCorrectTranslatedString = (
   value: unknown,
   container: Json,
+  headerName?: string,
 ): string | undefined => {
-  if (typeof value !== 'string' || !looksLikeTranslationExpr(value)) {
-    return typeof value === 'string' ? value : undefined;
+  // Case 1: raw expression string leaked into the field.
+  if (typeof value === 'string' && looksLikeTranslationExpr(value)) {
+    const resolved = evaluateTranslationExpression(value, container);
+    if (resolved != null) {
+      if (typeof resolved === 'string') return resolved;
+      if (typeof resolved === 'number' || typeof resolved === 'boolean') return String(resolved);
+      // If the resolved value is itself a header array, fall through to case 2.
+      value = resolved;
+    } else {
+      return value;
+    }
   }
-  const resolved = evaluateTranslationExpression(value, container);
-  if (resolved == null) return value;
-  if (typeof resolved === 'string') return resolved;
-  if (typeof resolved === 'number' || typeof resolved === 'boolean') return String(resolved);
+
+  // Case 2: field already contains an array of `{name, value}` header dicts
+  // (translator dumped the prefix array because it could not evaluate the
+  // filter predicate). Pick the header matching `headerName`.
+  if (Array.isArray(value) && headerName) {
+    const target = headerName.toLowerCase();
+    for (const item of value) {
+      if (item && typeof item === 'object') {
+        const n = (item as any).name ?? (item as any).Name ?? (item as any).key;
+        if (typeof n === 'string' && n.toLowerCase() === target) {
+          const v = (item as any).value ?? (item as any).Value;
+          if (typeof v === 'string') return v;
+          if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+        }
+      }
+    }
+  }
+
+  if (typeof value === 'string') return value;
+  if (value == null) return undefined;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   try {
-    return JSON.stringify(resolved);
+    return JSON.stringify(value);
   } catch {
-    return value;
+    return undefined;
   }
 };
