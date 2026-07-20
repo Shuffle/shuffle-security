@@ -108,83 +108,9 @@ const parseIncidentSummary = (item: { key: string; value: string; created?: numb
   }
 };
 
-/**
- * Smart merge: merge source incident data INTO target incident.
- * Strategy inspired by ServiceNow/Jira:
- * - Observables: deduplicate and append
- * - Tasks: append all source tasks
- * - Activity/Comments: append with merge note
- * - References: deduplicate and append
- * - Labels/types: deduplicate and append
- * - Description: append source description below target
- * - Metadata (severity, assignee, status): keep target's values
- */
-const smartMerge = (targetRaw: any, sourceRaw: any, sourceId: string, sourceTitle: string): any => {
-  const merged = { ...targetRaw };
-
-  // 1. Observables — deduplicate by type+value
-  const targetObs: Observable[] = targetRaw.observables || targetRaw.metadata?.extensions?.custom_attributes?.observables || [];
-  const sourceObs: Observable[] = sourceRaw.observables || sourceRaw.metadata?.extensions?.custom_attributes?.observables || [];
-  const obsSet = new Set(targetObs.map(o => `${o.type}::${o.value}`));
-  const mergedObs = [...targetObs, ...sourceObs.filter(o => !obsSet.has(`${o.type}::${o.value}`))];
-  merged.observables = mergedObs;
-
-  // 2. Tasks — append all with source prefix
-  const targetTasks = targetRaw.tasks || targetRaw.metadata?.extensions?.custom_attributes?.tasks || [];
-  const sourceTasks = (sourceRaw.tasks || sourceRaw.metadata?.extensions?.custom_attributes?.tasks || []).map((t: any) => ({
-    ...t,
-    id: `merged-${sourceId}-${t.id || Date.now()}`,
-    title: t.title,
-    group: t.group || `Merged from ${sourceTitle || sourceId}`,
-  }));
-  merged.tasks = [...targetTasks, ...sourceTasks];
-
-  // 3. Activity — append with merge marker
-  const targetActivity = targetRaw.activity || [];
-  const sourceActivity = (sourceRaw.activity || []).map((a: any) => ({
-    ...a,
-    id: `merged-${sourceId}-${a.id || Date.now()}`,
-  }));
-  const mergeNote = {
-    id: `merge-${Date.now()}`,
-    type: 'system',
-    user: 'System',
-    timestamp: Date.now(),
-    content: `Merged incident "${sourceTitle || sourceId}" (${sourceId}) into this incident`,
-  };
-  merged.activity = [...targetActivity, mergeNote, ...sourceActivity];
-
-  // 4. References — deduplicate
-  const existingFinding = merged.finding_info_list?.[0] || {};
-  const targetRefs: string[] = existingFinding.references || merged.references || [];
-  const sourceRefs: string[] = sourceRaw.finding_info_list?.[0]?.references || sourceRaw.references || [];
-  const allRefs = [...new Set([...targetRefs, ...sourceRefs])];
-  if (merged.finding_info_list?.[0]) {
-    merged.finding_info_list[0].references = allRefs;
-  }
-
-  // 5. Labels/types — deduplicate
-  const targetTypes: string[] = merged.types || [];
-  const sourceTypes: string[] = sourceRaw.types || [];
-  merged.types = [...new Set([...targetTypes, ...sourceTypes])];
-
-  // 6. Description — append source if different
-  const targetDesc = merged.desc || '';
-  const sourceDesc = sourceRaw.desc || sourceRaw.message || '';
-  if (sourceDesc && sourceDesc !== targetDesc) {
-    merged.desc = targetDesc
-      ? `${targetDesc}\n\n--- Merged from ${sourceTitle || sourceId} ---\n${sourceDesc}`
-      : sourceDesc;
-  }
-
-  // 7. Related events — track merged incident
-  const relatedEvents = merged.related_events || [];
-  if (!relatedEvents.includes(sourceId)) {
-    merged.related_events = [...relatedEvents, sourceId];
-  }
-
-  return merged;
-};
+// smartMerge was removed. Merges are now non-destructive: both incidents
+// stay as separate datastore rows and are cross-referenced via
+// `related_incidents` pointers. See src/lib/incidentRelations.ts.
 
 export const MergeIncidentDialog = ({
   open,
