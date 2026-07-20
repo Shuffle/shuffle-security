@@ -6569,6 +6569,18 @@ const IncidentDetailPage = () => {
         />
       )}
 
+      {/* Thread-correlated incidents — any other incidents that share the
+          same thread_id, pulled in live via the correlations API. */}
+      {!isPublicView && incident?.id && (
+        <ThreadCorrelatedBanner
+          threadId={threadCorrelated.threadId}
+          incidents={threadCorrelated.incidents}
+          invisibleCount={threadCorrelated.invisibleCount}
+          loading={threadCorrelated.loading}
+        />
+      )}
+
+
       {/* Possible duplicates / merge suggestions banner — surfaces past
           incidents that share observables, correlations, or known IOCs with
           the one being viewed. Hidden in the public/read-only view. */}
