@@ -98,12 +98,15 @@ export const MergedIncidentBanner = ({
         </IconButton>
       </Tooltip>
       <Button
-        onClick={jump}
+        asChild
         className="bg-[#ff6600] hover:bg-[#e55c00] text-white h-9"
       >
-        Open primary incident
-        <ArrowRight size={16} style={{ marginLeft: 4 }} />
+        <a href={primaryHref} onClick={jump}>
+          Open primary incident
+          <ArrowRight size={16} style={{ marginLeft: 4 }} />
+        </a>
       </Button>
     </Box>
   );
 };
+
