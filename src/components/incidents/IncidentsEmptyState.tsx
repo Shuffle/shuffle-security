@@ -128,7 +128,7 @@ export const IncidentsEmptyState = ({ ingestionApps = [], onIngestionToggled, on
                 key={app.name}
                 app={app}
                 onToggle={onToggleApp || (() => {})}
-                enableOnClick={!app.enabled}
+                enableOnClick={false}
                 highlighted={index === ingestionApps.findIndex(a => !a.enabled)}
               />
             ))}
