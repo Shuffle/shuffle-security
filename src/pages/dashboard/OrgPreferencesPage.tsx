@@ -179,6 +179,8 @@ const OrgPreferencesPage = () => {
     url: '/preferences',
   });
   const showAutomation = useShowAutomation();
+  const autoMergeThread = useAutoMergeThread();
+
 
   return (
     <Box sx={{ p: 4, maxWidth: 900, width: '100%', mx: 'auto' }}>
