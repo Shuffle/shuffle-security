@@ -51,12 +51,28 @@ const readTs = (raw: any): number => {
   return 0;
 };
 
+// How long we skip re-checking a given (thread, primary) after processing
+// it. Short enough that newly-arrived siblings on later list refreshes get
+// picked up; long enough that we don't spam /correlations on every
+// re-render or poll.
+const CHECK_COOLDOWN_MS = 20_000;
+
+interface CheckRecord {
+  at: number;
+  /**
+   * Number of already-linked pointers we saw last time. If the primary
+   * grows new links (someone opened a sibling and merged), we invalidate
+   * the cooldown so background continuation picks up the rest.
+   */
+  linked: number;
+}
+
 export const useBackgroundThreadContinuation = (
   incidents: IncidentListItem[],
   onDidMerge?: () => void,
 ): { busy: boolean } => {
   const enabled = useAutoMergeThread();
-  const processedRef = useRef<Set<string>>(new Set());
+  const lastCheckRef = useRef<Map<string, CheckRecord>>(new Map());
   const busyRef = useRef(false);
   const [busy, setBusy] = useState(false);
 
@@ -65,103 +81,122 @@ export const useBackgroundThreadContinuation = (
     if (busyRef.current) return;
     if (!incidents || incidents.length === 0) return;
 
-    // Find the next thread primary that (a) has an existing thread of
-    // merges and (b) carries a thread_id and (c) hasn't been checked yet.
-    const candidate = incidents.find((inc) => {
+    // Collect every thread-primary in the current list view that is
+    // (a) not itself a merged side, (b) already anchors ≥1 merge, and
+    // (c) carries a thread_id. Skip anything checked within the cooldown
+    // window unless its linked-pointer count grew since last check.
+    const now = Date.now();
+    const candidates = incidents.filter((inc) => {
       const raw = inc.rawOCSF;
       if (!raw) return false;
-      if (isMergedIncident(raw)) return false;         // it's a non-primary side
-      if (getPrimaryPointer(raw)) return false;         // ditto
-      if (getLinkedPointers(raw).length === 0) return false; // not a thread primary yet
+      if (isMergedIncident(raw)) return false;
+      if (getPrimaryPointer(raw)) return false;
+      const linked = getLinkedPointers(raw).length;
+      if (linked === 0) return false;
       const tid = extractThreadId(raw);
       if (!tid) return false;
       const key = `${tid}:${inc.id}`;
-      if (processedRef.current.has(key)) return false;
+      const prev = lastCheckRef.current.get(key);
+      if (prev && now - prev.at < CHECK_COOLDOWN_MS && prev.linked >= linked) {
+        return false;
+      }
       return true;
     });
-    if (!candidate) return;
+    if (candidates.length === 0) return;
 
-    const raw = candidate.rawOCSF;
-    const threadId = extractThreadId(raw)!;
-    const key = `${threadId}:${candidate.id}`;
-    processedRef.current.add(key);
     busyRef.current = true;
     setBusy(true);
 
-
-
     (async () => {
+      let totalMerged = 0;
       try {
-        const resp = await fetch(getApiUrl('/api/v2/correlations'), {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-          body: JSON.stringify({ type: 'value', key: String(threadId).toLowerCase() }),
-        });
-        if (!resp.ok) return;
-        const data = await resp.json();
-        const corrData = Array.isArray(data) ? data : (data.correlations || data.data || []);
+        for (const candidate of candidates) {
+          const raw = candidate.rawOCSF;
+          const threadId = extractThreadId(raw)!;
+          const key = `${threadId}:${candidate.id}`;
+          const alreadyLinked = new Set<string>(
+            getLinkedPointers(raw).map((p) => p.id.toLowerCase()),
+          );
+          alreadyLinked.add(candidate.id.toLowerCase());
+          lastCheckRef.current.set(key, { at: Date.now(), linked: alreadyLinked.size - 1 });
 
-        // Collect sibling ids from correlation refs, minus incidents
-        // already merged under this primary and minus the primary itself.
-        const alreadyLinked = new Set<string>(
-          getLinkedPointers(raw).map((p) => p.id.toLowerCase()),
-        );
-        alreadyLinked.add(candidate.id.toLowerCase());
-        const siblingIds = new Set<string>();
-        for (const c of corrData) {
-          const refs = Array.isArray(c?.ref) ? c.ref : [];
-          for (const r of refs) {
-            const rid = refToIncidentId(String(r));
-            if (!rid) continue;
-            if (alreadyLinked.has(rid.toLowerCase())) continue;
-            siblingIds.add(rid);
-          }
-        }
-        if (siblingIds.size === 0) return;
-
-        // Cross-load each sibling and skip any already in a merged state.
-        const siblings: Array<{ id: string; raw: any; title: string }> = [];
-        for (const sid of siblingIds) {
+          let corrData: any[] = [];
           try {
-            const res = await getDatastoreItem(sid, DATASTORE_CATEGORIES.INCIDENTS);
-            if (!res.success || !res.item) continue;
-            const sRaw = JSON.parse(res.item.value);
-            if (isMergedIncident(sRaw)) continue;
-            const title =
-              sRaw.title
-              || sRaw.finding_info_list?.[0]?.title
-              || sRaw.finding_info?.title
-              || sid;
-            siblings.push({ id: sid, raw: sRaw, title });
-          } catch { /* skip */ }
-        }
-        if (siblings.length === 0) return;
+            const resp = await fetch(getApiUrl('/api/v2/correlations'), {
+              method: 'POST',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+              body: JSON.stringify({ type: 'value', key: String(threadId).toLowerCase() }),
+            });
+            if (!resp.ok) continue;
+            const data = await resp.json();
+            corrData = Array.isArray(data) ? data : (data.correlations || data.data || []);
+          } catch { continue; }
 
-        // Retain the primary that already anchors the thread — do not
-        // reshuffle timestamps here. Fold each sibling into it.
-        let currentPrimaryRaw = raw;
-        const primaryTitle = raw?.title || raw?.finding_info_list?.[0]?.title || candidate.id;
-        let merged = 0;
-        for (const src of siblings) {
-          const res = await linkMergePair({
-            primaryId: candidate.id,
-            primaryRaw: currentPrimaryRaw,
-            primaryTitle,
-            sourceId: src.id,
-            sourceRaw: src.raw,
-            sourceTitle: src.title,
-            linkedBy: 'thread-auto-merge-list',
-          });
-          if (res.success) {
-            merged += 1;
-            if (res.foldedPrimary) currentPrimaryRaw = res.foldedPrimary;
+          const siblingIds = new Set<string>();
+          for (const c of corrData) {
+            const refs = Array.isArray(c?.ref) ? c.ref : [];
+            for (const r of refs) {
+              const rid = refToIncidentId(String(r));
+              if (!rid) continue;
+              if (alreadyLinked.has(rid.toLowerCase())) continue;
+              siblingIds.add(rid);
+            }
           }
+          if (siblingIds.size === 0) continue;
+
+          // Cross-load each sibling; skip already-merged sides.
+          const siblingLoads = await Promise.all(
+            Array.from(siblingIds).map(async (sid) => {
+              try {
+                const res = await getDatastoreItem(sid, DATASTORE_CATEGORIES.INCIDENTS);
+                if (!res.success || !res.item) return null;
+                const sRaw = JSON.parse(res.item.value);
+                if (isMergedIncident(sRaw)) return null;
+                const title =
+                  sRaw.title
+                  || sRaw.finding_info_list?.[0]?.title
+                  || sRaw.finding_info?.title
+                  || sid;
+                return { id: sid, raw: sRaw, title };
+              } catch { return null; }
+            }),
+          );
+          const siblings = siblingLoads.filter((s): s is { id: string; raw: any; title: string } => !!s);
+          if (siblings.length === 0) continue;
+
+          // Retain the primary that already anchors the thread. Chain
+          // the folded raw through each iteration so successive sources
+          // fold on top of the enriched primary (identical to detail-page
+          // handleAutoMergeThread behavior).
+          let currentPrimaryRaw = raw;
+          const primaryTitle = raw?.title || raw?.finding_info_list?.[0]?.title || candidate.id;
+          for (const src of siblings) {
+            const res = await linkMergePair({
+              primaryId: candidate.id,
+              primaryRaw: currentPrimaryRaw,
+              primaryTitle,
+              sourceId: src.id,
+              sourceRaw: src.raw,
+              sourceTitle: src.title,
+              linkedBy: 'thread-auto-merge-list',
+            });
+            if (res.success) {
+              totalMerged += 1;
+              if (res.foldedPrimary) currentPrimaryRaw = res.foldedPrimary;
+            }
+          }
+          // Update cooldown record with the new linked count so a later
+          // pass only reprocesses if MORE siblings arrive.
+          lastCheckRef.current.set(key, {
+            at: Date.now(),
+            linked: (alreadyLinked.size - 1) + siblings.length,
+          });
         }
-        if (merged > 0) onDidMerge?.();
       } catch { /* silent */ } finally {
         busyRef.current = false;
         setBusy(false);
+        if (totalMerged > 0) onDidMerge?.();
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
