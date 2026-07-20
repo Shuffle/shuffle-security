@@ -221,6 +221,42 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
     }
   }, []);
 
+  // Direct-lookup: if the query looks like an incident id (>=6 chars,
+  // alphanumeric / dashes / underscores), try to fetch it as an incident
+  // from the datastore. Lets analysts paste an incident id and jump to it
+  // even though the correlations index would only surface it indirectly.
+  const searchIncident = useCallback(async (q: string) => {
+    const trimmed = q.trim();
+    if (trimmed.length < 6 || !/^[A-Za-z0-9_-]+$/.test(trimmed)) {
+      setIncidentResults([]);
+      return;
+    }
+    setIncidentLoading(true);
+    try {
+      const res = await getDatastoreItem(trimmed, DATASTORE_CATEGORIES.INCIDENTS);
+      if (res.success && res.item) {
+        let title = trimmed;
+        try {
+          const parsed = JSON.parse(res.item.value);
+          title = parsed.title
+            || parsed.finding_info_list?.[0]?.title
+            || parsed.finding_info?.title
+            || parsed.message
+            || trimmed;
+        } catch {
+          /* keep id as title */
+        }
+        setIncidentResults([{ id: trimmed, title }]);
+      } else {
+        setIncidentResults([]);
+      }
+    } catch {
+      setIncidentResults([]);
+    } finally {
+      setIncidentLoading(false);
+    }
+  }, []);
+
   // Debounced app search (200ms) — only when dialog is open
   useEffect(() => {
     if (!open) return;
@@ -237,6 +273,14 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
     return () => { if (corrDebounceRef.current) clearTimeout(corrDebounceRef.current); };
   }, [query, searchCorrelations, open]);
 
+  // Debounced incident id lookup (350ms)
+  useEffect(() => {
+    if (!open) return;
+    if (incidentDebounceRef.current) clearTimeout(incidentDebounceRef.current);
+    incidentDebounceRef.current = setTimeout(() => searchIncident(query), 350);
+    return () => { if (incidentDebounceRef.current) clearTimeout(incidentDebounceRef.current); };
+  }, [query, searchIncident, open]);
+
   // Reset on open
   useEffect(() => {
     if (open) {
@@ -244,6 +288,7 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
       setAppResults([]);
       setCorrelationResults([]);
       setWorkflowResults([]);
+      setIncidentResults([]);
       setSelectedIndex(0);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
@@ -262,6 +307,8 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
     } else if (result.type === 'workflow') {
       // Open workflow in Shuffle Automation
       window.open(`https://shuffler.io/workflows/${result.workflow.id}`, '_blank');
+    } else if (result.type === 'incident') {
+      navigate(`/incidents/${encodeURIComponent(result.incident.id)}`);
     } else if (result.type === 'correlation') {
       const incidentRef = result.correlation.ref?.find((r) => r.includes('shuffle-security_incidents'));
       if (incidentRef) {
@@ -290,12 +337,14 @@ export const SidebarSearchDialog = ({ open, onOpenChange }: SidebarSearchDialogP
     }
   };
 
-  const isAnyLoading = loading || correlationsLoading;
+  const isAnyLoading = loading || correlationsLoading || incidentLoading;
 
   // Compute global indices for each section
   const workflowStartIdx = filteredNav.length;
-  const correlationStartIdx = workflowStartIdx + workflowResults.length;
-  const appStartIdx = correlationStartIdx + correlationResults.length;
+  const incidentStartIdx = workflowStartIdx + workflowResults.length;
+  const directMatchStartIdx = incidentStartIdx + incidentResults.length;
+  const correlationStartIdx = directMatchStartIdx + directMatchCorrelations.length;
+  const appStartIdx = correlationStartIdx + otherCorrelations.length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
