@@ -1643,7 +1643,7 @@ const IncidentsPage = () => {
   // Continue existing merge threads silently: if an incident already has
   // merges under it and carries a thread_id, fold any newly-arrived thread
   // siblings into it. Only touches existing threads — never starts new ones.
-  useBackgroundThreadContinuation(incidents, () => { void fetchItems(); });
+  const { busy: threadContinuationBusy } = useBackgroundThreadContinuation(incidents, () => { void fetchItems(); });
 
   const allSelectedResolved = selectedIds.size > 0 && selectedIncidentsList.every(i => i.status.toLowerCase() === 'resolved');
   const someSelectedResolved = selectedIds.size > 0 && selectedIncidentsList.some(i => i.status.toLowerCase() === 'resolved');
@@ -2613,6 +2613,25 @@ const IncidentsPage = () => {
               <RocketLaunchIcon size={20} />
             </IconButton>
           </Tooltip>
+          )}
+          {threadContinuationBusy && (
+            <Tooltip title="Continuing existing merge thread in the background">
+              <Box sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 0.75,
+                height: 36,
+                px: 1.25,
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1,
+                color: 'text.secondary',
+                fontSize: 12,
+              }}>
+                <CircularProgress size={12} thickness={5} sx={{ color: 'text.secondary' }} />
+                <span>Merging thread</span>
+              </Box>
+            </Tooltip>
           )}
           <Tooltip title="Refresh">
             <IconButton 
