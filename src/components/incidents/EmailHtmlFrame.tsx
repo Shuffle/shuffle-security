@@ -176,14 +176,6 @@ const EmailHtmlFrame = ({ html, maxHeight = 4000 }: EmailHtmlFrameProps) => {
         borderRadius: 1,
         overflow: 'hidden',
         backgroundColor: '#ffffff',
-        // Cap the render column to a typical email viewport (~720px) and
-        // center it on the white canvas. Real mail clients (Gmail, Outlook
-        // Web) render inside a narrow column, so email templates size their
-        // images/headers assuming that width. Letting our iframe span the
-        // full page width makes hero images and logos look drastically
-        // oversized relative to how they were designed.
-        maxWidth: 760,
-        marginX: 'auto',
         boxShadow:
           theme.palette.mode === 'dark'
             ? '0 1px 2px rgba(0,0,0,0.4)'
