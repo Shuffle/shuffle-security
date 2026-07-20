@@ -441,13 +441,15 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
         </Tooltip>
       )}
       {onForward && (
-        <Tooltip title="Forward">
-          <IconButton size="small" onClick={onForward} sx={{
-            color: 'text.secondary',
-            '&:hover': { color: primaryColor },
-          }}>
-            <ForwardIcon size={18} />
-          </IconButton>
+        <Tooltip title="Forwarding is not yet available">
+          <span>
+            <IconButton size="small" disabled sx={{
+              color: 'text.secondary',
+              '&:hover': { color: primaryColor },
+            }}>
+              <ForwardIcon size={18} />
+            </IconButton>
+          </span>
         </Tooltip>
       )}
       <Tooltip title={poppedOut ? 'Dock back inline' : 'Open in popout window'}>
