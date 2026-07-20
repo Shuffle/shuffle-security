@@ -582,7 +582,7 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
                         &lt;{email}&gt;
                       </Typography>
                     )}
-                    {msg.isLatest && (
+                    {msg.isLatest && !msg.isDraft && (
                       <Chip label="Latest" size="small" sx={{
                         height: 16,
                         fontSize: '0.6rem',
@@ -591,6 +591,18 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
                         ml: 0.5,
                       }} />
                     )}
+                    {msg.isDraft && (
+                      <Tooltip title="Unsent draft — not a source of truth" arrow>
+                        <Chip label="Draft" size="small" sx={{
+                          height: 16,
+                          fontSize: '0.6rem',
+                          bgcolor: 'hsl(var(--warning) / 0.15)',
+                          color: 'hsl(var(--warning))',
+                          ml: 0.5,
+                        }} />
+                      </Tooltip>
+                    )}
+
                   </Box>
                   {!isExpanded && (
                     <Typography variant="caption" sx={{
