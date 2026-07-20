@@ -8961,7 +8961,6 @@ const IncidentDetailPage = () => {
                         p: 1.5,
                         borderRadius: 1,
                         backgroundImage: 'none',
-                        backgroundImage: 'none',
                         border: isThisIgnored
                           ? '1px dashed hsl(var(--warning, 38 92% 50%) / 0.55)'
                           : mismatch ? '1px solid hsl(var(--warning, 38 92% 50%) / 0.35)' : isExpanded ? '1px solid hsl(var(--primary) / 0.35)' : '1px solid hsl(var(--border))',
