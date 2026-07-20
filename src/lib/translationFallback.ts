@@ -312,3 +312,90 @@ export const autoCorrectTranslatedString = (
     return undefined;
   }
 };
+
+const setDeepValue = (obj: Json, path: string, value: Json) => {
+  if (!obj || typeof obj !== 'object' || !path) return;
+  const parts = path.split('.');
+  let cur: any = obj;
+  for (let i = 0; i < parts.length - 1; i += 1) {
+    const part = parts[i];
+    if (cur[part] == null || typeof cur[part] !== 'object') {
+      cur[part] = {};
+    }
+    cur = cur[part];
+  }
+  cur[parts[parts.length - 1]] = value;
+};
+
+const findTitleLocation = (data: Json): { path: string; value: Json } | null => {
+  if (!data || typeof data !== 'object') return null;
+  const d = data as any;
+  // New OCSF format: title is at the root.
+  if ('finding_uid' in d && 'title' in d) {
+    return { path: 'title', value: d.title };
+  }
+  // Legacy OCSF format: title lives inside finding_info_list[0] or finding_info.
+  if (Array.isArray(d.finding_info_list) && d.finding_info_list.length > 0 && 'title' in d.finding_info_list[0]) {
+    return { path: 'finding_info_list.0.title', value: d.finding_info_list[0].title };
+  }
+  if (d.finding_info && typeof d.finding_info === 'object' && 'title' in d.finding_info) {
+    return { path: 'finding_info.title', value: d.finding_info.title };
+  }
+  // Non-OCSF format: root title.
+  if ('title' in d) {
+    return { path: 'title', value: d.title };
+  }
+  return null;
+};
+
+const findAssigneeLocation = (data: Json): { path: string; value: Json } | null => {
+  if (!data || typeof data !== 'object') return null;
+  const d = data as any;
+  const customAttrs = d.metadata?.extensions?.custom_attributes;
+  if (customAttrs && 'assignee' in customAttrs) {
+    return { path: 'metadata.extensions.custom_attributes.assignee', value: customAttrs.assignee };
+  }
+  if ('assignee' in d) {
+    return { path: 'assignee', value: d.assignee };
+  }
+  return null;
+};
+
+export interface FieldRepair {
+  field: 'title' | 'assignee';
+  path: string;
+  original: unknown;
+  corrected: string;
+}
+
+/**
+ * Detect and fix corrupted OCSF identity fields in place.
+ *
+ * Returns a list of repairs performed. The passed `data` object is mutated
+ * so the corrected scalar values replace the broken translation expressions
+ * / header arrays, ready to be persisted back to the datastore.
+ */
+export const repairCorruptedOcsfFields = (data: Json): FieldRepair[] => {
+  const repairs: FieldRepair[] = [];
+  if (!data || typeof data !== 'object') return repairs;
+
+  const titleLoc = findTitleLocation(data);
+  if (titleLoc) {
+    const corrected = autoCorrectTranslatedString(titleLoc.value, data, 'Subject');
+    if (corrected && corrected !== titleLoc.value) {
+      setDeepValue(data, titleLoc.path, corrected);
+      repairs.push({ field: 'title', path: titleLoc.path, original: titleLoc.value, corrected });
+    }
+  }
+
+  const assigneeLoc = findAssigneeLocation(data);
+  if (assigneeLoc) {
+    const corrected = autoCorrectTranslatedString(assigneeLoc.value, data, 'From');
+    if (corrected && corrected !== assigneeLoc.value) {
+      setDeepValue(data, assigneeLoc.path, corrected);
+      repairs.push({ field: 'assignee', path: assigneeLoc.path, original: assigneeLoc.value, corrected });
+    }
+  }
+
+  return repairs;
+};

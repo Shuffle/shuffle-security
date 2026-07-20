@@ -60,7 +60,7 @@ import IncidentReportDialog from '@/components/incidents/IncidentReportDialog';
 import type { GenerateReportInput } from '@/services/incidentReports';
 import { API_CONFIG, getApiUrl, getAuthHeader } from '@/Shuffle-MCPs/api';
 import { resyncState } from '@/lib/resyncState';
-import { autoCorrectTranslatedString } from '@/lib/translationFallback';
+import { autoCorrectTranslatedString, repairCorruptedOcsfFields, type FieldRepair } from '@/lib/translationFallback';
 import { useUsers } from '@/hooks/useUsers';
 import { useSubOrgs } from '@/hooks/useSubOrgs';
 import { useCustomFields, CustomField } from '@/hooks/useCustomFields';
@@ -2171,6 +2171,25 @@ const IncidentDetailPage = () => {
         edited: result.item.edited,
         enrichments: result.item.enrichments,
       };
+
+      // Repair corrupted translation fields (e.g. literal JSONPath or header
+      // arrays leaked into the title/assignee) before we display or persist.
+      // This mutates the parsed payload in place and re-serializes it for the
+      // parser so the corrected values become the stored values.
+      let repairedRaw: any = null;
+      let fieldRepairs: FieldRepair[] = [];
+      if (!isPublicView) {
+        try {
+          repairedRaw = JSON.parse(itemData.value);
+          fieldRepairs = repairCorruptedOcsfFields(repairedRaw);
+          if (fieldRepairs.length > 0) {
+            itemData.value = JSON.stringify(repairedRaw);
+          }
+        } catch (repairErr) {
+          console.warn('[IncidentDetail] Failed to pre-parse incident for translation repair:', repairErr);
+        }
+      }
+
       const parseStart = performance.now();
       const parsed = parseIncidentFromDatastore(itemData);
       console.log(`[Perf] parseIncidentFromDatastore: ${(performance.now() - parseStart).toFixed(1)}ms`);
@@ -2301,6 +2320,13 @@ const IncidentDetailPage = () => {
           labels: labelsStr,
         };
         console.log(`[Perf] State hydration: ${(performance.now() - stateStart).toFixed(1)}ms`);
+        // Persist any translation-field repairs so the stored OCSF reflects
+        // the corrected values instead of the raw translation expression.
+        if (!isPublicView && repairedRaw && fieldRepairs.length > 0) {
+          console.log('[IncidentDetail] Persisting repaired translation fields:', fieldRepairs);
+          setDatastoreItem(id, repairedRaw, DATASTORE_CATEGORIES.INCIDENTS, crossOrgId || undefined)
+            .catch((err) => console.warn('[IncidentDetail] Failed to persist repaired translation fields:', err));
+        }
         // Details is now tab 0 (default), no auto-switch needed
         // If arriving with ?tab=raw, populate rawJsonText now that data is loaded
         if (showLoading && searchParams.get('tab') === 'raw') {
