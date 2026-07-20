@@ -6664,17 +6664,9 @@ const IncidentDetailPage = () => {
         />
       )}
 
-      {/* If other incidents were merged INTO this one, list them so the
-          analyst can jump back or unmerge from the primary side. */}
-      {!isPublicView && incident?.id && (relatedIncidents.linked.length > 0 || relatedIncidents.invisibleCount > 0) && (
-        <RelatedIncidentsBanner
-          currentIncidentId={incident.id}
-          linked={relatedIncidents.linked}
-          invisibleCount={relatedIncidents.invisibleCount}
-          loading={relatedIncidents.loading}
-          onUnlinked={() => loadIncident(false)}
-        />
-      )}
+      {/* Incidents merged INTO this one are surfaced quietly at the top of
+          the Correlations tab instead of a loud page-level banner — see the
+          `activeTab === 3` block below. */}
 
       {/* Thread-correlated incidents — any other incidents that share the
           same thread_id, pulled in live via the correlations API. */}
