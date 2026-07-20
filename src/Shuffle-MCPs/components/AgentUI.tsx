@@ -795,11 +795,24 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
     runFinished && (item.status === 'RUNNING' || item.status === 'WAITING')
       ? 'IGNORED'
       : item.status;
-  const barColor = isProcessing ? 'hsl(var(--muted-foreground) / 0.45)' :
-    effectiveStatus === 'IGNORED' ? STATUS_COLORS.warning :
-    effectiveStatus === 'FINISHED' ? STATUS_COLORS.finished :
-    effectiveStatus === 'FAILURE' || effectiveStatus === 'ABORTED' ? STATUS_COLORS.error :
-    STATUS_COLORS.running;
+  const isFailed = effectiveStatus === 'FAILURE' || effectiveStatus === 'ABORTED';
+  // Default bar color: only failed executions stand out; everything else is
+  // neutral so the timeline does not look like a color parade.
+  const barColor = isProcessing
+    ? 'hsl(var(--muted-foreground) / 0.45)'
+    : isFailed
+      ? STATUS_COLORS.error
+      : 'hsl(var(--muted-foreground) / 0.35)';
+  // On hover we reveal the real status color so context is still one tap away.
+  const hoverBarColor = isProcessing
+    ? 'hsl(var(--muted-foreground) / 0.45)'
+    : effectiveStatus === 'IGNORED'
+      ? STATUS_COLORS.warning
+      : effectiveStatus === 'FINISHED'
+        ? STATUS_COLORS.finished
+        : isFailed
+          ? STATUS_COLORS.error
+          : STATUS_COLORS.running;
 
   return (
     <Box
@@ -826,7 +839,11 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
           px: 2,
           py: 1.25,
           cursor: isProcessing ? 'default' : 'pointer',
-          '&:hover': isProcessing ? {} : { bgcolor: 'hsl(var(--muted) / 0.4)' },
+          '--timeline-bar-color': barColor,
+          '&:hover': isProcessing ? {} : {
+            bgcolor: 'hsl(var(--muted) / 0.4)',
+            '--timeline-bar-color': hoverBarColor,
+          },
         }}
       >
         <Box sx={{ width: 24, display: 'flex', justifyContent: 'center' }}>
@@ -890,9 +907,9 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
                 width,
                 height: 8,
                 top: 1,
-                bgcolor: barColor,
+                bgcolor: 'var(--timeline-bar-color)',
                 borderRadius: 1,
-                transition: 'all 0.2s ease',
+                transition: 'all 0.2s ease, background-color 0.15s ease',
               }} />
             )}
           </Box>
