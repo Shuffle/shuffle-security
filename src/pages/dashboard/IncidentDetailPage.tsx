@@ -91,7 +91,9 @@ import { MergeIncidentDialog } from '@/components/incidents/MergeIncidentDialog'
 import { MergeCandidatesBanner } from '@/components/incidents/MergeCandidatesBanner';
 import { MergedIncidentBanner } from '@/components/incidents/MergedIncidentBanner';
 import { RelatedIncidentsBanner } from '@/components/incidents/RelatedIncidentsBanner';
+import { ThreadCorrelatedBanner } from '@/components/incidents/ThreadCorrelatedBanner';
 import { useRelatedIncidents } from '@/hooks/useRelatedIncidents';
+import { useThreadCorrelatedIncidents } from '@/hooks/useThreadCorrelatedIncidents';
 import { maybeMigrateLegacyMerge, getPrimaryPointer } from '@/lib/incidentRelations';
 import { DemoFallbackAuditBanner } from '@/components/incidents/DemoFallbackAuditBanner';
 import { useMergeCandidates } from '@/hooks/useMergeCandidates';
