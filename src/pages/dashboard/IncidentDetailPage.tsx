@@ -1646,6 +1646,11 @@ const IncidentDetailPage = () => {
     currentIocKeys: iocObservableKeys,
     enabled: !!incident?.id && !isPublicView,
   });
+
+  // Cross-referenced merges: fetch the primary (if this incident is merged
+  // into another) and the incidents that were merged INTO this one.
+  const relatedIncidents = useRelatedIncidents(incident?.id, incident?.rawOCSF);
+  const primaryPointer = useMemo(() => getPrimaryPointer(incident?.rawOCSF), [incident?.rawOCSF]);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSaveRef = useRef(false);
   // Track the initial normalized values so auto-save doesn't fire on load
