@@ -588,6 +588,7 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
         setScanning(true);
         setScanResult(null);
         void (async () => {
+          const currentId = incidentId; // capture prop before inner shadowing
           try {
             const orgId = userInfo?.active_org?.id;
             if (!orgId) {
@@ -610,32 +611,40 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
                 const raw = typeof it.value === 'string' ? JSON.parse(it.value) : it.value;
                 if (!raw || typeof raw !== 'object') continue;
                 scanned += 1;
-                // Mirror the incident detail view's normalization (repair
-                // corrupted OCSF fields, fall back to rawOCSF.*, decode
-                // base64, strip HTML) so this scan finds the same matches
-                // the analyst would see when opening each incident.
                 const ctx = buildScanContext(raw);
                 const hits = evaluateRoutingRules(ctx, [rule]);
                 if (hits.length === 0) continue;
                 matched += 1;
-                // Apply the rule end-to-end. Aggregate all matched actions
-                // (evaluateRoutingRules returns per-action hits) and write
-                // the updated payload back through writeIncidentSafe so we
-                // preserve related_incidents pointers.
                 const allActions = hits.flatMap((h: any) => Array.isArray(h?.rule?.actions) ? h.rule.actions : []);
                 if (allActions.length === 0) continue;
                 const result = applyRoutingActionsToRaw(raw, allActions, { ruleName: rule.name });
                 if (!result.changed) continue;
-                const incidentId = raw.id || it.key || it.id;
-                if (!incidentId) { failed += 1; continue; }
-                const write = await writeIncidentSafe(String(incidentId), result.next, orgId);
-                if (write.success) applied += 1;
-                else failed += 1;
+                const targetId = raw.id || it.key || it.id;
+                if (!targetId) { failed += 1; continue; }
+                const write = await writeIncidentSafe(String(targetId), result.next, orgId);
+                if (write.success) {
+                  applied += 1;
+                  // If we just mutated the incident the analyst is
+                  // currently viewing, tell the detail view to reload so
+                  // the change appears immediately.
+                  if (currentId && String(targetId) === String(currentId)) {
+                    window.dispatchEvent(
+                      new CustomEvent('incident:refresh', { detail: { id: String(targetId) } }),
+                    );
+                  }
+                } else failed += 1;
               } catch {
                 /* skip malformed */
               }
             }
             setScanResult({ matched, scanned, applied, failed });
+            // Final safety net: even if the current incident wasn't in the
+            // matched set, refresh it so the UI is guaranteed consistent.
+            if (currentId) {
+              window.dispatchEvent(
+                new CustomEvent('incident:refresh', { detail: { id: String(currentId) } }),
+              );
+            }
           } catch {
             setScanResult({ matched: 0, scanned: 0, applied: 0, failed: 0 });
           } finally {
