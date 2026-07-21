@@ -480,6 +480,8 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
             const items = (resp as any)?.items || (resp as any)?.data || [];
             let matched = 0;
             let scanned = 0;
+            let applied = 0;
+            let failed = 0;
             for (const it of items) {
               try {
                 const raw = typeof it.value === 'string' ? JSON.parse(it.value) : it.value;
@@ -497,14 +499,28 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
                   rawOCSF: raw.rawOCSF,
                 };
                 const hits = evaluateRoutingRules(ctx, [rule]);
-                if (hits.length > 0) matched += 1;
+                if (hits.length === 0) continue;
+                matched += 1;
+                // Apply the rule end-to-end. Aggregate all matched actions
+                // (evaluateRoutingRules returns per-action hits) and write
+                // the updated payload back through writeIncidentSafe so we
+                // preserve related_incidents pointers.
+                const allActions = hits.flatMap((h: any) => Array.isArray(h?.actions) ? h.actions : (h?.action ? [h.action] : []));
+                if (allActions.length === 0) continue;
+                const result = applyRoutingActionsToRaw(raw, allActions, { ruleName: rule.name });
+                if (!result.changed) continue;
+                const incidentId = raw.id || it.key || it.id;
+                if (!incidentId) { failed += 1; continue; }
+                const write = await writeIncidentSafe(String(incidentId), result.next, orgId);
+                if (write.success) applied += 1;
+                else failed += 1;
               } catch {
                 /* skip malformed */
               }
             }
-            setScanResult({ matched, scanned });
+            setScanResult({ matched, scanned, applied, failed });
           } catch {
-            setScanResult({ matched: 0, scanned: 0 });
+            setScanResult({ matched: 0, scanned: 0, applied: 0, failed: 0 });
           } finally {
             setScanning(false);
           }
