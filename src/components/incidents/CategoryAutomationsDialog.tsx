@@ -943,10 +943,10 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
             <DeleteSweepIcon size={22} style={{ color: cleanupTimeout > 0 ? 'hsl(var(--severity-medium))' : 'hsl(var(--muted-foreground))' }} />
             <Box sx={{ flex: 1 }}>
               <Typography sx={{ fontSize: '0.95rem', color: cleanupTimeout > 0 ? 'text.primary' : 'hsl(var(--muted-foreground))' }}>
-                Auto-delete incidents after
+                Auto-delete {entityPlural} after
               </Typography>
               <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                Automatically removes resolved incidents after the selected period
+                Automatically removes resolved {entityPlural} after the selected period
               </Typography>
             </Box>
             <FormControl size="small" sx={{ minWidth: 130 }}>
