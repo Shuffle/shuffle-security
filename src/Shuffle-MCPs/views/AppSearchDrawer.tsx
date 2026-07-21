@@ -109,6 +109,10 @@ interface AppSearchDrawerProps extends ShuffleHostProps {
   open: boolean;
   onClose: () => void;
   initialQuery?: string;
+  /** Silent search query run on mount without filling the visible input.
+   *  Used to bias results toward specific categories (e.g. vulnerabilities
+   *  page prioritising asset management / cloud / iam apps). */
+  initialFilterQuery?: string;
   title?: string;
   subtitle?: string;
   anchor?: 'left' | 'right';
@@ -155,6 +159,7 @@ export default function AppSearchDrawer({
   open,
   onClose,
   initialQuery = '',
+  initialFilterQuery,
   title = 'Add Integration',
   subtitle = 'Search and configure a tool',
   anchor = 'right',
@@ -549,7 +554,7 @@ export default function AppSearchDrawer({
                     gridColumns={2}
                     inline={true}
                     initialQuery={initialQuery}
-                    initialFilterQuery={initialQuery}
+                    initialFilterQuery={initialFilterQuery ?? initialQuery}
                     hitsPerPage={20}
                     showDescription={false}
                     showCategories={true}

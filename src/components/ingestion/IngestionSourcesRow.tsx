@@ -42,6 +42,10 @@ interface IngestionSourcesRowProps {
   /** Optional callback fired after the source list is refetched, so parents
    *  can react to enable/disable events (e.g. refresh a downstream list). */
   onSourcesChanged?: () => void;
+  /** Optional silent Algolia query used to bias the app-search drawer to a
+   *  set of categories (e.g. "asset management cloud iam" for the
+   *  vulnerabilities page). Does not fill the visible search input. */
+  searchPriorityQuery?: string;
 }
 
 /**
@@ -61,6 +65,7 @@ export const IngestionSourcesRow = ({
   titleTooltip,
   addSubtitle,
   onSourcesChanged,
+  searchPriorityQuery,
 }: IngestionSourcesRowProps) => {
   const { resolvedTheme } = useTheme();
   const { userInfo } = useAuth();
@@ -425,6 +430,7 @@ export const IngestionSourcesRow = ({
         }}
         title="Add Ingestion Source"
         subtitle={addSubtitle ?? 'Search and authenticate a tool to ingest from'}
+        initialFilterQuery={searchPriorityQuery}
       />
     </>
   );
