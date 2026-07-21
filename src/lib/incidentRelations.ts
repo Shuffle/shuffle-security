@@ -186,6 +186,103 @@ const removePointer = (raw: any, targetId: string): any => {
   return next;
 };
 
+const relationRefId = (value: unknown): string => {
+  if (typeof value !== 'string') return '';
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  if (trimmed.includes('|')) return trimmed.split('|').pop() || trimmed;
+  if (trimmed.includes('/')) return trimmed.split('/').pop() || trimmed;
+  return trimmed;
+};
+
+const relationRefKey = (value: unknown): string => relationRefId(value).toLowerCase();
+
+const getRelationRefs = (raw: any): string[] => {
+  if (!raw || typeof raw !== 'object') return [];
+  const refs: string[] = [];
+  if (Array.isArray(raw.related_events)) {
+    refs.push(...raw.related_events.filter((x: unknown): x is string => typeof x === 'string' && x.trim().length > 0));
+  }
+  if (Array.isArray(raw.related_findings)) {
+    refs.push(...raw.related_findings.filter((x: unknown): x is string => typeof x === 'string' && x.trim().length > 0));
+  }
+  return refs;
+};
+
+const unionRelationRefs = (...groups: string[][]): string[] => {
+  const byId = new Map<string, string>();
+  for (const group of groups) {
+    for (const ref of group) {
+      const key = relationRefKey(ref);
+      if (!key) continue;
+      if (!byId.has(key)) byId.set(key, ref);
+    }
+  }
+  return Array.from(byId.values());
+};
+
+const upsertRelatedEventRefs = (raw: any, ids: string[]): any => {
+  const next: any = { ...(raw || {}) };
+  const merged = unionRelationRefs(getRelationRefs(next), ids.filter(Boolean));
+  next.related_events = merged;
+  if (Array.isArray(next.related_findings)) next.related_findings = merged;
+  return next;
+};
+
+const writeAndVerifyPrimaryMerge = async (
+  primaryId: string,
+  nextPrimary: any,
+  requiredPointers: RelatedIncidentPointer[],
+): Promise<{ success: boolean; error?: string; raw?: any }> => {
+  const requiredIds = Array.from(new Set(
+    requiredPointers
+      .map((p) => p.id)
+      .filter((id): id is string => typeof id === 'string' && id.trim().length > 0),
+  ));
+  let payload = upsertRelatedEventRefs(nextPrimary, requiredIds);
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const write = await writeIncidentSafe(primaryId, payload);
+    if (!write.success) return { success: false, error: write.error || 'Failed to update primary' };
+
+    let storedRaw: any = null;
+    try {
+      const read = await getDatastoreItem(primaryId, DATASTORE_CATEGORIES.INCIDENTS);
+      if (read.success && read.item?.value) storedRaw = JSON.parse(read.item.value);
+    } catch {
+      storedRaw = null;
+    }
+
+    if (!storedRaw || typeof storedRaw !== 'object') {
+      if (attempt === 0) continue;
+      return { success: false, error: 'Failed to verify primary merge metadata' };
+    }
+
+    const linkedKeys = new Set(getLinkedPointers(storedRaw).map((p) => p.id.toLowerCase()));
+    const relatedKeys = new Set(getRelationRefs(storedRaw).map((ref) => relationRefKey(ref)));
+    const missingPointerIds = requiredIds.filter((id) => !linkedKeys.has(id.toLowerCase()));
+    const missingRelatedIds = requiredIds.filter((id) => !relatedKeys.has(id.toLowerCase()));
+
+    if (missingPointerIds.length === 0 && missingRelatedIds.length === 0) {
+      return { success: true, raw: storedRaw };
+    }
+
+    if (attempt === 1) {
+      return {
+        success: false,
+        error: `Primary merge metadata did not verify (${missingPointerIds.length} missing pointers, ${missingRelatedIds.length} missing related events)`,
+      };
+    }
+
+    payload = upsertRelatedEventRefs(storedRaw, requiredIds);
+    for (const pointer of requiredPointers) {
+      payload = upsertPointer(payload, pointer);
+    }
+  }
+
+  return { success: false, error: 'Failed to verify primary merge metadata' };
+};
+
 interface LinkArgs {
   /** The incident chosen as the merge target (becomes primary). */
   primaryId: string;
@@ -270,17 +367,21 @@ export const linkMergePair = async ({
   }
 
   let nextPrimary: any = upsertPointer(foldedPrimaryData, primaryPointer);
+  const requiredPrimaryPointers: RelatedIncidentPointer[] = [primaryPointer];
   // Also add direct pointers to every re-parented grandchild so the
   // primary lists them alongside the source in the Correlations tab.
   for (const c of childRaws) {
-    nextPrimary = upsertPointer(nextPrimary, {
+    const childPointer: RelatedIncidentPointer = {
       id: c.id,
       relation: 'merged',
       primary: false,
       linked_at: now,
       linked_by: linkedBy || 'chain-reparent',
-    });
+    };
+    requiredPrimaryPointers.push(childPointer);
+    nextPrimary = upsertPointer(nextPrimary, childPointer);
   }
+  nextPrimary = upsertRelatedEventRefs(nextPrimary, requiredPrimaryPointers.map((p) => p.id));
   // Track which sources have been folded, for debugging / repair tooling.
   const foldedFrom = Array.isArray(nextPrimary._merged_data_from) ? nextPrimary._merged_data_from : [];
   const foldedSet = new Set<string>(foldedFrom);
@@ -310,6 +411,7 @@ export const linkMergePair = async ({
   for (const c of childRaws) {
     nextSource = removePointer(nextSource, c.id);
   }
+  nextSource = upsertRelatedEventRefs(nextSource, [primaryId]);
   nextSource = {
     ...nextSource,
     status_id: MERGED_STATUS_ID,
@@ -331,22 +433,15 @@ export const linkMergePair = async ({
     },
   ];
 
-  // Write primary + source first. Grandchild re-parenting is best-effort:
-  // if it fails, the child stays pointing at the old source, which itself
-  // now points at the new primary — the "Open primary" CTA still resolves
-  // correctly, just via one extra hop until a repair pass runs.
-  const r1 = await setDatastoreItem(
-    primaryId,
-    JSON.stringify(nextPrimary),
-    DATASTORE_CATEGORIES.INCIDENTS,
-  );
+  // Write and verify the primary's merge metadata BEFORE marking any child
+  // as merged. If the primary cannot prove it has both related_incidents and
+  // related_events for every source, abort so the merge never ends in a
+  // child-only / parent-forgotten state.
+  const r1 = await writeAndVerifyPrimaryMerge(primaryId, nextPrimary, requiredPrimaryPointers);
   if (!r1.success) return { success: false, error: r1.error || 'Failed to update primary' };
+  if (r1.raw) nextPrimary = r1.raw;
 
-  const r2 = await setDatastoreItem(
-    sourceId,
-    JSON.stringify(nextSource),
-    DATASTORE_CATEGORIES.INCIDENTS,
-  );
+  const r2 = await writeIncidentSafe(sourceId, nextSource);
   if (!r2.success) return { success: false, error: r2.error || 'Failed to update source' };
 
   // Re-parent each grandchild: drop pointer to source, add pointer to
@@ -367,11 +462,8 @@ export const linkMergePair = async ({
       rehomed.merged_at = now;
       rehomed.status_id = MERGED_STATUS_ID;
       rehomed.status = MERGED_STATUS_LABEL;
-      await setDatastoreItem(
-        c.id,
-        JSON.stringify(rehomed),
-        DATASTORE_CATEGORIES.INCIDENTS,
-      );
+      rehomed = upsertRelatedEventRefs(rehomed, [primaryId]);
+      await writeIncidentSafe(c.id, rehomed);
     } catch { /* leave the old pointer; the primary chain still resolves */ }
   }
 
@@ -484,15 +576,11 @@ export const maybeMigrateLegacyMerge = async (
     linked_by: 'legacy-migration',
   };
   const nextSource = {
-    ...upsertPointer(raw, pointer),
+    ...upsertRelatedEventRefs(upsertPointer(raw, pointer), [legacyPrimary]),
     status_id: MERGED_STATUS_ID,
     status: MERGED_STATUS_LABEL,
   };
-  await setDatastoreItem(
-    incidentId,
-    JSON.stringify(nextSource),
-    DATASTORE_CATEGORIES.INCIDENTS,
-  );
+  await writeIncidentSafe(incidentId, nextSource);
 
   // Best-effort back-fill on the primary side too. Non-fatal if it fails
   // (e.g. permissions in multi-tenant), the incident detail still works.
@@ -505,18 +593,14 @@ export const maybeMigrateLegacyMerge = async (
       const primaryRaw = JSON.parse(primaryRes.item.value);
       const already = getRelatedIncidents(primaryRaw).some(p => p.id === incidentId);
       if (!already) {
-        const nextPrimary = upsertPointer(primaryRaw, {
+        const nextPrimary = upsertRelatedEventRefs(upsertPointer(primaryRaw, {
           id: incidentId,
           relation: 'merged',
           primary: false,
           linked_at: raw.merged_at || Date.now(),
           linked_by: 'legacy-migration',
-        });
-        await setDatastoreItem(
-          legacyPrimary,
-          JSON.stringify(nextPrimary),
-          DATASTORE_CATEGORIES.INCIDENTS,
-        );
+        }), [incidentId]);
+        await writeIncidentSafe(legacyPrimary, nextPrimary);
       }
     }
   } catch {
@@ -585,6 +669,17 @@ export const preserveRelationFields = (existing: any, next: any): any => {
   const nextFolded = Array.isArray(out._merged_data_from) ? out._merged_data_from : [];
   if (existingFolded.length || nextFolded.length) {
     out._merged_data_from = Array.from(new Set<string>([...existingFolded, ...nextFolded]));
+  }
+
+  const pointerRefs = getRelatedIncidents(out)
+    .filter((p) => p.relation === 'merged')
+    .map((p) => p.id);
+  const mergedRelationRefs = unionRelationRefs(getRelationRefs(existing), getRelationRefs(out), pointerRefs);
+  if (mergedRelationRefs.length > 0) {
+    out.related_events = mergedRelationRefs;
+    if (Array.isArray(existing.related_findings) || Array.isArray(out.related_findings)) {
+      out.related_findings = mergedRelationRefs;
+    }
   }
 
   // Preserve tombstone fields if the row was a non-primary side. Never
@@ -674,16 +769,25 @@ export const reconcileRelatedFromRevisions = (
 
   const merged = unionPointers(currentPointers, revPointers);
   const foldedUnion = new Set<string>([...currentFolded, ...revFolded]);
+  const currentRelationRefs = getRelationRefs(currentRaw);
+  const mergedRelationRefs = unionRelationRefs(
+    currentRelationRefs,
+    merged.filter((p) => p.relation === 'merged').map((p) => p.id),
+  );
 
   const pointersChanged =
     merged.length !== currentPointers.length ||
     merged.some(p => !currentPointers.find(cp => cp.id === p.id && cp.primary === p.primary));
   const foldedChanged = foldedUnion.size !== currentFolded.size;
+  const relatedRefsChanged =
+    mergedRelationRefs.length !== currentRelationRefs.length ||
+    mergedRelationRefs.some((ref) => !currentRelationRefs.find((current) => relationRefKey(current) === relationRefKey(ref)));
 
-  if (!pointersChanged && !foldedChanged) return { raw: currentRaw, changed: false };
+  if (!pointersChanged && !foldedChanged && !relatedRefsChanged) return { raw: currentRaw, changed: false };
 
   const next: any = { ...currentRaw };
   if (merged.length > 0) next.related_incidents = merged;
   if (foldedUnion.size > 0) next._merged_data_from = Array.from(foldedUnion);
+  if (mergedRelationRefs.length > 0) next.related_events = mergedRelationRefs;
   return { raw: next, changed: true };
 };
