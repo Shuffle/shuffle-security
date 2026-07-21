@@ -700,7 +700,7 @@ export const ShuffleMCP = React.forwardRef<ShuffleMCPHandle, ShuffleMCPProps>(({
               ? `Showing the top ${MAX_RESULTS} results. Try a more specific search to narrow it down.`
               : "Can't find what you're looking for? Try a different search term."}
           </span>
-          {capped && onCreateNewApp && (
+          {onCreateNewApp && (
             <button
               type="button"
               onClick={onCreateNewApp}

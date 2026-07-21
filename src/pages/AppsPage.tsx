@@ -3,10 +3,11 @@ import { Box, Container, Typography, Button, useTheme } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Mail, Radar, Search, Globe, Cloud, Shield, ArrowRight as ArrowForwardIcon } from 'lucide-react';
+import { Mail, Radar, Search, Globe, Cloud, Shield, ArrowRight as ArrowForwardIcon, Plus } from 'lucide-react';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
 import { Footer } from '@/components/landing/Footer';
 import { ShuffleMCP, ShuffleMCPHandle } from '@/Shuffle-MCPs';
+import { AddAppDialog } from '@/Shuffle-Core';
 import { trackCTA, trackPredefinedEvent, GA_EVENTS } from '@/lib/analytics';
 import { usePageMeta } from '@/hooks/usePageMeta';
 
@@ -24,10 +25,30 @@ export default function AppsPage() {
   const singulRef = useRef<ShuffleMCPHandle>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
+  const [addAppOpen, setAddAppOpen] = useState(false);
+  const [addAppSeed, setAddAppSeed] = useState('');
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const theme = useTheme();
   const primaryColor = theme.palette.primary.main;
+
+  // Category search-terms we should NOT seed into the "Add app" dialog —
+  // these are broad filters (e.g. "cloud", "siem"), not the name of an app
+  // the user is trying to generate.
+  const CATEGORY_PREFIXES = ['cloud', 'siem', 'email', 'edr', 'threat intel'];
+  const SEED_MAX_LEN = 200;
+
+  const openAddApp = (source: string) => {
+    const raw = (searchQuery || '').trim();
+    const lower = raw.toLowerCase();
+    const isCategory = CATEGORY_PREFIXES.some(
+      (p) => lower === p || lower === p.replace(' ', ''),
+    );
+    const seed = !raw || isCategory ? '' : raw.slice(0, SEED_MAX_LEN);
+    setAddAppSeed(seed);
+    setAddAppOpen(true);
+    trackCTA('add_app', source);
+  };
 
   usePageMeta({
     title: '3,000+ Integrations',
@@ -158,29 +179,52 @@ export default function AppsPage() {
                 Connect your SIEM, EDR, ITSM, Email, Threat Intel, Cloud, and any other data source. 
                 Use your existing tools—we fill in the gaps.
               </Typography>
-              <Button
-                component={Link}
-                to="/register"
-                variant="contained"
-                size="large"
-                endIcon={<ArrowForwardIcon />}
-                onClick={() => trackCTA('get_started_free', 'apps_hero')}
-                sx={{
-                  py: { xs: 1.25, md: 1.5 },
-                  px: { xs: 3, md: 4 },
-                  fontSize: { xs: '0.9rem', md: '1rem' },
-                  fontWeight: 600,
-                  borderRadius: 3,
-                  background: primaryColor,
-                  boxShadow: `0 8px 32px ${primaryColor}40`,
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: `0 12px 40px ${primaryColor}60`,
-                  },
-                }}
-              >
-                Get Started Free
-              </Button>
+              <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <Button
+                  component={Link}
+                  to="/register"
+                  variant="contained"
+                  size="large"
+                  endIcon={<ArrowForwardIcon />}
+                  onClick={() => trackCTA('get_started_free', 'apps_hero')}
+                  sx={{
+                    py: { xs: 1.25, md: 1.5 },
+                    px: { xs: 3, md: 4 },
+                    fontSize: { xs: '0.9rem', md: '1rem' },
+                    fontWeight: 600,
+                    borderRadius: 3,
+                    background: primaryColor,
+                    boxShadow: `0 8px 32px ${primaryColor}40`,
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: `0 12px 40px ${primaryColor}60`,
+                    },
+                  }}
+                >
+                  Get Started Free
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  startIcon={<Plus size={18} />}
+                  onClick={() => openAddApp('apps_hero')}
+                  sx={{
+                    py: { xs: 1.25, md: 1.5 },
+                    px: { xs: 3, md: 4 },
+                    fontSize: { xs: '0.9rem', md: '1rem' },
+                    fontWeight: 600,
+                    borderRadius: 3,
+                    borderColor: `${primaryColor}80`,
+                    color: 'primary.main',
+                    '&:hover': {
+                      borderColor: 'primary.main',
+                      background: `${primaryColor}14`,
+                    },
+                  }}
+                >
+                  Add app
+                </Button>
+              </Box>
             </Box>
           </motion.div>
         </Container>
@@ -353,6 +397,7 @@ export default function AppsPage() {
                   trackPredefinedEvent(GA_EVENTS.APP_VIEWED, app.name);
                   navigate(`/apps/${encodeURIComponent(app.name.toLowerCase().replace(/[\s]+/g, '_'))}`);
                 }}
+                onCreateNewApp={() => openAddApp('apps_search_empty')}
               />
             </Box>
           </motion.div>
@@ -400,6 +445,16 @@ export default function AppsPage() {
         </Container>
       </Box>
 
+      <AddAppDialog
+        open={addAppOpen}
+        onOpenChange={setAddAppOpen}
+        initialInput={addAppSeed}
+        onCreated={(_appId, app) => {
+          if (app?.name) {
+            navigate(`/apps/${encodeURIComponent(app.name.toLowerCase().replace(/[\s]+/g, '_'))}`);
+          }
+        }}
+      />
       <Footer />
     </Box>
   );
