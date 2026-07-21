@@ -6965,9 +6965,17 @@ const IncidentDetailPage = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
       style={{ maxWidth: 1400, width: '100%', marginLeft: 'auto', marginRight: 'auto' }}
+      data-incident-content=""
     >
+      {/* Highlight-to-create routing rule chip. Non-invasive: only appears
+          on real text selections inside this incident's content area. */}
+      {!isPublicView && <SelectionRuleChip incidentId={incident?.id} />}
+
       {/* OCSF recovery fallback banner moved into the Timeline section
           (and is dismissible there). Intentionally not shown at the top. */}
+
+
+
 
 
       {/* Read-only banner for shared/public view */}
