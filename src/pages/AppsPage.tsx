@@ -445,6 +445,16 @@ export default function AppsPage() {
         </Container>
       </Box>
 
+      <AddAppDialog
+        open={addAppOpen}
+        onOpenChange={setAddAppOpen}
+        initialInput={addAppSeed}
+        onCreated={(_appId, app) => {
+          if (app?.name) {
+            navigate(`/apps/${encodeURIComponent(app.name.toLowerCase().replace(/[\s]+/g, '_'))}`);
+          }
+        }}
+      />
       <Footer />
     </Box>
   );
