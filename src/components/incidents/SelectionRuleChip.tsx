@@ -195,6 +195,7 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
   const { userInfo } = useAuth();
   const { parentOrg } = useSubOrgs(userInfo?.active_org?.id);
   const routingOrgId = parentOrg?.id || userInfo?.active_org?.id;
+  const navigate = useNavigate();
 
   const { addItem } = useDatastore({
     category: ROUTING_DATASTORE_CATEGORY,
@@ -216,6 +217,13 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
   const [actionValue, setActionValue] = useState<string>('');
   const [ruleName, setRuleName] = useState<string>('');
 
+  // Post-save summary state — after a successful save we replace the form
+  // with a summary that scans the most recent incidents to show the user
+  // how many would have matched the rule they just created.
+  const [savedRule, setSavedRule] = useState<RoutingRule | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [scanResult, setScanResult] = useState<{ matched: number; scanned: number } | null>(null);
+
   const currentPreset = useMemo(
     () => ACTION_PRESETS.find((p) => p.key === actionKey) || ACTION_PRESETS[0],
     [actionKey],
@@ -224,6 +232,9 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
   const closeChip = useCallback(() => {
     setChip(null);
     setPopoverOpen(false);
+    setSavedRule(null);
+    setScanResult(null);
+    setScanning(false);
   }, []);
 
   // Selection listener
