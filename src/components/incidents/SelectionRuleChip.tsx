@@ -637,7 +637,7 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
                   size="small"
                   onClick={() => {
                     closeChip();
-                    navigate('/settings/incident-routing');
+                    navigate('/usecases/case_management_incident_routing_1');
                   }}
                   sx={{ textTransform: 'none', color: 'hsl(var(--muted-foreground))', height: 36 }}
                 >
