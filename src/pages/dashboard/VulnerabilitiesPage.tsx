@@ -278,6 +278,39 @@ const AuthenticatedVulnerabilitiesView = () => {
               <TooltipContent>Refresh</TooltipContent>
             </Tooltip>
           </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={() => {
+                    const workflowAuto = categoryAutomations?.find(a => a.type === 'workflow' && a.enabled);
+                    const wfId = workflowAuto?.options?.find(o => o.key === 'workflow_id')?.value?.split(',')[0]?.trim();
+                    if (wfId) {
+                      window.open(`https://shuffler.io/workflows/${wfId}`, '_blank');
+                    } else {
+                      setAutomationsDialogOpen(true);
+                    }
+                  }}
+                  style={{
+                    color: categoryAutomations?.some(a => a.enabled) ? '#4ade80' : undefined,
+                    borderColor: categoryAutomations?.some(a => a.enabled) ? '#4ade80' : undefined,
+                  }}
+                >
+                  <RocketLaunchIcon size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {(() => {
+                  const workflowAuto = categoryAutomations?.find(a => a.type === 'workflow' && a.enabled);
+                  const wfId = workflowAuto?.options?.find(o => o.key === 'workflow_id')?.value?.split(',')[0]?.trim();
+                  return wfId ? 'Click to open automation workflow' : 'Automation for Vulnerabilities';
+                })()}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <IngestionSourcesRow
             workflowLabel="Ingest Vulnerabilities"
             category="vulnerabilities"
