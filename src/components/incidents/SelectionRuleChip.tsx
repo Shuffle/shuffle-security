@@ -313,6 +313,8 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
     const onDown = (e: MouseEvent) => {
       const t = e.target as HTMLElement | null;
       if (t?.closest?.('[data-selection-rule-ui="1"]')) return;
+      // Ignore clicks inside MUI portal-rendered popovers/menus (Selects).
+      if (t?.closest?.('.MuiPopover-root, .MuiMenu-root, .MuiModal-root')) return;
       closeChip();
     };
     document.addEventListener('mousedown', onDown);
