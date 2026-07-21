@@ -1222,6 +1222,42 @@ const IncidentDetailPage = () => {
     }
   };
 
+  // Restore the last known-good OCSF payload discovered by the fallback
+  // recovery. Writes the recovered snapshot back to the datastore so the
+  // stored item stops being "broken" for other users as well, then reloads
+  // the incident state from the server.
+  const handleRestoreOcsfFallback = async () => {
+    if (!id || !ocsfFallbackInfo?.recoveredValue || ocsfRestoring) return;
+    setOcsfRestoring(true);
+    try {
+      let parsedRecovered: any;
+      try {
+        parsedRecovered = JSON.parse(ocsfFallbackInfo.recoveredValue);
+      } catch (err) {
+        toast.error('Could not parse the recovered snapshot');
+        setOcsfRestoring(false);
+        return;
+      }
+      const res = await writeIncidentSafe(id, parsedRecovered, crossOrgId || undefined);
+      if (!res.success) {
+        toast.error(res.error || 'Failed to restore the previous version');
+        setOcsfRestoring(false);
+        return;
+      }
+      toast.success('Incident restored from the last known-good version');
+      dismissOcsfFallback();
+      // Reset the fallback attempt so a fresh load re-validates the payload.
+      ocsfFallbackAttemptedRef.current = false;
+      setOcsfFallbackInfo(null);
+      await loadIncident(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to restore');
+    } finally {
+      setOcsfRestoring(false);
+    }
+  };
+
+
   const loadRevisions = useCallback(async () => {
     if (!id) return;
     setRevisionsLoading(true);
