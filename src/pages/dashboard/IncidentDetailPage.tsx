@@ -7538,7 +7538,11 @@ const IncidentDetailPage = () => {
                     return statusConfig[val].label;
                   }}
                 >
-                  {Object.entries(statusConfig).map(([key, cfg]) => {
+                  {Object.entries(statusConfig)
+                    // "Merged" is set only by the auto-merge action — never let a user
+                    // pick it manually from the status dropdown.
+                    .filter(([key]) => key !== 'merged')
+                    .map(([key, cfg]) => {
                     const isDisabled = key === 'on_hold' || key === 'escalated';
                     return (
                       <MenuItem key={key} value={key} disabled={isDisabled} sx={{ fontSize: '0.8rem', gap: 1, opacity: isDisabled ? 0.4 : 1 }}>
