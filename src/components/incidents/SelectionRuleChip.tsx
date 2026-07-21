@@ -337,17 +337,7 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
             const raw = typeof it.value === 'string' ? JSON.parse(it.value) : it.value;
             if (!raw || typeof raw !== 'object') continue;
             scanned += 1;
-            const ctx: IncidentEvaluationContext = {
-              title: raw.title,
-              description: raw.message || raw.description,
-              source: raw.source,
-              severity: raw.severity,
-              status: raw.status,
-              labels: raw.labels,
-              observables: raw.observables,
-              stakeholders: raw.stakeholders,
-              rawOCSF: raw.rawOCSF,
-            };
+            const ctx = buildScanContext(raw);
             const hits = evaluateRoutingRules(ctx, [rule]);
             if (hits.length === 0) continue;
             matched += 1;
