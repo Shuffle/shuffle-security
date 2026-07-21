@@ -2866,6 +2866,23 @@ const IncidentDetailPage = () => {
     return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [loadIncident, isSaving]);
 
+  // External refresh trigger: components that mutate the current incident
+  // out-of-band (e.g. the retroactive routing-rule scanner in
+  // SelectionRuleChip) dispatch `incident:refresh` with the target id so
+  // the detail view reflects the change immediately instead of waiting for
+  // the 30s poll.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { id?: string } | undefined;
+      if (!id) return;
+      if (detail?.id && String(detail.id) !== String(id)) return;
+      if (pendingSaveRef.current || isSaving) return;
+      loadIncident(false);
+    };
+    window.addEventListener('incident:refresh', handler as EventListener);
+    return () => window.removeEventListener('incident:refresh', handler as EventListener);
+  }, [id, loadIncident, isSaving]);
+
   // Fetch correlations — extracted into a callback so the "Re-run" button on
   // the Correlations tab header can refresh on demand. Deferred until the
   // incident is loaded to avoid blocking the UI.
