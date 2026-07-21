@@ -271,16 +271,6 @@ const AuthenticatedVulnerabilitiesView = () => {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" onClick={() => refresh()} disabled={isRefreshing}>
-                  <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Refresh</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
                 <Button
                   variant="outline"
                   size="icon"
