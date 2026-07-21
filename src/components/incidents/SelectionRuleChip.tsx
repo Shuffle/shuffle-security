@@ -794,6 +794,7 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
               </Button>
             </Stack>
           </Stack>
+          )}
         </Paper>
       )}
     </>,
