@@ -57,6 +57,7 @@ import { getDatastoreByCategory, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/dat
 import { evaluateRoutingRules, type IncidentEvaluationContext } from '@/utils/routingRuleEvaluator';
 import { applyRoutingActionsToRaw } from '@/lib/applyRoutingActionsToRaw';
 import { writeIncidentSafe } from '@/lib/incidentRelations';
+import { decodeIfBase64, htmlToPlainText } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 
 type FieldChoice = {
@@ -583,9 +584,18 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
                 const raw = typeof it.value === 'string' ? JSON.parse(it.value) : it.value;
                 if (!raw || typeof raw !== 'object') continue;
                 scanned += 1;
+                // Mirror the incident detail view's normalization so the
+                // scan matches what the analyst actually sees: decode any
+                // base64 blobs (Gmail bodies) and strip HTML from the
+                // description before evaluating conditions. The evaluator
+                // also auto-probes base64 variants as a second safety net.
+                const rawDesc = raw.message || raw.description || '';
+                const decodedDesc = typeof rawDesc === 'string' ? decodeIfBase64(rawDesc) : rawDesc;
+                const plainDesc = typeof decodedDesc === 'string' ? htmlToPlainText(decodedDesc) : decodedDesc;
+                const rawTitle = typeof raw.title === 'string' ? decodeIfBase64(raw.title) : raw.title;
                 const ctx: IncidentEvaluationContext = {
-                  title: raw.title,
-                  description: raw.message || raw.description,
+                  title: rawTitle,
+                  description: plainDesc,
                   source: raw.source,
                   severity: raw.severity,
                   status: raw.status,
@@ -732,21 +742,26 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
                     </Typography>
                   </Stack>
                 ) : scanResult ? (
-                  <Typography sx={{ fontSize: 12, color: 'hsl(var(--foreground))' }}>
-                    {scanResult.matched === 0 ? (
-                      <>
-                        No historical matches across {scanResult.scanned} recent incidents. The rule will run on new incoming incidents.
-                      </>
-                    ) : (
-                      <>
-                        Applied to <strong>{scanResult.applied}</strong> of {scanResult.matched} matching incident{scanResult.matched === 1 ? '' : 's'}
-                        {scanResult.failed > 0 && (
-                          <Box component="span" sx={{ color: 'hsl(0 84% 60%)' }}> ({scanResult.failed} failed)</Box>
-                        )}
-                        . The rule will also run on new incoming incidents.
-                      </>
-                    )}
-                  </Typography>
+                  <Stack spacing={0.75}>
+                    <Typography sx={{ fontSize: 12, color: 'hsl(var(--foreground))' }}>
+                      {scanResult.matched === 0 ? (
+                        <>
+                          Scanned <strong>{scanResult.scanned}</strong> recent incident{scanResult.scanned === 1 ? '' : 's'} — no historical matches.
+                        </>
+                      ) : (
+                        <>
+                          Scanned <strong>{scanResult.scanned}</strong>, matched <strong>{scanResult.matched}</strong>, applied to <strong>{scanResult.applied}</strong>
+                          {scanResult.failed > 0 && (
+                            <Box component="span" sx={{ color: 'hsl(0 84% 60%)' }}> ({scanResult.failed} failed)</Box>
+                          )}
+                          .
+                        </>
+                      )}
+                    </Typography>
+                    <Typography sx={{ fontSize: 11, color: 'hsl(var(--muted-foreground))' }}>
+                      Base64-encoded bodies (Gmail, Outlook) and HTML are decoded before matching. The rule will also run on new incoming incidents.
+                    </Typography>
+                  </Stack>
                 ) : (
                   <Typography sx={{ fontSize: 12, color: 'hsl(var(--muted-foreground))' }}>
                     Rule will apply to new incoming incidents.
