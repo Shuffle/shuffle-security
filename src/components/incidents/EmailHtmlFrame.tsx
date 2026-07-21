@@ -198,6 +198,31 @@ const EmailHtmlFrame = ({ html, maxHeight = 4000 }: EmailHtmlFrameProps) => {
             img.addEventListener('error', measure, { once: true });
           }
         });
+
+        // Bridge text selections inside the email iframe up to the parent so
+        // the "Create automation rule" chip can appear for email body text.
+        const forwardSelection = () => {
+          try {
+            const sel = doc.getSelection?.();
+            if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+            const text = sel.toString().trim();
+            if (text.length < 3) return;
+            const range = sel.getRangeAt(0);
+            const rectInFrame = range.getBoundingClientRect();
+            const iframeRect = iframe.getBoundingClientRect();
+            const x = iframeRect.left + rectInFrame.left + rectInFrame.width / 2;
+            const y = iframeRect.top + rectInFrame.bottom + 8;
+            window.dispatchEvent(
+              new CustomEvent('selection-rule:external', {
+                detail: { x, y, text, field: 'rawOCSF.unmapped_original.body' },
+              }),
+            );
+          } catch {
+            /* ignore cross-origin */
+          }
+        };
+        doc.addEventListener('mouseup', forwardSelection);
+        doc.addEventListener('touchend', forwardSelection);
       } catch {
         /* ignore */
       }
