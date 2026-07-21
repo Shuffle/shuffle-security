@@ -123,12 +123,19 @@ const SEVERITY_OPTIONS = ['Informational', 'Low', 'Medium', 'High', 'Critical'];
 const PRIORITY_OPTIONS = ['Low', 'Medium', 'High', 'Urgent'];
 
 // Detect whether a Node is inside an editable element the user is typing in.
+// Inputs/textareas that are explicitly marked as selectable incident content
+// (via `data-incident-field`) are NOT treated as editable here — we still
+// want to offer the chip when the user highlights part of the title.
 const isEditableTarget = (node: Node | null): boolean => {
   let el: HTMLElement | null =
     node instanceof HTMLElement ? node : node?.parentElement ?? null;
   while (el) {
     const tag = el.tagName;
-    if (tag === 'INPUT' || tag === 'TEXTAREA') return true;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') {
+      // Allow if this input is inside a marked incident field.
+      if (el.closest?.('[data-incident-field]')) return false;
+      return true;
+    }
     if (el.isContentEditable) return true;
     if (el.getAttribute?.('data-selection-rule-ui') === '1') return true;
     el = el.parentElement;
@@ -136,20 +143,28 @@ const isEditableTarget = (node: Node | null): boolean => {
   return false;
 };
 
-// Walk up to find the nearest [data-incident-field] hint. Falls back to a
-// heuristic (H1/H2 => title) so we can still pre-fill the field even when
-// the caller hasn't tagged its DOM.
+// Walk up to find the nearest [data-incident-field] hint. No heading fallback
+// — random subtitle headings like "Timeline" or "Email Thread" should not
+// trigger a rule creation.
 const detectField = (node: Node | null): string => {
   let el: HTMLElement | null =
     node instanceof HTMLElement ? node : node?.parentElement ?? null;
   while (el) {
     const hint = el.getAttribute?.('data-incident-field');
     if (hint) return hint;
-    const tag = el.tagName;
-    if (tag === 'H1' || tag === 'H2') return 'title';
     el = el.parentElement;
   }
   return '*';
+};
+
+const isInsideIgnored = (node: Node | null): boolean => {
+  let el: HTMLElement | null =
+    node instanceof HTMLElement ? node : node?.parentElement ?? null;
+  while (el) {
+    if (el.getAttribute?.('data-selection-rule-ignore') === '1') return true;
+    el = el.parentElement;
+  }
+  return false;
 };
 
 const isInsideIncidentContent = (node: Node | null): boolean => {
