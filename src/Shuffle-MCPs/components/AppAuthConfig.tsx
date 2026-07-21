@@ -2196,9 +2196,15 @@ export const AppAuthCard = ({
                         const redirectUri = auth?.redirect_uri || 'https://shuffler.io/set_authentication';
                         const scopes = selectedScopes.join(' ');
                         const clientId = localCredentials['client_id'].trim();
-                        const clientSecret = localCredentials['client_secret']?.trim() || '';
 
-                        // Build state parameter matching Shuffle's expected format
+                        // SECURITY: Do NOT embed client_secret in the OAuth
+                        // authorization URL. The `state` parameter is echoed
+                        // back through the OAuth provider (Google, GitHub, …)
+                        // and would end up in browser history, provider access
+                        // logs, and any URL-logging proxy on the return path.
+                        // Shuffle's `set_authentication` handler retrieves the
+                        // client secret from the saved auth entry server-side
+                        // using the app_id / reference_action_id in state.
                         const stateParams = new URLSearchParams({
                           workflow_id: '',
                           reference_action_id: app.objectID,
@@ -2208,7 +2214,6 @@ export const AppAuthCard = ({
                           authentication_url: auth?.token_uri || '',
                           scope: scopes,
                           client_id: clientId,
-                          client_secret: clientSecret,
                           org_id: 'undefined',
                           oauth_url: auth?.token_uri?.replace(/\/token.*$/, '') || '',
                           refresh_uri: auth?.refresh_uri || auth?.token_uri || '',
