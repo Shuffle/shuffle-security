@@ -6011,9 +6011,13 @@ const IncidentDetailPage = () => {
             pillOnClick = () => focusCorrelationFromTimeline(null);
           }
         } else if (item.kind === 'routing-matched') {
-          // Scroll to the RoutingRulePreviewBanner so the user can act on the
-          // matched rule (apply severity/status, suggest move, etc.).
+          // Re-surface the matched rule in the RoutingRulePreviewBanner even
+          // if the user had dismissed it at the top, then scroll to it.
+          const ruleId = item.id.startsWith('step-routing-') ? item.id.slice('step-routing-'.length) : '';
           pillOnClick = () => {
+            try {
+              window.dispatchEvent(new CustomEvent('routing-preview:reveal', { detail: { ruleId } }));
+            } catch { /* ignore */ }
             const el = document.getElementById('routing-rule-preview-banner');
             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
           };
