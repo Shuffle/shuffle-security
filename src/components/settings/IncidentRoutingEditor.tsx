@@ -1320,7 +1320,7 @@ export const IncidentRoutingEditor = ({ forceShow = false }: IncidentRoutingEdit
           {/* Actions */}
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pt: 1, borderTop: '1px solid hsl(var(--border))' }}>
             <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.65rem', letterSpacing: '0.05em' }}>
-              Then suggest
+              Then
             </Typography>
             {rule.actions.map((action, aIdx) => {
               const valuePresets =
