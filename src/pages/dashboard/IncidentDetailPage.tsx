@@ -244,10 +244,14 @@ const formatRelativeTime = (timestamp: number): string => {
 };
 
 const formatDuration = (ms: number): string => {
+  // Guard against NaN/undefined/negative — callers sometimes pass a diff of
+  // two timestamps where one side is missing, which propagates as NaN and
+  // renders as "NaNd NaNh" in the Metrics area.
+  if (!Number.isFinite(ms) || ms < 0) return '—';
   const minutes = Math.floor(ms / 60000);
   const hours = Math.floor(ms / 3600000);
   const days = Math.floor(ms / 86400000);
-  
+
   if (minutes < 60) return `${minutes}m`;
   if (hours < 24) return `${hours}h ${minutes % 60}m`;
   return `${days}d ${hours % 24}h`;
