@@ -4783,7 +4783,7 @@ const IncidentDetailPage = () => {
               <Button
                 size="small"
                 variant="contained"
-                disabled={!ocsfFallbackInfo.recoveredValue || ocsfRestoring || isPublicView || isMergedIncident}
+                disabled={!ocsfFallbackInfo.recoveredValue || ocsfRestoring || isPublicView || !!primaryPointer}
                 onClick={handleRestoreOcsfFallback}
                 startIcon={ocsfRestoring ? <Loader2Icon size={14} className="animate-spin" /> : <HistoryIcon size={14} />}
                 sx={{
