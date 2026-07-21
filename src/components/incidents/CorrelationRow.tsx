@@ -235,16 +235,21 @@ export const CorrelationRow = ({ correlation, currentIncidentId, ignoredObservab
               else ignoredObs.ignore('value', correlation.key);
             }}
             sx={{
-              p: 0.25,
-              ml: 0.25,
+              // Match the Observables tab hide-button footprint — a quiet
+              // 20px hit target so it sits next to the match count without
+              // dominating the row header.
+              p: 0,
+              ml: 0.5,
+              width: 20,
+              height: 20,
               flexShrink: 0,
               color: isHidden ? 'hsl(var(--primary))' : 'text.disabled',
               '&:hover': { color: 'hsl(var(--primary))' },
             }}
           >
             {isHidden
-              ? <VisibilityIcon style={{ fontSize: compact ? 14 : 16 }} />
-              : <VisibilityOffIcon style={{ fontSize: compact ? 14 : 16 }} />}
+              ? <VisibilityIcon style={{ fontSize: 12 }} />
+              : <VisibilityOffIcon style={{ fontSize: 12 }} />}
           </IconButton>
         </Tooltip>
       </Box>
