@@ -4041,6 +4041,34 @@ const IncidentDetailPage = () => {
       }
     }
 
+    // Auto-resolving via routing rule: always leave a comment so the audit
+    // trail is clear about why the incident was closed automatically.
+    const RESOLVING_STATUSES = new Set(['resolved', 'closed']);
+    const wasResolving = RESOLVING_STATUSES.has(String(editedStatus).toLowerCase());
+    const nowResolving = RESOLVING_STATUSES.has(String(nextStatus).toLowerCase());
+    if (!wasResolving && nowResolving) {
+      const statusLabel = nextStatus === 'resolved' ? 'Resolved' : nextStatus === 'closed' ? 'Closed' : String(nextStatus);
+      const commentText = `Auto-${statusLabel.toLowerCase()} by routing rule`;
+      const alreadyPosted = nextActivity.some((it: any) => it?.type === 'comment' && typeof it?.content === 'string' && it.content.trim() === commentText);
+      if (!alreadyPosted) {
+        nextActivity = [
+          ...nextActivity,
+          {
+            id: `routing-autoresolve-${Date.now()}-${nextActivity.length}`,
+            type: 'comment',
+            user: 'Incident Routing Rules',
+            timestamp: Date.now(),
+            content: commentText,
+            details: { source: 'incident_routing_rule', auto_resolve: true },
+            attachments: [],
+            ai_handled: true,
+          } as ActivityItem,
+        ];
+        changed = true;
+      }
+    }
+
+
     const severityOption = severityOptions.find((s) => s.value === nextSeverity);
     const { label: statusLabel, id: statusId } = getOCSFStatus(nextStatus);
     const existingFindingInfo = nextRaw?.finding_info_list?.[0] || nextRaw?.finding_info;
