@@ -2752,7 +2752,13 @@ const IncidentDetailPage = () => {
     setEditedLabels(reParsed.labels || []);
     setActivity(reParsed.activity || []);
 
-    setOcsfFallbackInfo({ revisionTimestamp: newestRevisionTs, overlaidFieldCount });
+    setOcsfFallbackInfo({
+      revisionTimestamp: newestRevisionTs,
+      overlaidFieldCount,
+      reason: liveIsOcsf ? 'missing-fields' : 'not-ocsf',
+      missingFields,
+      recoveredValue: JSON.stringify(ocsfBase),
+    });
   }, [loading, incident, revisionsLoaded, revisions]);
 
 
