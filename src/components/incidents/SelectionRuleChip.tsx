@@ -38,8 +38,9 @@ import {
   Button,
   Stack,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useSubOrgs } from '@/hooks/useSubOrgs';
 import { useDatastore } from '@/hooks/useDatastore';
@@ -49,6 +50,9 @@ import {
   type RoutingConditionOp,
   type RoutingActionType,
 } from '@/components/settings/IncidentRoutingEditor';
+import { getDatastoreByCategory, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
+import { evaluateRoutingRules, type IncidentEvaluationContext } from '@/utils/routingRuleEvaluator';
+import { useNavigate } from 'react-router-dom';
 
 type FieldChoice = {
   value: string;
