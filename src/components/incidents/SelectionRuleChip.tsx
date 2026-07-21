@@ -57,6 +57,7 @@ import { getDatastoreByCategory, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/dat
 import { evaluateRoutingRules, type IncidentEvaluationContext } from '@/utils/routingRuleEvaluator';
 import { applyRoutingActionsToRaw } from '@/lib/applyRoutingActionsToRaw';
 import { writeIncidentSafe } from '@/lib/incidentRelations';
+import { decodeIfBase64, htmlToPlainText } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 
 type FieldChoice = {
