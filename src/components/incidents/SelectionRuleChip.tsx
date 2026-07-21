@@ -223,8 +223,13 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
   // with a summary that scans the most recent incidents to show the user
   // how many would have matched the rule they just created.
   const [savedRule, setSavedRule] = useState<RoutingRule | null>(null);
+  // Duplicate detection state — when the user is about to create a rule that
+  // already exists (same condition + same action), we surface the existing
+  // rule and offer to run it now instead of creating a clone.
+  const [existingRule, setExistingRule] = useState<RoutingRule | null>(null);
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<{ matched: number; scanned: number; applied: number; failed: number } | null>(null);
+
 
   const currentPreset = useMemo(
     () => ACTION_PRESETS.find((p) => p.key === actionKey) || ACTION_PRESETS[0],
