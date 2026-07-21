@@ -65,6 +65,7 @@ export const IngestionSourcesRow = ({
   titleTooltip,
   addSubtitle,
   onSourcesChanged,
+  searchPriorityQuery,
 }: IngestionSourcesRowProps) => {
   const { resolvedTheme } = useTheme();
   const { userInfo } = useAuth();
