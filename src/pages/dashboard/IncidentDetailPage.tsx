@@ -2793,11 +2793,17 @@ const IncidentDetailPage = () => {
     setEditedLabels(reParsed.labels || []);
     setActivity(reParsed.activity || []);
 
+    // Compute what is STILL missing after we folded revisions into the base
+    // and overlaid live edits. Only these should surface as "missing" in the
+    // UI — anything the recovery could refill is not the reader's problem.
+    const stillMissing = isOcsfShapedData(merged) ? getMissingCriticalFields(merged) : [];
+
     setOcsfFallbackInfo({
       revisionTimestamp: newestRevisionTs,
       overlaidFieldCount,
       reason: liveIsOcsf ? 'missing-fields' : 'not-ocsf',
       missingFields,
+      stillMissingFields: stillMissing,
       recoveredValue: JSON.stringify(ocsfBase),
     });
   }, [loading, incident, revisionsLoaded, revisions]);
