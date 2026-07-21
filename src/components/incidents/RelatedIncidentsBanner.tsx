@@ -73,7 +73,7 @@ export const RelatedIncidentsBanner = ({
           </Tooltip>
         )}
       </Box>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, maxHeight: 260, overflowY: 'auto', pr: 0.5 }}>
         {linked.map((l) => (
           <Box
             key={l.id}
