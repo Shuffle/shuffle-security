@@ -430,6 +430,7 @@ export const IngestionSourcesRow = ({
         }}
         title="Add Ingestion Source"
         subtitle={addSubtitle ?? 'Search and authenticate a tool to ingest from'}
+        initialFilterQuery={searchPriorityQuery}
       />
     </>
   );
