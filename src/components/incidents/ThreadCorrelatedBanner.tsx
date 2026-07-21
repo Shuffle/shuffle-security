@@ -99,7 +99,7 @@ export const ThreadCorrelatedBanner = ({
           </Box>
         )}
       </Box>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, maxHeight: 260, overflowY: 'auto', pr: 0.5 }}>
         {incidents.map((l) => (
           <Box
             key={l.id}
