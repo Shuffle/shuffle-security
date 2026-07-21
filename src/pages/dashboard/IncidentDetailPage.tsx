@@ -99,6 +99,7 @@ import { maybeMigrateLegacyMerge, getPrimaryPointer, linkMergePair, writeInciden
 import { DemoFallbackAuditBanner } from '@/components/incidents/DemoFallbackAuditBanner';
 import { useMergeCandidates } from '@/hooks/useMergeCandidates';
 import { RoutingRulePreviewBanner } from '@/components/incidents/RoutingRulePreviewBanner';
+import { SelectionRuleChip } from '@/components/incidents/SelectionRuleChip';
 import {
   ROUTING_DATASTORE_CATEGORY,
   type RoutingRule,
