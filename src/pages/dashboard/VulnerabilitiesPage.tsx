@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, Chip, IconButton, Avatar } from '@mui/material';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Shield, Plus, RefreshCw, Search, Zap, ArrowRight, Wrench, Sparkles, AlertTriangle, Globe, LogIn, Loader2, MonitorCheck } from 'lucide-react';
+import { Shield, Plus, RefreshCw, Search, Zap, ArrowRight, Wrench, Sparkles, AlertTriangle, Globe, LogIn, Loader2, MonitorCheck, Rocket as RocketLaunchIcon } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useVulnerabilities, Vulnerability, VulnSeverity, VulnCategory } from '@/hooks/useVulnerabilities';
 import { useAppAuth } from '@/Shuffle-MCPs/useAppAuth';
@@ -22,6 +22,9 @@ import { useWorkflows } from '@/hooks/useWorkflows';
 import { VulnerabilityAutomationBanner } from '@/components/vulnerabilities/VulnerabilityAutomationBanner';
 import { IngestionSourcesRow } from '@/components/ingestion/IngestionSourcesRow';
 import { AddVulnerabilityDialog } from '@/components/vulnerabilities/AddVulnerabilityDialog';
+import { CategoryAutomationsDialog } from '@/components/incidents/CategoryAutomationsDialog';
+import { useDatastore } from '@/hooks/useDatastore';
+import { DATASTORE_CATEGORIES, CategoryAutomation } from '@/Shuffle-MCPs/datastore';
 
 const SEVERITY_COLORS: Record<VulnSeverity, string> = {
   critical: 'bg-red-500/10 text-red-500 border-red-500/20',
@@ -156,6 +159,13 @@ const AuthenticatedVulnerabilitiesView = () => {
   const [enablingAutomation, setEnablingAutomation] = useState(false);
   const [addVulnOpen, setAddVulnOpen] = useState(false);
 
+  const [automationsDialogOpen, setAutomationsDialogOpen] = useState(false);
+  const [categoryAutomations, setCategoryAutomations] = useState<CategoryAutomation[]>([]);
+  const { categoryConfig } = useDatastore({ category: DATASTORE_CATEGORIES.VULNERABILITIES });
+  useEffect(() => {
+    if (categoryConfig?.automations) setCategoryAutomations(categoryConfig.automations);
+  }, [categoryConfig]);
+
   const { data: workflows, refetch: refetchWorkflows } = useWorkflows();
   const vulnComparisonWorkflow = (workflows || []).find(
     w => (w.name || '').toLowerCase() === 'vulnerability comparison'
@@ -266,6 +276,39 @@ const AuthenticatedVulnerabilitiesView = () => {
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Refresh</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  onClick={() => {
+                    const workflowAuto = categoryAutomations?.find(a => a.type === 'workflow' && a.enabled);
+                    const wfId = workflowAuto?.options?.find(o => o.key === 'workflow_id')?.value?.split(',')[0]?.trim();
+                    if (wfId) {
+                      window.open(`https://shuffler.io/workflows/${wfId}`, '_blank');
+                    } else {
+                      setAutomationsDialogOpen(true);
+                    }
+                  }}
+                  style={{
+                    color: categoryAutomations?.some(a => a.enabled) ? '#4ade80' : undefined,
+                    borderColor: categoryAutomations?.some(a => a.enabled) ? '#4ade80' : undefined,
+                  }}
+                >
+                  <RocketLaunchIcon size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {(() => {
+                  const workflowAuto = categoryAutomations?.find(a => a.type === 'workflow' && a.enabled);
+                  const wfId = workflowAuto?.options?.find(o => o.key === 'workflow_id')?.value?.split(',')[0]?.trim();
+                  return wfId ? 'Click to open automation workflow' : 'Automation for Vulnerabilities';
+                })()}
+              </TooltipContent>
             </Tooltip>
           </TooltipProvider>
           <IngestionSourcesRow
@@ -396,6 +439,16 @@ const AuthenticatedVulnerabilitiesView = () => {
         open={addVulnOpen}
         onOpenChange={setAddVulnOpen}
         onAdded={() => refresh()}
+      />
+
+      <CategoryAutomationsDialog
+        open={automationsDialogOpen}
+        onClose={() => setAutomationsDialogOpen(false)}
+        category={DATASTORE_CATEGORIES.VULNERABILITIES}
+        automations={categoryAutomations}
+        onAutomationsChange={setCategoryAutomations}
+        initialSettings={categoryConfig?.settings}
+        entityLabel={{ singular: 'vulnerability', plural: 'vulnerabilities' }}
       />
     </div>
   );

@@ -58,6 +58,7 @@ interface CategoryAutomationsDialogProps {
   onAutomationsChange: (automations: CategoryAutomation[]) => void;
   initialSettings?: { timeout?: number; public?: boolean };
   onSaved?: () => void;
+  entityLabel?: { singular: string; plural: string };
 }
 
 const WEEKS_OPTIONS = [
@@ -149,7 +150,12 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
   onAutomationsChange,
   initialSettings,
   onSaved,
+  entityLabel,
 }) => {
+  const entitySingular = entityLabel?.singular || 'incident';
+  const entityPlural = entityLabel?.plural || 'incidents';
+  const entitySingularCap = entitySingular.charAt(0).toUpperCase() + entitySingular.slice(1);
+  const entityPluralCap = entityPlural.charAt(0).toUpperCase() + entityPlural.slice(1);
   const navigate = useNavigate();
   const [automations, setAutomations] = useState<CategoryAutomation[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -575,7 +581,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <RocketLaunchIcon size={28} style={{ color: enabledCount > 0 ? '#4ade80' : 'hsl(var(--muted-foreground))' }} />
           <Typography variant="h6" sx={{ fontSize: '1.1rem', fontWeight: 600 }}>
-            Automation for Incidents
+            Automation for {entityPluralCap}
           </Typography>
         </Box>
         <IconButton
@@ -617,7 +623,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
             }}
           >
             <Typography sx={{ fontSize: '0.95rem' }}>
-              An incident is edited
+              {`A${/^[aeiou]/i.test(entitySingular) ? 'n' : ''} ${entitySingular} is edited`}
             </Typography>
           </Box>
         </Box>
@@ -937,10 +943,10 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
             <DeleteSweepIcon size={22} style={{ color: cleanupTimeout > 0 ? 'hsl(var(--severity-medium))' : 'hsl(var(--muted-foreground))' }} />
             <Box sx={{ flex: 1 }}>
               <Typography sx={{ fontSize: '0.95rem', color: cleanupTimeout > 0 ? 'text.primary' : 'hsl(var(--muted-foreground))' }}>
-                Auto-delete incidents after
+                Auto-delete {entityPlural} after
               </Typography>
               <Typography variant="caption" sx={{ color: 'text.disabled' }}>
-                Automatically removes resolved incidents after the selected period
+                Automatically removes resolved {entityPlural} after the selected period
               </Typography>
             </Box>
             <FormControl size="small" sx={{ minWidth: 130 }}>
