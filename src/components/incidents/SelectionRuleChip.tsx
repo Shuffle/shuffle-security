@@ -587,12 +587,79 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
         >
           <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
             <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
-              New routing rule
+              {savedRule ? 'Rule created' : 'New routing rule'}
             </Typography>
             <IconButton size="small" onClick={closeChip} sx={{ color: 'hsl(var(--muted-foreground))' }}>
               <X size={14} />
             </IconButton>
           </Stack>
+
+          {savedRule ? (
+            <Stack spacing={1.25}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <CheckCircle2 size={16} color="hsl(142 71% 45%)" />
+                <Typography sx={{ fontSize: 12, color: 'hsl(var(--foreground))' }}>
+                  {savedRule.name}
+                </Typography>
+              </Stack>
+              <Box
+                sx={{
+                  p: 1.25,
+                  borderRadius: 1,
+                  bgcolor: 'hsl(var(--muted) / 0.4)',
+                  border: '1px solid hsl(var(--border))',
+                }}
+              >
+                {scanning ? (
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <CircularProgress size={12} />
+                    <Typography sx={{ fontSize: 12, color: 'hsl(var(--muted-foreground))' }}>
+                      Scanning recent incidents for matches...
+                    </Typography>
+                  </Stack>
+                ) : scanResult ? (
+                  <Typography sx={{ fontSize: 12, color: 'hsl(var(--foreground))' }}>
+                    Matched <strong>{scanResult.matched}</strong> of {scanResult.scanned} recent incidents.
+                    {scanResult.matched === 0 && (
+                      <Box component="span" sx={{ display: 'block', mt: 0.5, color: 'hsl(var(--muted-foreground))' }}>
+                        No historical matches — the rule will still run on new incidents.
+                      </Box>
+                    )}
+                  </Typography>
+                ) : (
+                  <Typography sx={{ fontSize: 12, color: 'hsl(var(--muted-foreground))' }}>
+                    Rule will apply to new incoming incidents.
+                  </Typography>
+                )}
+              </Box>
+              <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 1 }}>
+                <Button
+                  size="small"
+                  onClick={() => {
+                    closeChip();
+                    navigate('/settings/incident-routing');
+                  }}
+                  sx={{ textTransform: 'none', color: 'hsl(var(--muted-foreground))', height: 36 }}
+                >
+                  Open routing rules
+                </Button>
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={closeChip}
+                  sx={{
+                    textTransform: 'none',
+                    height: 36,
+                    bgcolor: 'hsl(var(--primary))',
+                    color: 'hsl(var(--primary-foreground))',
+                    '&:hover': { bgcolor: 'hsl(var(--primary))', filter: 'brightness(1.1)' },
+                  }}
+                >
+                  Done
+                </Button>
+              </Stack>
+            </Stack>
+          ) : (
 
           <Stack spacing={1.25}>
 
