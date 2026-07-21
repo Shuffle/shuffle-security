@@ -629,13 +629,30 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
                 const incidentId = raw.id || it.key || it.id;
                 if (!incidentId) { failed += 1; continue; }
                 const write = await writeIncidentSafe(String(incidentId), result.next, orgId);
-                if (write.success) applied += 1;
-                else failed += 1;
+                if (write.success) {
+                  applied += 1;
+                  // If we just mutated the incident the analyst is
+                  // currently looking at, tell the detail view to
+                  // reload so the change appears immediately.
+                  if (String(incidentId) === String(props_incidentId ?? '')) {
+                    window.dispatchEvent(
+                      new CustomEvent('incident:refresh', { detail: { id: String(incidentId) } }),
+                    );
+                  }
+                } else failed += 1;
               } catch {
                 /* skip malformed */
               }
             }
             setScanResult({ matched, scanned, applied, failed });
+            // Final safety net: even if the current incident wasn't in the
+            // matched set, the new rule may still apply to it on the next
+            // load. Trigger a refresh so the UI is guaranteed consistent.
+            if (props_incidentId) {
+              window.dispatchEvent(
+                new CustomEvent('incident:refresh', { detail: { id: String(props_incidentId) } }),
+              );
+            }
           } catch {
             setScanResult({ matched: 0, scanned: 0, applied: 0, failed: 0 });
           } finally {
