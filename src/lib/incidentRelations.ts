@@ -60,7 +60,7 @@ const PRIMARY_IDENTITY_KEYS = [
   // ownership / routing
   'assignee', 'assignee_id', 'owner', 'product',
   // merge bookkeeping
-  'related_incidents', 'related_events', 'related_findings', 'merged_into', 'merged_at',
+  'related_incidents', 'merged_into', 'merged_at',
 ];
 
 const extractIncidentTs = (raw: any): number => {
@@ -677,6 +677,14 @@ export const preserveRelationFields = (existing: any, next: any): any => {
   const nextFolded = Array.isArray(out._merged_data_from) ? out._merged_data_from : [];
   if (existingFolded.length || nextFolded.length) {
     out._merged_data_from = Array.from(new Set<string>([...existingFolded, ...nextFolded]));
+  }
+
+  const mergedRelationRefs = unionRelationRefs(getRelationRefs(existing), getRelationRefs(out));
+  if (mergedRelationRefs.length > 0) {
+    out.related_events = mergedRelationRefs;
+    if (Array.isArray(existing.related_findings) || Array.isArray(out.related_findings)) {
+      out.related_findings = mergedRelationRefs;
+    }
   }
 
   // Preserve tombstone fields if the row was a non-primary side. Never
