@@ -146,6 +146,31 @@ export const RoutingRulePreviewBanner = ({
     setDismissed(next);
   }, [incidentId, matches]);
 
+  // Timeline pills can request that a specific rule be re-surfaced after the
+  // user closed it at the top. Clear the dismissal, expand the section, and
+  // scroll the banner into view so the click has a visible effect.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { ruleId?: string } | undefined;
+      const ruleId = detail?.ruleId;
+      if (!ruleId) return;
+      try { window.localStorage.removeItem(dismissKey(incidentId, ruleId)); } catch { /* ignore */ }
+      setDismissed((prev) => {
+        if (!prev.has(ruleId)) return prev;
+        const next = new Set(prev);
+        next.delete(ruleId);
+        return next;
+      });
+      setExpanded(true);
+      window.setTimeout(() => {
+        const el = document.getElementById('routing-rule-preview-banner');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 30);
+    };
+    window.addEventListener('routing-preview:reveal', handler as EventListener);
+    return () => window.removeEventListener('routing-preview:reveal', handler as EventListener);
+  }, [incidentId]);
+
   // Filter out dismissed rules AND rules whose actions have all already been
   // applied (nothing left to suggest). `isActionApplied` is optional — when
   // absent we keep prior behavior and show everything.
