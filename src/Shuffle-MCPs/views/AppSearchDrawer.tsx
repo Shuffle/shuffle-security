@@ -91,9 +91,8 @@ const singulStyles = {
     color: 'hsl(var(--muted-foreground))',
     textAlign: 'center' as const,
     fontSize: '13px',
-    backgroundColor: 'hsl(var(--muted))',
+    backgroundColor: 'transparent',
     borderRadius: '12px',
-    border: '1px solid hsl(var(--border))',
     gridColumn: '1 / -1',
   },
 };
