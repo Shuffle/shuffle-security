@@ -4760,30 +4760,64 @@ const IncidentDetailPage = () => {
           <HistoryIcon size={18} style={{ color: 'hsl(38 92% 50%)', marginTop: '0px' }} />
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="body2" sx={{ color: 'hsl(38 92% 50%)', fontWeight: 600, fontSize: '0.78rem' }}>
-              Incident data looks broken — consider rolling back
+              {ocsfFallbackInfo.reason === 'not-ocsf'
+                ? 'This incident is no longer valid OCSF'
+                : 'This incident is missing required OCSF fields'}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem', display: 'block', mt: 0.25 }}>
-              The latest payload is not valid OCSF. This often happens after a manual edit to the underlying datastore item. The last known-good change
-              {ocsfFallbackInfo.revisionTimestamp ? ` is from ${new Date(ocsfFallbackInfo.revisionTimestamp).toLocaleString()}` : ''} — find it under the Changes filter below and restore it.
+              {ocsfFallbackInfo.reason === 'not-ocsf'
+                ? 'The current stored payload does not match the OCSF 2005 incident schema. This usually happens after a manual edit to the underlying datastore item overwrote the structured fields.'
+                : `The stored payload parses as OCSF but is missing critical field${ocsfFallbackInfo.missingFields.length === 1 ? '' : 's'}${ocsfFallbackInfo.missingFields.length > 0 ? `: ${ocsfFallbackInfo.missingFields.slice(0, 6).join(', ')}${ocsfFallbackInfo.missingFields.length > 6 ? `, +${ocsfFallbackInfo.missingFields.length - 6} more` : ''}` : ''}. This usually happens after a manual edit to the datastore item removed them.`}
             </Typography>
-            {!isFilterActive('revisions') && (
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem', display: 'block', mt: 0.5 }}>
+              You are currently viewing a merged reconstruction from earlier revisions
+              {typeof ocsfFallbackInfo.overlaidFieldCount === 'number' && ocsfFallbackInfo.overlaidFieldCount > 0
+                ? ` (${ocsfFallbackInfo.overlaidFieldCount} field${ocsfFallbackInfo.overlaidFieldCount === 1 ? '' : 's'} overlaid from the broken payload)`
+                : ''}
+              . The last known-good version{ocsfFallbackInfo.revisionTimestamp ? ` is from ${new Date(ocsfFallbackInfo.revisionTimestamp).toLocaleString()}` : ''}.
+            </Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem', display: 'block', mt: 0.5, fontWeight: 600 }}>
+              Restore rewrites the stored incident to that known-good version. Any unsaved edits made after it will be discarded, but the current broken payload remains in the change history so you can still recover it.
+            </Typography>
+            <Box sx={{ display: 'flex', gap: 0.75, mt: 0.75, flexWrap: 'wrap' }}>
               <Button
                 size="small"
-                onClick={() => setActiveTimelineFilters(new Set(['revisions']))}
+                variant="contained"
+                disabled={!ocsfFallbackInfo.recoveredValue || ocsfRestoring || isPublicView || isMergedIncident}
+                onClick={handleRestoreOcsfFallback}
+                startIcon={ocsfRestoring ? <Loader2Icon size={14} className="animate-spin" /> : <HistoryIcon size={14} />}
                 sx={{
-                  mt: 0.75,
                   textTransform: 'none',
                   fontSize: '0.7rem',
-                  color: 'hsl(38 92% 50%)',
-                  px: 1,
-                  py: 0.25,
+                  bgcolor: 'hsl(38 92% 50%)',
+                  color: 'hsl(0 0% 0%)',
+                  px: 1.25,
+                  py: 0.35,
                   minHeight: 0,
-                  '&:hover': { bgcolor: 'hsl(38 92% 50% / 0.15)' },
+                  boxShadow: 'none',
+                  '&:hover': { bgcolor: 'hsl(38 92% 45%)', boxShadow: 'none' },
                 }}
               >
-                Show changes
+                {ocsfRestoring ? 'Restoring…' : 'Restore last known-good version'}
               </Button>
-            )}
+              {!isFilterActive('revisions') && (
+                <Button
+                  size="small"
+                  onClick={() => setActiveTimelineFilters(new Set(['revisions']))}
+                  sx={{
+                    textTransform: 'none',
+                    fontSize: '0.7rem',
+                    color: 'hsl(38 92% 50%)',
+                    px: 1,
+                    py: 0.35,
+                    minHeight: 0,
+                    '&:hover': { bgcolor: 'hsl(38 92% 50% / 0.15)' },
+                  }}
+                >
+                  Review changes first
+                </Button>
+              )}
+            </Box>
           </Box>
           <IconButton
             size="small"
