@@ -540,7 +540,12 @@ const EmailThreadPanel = ({ descriptionHtml, descriptionText, rawOCSF, onReply, 
       <Box sx={{ maxHeight: poppedOut ? 'none' : 500, flex: poppedOut ? 1 : 'unset', overflow: 'auto' }}>
         {messages.map((msg, idx) => {
           const isExpanded = msg.isLatest ? !expandedMessages.has(msg.id) : expandedMessages.has(msg.id);
-          const { name, email } = extractEmail(msg.from);
+          const parsed = extractEmail(msg.from);
+          const name = parsed.name;
+          // Prefer any address embedded in the display string; otherwise fall
+          // back to the structured `fromEmail` from the adapter so we still
+          // show the sender's address for values like `"'Brandon' via Shuffle Platform"`.
+          const email = parsed.email || msg.fromEmail;
           const avatarColor = hashColor(msg.from);
 
           return (
