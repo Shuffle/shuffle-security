@@ -100,7 +100,25 @@ export default function AppsPage() {
         }
       }
     }
-  }, []);
+
+    // Auto-open the "Add app" dialog if the user came back from /register with the flag.
+    if (searchParams.get('addApp') === '1') {
+      const seed = searchParams.get('addAppSeed') || '';
+      if (isAuthenticated) {
+        setAddAppSeed(seed);
+        setAddAppOpen(true);
+        // Clean the URL so a refresh does not re-open the dialog.
+        const next = new URLSearchParams(searchParams);
+        next.delete('addApp');
+        next.delete('addAppSeed');
+        setSearchParams(next, { replace: true });
+      } else {
+        // Still not authenticated (e.g. cancelled registration) — surface the prompt again.
+        setPendingSeed(seed);
+        setRegisterPromptOpen(true);
+      }
+    }
+  }, [isAuthenticated]);
 
   const getActiveCategory = () => {
     const lowerQuery = searchQuery.toLowerCase().trim();
