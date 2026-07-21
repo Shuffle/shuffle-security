@@ -2217,12 +2217,6 @@ const IncidentsPage = () => {
       transition={{ duration: 0.4 }}
     >
       <HighlightSpotlight />
-      <ScheduleHealthBanner
-        compact
-        dismissKey="shuffle:schedule-health-banner:dismissed"
-        minIncidents={20}
-        incidentCount={incidents.filter(i => !(typeof i.id === 'string' && i.id.startsWith('demo-'))).length}
-      />
       <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Typography variant="h5" sx={{ fontWeight: 600, fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
