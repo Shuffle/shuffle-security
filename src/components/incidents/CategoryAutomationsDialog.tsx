@@ -581,7 +581,7 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <RocketLaunchIcon size={28} style={{ color: enabledCount > 0 ? '#4ade80' : 'hsl(var(--muted-foreground))' }} />
           <Typography variant="h6" sx={{ fontSize: '1.1rem', fontWeight: 600 }}>
-            Automation for Incidents
+            Automation for {entityPluralCap}
           </Typography>
         </Box>
         <IconButton
