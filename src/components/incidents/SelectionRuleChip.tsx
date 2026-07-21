@@ -40,7 +40,7 @@ import {
   IconButton,
 } from '@mui/material';
 import { Plus, X } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/context/AuthContext';
 import { useSubOrgs } from '@/hooks/useSubOrgs';
 import { useDatastore } from '@/hooks/useDatastore';
 import {
