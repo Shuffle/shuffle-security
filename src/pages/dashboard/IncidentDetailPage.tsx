@@ -95,7 +95,7 @@ import { RelatedIncidentsBanner } from '@/components/incidents/RelatedIncidentsB
 import { ThreadCorrelatedBanner } from '@/components/incidents/ThreadCorrelatedBanner';
 import { useRelatedIncidents } from '@/hooks/useRelatedIncidents';
 import { useThreadCorrelatedIncidents } from '@/hooks/useThreadCorrelatedIncidents';
-import { maybeMigrateLegacyMerge, getPrimaryPointer, linkMergePair } from '@/lib/incidentRelations';
+import { maybeMigrateLegacyMerge, getPrimaryPointer, linkMergePair, writeIncidentSafe, reconcileRelatedFromRevisions, getLinkedPointers } from '@/lib/incidentRelations';
 import { DemoFallbackAuditBanner } from '@/components/incidents/DemoFallbackAuditBanner';
 import { useMergeCandidates } from '@/hooks/useMergeCandidates';
 import { RoutingRulePreviewBanner } from '@/components/incidents/RoutingRulePreviewBanner';
@@ -2324,7 +2324,7 @@ const IncidentDetailPage = () => {
         // the corrected values instead of the raw translation expression.
         if (!isPublicView && repairedRaw && fieldRepairs.length > 0) {
           console.log('[IncidentDetail] Persisting repaired translation fields:', fieldRepairs);
-          setDatastoreItem(id, repairedRaw, DATASTORE_CATEGORIES.INCIDENTS, crossOrgId || undefined)
+          writeIncidentSafe(id, repairedRaw, crossOrgId || undefined)
             .catch((err) => console.warn('[IncidentDetail] Failed to persist repaired translation fields:', err));
         }
         // Details is now tab 0 (default), no auto-switch needed
@@ -2864,7 +2864,7 @@ const IncidentDetailPage = () => {
                   },
                 },
               };
-              setDatastoreItem(id, updated, DATASTORE_CATEGORIES.INCIDENTS, crossOrgId || undefined)
+              writeIncidentSafe(id, updated, crossOrgId || undefined)
                 .catch((err) => console.warn('[Correlations] persist first-seen failed', err));
             }
             // Anchor the timeline pill at the earliest stamp we know about.
@@ -3282,7 +3282,7 @@ const IncidentDetailPage = () => {
       if (sharedOrgs.length > 0) {
         Promise.allSettled(
           sharedOrgs.map(org =>
-            setDatastoreItem(incident.id, updatedData, DATASTORE_CATEGORIES.INCIDENTS, org.id)
+            writeIncidentSafe(incident.id, updatedData, org.id)
           )
         ).then(results => {
           const failed = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.success));
