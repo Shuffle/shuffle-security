@@ -299,8 +299,8 @@ const AuthenticatedVulnerabilitiesView = () => {
                     }
                   }}
                   style={{
-                    color: categoryAutomations?.some(a => a.enabled) ? 'hsl(var(--success, 142 71% 45%))' : undefined,
-                    borderColor: categoryAutomations?.some(a => a.enabled) ? 'hsl(var(--success, 142 71% 45%))' : undefined,
+                    color: categoryAutomations?.some(a => a.enabled) ? 'hsl(var(--severity-low))' : undefined,
+                    borderColor: categoryAutomations?.some(a => a.enabled) ? 'hsl(var(--severity-low))' : undefined,
                   }}
                 >
                   <RocketLaunchIcon size={16} />
