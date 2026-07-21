@@ -208,12 +208,20 @@ export const IngestionSourcesRow = ({
         const body: Record<string, string> = { label: workflowLabel, category };
         if (activeNames.length > 0) body.app_name = activeNames.join(',');
         else body.action_name = 'remove';
-        await fetch(getApiUrl('/api/v2/workflows/generate'), {
+        const resp = await fetch(getApiUrl('/api/v2/workflows/generate'), {
           method: 'POST',
           credentials: 'include',
           headers: { ...getAuthHeader(), 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         });
+        let payload: any = null;
+        try { payload = await resp.json(); } catch { /* ignore */ }
+        if (!resp.ok || (payload && payload.success === false)) {
+          const reason = payload?.reason || `Failed to update ingestion sources (${resp.status})`;
+          toast.error(reason);
+          await fetchIngestionApps();
+          return;
+        }
         toast.success('Ingestion sources updated');
         await fetchIngestionApps();
         onSourcesChanged?.();
