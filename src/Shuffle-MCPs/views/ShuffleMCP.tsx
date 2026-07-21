@@ -66,6 +66,45 @@ const InfiniteScrollSkeleton: React.FC<{ layout: 'list' | 'grid'; gridColumns: n
   );
 };
 
+// Consistent error state for search failures. Centered and always points users
+// to the support contact form when the catalog is throttled.
+const SearchErrorMessage: React.FC<{ rateLimited: boolean; message: string }> = ({ rateLimited, message }) => {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 6,
+        alignItems: 'center',
+        textAlign: 'center',
+        width: '100%',
+        padding: '8px 12px',
+        color: rateLimited ? 'hsl(var(--severity-medium))' : 'hsl(var(--destructive))',
+      }}
+    >
+      <strong style={{ fontSize: 13 }}>
+        {rateLimited ? 'Algolia rate limit reached (429)' : 'Search unavailable'}
+      </strong>
+      <span style={{ fontSize: 12, color: 'hsl(var(--muted-foreground))', lineHeight: 1.4 }}>
+        {message}
+      </span>
+      <span style={{ fontSize: 12, color: 'hsl(var(--muted-foreground))', lineHeight: 1.4 }}>
+        Need help sooner? Reach out on{' '}
+        <a
+          href="https://shuffler.io/contact"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: 'hsl(var(--primary))', textDecoration: 'underline' }}
+        >
+          shuffler.io/contact
+        </a>
+        .
+      </span>
+    </div>
+  );
+};
+
+
 export interface ShuffleMCPHandle {
   search: (query: string) => void;
   clear: () => void;
