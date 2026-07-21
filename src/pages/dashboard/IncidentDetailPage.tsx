@@ -2030,7 +2030,7 @@ const IncidentDetailPage = () => {
     rawOCSF: incident?.rawOCSF,
   }), [editedTitle, editedMessage, editedSeverity, editedStatus, editedLabels, editedObservables, editedStakeholders, incident]);
   const routingMatches = useMemo(
-    () => evaluateRoutingRules(routingContext, routingRules),
+    () => dedupeMatchesByActionTarget(evaluateRoutingRules(routingContext, routingRules)),
     [routingContext, routingRules]
   );
 
