@@ -576,15 +576,11 @@ export const maybeMigrateLegacyMerge = async (
     linked_by: 'legacy-migration',
   };
   const nextSource = {
-    ...upsertPointer(raw, pointer),
+    ...upsertRelatedEventRefs(upsertPointer(raw, pointer), [legacyPrimary]),
     status_id: MERGED_STATUS_ID,
     status: MERGED_STATUS_LABEL,
   };
-  await setDatastoreItem(
-    incidentId,
-    JSON.stringify(nextSource),
-    DATASTORE_CATEGORIES.INCIDENTS,
-  );
+  await writeIncidentSafe(incidentId, nextSource);
 
   // Best-effort back-fill on the primary side too. Non-fatal if it fails
   // (e.g. permissions in multi-tenant), the incident detail still works.
@@ -597,18 +593,14 @@ export const maybeMigrateLegacyMerge = async (
       const primaryRaw = JSON.parse(primaryRes.item.value);
       const already = getRelatedIncidents(primaryRaw).some(p => p.id === incidentId);
       if (!already) {
-        const nextPrimary = upsertPointer(primaryRaw, {
+        const nextPrimary = upsertRelatedEventRefs(upsertPointer(primaryRaw, {
           id: incidentId,
           relation: 'merged',
           primary: false,
           linked_at: raw.merged_at || Date.now(),
           linked_by: 'legacy-migration',
-        });
-        await setDatastoreItem(
-          legacyPrimary,
-          JSON.stringify(nextPrimary),
-          DATASTORE_CATEGORIES.INCIDENTS,
-        );
+        }), [incidentId]);
+        await writeIncidentSafe(legacyPrimary, nextPrimary);
       }
     }
   } catch {
