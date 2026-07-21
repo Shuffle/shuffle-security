@@ -150,7 +150,12 @@ export const CategoryAutomationsDialog: React.FC<CategoryAutomationsDialogProps>
   onAutomationsChange,
   initialSettings,
   onSaved,
+  entityLabel,
 }) => {
+  const entitySingular = entityLabel?.singular || 'incident';
+  const entityPlural = entityLabel?.plural || 'incidents';
+  const entitySingularCap = entitySingular.charAt(0).toUpperCase() + entitySingular.slice(1);
+  const entityPluralCap = entityPlural.charAt(0).toUpperCase() + entityPlural.slice(1);
   const navigate = useNavigate();
   const [automations, setAutomations] = useState<CategoryAutomation[]>([]);
   const [isSaving, setIsSaving] = useState(false);
