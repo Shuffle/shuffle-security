@@ -219,18 +219,17 @@ export const RoutingRulePreviewBanner = ({
 
   const renderActionButton = (a: RoutingAction, idx: number) => {
     const baseSx = {
-      height: 28,
+      height: 26,
       textTransform: 'none' as const,
-      fontWeight: 600,
+      fontWeight: 500,
       fontSize: 12,
-      borderColor: 'hsl(var(--primary) / 0.5)',
-      color: 'hsl(var(--primary))',
-      '&:hover': { borderColor: 'hsl(var(--primary))', bgcolor: 'hsl(var(--primary) / 0.08)' },
-      '&.Mui-disabled': { borderColor: 'hsl(var(--border))', color: 'hsl(var(--muted-foreground))' },
+      px: 1,
+      minWidth: 0,
+      color: 'hsl(var(--foreground))',
+      '&:hover': { bgcolor: 'hsl(var(--muted) / 0.6)' },
+      '&.Mui-disabled': { color: 'hsl(var(--muted-foreground))' },
     };
 
-    // Applied → render as a muted "done" chip so users see it was covered
-    // without another click doing nothing / re-firing side effects.
     if (isApplied(a)) {
       const label =
         a.type === 'suggest_move' ? `Moved to ${a.targetOrgId ? (orgNameById[a.targetOrgId] || a.targetOrgId.slice(0, 8)) : '?'}`
@@ -243,97 +242,41 @@ export const RoutingRulePreviewBanner = ({
         : a.type === 'set_field' ? `${a.field}: ${a.value}`
         : ACTION_TYPE_LABELS[a.type];
       return (
-        <Chip
-          key={idx}
-          size="small"
-          label={`✓ ${label}`}
-          sx={{
-            height: 24,
-            fontSize: 11,
-            bgcolor: 'hsl(var(--muted) / 0.6)',
-            color: 'hsl(var(--muted-foreground))',
-            textDecoration: 'line-through',
-          }}
-        />
+        <Typography key={idx} variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', textDecoration: 'line-through', fontSize: 11 }}>
+          {label}
+        </Typography>
       );
     }
 
-    switch (a.type) {
-      case 'suggest_move': {
-        const name = a.targetOrgId ? (orgNameById[a.targetOrgId] || a.targetOrgId.slice(0, 8)) : 'no target';
-        return (
-          <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={isApplying || !a.targetOrgId || (!onMove && !onApplyActions)}
-            onClick={() => applyActions([a])}>
-            Move to {name}
-          </Button>
-        );
+    const labelFor = (): string => {
+      switch (a.type) {
+        case 'suggest_move': {
+          const name = a.targetOrgId ? (orgNameById[a.targetOrgId] || a.targetOrgId.slice(0, 8)) : 'no target';
+          return `Move to ${name}`;
+        }
+        case 'set_severity': return `Set severity → ${a.value || '?'}`;
+        case 'set_status': return `Set status → ${a.value || '?'}`;
+        case 'set_priority': return `Set priority → ${a.value || '?'}`;
+        case 'add_label': return `Add label "${a.value || ''}"`;
+        case 'assign_to': return `Assign to ${a.value || '?'}`;
+        case 'add_comment': return 'Add comment';
+        case 'set_field': return `Set ${a.field || '?'} → ${a.value || '?'}`;
+        default: return `${ACTION_TYPE_LABELS[a.type]}${a.value ? `: ${a.value}` : ''}`;
       }
-      case 'set_severity':
-        return (
-          <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={isApplying || !a.value || (!onApply && !onApplyActions)} onClick={() => applyActions([a])}>
-            Set severity → {a.value || '?'}
-          </Button>
-        );
-      case 'set_status':
-        return (
-          <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={isApplying || !a.value || (!onApply && !onApplyActions)} onClick={() => applyActions([a])}>
-            Set status → {a.value || '?'}
-          </Button>
-        );
-      case 'set_priority':
-        return (
-          <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={isApplying || !a.value || (!onApply && !onApplyActions)} onClick={() => applyActions([a])}>
-            Set priority → {a.value || '?'}
-          </Button>
-        );
-      case 'add_label':
-        return (
-          <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={isApplying || !a.value || (!onApply && !onApplyActions)} onClick={() => applyActions([a])}>
-            Add label "{a.value || ''}"
-          </Button>
-        );
-      case 'assign_to':
-        return (
-          <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={isApplying || !a.value || (!onApply && !onApplyActions)} onClick={() => applyActions([a])}>
-            Assign to {a.value || '?'}
-          </Button>
-        );
-      case 'add_comment':
-        return (
-          <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={isApplying || !a.value || (!onApply && !onApplyActions)} onClick={() => applyActions([a])}>
-            Add comment
-          </Button>
-        );
-      case 'set_field':
-        return (
-          <Button key={idx} size="small" variant="outlined" sx={baseSx}
-            disabled={isApplying || !a.field || a.value === undefined || (!onApply && !onApplyActions)}
-            onClick={() => applyActions([a])}>
-            Set {a.field || '?'} → {a.value || '?'}
-          </Button>
-        );
-      default:
-        return (
-          <Chip
-            key={idx}
-            size="small"
-            label={`${ACTION_TYPE_LABELS[a.type]}${a.value ? `: ${a.value}` : ''}`}
-            sx={{
-              height: 24,
-              fontSize: 11,
-              bgcolor: 'hsl(var(--muted))',
-              color: 'hsl(var(--muted-foreground))',
-            }}
-          />
-        );
-    }
+    };
+
+    const disabled =
+      isApplying ||
+      (a.type === 'suggest_move' ? (!a.targetOrgId || (!onMove && !onApplyActions)) :
+       a.type === 'set_field' ? (!a.field || a.value === undefined || (!onApply && !onApplyActions)) :
+       a.type === 'add_comment' ? (!a.value || (!onApply && !onApplyActions)) :
+       (!a.value || (!onApply && !onApplyActions)));
+
+    return (
+      <Button key={idx} size="small" variant="text" sx={baseSx} disabled={disabled} onClick={() => applyActions([a])}>
+        {labelFor()}
+      </Button>
+    );
   };
 
   return (
@@ -341,105 +284,59 @@ export const RoutingRulePreviewBanner = ({
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        gap: 1,
-        px: 2,
-        py: 1.25,
+        gap: 0.5,
+        py: 1,
         mb: 1.5,
-        borderRadius: 2,
-        bgcolor: 'hsl(var(--primary) / 0.06)',
-        border: '1px solid hsl(var(--primary) / 0.35)',
+        borderTop: '1px solid hsl(var(--border))',
+        borderBottom: '1px solid hsl(var(--border))',
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <CallSplitIcon size={18} style={{ color: 'hsl(var(--primary))', flexShrink: 0 }} />
-        <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, flex: 1 }}>
-          {visible.length} routing rule{visible.length === 1 ? '' : 's'} matched this incident
+        <CallSplitIcon size={14} style={{ color: 'hsl(var(--muted-foreground))', flexShrink: 0 }} />
+        <Typography variant="body2" sx={{ color: 'hsl(var(--muted-foreground))', fontSize: 12, flex: 1 }}>
+          {visible.length} routing rule{visible.length === 1 ? '' : 's'} matched
         </Typography>
         {pendingActions.length > 0 && (
           <Button
             size="small"
-            variant="contained"
+            variant="text"
             disabled={isApplying}
             onClick={() => applyActions(pendingActions)}
             sx={{
-              height: 28,
+              height: 26,
               textTransform: 'none',
-              fontWeight: 700,
+              fontWeight: 600,
               fontSize: 12,
-              px: 1.5,
-              bgcolor: 'hsl(var(--primary))',
-              color: 'hsl(var(--primary-foreground))',
-              boxShadow: 'none',
-              '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)', boxShadow: 'none' },
+              px: 1,
+              color: 'hsl(var(--primary))',
+              '&:hover': { bgcolor: 'hsl(var(--primary) / 0.08)' },
             }}
           >
             {isApplying ? 'Applying…' : `Apply all (${pendingActions.length})`}
           </Button>
         )}
-        <Tooltip title={expanded ? 'Collapse' : 'Expand'}>
-          <IconButton size="small" onClick={() => setExpanded((v) => !v)}
-            sx={{ width: 28, height: 28, color: 'hsl(var(--muted-foreground))' }}>
-            {expanded ? <ExpandLessIcon size={18} /> : <ExpandMoreIcon size={18} />}
-          </IconButton>
-        </Tooltip>
+        <IconButton size="small" onClick={() => setExpanded((v) => !v)}
+          sx={{ width: 24, height: 24, color: 'hsl(var(--muted-foreground))' }}>
+          {expanded ? <ExpandLessIcon size={16} /> : <ExpandMoreIcon size={16} />}
+        </IconButton>
       </Box>
 
       {expanded && (
-        <Stack spacing={1}>
+        <Stack spacing={0.5} sx={{ pl: 2.75 }}>
           {visible.map((m) => (
-            <Box
-              key={m.rule.id}
-              sx={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 1,
-                p: 1,
-                borderRadius: 1,
-                bgcolor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
-              }}
-            >
-              <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.25 }}>
-                  <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))', fontWeight: 600, flex: 1, minWidth: 0 }}>
-                    {m.rule.name}
-                  </Typography>
-                  {m.rule.actions.filter((a) => !isApplied(a)).length > 1 && (
-                    <Button
-                      size="small"
-                      variant="contained"
-                      disabled={isApplying}
-                      onClick={() => applyAllForRule(m.rule)}
-                      sx={{
-                        height: 26,
-                        textTransform: 'none',
-                        fontWeight: 700,
-                        fontSize: 11,
-                        px: 1.25,
-                        bgcolor: 'hsl(var(--primary))',
-                        color: 'hsl(var(--primary-foreground))',
-                        boxShadow: 'none',
-                        '&:hover': { bgcolor: 'hsl(var(--primary) / 0.9)', boxShadow: 'none' },
-                      }}
-                    >
-                      Apply all ({m.rule.actions.filter((a) => !isApplied(a)).length})
-                    </Button>
-                  )}
-                </Box>
-                <Typography variant="caption" sx={{ color: 'hsl(var(--muted-foreground))', display: 'block', mb: 0.75 }}>
-                  Matched {m.matched.length}/{m.rule.conditions.length} condition{m.rule.conditions.length === 1 ? '' : 's'}
-                  {m.matched[0]?.field ? ` — ${m.matched[0].field} ${m.matched[0].op}${m.matched[0].value ? ` "${m.matched[0].value}"` : ''}` : ''}
+            <Box key={m.rule.id} sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+              <Box sx={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                <Typography variant="body2" sx={{ color: 'hsl(var(--foreground))', fontWeight: 500, fontSize: 13 }}>
+                  {m.rule.name}
                 </Typography>
-                <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap', gap: 0.75 }}>
+                <Stack direction="row" spacing={0.25} sx={{ flexWrap: 'wrap', alignItems: 'center' }}>
                   {m.rule.actions.map((a, i) => renderActionButton(a, i))}
                 </Stack>
               </Box>
-              <Tooltip title="Dismiss for this incident">
-                <IconButton size="small" onClick={() => dismissRule(m.rule.id)}
-                  sx={{ width: 28, height: 28, color: 'hsl(var(--muted-foreground))' }}>
-                  <CloseIcon size={16} />
-                </IconButton>
-              </Tooltip>
+              <IconButton size="small" onClick={() => dismissRule(m.rule.id)}
+                sx={{ width: 22, height: 22, color: 'hsl(var(--muted-foreground))', opacity: 0.6, '&:hover': { opacity: 1 } }}>
+                <CloseIcon size={14} />
+              </IconButton>
             </Box>
           ))}
         </Stack>
