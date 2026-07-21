@@ -486,10 +486,11 @@ export const IncidentCardView = ({
                     ? (incident as any)
                     : (incident as any).rawOCSF || (incident as any);
                   const linked = getLinkedPointers(rawSource);
-                  const count = linked.length;
-                  if (count === 0) return null;
+                  // Thread count always includes the current incident plus the merged ones.
+                  const count = linked.length + 1;
+                  if (count <= 1) return null;
                   return (
-                    <Tooltip title={`${count} incident${count !== 1 ? 's' : ''} merged into this thread`} arrow>
+                    <Tooltip title={`${count} incident${count !== 1 ? 's' : ''} in this thread`} arrow>
                       <Avatar
                         sx={{
                           position: 'absolute',

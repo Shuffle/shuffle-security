@@ -7282,11 +7282,13 @@ const IncidentDetailPage = () => {
             </Box>
             {(() => {
               const mergedCount = relatedIncidents?.linked?.length || 0;
-              if (mergedCount === 0) return null;
-              const total = mergedCount + (relatedIncidents?.invisibleCount || 0);
-              const suffix = relatedIncidents?.invisibleCount ? ` (${relatedIncidents.invisibleCount} unavailable)` : '';
+              // Thread count always includes the current incident plus the merged ones.
+              const total = mergedCount + 1;
+              if (total <= 1) return null;
+              const unavailable = relatedIncidents?.invisibleCount || 0;
+              const suffix = unavailable ? ` (${unavailable} unavailable)` : '';
               return (
-                <Tooltip title={`${total} incident${total !== 1 ? 's' : ''} merged into this thread${suffix}`} arrow>
+                <Tooltip title={`${total} incident${total !== 1 ? 's' : ''} in this thread${suffix}`} arrow>
                   <Avatar
                     sx={{
                       position: 'absolute',
@@ -7302,7 +7304,7 @@ const IncidentDetailPage = () => {
                       boxSizing: 'border-box',
                     }}
                   >
-                    {mergedCount}
+                    {total}
                   </Avatar>
                 </Tooltip>
               );
