@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Shield, Plus, RefreshCw, Search, Zap, ArrowRight, Wrench, Sparkles, AlertTriangle, Globe, LogIn, Loader2, MonitorCheck } from 'lucide-react';
+import { Shield, Plus, RefreshCw, Search, Zap, ArrowRight, Wrench, Sparkles, AlertTriangle, Globe, LogIn, Loader2, MonitorCheck, Rocket as RocketLaunchIcon } from 'lucide-react';
 import { usePageMeta } from '@/hooks/usePageMeta';
 import { useVulnerabilities, Vulnerability, VulnSeverity, VulnCategory } from '@/hooks/useVulnerabilities';
 import { useAppAuth } from '@/Shuffle-MCPs/useAppAuth';
@@ -22,6 +22,9 @@ import { useWorkflows } from '@/hooks/useWorkflows';
 import { VulnerabilityAutomationBanner } from '@/components/vulnerabilities/VulnerabilityAutomationBanner';
 import { IngestionSourcesRow } from '@/components/ingestion/IngestionSourcesRow';
 import { AddVulnerabilityDialog } from '@/components/vulnerabilities/AddVulnerabilityDialog';
+import { CategoryAutomationsDialog } from '@/components/incidents/CategoryAutomationsDialog';
+import { useDatastore } from '@/hooks/useDatastore';
+import { DATASTORE_CATEGORIES, CategoryAutomation } from '@/Shuffle-MCPs/datastore';
 
 const SEVERITY_COLORS: Record<VulnSeverity, string> = {
   critical: 'bg-red-500/10 text-red-500 border-red-500/20',
