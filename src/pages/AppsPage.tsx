@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
-import { Box, Container, Typography, Button, useTheme } from '@mui/material';
+import { Box, Container, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, useTheme } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
