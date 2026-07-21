@@ -489,6 +489,54 @@ export default function AppsPage() {
           }
         }}
       />
+
+      <Dialog
+        open={registerPromptOpen}
+        onClose={() => setRegisterPromptOpen(false)}
+        fullWidth
+        maxWidth="xs"
+        PaperProps={{
+          sx: {
+            background: 'hsl(var(--card))',
+            color: 'hsl(var(--foreground))',
+            border: '1px solid hsl(var(--border))',
+            borderRadius: 2,
+          },
+        }}
+      >
+        <DialogTitle sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, pt: 4, pb: 1 }}>
+          <Box sx={{
+            width: 48, height: 48, borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'hsla(var(--primary) / 0.1)',
+            border: '1px solid hsla(var(--primary) / 0.3)',
+            mb: 0.5,
+          }}>
+            <Plus size={24} style={{ color: 'hsl(var(--primary))' }} />
+          </Box>
+          <Typography sx={{ fontSize: 20, fontWeight: 700, textAlign: 'center' }}>
+            Register to add a new app
+          </Typography>
+        </DialogTitle>
+        <DialogContent sx={{ px: 4, pb: 1 }}>
+          <Typography sx={{ fontSize: 14, color: 'hsl(var(--muted-foreground))', textAlign: 'center' }}>
+            Generating a new integration requires a free Shuffle account. You will be sent to registration, and after signing up we will bring you right back here with this popup ready to continue{pendingSeed ? <> for <strong style={{ color: 'hsl(var(--foreground))' }}>"{pendingSeed}"</strong></> : null}.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ px: 4, pb: 3, pt: 2, justifyContent: 'center', gap: 1 }}>
+          <Button onClick={() => setRegisterPromptOpen(false)} sx={{ textTransform: 'none', color: 'hsl(var(--muted-foreground))' }}>
+            Not now
+          </Button>
+          <Button
+            variant="contained"
+            onClick={goRegisterForAddApp}
+            sx={{ textTransform: 'none', background: primaryColor, '&:hover': { background: primaryColor, filter: 'brightness(1.05)' } }}
+          >
+            Register &amp; continue
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Footer />
     </Box>
   );
