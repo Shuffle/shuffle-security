@@ -402,23 +402,25 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
             zIndex: 10000,
             display: 'inline-flex',
             alignItems: 'center',
-            gap: 0.75,
-            px: 1.25,
-            height: 28,
+            gap: 1,
+            px: 2,
+            py: 0.75,
+            minHeight: 34,
             borderRadius: 999,
             bgcolor: 'hsl(var(--card))',
             border: '1px solid hsl(var(--border))',
-            boxShadow: '0 6px 20px rgba(0,0,0,0.35)',
+            boxShadow: '0 6px 24px rgba(0,0,0,0.45)',
             cursor: 'pointer',
             userSelect: 'none',
-            fontSize: 12,
+            fontSize: 13,
             color: 'hsl(var(--foreground))',
+            whiteSpace: 'nowrap',
             '&:hover': { borderColor: 'hsl(var(--primary))' },
           }}
         >
-          <Plus size={13} />
-          <Typography variant="caption" sx={{ fontSize: 12, lineHeight: 1 }}>
-            Create rule from “{truncate(chip.text, 28)}”
+          <Plus size={14} />
+          <Typography variant="caption" sx={{ fontSize: 13, lineHeight: 1, fontWeight: 500 }}>
+            Create automation rule...
           </Typography>
         </Box>
       )}
