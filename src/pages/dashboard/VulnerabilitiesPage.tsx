@@ -25,6 +25,8 @@ import { AddVulnerabilityDialog } from '@/components/vulnerabilities/AddVulnerab
 import { CategoryAutomationsDialog } from '@/components/incidents/CategoryAutomationsDialog';
 import { useDatastore } from '@/hooks/useDatastore';
 import { DATASTORE_CATEGORIES, CategoryAutomation } from '@/Shuffle-MCPs/datastore';
+import { IconActionButton } from '@/components/common/IconActionButton';
+
 
 const SEVERITY_COLORS: Record<VulnSeverity, string> = {
   critical: 'bg-red-500/10 text-red-500 border-red-500/20',
@@ -282,61 +284,35 @@ const AuthenticatedVulnerabilitiesView = () => {
             <MonitorCheck size={14} />
             Add Host Monitor
           </Button>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="shrink-0"
-                  onClick={() => {
-                    const workflowAuto = categoryAutomations?.find(a => a.type === 'workflow' && a.enabled);
-                    const wfId = workflowAuto?.options?.find(o => o.key === 'workflow_id')?.value?.split(',')[0]?.trim();
-                    if (wfId) {
-                      window.open(`https://shuffler.io/workflows/${wfId}`, '_blank');
-                    } else {
-                      setAutomationsDialogOpen(true);
-                    }
-                  }}
-                  style={{
-                    color: categoryAutomations?.some(a => a.enabled) ? 'hsl(var(--severity-low))' : undefined,
-                    borderColor: categoryAutomations?.some(a => a.enabled) ? 'hsl(var(--severity-low))' : undefined,
-                  }}
-                >
-                  <RocketLaunchIcon size={16} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {(() => {
-                  const workflowAuto = categoryAutomations?.find(a => a.type === 'workflow' && a.enabled);
-                  const wfId = workflowAuto?.options?.find(o => o.key === 'workflow_id')?.value?.split(',')[0]?.trim();
-                  return wfId ? 'Click to open automation workflow' : 'Automation for Vulnerabilities';
-                })()}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" className="shrink-0" onClick={() => refresh()} disabled={isRefreshing}>
-                  <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Refresh</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" className="shrink-0" onClick={() => setAddVulnOpen(true)}>
-                  <Plus size={16} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Add Vulnerability</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <IconActionButton
+            tone="success"
+            active={!!categoryAutomations?.some(a => a.enabled)}
+            tooltip={(() => {
+              const workflowAuto = categoryAutomations?.find(a => a.type === 'workflow' && a.enabled);
+              const wfId = workflowAuto?.options?.find(o => o.key === 'workflow_id')?.value?.split(',')[0]?.trim();
+              return wfId ? 'Click to open automation workflow' : 'Automation for Vulnerabilities';
+            })()}
+            onClick={() => {
+              const workflowAuto = categoryAutomations?.find(a => a.type === 'workflow' && a.enabled);
+              const wfId = workflowAuto?.options?.find(o => o.key === 'workflow_id')?.value?.split(',')[0]?.trim();
+              if (wfId) {
+                window.open(`https://shuffler.io/workflows/${wfId}`, '_blank');
+              } else {
+                setAutomationsDialogOpen(true);
+              }
+            }}
+          >
+            <RocketLaunchIcon size={16} />
+          </IconActionButton>
+          <IconActionButton tooltip="Refresh" onClick={() => refresh()} disabled={isRefreshing}>
+            <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
+          </IconActionButton>
+          <IconActionButton tooltip="Add Vulnerability" onClick={() => setAddVulnOpen(true)}>
+            <Plus size={16} />
+          </IconActionButton>
         </div>
       </div>
+
 
 
       {/* Stats row */}
