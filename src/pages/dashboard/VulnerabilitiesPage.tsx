@@ -440,6 +440,16 @@ const AuthenticatedVulnerabilitiesView = () => {
         onOpenChange={setAddVulnOpen}
         onAdded={() => refresh()}
       />
+
+      <CategoryAutomationsDialog
+        open={automationsDialogOpen}
+        onClose={() => setAutomationsDialogOpen(false)}
+        category={DATASTORE_CATEGORIES.VULNERABILITIES}
+        automations={categoryAutomations}
+        onAutomationsChange={setCategoryAutomations}
+        initialSettings={categoryConfig?.settings}
+        entityLabel={{ singular: 'vulnerability', plural: 'vulnerabilities' }}
+      />
     </div>
   );
 };
