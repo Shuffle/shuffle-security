@@ -308,6 +308,7 @@ const AuthenticatedVulnerabilitiesView = () => {
             webhookWorkflowName="Vulnerability Ingestion Webhook"
             titleTooltip="Apps with authentication appear here. Verified apps show in green, unverified in yellow. Toggle them to control which tools automatically pull in vulnerabilities."
             addSubtitle="Search and authenticate a tool to ingest vulnerabilities from"
+            searchPriorityQuery="asset management cloud iam"
             onSourcesChanged={() => refresh()}
           />
           <Button size="sm" className="gap-1.5" onClick={() => navigate('/monitors?add_host=true')}>
