@@ -456,7 +456,57 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
       if (ok) {
         toast.success('Routing rule created');
         window.getSelection?.()?.removeAllRanges?.();
-        closeChip();
+        // Switch popover into "saved" state and kick off a retro scan
+        // against the most recent incidents so the user sees immediately
+        // how many past incidents this rule would have matched.
+        setSavedRule(rule);
+        setScanning(true);
+        setScanResult(null);
+        void (async () => {
+          try {
+            const orgId = userInfo?.active_org?.id;
+            if (!orgId) {
+              setScanning(false);
+              return;
+            }
+            const resp = await getDatastoreByCategory(
+              DATASTORE_CATEGORIES.INCIDENTS,
+              undefined,
+              undefined,
+              orgId,
+            );
+            const items = (resp as any)?.items || (resp as any)?.data || [];
+            let matched = 0;
+            let scanned = 0;
+            for (const it of items) {
+              try {
+                const raw = typeof it.value === 'string' ? JSON.parse(it.value) : it.value;
+                if (!raw || typeof raw !== 'object') continue;
+                scanned += 1;
+                const ctx: IncidentEvaluationContext = {
+                  title: raw.title,
+                  description: raw.message || raw.description,
+                  source: raw.source,
+                  severity: raw.severity,
+                  status: raw.status,
+                  labels: raw.labels,
+                  observables: raw.observables,
+                  stakeholders: raw.stakeholders,
+                  rawOCSF: raw.rawOCSF,
+                };
+                const hits = evaluateRoutingRules(ctx, [rule]);
+                if (hits.length > 0) matched += 1;
+              } catch {
+                /* skip malformed */
+              }
+            }
+            setScanResult({ matched, scanned });
+          } catch {
+            setScanResult({ matched: 0, scanned: 0 });
+          } finally {
+            setScanning(false);
+          }
+        })();
       } else {
         toast.error('Failed to save routing rule');
       }
