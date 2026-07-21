@@ -179,29 +179,52 @@ export default function AppsPage() {
                 Connect your SIEM, EDR, ITSM, Email, Threat Intel, Cloud, and any other data source. 
                 Use your existing tools—we fill in the gaps.
               </Typography>
-              <Button
-                component={Link}
-                to="/register"
-                variant="contained"
-                size="large"
-                endIcon={<ArrowForwardIcon />}
-                onClick={() => trackCTA('get_started_free', 'apps_hero')}
-                sx={{
-                  py: { xs: 1.25, md: 1.5 },
-                  px: { xs: 3, md: 4 },
-                  fontSize: { xs: '0.9rem', md: '1rem' },
-                  fontWeight: 600,
-                  borderRadius: 3,
-                  background: primaryColor,
-                  boxShadow: `0 8px 32px ${primaryColor}40`,
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: `0 12px 40px ${primaryColor}60`,
-                  },
-                }}
-              >
-                Get Started Free
-              </Button>
+              <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <Button
+                  component={Link}
+                  to="/register"
+                  variant="contained"
+                  size="large"
+                  endIcon={<ArrowForwardIcon />}
+                  onClick={() => trackCTA('get_started_free', 'apps_hero')}
+                  sx={{
+                    py: { xs: 1.25, md: 1.5 },
+                    px: { xs: 3, md: 4 },
+                    fontSize: { xs: '0.9rem', md: '1rem' },
+                    fontWeight: 600,
+                    borderRadius: 3,
+                    background: primaryColor,
+                    boxShadow: `0 8px 32px ${primaryColor}40`,
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: `0 12px 40px ${primaryColor}60`,
+                    },
+                  }}
+                >
+                  Get Started Free
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  startIcon={<Plus size={18} />}
+                  onClick={() => openAddApp('apps_hero')}
+                  sx={{
+                    py: { xs: 1.25, md: 1.5 },
+                    px: { xs: 3, md: 4 },
+                    fontSize: { xs: '0.9rem', md: '1rem' },
+                    fontWeight: 600,
+                    borderRadius: 3,
+                    borderColor: `${primaryColor}80`,
+                    color: 'primary.main',
+                    '&:hover': {
+                      borderColor: 'primary.main',
+                      background: `${primaryColor}14`,
+                    },
+                  }}
+                >
+                  Add app
+                </Button>
+              </Box>
             </Box>
           </motion.div>
         </Container>
