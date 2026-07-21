@@ -1201,7 +1201,12 @@ const IncidentDetailPage = () => {
     revisionTimestamp?: number;
     overlaidFieldCount: number;
     reason: 'not-ocsf' | 'missing-fields';
+    // Fields that were missing on the live payload before reconstruction.
     missingFields: string[];
+    // Fields still missing AFTER folding revisions into the reconstruction.
+    // Only these should be surfaced as "missing" in the UI — anything the
+    // recovery could refill is no longer a concern for the reader.
+    stillMissingFields: string[];
     recoveredValue?: string;
   } | null>(null);
   const [ocsfRestoring, setOcsfRestoring] = useState(false);
@@ -2788,11 +2793,17 @@ const IncidentDetailPage = () => {
     setEditedLabels(reParsed.labels || []);
     setActivity(reParsed.activity || []);
 
+    // Compute what is STILL missing after we folded revisions into the base
+    // and overlaid live edits. Only these should surface as "missing" in the
+    // UI — anything the recovery could refill is not the reader's problem.
+    const stillMissing = isOcsfShapedData(merged) ? getMissingCriticalFields(merged) : [];
+
     setOcsfFallbackInfo({
       revisionTimestamp: newestRevisionTs,
       overlaidFieldCount,
       reason: liveIsOcsf ? 'missing-fields' : 'not-ocsf',
       missingFields,
+      stillMissingFields: stillMissing,
       recoveredValue: JSON.stringify(ocsfBase),
     });
   }, [loading, incident, revisionsLoaded, revisions]);
@@ -4759,26 +4770,42 @@ const IncidentDetailPage = () => {
         }}>
           <HistoryIcon size={18} style={{ color: 'hsl(38 92% 50%)', marginTop: '0px' }} />
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="body2" sx={{ color: 'hsl(38 92% 50%)', fontWeight: 600, fontSize: '0.78rem' }}>
-              {ocsfFallbackInfo.reason === 'not-ocsf'
-                ? 'This incident is no longer valid OCSF'
-                : 'This incident is missing required OCSF fields'}
-            </Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem', display: 'block', mt: 0.25 }}>
-              {ocsfFallbackInfo.reason === 'not-ocsf'
-                ? 'The current stored payload does not match the OCSF 2005 incident schema. This usually happens after a manual edit to the underlying datastore item overwrote the structured fields.'
-                : `The stored payload parses as OCSF but is missing critical field${ocsfFallbackInfo.missingFields.length === 1 ? '' : 's'}${ocsfFallbackInfo.missingFields.length > 0 ? `: ${ocsfFallbackInfo.missingFields.slice(0, 6).join(', ')}${ocsfFallbackInfo.missingFields.length > 6 ? `, +${ocsfFallbackInfo.missingFields.length - 6} more` : ''}` : ''}. This usually happens after a manual edit to the datastore item removed them.`}
-            </Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem', display: 'block', mt: 0.5 }}>
-              You are currently viewing a merged reconstruction from earlier revisions
-              {typeof ocsfFallbackInfo.overlaidFieldCount === 'number' && ocsfFallbackInfo.overlaidFieldCount > 0
-                ? ` (${ocsfFallbackInfo.overlaidFieldCount} field${ocsfFallbackInfo.overlaidFieldCount === 1 ? '' : 's'} overlaid from the broken payload)`
-                : ''}
-              . The last known-good version{ocsfFallbackInfo.revisionTimestamp ? ` is from ${new Date(ocsfFallbackInfo.revisionTimestamp).toLocaleString()}` : ''}.
-            </Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem', display: 'block', mt: 0.5, fontWeight: 600 }}>
-              Restore rewrites the stored incident to that known-good version. Any unsaved edits made after it will be discarded, but the current broken payload remains in the change history so you can still recover it.
-            </Typography>
+            {(() => {
+              const stillMissing = ocsfFallbackInfo.stillMissingFields || [];
+              const stillHasProblem = stillMissing.length > 0 || ocsfFallbackInfo.reason === 'not-ocsf';
+              const missingList = stillMissing.slice(0, 6).join(', ')
+                + (stillMissing.length > 6 ? `, +${stillMissing.length - 6} more` : '');
+              return (
+                <>
+                  <Typography variant="body2" sx={{ color: 'hsl(38 92% 50%)', fontWeight: 600, fontSize: '0.78rem' }}>
+                    {stillMissing.length > 0
+                      ? (stillMissing.length === 1
+                          ? `This incident is missing a required OCSF field: ${stillMissing[0]}`
+                          : `This incident is missing required OCSF fields: ${missingList}`)
+                      : ocsfFallbackInfo.reason === 'not-ocsf'
+                        ? 'This incident is no longer valid OCSF'
+                        : 'This incident has been reconstructed from earlier revisions'}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem', display: 'block', mt: 0.25 }}>
+                    {stillHasProblem
+                      ? (ocsfFallbackInfo.reason === 'not-ocsf'
+                          ? 'The current stored payload does not match the OCSF 2005 incident schema. This usually happens after a manual edit to the underlying datastore item overwrote the structured fields.'
+                          : 'The stored payload parses as OCSF but the field(s) above could not be recovered from any revision. This usually happens after a manual edit to the datastore item removed them.')
+                      : 'The stored payload was broken, but earlier revisions had every required field — you are viewing a merged reconstruction and nothing is currently missing.'}
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem', display: 'block', mt: 0.5 }}>
+                    You are currently viewing a merged reconstruction from earlier revisions
+                    {typeof ocsfFallbackInfo.overlaidFieldCount === 'number' && ocsfFallbackInfo.overlaidFieldCount > 0
+                      ? ` (${ocsfFallbackInfo.overlaidFieldCount} field${ocsfFallbackInfo.overlaidFieldCount === 1 ? '' : 's'} overlaid from the broken payload)`
+                      : ''}
+                    . The last known-good version{ocsfFallbackInfo.revisionTimestamp ? ` is from ${new Date(ocsfFallbackInfo.revisionTimestamp).toLocaleString()}` : ''}.
+                  </Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary', fontSize: '0.7rem', display: 'block', mt: 0.5, fontWeight: 600 }}>
+                    Restore rewrites the stored incident to that known-good version. Any unsaved edits made after it will be discarded, but the current broken payload remains in the change history so you can still recover it.
+                  </Typography>
+                </>
+              );
+            })()}
             <Box sx={{ display: 'flex', gap: 0.75, mt: 0.75, flexWrap: 'wrap' }}>
               <Button
                 size="small"
