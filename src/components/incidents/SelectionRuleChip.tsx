@@ -505,7 +505,7 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
                 // (evaluateRoutingRules returns per-action hits) and write
                 // the updated payload back through writeIncidentSafe so we
                 // preserve related_incidents pointers.
-                const allActions = hits.flatMap((h: any) => Array.isArray(h?.actions) ? h.actions : (h?.action ? [h.action] : []));
+                const allActions = hits.flatMap((h: any) => Array.isArray(h?.rule?.actions) ? h.rule.actions : []);
                 if (allActions.length === 0) continue;
                 const result = applyRoutingActionsToRaw(raw, allActions, { ruleName: rule.name });
                 if (!result.changed) continue;
