@@ -159,6 +159,7 @@ export default function AppSearchDrawer({
   open,
   onClose,
   initialQuery = '',
+  initialFilterQuery,
   title = 'Add Integration',
   subtitle = 'Search and configure a tool',
   anchor = 'right',
