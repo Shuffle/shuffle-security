@@ -526,3 +526,164 @@ export const maybeMigrateLegacyMerge = async (
 };
 
 export { MERGED_STATUS_ID, MERGED_STATUS_LABEL };
+
+// ---------------------------------------------------------------------------
+// Relation-safe writes + revision-based reconciliation
+// ---------------------------------------------------------------------------
+
+/**
+ * Fields that describe the merge relationship. They MUST survive any write
+ * to an incident row, because they are what wires primary <-> child. If a
+ * caller overwrites the row with a stale copy that doesn't carry these,
+ * the union is silently lost (parent forgets its children).
+ */
+const RELATION_FIELDS = [
+  'related_incidents',
+  '_merged_data_from',
+  'merged_into',
+  'merged_at',
+] as const;
+
+/**
+ * Union two related_incidents arrays by pointer id. Later linked_at wins
+ * on duplicates, and a `primary: true` entry always beats a false one for
+ * the same id (child->primary direction must stick).
+ */
+const unionPointers = (
+  a: RelatedIncidentPointer[] = [],
+  b: RelatedIncidentPointer[] = [],
+): RelatedIncidentPointer[] => {
+  const byId = new Map<string, RelatedIncidentPointer>();
+  for (const p of [...a, ...b]) {
+    if (!p || typeof p.id !== 'string') continue;
+    const prev = byId.get(p.id);
+    if (!prev) { byId.set(p.id, p); continue; }
+    const preferPrimary = p.primary && !prev.primary ? p
+      : (!p.primary && prev.primary ? prev : null);
+    if (preferPrimary) { byId.set(p.id, preferPrimary); continue; }
+    byId.set(p.id, (p.linked_at || 0) >= (prev.linked_at || 0) ? p : prev);
+  }
+  return Array.from(byId.values());
+};
+
+/**
+ * Merge the relation fields from `existing` into `next` so a caller who
+ * built `next` from a stale snapshot can't drop pointers. Returns the
+ * hardened payload — never mutates inputs.
+ */
+export const preserveRelationFields = (existing: any, next: any): any => {
+  const out: any = { ...(next || {}) };
+  if (!existing || typeof existing !== 'object') return out;
+
+  const merged = unionPointers(
+    getRelatedIncidents(existing),
+    getRelatedIncidents(out),
+  );
+  if (merged.length > 0) out.related_incidents = merged;
+
+  const existingFolded = Array.isArray(existing._merged_data_from) ? existing._merged_data_from : [];
+  const nextFolded = Array.isArray(out._merged_data_from) ? out._merged_data_from : [];
+  if (existingFolded.length || nextFolded.length) {
+    out._merged_data_from = Array.from(new Set<string>([...existingFolded, ...nextFolded]));
+  }
+
+  // Preserve tombstone fields if the row was a non-primary side. Never
+  // resurrect them if the caller explicitly cleared them (unmerge path
+  // sets status back and deletes merged_into) — detect that by checking
+  // whether the caller kept status_id === MERGED_STATUS_ID.
+  if (out.status_id === MERGED_STATUS_ID || existing.status_id === MERGED_STATUS_ID) {
+    if (!out.merged_into && existing.merged_into) out.merged_into = existing.merged_into;
+    if (!out.merged_at && existing.merged_at) out.merged_at = existing.merged_at;
+  }
+  return out;
+};
+
+/**
+ * Safe writer for incident rows. Re-fetches the current stored payload,
+ * unions the merge-relation fields onto the caller's `nextRaw`, then
+ * writes. Every code path that persists an incident SHOULD go through
+ * this — bare `setDatastoreItem(..., INCIDENTS, ...)` is a footgun.
+ *
+ * Accepts either an object or a JSON string (mirrors setDatastoreItem).
+ * Returns the same shape as setDatastoreItem.
+ */
+export const writeIncidentSafe = async (
+  id: string,
+  nextRaw: any,
+  orgId?: string,
+): Promise<{ success: boolean; error?: string }> => {
+  let nextObj: any = nextRaw;
+  if (typeof nextRaw === 'string') {
+    try { nextObj = JSON.parse(nextRaw); } catch { nextObj = {}; }
+  }
+  let existing: any = null;
+  try {
+    const res = await getDatastoreItem(id, DATASTORE_CATEGORIES.INCIDENTS, orgId);
+    if (res.success && res.item?.value) {
+      existing = JSON.parse(res.item.value);
+    }
+  } catch { /* first write, nothing to preserve */ }
+
+  const hardened = preserveRelationFields(existing, nextObj);
+  return setDatastoreItem(
+    id,
+    JSON.stringify(hardened),
+    DATASTORE_CATEGORIES.INCIDENTS,
+    orgId,
+  );
+};
+
+/**
+ * Reconcile `related_incidents` from a list of prior revisions. If a
+ * previous revision recorded a pointer that is missing from `currentRaw`,
+ * bring it back. Also unions `_merged_data_from`. Returns the reconciled
+ * payload and whether anything actually changed.
+ */
+export const reconcileRelatedFromRevisions = (
+  currentRaw: any,
+  revisions: any[],
+): { raw: any; changed: boolean } => {
+  if (!currentRaw || typeof currentRaw !== 'object' || !Array.isArray(revisions) || revisions.length === 0) {
+    return { raw: currentRaw, changed: false };
+  }
+  const currentPointers = getRelatedIncidents(currentRaw);
+  const currentFolded = new Set<string>(
+    Array.isArray(currentRaw._merged_data_from) ? currentRaw._merged_data_from : [],
+  );
+
+  const revPointers: RelatedIncidentPointer[] = [];
+  const revFolded = new Set<string>();
+  for (const rev of revisions) {
+    // Revisions may nest the payload under .value / .data / .body — try
+    // each shape leniently.
+    const candidates = [rev?.value, rev?.data, rev?.body, rev];
+    for (const c of candidates) {
+      let obj: any = c;
+      if (typeof obj === 'string') {
+        try { obj = JSON.parse(obj); } catch { continue; }
+      }
+      if (!obj || typeof obj !== 'object') continue;
+      const ptrs = getRelatedIncidents(obj);
+      for (const p of ptrs) revPointers.push(p);
+      if (Array.isArray(obj._merged_data_from)) {
+        for (const x of obj._merged_data_from) revFolded.add(x);
+      }
+      break;
+    }
+  }
+
+  const merged = unionPointers(currentPointers, revPointers);
+  const foldedUnion = new Set<string>([...currentFolded, ...revFolded]);
+
+  const pointersChanged =
+    merged.length !== currentPointers.length ||
+    merged.some(p => !currentPointers.find(cp => cp.id === p.id && cp.primary === p.primary));
+  const foldedChanged = foldedUnion.size !== currentFolded.size;
+
+  if (!pointersChanged && !foldedChanged) return { raw: currentRaw, changed: false };
+
+  const next: any = { ...currentRaw };
+  if (merged.length > 0) next.related_incidents = merged;
+  if (foldedUnion.size > 0) next._merged_data_from = Array.from(foldedUnion);
+  return { raw: next, changed: true };
+};
