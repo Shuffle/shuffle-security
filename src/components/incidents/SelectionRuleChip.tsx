@@ -334,15 +334,34 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
       pendingUpdateRef.current = false;
     };
 
+    // Selections that originate in a sandboxed same-origin iframe (e.g. the
+    // Email Thread body) don't reach the parent's selectionchange. Frames
+    // bridge them via a custom `selection-rule:external` event.
+    const handleExternalSelection = (evt: Event) => {
+      const detail = (evt as CustomEvent).detail as
+        | { x: number; y: number; text: string; field?: string }
+        | undefined;
+      if (!detail || !detail.text || detail.text.length < 3) return;
+      if (popoverOpen) return;
+      setChip({
+        x: detail.x,
+        y: detail.y,
+        text: detail.text.trim(),
+        field: detail.field || '*',
+      });
+    };
+
     document.addEventListener('selectionchange', handleSelectionChange);
     document.addEventListener('pointerdown', handlePointerDown);
     document.addEventListener('pointerup', handlePointerUp);
     document.addEventListener('pointercancel', handlePointerCancel);
+    window.addEventListener('selection-rule:external', handleExternalSelection);
     return () => {
       document.removeEventListener('selectionchange', handleSelectionChange);
       document.removeEventListener('pointerdown', handlePointerDown);
       document.removeEventListener('pointerup', handlePointerUp);
       document.removeEventListener('pointercancel', handlePointerCancel);
+      window.removeEventListener('selection-rule:external', handleExternalSelection);
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     };
   }, [chip, popoverOpen, evaluateSelection]);
