@@ -38,8 +38,9 @@ import {
   Button,
   Stack,
   IconButton,
+  CircularProgress,
 } from '@mui/material';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useSubOrgs } from '@/hooks/useSubOrgs';
 import { useDatastore } from '@/hooks/useDatastore';
@@ -49,6 +50,9 @@ import {
   type RoutingConditionOp,
   type RoutingActionType,
 } from '@/components/settings/IncidentRoutingEditor';
+import { getDatastoreByCategory, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
+import { evaluateRoutingRules, type IncidentEvaluationContext } from '@/utils/routingRuleEvaluator';
+import { useNavigate } from 'react-router-dom';
 
 type FieldChoice = {
   value: string;
@@ -191,6 +195,7 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
   const { userInfo } = useAuth();
   const { parentOrg } = useSubOrgs(userInfo?.active_org?.id);
   const routingOrgId = parentOrg?.id || userInfo?.active_org?.id;
+  const navigate = useNavigate();
 
   const { addItem } = useDatastore({
     category: ROUTING_DATASTORE_CATEGORY,
@@ -212,6 +217,13 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
   const [actionValue, setActionValue] = useState<string>('');
   const [ruleName, setRuleName] = useState<string>('');
 
+  // Post-save summary state — after a successful save we replace the form
+  // with a summary that scans the most recent incidents to show the user
+  // how many would have matched the rule they just created.
+  const [savedRule, setSavedRule] = useState<RoutingRule | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [scanResult, setScanResult] = useState<{ matched: number; scanned: number } | null>(null);
+
   const currentPreset = useMemo(
     () => ACTION_PRESETS.find((p) => p.key === actionKey) || ACTION_PRESETS[0],
     [actionKey],
@@ -220,6 +232,9 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
   const closeChip = useCallback(() => {
     setChip(null);
     setPopoverOpen(false);
+    setSavedRule(null);
+    setScanResult(null);
+    setScanning(false);
   }, []);
 
   // Selection listener
@@ -441,7 +456,57 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
       if (ok) {
         toast.success('Routing rule created');
         window.getSelection?.()?.removeAllRanges?.();
-        closeChip();
+        // Switch popover into "saved" state and kick off a retro scan
+        // against the most recent incidents so the user sees immediately
+        // how many past incidents this rule would have matched.
+        setSavedRule(rule);
+        setScanning(true);
+        setScanResult(null);
+        void (async () => {
+          try {
+            const orgId = userInfo?.active_org?.id;
+            if (!orgId) {
+              setScanning(false);
+              return;
+            }
+            const resp = await getDatastoreByCategory(
+              DATASTORE_CATEGORIES.INCIDENTS,
+              undefined,
+              undefined,
+              orgId,
+            );
+            const items = (resp as any)?.items || (resp as any)?.data || [];
+            let matched = 0;
+            let scanned = 0;
+            for (const it of items) {
+              try {
+                const raw = typeof it.value === 'string' ? JSON.parse(it.value) : it.value;
+                if (!raw || typeof raw !== 'object') continue;
+                scanned += 1;
+                const ctx: IncidentEvaluationContext = {
+                  title: raw.title,
+                  description: raw.message || raw.description,
+                  source: raw.source,
+                  severity: raw.severity,
+                  status: raw.status,
+                  labels: raw.labels,
+                  observables: raw.observables,
+                  stakeholders: raw.stakeholders,
+                  rawOCSF: raw.rawOCSF,
+                };
+                const hits = evaluateRoutingRules(ctx, [rule]);
+                if (hits.length > 0) matched += 1;
+              } catch {
+                /* skip malformed */
+              }
+            }
+            setScanResult({ matched, scanned });
+          } catch {
+            setScanResult({ matched: 0, scanned: 0 });
+          } finally {
+            setScanning(false);
+          }
+        })();
       } else {
         toast.error('Failed to save routing rule');
       }
@@ -522,12 +587,79 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
         >
           <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
             <Typography sx={{ fontSize: 13, fontWeight: 600 }}>
-              New routing rule
+              {savedRule ? 'Rule created' : 'New routing rule'}
             </Typography>
             <IconButton size="small" onClick={closeChip} sx={{ color: 'hsl(var(--muted-foreground))' }}>
               <X size={14} />
             </IconButton>
           </Stack>
+
+          {savedRule ? (
+            <Stack spacing={1.25}>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <CheckCircle2 size={16} color="hsl(142 71% 45%)" />
+                <Typography sx={{ fontSize: 12, color: 'hsl(var(--foreground))' }}>
+                  {savedRule.name}
+                </Typography>
+              </Stack>
+              <Box
+                sx={{
+                  p: 1.25,
+                  borderRadius: 1,
+                  bgcolor: 'hsl(var(--muted) / 0.4)',
+                  border: '1px solid hsl(var(--border))',
+                }}
+              >
+                {scanning ? (
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <CircularProgress size={12} />
+                    <Typography sx={{ fontSize: 12, color: 'hsl(var(--muted-foreground))' }}>
+                      Scanning recent incidents for matches...
+                    </Typography>
+                  </Stack>
+                ) : scanResult ? (
+                  <Typography sx={{ fontSize: 12, color: 'hsl(var(--foreground))' }}>
+                    Matched <strong>{scanResult.matched}</strong> of {scanResult.scanned} recent incidents.
+                    {scanResult.matched === 0 && (
+                      <Box component="span" sx={{ display: 'block', mt: 0.5, color: 'hsl(var(--muted-foreground))' }}>
+                        No historical matches — the rule will still run on new incidents.
+                      </Box>
+                    )}
+                  </Typography>
+                ) : (
+                  <Typography sx={{ fontSize: 12, color: 'hsl(var(--muted-foreground))' }}>
+                    Rule will apply to new incoming incidents.
+                  </Typography>
+                )}
+              </Box>
+              <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mt: 1 }}>
+                <Button
+                  size="small"
+                  onClick={() => {
+                    closeChip();
+                    navigate('/settings/incident-routing');
+                  }}
+                  sx={{ textTransform: 'none', color: 'hsl(var(--muted-foreground))', height: 36 }}
+                >
+                  Open routing rules
+                </Button>
+                <Button
+                  size="small"
+                  variant="contained"
+                  onClick={closeChip}
+                  sx={{
+                    textTransform: 'none',
+                    height: 36,
+                    bgcolor: 'hsl(var(--primary))',
+                    color: 'hsl(var(--primary-foreground))',
+                    '&:hover': { bgcolor: 'hsl(var(--primary))', filter: 'brightness(1.1)' },
+                  }}
+                >
+                  Done
+                </Button>
+              </Stack>
+            </Stack>
+          ) : (
 
           <Stack spacing={1.25}>
 
@@ -662,6 +794,7 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
               </Button>
             </Stack>
           </Stack>
+          )}
         </Paper>
       )}
     </>,
