@@ -52,6 +52,8 @@ import {
 } from '@/components/settings/IncidentRoutingEditor';
 import { getDatastoreByCategory, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import { evaluateRoutingRules, type IncidentEvaluationContext } from '@/utils/routingRuleEvaluator';
+import { applyRoutingActionsToRaw } from '@/lib/applyRoutingActionsToRaw';
+import { writeIncidentSafe } from '@/lib/incidentRelations';
 import { useNavigate } from 'react-router-dom';
 
 type FieldChoice = {
@@ -222,7 +224,7 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
   // how many would have matched the rule they just created.
   const [savedRule, setSavedRule] = useState<RoutingRule | null>(null);
   const [scanning, setScanning] = useState(false);
-  const [scanResult, setScanResult] = useState<{ matched: number; scanned: number } | null>(null);
+  const [scanResult, setScanResult] = useState<{ matched: number; scanned: number; applied: number; failed: number } | null>(null);
 
   const currentPreset = useMemo(
     () => ACTION_PRESETS.find((p) => p.key === actionKey) || ACTION_PRESETS[0],
@@ -478,6 +480,8 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
             const items = (resp as any)?.items || (resp as any)?.data || [];
             let matched = 0;
             let scanned = 0;
+            let applied = 0;
+            let failed = 0;
             for (const it of items) {
               try {
                 const raw = typeof it.value === 'string' ? JSON.parse(it.value) : it.value;
@@ -495,14 +499,28 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
                   rawOCSF: raw.rawOCSF,
                 };
                 const hits = evaluateRoutingRules(ctx, [rule]);
-                if (hits.length > 0) matched += 1;
+                if (hits.length === 0) continue;
+                matched += 1;
+                // Apply the rule end-to-end. Aggregate all matched actions
+                // (evaluateRoutingRules returns per-action hits) and write
+                // the updated payload back through writeIncidentSafe so we
+                // preserve related_incidents pointers.
+                const allActions = hits.flatMap((h: any) => Array.isArray(h?.rule?.actions) ? h.rule.actions : []);
+                if (allActions.length === 0) continue;
+                const result = applyRoutingActionsToRaw(raw, allActions, { ruleName: rule.name });
+                if (!result.changed) continue;
+                const incidentId = raw.id || it.key || it.id;
+                if (!incidentId) { failed += 1; continue; }
+                const write = await writeIncidentSafe(String(incidentId), result.next, orgId);
+                if (write.success) applied += 1;
+                else failed += 1;
               } catch {
                 /* skip malformed */
               }
             }
-            setScanResult({ matched, scanned });
+            setScanResult({ matched, scanned, applied, failed });
           } catch {
-            setScanResult({ matched: 0, scanned: 0 });
+            setScanResult({ matched: 0, scanned: 0, applied: 0, failed: 0 });
           } finally {
             setScanning(false);
           }
@@ -614,16 +632,23 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
                   <Stack direction="row" spacing={1} alignItems="center">
                     <CircularProgress size={12} />
                     <Typography sx={{ fontSize: 12, color: 'hsl(var(--muted-foreground))' }}>
-                      Scanning recent incidents for matches...
+                      Applying rule to recent incidents...
                     </Typography>
                   </Stack>
                 ) : scanResult ? (
                   <Typography sx={{ fontSize: 12, color: 'hsl(var(--foreground))' }}>
-                    Matched <strong>{scanResult.matched}</strong> of {scanResult.scanned} recent incidents.
-                    {scanResult.matched === 0 && (
-                      <Box component="span" sx={{ display: 'block', mt: 0.5, color: 'hsl(var(--muted-foreground))' }}>
-                        No historical matches — the rule will still run on new incidents.
-                      </Box>
+                    {scanResult.matched === 0 ? (
+                      <>
+                        No historical matches across {scanResult.scanned} recent incidents. The rule will run on new incoming incidents.
+                      </>
+                    ) : (
+                      <>
+                        Applied to <strong>{scanResult.applied}</strong> of {scanResult.matched} matching incident{scanResult.matched === 1 ? '' : 's'}
+                        {scanResult.failed > 0 && (
+                          <Box component="span" sx={{ color: 'hsl(0 84% 60%)' }}> ({scanResult.failed} failed)</Box>
+                        )}
+                        . The rule will also run on new incoming incidents.
+                      </>
                     )}
                   </Typography>
                 ) : (
