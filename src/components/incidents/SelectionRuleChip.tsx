@@ -47,9 +47,12 @@ import { useDatastore } from '@/hooks/useDatastore';
 import {
   ROUTING_DATASTORE_CATEGORY,
   type RoutingRule,
+  type RoutingCondition,
   type RoutingConditionOp,
+  type RoutingAction,
   type RoutingActionType,
 } from '@/components/settings/IncidentRoutingEditor';
+
 import { getDatastoreByCategory, DATASTORE_CATEGORIES } from '@/Shuffle-MCPs/datastore';
 import { evaluateRoutingRules, type IncidentEvaluationContext } from '@/utils/routingRuleEvaluator';
 import { applyRoutingActionsToRaw } from '@/lib/applyRoutingActionsToRaw';
@@ -223,8 +226,13 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
   // with a summary that scans the most recent incidents to show the user
   // how many would have matched the rule they just created.
   const [savedRule, setSavedRule] = useState<RoutingRule | null>(null);
+  // Duplicate detection state — when the user is about to create a rule that
+  // already exists (same condition + same action), we surface the existing
+  // rule and offer to run it now instead of creating a clone.
+  const [existingRule, setExistingRule] = useState<RoutingRule | null>(null);
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<{ matched: number; scanned: number; applied: number; failed: number } | null>(null);
+
 
   const currentPreset = useMemo(
     () => ACTION_PRESETS.find((p) => p.key === actionKey) || ACTION_PRESETS[0],
@@ -235,9 +243,97 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
     setChip(null);
     setPopoverOpen(false);
     setSavedRule(null);
+    setExistingRule(null);
     setScanResult(null);
     setScanning(false);
   }, []);
+
+  // Determine whether an identical rule already exists. "Identical" means the
+  // whole rule matches: same condition field/op/value and same action type/value.
+  const findDuplicateRule = useCallback(
+    (existingRules: RoutingRule[], candidateConditions: RoutingCondition[], candidateActions: RoutingAction[]): RoutingRule | null => {
+      for (const rule of existingRules) {
+        if (!rule.enabled) continue;
+        const conditions = rule.conditions || [];
+        if (conditions.length !== candidateConditions.length) continue;
+        const actions = rule.actions || [];
+        if (actions.length !== candidateActions.length) continue;
+
+        const conditionsMatch = conditions.every((c, i) => {
+          const cc = candidateConditions[i];
+          return c.field === cc.field && c.op === cc.op && (c.value || '') === (cc.value || '');
+        });
+        if (!conditionsMatch) continue;
+
+        const actionsMatch = actions.every((a, i) => {
+          const ca = candidateActions[i];
+          return a.type === ca.type && (a.value || '') === (ca.value || '') && (a.field || '') === (ca.field || '');
+        });
+        if (!actionsMatch) continue;
+
+        return rule;
+      }
+      return null;
+    },
+    [],
+  );
+
+  // Run a retroactive scan + apply for a given rule. Returns the scan summary.
+  const runRetroactiveScan = useCallback(
+    async (rule: RoutingRule): Promise<{ matched: number; scanned: number; applied: number; failed: number }> => {
+      const orgId = userInfo?.active_org?.id;
+      if (!orgId) return { matched: 0, scanned: 0, applied: 0, failed: 0 };
+      try {
+        const resp = await getDatastoreByCategory(
+          DATASTORE_CATEGORIES.INCIDENTS,
+          undefined,
+          undefined,
+          orgId,
+        );
+        const items = (resp as any)?.items || (resp as any)?.data || [];
+        let matched = 0;
+        let scanned = 0;
+        let applied = 0;
+        let failed = 0;
+        for (const it of items) {
+          try {
+            const raw = typeof it.value === 'string' ? JSON.parse(it.value) : it.value;
+            if (!raw || typeof raw !== 'object') continue;
+            scanned += 1;
+            const ctx: IncidentEvaluationContext = {
+              title: raw.title,
+              description: raw.message || raw.description,
+              source: raw.source,
+              severity: raw.severity,
+              status: raw.status,
+              labels: raw.labels,
+              observables: raw.observables,
+              stakeholders: raw.stakeholders,
+              rawOCSF: raw.rawOCSF,
+            };
+            const hits = evaluateRoutingRules(ctx, [rule]);
+            if (hits.length === 0) continue;
+            matched += 1;
+            const allActions = hits.flatMap((h: any) => (Array.isArray(h?.rule?.actions) ? h.rule.actions : []));
+            if (allActions.length === 0) continue;
+            const result = applyRoutingActionsToRaw(raw, allActions, { ruleName: rule.name });
+            if (!result.changed) continue;
+            const incidentId = raw.id || it.key || it.id;
+            if (!incidentId) { failed += 1; continue; }
+            const write = await writeIncidentSafe(String(incidentId), result.next, orgId);
+            if (write.success) applied += 1;
+            else failed += 1;
+          } catch {
+            /* skip malformed */
+          }
+        }
+        return { matched, scanned, applied, failed };
+      } catch {
+        return { matched: 0, scanned: 0, applied: 0, failed: 0 };
+      }
+    },
+    [userInfo?.active_org?.id],
+  );
 
   // Selection listener
   // The chip should only appear after the user has finished marking text
