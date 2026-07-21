@@ -584,9 +584,18 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
                 const raw = typeof it.value === 'string' ? JSON.parse(it.value) : it.value;
                 if (!raw || typeof raw !== 'object') continue;
                 scanned += 1;
+                // Mirror the incident detail view's normalization so the
+                // scan matches what the analyst actually sees: decode any
+                // base64 blobs (Gmail bodies) and strip HTML from the
+                // description before evaluating conditions. The evaluator
+                // also auto-probes base64 variants as a second safety net.
+                const rawDesc = raw.message || raw.description || '';
+                const decodedDesc = typeof rawDesc === 'string' ? decodeIfBase64(rawDesc) : rawDesc;
+                const plainDesc = typeof decodedDesc === 'string' ? htmlToPlainText(decodedDesc) : decodedDesc;
+                const rawTitle = typeof raw.title === 'string' ? decodeIfBase64(raw.title) : raw.title;
                 const ctx: IncidentEvaluationContext = {
-                  title: raw.title,
-                  description: raw.message || raw.description,
+                  title: rawTitle,
+                  description: plainDesc,
                   source: raw.source,
                   severity: raw.severity,
                   status: raw.status,
