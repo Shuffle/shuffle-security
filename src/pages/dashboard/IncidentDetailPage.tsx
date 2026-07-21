@@ -106,7 +106,7 @@ import {
   type RoutingAction,
   ACTION_TYPE_LABELS,
 } from '@/components/settings/IncidentRoutingEditor';
-import { evaluateRoutingRules, type IncidentEvaluationContext } from '@/utils/routingRuleEvaluator';
+import { evaluateRoutingRules, dedupeMatchesByActionTarget, type IncidentEvaluationContext } from '@/utils/routingRuleEvaluator';
 import { GitBranch as CallSplitIcon } from 'lucide-react';
 import { buildAgentContextBlock, stripAgentContextBlock } from '@/utils/agentContextBlock';
 import { MentionText } from '@/components/incidents/MentionText';
@@ -2030,7 +2030,7 @@ const IncidentDetailPage = () => {
     rawOCSF: incident?.rawOCSF,
   }), [editedTitle, editedMessage, editedSeverity, editedStatus, editedLabels, editedObservables, editedStakeholders, incident]);
   const routingMatches = useMemo(
-    () => evaluateRoutingRules(routingContext, routingRules),
+    () => dedupeMatchesByActionTarget(evaluateRoutingRules(routingContext, routingRules)),
     [routingContext, routingRules]
   );
 

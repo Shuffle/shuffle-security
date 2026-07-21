@@ -34,6 +34,7 @@ import { useAuth } from '@/context/AuthContext';
 import { toast } from '@/lib/toast';
 import {
   evaluateRoutingRules,
+  dedupeMatchesByActionTarget,
   type IncidentEvaluationContext,
   type RoutingRuleMatch,
 } from '@/utils/routingRuleEvaluator';
@@ -116,7 +117,7 @@ export const RoutingRulePreviewBanner = ({
   }, [items]);
 
   const matches: RoutingRuleMatch[] = useMemo(
-    () => evaluateRoutingRules(context, rules),
+    () => dedupeMatchesByActionTarget(evaluateRoutingRules(context, rules)),
     [context, rules]
   );
 

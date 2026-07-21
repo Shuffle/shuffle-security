@@ -316,3 +316,47 @@ export const evaluateRoutingRules = (
   out.sort((a, b) => (a.rule.priority || 0) - (b.rule.priority || 0));
   return out;
 };
+
+/**
+ * Return a "target key" for a routing action describing *what* on the incident
+ * would be mutated. Two actions with the same target key are competing to set
+ * the same thing — only the winner (from the highest-priority matched rule)
+ * should be shown or applied.
+ *
+ * Add-style actions (labels, comments) key on the value so distinct labels /
+ * comments coexist; only exact duplicates are collapsed.
+ */
+export const actionTargetKey = (a: { type: string; value?: string; field?: string; targetOrgId?: string }): string => {
+  switch (a.type) {
+    case 'suggest_move': return 'move';
+    case 'set_severity': return 'severity';
+    case 'set_status': return 'status';
+    case 'set_priority': return 'priority';
+    case 'assign_to': return 'assignee';
+    case 'add_label': return `label:${(a.value || '').trim().toLowerCase()}`;
+    case 'add_comment': return `comment:${(a.value || '').trim()}`;
+    case 'set_field': return `field:${(a.field || '').trim().toLowerCase()}`;
+    default: return `${a.type}:${a.value || ''}`;
+  }
+};
+
+/**
+ * Given priority-sorted matches (highest priority first), drop actions from
+ * lower-priority rules whose target has already been claimed by a higher
+ * one. Rules that end up with zero actions are dropped entirely.
+ */
+export const dedupeMatchesByActionTarget = (matches: RoutingRuleMatch[]): RoutingRuleMatch[] => {
+  const claimed = new Set<string>();
+  const out: RoutingRuleMatch[] = [];
+  for (const m of matches) {
+    const kept = m.rule.actions.filter((a) => {
+      const key = actionTargetKey(a);
+      if (claimed.has(key)) return false;
+      claimed.add(key);
+      return true;
+    });
+    if (kept.length === 0) continue;
+    out.push({ ...m, rule: { ...m.rule, actions: kept } });
+  }
+  return out;
+};
