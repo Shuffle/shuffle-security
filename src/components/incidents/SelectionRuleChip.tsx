@@ -742,21 +742,26 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
                     </Typography>
                   </Stack>
                 ) : scanResult ? (
-                  <Typography sx={{ fontSize: 12, color: 'hsl(var(--foreground))' }}>
-                    {scanResult.matched === 0 ? (
-                      <>
-                        No historical matches across {scanResult.scanned} recent incidents. The rule will run on new incoming incidents.
-                      </>
-                    ) : (
-                      <>
-                        Applied to <strong>{scanResult.applied}</strong> of {scanResult.matched} matching incident{scanResult.matched === 1 ? '' : 's'}
-                        {scanResult.failed > 0 && (
-                          <Box component="span" sx={{ color: 'hsl(0 84% 60%)' }}> ({scanResult.failed} failed)</Box>
-                        )}
-                        . The rule will also run on new incoming incidents.
-                      </>
-                    )}
-                  </Typography>
+                  <Stack spacing={0.75}>
+                    <Typography sx={{ fontSize: 12, color: 'hsl(var(--foreground))' }}>
+                      {scanResult.matched === 0 ? (
+                        <>
+                          Scanned <strong>{scanResult.scanned}</strong> recent incident{scanResult.scanned === 1 ? '' : 's'} — no historical matches.
+                        </>
+                      ) : (
+                        <>
+                          Scanned <strong>{scanResult.scanned}</strong>, matched <strong>{scanResult.matched}</strong>, applied to <strong>{scanResult.applied}</strong>
+                          {scanResult.failed > 0 && (
+                            <Box component="span" sx={{ color: 'hsl(0 84% 60%)' }}> ({scanResult.failed} failed)</Box>
+                          )}
+                          .
+                        </>
+                      )}
+                    </Typography>
+                    <Typography sx={{ fontSize: 11, color: 'hsl(var(--muted-foreground))' }}>
+                      Base64-encoded bodies (Gmail, Outlook) and HTML are decoded before matching. The rule will also run on new incoming incidents.
+                    </Typography>
+                  </Stack>
                 ) : (
                   <Typography sx={{ fontSize: 12, color: 'hsl(var(--muted-foreground))' }}>
                     Rule will apply to new incoming incidents.
