@@ -4788,6 +4788,11 @@ const IncidentDetailPage = () => {
         // hide the banner.
         const createdMs = incident?.createdTs || 0;
         if (createdMs && Date.now() - createdMs < 10 * 60 * 1000) return null;
+        // If auto-recovery succeeded (no fields still missing and payload parses
+        // as OCSF), stay silent — the reconstruction is transparent to the user.
+        const stillMissing = ocsfFallbackInfo.stillMissingFields || [];
+        const stillHasProblem = stillMissing.length > 0 || ocsfFallbackInfo.reason === 'not-ocsf';
+        if (!stillHasProblem) return null;
         return true;
       })() && (
         <Box sx={{
