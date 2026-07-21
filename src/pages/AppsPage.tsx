@@ -397,6 +397,7 @@ export default function AppsPage() {
                   trackPredefinedEvent(GA_EVENTS.APP_VIEWED, app.name);
                   navigate(`/apps/${encodeURIComponent(app.name.toLowerCase().replace(/[\s]+/g, '_'))}`);
                 }}
+                onCreateNewApp={() => openAddApp('apps_search_empty')}
               />
             </Box>
           </motion.div>
