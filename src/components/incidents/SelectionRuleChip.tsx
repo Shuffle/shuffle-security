@@ -58,6 +58,42 @@ import { evaluateRoutingRules, type IncidentEvaluationContext } from '@/utils/ro
 import { applyRoutingActionsToRaw } from '@/lib/applyRoutingActionsToRaw';
 import { writeIncidentSafe } from '@/lib/incidentRelations';
 import { decodeIfBase64, htmlToPlainText } from '@/lib/utils';
+import { repairCorruptedOcsfFields } from '@/lib/translationFallback';
+
+/**
+ * Normalize a raw datastore incident payload into the same shape the incident
+ * detail page uses when evaluating routing rules. This mirrors the detail
+ * view's read pipeline so the retroactive scan finds the same matches the
+ * analyst would see when opening the incident:
+ *   1. Repair corrupted OCSF translation fields (e.g. header arrays leaked
+ *      into title/assignee) in place.
+ *   2. Fall back to nested `rawOCSF.*` values when top-level fields are
+ *      missing or clearly wrong.
+ *   3. Decode base64 (Gmail bodies) and strip HTML from title/description
+ *      so plain-text conditions match rendered text, not markup.
+ */
+const buildScanContext = (raw: any): IncidentEvaluationContext => {
+  // Repair in place so nested and top-level fields agree before we read.
+  try { repairCorruptedOcsfFields(raw); } catch { /* best-effort */ }
+  const ocsf = raw?.rawOCSF || {};
+  const pickTitle = raw?.title || ocsf.title || ocsf.subject || ocsf.name || '';
+  const pickDesc = raw?.message || raw?.description || ocsf.desc || ocsf.message || ocsf.body || '';
+  const decodedTitle = typeof pickTitle === 'string' ? decodeIfBase64(pickTitle) : pickTitle;
+  const plainTitle = typeof decodedTitle === 'string' ? htmlToPlainText(decodedTitle) : decodedTitle;
+  const decodedDesc = typeof pickDesc === 'string' ? decodeIfBase64(pickDesc) : pickDesc;
+  const plainDesc = typeof decodedDesc === 'string' ? htmlToPlainText(decodedDesc) : decodedDesc;
+  return {
+    title: plainTitle,
+    description: plainDesc,
+    source: raw?.source,
+    severity: raw?.severity,
+    status: raw?.status,
+    labels: raw?.labels,
+    observables: raw?.observables,
+    stakeholders: raw?.stakeholders,
+    rawOCSF: raw?.rawOCSF,
+  };
+};
 import { useNavigate } from 'react-router-dom';
 
 type FieldChoice = {
@@ -301,17 +337,7 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
             const raw = typeof it.value === 'string' ? JSON.parse(it.value) : it.value;
             if (!raw || typeof raw !== 'object') continue;
             scanned += 1;
-            const ctx: IncidentEvaluationContext = {
-              title: raw.title,
-              description: raw.message || raw.description,
-              source: raw.source,
-              severity: raw.severity,
-              status: raw.status,
-              labels: raw.labels,
-              observables: raw.observables,
-              stakeholders: raw.stakeholders,
-              rawOCSF: raw.rawOCSF,
-            };
+            const ctx = buildScanContext(raw);
             const hits = evaluateRoutingRules(ctx, [rule]);
             if (hits.length === 0) continue;
             matched += 1;
@@ -584,26 +610,11 @@ export const SelectionRuleChip = ({ incidentId }: SelectionRuleChipProps) => {
                 const raw = typeof it.value === 'string' ? JSON.parse(it.value) : it.value;
                 if (!raw || typeof raw !== 'object') continue;
                 scanned += 1;
-                // Mirror the incident detail view's normalization so the
-                // scan matches what the analyst actually sees: decode any
-                // base64 blobs (Gmail bodies) and strip HTML from the
-                // description before evaluating conditions. The evaluator
-                // also auto-probes base64 variants as a second safety net.
-                const rawDesc = raw.message || raw.description || '';
-                const decodedDesc = typeof rawDesc === 'string' ? decodeIfBase64(rawDesc) : rawDesc;
-                const plainDesc = typeof decodedDesc === 'string' ? htmlToPlainText(decodedDesc) : decodedDesc;
-                const rawTitle = typeof raw.title === 'string' ? decodeIfBase64(raw.title) : raw.title;
-                const ctx: IncidentEvaluationContext = {
-                  title: rawTitle,
-                  description: plainDesc,
-                  source: raw.source,
-                  severity: raw.severity,
-                  status: raw.status,
-                  labels: raw.labels,
-                  observables: raw.observables,
-                  stakeholders: raw.stakeholders,
-                  rawOCSF: raw.rawOCSF,
-                };
+                // Mirror the incident detail view's normalization (repair
+                // corrupted OCSF fields, fall back to rawOCSF.*, decode
+                // base64, strip HTML) so this scan finds the same matches
+                // the analyst would see when opening each incident.
+                const ctx = buildScanContext(raw);
                 const hits = evaluateRoutingRules(ctx, [rule]);
                 if (hits.length === 0) continue;
                 matched += 1;
