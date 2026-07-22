@@ -1267,7 +1267,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
       })()}
 
       {/* Raw JSON */}
-      {open && (
+      {open && !isProcessing && item.details != null && item.details !== '' && (
         <Box sx={{ px: 4, pb: 2 }}>
           <Box
             sx={{
