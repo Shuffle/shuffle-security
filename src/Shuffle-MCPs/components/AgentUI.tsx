@@ -775,9 +775,14 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
   const questions: { question: string; index: number; preAnswer?: string }[] = [];
   if (item.category === 'ask' || details?.action === 'ask') {
     for (const f of details?.fields || []) {
-      if (f.key === 'question' && f.value) {
+      // Some upstream payloads emit questions with an empty `key` and the
+      // question text in `value` — treat those as questions too, otherwise
+      // the row falls through to the generic approve/deny prompt.
+      const k = (f?.key || '').toLowerCase();
+      const isQuestionField = (k === 'question' || k === '') && !!f?.value;
+      if (isQuestionField) {
         const preAnswer = typeof (f as any).answer === 'string' ? (f as any).answer.trim() : '';
-        questions.push({ question: f.value, index: questions.length + 1, preAnswer: preAnswer || undefined });
+        questions.push({ question: f.value as string, index: questions.length + 1, preAnswer: preAnswer || undefined });
       }
     }
   }
