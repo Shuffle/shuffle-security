@@ -680,7 +680,7 @@ const StatusIcon: React.FC<{ status?: string }> = ({ status }) => {
     node = <ErrorIcon size={20} color={'hsl(var(--destructive))'} />;
     label = s === 'ABORTED' ? 'Aborted' : 'Failed';
   } else if (s === 'IGNORED' || s === 'IGNORE') {
-    node = <WarningIcon size={20} />;
+    node = <WarningIcon size={20} color={STATUS_COLORS.warning} />;
     label = 'Ignored — skipped after run finished';
   } else {
     node = <HourglassDisabledIcon size={20} color={'hsl(var(--muted-foreground))'} />;
