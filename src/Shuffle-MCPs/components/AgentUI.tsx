@@ -4529,32 +4529,41 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 </Box>
               ) : (
                 <>
-                  {timeline.map((item, i) => (
-                    <TimelineRow
-                      key={i}
-                      item={item}
-                      index={i}
-                      open={openIndexes.has(i)}
-                      onToggle={() => toggleOpen(i)}
-                      appsById={appsById}
-                      totalDuration={totalDuration}
-                      originalStartTime={originalStartTime}
-                      maxWidth={210}
-                      questionAnswers={questionAnswers}
-                      setQuestionAnswers={setQuestionAnswers}
-                      onSubmitQuestions={submitQuestions}
-                      onRerunAgent={rerunAgent}
-                      onRerunDecision={rerunDecision}
-                      agentRequestLoading={agentRequestLoading}
-                      getFormUrl={getFormUrl}
-                      runFinished={detailedRunFinished}
-                      onAuthenticateApp={(name, id) => setAuthDrawerApp({ name, id })}
-                      onRefreshAuthenticatedApps={() => { loadAuthenticatedApps(); }}
-                      isAppAuthenticated={isAppAuthenticated}
-                      authAppsLoading={authAppsLoading}
-                      highlight={highlightedIndex === i}
-                    />
-                  ))}
+                  {(() => {
+                    const rerunIdx = rerunningDecisionId
+                      ? timeline.findIndex(
+                          (t) => (t as any)?.details?.run_details?.id === rerunningDecisionId,
+                        )
+                      : -1;
+                    return timeline.map((item, i) => (
+                      <TimelineRow
+                        key={i}
+                        item={item}
+                        index={i}
+                        open={openIndexes.has(i)}
+                        onToggle={() => toggleOpen(i)}
+                        appsById={appsById}
+                        totalDuration={totalDuration}
+                        originalStartTime={originalStartTime}
+                        maxWidth={210}
+                        questionAnswers={questionAnswers}
+                        setQuestionAnswers={setQuestionAnswers}
+                        onSubmitQuestions={submitQuestions}
+                        onRerunAgent={rerunAgent}
+                        onRerunDecision={rerunDecision}
+                        agentRequestLoading={agentRequestLoading}
+                        getFormUrl={getFormUrl}
+                        runFinished={detailedRunFinished}
+                        onAuthenticateApp={(name, id) => setAuthDrawerApp({ name, id })}
+                        onRefreshAuthenticatedApps={() => { loadAuthenticatedApps(); }}
+                        isAppAuthenticated={isAppAuthenticated}
+                        authAppsLoading={authAppsLoading}
+                        highlight={highlightedIndex === i}
+                        rerunningDecisionId={rerunningDecisionId}
+                        dimmedByRerun={rerunIdx >= 0 && i > rerunIdx}
+                      />
+                    ));
+                  })()}
                   {detailedRunFinished && (
                     <Box sx={{
                       borderTop: '1px solid hsl(var(--border))',
