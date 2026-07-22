@@ -164,6 +164,12 @@ const getQuestionFieldText = (field: any, decision?: Partial<AgentDecision> | nu
   return '';
 };
 
+const truncateReason = (reason?: string, maxLength = 280): string => {
+  if (!reason) return '';
+  if (reason.length <= maxLength) return reason;
+  return reason.slice(0, maxLength).replace(/\s+\S*$/, '') + '…';
+};
+
 /**
  * Render the agent's "Run finished" answer:
  *  - If the whole text (or its sole code fence) is a JSON object/array → JsonView
