@@ -1041,6 +1041,11 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
             };
             return (
               <>
+                {details?.reason && (
+                  <Box sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.4, mb: 1.5 }}>
+                    {truncateReason(details.reason)}
+                  </Box>
+                )}
                 {questions.map((q, qi) => {
                   const value = questionAnswers[q.question]?.value || '';
                   const isMissing = submitAttempted && !value;
