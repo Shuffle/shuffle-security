@@ -721,6 +721,11 @@ interface TimelineRowProps {
   /** When true, briefly draw attention to this row + its output. Used after
    *  a "jump to evidence" click from the diagnosis banner. */
   highlight?: boolean;
+  /** Optimistic UI: which decision the user just clicked Rerun on. That row
+   *  shows a spinner and everything after it is dimmed. */
+  rerunningDecisionId?: string | null;
+  /** True when this row sits after the decision the user just rerun. */
+  dimmedByRerun?: boolean;
 }
 
 const TimelineRow: React.FC<TimelineRowProps> = ({
