@@ -149,6 +149,21 @@ const stripSingleCodeFence = (raw: string): string => {
   return m ? m[1] : raw;
 };
 
+const isAskDecision = (decision?: Partial<AgentDecision> | null, category?: string): boolean => {
+  const action = String(decision?.action || '').toLowerCase();
+  const decisionCategory = String(decision?.category || category || '').toLowerCase();
+  return action === 'ask' || action === 'question' || decisionCategory === 'ask' || decisionCategory === 'question';
+};
+
+const getQuestionFieldText = (field: any, decision?: Partial<AgentDecision> | null, category?: string): string => {
+  const key = String(field?.key || '').trim().toLowerCase();
+  const value = typeof field?.value === 'string' ? field.value.trim() : '';
+  if (!value) return '';
+  if (key === 'question') return value;
+  if (!key && isAskDecision(decision, category)) return value;
+  return '';
+};
+
 /**
  * Render the agent's "Run finished" answer:
  *  - If the whole text (or its sole code fence) is a JSON object/array → JsonView
@@ -730,7 +745,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
   if (!isProcessing) {
     if (details?.action === 'finish' || item.category === 'finish' || details?.action === 'finalise') {
       displayType = 'finalise';
-    } else if (item.category === 'ask' || details?.action === 'ask') {
+    } else if (isAskDecision(details, item.category)) {
       displayType = 'question';
     } else if (details?.action === 'add_tool') {
       displayType = 'add tool';
@@ -746,8 +761,8 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
   let toolApp: AgentUIApp | undefined;
   const GENERIC_TOOLS = new Set(['api', 'http', 'https', 'webhook', 'singul', 'core', 'shuffle_tools', 'shuffle-tools']);
   const skipToolIcon =
-    item.category === 'finalise' || item.category === 'finish' || item.category === 'ask' ||
-    details?.action === 'finalise' || details?.action === 'finish' || details?.action === 'ask';
+    item.category === 'finalise' || item.category === 'finish' || isAskDecision(details, item.category) ||
+    details?.action === 'finalise' || details?.action === 'finish';
   if (!skipToolIcon && details?.tool && typeof details.tool === 'string') {
     const raw = details.tool;
     let tn = raw.toLowerCase().replace(/[\s-]+/g, '_');
@@ -773,16 +788,12 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
   // payload already carries an `answer` value on the field itself, or the
   // user has typed an answer locally in `questionAnswers`.
   const questions: { question: string; index: number; preAnswer?: string }[] = [];
-  if (item.category === 'ask' || details?.action === 'ask') {
+  if (isAskDecision(details, item.category)) {
     for (const f of details?.fields || []) {
-      // Some upstream payloads emit questions with an empty `key` and the
-      // question text in `value` — treat those as questions too, otherwise
-      // the row falls through to the generic approve/deny prompt.
-      const k = (f?.key || '').toLowerCase();
-      const isQuestionField = (k === 'question' || k === '') && !!f?.value;
-      if (isQuestionField) {
+      const questionText = getQuestionFieldText(f, details, item.category);
+      if (questionText) {
         const preAnswer = typeof (f as any).answer === 'string' ? (f as any).answer.trim() : '';
-        questions.push({ question: f.value as string, index: questions.length + 1, preAnswer: preAnswer || undefined });
+        questions.push({ question: questionText, index: questions.length + 1, preAnswer: preAnswer || undefined });
       }
     }
   }
@@ -934,7 +945,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
         >
           {item.type === 'decision'
             && details?.run_details?.status === 'WAITING'
-            && (item.category === 'ask' || details?.action === 'ask')
+            && isAskDecision(details, item.category)
             && questions.length === 0 && (
             <>
               <Tooltip title="Approve this step">
@@ -972,7 +983,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
             const action = details?.action;
             const cat = item.category;
             const isApiAction =
-              action !== 'ask' && cat !== 'ask' &&
+              !isAskDecision(details, cat) &&
               action !== 'finish' && action !== 'finalise' && cat !== 'finish' && cat !== 'finalise' &&
               cat !== 'processing' &&
               action !== 'add_tool';
@@ -4216,15 +4227,16 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   }
                   // Detect a pending ASK decision (agent waiting on a user answer)
                   const pendingAsk = (agentData?.decisions || []).slice().reverse().find((d) => {
-                    const isAsk = d.category === 'ask' || d.action === 'ask';
+                    const isAsk = isAskDecision(d, d.category);
                     const st = (d.run_details?.status || '').toUpperCase();
                     return isAsk && (st === 'RUNNING' || st === 'WAITING');
                   });
                   const pendingQuestions: { question: string; index: number }[] = [];
                   if (pendingAsk) {
                     for (const f of pendingAsk.fields || []) {
-                      if (f.key === 'question' && f.value) {
-                        pendingQuestions.push({ question: f.value, index: pendingQuestions.length + 1 });
+                      const questionText = getQuestionFieldText(f, pendingAsk, pendingAsk.category);
+                      if (questionText) {
+                        pendingQuestions.push({ question: questionText, index: pendingQuestions.length + 1 });
                       }
                     }
                   }
