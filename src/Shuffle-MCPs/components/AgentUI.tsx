@@ -2766,6 +2766,7 @@ const AgentUI: React.FC<AgentUIProps> = ({
         });
       }
     };
+    let lastWasFinalise = false;
     for (const it of items) {
       if (it.type === 'decision') {
         const decStart = it.start_time || 0;
@@ -2774,13 +2775,16 @@ const AgentUI: React.FC<AgentUIProps> = ({
         pushThinking(prevDecEnd, decStart);
         withProcessing.push(it);
         prevDecEnd = it.end_time || decStart || prevDecEnd;
+        lastWasFinalise = isFinalise(it);
       } else {
         withProcessing.push(it);
       }
     }
     // Tail: if the last decision finished well before the run ended and there
-    // was no Finalise, surface that trailing dead time too.
-    if (runEnd > 0) pushThinking(prevDecEnd, runEnd);
+    // was no Finalise, surface that trailing dead time too. Skip when the run
+    // already ended in a Finalise — nothing is "processing" after the finish.
+    if (runEnd > 0 && !lastWasFinalise) pushThinking(prevDecEnd, runEnd);
+
     items.length = 0;
     items.push(...withProcessing);
 
