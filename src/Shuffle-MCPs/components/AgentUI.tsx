@@ -164,6 +164,12 @@ const getQuestionFieldText = (field: any, decision?: Partial<AgentDecision> | nu
   return '';
 };
 
+const truncateReason = (reason?: string, maxLength = 280): string => {
+  if (!reason) return '';
+  if (reason.length <= maxLength) return reason;
+  return reason.slice(0, maxLength).replace(/\s+\S*$/, '') + '…';
+};
+
 /**
  * Render the agent's "Run finished" answer:
  *  - If the whole text (or its sole code fence) is a JSON object/array → JsonView
@@ -1035,6 +1041,11 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
             };
             return (
               <>
+                {details?.reason && (
+                  <Box sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.4, mb: 1.5 }}>
+                    {truncateReason(details.reason)}
+                  </Box>
+                )}
                 {questions.map((q, qi) => {
                   const value = questionAnswers[q.question]?.value || '';
                   const isMissing = submitAttempted && !value;
@@ -4323,6 +4334,11 @@ const AgentUI: React.FC<AgentUIProps> = ({
                           };
                           return (
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                              {pendingAsk?.reason && (
+                                <Box sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.4 }}>
+                                  {truncateReason(pendingAsk.reason)}
+                                </Box>
+                              )}
                               {pendingQuestions.map((q, qi) => {
                                 const value = questionAnswers[q.question]?.value || '';
                                 const isMissing = simpleSubmitAttempted && !value;
