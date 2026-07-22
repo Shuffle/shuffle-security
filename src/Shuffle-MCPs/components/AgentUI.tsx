@@ -4408,11 +4408,11 @@ const AgentUI: React.FC<AgentUIProps> = ({
                         })()
                       ) : !finishAnswer && isRunning ? (
                         <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))' }}>
-                          Waiting for the agent to produce the first step.
+                          Agent is running…
                         </Typography>
                       ) : !finishAnswer ? (
                         <Typography sx={{ fontSize: '0.85rem', color: 'hsl(var(--muted-foreground))' }}>
-                          No final answer was returned. Open Detailed to inspect each step.
+                          No final answer returned.
                         </Typography>
                       ) : null}
 
