@@ -1531,6 +1531,14 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const [appSearchOpen, setAppSearchOpen] = useState(false);
   const [authDrawerApp, setAuthDrawerApp] = useState<{ name: string; id?: string | null } | null>(null);
   const [agentRequestLoading, setAgentRequestLoading] = useState(false);
+  // Optimistic UI: track which decision the user just clicked Rerun on so we
+  // can immediately hide later decisions and show a spinner on that row while
+  // the backend catches up. Cleared when the poll returns fresh decisions or
+  // after a safety timeout.
+  const [rerunningDecisionId, setRerunningDecisionId] = useState<string | null>(null);
+  const rerunDecisionsSigRef = useRef<string>('');
+  // Optimistic UI for the top-level "Rerun agent" button.
+  const [rerunAgentPending, setRerunAgentPending] = useState(false);
   const [execution, setExecution] = useState<ExecutionData | null>(null);
   const [agentData, setAgentData] = useState<{ decisions?: AgentDecision[]; original_input?: string; status?: string; started_at?: number; completed_at?: number; [k: string]: any }>({});
   const [agentActionResult, setAgentActionResult] = useState<any>(null);
