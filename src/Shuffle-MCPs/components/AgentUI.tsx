@@ -671,7 +671,7 @@ const StatusIcon: React.FC<{ status?: string }> = ({ status }) => {
     node = <CheckCircleIcon size={20} />;
     label = 'Finished successfully';
   } else if (s === 'ABORTED' || s === 'FAILURE') {
-    node = <ErrorIcon size={20} />;
+    node = <ErrorIcon size={20} color={'hsl(var(--destructive))'} />;
     label = s === 'ABORTED' ? 'Aborted' : 'Failed';
   } else if (s === 'IGNORED' || s === 'IGNORE') {
     node = <WarningIcon size={20} />;
