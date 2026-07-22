@@ -842,6 +842,11 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
           ? STATUS_COLORS.error
           : STATUS_COLORS.running;
 
+  const isRerunTarget =
+    !!rerunningDecisionId &&
+    item.type === 'decision' &&
+    details?.run_details?.id === rerunningDecisionId;
+
   return (
     <Box
       data-timeline-index={index}
@@ -849,13 +854,21 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
         borderTop: index === 0 ? 'none' : '1px solid hsl(var(--border))',
         bgcolor: highlight
           ? 'hsla(var(--severity-medium) / 0.12)'
-          : open
-            ? 'hsl(var(--muted) / 0.3)'
-            : 'transparent',
-        transition: 'background 0.6s ease, box-shadow 0.6s ease',
+          : isRerunTarget
+            ? 'hsla(var(--primary) / 0.08)'
+            : open
+              ? 'hsl(var(--muted) / 0.3)'
+              : 'transparent',
+        transition: 'background 0.6s ease, box-shadow 0.6s ease, opacity 0.2s ease',
         scrollMarginTop: 96,
         position: 'relative',
-        boxShadow: highlight ? 'inset 0 0 0 2px hsla(var(--severity-medium) / 0.55)' : 'none',
+        boxShadow: highlight
+          ? 'inset 0 0 0 2px hsla(var(--severity-medium) / 0.55)'
+          : isRerunTarget
+            ? 'inset 0 0 0 1px hsla(var(--primary) / 0.5)'
+            : 'none',
+        opacity: dimmedByRerun ? 0.35 : 1,
+        pointerEvents: dimmedByRerun ? 'none' : 'auto',
       }}
     >
       <Box
@@ -875,7 +888,9 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
         }}
       >
         <Box sx={{ width: 24, display: 'flex', justifyContent: 'center' }}>
-          {isProcessing ? (
+          {isRerunTarget ? (
+            <CircularProgress size={14} sx={{ color: 'hsl(var(--primary))' }} />
+          ) : isProcessing ? (
             <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'hsl(var(--muted-foreground) / 0.5)' }} />
           ) : (
             <StatusIcon status={effectiveStatus} />
