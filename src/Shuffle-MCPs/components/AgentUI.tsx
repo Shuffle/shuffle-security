@@ -4334,6 +4334,11 @@ const AgentUI: React.FC<AgentUIProps> = ({
                           };
                           return (
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                              {pendingAsk?.reason && (
+                                <Box sx={{ fontSize: '0.8rem', color: 'hsl(var(--muted-foreground))', lineHeight: 1.4 }}>
+                                  {truncateReason(pendingAsk.reason)}
+                                </Box>
+                              )}
                               {pendingQuestions.map((q, qi) => {
                                 const value = questionAnswers[q.question]?.value || '';
                                 const isMissing = simpleSubmitAttempted && !value;
