@@ -2505,6 +2505,10 @@ const AgentUI: React.FC<AgentUIProps> = ({
 
   const rerunAgent = useCallback(() => {
     const input = resolveRunInput();
+    // Optimistic feedback for the button — flip immediately, cleared when
+    // the new execution loads (see effect below).
+    setRerunAgentPending(true);
+    toast({ title: 'Rerunning agent', description: 'Starting a new run with the same prompt and tools.' });
     if (input && typeof input === 'string') {
       setActionInput(input);
     }
@@ -2526,7 +2530,17 @@ const AgentUI: React.FC<AgentUIProps> = ({
     if (input && typeof input === 'string' && input.trim().length >= 6) {
       submitInput(input);
     }
+    // Safety timeout in case submitInput never produces a new execution.
+    setTimeout(() => setRerunAgentPending(false), 8000);
   }, [resolveRunInput, executionApps, setSearchParams, disableStartTab, submitInput]);
+
+  // Clear the top-level rerun-pending flag as soon as we're loading or a
+  // new execution has taken over.
+  useEffect(() => {
+    if (rerunAgentPending && (agentRequestLoading || execution?.execution_id)) {
+      setRerunAgentPending(false);
+    }
+  }, [rerunAgentPending, agentRequestLoading, execution?.execution_id]);
 
   // ── Abort the currently running agent execution ──
   // If the agent has not produced an execution_id yet (i.e. the initial
