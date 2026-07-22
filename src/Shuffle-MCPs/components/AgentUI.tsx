@@ -2635,6 +2635,14 @@ const AgentUI: React.FC<AgentUIProps> = ({
     const body: any = { ...agentActionResult.action };
     body.source_execution = execution.execution_id;
     body.source_workflow = execution.workflow?.id;
+    // Optimistic feedback — flip the UI *before* the network round-trip so
+    // the click feels instantaneous. Poll updates will overwrite these
+    // hints with real backend state.
+    setRerunningDecisionId(decisionId);
+    rerunDecisionsSigRef.current = JSON.stringify(
+      (agentData?.decisions || []).map((d: any) => d?.run_details?.id || ''),
+    );
+    toast({ title: 'Rerunning decision', description: 'The agent will continue from this step.' });
     setAgentRequestLoading(true);
     try {
       const resp = await fetch(resolveUrl(`/api/v1/apps/agent/run?rerun=true&decision_id=${encodeURIComponent(decisionId)}`), {
@@ -2646,17 +2654,33 @@ const AgentUI: React.FC<AgentUIProps> = ({
       const json = await resp.json().catch(() => ({}));
       if (json?.success === false) {
         toast({ title: 'Rerun failed', description: json.reason || 'Try again later.', variant: 'destructive' });
+        setRerunningDecisionId(null);
       } else {
-        toast({ title: 'Rerunning decision', description: 'The agent will continue from this step.' });
         setTimeout(() => getExecution(execution.execution_id!, execution.authorization!), 800);
         setTimeout(() => getExecution(execution.execution_id!, execution.authorization!), 5000);
       }
     } catch (err) {
       toast({ title: 'Network error', description: String(err), variant: 'destructive' });
+      setRerunningDecisionId(null);
     } finally {
       setAgentRequestLoading(false);
     }
-  }, [execution, agentActionResult, getExecution]);
+  }, [execution, agentActionResult, agentData, getExecution, resolveUrl, resolveHeaders]);
+
+  // Clear the optimistic rerun flag once the backend reflects the change
+  // (decisions list signature changes) or after a safety timeout.
+  useEffect(() => {
+    if (!rerunningDecisionId) return;
+    const sig = JSON.stringify(
+      (agentData?.decisions || []).map((d: any) => d?.run_details?.id || ''),
+    );
+    if (sig !== rerunDecisionsSigRef.current) {
+      setRerunningDecisionId(null);
+      return;
+    }
+    const t = setTimeout(() => setRerunningDecisionId(null), 20000);
+    return () => clearTimeout(t);
+  }, [agentData?.decisions, rerunningDecisionId]);
 
   // ── Build timeline ──
   const { timeline, originalStartTime, totalDuration, finishDecisionId, finishAnswer } = useMemo(() => {
