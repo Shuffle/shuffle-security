@@ -721,6 +721,11 @@ interface TimelineRowProps {
   /** When true, briefly draw attention to this row + its output. Used after
    *  a "jump to evidence" click from the diagnosis banner. */
   highlight?: boolean;
+  /** Optimistic UI: which decision the user just clicked Rerun on. That row
+   *  shows a spinner and everything after it is dimmed. */
+  rerunningDecisionId?: string | null;
+  /** True when this row sits after the decision the user just rerun. */
+  dimmedByRerun?: boolean;
 }
 
 const TimelineRow: React.FC<TimelineRowProps> = ({
@@ -728,6 +733,7 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
   maxWidth, questionAnswers, setQuestionAnswers, onSubmitQuestions,
   onRerunAgent, onRerunDecision, agentRequestLoading, getFormUrl, runFinished,
   onAuthenticateApp, onRefreshAuthenticatedApps, isAppAuthenticated, authAppsLoading = false, highlight = false,
+  rerunningDecisionId = null, dimmedByRerun = false,
 }) => {
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const validate = validateJson(item.details);
@@ -836,6 +842,11 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
           ? STATUS_COLORS.error
           : STATUS_COLORS.running;
 
+  const isRerunTarget =
+    !!rerunningDecisionId &&
+    item.type === 'decision' &&
+    details?.run_details?.id === rerunningDecisionId;
+
   return (
     <Box
       data-timeline-index={index}
@@ -843,13 +854,21 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
         borderTop: index === 0 ? 'none' : '1px solid hsl(var(--border))',
         bgcolor: highlight
           ? 'hsla(var(--severity-medium) / 0.12)'
-          : open
-            ? 'hsl(var(--muted) / 0.3)'
-            : 'transparent',
-        transition: 'background 0.6s ease, box-shadow 0.6s ease',
+          : isRerunTarget
+            ? 'hsla(var(--primary) / 0.08)'
+            : open
+              ? 'hsl(var(--muted) / 0.3)'
+              : 'transparent',
+        transition: 'background 0.6s ease, box-shadow 0.6s ease, opacity 0.2s ease',
         scrollMarginTop: 96,
         position: 'relative',
-        boxShadow: highlight ? 'inset 0 0 0 2px hsla(var(--severity-medium) / 0.55)' : 'none',
+        boxShadow: highlight
+          ? 'inset 0 0 0 2px hsla(var(--severity-medium) / 0.55)'
+          : isRerunTarget
+            ? 'inset 0 0 0 1px hsla(var(--primary) / 0.5)'
+            : 'none',
+        opacity: dimmedByRerun ? 0.35 : 1,
+        pointerEvents: dimmedByRerun ? 'none' : 'auto',
       }}
     >
       <Box
@@ -869,7 +888,9 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
         }}
       >
         <Box sx={{ width: 24, display: 'flex', justifyContent: 'center' }}>
-          {isProcessing ? (
+          {isRerunTarget ? (
+            <CircularProgress size={14} sx={{ color: 'hsl(var(--primary))' }} />
+          ) : isProcessing ? (
             <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'hsl(var(--muted-foreground) / 0.5)' }} />
           ) : (
             <StatusIcon status={effectiveStatus} />
@@ -1001,15 +1022,17 @@ const TimelineRow: React.FC<TimelineRowProps> = ({
               action !== 'add_tool';
             if (!isApiAction) return null;
             return (
-              <Tooltip title="Rerun from this decision (clears all decisions after it)">
+              <Tooltip title={isRerunTarget ? 'Rerun starting…' : 'Rerun from this decision (clears all decisions after it)'}>
                 <span>
                   <IconButton
                     size="small"
-                    disabled={agentRequestLoading || !details?.run_details?.id}
+                    disabled={agentRequestLoading || !details?.run_details?.id || isRerunTarget}
                     onClick={() => details && onRerunDecision(details)}
-                    sx={{ color: 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
+                    sx={{ color: isRerunTarget ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))', '&:hover': { color: 'hsl(var(--primary))' } }}
                   >
-                    <RestartAltIcon size={16} />
+                    {isRerunTarget
+                      ? <CircularProgress size={14} sx={{ color: 'hsl(var(--primary))' }} />
+                      : <RestartAltIcon size={16} />}
                   </IconButton>
                 </span>
               </Tooltip>
@@ -1531,6 +1554,14 @@ const AgentUI: React.FC<AgentUIProps> = ({
   const [appSearchOpen, setAppSearchOpen] = useState(false);
   const [authDrawerApp, setAuthDrawerApp] = useState<{ name: string; id?: string | null } | null>(null);
   const [agentRequestLoading, setAgentRequestLoading] = useState(false);
+  // Optimistic UI: track which decision the user just clicked Rerun on so we
+  // can immediately hide later decisions and show a spinner on that row while
+  // the backend catches up. Cleared when the poll returns fresh decisions or
+  // after a safety timeout.
+  const [rerunningDecisionId, setRerunningDecisionId] = useState<string | null>(null);
+  const rerunDecisionsSigRef = useRef<string>('');
+  // Optimistic UI for the top-level "Rerun agent" button.
+  const [rerunAgentPending, setRerunAgentPending] = useState(false);
   const [execution, setExecution] = useState<ExecutionData | null>(null);
   const [agentData, setAgentData] = useState<{ decisions?: AgentDecision[]; original_input?: string; status?: string; started_at?: number; completed_at?: number; [k: string]: any }>({});
   const [agentActionResult, setAgentActionResult] = useState<any>(null);
@@ -2497,6 +2528,10 @@ const AgentUI: React.FC<AgentUIProps> = ({
 
   const rerunAgent = useCallback(() => {
     const input = resolveRunInput();
+    // Optimistic feedback for the button — flip immediately, cleared when
+    // the new execution loads (see effect below).
+    setRerunAgentPending(true);
+    toast({ title: 'Rerunning agent', description: 'Starting a new run with the same prompt and tools.' });
     if (input && typeof input === 'string') {
       setActionInput(input);
     }
@@ -2518,7 +2553,17 @@ const AgentUI: React.FC<AgentUIProps> = ({
     if (input && typeof input === 'string' && input.trim().length >= 6) {
       submitInput(input);
     }
+    // Safety timeout in case submitInput never produces a new execution.
+    setTimeout(() => setRerunAgentPending(false), 8000);
   }, [resolveRunInput, executionApps, setSearchParams, disableStartTab, submitInput]);
+
+  // Clear the top-level rerun-pending flag as soon as we're loading or a
+  // new execution has taken over.
+  useEffect(() => {
+    if (rerunAgentPending && (agentRequestLoading || execution?.execution_id)) {
+      setRerunAgentPending(false);
+    }
+  }, [rerunAgentPending, agentRequestLoading, execution?.execution_id]);
 
   // ── Abort the currently running agent execution ──
   // If the agent has not produced an execution_id yet (i.e. the initial
@@ -2627,6 +2672,14 @@ const AgentUI: React.FC<AgentUIProps> = ({
     const body: any = { ...agentActionResult.action };
     body.source_execution = execution.execution_id;
     body.source_workflow = execution.workflow?.id;
+    // Optimistic feedback — flip the UI *before* the network round-trip so
+    // the click feels instantaneous. Poll updates will overwrite these
+    // hints with real backend state.
+    setRerunningDecisionId(decisionId);
+    rerunDecisionsSigRef.current = JSON.stringify(
+      (agentData?.decisions || []).map((d: any) => d?.run_details?.id || ''),
+    );
+    toast({ title: 'Rerunning decision', description: 'The agent will continue from this step.' });
     setAgentRequestLoading(true);
     try {
       const resp = await fetch(resolveUrl(`/api/v1/apps/agent/run?rerun=true&decision_id=${encodeURIComponent(decisionId)}`), {
@@ -2638,17 +2691,33 @@ const AgentUI: React.FC<AgentUIProps> = ({
       const json = await resp.json().catch(() => ({}));
       if (json?.success === false) {
         toast({ title: 'Rerun failed', description: json.reason || 'Try again later.', variant: 'destructive' });
+        setRerunningDecisionId(null);
       } else {
-        toast({ title: 'Rerunning decision', description: 'The agent will continue from this step.' });
         setTimeout(() => getExecution(execution.execution_id!, execution.authorization!), 800);
         setTimeout(() => getExecution(execution.execution_id!, execution.authorization!), 5000);
       }
     } catch (err) {
       toast({ title: 'Network error', description: String(err), variant: 'destructive' });
+      setRerunningDecisionId(null);
     } finally {
       setAgentRequestLoading(false);
     }
-  }, [execution, agentActionResult, getExecution]);
+  }, [execution, agentActionResult, agentData, getExecution, resolveUrl, resolveHeaders]);
+
+  // Clear the optimistic rerun flag once the backend reflects the change
+  // (decisions list signature changes) or after a safety timeout.
+  useEffect(() => {
+    if (!rerunningDecisionId) return;
+    const sig = JSON.stringify(
+      (agentData?.decisions || []).map((d: any) => d?.run_details?.id || ''),
+    );
+    if (sig !== rerunDecisionsSigRef.current) {
+      setRerunningDecisionId(null);
+      return;
+    }
+    const t = setTimeout(() => setRerunningDecisionId(null), 20000);
+    return () => clearTimeout(t);
+  }, [agentData?.decisions, rerunningDecisionId]);
 
   // ── Build timeline ──
   const { timeline, originalStartTime, totalDuration, finishDecisionId, finishAnswer } = useMemo(() => {
@@ -4138,18 +4207,20 @@ const AgentUI: React.FC<AgentUIProps> = ({
                   </Tooltip>
                 ) : null;
               })()}
-              <Tooltip title="Rerun with the same prompt and tools">
+              <Tooltip title={rerunAgentPending ? 'Rerun starting…' : 'Rerun with the same prompt and tools'}>
                 <span>
                   <IconButton
                     size="small"
-                    disabled={agentRequestLoading}
+                    disabled={agentRequestLoading || rerunAgentPending}
                     onClick={rerunAgent}
                     sx={{
-                      color: 'hsl(var(--muted-foreground))',
+                      color: rerunAgentPending ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground))',
                       '&:hover': { color: 'hsl(var(--primary))', bgcolor: 'hsl(var(--muted))' },
                     }}
                   >
-                    <RestartAltIcon size={18} />
+                    {rerunAgentPending
+                      ? <CircularProgress size={16} sx={{ color: 'hsl(var(--primary))' }} />
+                      : <RestartAltIcon size={18} />}
                   </IconButton>
                 </span>
               </Tooltip>
@@ -4462,32 +4533,41 @@ const AgentUI: React.FC<AgentUIProps> = ({
                 </Box>
               ) : (
                 <>
-                  {timeline.map((item, i) => (
-                    <TimelineRow
-                      key={i}
-                      item={item}
-                      index={i}
-                      open={openIndexes.has(i)}
-                      onToggle={() => toggleOpen(i)}
-                      appsById={appsById}
-                      totalDuration={totalDuration}
-                      originalStartTime={originalStartTime}
-                      maxWidth={210}
-                      questionAnswers={questionAnswers}
-                      setQuestionAnswers={setQuestionAnswers}
-                      onSubmitQuestions={submitQuestions}
-                      onRerunAgent={rerunAgent}
-                      onRerunDecision={rerunDecision}
-                      agentRequestLoading={agentRequestLoading}
-                      getFormUrl={getFormUrl}
-                      runFinished={detailedRunFinished}
-                      onAuthenticateApp={(name, id) => setAuthDrawerApp({ name, id })}
-                      onRefreshAuthenticatedApps={() => { loadAuthenticatedApps(); }}
-                      isAppAuthenticated={isAppAuthenticated}
-                      authAppsLoading={authAppsLoading}
-                      highlight={highlightedIndex === i}
-                    />
-                  ))}
+                  {(() => {
+                    const rerunIdx = rerunningDecisionId
+                      ? timeline.findIndex(
+                          (t) => (t as any)?.details?.run_details?.id === rerunningDecisionId,
+                        )
+                      : -1;
+                    return timeline.map((item, i) => (
+                      <TimelineRow
+                        key={i}
+                        item={item}
+                        index={i}
+                        open={openIndexes.has(i)}
+                        onToggle={() => toggleOpen(i)}
+                        appsById={appsById}
+                        totalDuration={totalDuration}
+                        originalStartTime={originalStartTime}
+                        maxWidth={210}
+                        questionAnswers={questionAnswers}
+                        setQuestionAnswers={setQuestionAnswers}
+                        onSubmitQuestions={submitQuestions}
+                        onRerunAgent={rerunAgent}
+                        onRerunDecision={rerunDecision}
+                        agentRequestLoading={agentRequestLoading}
+                        getFormUrl={getFormUrl}
+                        runFinished={detailedRunFinished}
+                        onAuthenticateApp={(name, id) => setAuthDrawerApp({ name, id })}
+                        onRefreshAuthenticatedApps={() => { loadAuthenticatedApps(); }}
+                        isAppAuthenticated={isAppAuthenticated}
+                        authAppsLoading={authAppsLoading}
+                        highlight={highlightedIndex === i}
+                        rerunningDecisionId={rerunningDecisionId}
+                        dimmedByRerun={rerunIdx >= 0 && i > rerunIdx}
+                      />
+                    ));
+                  })()}
                   {detailedRunFinished && (
                     <Box sx={{
                       borderTop: '1px solid hsl(var(--border))',
