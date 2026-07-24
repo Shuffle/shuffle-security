@@ -323,7 +323,7 @@ export interface Usecase {
   /** Optional custom action — a one-click CTA that overrides the default "create workflow" flow.
    *  Use for usecases best fulfilled by an in-app navigation (e.g. opening /monitors?add_host=true)
    *  rather than generating a Shuffle workflow. */
-  customAction?: {
+  customAction?: null | {
     /** Button label shown on the usecase detail page (e.g. "Add Monitor"). */
     label: string;
     /** In-app route. Use this OR `url`. Internal routes use react-router navigation. */
@@ -573,17 +573,16 @@ export const DEFAULT_USECASES: Usecase[] = [
     automationArea: 'correlation',
   },
   {
-    id: 'asset_management_case_management_vuln_1', phase: 'ingest', source: 'asset_management', target: 'case_management',
+    id: 'asset_management_case_management_vuln_1', phase: 'correlation', source: 'asset_management', target: 'case_management',
     label: 'Vulnerability Correlation',
+    animated: true,
     tags: ['Context', 'Correlation', 'Vulnerability'],
     description: 'Correlate known vulnerabilities (CVEs, misconfigurations, missing patches) on affected assets with active incidents — surfacing exploitable weaknesses that elevate risk and guide containment priorities.',
     agenticDescription: 'An agent matches observables and affected hosts in a case against the vulnerability inventory, identifies exploitable CVEs aligned with the attack technique, recalculates incident severity, and recommends remediation or compensating controls.',
+    automationLabel: 'Vulnerability Correlation',
+    automationCategory: 'cases',
     automationArea: 'correlation',
-    customAction: {
-      label: 'Configure Vulnerabilities',
-      href: '/vulnerabilities',
-      description: 'Open the vulnerability inventory to ingest CVEs from your scanners.',
-    },
+    customAction: null,
   },
   {
     id: 'vulnerability_ingestion_1', phase: 'ingest', source: 'asset_management', target: 'case_management',

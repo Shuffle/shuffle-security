@@ -28,15 +28,10 @@ const CLOUD_DOMAINS = ['security.shuffler.io', 'shutdown.no'];
 // Safely read Vite-style env vars without depending on `vite/client` types
 // (the published library should not require Vite to be installed).
 const getEnvVar = (key: string): string | undefined => {
-  // Indirect access via `new Function` keeps `import.meta` out of the emitted
-  // CJS bundle. tsup otherwise inlines it verbatim into `dist/index.js`, which
-  // breaks consumers whose webpack rolls the CJS build into a non-ESM bundle
-  // ("Cannot use 'import.meta' outside a module").
+  // Dynamic property access avoids tsup's static inlining of import.meta.env.*
+  // while still working in Vite's dev server and build output.
   try {
-    const meta = (new Function('try { return import.meta } catch { return undefined }')()) as
-      | { env?: Record<string, string | undefined> }
-      | undefined;
-    return meta?.env?.[key];
+    return (import.meta as any).env?.[key];
   } catch {
     return undefined;
   }
@@ -78,9 +73,7 @@ const getDefaultBaseUrl = (): string => {
   // Cloud domains always default to shuffler.io; region_url from getinfo may override later
   if (isCloudDomain()) return PROD_BACKEND;
   // Self-hosted / on-prem: use current domain (nginx proxies /api/* to backend)
-  if (typeof window !== 'undefined') {
-    return window.location.origin;
-  }
+  if (typeof window !== 'undefined') return window.location.origin;
   return PROD_BACKEND;
 };
 
